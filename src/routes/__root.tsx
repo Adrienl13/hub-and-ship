@@ -73,14 +73,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Container Club — Pro outdoor furniture, factory-direct" },
+      { name: "description", content: "Reserve your spot in our next shared shipping container. Save 30-40% on pro outdoor furniture, delivered in 6 months." },
+      { name: "author", content: "Container Club" },
+      { property: "og:title", content: "Container Club — Pro outdoor furniture, factory-direct" },
+      { property: "og:description", content: "Reserve your spot. Save 30-40%. Delivered in 6 months." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
