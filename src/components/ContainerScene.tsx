@@ -1,83 +1,107 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Edges, RoundedBox } from "@react-three/drei";
+import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment } from "@react-three/drei";
 import { useMemo } from "react";
 import type { Product } from "@/lib/products";
 
-// Internal 20ft container dims (m)
+// Internal 20ft High Cube container dims (m) — usable
 const L = 5.9;
-const W = 2.35;
-const H = 2.39;
+const W = 2.34;
+const H = 2.69;
 
-type BoxInstance = { pos: [number, number, number]; size: number; color: string };
+type BoxInstance = {
+  pos: [number, number, number];
+  size: [number, number, number];
+  color: string;
+  productId: string;
+};
 
+// Realistic shelf-packer: each product gets a contiguous slice along the container length.
+// Within that slice, packs are placed in a (depth × width × height) grid sized to packDim.
 function packBoxes(items: { product: Product; qty: number }[]): BoxInstance[] {
   const boxes: BoxInstance[] = [];
-  let xCursor = -L / 2; // along length
+  let xCursor = -L / 2;
 
   for (const { product, qty } of items) {
     if (qty <= 0) continue;
-    const s = Math.max(Math.cbrt(product.cbm), 0.18);
-    const cellsW = Math.max(1, Math.floor(W / s));
-    const cellsH = Math.max(1, Math.floor(H / s));
-    const perLayerCol = cellsW * cellsH; // units per "column" (slice along L)
-    const colsNeeded = Math.ceil(qty / perLayerCol);
-    const sectionLen = colsNeeded * s;
-
-    if (xCursor + sectionLen > L / 2 + 0.01) {
-      // overflow — clamp visually
+    const packs = Math.ceil(qty / product.packQty);
+    let [w, d, h] = product.packDim;
+    // Orient so the longest side runs along X (container length) for tall items like parasols
+    if (h > L) {
+      // lay it down: swap height with depth
+      [d, h] = [h, d];
     }
+    if (h > H) h = H * 0.98; // visual clamp
 
-    for (let i = 0; i < qty; i++) {
-      const colIdx = Math.floor(i / perLayerCol);
-      const within = i % perLayerCol;
-      const layer = Math.floor(within / cellsW); // y
-      const wIdx = within % cellsW;              // z
+    const cellsW = Math.max(1, Math.floor(W / w));
+    const cellsH = Math.max(1, Math.floor(H / h));
+    const perCol = cellsW * cellsH; // packs per slice along X
+    const colsNeeded = Math.ceil(packs / perCol);
 
-      const x = xCursor + colIdx * s + s / 2;
-      const y = -H / 2 + layer * s + s / 2;
-      const z = -W / 2 + wIdx * s + s / 2;
-      boxes.push({ pos: [x, y, z], size: s * 0.94, color: product.color });
+    // Center the slice's content in the available width
+    const usedW = cellsW * w;
+    const zStart = -W / 2 + (W - usedW) / 2 + w / 2;
+
+    for (let i = 0; i < packs; i++) {
+      const colIdx = Math.floor(i / perCol);
+      const within = i % perCol;
+      const layer = Math.floor(within / cellsW);
+      const wIdx = within % cellsW;
+
+      const x = xCursor + colIdx * d + d / 2;
+      const y = -H / 2 + layer * h + h / 2;
+      const z = zStart + wIdx * w;
+
+      boxes.push({
+        pos: [x, y, z],
+        size: [d * 0.97, h * 0.97, w * 0.97],
+        color: product.color,
+        productId: product.id,
+      });
     }
-    xCursor += sectionLen + 0.05;
+    xCursor += colsNeeded * d + 0.04;
   }
   return boxes;
 }
 
 function ContainerShell() {
+  const wallColor = "#b8aea0";
   return (
     <group>
-      {/* Floor */}
-      <mesh position={[0, -H / 2 - 0.01, 0]} receiveShadow>
+      {/* Floor (corrugated wood-look) */}
+      <mesh position={[0, -H / 2 - 0.011, 0]} receiveShadow>
         <boxGeometry args={[L, 0.02, W]} />
-        <meshStandardMaterial color="#8a8074" />
+        <meshStandardMaterial color="#6e5e4a" roughness={0.95} />
       </mesh>
-      {/* Walls (semi-transparent) */}
+      {/* Back wall */}
       <mesh position={[0, 0, -W / 2]}>
-        <boxGeometry args={[L, H, 0.02]} />
-        <meshStandardMaterial color="#cfc8bd" transparent opacity={0.18} />
+        <boxGeometry args={[L, H, 0.015]} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.18} />
       </mesh>
+      {/* Front wall (almost invisible so user sees inside) */}
       <mesh position={[0, 0, W / 2]}>
-        <boxGeometry args={[L, H, 0.02]} />
-        <meshStandardMaterial color="#cfc8bd" transparent opacity={0.08} />
+        <boxGeometry args={[L, H, 0.015]} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.04} />
       </mesh>
+      {/* Left (closed end) */}
       <mesh position={[-L / 2, 0, 0]}>
-        <boxGeometry args={[0.02, H, W]} />
-        <meshStandardMaterial color="#cfc8bd" transparent opacity={0.18} />
+        <boxGeometry args={[0.015, H, W]} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.22} />
       </mesh>
+      {/* Right (door end) */}
       <mesh position={[L / 2, 0, 0]}>
-        <boxGeometry args={[0.02, H, W]} />
-        <meshStandardMaterial color="#cfc8bd" transparent opacity={0.18} />
+        <boxGeometry args={[0.015, H, W]} />
+        <meshStandardMaterial color="#a8907a" transparent opacity={0.12} />
       </mesh>
-      {/* Roof edges */}
+      {/* Roof */}
       <mesh position={[0, H / 2, 0]}>
-        <boxGeometry args={[L, 0.02, W]} />
-        <meshStandardMaterial color="#cfc8bd" transparent opacity={0.05} />
+        <boxGeometry args={[L, 0.015, W]} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.04} />
       </mesh>
       {/* Frame outline */}
       <mesh>
         <boxGeometry args={[L, H, W]} />
         <meshBasicMaterial visible={false} />
-        <Edges color="#3a3a3f" threshold={1} />
+        <Edges color="#2a2a2f" threshold={1} />
       </mesh>
     </group>
   );
@@ -94,40 +118,57 @@ export function ContainerScene({
     <Canvas
       shadows
       dpr={[1, 2]}
-      camera={{ position: [7, 5, 7], fov: 38 }}
+      camera={{ position: [8, 5.5, 7.5], fov: 35 }}
       style={{ background: "transparent" }}
     >
-      <ambientLight intensity={0.7} />
+      <color attach="background" args={["#f4ede1"]} />
+      <fog attach="fog" args={["#f4ede1", 18, 32]} />
+      <ambientLight intensity={0.55} />
       <directionalLight
-        position={[6, 10, 6]}
-        intensity={1.1}
+        position={[7, 11, 6]}
+        intensity={1.2}
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-8}
+        shadow-camera-right={8}
+        shadow-camera-top={8}
+        shadow-camera-bottom={-8}
       />
-      <directionalLight position={[-6, 4, -4]} intensity={0.3} />
+      <directionalLight position={[-6, 4, -4]} intensity={0.25} />
+      <Environment preset="city" />
 
-      <group position={[0, 0.2, 0]}>
+      <group position={[0, 0.25, 0]}>
         <ContainerShell />
         {boxes.map((b, i) => (
           <RoundedBox
             key={i}
-            args={[b.size, b.size, b.size]}
-            radius={0.02}
+            args={b.size}
+            radius={0.015}
             smoothness={2}
             position={b.pos}
             castShadow
+            receiveShadow
           >
-            <meshStandardMaterial color={b.color} roughness={0.7} />
+            <meshStandardMaterial color={b.color} roughness={0.78} metalness={0.05} />
           </RoundedBox>
         ))}
+        <ContactShadows
+          position={[0, -H / 2 + 0.01, 0]}
+          opacity={0.35}
+          scale={14}
+          blur={2.4}
+          far={4}
+        />
       </group>
 
       <OrbitControls
         enablePan={false}
         minDistance={6}
-        maxDistance={16}
-        maxPolarAngle={Math.PI / 2.1}
+        maxDistance={18}
+        maxPolarAngle={Math.PI / 2.05}
+        autoRotate
+        autoRotateSpeed={0.4}
       />
     </Canvas>
   );
