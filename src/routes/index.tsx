@@ -332,14 +332,57 @@ function ContainerClubPage() {
                     key={p.id}
                     product={p}
                     qty={qtys[p.id] ?? 0}
+                    optionId={options[p.id]}
                     onChange={(n) => setQty(p.id, n)}
+                    onOptionChange={(id) =>
+                      setOptions((prev) => ({ ...prev, [p.id]: id }))
+                    }
                   />
                 ))}
               </div>
-              <div className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Bon à savoir : </span>
-                volumes calculés à partir des cartons réels usine (chaises empilées
-                par 10, plateaux par 2, etc.).
+              <div className="mt-4 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Direct usine : </span>
+                choisissez la couleur du tressage, du textilène ou du plateau —
+                le container 3D se met à jour en direct.
+              </div>
+              {/* Degressive pricing ladder */}
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Remise collective
+                  </div>
+                  {tier.pct > 0 && (
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                      Palier actif : −{tier.pct}%
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  {[
+                    { t: 60, p: 5 },
+                    { t: 80, p: 8 },
+                    { t: 100, p: 12 },
+                  ].map((step) => {
+                    const reached = fillPct >= step.t;
+                    return (
+                      <div
+                        key={step.t}
+                        className={`rounded-md border px-2 py-1.5 transition-colors ${
+                          reached
+                            ? "border-primary/50 bg-primary/10 text-primary"
+                            : "border-border bg-muted/40 text-muted-foreground"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase tracking-wider">
+                          {step.t}% rempli
+                        </div>
+                        <div className="font-display text-base tabular-nums">
+                          −{step.p}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
