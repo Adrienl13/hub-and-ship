@@ -17,11 +17,11 @@ type BoxInstance = {
 
 // Realistic shelf-packer: each product gets a contiguous slice along the container length.
 // Within that slice, packs are placed in a (depth × width × height) grid sized to packDim.
-function packBoxes(items: { product: Product; qty: number }[]): BoxInstance[] {
+function packBoxes(items: { product: Product; qty: number; color: string }[]): BoxInstance[] {
   const boxes: BoxInstance[] = [];
   let xCursor = -L / 2;
 
-  for (const { product, qty } of items) {
+  for (const { product, qty, color } of items) {
     if (qty <= 0) continue;
     const packs = Math.ceil(qty / product.packQty);
     let [w, d, h] = product.packDim;
@@ -54,7 +54,7 @@ function packBoxes(items: { product: Product; qty: number }[]): BoxInstance[] {
       boxes.push({
         pos: [x, y, z],
         size: [d * 0.97, h * 0.97, w * 0.97],
-        color: product.color,
+        color,
         productId: product.id,
       });
     }
@@ -110,7 +110,7 @@ function ContainerShell() {
 export function ContainerScene({
   items,
 }: {
-  items: { product: Product; qty: number }[];
+  items: { product: Product; qty: number; color: string }[];
 }) {
   const boxes = useMemo(() => packBoxes(items), [items]);
 

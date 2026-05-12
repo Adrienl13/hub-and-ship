@@ -30,22 +30,39 @@ import {
 
 import { ContainerScene } from "@/components/ContainerScene";
 import { ProductRow } from "@/components/ProductRow";
-import { CONTAINER_CBM, PRODUCTS, type Product, unitCBM } from "@/lib/products";
+import {
+  CONTAINER_CBM,
+  PRODUCTS,
+  type Product,
+  unitCBM,
+  getProductColor,
+  defaultOptionId,
+} from "@/lib/products";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
 });
 
 const FAKE_BUYERS = [
-  { initials: "MR", name: "Marie · Café du Port" },
-  { initials: "JL", name: "Jérôme · Hôtel Belvédère" },
-  { initials: "AC", name: "Anna · Plage Privée" },
-  { initials: "PD", name: "Paul · Brasserie Centrale" },
-  { initials: "SK", name: "Sophie · Beach Club Sète" },
-  { initials: "EB", name: "Éric · Distrib Pro Sud" },
-  { initials: "TN", name: "Théo · Rooftop Lyon" },
-  { initials: "LV", name: "Laura · Camping 4★" },
+  { initials: "MR", name: "Marie · Café du Marais", city: "Paris 4e", items: "20 chaises rotin" },
+  { initials: "JL", name: "Jérôme · Hôtel Belvédère", city: "Lyon 2e", items: "12 bains de soleil" },
+  { initials: "AC", name: "Anna · Plage Privée", city: "Cannes", items: "30 tabourets" },
+  { initials: "PD", name: "Paul · Brasserie Centrale", city: "Bordeaux", items: "40 chaises cannage + 10 tables" },
+  { initials: "SK", name: "Sophie · Beach Club", city: "Sète", items: "8 parasols + 6 bains" },
+  { initials: "TN", name: "Théo · Rooftop République", city: "Lyon 1er", items: "20 mange-debout" },
+  { initials: "LV", name: "Laura · Camping 4★", city: "Royan", items: "60 chaises bistrot" },
+  { initials: "EB", name: "Éric · Distrib Pro Sud", city: "Marseille", items: "Lot mixte 4 m³" },
 ];
+
+const TOTAL_SLOTS = 20;
+const SLOTS_TAKEN = FAKE_BUYERS.length;
+
+function getDiscountTier(fillPct: number) {
+  if (fillPct >= 100) return { pct: 12, label: "Container plein" };
+  if (fillPct >= 80) return { pct: 8, label: "Seuil de départ atteint" };
+  if (fillPct >= 60) return { pct: 5, label: "60 % rempli" };
+  return { pct: 0, label: "Tarif de base" };
+}
 
 function formatEUR(n: number) {
   return new Intl.NumberFormat("fr-FR", {
@@ -58,13 +75,17 @@ function formatEUR(n: number) {
 function ContainerClubPage() {
   // Pre-populate with realistic dummy data (multiples of pack size)
   const [qtys, setQtys] = useState<Record<string, number>>({
-    chaise: 40,    // 4 packs · ≈3,5 CBM
-    table: 10,     // 5 packs · ≈1,0 CBM
-    parasol: 8,    // 2 packs · ≈0,2 CBM
-    bain: 6,       // 3 packs · ≈1,1 CBM
-    tabouret: 16,  // 2 packs · ≈0,65 CBM
-    banquette: 2,  // 2 packs · ≈1,9 CBM
+    "bistrot-rotin": 30,
+    "bistrot-cannage": 20,
+    "tabouret-bistrot": 8,
+    "table-bistrot-60": 12,
+    "mange-debout": 4,
+    "bain-soleil": 4,
+    "parasol": 4,
   });
+  const [options, setOptions] = useState<Record<string, string | undefined>>(
+    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, defaultOptionId(p)])),
+  );
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState(23);
   const [hours, setHours] = useState(14);
@@ -86,16 +107,26 @@ function ContainerClubPage() {
   }, []);
 
   const items = useMemo(
-    () => PRODUCTS.map((p) => ({ product: p, qty: qtys[p.id] ?? 0 })),
-    [qtys],
+    () =>
+      PRODUCTS.map((p) => ({
+        product: p,
+        qty: qtys[p.id] ?? 0,
+        color: getProductColor(p, options[p.id]),
+      })),
+    [qtys, options],
   );
   const usedCBM = items.reduce((s, i) => s + unitCBM(i.product) * i.qty, 0);
   const fillPct = Math.min(100, (usedCBM / CONTAINER_CBM) * 100);
-  const totalHT = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const deposit = totalHT / 2;
+  const subTotalHT = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const tier = getDiscountTier(fillPct);
+  const tierDiscount = subTotalHT * (tier.pct / 100);
+  const totalHT = subTotalHT - tierDiscount;
+  const deposit = totalHT * 0.3;
   const totalUnits = items.reduce((s, i) => s + i.qty, 0);
-  // Retail comparison: assume 38% savings vs retail
-  const retailEquivalent = totalHT / 0.62;
+  const retailEquivalent = items.reduce(
+    (s, i) => s + i.product.retailPrice * i.qty,
+    0,
+  );
   const savings = retailEquivalent - totalHT;
 
   const setQty = (id: string, n: number) =>
@@ -163,24 +194,25 @@ function ContainerClubPage() {
               Pré-commande B2B · Sourcing direct usine
             </div>
             <h1 className="font-display text-4xl font-medium leading-[1.02] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Mobilier de terrasse,
+              La chaise bistrot
               <br />
-              <span className="italic text-primary">au prix usine.</span>
+              <span className="italic text-primary">au prix de l'usine.</span>
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-lg text-muted-foreground">
-              Réservez votre place dans le prochain container partagé.
-              Économisez 30 à 40 %. Livré en 6 mois, dédouané.
+              Le club d'achat groupé des pros de la terrasse parisienne.
+              Tressage, textilène, plateaux : tout est configurable, en direct usine.
+              Jusqu'à <span className="font-semibold text-foreground">−55 %</span> sur le prix grossiste.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild className="h-12 px-7 text-base">
                 <a href="#reserve">
-                  Voir le container en cours
+                  Configurer mon mobilier
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </a>
               </Button>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Acompte 50 % · remboursable jusqu'à clôture
+                Acompte 30 % · remboursable jusqu'à clôture
               </div>
             </div>
 
@@ -301,14 +333,57 @@ function ContainerClubPage() {
                     key={p.id}
                     product={p}
                     qty={qtys[p.id] ?? 0}
+                    optionId={options[p.id]}
                     onChange={(n) => setQty(p.id, n)}
+                    onOptionChange={(id) =>
+                      setOptions((prev) => ({ ...prev, [p.id]: id }))
+                    }
                   />
                 ))}
               </div>
-              <div className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Bon à savoir : </span>
-                volumes calculés à partir des cartons réels usine (chaises empilées
-                par 10, plateaux par 2, etc.).
+              <div className="mt-4 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Direct usine : </span>
+                choisissez la couleur du tressage, du textilène ou du plateau —
+                le container 3D se met à jour en direct.
+              </div>
+              {/* Degressive pricing ladder */}
+              <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Remise collective
+                  </div>
+                  {tier.pct > 0 && (
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                      Palier actif : −{tier.pct}%
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  {[
+                    { t: 60, p: 5 },
+                    { t: 80, p: 8 },
+                    { t: 100, p: 12 },
+                  ].map((step) => {
+                    const reached = fillPct >= step.t;
+                    return (
+                      <div
+                        key={step.t}
+                        className={`rounded-md border px-2 py-1.5 transition-colors ${
+                          reached
+                            ? "border-primary/50 bg-primary/10 text-primary"
+                            : "border-border bg-muted/40 text-muted-foreground"
+                        }`}
+                      >
+                        <div className="text-[10px] uppercase tracking-wider">
+                          {step.t}% rempli
+                        </div>
+                        <div className="font-display text-base tabular-nums">
+                          −{step.p}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -320,27 +395,46 @@ function ContainerClubPage() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="p-6">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                <Users className="h-3.5 w-3.5" /> Co-réservataires
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" /> Le club
+                </div>
+                <div className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  {TOTAL_SLOTS - SLOTS_TAKEN} places restantes
+                </div>
               </div>
-              <div className="mt-2 font-display text-3xl tabular-nums">{FAKE_BUYERS.length}</div>
+              <div className="mt-2 font-display text-3xl tabular-nums">
+                {SLOTS_TAKEN}
+                <span className="text-lg text-muted-foreground"> / {TOTAL_SLOTS}</span>
+              </div>
               <div className="text-sm text-muted-foreground">
-                pros ont déjà réservé dans ce container
+                pros ont déjà réservé sur ce container
               </div>
-              <div className="mt-3 flex -space-x-2">
-                {FAKE_BUYERS.map((b, i) => (
+              <div className="mt-3 space-y-1.5">
+                {FAKE_BUYERS.slice(0, 4).map((b, i) => (
                   <div
                     key={i}
+                    className="flex items-center gap-2 text-xs"
                     title={b.name}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-secondary text-[11px] font-semibold text-secondary-foreground"
-                    style={{
-                      zIndex: FAKE_BUYERS.length - i,
-                      backgroundColor: i % 2 ? "var(--accent)" : "var(--muted)",
-                    }}
                   >
-                    {b.initials}
+                    <div
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-foreground/80"
+                      style={{
+                        backgroundColor: i % 2 ? "var(--accent)" : "var(--muted)",
+                      }}
+                    >
+                      {b.initials}
+                    </div>
+                    <div className="min-w-0 flex-1 truncate text-muted-foreground">
+                      <span className="font-medium text-foreground">{b.city}</span>
+                      <span className="mx-1 text-border">·</span>
+                      {b.items}
+                    </div>
                   </div>
                 ))}
+                <div className="pt-0.5 text-[11px] text-muted-foreground">
+                  + {FAKE_BUYERS.length - 4} autres pros
+                </div>
               </div>
             </div>
 
@@ -398,43 +492,53 @@ function ContainerClubPage() {
                 Votre réservation
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Verrouillez le prix usine avec un acompte de 50 %. Le solde
-                sera réglé avant expédition.
+                Verrouillez le prix usine avec un acompte de 30 %. Le solde
+                sera réglé avant expédition. Configuration sauvegardée.
               </p>
               <div className="mt-5 divide-y divide-border rounded-xl border border-border bg-card">
                 <AnimatePresence initial={false}>
                   {items
                     .filter((i) => i.qty > 0)
-                    .map(({ product, qty }) => (
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between gap-4 px-4 py-3">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div
-                              className="h-8 w-8 shrink-0 rounded-md ring-1 ring-black/5"
-                              style={{ backgroundColor: product.swatch }}
-                            />
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-medium">
-                                {product.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground tabular-nums">
-                                {qty} × {formatEUR(product.price)} ·{" "}
-                                {(unitCBM(product) * qty).toFixed(2)} m³
+                    .map(({ product, qty, color }) => {
+                      const optName = product.customization?.options.find(
+                        (o) => o.id === options[product.id],
+                      )?.name;
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between gap-4 px-4 py-3">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div
+                                className="h-8 w-8 shrink-0 rounded-md ring-1 ring-black/5 transition-colors"
+                                style={{ backgroundColor: color }}
+                              />
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-medium">
+                                  {product.name}
+                                </div>
+                                <div className="truncate text-xs text-muted-foreground tabular-nums">
+                                  {qty} × {formatEUR(product.price)}
+                                  {optName && (
+                                    <>
+                                      {" · "}
+                                      <span className="text-foreground/70">{optName}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            <div className="text-sm font-semibold tabular-nums">
+                              {formatEUR(product.price * qty)}
+                            </div>
                           </div>
-                          <div className="text-sm font-semibold tabular-nums">
-                            {formatEUR(product.price * qty)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                 </AnimatePresence>
                 {totalUnits === 0 && (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -453,6 +557,20 @@ function ContainerClubPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Sous-total club (HT)</span>
+                  <span className="tabular-nums">{formatEUR(subTotalHT)}</span>
+                </div>
+                {tier.pct > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Remise palier −{tier.pct}%
+                    </span>
+                    <span className="tabular-nums text-primary">
+                      −{formatEUR(tierDiscount)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
                   <span className="font-medium">Total Container Club (HT)</span>
                   <span className="font-semibold tabular-nums">
                     {formatEUR(totalHT)}
@@ -470,7 +588,10 @@ function ContainerClubPage() {
                 </div>
                 <div className="my-2 border-t border-border" />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Acompte aujourd'hui</span>
+                  <div>
+                    <span className="text-sm font-medium">Acompte aujourd'hui</span>
+                    <div className="text-[11px] text-muted-foreground">30 % du total HT</div>
+                  </div>
                   <span className="font-display text-3xl tabular-nums text-primary">
                     {formatEUR(deposit)}
                   </span>
@@ -509,7 +630,7 @@ function ContainerClubPage() {
                 icon: ShieldCheck,
                 step: "01",
                 title: "Réservez votre place",
-                body: "Acompte de 50 % pour bloquer le prix usine. Aucun frais caché, remboursable.",
+                body: "Acompte de 30 % pour bloquer le prix usine et la couleur choisie. Remboursable.",
               },
               {
                 icon: Factory,
