@@ -30,22 +30,39 @@ import {
 
 import { ContainerScene } from "@/components/ContainerScene";
 import { ProductRow } from "@/components/ProductRow";
-import { CONTAINER_CBM, PRODUCTS, type Product, unitCBM } from "@/lib/products";
+import {
+  CONTAINER_CBM,
+  PRODUCTS,
+  type Product,
+  unitCBM,
+  getProductColor,
+  defaultOptionId,
+} from "@/lib/products";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
 });
 
 const FAKE_BUYERS = [
-  { initials: "MR", name: "Marie · Café du Port" },
-  { initials: "JL", name: "Jérôme · Hôtel Belvédère" },
-  { initials: "AC", name: "Anna · Plage Privée" },
-  { initials: "PD", name: "Paul · Brasserie Centrale" },
-  { initials: "SK", name: "Sophie · Beach Club Sète" },
-  { initials: "EB", name: "Éric · Distrib Pro Sud" },
-  { initials: "TN", name: "Théo · Rooftop Lyon" },
-  { initials: "LV", name: "Laura · Camping 4★" },
+  { initials: "MR", name: "Marie · Café du Marais", city: "Paris 4e", items: "20 chaises rotin" },
+  { initials: "JL", name: "Jérôme · Hôtel Belvédère", city: "Lyon 2e", items: "12 bains de soleil" },
+  { initials: "AC", name: "Anna · Plage Privée", city: "Cannes", items: "30 tabourets" },
+  { initials: "PD", name: "Paul · Brasserie Centrale", city: "Bordeaux", items: "40 chaises cannage + 10 tables" },
+  { initials: "SK", name: "Sophie · Beach Club", city: "Sète", items: "8 parasols + 6 bains" },
+  { initials: "TN", name: "Théo · Rooftop République", city: "Lyon 1er", items: "20 mange-debout" },
+  { initials: "LV", name: "Laura · Camping 4★", city: "Royan", items: "60 chaises bistrot" },
+  { initials: "EB", name: "Éric · Distrib Pro Sud", city: "Marseille", items: "Lot mixte 4 m³" },
 ];
+
+const TOTAL_SLOTS = 20;
+const SLOTS_TAKEN = FAKE_BUYERS.length;
+
+function getDiscountTier(fillPct: number) {
+  if (fillPct >= 100) return { pct: 12, label: "Container plein" };
+  if (fillPct >= 80) return { pct: 8, label: "Seuil de départ atteint" };
+  if (fillPct >= 60) return { pct: 5, label: "60 % rempli" };
+  return { pct: 0, label: "Tarif de base" };
+}
 
 function formatEUR(n: number) {
   return new Intl.NumberFormat("fr-FR", {
@@ -58,13 +75,17 @@ function formatEUR(n: number) {
 function ContainerClubPage() {
   // Pre-populate with realistic dummy data (multiples of pack size)
   const [qtys, setQtys] = useState<Record<string, number>>({
-    chaise: 40,    // 4 packs · ≈3,5 CBM
-    table: 10,     // 5 packs · ≈1,0 CBM
-    parasol: 8,    // 2 packs · ≈0,2 CBM
-    bain: 6,       // 3 packs · ≈1,1 CBM
-    tabouret: 16,  // 2 packs · ≈0,65 CBM
-    banquette: 2,  // 2 packs · ≈1,9 CBM
+    "bistrot-rotin": 30,
+    "bistrot-cannage": 20,
+    "tabouret-bistrot": 8,
+    "table-bistrot-60": 12,
+    "mange-debout": 4,
+    "bain-soleil": 4,
+    "parasol": 4,
   });
+  const [options, setOptions] = useState<Record<string, string | undefined>>(
+    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, defaultOptionId(p)])),
+  );
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState(23);
   const [hours, setHours] = useState(14);
@@ -86,16 +107,26 @@ function ContainerClubPage() {
   }, []);
 
   const items = useMemo(
-    () => PRODUCTS.map((p) => ({ product: p, qty: qtys[p.id] ?? 0 })),
-    [qtys],
+    () =>
+      PRODUCTS.map((p) => ({
+        product: p,
+        qty: qtys[p.id] ?? 0,
+        color: getProductColor(p, options[p.id]),
+      })),
+    [qtys, options],
   );
   const usedCBM = items.reduce((s, i) => s + unitCBM(i.product) * i.qty, 0);
   const fillPct = Math.min(100, (usedCBM / CONTAINER_CBM) * 100);
-  const totalHT = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const deposit = totalHT / 2;
+  const subTotalHT = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const tier = getDiscountTier(fillPct);
+  const tierDiscount = subTotalHT * (tier.pct / 100);
+  const totalHT = subTotalHT - tierDiscount;
+  const deposit = totalHT * 0.3;
   const totalUnits = items.reduce((s, i) => s + i.qty, 0);
-  // Retail comparison: assume 38% savings vs retail
-  const retailEquivalent = totalHT / 0.62;
+  const retailEquivalent = items.reduce(
+    (s, i) => s + i.product.retailPrice * i.qty,
+    0,
+  );
   const savings = retailEquivalent - totalHT;
 
   const setQty = (id: string, n: number) =>
