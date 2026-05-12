@@ -630,7 +630,7 @@ function ContainerClubPage() {
                 icon: ShieldCheck,
                 step: "01",
                 title: "Réservez votre place",
-                body: "Acompte de 50 % pour bloquer le prix usine. Aucun frais caché, remboursable.",
+                body: "Acompte de 30 % pour bloquer le prix usine et la couleur choisie. Remboursable.",
               },
               {
                 icon: Factory,
