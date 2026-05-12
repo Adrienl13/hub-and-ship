@@ -588,7 +588,10 @@ function ContainerClubPage() {
                 </div>
                 <div className="my-2 border-t border-border" />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Acompte aujourd'hui</span>
+                  <div>
+                    <span className="text-sm font-medium">Acompte aujourd'hui</span>
+                    <div className="text-[11px] text-muted-foreground">30 % du total HT</div>
+                  </div>
                   <span className="font-display text-3xl tabular-nums text-primary">
                     {formatEUR(deposit)}
                   </span>
