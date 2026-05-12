@@ -492,8 +492,8 @@ function ContainerClubPage() {
                 Votre réservation
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Verrouillez le prix usine avec un acompte de 50 %. Le solde
-                sera réglé avant expédition.
+                Verrouillez le prix usine avec un acompte de 30 %. Le solde
+                sera réglé avant expédition. Configuration sauvegardée.
               </p>
               <div className="mt-5 divide-y divide-border rounded-xl border border-border bg-card">
                 <AnimatePresence initial={false}>
