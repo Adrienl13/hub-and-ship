@@ -499,36 +499,46 @@ function ContainerClubPage() {
                 <AnimatePresence initial={false}>
                   {items
                     .filter((i) => i.qty > 0)
-                    .map(({ product, qty }) => (
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between gap-4 px-4 py-3">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div
-                              className="h-8 w-8 shrink-0 rounded-md ring-1 ring-black/5"
-                              style={{ backgroundColor: product.swatch }}
-                            />
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-medium">
-                                {product.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground tabular-nums">
-                                {qty} × {formatEUR(product.price)} ·{" "}
-                                {(unitCBM(product) * qty).toFixed(2)} m³
+                    .map(({ product, qty, color }) => {
+                      const optName = product.customization?.options.find(
+                        (o) => o.id === options[product.id],
+                      )?.name;
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between gap-4 px-4 py-3">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div
+                                className="h-8 w-8 shrink-0 rounded-md ring-1 ring-black/5 transition-colors"
+                                style={{ backgroundColor: color }}
+                              />
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-medium">
+                                  {product.name}
+                                </div>
+                                <div className="truncate text-xs text-muted-foreground tabular-nums">
+                                  {qty} × {formatEUR(product.price)}
+                                  {optName && (
+                                    <>
+                                      {" · "}
+                                      <span className="text-foreground/70">{optName}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            <div className="text-sm font-semibold tabular-nums">
+                              {formatEUR(product.price * qty)}
+                            </div>
                           </div>
-                          <div className="text-sm font-semibold tabular-nums">
-                            {formatEUR(product.price * qty)}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                 </AnimatePresence>
                 {totalUnits === 0 && (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
