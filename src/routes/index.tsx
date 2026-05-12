@@ -395,27 +395,46 @@ function ContainerClubPage() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="p-6">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                <Users className="h-3.5 w-3.5" /> Co-réservataires
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" /> Le club
+                </div>
+                <div className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  {TOTAL_SLOTS - SLOTS_TAKEN} places restantes
+                </div>
               </div>
-              <div className="mt-2 font-display text-3xl tabular-nums">{FAKE_BUYERS.length}</div>
+              <div className="mt-2 font-display text-3xl tabular-nums">
+                {SLOTS_TAKEN}
+                <span className="text-lg text-muted-foreground"> / {TOTAL_SLOTS}</span>
+              </div>
               <div className="text-sm text-muted-foreground">
-                pros ont déjà réservé dans ce container
+                pros ont déjà réservé sur ce container
               </div>
-              <div className="mt-3 flex -space-x-2">
-                {FAKE_BUYERS.map((b, i) => (
+              <div className="mt-3 space-y-1.5">
+                {FAKE_BUYERS.slice(0, 4).map((b, i) => (
                   <div
                     key={i}
+                    className="flex items-center gap-2 text-xs"
                     title={b.name}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-secondary text-[11px] font-semibold text-secondary-foreground"
-                    style={{
-                      zIndex: FAKE_BUYERS.length - i,
-                      backgroundColor: i % 2 ? "var(--accent)" : "var(--muted)",
-                    }}
                   >
-                    {b.initials}
+                    <div
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-foreground/80"
+                      style={{
+                        backgroundColor: i % 2 ? "var(--accent)" : "var(--muted)",
+                      }}
+                    >
+                      {b.initials}
+                    </div>
+                    <div className="min-w-0 flex-1 truncate text-muted-foreground">
+                      <span className="font-medium text-foreground">{b.city}</span>
+                      <span className="mx-1 text-border">·</span>
+                      {b.items}
+                    </div>
                   </div>
                 ))}
+                <div className="pt-0.5 text-[11px] text-muted-foreground">
+                  + {FAKE_BUYERS.length - 4} autres pros
+                </div>
               </div>
             </div>
 
