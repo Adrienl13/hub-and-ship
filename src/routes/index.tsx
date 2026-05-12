@@ -557,6 +557,20 @@ function ContainerClubPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Sous-total club (HT)</span>
+                  <span className="tabular-nums">{formatEUR(subTotalHT)}</span>
+                </div>
+                {tier.pct > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Remise palier −{tier.pct}%
+                    </span>
+                    <span className="tabular-nums text-primary">
+                      −{formatEUR(tierDiscount)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
                   <span className="font-medium">Total Container Club (HT)</span>
                   <span className="font-semibold tabular-nums">
                     {formatEUR(totalHT)}
