@@ -194,24 +194,25 @@ function ContainerClubPage() {
               Pré-commande B2B · Sourcing direct usine
             </div>
             <h1 className="font-display text-4xl font-medium leading-[1.02] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Mobilier de terrasse,
+              La chaise bistrot
               <br />
-              <span className="italic text-primary">au prix usine.</span>
+              <span className="italic text-primary">au prix de l'usine.</span>
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-lg text-muted-foreground">
-              Réservez votre place dans le prochain container partagé.
-              Économisez 30 à 40 %. Livré en 6 mois, dédouané.
+              Le club d'achat groupé des pros de la terrasse parisienne.
+              Tressage, textilène, plateaux : tout est configurable, en direct usine.
+              Jusqu'à <span className="font-semibold text-foreground">−55 %</span> sur le prix grossiste.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild className="h-12 px-7 text-base">
                 <a href="#reserve">
-                  Voir le container en cours
+                  Configurer mon mobilier
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </a>
               </Button>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Acompte 50 % · remboursable jusqu'à clôture
+                Acompte 30 % · remboursable jusqu'à clôture
               </div>
             </div>
 
