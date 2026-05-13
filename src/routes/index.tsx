@@ -96,6 +96,10 @@ function ContainerClubPage() {
   const [days, setDays] = useState(23);
   const [hours, setHours] = useState(14);
   const [mins, setMins] = useState(37);
+  const [exploded, setExploded] = useState(false);
+  const [category, setCategory] = useState<CategoryFilter>("Tous");
+  const [sort, setSort] = useState<SortKey>("default");
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => {
