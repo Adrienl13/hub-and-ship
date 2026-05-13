@@ -373,8 +373,53 @@ function ContainerClubPage() {
                   <div className="font-semibold tabular-nums">{totalUnits} unités</div>
                 </div>
               </div>
+
+              {/* Filters */}
+              <div className="mb-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-1">
+                  {CATEGORIES.map((c) => {
+                    const active = c === category;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCategory(c)}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        }`}
+                      >
+                        {c}
+                        <span className={`ml-1 tabular-nums ${active ? "opacity-80" : "opacity-60"}`}>
+                          {categoryCounts[c] ?? 0}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="tabular-nums">
+                    {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""}
+                  </span>
+                  <label className="flex items-center gap-1.5">
+                    <ArrowUpDown className="h-3 w-3" />
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as SortKey)}
+                      className="rounded-md border border-border bg-card px-1.5 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="default">Par défaut</option>
+                      <option value="price-asc">Prix ↑</option>
+                      <option value="price-desc">Prix ↓</option>
+                      <option value="cbm-asc">Compact ↑</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2.5">
-                {PRODUCTS.map((p: Product) => (
+                {filteredProducts.map((p: Product) => (
                   <ProductRow
                     key={p.id}
                     product={p}
@@ -384,8 +429,14 @@ function ContainerClubPage() {
                     onOptionChange={(id) =>
                       setOptions((prev) => ({ ...prev, [p.id]: id }))
                     }
+                    onOpenDetails={() => setDetailId(p.id)}
                   />
                 ))}
+                {filteredProducts.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                    Aucun produit dans cette catégorie.
+                  </div>
+                )}
               </div>
               <div className="mt-4 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">Direct usine : </span>
