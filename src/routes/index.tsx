@@ -33,6 +33,7 @@ import {
 
 import { ContainerScene } from "@/components/ContainerScene";
 import { ProductRow } from "@/components/ProductRow";
+import { ProductDetailDialog } from "@/components/ProductDetailDialog";
 import {
   CONTAINER_CBM,
   PRODUCTS,
@@ -42,6 +43,10 @@ import {
   defaultOptionId,
   findOption,
 } from "@/lib/products";
+
+const CATEGORIES = ["Tous", "Chaise", "Fauteuil", "Tabouret", "Table"] as const;
+type CategoryFilter = (typeof CATEGORIES)[number];
+type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
