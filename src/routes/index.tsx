@@ -14,6 +14,9 @@ import {
   Container as ContainerIcon,
   Anchor,
   TrendingDown,
+  Maximize2,
+  Minimize2,
+  ArrowUpDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
