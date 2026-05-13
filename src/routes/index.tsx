@@ -37,6 +37,7 @@ import {
   unitCBM,
   getProductColor,
   defaultOptionId,
+  findOption,
 } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
@@ -75,13 +76,10 @@ function formatEUR(n: number) {
 function ContainerClubPage() {
   // Pre-populate with realistic dummy data (multiples of pack size)
   const [qtys, setQtys] = useState<Record<string, number>>({
-    "bistrot-rotin": 30,
-    "bistrot-cannage": 20,
-    "tabouret-bistrot": 8,
-    "table-bistrot-60": 12,
-    "mange-debout": 4,
-    "bain-soleil": 4,
-    "parasol": 4,
+    "bistrot-rotin": 60,
+    "bistrot-cannage": 50,
+    "tabouret-bistrot": 50,
+    "table-bistrot-60": 20,
   });
   const [options, setOptions] = useState<Record<string, string | undefined>>(
     () => Object.fromEntries(PRODUCTS.map((p) => [p.id, defaultOptionId(p)])),
@@ -319,7 +317,7 @@ function ContainerClubPage() {
                 <div>
                   <h3 className="font-display text-xl">Catalogue</h3>
                   <div className="text-xs text-muted-foreground">
-                    Quantités par lot d'emballage
+                    Échantillon · {PRODUCTS.length} modèles affichés sur 28 formes de chaises & fauteuils
                   </div>
                 </div>
                 <div className="text-right">
@@ -500,9 +498,7 @@ function ContainerClubPage() {
                   {items
                     .filter((i) => i.qty > 0)
                     .map(({ product, qty, color }) => {
-                      const optName = product.customization?.options.find(
-                        (o) => o.id === options[product.id],
-                      )?.name;
+                      const optName = findOption(product, options[product.id])?.name;
                       return (
                         <motion.div
                           key={product.id}
