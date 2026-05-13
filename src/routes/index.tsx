@@ -317,7 +317,7 @@ function ContainerClubPage() {
                 <div>
                   <h3 className="font-display text-xl">Catalogue</h3>
                   <div className="text-xs text-muted-foreground">
-                    Quantités par lot d'emballage
+                    Échantillon · {PRODUCTS.length} modèles affichés sur 28 formes de chaises & fauteuils
                   </div>
                 </div>
                 <div className="text-right">
