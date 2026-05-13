@@ -37,6 +37,7 @@ import {
   unitCBM,
   getProductColor,
   defaultOptionId,
+  findOption,
 } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
