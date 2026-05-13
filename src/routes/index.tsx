@@ -856,6 +856,19 @@ function ContainerClubPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ProductDetailDialog
+        product={detailProduct}
+        open={!!detailId}
+        onOpenChange={(v) => !v && setDetailId(null)}
+        qty={detailProduct ? (qtys[detailProduct.id] ?? 0) : 0}
+        optionId={detailProduct ? options[detailProduct.id] : undefined}
+        onChange={(n) => detailProduct && setQty(detailProduct.id, n)}
+        onOptionChange={(id) =>
+          detailProduct &&
+          setOptions((prev) => ({ ...prev, [detailProduct.id]: id }))
+        }
+      />
     </div>
   );
 }
