@@ -14,6 +14,9 @@ import {
   Container as ContainerIcon,
   Anchor,
   TrendingDown,
+  Maximize2,
+  Minimize2,
+  ArrowUpDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,7 @@ import {
 
 import { ContainerScene } from "@/components/ContainerScene";
 import { ProductRow } from "@/components/ProductRow";
+import { ProductDetailDialog } from "@/components/ProductDetailDialog";
 import {
   CONTAINER_CBM,
   PRODUCTS,
@@ -39,6 +43,10 @@ import {
   defaultOptionId,
   findOption,
 } from "@/lib/products";
+
+const CATEGORIES = ["Tous", "Chaise", "Fauteuil", "Tabouret", "Table"] as const;
+type CategoryFilter = (typeof CATEGORIES)[number];
+type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
@@ -88,6 +96,10 @@ function ContainerClubPage() {
   const [days, setDays] = useState(23);
   const [hours, setHours] = useState(14);
   const [mins, setMins] = useState(37);
+  const [exploded, setExploded] = useState(false);
+  const [category, setCategory] = useState<CategoryFilter>("Tous");
+  const [sort, setSort] = useState<SortKey>("default");
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -129,6 +141,24 @@ function ContainerClubPage() {
 
   const setQty = (id: string, n: number) =>
     setQtys((prev) => ({ ...prev, [id]: Math.max(0, n) }));
+
+  const filteredProducts = useMemo(() => {
+    let list = PRODUCTS.filter((p) => category === "Tous" || p.category === category);
+    if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
+    else if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "cbm-asc") list = [...list].sort((a, b) => unitCBM(a) - unitCBM(b));
+    return list;
+  }, [category, sort]);
+
+  const detailProduct = useMemo(
+    () => PRODUCTS.find((p) => p.id === detailId) ?? null,
+    [detailId],
+  );
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { Tous: PRODUCTS.length };
+    for (const p of PRODUCTS) counts[p.category] = (counts[p.category] ?? 0) + 1;
+    return counts;
+  }, []);
 
   const deliveryDate = useMemo(() => {
     const d = new Date();
@@ -298,8 +328,26 @@ function ContainerClubPage() {
                 </div>
               </div>
               {/* 3D Canvas */}
-              <div className="h-[420px] w-full sm:h-[540px]">
-                <ContainerScene items={items} />
+              <div className="relative h-[420px] w-full sm:h-[540px]">
+                <ContainerScene items={items} exploded={exploded} />
+                <div className="absolute right-3 top-3 flex flex-col gap-1.5">
+                  <Button
+                    variant={exploded ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 gap-1.5 bg-card/90 px-2.5 text-xs backdrop-blur"
+                    onClick={() => setExploded((v) => !v)}
+                  >
+                    {exploded ? (
+                      <>
+                        <Minimize2 className="h-3 w-3" /> Regrouper
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="h-3 w-3" /> Vue éclatée
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
                 <span>Glisser pour pivoter · Molette pour zoomer</span>
@@ -325,8 +373,53 @@ function ContainerClubPage() {
                   <div className="font-semibold tabular-nums">{totalUnits} unités</div>
                 </div>
               </div>
+
+              {/* Filters */}
+              <div className="mb-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-1">
+                  {CATEGORIES.map((c) => {
+                    const active = c === category;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCategory(c)}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        }`}
+                      >
+                        {c}
+                        <span className={`ml-1 tabular-nums ${active ? "opacity-80" : "opacity-60"}`}>
+                          {categoryCounts[c] ?? 0}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="tabular-nums">
+                    {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""}
+                  </span>
+                  <label className="flex items-center gap-1.5">
+                    <ArrowUpDown className="h-3 w-3" />
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as SortKey)}
+                      className="rounded-md border border-border bg-card px-1.5 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="default">Par défaut</option>
+                      <option value="price-asc">Prix ↑</option>
+                      <option value="price-desc">Prix ↓</option>
+                      <option value="cbm-asc">Compact ↑</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2.5">
-                {PRODUCTS.map((p: Product) => (
+                {filteredProducts.map((p: Product) => (
                   <ProductRow
                     key={p.id}
                     product={p}
@@ -336,8 +429,14 @@ function ContainerClubPage() {
                     onOptionChange={(id) =>
                       setOptions((prev) => ({ ...prev, [p.id]: id }))
                     }
+                    onOpenDetails={() => setDetailId(p.id)}
                   />
                 ))}
+                {filteredProducts.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                    Aucun produit dans cette catégorie.
+                  </div>
+                )}
               </div>
               <div className="mt-4 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">Direct usine : </span>
@@ -757,6 +856,19 @@ function ContainerClubPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ProductDetailDialog
+        product={detailProduct}
+        open={!!detailId}
+        onOpenChange={(v) => !v && setDetailId(null)}
+        qty={detailProduct ? (qtys[detailProduct.id] ?? 0) : 0}
+        optionId={detailProduct ? options[detailProduct.id] : undefined}
+        onChange={(n) => detailProduct && setQty(detailProduct.id, n)}
+        onOptionChange={(id) =>
+          detailProduct &&
+          setOptions((prev) => ({ ...prev, [detailProduct.id]: id }))
+        }
+      />
     </div>
   );
 }

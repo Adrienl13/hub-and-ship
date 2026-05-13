@@ -1,4 +1,4 @@
-import { Minus, Plus, Check, AlertCircle } from "lucide-react";
+import { Minus, Plus, Check, AlertCircle, Info } from "lucide-react";
 import {
   type Product,
   type ColorOption,
@@ -71,12 +71,14 @@ export function ProductRow({
   optionId,
   onChange,
   onOptionChange,
+  onOpenDetails,
 }: {
   product: Product;
   qty: number;
   optionId?: string;
   onChange: (next: number) => void;
   onOptionChange: (id: string) => void;
+  onOpenDetails?: () => void;
 }) {
   const cbm = unitCBM(product);
   const lineCBM = cbm * qty;
@@ -99,23 +101,30 @@ export function ProductRow({
   return (
     <div className="group rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:shadow-sm">
       <div className="flex items-center gap-3">
-        <div
-          className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-black/5"
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-black/5 transition-transform hover:scale-105"
           style={{
             background: activeOpt
               ? swatchBackground(activeOpt)
               : swatchHex,
             backgroundSize: activeOpt?.pattern === "check" ? "8px 8px" : undefined,
           }}
-          aria-hidden
+          aria-label={`Voir détails ${product.name}`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-white/15 to-black/15" />
-        </div>
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="truncate text-sm font-medium text-foreground">
-              {product.name}
-            </div>
+            <button
+              type="button"
+              onClick={onOpenDetails}
+              className="group/name inline-flex items-center gap-1 truncate text-left text-sm font-medium text-foreground hover:text-primary"
+            >
+              <span className="truncate">{product.name}</span>
+              <Info className="h-3 w-3 opacity-0 transition-opacity group-hover/name:opacity-100" />
+            </button>
             <div className="flex shrink-0 items-baseline gap-1.5">
               <span className="text-[11px] text-muted-foreground line-through tabular-nums">
                 €{product.retailPrice}
