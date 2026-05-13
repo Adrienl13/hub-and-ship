@@ -328,8 +328,26 @@ function ContainerClubPage() {
                 </div>
               </div>
               {/* 3D Canvas */}
-              <div className="h-[420px] w-full sm:h-[540px]">
-                <ContainerScene items={items} />
+              <div className="relative h-[420px] w-full sm:h-[540px]">
+                <ContainerScene items={items} exploded={exploded} />
+                <div className="absolute right-3 top-3 flex flex-col gap-1.5">
+                  <Button
+                    variant={exploded ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 gap-1.5 bg-card/90 px-2.5 text-xs backdrop-blur"
+                    onClick={() => setExploded((v) => !v)}
+                  >
+                    {exploded ? (
+                      <>
+                        <Minimize2 className="h-3 w-3" /> Regrouper
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="h-3 w-3" /> Vue éclatée
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
                 <span>Glisser pour pivoter · Molette pour zoomer</span>
