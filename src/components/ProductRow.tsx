@@ -1,4 +1,4 @@
-import { Minus, Plus, Check, AlertCircle } from "lucide-react";
+import { Minus, Plus, Check, AlertCircle, Info } from "lucide-react";
 import {
   type Product,
   type ColorOption,
