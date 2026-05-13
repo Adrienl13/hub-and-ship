@@ -76,13 +76,10 @@ function formatEUR(n: number) {
 function ContainerClubPage() {
   // Pre-populate with realistic dummy data (multiples of pack size)
   const [qtys, setQtys] = useState<Record<string, number>>({
-    "bistrot-rotin": 30,
-    "bistrot-cannage": 20,
-    "tabouret-bistrot": 8,
-    "table-bistrot-60": 12,
-    "mange-debout": 4,
-    "bain-soleil": 4,
-    "parasol": 4,
+    "bistrot-rotin": 60,
+    "bistrot-cannage": 50,
+    "tabouret-bistrot": 50,
+    "table-bistrot-60": 20,
   });
   const [options, setOptions] = useState<Record<string, string | undefined>>(
     () => Object.fromEntries(PRODUCTS.map((p) => [p.id, defaultOptionId(p)])),
