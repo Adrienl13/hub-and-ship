@@ -142,6 +142,24 @@ function ContainerClubPage() {
   const setQty = (id: string, n: number) =>
     setQtys((prev) => ({ ...prev, [id]: Math.max(0, n) }));
 
+  const filteredProducts = useMemo(() => {
+    let list = PRODUCTS.filter((p) => category === "Tous" || p.category === category);
+    if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
+    else if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "cbm-asc") list = [...list].sort((a, b) => unitCBM(a) - unitCBM(b));
+    return list;
+  }, [category, sort]);
+
+  const detailProduct = useMemo(
+    () => PRODUCTS.find((p) => p.id === detailId) ?? null,
+    [detailId],
+  );
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { Tous: PRODUCTS.length };
+    for (const p of PRODUCTS) counts[p.category] = (counts[p.category] ?? 0) + 1;
+    return counts;
+  }, []);
+
   const deliveryDate = useMemo(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + 6);
