@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment } from "@react-three/drei";
+import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment, Html } from "@react-three/drei";
 import { useMemo } from "react";
 import type { Product } from "@/lib/products";
 
@@ -13,33 +13,46 @@ type BoxInstance = {
   size: [number, number, number];
   color: string;
   productId: string;
+  productName: string;
+  sliceIndex: number;
+  sliceCenterX: number;
+  sliceWidth: number;
 };
 
-// Realistic shelf-packer: each product gets a contiguous slice along the container length.
-// Within that slice, packs are placed in a (depth × width × height) grid sized to packDim.
-function packBoxes(items: { product: Product; qty: number; color: string }[]): BoxInstance[] {
+type Slice = {
+  productId: string;
+  productName: string;
+  centerX: number;
+  width: number;
+  color: string;
+};
+
+function packBoxes(items: { product: Product; qty: number; color: string }[]): {
+  boxes: BoxInstance[];
+  slices: Slice[];
+} {
   const boxes: BoxInstance[] = [];
+  const slices: Slice[] = [];
   let xCursor = -L / 2;
+  let sliceIndex = 0;
 
   for (const { product, qty, color } of items) {
     if (qty <= 0) continue;
     const packs = Math.ceil(qty / product.packQty);
     let [w, d, h] = product.packDim;
-    // Orient so the longest side runs along X (container length) for tall items like parasols
-    if (h > L) {
-      // lay it down: swap height with depth
-      [d, h] = [h, d];
-    }
-    if (h > H) h = H * 0.98; // visual clamp
+    if (h > L) [d, h] = [h, d];
+    if (h > H) h = H * 0.98;
 
     const cellsW = Math.max(1, Math.floor(W / w));
     const cellsH = Math.max(1, Math.floor(H / h));
-    const perCol = cellsW * cellsH; // packs per slice along X
+    const perCol = cellsW * cellsH;
     const colsNeeded = Math.ceil(packs / perCol);
 
-    // Center the slice's content in the available width
     const usedW = cellsW * w;
     const zStart = -W / 2 + (W - usedW) / 2 + w / 2;
+
+    const sliceWidth = colsNeeded * d;
+    const sliceCenterX = xCursor + sliceWidth / 2;
 
     for (let i = 0; i < packs; i++) {
       const colIdx = Math.floor(i / perCol);
@@ -56,48 +69,47 @@ function packBoxes(items: { product: Product; qty: number; color: string }[]): B
         size: [d * 0.97, h * 0.97, w * 0.97],
         color,
         productId: product.id,
+        productName: product.name,
+        sliceIndex,
+        sliceCenterX,
+        sliceWidth,
       });
     }
-    xCursor += colsNeeded * d + 0.04;
+    slices.push({ productId: product.id, productName: product.name, centerX: sliceCenterX, width: sliceWidth, color });
+    xCursor += sliceWidth + 0.04;
+    sliceIndex++;
   }
-  return boxes;
+  return { boxes, slices };
 }
 
-function ContainerShell() {
+function ContainerShell({ opacity = 1 }: { opacity?: number }) {
   const wallColor = "#b8aea0";
   return (
     <group>
-      {/* Floor (corrugated wood-look) */}
       <mesh position={[0, -H / 2 - 0.011, 0]} receiveShadow>
         <boxGeometry args={[L, 0.02, W]} />
-        <meshStandardMaterial color="#6e5e4a" roughness={0.95} />
+        <meshStandardMaterial color="#6e5e4a" roughness={0.95} transparent opacity={opacity} />
       </mesh>
-      {/* Back wall */}
       <mesh position={[0, 0, -W / 2]}>
         <boxGeometry args={[L, H, 0.015]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.18} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.18 * opacity} />
       </mesh>
-      {/* Front wall (almost invisible so user sees inside) */}
       <mesh position={[0, 0, W / 2]}>
         <boxGeometry args={[L, H, 0.015]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.04} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.04 * opacity} />
       </mesh>
-      {/* Left (closed end) */}
       <mesh position={[-L / 2, 0, 0]}>
         <boxGeometry args={[0.015, H, W]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.22} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.22 * opacity} />
       </mesh>
-      {/* Right (door end) */}
       <mesh position={[L / 2, 0, 0]}>
         <boxGeometry args={[0.015, H, W]} />
-        <meshStandardMaterial color="#a8907a" transparent opacity={0.12} />
+        <meshStandardMaterial color="#a8907a" transparent opacity={0.12 * opacity} />
       </mesh>
-      {/* Roof */}
       <mesh position={[0, H / 2, 0]}>
         <boxGeometry args={[L, 0.015, W]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.04} />
+        <meshStandardMaterial color={wallColor} transparent opacity={0.04 * opacity} />
       </mesh>
-      {/* Frame outline */}
       <mesh>
         <boxGeometry args={[L, H, W]} />
         <meshBasicMaterial visible={false} />
@@ -109,10 +121,24 @@ function ContainerShell() {
 
 export function ContainerScene({
   items,
+  exploded = false,
 }: {
   items: { product: Product; qty: number; color: string }[];
+  exploded?: boolean;
 }) {
-  const boxes = useMemo(() => packBoxes(items), [items]);
+  const { boxes, slices } = useMemo(() => packBoxes(items), [items]);
+
+  // Explode factor: separate each slice horizontally and lift alternates
+  const EXPLODE_GAP = 0.9;
+  const explodeOffset = (sliceIndex: number, total: number) => {
+    if (!exploded || total <= 1) return { dx: 0, dy: 0 };
+    const centered = sliceIndex - (total - 1) / 2;
+    return {
+      dx: centered * EXPLODE_GAP,
+      dy: (sliceIndex % 2 === 0 ? 0.15 : -0.05),
+    };
+  };
+  const totalSlices = slices.length;
 
   return (
     <Canvas
@@ -139,20 +165,43 @@ export function ContainerScene({
       <Environment preset="city" />
 
       <group position={[0, 0.25, 0]}>
-        <ContainerShell />
-        {boxes.map((b, i) => (
-          <RoundedBox
-            key={i}
-            args={b.size}
-            radius={0.015}
-            smoothness={2}
-            position={b.pos}
-            castShadow
-            receiveShadow
-          >
-            <meshStandardMaterial color={b.color} roughness={0.78} metalness={0.05} />
-          </RoundedBox>
-        ))}
+        <ContainerShell opacity={exploded ? 0.25 : 1} />
+        {boxes.map((b, i) => {
+          const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices);
+          return (
+            <RoundedBox
+              key={i}
+              args={b.size}
+              radius={0.015}
+              smoothness={2}
+              position={[b.pos[0] + dx, b.pos[1] + dy, b.pos[2]]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial color={b.color} roughness={0.78} metalness={0.05} />
+            </RoundedBox>
+          );
+        })}
+        {exploded &&
+          slices.map((s, i) => {
+            const { dx } = explodeOffset(i, totalSlices);
+            return (
+              <Html
+                key={s.productId}
+                position={[s.centerX + dx, -H / 2 - 0.25, 0]}
+                center
+                distanceFactor={10}
+                style={{ pointerEvents: "none" }}
+              >
+                <div
+                  className="whitespace-nowrap rounded-full border border-black/10 bg-white/90 px-2 py-0.5 text-[10px] font-medium text-foreground shadow-sm backdrop-blur"
+                  style={{ borderLeft: `3px solid ${s.color}` }}
+                >
+                  {s.productName}
+                </div>
+              </Html>
+            );
+          })}
         <ContactShadows
           position={[0, -H / 2 + 0.01, 0]}
           opacity={0.35}
