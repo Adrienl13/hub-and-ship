@@ -501,9 +501,7 @@ function ContainerClubPage() {
                   {items
                     .filter((i) => i.qty > 0)
                     .map(({ product, qty, color }) => {
-                      const optName = product.customization?.options.find(
-                        (o) => o.id === options[product.id],
-                      )?.name;
+                      const optName = findOption(product, options[product.id])?.name;
                       return (
                         <motion.div
                           key={product.id}
