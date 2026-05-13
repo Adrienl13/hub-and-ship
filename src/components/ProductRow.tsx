@@ -71,12 +71,14 @@ export function ProductRow({
   optionId,
   onChange,
   onOptionChange,
+  onOpenDetails,
 }: {
   product: Product;
   qty: number;
   optionId?: string;
   onChange: (next: number) => void;
   onOptionChange: (id: string) => void;
+  onOpenDetails?: () => void;
 }) {
   const cbm = unitCBM(product);
   const lineCBM = cbm * qty;
