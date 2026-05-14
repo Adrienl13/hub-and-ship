@@ -18,6 +18,12 @@ import {
   Minimize2,
   ArrowUpDown,
   FileText,
+  Mail,
+  Lock,
+  RefreshCcw,
+  CheckCircle2,
+  Phone,
+  HelpCircle,
 } from "lucide-react";
 import { openQuotePDF } from "@/lib/quote";
 
