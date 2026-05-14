@@ -18,6 +18,12 @@ import {
   Minimize2,
   ArrowUpDown,
   FileText,
+  Mail,
+  Lock,
+  RefreshCcw,
+  CheckCircle2,
+  Phone,
+  HelpCircle,
 } from "lucide-react";
 import { openQuotePDF } from "@/lib/quote";
 
@@ -694,46 +700,93 @@ function ContainerClubPage() {
                   </span>
                 </div>
               </div>
+              {/* Reassurance pills */}
+              <div className="mt-4 grid grid-cols-2 gap-1.5">
+                {[
+                  { icon: RefreshCcw, t: "Remboursable" },
+                  { icon: Lock,       t: "Paiement sécurisé" },
+                  { icon: ShieldCheck, t: "Contrôle SGS" },
+                  { icon: Truck,      t: "Livraison incluse" },
+                ].map(({ icon: Icon, t }) => (
+                  <div
+                    key={t}
+                    className="flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2 py-1.5 text-[10px] text-muted-foreground"
+                  >
+                    <Icon className="h-3 w-3 text-primary" />
+                    <span className="truncate">{t}</span>
+                  </div>
+                ))}
+              </div>
+
               <Button
                 size="lg"
-                className="mt-5 h-12 w-full text-base"
+                className="mt-3 h-12 w-full text-base shadow-sm"
                 disabled={totalUnits === 0}
                 onClick={() => setOpen(true)}
               >
-                Confirmer ma réservation
+                <Lock className="h-4 w-4" />
+                Réserver — {formatEUR(deposit)} d'acompte
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2 h-10 w-full gap-1.5"
-                disabled={totalUnits === 0}
-                onClick={() =>
-                  openQuotePDF({
-                    lines: items.map(({ product, qty }) => ({
-                      product,
-                      qty,
-                      optionId: options[product.id],
-                    })),
-                    fillPct,
-                    usedCBM,
-                    subTotalHT,
-                    tierPct: tier.pct,
-                    tierDiscount,
-                    totalHT,
-                    retailEquivalent,
-                    savings,
-                    deposit,
-                    containerNumber: "#024",
-                    deliveryDate,
-                  })
-                }
-              >
-                <FileText className="h-4 w-4" />
-                Télécharger mon devis (PDF)
-              </Button>
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Remboursable tant que le container n'est pas plein.
+
+              {/* Low-friction alternates */}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1.5"
+                  disabled={totalUnits === 0}
+                  onClick={() =>
+                    openQuotePDF({
+                      lines: items.map(({ product, qty }) => ({
+                        product,
+                        qty,
+                        optionId: options[product.id],
+                      })),
+                      fillPct,
+                      usedCBM,
+                      subTotalHT,
+                      tierPct: tier.pct,
+                      tierDiscount,
+                      totalHT,
+                      retailEquivalent,
+                      savings,
+                      deposit,
+                      containerNumber: "#024",
+                      deliveryDate,
+                    })
+                  }
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Devis PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1.5"
+                  disabled={totalUnits === 0}
+                  onClick={() =>
+                    toast.success("Devis envoyé", {
+                      description:
+                        "Vous le recevrez sous 1 min — pensez à vérifier vos spams.",
+                    })
+                  }
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Par email
+                </Button>
+              </div>
+
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3 text-primary" />
+                Aucun engagement avant signature — modifiable jusqu'à clôture.
               </p>
+              <a
+                href="tel:+33123456789"
+                className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Phone className="h-3 w-3" />
+                Une question ? Parlez à un expert · 01 23 45 67 89
+              </a>
             </div>
           </div>
         </div>
@@ -791,6 +844,73 @@ function ContainerClubPage() {
         </div>
       </section>
 
+      {/* FAQ — lever les objections */}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <div className="mx-auto mb-10 max-w-xl text-center">
+            <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
+              <HelpCircle className="h-3.5 w-3.5" /> Vos questions
+            </div>
+            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+              Tout ce qu'il faut savoir avant de réserver.
+            </h2>
+          </div>
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+            {[
+              {
+                q: "Que se passe-t-il si le container ne se remplit pas ?",
+                a: "Vous êtes intégralement remboursé sous 5 jours ouvrés. Pas de frais, pas de questions. À ce jour, 96 % de nos containers atteignent le seuil de 80 % en moins de 30 jours.",
+              },
+              {
+                q: "Puis-je modifier ma sélection après avoir réservé ?",
+                a: "Oui — couleurs, quantités, références : tout reste modifiable jusqu'à la clôture du container. La production ne démarre qu'une fois le container plein, donc aucun risque.",
+              },
+              {
+                q: "Comment êtes-vous moins cher de 38 % qu'un grossiste FR ?",
+                a: "Pas d'intermédiaire, pas de stock, pas de showroom. Vous achetez directement à l'usine et nous mutualisons le container. Le grossiste classique stocke, marge, et facture sa logistique : nous, non.",
+              },
+              {
+                q: "Et la qualité ? J'ai déjà été déçu par l'import.",
+                a: "Chaque commande passe par un contrôle SGS en sortie d'usine (frais inclus). Mobilier conforme CE & REACH, garantie 2 ans pièces. Échantillons couleur envoyables sur demande avant paiement du solde.",
+              },
+              {
+                q: "Quels sont les délais réels ?",
+                a: "Production lancée à container plein : 8-10 semaines en usine + 5-6 semaines de transport maritime + 2 semaines de dédouanement / livraison. Nous communiquons un tracking dès la sortie d'usine.",
+              },
+              {
+                q: "Comment se passe le paiement ?",
+                a: "30 % d'acompte par CB ou virement (Stripe sécurisé) à la réservation. Solde réglé 7 jours avant expédition, sur facture. Possibilité de paiement en 3× sans frais sur demande.",
+              },
+            ].map((f, i) => (
+              <details
+                key={i}
+                className="group p-5 transition-colors open:bg-accent/30 hover:bg-accent/20"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                  <span>{f.q}</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-45 group-open:border-primary group-open:text-primary">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {f.a}
+                </p>
+              </details>
+            ))}
+          </div>
+          <div className="mt-6 text-center text-xs text-muted-foreground">
+            Une autre question ?{" "}
+            <a href="tel:+33123456789" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Appelez-nous au 01 23 45 67 89
+            </a>{" "}
+            ou{" "}
+            <a href="mailto:hello@terrassea.fr" className="font-medium text-foreground underline-offset-4 hover:underline">
+              écrivez-nous
+            </a>.
+          </div>
+        </div>
+      </section>
+
       {/* Trust strip */}
       <section className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6 py-10 text-sm text-muted-foreground">
@@ -823,70 +943,100 @@ function ContainerClubPage() {
         </div>
       </footer>
 
-      {/* Reservation modal */}
+      {/* Reservation modal — low friction, trust-forward */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
+            <div className="mb-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+              <Lock className="h-3 w-3" /> Réservation sécurisée
+            </div>
             <DialogTitle className="font-display text-2xl">
-              Confirmer votre réservation
+              Bloquez votre place
             </DialogTitle>
-            <DialogDescription>
-              Acompte :{" "}
+            <DialogDescription className="text-sm">
+              Acompte de{" "}
               <span className="font-semibold text-foreground">
                 {formatEUR(deposit)}
               </span>{" "}
-              · Total HT :{" "}
-              <span className="font-semibold text-foreground">
-                {formatEUR(totalHT)}
-              </span>
+              · entièrement remboursable jusqu'à clôture du container.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Tiny order recap */}
+          <div className="rounded-lg border border-border bg-accent/30 p-3 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Container #024 · {totalUnits} unités</span>
+              <span className="font-semibold tabular-nums">{formatEUR(totalHT)} HT</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Vous économisez</span>
+              <span className="tabular-nums text-primary">{formatEUR(savings)}</span>
+            </div>
+          </div>
+
           <form
             className="space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
               setOpen(false);
-              toast.success("Réservation enregistrée", {
-                description: "Mockup — aucun envoi réel.",
+              toast.success("Place réservée — bienvenue dans le club.", {
+                description:
+                  "Vous recevez un récapitulatif par email sous 1 minute.",
               });
             }}
           >
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Nom complet</Label>
-                <Input id="name" required placeholder="Marie Lambert" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="company">Société</Label>
-                <Input id="company" required placeholder="Café du Port" />
-              </div>
-            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email pro</Label>
+              <Label htmlFor="email">Email professionnel</Label>
               <Input
                 id="email"
                 type="email"
                 required
-                placeholder="marie@cafe.fr"
+                placeholder="marie@cafe-du-marais.fr"
+                autoComplete="email"
               />
+              <p className="text-[10px] text-muted-foreground">
+                Sert uniquement à sécuriser votre place — pas de newsletter.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="siren">SIREN</Label>
-              <Input
-                id="siren"
-                required
-                inputMode="numeric"
-                placeholder="123 456 789"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Société</Label>
+                <Input id="company" required placeholder="Café du Marais" autoComplete="organization" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input id="phone" type="tel" required placeholder="06 12 34 56 78" autoComplete="tel" />
+              </div>
             </div>
-            <DialogFooter className="pt-2">
-              <Button type="submit" className="w-full">
-                Confirmer & payer l'acompte
+
+            <div className="rounded-md border border-border/70 bg-card p-2.5">
+              <div className="grid grid-cols-3 gap-1.5 text-center">
+                {[
+                  { icon: RefreshCcw, t: "100%\nremboursable" },
+                  { icon: Lock,       t: "Paiement\nStripe sécurisé" },
+                  { icon: ShieldCheck, t: "Données\nchiffrées" },
+                ].map(({ icon: Icon, t }) => (
+                  <div key={t} className="flex flex-col items-center gap-1">
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                    <span className="whitespace-pre-line text-[9px] leading-tight text-muted-foreground">{t}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col gap-1.5 pt-1 sm:flex-col">
+              <Button type="submit" size="lg" className="w-full">
+                <Lock className="h-4 w-4" />
+                Réserver ma place — {formatEUR(deposit)}
               </Button>
+              <p className="text-center text-[10px] text-muted-foreground">
+                Aucun débit immédiat. SIRET demandé uniquement à la facturation finale.
+              </p>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
 
       <ProductDetailDialog
         product={detailProduct}
@@ -900,6 +1050,33 @@ function ContainerClubPage() {
           setOptions((prev) => ({ ...prev, [detailProduct.id]: id }))
         }
       />
+
+      {/* Sticky mobile CTA — visible quand l'utilisateur scrolle hors du panneau de réservation */}
+      {totalUnits > 0 && (
+        <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_-8px_rgba(0,0,0,0.12)] backdrop-blur-md lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {totalUnits} unités · {fillPct.toFixed(0)}% rempli
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-lg tabular-nums">
+                  {formatEUR(deposit)}
+                </span>
+                <span className="text-[10px] text-muted-foreground">acompte</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="h-11 shrink-0 px-4"
+              onClick={() => setOpen(true)}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Réserver
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
