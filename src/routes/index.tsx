@@ -844,6 +844,73 @@ function ContainerClubPage() {
         </div>
       </section>
 
+      {/* FAQ — lever les objections */}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <div className="mx-auto mb-10 max-w-xl text-center">
+            <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
+              <HelpCircle className="h-3.5 w-3.5" /> Vos questions
+            </div>
+            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+              Tout ce qu'il faut savoir avant de réserver.
+            </h2>
+          </div>
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+            {[
+              {
+                q: "Que se passe-t-il si le container ne se remplit pas ?",
+                a: "Vous êtes intégralement remboursé sous 5 jours ouvrés. Pas de frais, pas de questions. À ce jour, 96 % de nos containers atteignent le seuil de 80 % en moins de 30 jours.",
+              },
+              {
+                q: "Puis-je modifier ma sélection après avoir réservé ?",
+                a: "Oui — couleurs, quantités, références : tout reste modifiable jusqu'à la clôture du container. La production ne démarre qu'une fois le container plein, donc aucun risque.",
+              },
+              {
+                q: "Comment êtes-vous moins cher de 38 % qu'un grossiste FR ?",
+                a: "Pas d'intermédiaire, pas de stock, pas de showroom. Vous achetez directement à l'usine et nous mutualisons le container. Le grossiste classique stocke, marge, et facture sa logistique : nous, non.",
+              },
+              {
+                q: "Et la qualité ? J'ai déjà été déçu par l'import.",
+                a: "Chaque commande passe par un contrôle SGS en sortie d'usine (frais inclus). Mobilier conforme CE & REACH, garantie 2 ans pièces. Échantillons couleur envoyables sur demande avant paiement du solde.",
+              },
+              {
+                q: "Quels sont les délais réels ?",
+                a: "Production lancée à container plein : 8-10 semaines en usine + 5-6 semaines de transport maritime + 2 semaines de dédouanement / livraison. Nous communiquons un tracking dès la sortie d'usine.",
+              },
+              {
+                q: "Comment se passe le paiement ?",
+                a: "30 % d'acompte par CB ou virement (Stripe sécurisé) à la réservation. Solde réglé 7 jours avant expédition, sur facture. Possibilité de paiement en 3× sans frais sur demande.",
+              },
+            ].map((f, i) => (
+              <details
+                key={i}
+                className="group p-5 transition-colors open:bg-accent/30 hover:bg-accent/20"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                  <span>{f.q}</span>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-45 group-open:border-primary group-open:text-primary">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {f.a}
+                </p>
+              </details>
+            ))}
+          </div>
+          <div className="mt-6 text-center text-xs text-muted-foreground">
+            Une autre question ?{" "}
+            <a href="tel:+33123456789" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Appelez-nous au 01 23 45 67 89
+            </a>{" "}
+            ou{" "}
+            <a href="mailto:hello@terrassea.fr" className="font-medium text-foreground underline-offset-4 hover:underline">
+              écrivez-nous
+            </a>.
+          </div>
+        </div>
+      </section>
+
       {/* Trust strip */}
       <section className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6 py-10 text-sm text-muted-foreground">
