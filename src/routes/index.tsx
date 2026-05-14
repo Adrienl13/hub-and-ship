@@ -700,46 +700,93 @@ function ContainerClubPage() {
                   </span>
                 </div>
               </div>
+              {/* Reassurance pills */}
+              <div className="mt-4 grid grid-cols-2 gap-1.5">
+                {[
+                  { icon: RefreshCcw, t: "Remboursable" },
+                  { icon: Lock,       t: "Paiement sécurisé" },
+                  { icon: ShieldCheck, t: "Contrôle SGS" },
+                  { icon: Truck,      t: "Livraison incluse" },
+                ].map(({ icon: Icon, t }) => (
+                  <div
+                    key={t}
+                    className="flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2 py-1.5 text-[10px] text-muted-foreground"
+                  >
+                    <Icon className="h-3 w-3 text-primary" />
+                    <span className="truncate">{t}</span>
+                  </div>
+                ))}
+              </div>
+
               <Button
                 size="lg"
-                className="mt-5 h-12 w-full text-base"
+                className="mt-3 h-12 w-full text-base shadow-sm"
                 disabled={totalUnits === 0}
                 onClick={() => setOpen(true)}
               >
-                Confirmer ma réservation
+                <Lock className="h-4 w-4" />
+                Réserver — {formatEUR(deposit)} d'acompte
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2 h-10 w-full gap-1.5"
-                disabled={totalUnits === 0}
-                onClick={() =>
-                  openQuotePDF({
-                    lines: items.map(({ product, qty }) => ({
-                      product,
-                      qty,
-                      optionId: options[product.id],
-                    })),
-                    fillPct,
-                    usedCBM,
-                    subTotalHT,
-                    tierPct: tier.pct,
-                    tierDiscount,
-                    totalHT,
-                    retailEquivalent,
-                    savings,
-                    deposit,
-                    containerNumber: "#024",
-                    deliveryDate,
-                  })
-                }
-              >
-                <FileText className="h-4 w-4" />
-                Télécharger mon devis (PDF)
-              </Button>
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Remboursable tant que le container n'est pas plein.
+
+              {/* Low-friction alternates */}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1.5"
+                  disabled={totalUnits === 0}
+                  onClick={() =>
+                    openQuotePDF({
+                      lines: items.map(({ product, qty }) => ({
+                        product,
+                        qty,
+                        optionId: options[product.id],
+                      })),
+                      fillPct,
+                      usedCBM,
+                      subTotalHT,
+                      tierPct: tier.pct,
+                      tierDiscount,
+                      totalHT,
+                      retailEquivalent,
+                      savings,
+                      deposit,
+                      containerNumber: "#024",
+                      deliveryDate,
+                    })
+                  }
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Devis PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-1.5"
+                  disabled={totalUnits === 0}
+                  onClick={() =>
+                    toast.success("Devis envoyé", {
+                      description:
+                        "Vous le recevrez sous 1 min — pensez à vérifier vos spams.",
+                    })
+                  }
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Par email
+                </Button>
+              </div>
+
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3 text-primary" />
+                Aucun engagement avant signature — modifiable jusqu'à clôture.
               </p>
+              <a
+                href="tel:+33123456789"
+                className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Phone className="h-3 w-3" />
+                Une question ? Parlez à un expert · 01 23 45 67 89
+              </a>
             </div>
           </div>
         </div>
