@@ -17,7 +17,9 @@ import {
   Maximize2,
   Minimize2,
   ArrowUpDown,
+  FileText,
 } from "lucide-react";
+import { openQuotePDF } from "@/lib/quote";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
