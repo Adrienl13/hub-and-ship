@@ -17,7 +17,9 @@ import {
   Maximize2,
   Minimize2,
   ArrowUpDown,
+  FileText,
 } from "lucide-react";
+import { openQuotePDF } from "@/lib/quote";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -699,6 +701,35 @@ function ContainerClubPage() {
                 onClick={() => setOpen(true)}
               >
                 Confirmer ma réservation
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 h-10 w-full gap-1.5"
+                disabled={totalUnits === 0}
+                onClick={() =>
+                  openQuotePDF({
+                    lines: items.map(({ product, qty }) => ({
+                      product,
+                      qty,
+                      optionId: options[product.id],
+                    })),
+                    fillPct,
+                    usedCBM,
+                    subTotalHT,
+                    tierPct: tier.pct,
+                    tierDiscount,
+                    totalHT,
+                    retailEquivalent,
+                    savings,
+                    deposit,
+                    containerNumber: "#024",
+                    deliveryDate,
+                  })
+                }
+              >
+                <FileText className="h-4 w-4" />
+                Télécharger mon devis (PDF)
               </Button>
               <p className="mt-2 text-center text-xs text-muted-foreground">
                 Remboursable tant que le container n'est pas plein.
