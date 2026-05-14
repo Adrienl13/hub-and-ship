@@ -876,70 +876,100 @@ function ContainerClubPage() {
         </div>
       </footer>
 
-      {/* Reservation modal */}
+      {/* Reservation modal — low friction, trust-forward */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
+            <div className="mb-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+              <Lock className="h-3 w-3" /> Réservation sécurisée
+            </div>
             <DialogTitle className="font-display text-2xl">
-              Confirmer votre réservation
+              Bloquez votre place
             </DialogTitle>
-            <DialogDescription>
-              Acompte :{" "}
+            <DialogDescription className="text-sm">
+              Acompte de{" "}
               <span className="font-semibold text-foreground">
                 {formatEUR(deposit)}
               </span>{" "}
-              · Total HT :{" "}
-              <span className="font-semibold text-foreground">
-                {formatEUR(totalHT)}
-              </span>
+              · entièrement remboursable jusqu'à clôture du container.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Tiny order recap */}
+          <div className="rounded-lg border border-border bg-accent/30 p-3 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Container #024 · {totalUnits} unités</span>
+              <span className="font-semibold tabular-nums">{formatEUR(totalHT)} HT</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Vous économisez</span>
+              <span className="tabular-nums text-primary">{formatEUR(savings)}</span>
+            </div>
+          </div>
+
           <form
             className="space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
               setOpen(false);
-              toast.success("Réservation enregistrée", {
-                description: "Mockup — aucun envoi réel.",
+              toast.success("Place réservée — bienvenue dans le club.", {
+                description:
+                  "Vous recevez un récapitulatif par email sous 1 minute.",
               });
             }}
           >
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Nom complet</Label>
-                <Input id="name" required placeholder="Marie Lambert" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="company">Société</Label>
-                <Input id="company" required placeholder="Café du Port" />
-              </div>
-            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email pro</Label>
+              <Label htmlFor="email">Email professionnel</Label>
               <Input
                 id="email"
                 type="email"
                 required
-                placeholder="marie@cafe.fr"
+                placeholder="marie@cafe-du-marais.fr"
+                autoComplete="email"
               />
+              <p className="text-[10px] text-muted-foreground">
+                Sert uniquement à sécuriser votre place — pas de newsletter.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="siren">SIREN</Label>
-              <Input
-                id="siren"
-                required
-                inputMode="numeric"
-                placeholder="123 456 789"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Société</Label>
+                <Input id="company" required placeholder="Café du Marais" autoComplete="organization" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input id="phone" type="tel" required placeholder="06 12 34 56 78" autoComplete="tel" />
+              </div>
             </div>
-            <DialogFooter className="pt-2">
-              <Button type="submit" className="w-full">
-                Confirmer & payer l'acompte
+
+            <div className="rounded-md border border-border/70 bg-card p-2.5">
+              <div className="grid grid-cols-3 gap-1.5 text-center">
+                {[
+                  { icon: RefreshCcw, t: "100%\nremboursable" },
+                  { icon: Lock,       t: "Paiement\nStripe sécurisé" },
+                  { icon: ShieldCheck, t: "Données\nchiffrées" },
+                ].map(({ icon: Icon, t }) => (
+                  <div key={t} className="flex flex-col items-center gap-1">
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                    <span className="whitespace-pre-line text-[9px] leading-tight text-muted-foreground">{t}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col gap-1.5 pt-1 sm:flex-col">
+              <Button type="submit" size="lg" className="w-full">
+                <Lock className="h-4 w-4" />
+                Réserver ma place — {formatEUR(deposit)}
               </Button>
+              <p className="text-center text-[10px] text-muted-foreground">
+                Aucun débit immédiat. SIRET demandé uniquement à la facturation finale.
+              </p>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
 
       <ProductDetailDialog
         product={detailProduct}
