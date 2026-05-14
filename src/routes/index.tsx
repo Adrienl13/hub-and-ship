@@ -1050,6 +1050,33 @@ function ContainerClubPage() {
           setOptions((prev) => ({ ...prev, [detailProduct.id]: id }))
         }
       />
+
+      {/* Sticky mobile CTA — visible quand l'utilisateur scrolle hors du panneau de réservation */}
+      {totalUnits > 0 && (
+        <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_-8px_rgba(0,0,0,0.12)] backdrop-blur-md lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {totalUnits} unités · {fillPct.toFixed(0)}% rempli
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-lg tabular-nums">
+                  {formatEUR(deposit)}
+                </span>
+                <span className="text-[10px] text-muted-foreground">acompte</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="h-11 shrink-0 px-4"
+              onClick={() => setOpen(true)}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Réserver
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
