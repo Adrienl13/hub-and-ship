@@ -1,1082 +1,289 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  ArrowRight,
-  ShieldCheck,
-  Ship,
-  Factory,
-  Truck,
-  Clock,
-  Users,
-  Sparkles,
-  Container as ContainerIcon,
-  Anchor,
-  TrendingDown,
-  Maximize2,
-  Minimize2,
-  ArrowUpDown,
-  FileText,
-  Mail,
-  Lock,
-  RefreshCcw,
-  CheckCircle2,
-  Phone,
-  HelpCircle,
-} from "lucide-react";
-import { openQuotePDF } from "@/lib/quote";
+import { ArrowUpDown } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-import { ContainerScene } from "@/components/ContainerScene";
+import { Header } from "@/components/Header";
+import { Hero } from "@/components/Hero";
+import { HowItWorks } from "@/components/HowItWorks";
 import { ProductRow } from "@/components/ProductRow";
 import { ProductDetailDialog } from "@/components/ProductDetailDialog";
+import { OrderSidebar } from "@/components/OrderSidebar";
+import { PastContainers } from "@/components/PastContainers";
+import { FaqAccordion } from "@/components/FaqAccordion";
+import { Footer } from "@/components/Footer";
+import { MobileStickyBar } from "@/components/MobileStickyBar";
+import { ReservationDialog } from "@/components/ReservationDialog";
+
 import {
-  CONTAINER_CBM,
+  CATEGORY_LABEL,
+  CURRENT_CONTAINER,
   PRODUCTS,
   type Product,
-  unitCBM,
-  getProductColor,
-  defaultOptionId,
-  findOption,
+  type ProductCategory,
 } from "@/lib/products";
-
-const CATEGORIES = ["Tous", "Chaise", "Fauteuil", "Tabouret", "Table"] as const;
-type CategoryFilter = (typeof CATEGORIES)[number];
-type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc";
+import {
+  calculateContainerFill,
+  calculateOrder,
+  type CartItem,
+} from "@/lib/order";
+import { openQuotePDF } from "@/lib/quote";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
 });
 
-const FAKE_BUYERS = [
-  { initials: "MR", name: "Marie · Café du Marais", city: "Paris 4e", items: "20 chaises rotin" },
-  { initials: "JL", name: "Jérôme · Hôtel Belvédère", city: "Lyon 2e", items: "12 bains de soleil" },
-  { initials: "AC", name: "Anna · Plage Privée", city: "Cannes", items: "30 tabourets" },
-  { initials: "PD", name: "Paul · Brasserie Centrale", city: "Bordeaux", items: "40 chaises cannage + 10 tables" },
-  { initials: "SK", name: "Sophie · Beach Club", city: "Sète", items: "8 parasols + 6 bains" },
-  { initials: "TN", name: "Théo · Rooftop République", city: "Lyon 1er", items: "20 mange-debout" },
-  { initials: "LV", name: "Laura · Camping 4★", city: "Royan", items: "60 chaises bistrot" },
-  { initials: "EB", name: "Éric · Distrib Pro Sud", city: "Marseille", items: "Lot mixte 4 m³" },
+const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = [
+  { id: "all", label: "Tous" },
+  { id: "chair", label: "Chaise" },
+  { id: "armchair", label: "Fauteuil" },
+  { id: "table", label: "Table" },
+  { id: "bench", label: "Banc" },
 ];
 
-const TOTAL_SLOTS = 20;
-const SLOTS_TAKEN = FAKE_BUYERS.length;
-
-function getDiscountTier(fillPct: number) {
-  if (fillPct >= 100) return { pct: 12, label: "Container plein" };
-  if (fillPct >= 80) return { pct: 8, label: "Seuil de départ atteint" };
-  if (fillPct >= 60) return { pct: 5, label: "60 % rempli" };
-  return { pct: 0, label: "Tarif de base" };
-}
-
-function formatEUR(n: number) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
 
 function ContainerClubPage() {
-  // Pre-populate with realistic dummy data (multiples of pack size)
-  const [qtys, setQtys] = useState<Record<string, number>>({
-    "bistrot-rotin": 60,
-    "bistrot-cannage": 50,
-    "tabouret-bistrot": 50,
-    "table-bistrot-60": 20,
-  });
-  const [options, setOptions] = useState<Record<string, string | undefined>>(
-    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, defaultOptionId(p)])),
+  // Pré-sélection couleur par produit (1ère variante)
+  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
+    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, p.variants[0].id])),
   );
-  const [open, setOpen] = useState(false);
-  const [days, setDays] = useState(23);
-  const [hours, setHours] = useState(14);
-  const [mins, setMins] = useState(37);
-  const [exploded, setExploded] = useState(false);
-  const [category, setCategory] = useState<CategoryFilter>("Tous");
+  // Quantités par produit (la quantité s'applique à la variante sélectionnée)
+  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
+    p1: 24,
+    p3: 10,
+  });
+
+  const [filter, setFilter] = useState<"all" | ProductCategory>("all");
   const [sort, setSort] = useState<SortKey>("default");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [reserveOpen, setReserveOpen] = useState(false);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setMins((m) => {
-        if (m > 0) return m - 1;
-        setHours((h) => {
-          if (h > 0) return h - 1;
-          setDays((d) => Math.max(0, d - 1));
-          return 23;
-        });
-        return 59;
-      });
-    }, 60000);
-    return () => clearInterval(t);
-  }, []);
+  // Construire le panier
+  const items: CartItem[] = useMemo(() => {
+    return PRODUCTS.flatMap((product) => {
+      const qty = qtyByProduct[product.id] ?? 0;
+      if (qty <= 0) return [];
+      const variantId = variantByProduct[product.id] ?? product.variants[0].id;
+      const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
+      return [{ product, variant, quantity: qty }];
+    });
+  }, [qtyByProduct, variantByProduct]);
 
-  const items = useMemo(
-    () =>
-      PRODUCTS.map((p) => ({
-        product: p,
-        qty: qtys[p.id] ?? 0,
-        color: getProductColor(p, options[p.id]),
-      })),
-    [qtys, options],
+  const totals = useMemo(() => calculateOrder(items), [items]);
+  const fill = useMemo(
+    () => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm),
+    [items],
   );
-  const usedCBM = items.reduce((s, i) => s + unitCBM(i.product) * i.qty, 0);
-  const fillPct = Math.min(100, (usedCBM / CONTAINER_CBM) * 100);
-  const subTotalHT = items.reduce((s, i) => s + i.product.price * i.qty, 0);
-  const tier = getDiscountTier(fillPct);
-  const tierDiscount = subTotalHT * (tier.pct / 100);
-  const totalHT = subTotalHT - tierDiscount;
-  const deposit = totalHT * 0.3;
-  const totalUnits = items.reduce((s, i) => s + i.qty, 0);
-  const retailEquivalent = items.reduce(
-    (s, i) => s + i.product.retailPrice * i.qty,
-    0,
-  );
-  const savings = retailEquivalent - totalHT;
 
-  const setQty = (id: string, n: number) =>
-    setQtys((prev) => ({ ...prev, [id]: Math.max(0, n) }));
+  const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
-  const filteredProducts = useMemo(() => {
-    let list = PRODUCTS.filter((p) => category === "Tous" || p.category === category);
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
-    else if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
-    else if (sort === "cbm-asc") list = [...list].sort((a, b) => unitCBM(a) - unitCBM(b));
+  // Filtrage + tri
+  const filtered = useMemo(() => {
+    let list = PRODUCTS.filter((p) => filter === "all" || p.category === filter);
+    if (sort === "price-asc") list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
+    else if (sort === "price-desc") list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
+    else if (sort === "cbm-asc") list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
+    else if (sort === "popular")
+      list = [...list].sort(
+        (a, b) =>
+          b.variants.reduce((s, v) => s + v.unitsCommitted, 0) -
+          a.variants.reduce((s, v) => s + v.unitsCommitted, 0),
+      );
     return list;
-  }, [category, sort]);
+  }, [filter, sort]);
 
-  const detailProduct = useMemo(
+  const detailProduct: Product | null = useMemo(
     () => PRODUCTS.find((p) => p.id === detailId) ?? null,
     [detailId],
   );
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { Tous: PRODUCTS.length };
-    for (const p of PRODUCTS) counts[p.category] = (counts[p.category] ?? 0) + 1;
-    return counts;
-  }, []);
 
-  const deliveryDate = useMemo(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 6);
-    return d.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+  // Handlers
+  const setQty = (productId: string, n: number) =>
+    setQtyByProduct((prev) => ({ ...prev, [productId]: Math.max(0, n) }));
+  const setVariant = (productId: string, variantId: string) =>
+    setVariantByProduct((prev) => ({ ...prev, [productId]: variantId }));
+
+  const handleEmail = () => {
+    toast.success("Devis envoyé", {
+      description: "Vous recevrez votre devis PDF par email sous 2 minutes.",
     });
-  }, []);
+  };
+
+  const handlePdf = () => {
+    openQuotePDF({
+      items,
+      totals,
+      fillPercent: fill.percent,
+      usedCbm: fill.usedCbm,
+      capacity: fill.capacity,
+      containerRef: CURRENT_CONTAINER.reference,
+      port: CURRENT_CONTAINER.port,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Nav */}
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
-              <ContainerIcon className="h-4 w-4" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display text-lg font-semibold tracking-tight">
-                Container Club
-              </span>
-              <span className="hidden rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:inline">
-                Concept
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-muted-foreground sm:inline">
-              Container #024 · <span className="text-primary">{fillPct.toFixed(0)}% rempli</span>
-            </span>
-            <Button asChild size="sm">
-              <a href="#reserve">
-                Réserver ma place <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </a>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header onReserve={() => setReserveOpen(true)} />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 -z-10 opacity-60"
-          style={{
-            background:
-              "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 70%)",
-          }}
-        />
-        <div className="mx-auto max-w-7xl px-6 pb-20 pt-20 sm:pt-28">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mx-auto max-w-3xl text-center"
-          >
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Sparkles className="h-3 w-3 text-primary" />
-              Pré-commande B2B · Sourcing direct usine
-            </div>
-            <h1 className="font-display text-4xl font-medium leading-[1.02] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              La chaise bistrot
-              <br />
-              <span className="italic text-primary">au prix de l'usine.</span>
-            </h1>
-            <p className="mx-auto mt-7 max-w-xl text-lg text-muted-foreground">
-              Le club d'achat groupé des pros de la terrasse parisienne.
-              Tressage, textilène, plateaux : tout est configurable, en direct usine.
-              Jusqu'à <span className="font-semibold text-foreground">−55 %</span> sur le prix grossiste.
-            </p>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" asChild className="h-12 px-7 text-base">
-                <a href="#reserve">
-                  Configurer mon mobilier
-                  <ArrowRight className="ml-1.5 h-4 w-4" />
-                </a>
-              </Button>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Acompte 30 % · remboursable jusqu'à clôture
-              </div>
-            </div>
+      <Hero
+        fillPercent={fill.percent}
+        seriesReached={CURRENT_CONTAINER.seriesReached}
+        totalSeries={CURRENT_CONTAINER.totalSeries}
+        professionalsEngaged={CURRENT_CONTAINER.professionalsEngaged}
+      />
 
-            {/* Trust strip inline */}
-            <div className="mx-auto mt-14 grid max-w-2xl grid-cols-3 gap-4 border-t border-border pt-6 text-left sm:gap-8">
-              {[
-                { v: "−38 %", l: "vs. prix grossiste FR" },
-                { v: "6 mois", l: "production + transport" },
-                { v: "33 m³", l: "par container 20'" },
-              ].map((s) => (
-                <div key={s.l}>
-                  <div className="font-display text-2xl text-foreground sm:text-3xl">{s.v}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{s.l}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      <HowItWorks />
 
-      {/* Interactive container */}
+      {/* Catalogue */}
       <section
-        id="reserve"
-        className="mx-auto max-w-7xl scroll-mt-20 px-6 pb-20"
+        id="catalogue"
+        className="border-t border-[color:var(--sand-deep)] scroll-mt-20"
       >
-        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Container #024 — ouvert à la réservation
-            </div>
-            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-              Regardez votre container se remplir.
-            </h2>
-          </div>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Chaque réservation occupe un volume réel dans notre prochain
-            container 20 pieds. Quand il est plein, on expédie — et vous
-            économisez.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          {/* 3D + progress */}
-          <div className="lg:col-span-3">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              {/* Progress bar */}
-              <div className="border-b border-border bg-gradient-to-b from-card to-card px-5 py-4">
-                <div className="mb-2 flex items-end justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                      Remplissage
-                    </div>
-                    <div className="font-display text-3xl tabular-nums">
-                      {fillPct.toFixed(0)}
-                      <span className="text-lg text-muted-foreground">%</span>
-                    </div>
-                  </div>
-                  <div className="text-right text-sm tabular-nums">
-                    <div className="font-medium">
-                      {usedCBM.toFixed(2)}{" "}
-                      <span className="text-muted-foreground">/ {CONTAINER_CBM} m³</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {Math.max(0, CONTAINER_CBM - usedCBM).toFixed(2)} m³ restants
-                    </div>
-                  </div>
-                </div>
-                <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-[color-mix(in_oklab,var(--primary)_70%,white)]"
-                    animate={{ width: `${fillPct}%` }}
-                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                  />
-                  {/* Threshold tick at 80% */}
-                  <div className="absolute inset-y-0 left-[80%] w-px bg-foreground/20" />
-                </div>
-                <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-                  <span>0</span>
-                  <span className="text-foreground/50">80 % seuil de départ</span>
-                  <span>100 %</span>
-                </div>
-              </div>
-              {/* 3D Canvas */}
-              <div className="relative h-[420px] w-full sm:h-[540px]">
-                <ContainerScene items={items} exploded={exploded} />
-                <div className="absolute right-3 top-3 flex flex-col gap-1.5">
-                  <Button
-                    variant={exploded ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 gap-1.5 bg-card/90 px-2.5 text-xs backdrop-blur"
-                    onClick={() => setExploded((v) => !v)}
-                  >
-                    {exploded ? (
-                      <>
-                        <Minimize2 className="h-3 w-3" /> Regrouper
-                      </>
-                    ) : (
-                      <>
-                        <Maximize2 className="h-3 w-3" /> Vue éclatée
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
-                <span>Glisser pour pivoter · Molette pour zoomer</span>
-                <span className="hidden items-center gap-1.5 sm:flex">
-                  <Anchor className="h-3 w-3" /> 20' High Cube
-                </span>
-              </div>
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <div className="label-eyebrow text-[color:var(--ember)]">Catalogue</div>
+              <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+                Choisissez vos modèles, couleur par couleur.
+              </h2>
+              <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
+                Chaque référence affiche son MOQ en temps réel : ajoutez votre
+                quantité pour faire grimper la barre et déclencher la série.
+              </p>
             </div>
           </div>
 
-          {/* Catalog */}
-          <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-display text-xl">Catalogue</h3>
-                  <div className="text-xs text-muted-foreground">
-                    Échantillon · {PRODUCTS.length} modèles affichés sur 28 formes de chaises & fauteuils
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-muted-foreground">Sélection</div>
-                  <div className="font-semibold tabular-nums">{totalUnits} unités</div>
-                </div>
-              </div>
-
-              {/* Filters */}
-              <div className="mb-3 space-y-2">
-                <div className="flex flex-wrap items-center gap-1">
-                  {CATEGORIES.map((c) => {
-                    const active = c === category;
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            {/* Catalogue (60%) */}
+            <div className="lg:col-span-7">
+              {/* Filtres */}
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--sand-deep)] pb-4">
+                <div className="flex flex-wrap gap-1.5">
+                  {CATEGORY_FILTERS.map((f) => {
+                    const active = f.id === filter;
+                    const count =
+                      f.id === "all"
+                        ? PRODUCTS.length
+                        : PRODUCTS.filter((p) => p.category === f.id).length;
                     return (
                       <button
-                        key={c}
+                        key={f.id}
                         type="button"
-                        onClick={() => setCategory(c)}
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        onClick={() => setFilter(f.id)}
+                        className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                           active
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            ? "bg-foreground text-background"
+                            : "border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground"
                         }`}
                       >
-                        {c}
-                        <span className={`ml-1 tabular-nums ${active ? "opacity-80" : "opacity-60"}`}>
-                          {categoryCounts[c] ?? 0}
+                        {f.label}
+                        <span className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}>
+                          {count}
                         </span>
                       </button>
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span className="tabular-nums">
-                    {filteredProducts.length} produit{filteredProducts.length > 1 ? "s" : ""}
-                  </span>
-                  <label className="flex items-center gap-1.5">
-                    <ArrowUpDown className="h-3 w-3" />
-                    <select
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value as SortKey)}
-                      className="rounded-md border border-border bg-card px-1.5 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
-                    >
-                      <option value="default">Par défaut</option>
-                      <option value="price-asc">Prix ↑</option>
-                      <option value="price-desc">Prix ↓</option>
-                      <option value="cbm-asc">Compact ↑</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5">
-                {filteredProducts.map((p: Product) => (
-                  <ProductRow
-                    key={p.id}
-                    product={p}
-                    qty={qtys[p.id] ?? 0}
-                    optionId={options[p.id]}
-                    onChange={(n) => setQty(p.id, n)}
-                    onOptionChange={(id) =>
-                      setOptions((prev) => ({ ...prev, [p.id]: id }))
-                    }
-                    onOpenDetails={() => setDetailId(p.id)}
-                  />
-                ))}
-                {filteredProducts.length === 0 && (
-                  <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-                    Aucun produit dans cette catégorie.
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Direct usine : </span>
-                choisissez la couleur du tressage, du textilène ou du plateau —
-                le container 3D se met à jour en direct.
-              </div>
-              {/* Degressive pricing ladder */}
-              <div className="mt-3 rounded-lg border border-border bg-card p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Remise collective
-                  </div>
-                  {tier.pct > 0 && (
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      Palier actif : −{tier.pct}%
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  {[
-                    { t: 60, p: 5 },
-                    { t: 80, p: 8 },
-                    { t: 100, p: 12 },
-                  ].map((step) => {
-                    const reached = fillPct >= step.t;
-                    return (
-                      <div
-                        key={step.t}
-                        className={`rounded-md border px-2 py-1.5 transition-colors ${
-                          reached
-                            ? "border-primary/50 bg-primary/10 text-primary"
-                            : "border-border bg-muted/40 text-muted-foreground"
-                        }`}
-                      >
-                        <div className="text-[10px] uppercase tracking-wider">
-                          {step.t}% rempli
-                        </div>
-                        <div className="font-display text-base tabular-nums">
-                          −{step.p}%
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Live status */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0">
-            <div className="p-6">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                  <Users className="h-3.5 w-3.5" /> Le club
-                </div>
-                <div className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                  {TOTAL_SLOTS - SLOTS_TAKEN} places restantes
-                </div>
-              </div>
-              <div className="mt-2 font-display text-3xl tabular-nums">
-                {SLOTS_TAKEN}
-                <span className="text-lg text-muted-foreground"> / {TOTAL_SLOTS}</span>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                pros ont déjà réservé sur ce container
-              </div>
-              <div className="mt-3 space-y-1.5">
-                {FAKE_BUYERS.slice(0, 4).map((b, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 text-xs"
-                    title={b.name}
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <ArrowUpDown className="h-3 w-3" />
+                  <select
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value as SortKey)}
+                    className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-foreground"
                   >
-                    <div
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-foreground/80"
-                      style={{
-                        backgroundColor: i % 2 ? "var(--accent)" : "var(--muted)",
-                      }}
-                    >
-                      {b.initials}
-                    </div>
-                    <div className="min-w-0 flex-1 truncate text-muted-foreground">
-                      <span className="font-medium text-foreground">{b.city}</span>
-                      <span className="mx-1 text-border">·</span>
-                      {b.items}
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-0.5 text-[11px] text-muted-foreground">
-                  + {FAKE_BUYERS.length - 4} autres pros
+                    <option value="default">Tri par défaut</option>
+                    <option value="price-asc">Prix croissant</option>
+                    <option value="price-desc">Prix décroissant</option>
+                    <option value="cbm-asc">Volume CBM</option>
+                    <option value="popular">Popularité</option>
+                  </select>
+                </label>
+              </div>
+
+              {filtered.length === 0 ? (
+                <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-16 text-center text-sm text-muted-foreground">
+                  Aucun produit dans cette catégorie pour ce container.
                 </div>
-              </div>
-            </div>
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map((product) => (
+                    <ProductRow
+                      key={product.id}
+                      product={product}
+                      variantId={
+                        variantByProduct[product.id] ?? product.variants[0].id
+                      }
+                      qty={qtyByProduct[product.id] ?? 0}
+                      onQtyChange={(n) => setQty(product.id, n)}
+                      onVariantChange={(id) => setVariant(product.id, id)}
+                      onOpenDetails={() => setDetailId(product.id)}
+                    />
+                  ))}
+                </div>
+              )}
 
-            <div className="p-6">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                <Ship className="h-3.5 w-3.5" /> Expédition
-              </div>
-              <div className="mt-2 font-display text-xl leading-tight">
-                Au plus tôt : <span className="text-primary">container plein</span>
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                Au plus tard : <span className="font-medium text-foreground">{deliveryDate}</span>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                <Truck className="h-3.5 w-3.5" />
-                Livraison France métropolitaine incluse
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" /> Clôture des réservations
-              </div>
-              <div className="mt-2 flex items-baseline gap-3 font-display text-3xl tabular-nums">
-                <span>
-                  {days}
-                  <span className="ml-0.5 text-xs text-muted-foreground">j</span>
-                </span>
-                <span>
-                  {String(hours).padStart(2, "0")}
-                  <span className="ml-0.5 text-xs text-muted-foreground">h</span>
-                </span>
-                <span>
-                  {String(mins).padStart(2, "0")}
-                  <span className="ml-0.5 text-xs text-muted-foreground">m</span>
-                </span>
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                puis lancement en production
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Reservation summary */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-accent/40 p-6 shadow-sm sm:p-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-                <TrendingDown className="h-3.5 w-3.5" /> Votre économie estimée
-              </div>
-              <h3 className="mt-1 font-display text-3xl tracking-tight">
-                Votre réservation
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Verrouillez le prix usine avec un acompte de 30 %. Le solde
-                sera réglé avant expédition. Configuration sauvegardée.
-              </p>
-              <div className="mt-5 divide-y divide-border rounded-xl border border-border bg-card">
-                <AnimatePresence initial={false}>
-                  {items
-                    .filter((i) => i.qty > 0)
-                    .map(({ product, qty, color }) => {
-                      const optName = findOption(product, options[product.id])?.name;
-                      return (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="flex items-center justify-between gap-4 px-4 py-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div
-                                className="h-8 w-8 shrink-0 rounded-md ring-1 ring-black/5 transition-colors"
-                                style={{ backgroundColor: color }}
-                              />
-                              <div className="min-w-0">
-                                <div className="truncate text-sm font-medium">
-                                  {product.name}
-                                </div>
-                                <div className="truncate text-xs text-muted-foreground tabular-nums">
-                                  {qty} × {formatEUR(product.price)}
-                                  {optName && (
-                                    <>
-                                      {" · "}
-                                      <span className="text-foreground/70">{optName}</span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-sm font-semibold tabular-nums">
-                              {formatEUR(product.price * qty)}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                </AnimatePresence>
-                {totalUnits === 0 && (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Aucun article — choisissez dans le catalogue ci-dessus.
-                  </div>
+              <div className="mt-4 text-[11px] text-muted-foreground">
+                {CATEGORY_LABEL.chair && (
+                  <>
+                    MOQ usine :{" "}
+                    <strong className="text-foreground/80">
+                      50 unités par modèle ET par couleur
+                    </strong>{" "}
+                    pour les assises, 20 pour les tables.
+                  </>
                 )}
               </div>
             </div>
 
-            <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Équivalent retail FR</span>
-                  <span className="text-muted-foreground line-through tabular-nums">
-                    {formatEUR(retailEquivalent)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Sous-total club (HT)</span>
-                  <span className="tabular-nums">{formatEUR(subTotalHT)}</span>
-                </div>
-                {tier.pct > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Remise palier −{tier.pct}%
-                    </span>
-                    <span className="tabular-nums text-primary">
-                      −{formatEUR(tierDiscount)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between border-t border-border pt-2 text-sm">
-                  <span className="font-medium">Total Container Club (HT)</span>
-                  <span className="font-semibold tabular-nums">
-                    {formatEUR(totalHT)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between rounded-md bg-primary/10 px-2 py-1.5 text-sm">
-                  <span className="font-medium text-primary">Vous économisez</span>
-                  <span className="font-semibold tabular-nums text-primary">
-                    {formatEUR(savings)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Volume occupé</span>
-                  <span className="tabular-nums">{usedCBM.toFixed(2)} m³</span>
-                </div>
-                <div className="my-2 border-t border-border" />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium">Acompte aujourd'hui</span>
-                    <div className="text-[11px] text-muted-foreground">30 % du total HT</div>
-                  </div>
-                  <span className="font-display text-3xl tabular-nums text-primary">
-                    {formatEUR(deposit)}
-                  </span>
-                </div>
-              </div>
-              {/* Reassurance pills */}
-              <div className="mt-4 grid grid-cols-2 gap-1.5">
-                {[
-                  { icon: RefreshCcw, t: "Remboursable" },
-                  { icon: Lock,       t: "Paiement sécurisé" },
-                  { icon: ShieldCheck, t: "Contrôle SGS" },
-                  { icon: Truck,      t: "Livraison incluse" },
-                ].map(({ icon: Icon, t }) => (
-                  <div
-                    key={t}
-                    className="flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2 py-1.5 text-[10px] text-muted-foreground"
-                  >
-                    <Icon className="h-3 w-3 text-primary" />
-                    <span className="truncate">{t}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                size="lg"
-                className="mt-3 h-12 w-full text-base shadow-sm"
-                disabled={totalUnits === 0}
-                onClick={() => setOpen(true)}
-              >
-                <Lock className="h-4 w-4" />
-                Réserver — {formatEUR(deposit)} d'acompte
-              </Button>
-
-              {/* Low-friction alternates */}
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-10 gap-1.5"
-                  disabled={totalUnits === 0}
-                  onClick={() =>
-                    openQuotePDF({
-                      lines: items.map(({ product, qty }) => ({
-                        product,
-                        qty,
-                        optionId: options[product.id],
-                      })),
-                      fillPct,
-                      usedCBM,
-                      subTotalHT,
-                      tierPct: tier.pct,
-                      tierDiscount,
-                      totalHT,
-                      retailEquivalent,
-                      savings,
-                      deposit,
-                      containerNumber: "#024",
-                      deliveryDate,
-                    })
-                  }
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Devis PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-10 gap-1.5"
-                  disabled={totalUnits === 0}
-                  onClick={() =>
-                    toast.success("Devis envoyé", {
-                      description:
-                        "Vous le recevrez sous 1 min — pensez à vérifier vos spams.",
-                    })
-                  }
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  Par email
-                </Button>
-              </div>
-
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-                <CheckCircle2 className="h-3 w-3 text-primary" />
-                Aucun engagement avant signature — modifiable jusqu'à clôture.
-              </p>
-              <a
-                href="tel:+33123456789"
-                className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Phone className="h-3 w-3" />
-                Une question ? Parlez à un expert · 01 23 45 67 89
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="border-t border-border bg-accent/30">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="text-xs uppercase tracking-[0.18em] text-primary">
-              Comment ça marche
-            </div>
-            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
-              Trois étapes. Six mois. Un container.
-            </h2>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: ShieldCheck,
-                step: "01",
-                title: "Réservez votre place",
-                body: "Acompte de 30 % pour bloquer le prix usine et la couleur choisie. Remboursable.",
-              },
-              {
-                icon: Factory,
-                step: "02",
-                title: "On remplit le container",
-                body: "Container plein → on lance la production en Chine. Contrôle qualité SGS inclus.",
-              },
-              {
-                icon: Truck,
-                step: "03",
-                title: "Livraison en 6 mois",
-                body: "Solde réglé avant expédition. Réception en France, dédouané, livré chez vous.",
-              },
-            ].map(({ icon: Icon, step, title, body }) => (
-              <div
-                key={step}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="font-display text-3xl text-muted-foreground/40">
-                    {step}
-                  </span>
-                </div>
-                <h3 className="mt-5 font-display text-xl">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ — lever les objections */}
-      <section className="border-t border-border">
-        <div className="mx-auto max-w-4xl px-6 py-20">
-          <div className="mx-auto mb-10 max-w-xl text-center">
-            <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.18em] text-primary">
-              <HelpCircle className="h-3.5 w-3.5" /> Vos questions
-            </div>
-            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
-              Tout ce qu'il faut savoir avant de réserver.
-            </h2>
-          </div>
-          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-            {[
-              {
-                q: "Que se passe-t-il si le container ne se remplit pas ?",
-                a: "Vous êtes intégralement remboursé sous 5 jours ouvrés. Pas de frais, pas de questions. À ce jour, 96 % de nos containers atteignent le seuil de 80 % en moins de 30 jours.",
-              },
-              {
-                q: "Puis-je modifier ma sélection après avoir réservé ?",
-                a: "Oui — couleurs, quantités, références : tout reste modifiable jusqu'à la clôture du container. La production ne démarre qu'une fois le container plein, donc aucun risque.",
-              },
-              {
-                q: "Comment êtes-vous moins cher de 38 % qu'un grossiste FR ?",
-                a: "Pas d'intermédiaire, pas de stock, pas de showroom. Vous achetez directement à l'usine et nous mutualisons le container. Le grossiste classique stocke, marge, et facture sa logistique : nous, non.",
-              },
-              {
-                q: "Et la qualité ? J'ai déjà été déçu par l'import.",
-                a: "Chaque commande passe par un contrôle SGS en sortie d'usine (frais inclus). Mobilier conforme CE & REACH, garantie 2 ans pièces. Échantillons couleur envoyables sur demande avant paiement du solde.",
-              },
-              {
-                q: "Quels sont les délais réels ?",
-                a: "Production lancée à container plein : 8-10 semaines en usine + 5-6 semaines de transport maritime + 2 semaines de dédouanement / livraison. Nous communiquons un tracking dès la sortie d'usine.",
-              },
-              {
-                q: "Comment se passe le paiement ?",
-                a: "30 % d'acompte par CB ou virement (Stripe sécurisé) à la réservation. Solde réglé 7 jours avant expédition, sur facture. Possibilité de paiement en 3× sans frais sur demande.",
-              },
-            ].map((f, i) => (
-              <details
-                key={i}
-                className="group p-5 transition-colors open:bg-accent/30 hover:bg-accent/20"
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                  <span>{f.q}</span>
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-transform group-open:rotate-45 group-open:border-primary group-open:text-primary">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {f.a}
-                </p>
-              </details>
-            ))}
-          </div>
-          <div className="mt-6 text-center text-xs text-muted-foreground">
-            Une autre question ?{" "}
-            <a href="tel:+33123456789" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Appelez-nous au 01 23 45 67 89
-            </a>{" "}
-            ou{" "}
-            <a href="mailto:hello@terrassea.fr" className="font-medium text-foreground underline-offset-4 hover:underline">
-              écrivez-nous
-            </a>.
-          </div>
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6 py-10 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            CE · REACH · SGS certifiés
-          </div>
-          <div>
-            Importé par{" "}
-            <span className="font-medium text-foreground">Pros Import EURL</span>{" "}
-            — Paris, France
-          </div>
-          <div>12+ ans d'expérience sourcing</div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
-          <div>
-            Container Club — Un concept par{" "}
-            <span className="font-medium text-foreground">Terrassea</span>
-          </div>
-          <a
-            href="mailto:hello@terrassea.fr"
-            className="hover:text-foreground"
-          >
-            hello@terrassea.fr
-          </a>
-        </div>
-      </footer>
-
-      {/* Reservation modal — low friction, trust-forward */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mb-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-              <Lock className="h-3 w-3" /> Réservation sécurisée
-            </div>
-            <DialogTitle className="font-display text-2xl">
-              Bloquez votre place
-            </DialogTitle>
-            <DialogDescription className="text-sm">
-              Acompte de{" "}
-              <span className="font-semibold text-foreground">
-                {formatEUR(deposit)}
-              </span>{" "}
-              · entièrement remboursable jusqu'à clôture du container.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Tiny order recap */}
-          <div className="rounded-lg border border-border bg-accent/30 p-3 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Container #024 · {totalUnits} unités</span>
-              <span className="font-semibold tabular-nums">{formatEUR(totalHT)} HT</span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Vous économisez</span>
-              <span className="tabular-nums text-primary">{formatEUR(savings)}</span>
-            </div>
-          </div>
-
-          <form
-            className="space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setOpen(false);
-              toast.success("Place réservée — bienvenue dans le club.", {
-                description:
-                  "Vous recevez un récapitulatif par email sous 1 minute.",
-              });
-            }}
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email professionnel</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                placeholder="marie@cafe-du-marais.fr"
-                autoComplete="email"
+            {/* Sidebar (40%) */}
+            <aside className="lg:col-span-5">
+              <OrderSidebar
+                items={items}
+                totals={totals}
+                fillPercent={fill.percent}
+                usedCbm={fill.usedCbm}
+                capacity={fill.capacity}
+                onReserve={() => setReserveOpen(true)}
+                onDownloadPdf={handlePdf}
+                onEmailQuote={handleEmail}
               />
-              <p className="text-[10px] text-muted-foreground">
-                Sert uniquement à sécuriser votre place — pas de newsletter.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="company">Société</Label>
-                <Input id="company" required placeholder="Café du Marais" autoComplete="organization" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" type="tel" required placeholder="06 12 34 56 78" autoComplete="tel" />
-              </div>
-            </div>
+            </aside>
+          </div>
+        </div>
+      </section>
 
-            <div className="rounded-md border border-border/70 bg-card p-2.5">
-              <div className="grid grid-cols-3 gap-1.5 text-center">
-                {[
-                  { icon: RefreshCcw, t: "100%\nremboursable" },
-                  { icon: Lock,       t: "Paiement\nStripe sécurisé" },
-                  { icon: ShieldCheck, t: "Données\nchiffrées" },
-                ].map(({ icon: Icon, t }) => (
-                  <div key={t} className="flex flex-col items-center gap-1">
-                    <Icon className="h-3.5 w-3.5 text-primary" />
-                    <span className="whitespace-pre-line text-[9px] leading-tight text-muted-foreground">{t}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <PastContainers />
+      <FaqAccordion />
+      <Footer />
 
-            <DialogFooter className="flex-col gap-1.5 pt-1 sm:flex-col">
-              <Button type="submit" size="lg" className="w-full">
-                <Lock className="h-4 w-4" />
-                Réserver ma place — {formatEUR(deposit)}
-              </Button>
-              <p className="text-center text-[10px] text-muted-foreground">
-                Aucun débit immédiat. SIRET demandé uniquement à la facturation finale.
-              </p>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-
-      <ProductDetailDialog
-        product={detailProduct}
-        open={!!detailId}
-        onOpenChange={(v) => !v && setDetailId(null)}
-        qty={detailProduct ? (qtys[detailProduct.id] ?? 0) : 0}
-        optionId={detailProduct ? options[detailProduct.id] : undefined}
-        onChange={(n) => detailProduct && setQty(detailProduct.id, n)}
-        onOptionChange={(id) =>
-          detailProduct &&
-          setOptions((prev) => ({ ...prev, [detailProduct.id]: id }))
-        }
+      <MobileStickyBar
+        totalItems={totalUnits}
+        fillPercent={fill.percent}
+        subtotalHt={totals.subtotalHt}
+        onReserve={() => setReserveOpen(true)}
       />
 
-      {/* Sticky mobile CTA — visible quand l'utilisateur scrolle hors du panneau de réservation */}
-      {totalUnits > 0 && (
-        <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_-8px_rgba(0,0,0,0.12)] backdrop-blur-md lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                {totalUnits} unités · {fillPct.toFixed(0)}% rempli
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-lg tabular-nums">
-                  {formatEUR(deposit)}
-                </span>
-                <span className="text-[10px] text-muted-foreground">acompte</span>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              className="h-11 shrink-0 px-4"
-              onClick={() => setOpen(true)}
-            >
-              <Lock className="h-3.5 w-3.5" />
-              Réserver
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <ProductDetailDialog
+        product={detailProduct}
+        open={!!detailProduct}
+        onOpenChange={(v) => !v && setDetailId(null)}
+        qty={detailProduct ? qtyByProduct[detailProduct.id] ?? 0 : 0}
+        variantId={
+          detailProduct
+            ? variantByProduct[detailProduct.id] ?? detailProduct.variants[0].id
+            : ""
+        }
+        onQtyChange={(n) => detailProduct && setQty(detailProduct.id, n)}
+        onVariantChange={(id) => detailProduct && setVariant(detailProduct.id, id)}
+      />
+
+      <ReservationDialog
+        open={reserveOpen}
+        onOpenChange={setReserveOpen}
+        totals={totals}
+      />
     </div>
   );
 }

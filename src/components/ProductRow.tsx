@@ -1,222 +1,223 @@
-import { Minus, Plus, Check, AlertCircle, Info } from "lucide-react";
+import { Minus, Plus, Check, Info, Sparkles } from "lucide-react";
+import { useMemo } from "react";
 import {
+  CATEGORY_LABEL,
+  type ColorVariant,
   type Product,
-  type ColorOption,
-  unitCBM,
-  findOption,
 } from "@/lib/products";
+import { getMoqStatus, formatEUR } from "@/lib/order";
 import { Button } from "@/components/ui/button";
 
-/** Fond CSS reproduisant la trame d'un échantillon (chevron, diamond, weave, check, stripe) */
-function swatchBackground(opt: { hex: string; hex2?: string; pattern?: string }): string {
-  const a = opt.hex;
-  const b = opt.hex2 ?? "#ffffff";
-  switch (opt.pattern) {
-    case "chevron":
-      return `repeating-linear-gradient(135deg, ${a} 0 3px, ${b} 3px 6px), repeating-linear-gradient(45deg, ${a} 0 3px, ${b} 3px 6px)`;
-    case "diamond":
-      return `repeating-linear-gradient(45deg, ${a} 0 2px, ${b} 2px 5px), repeating-linear-gradient(-45deg, ${a} 0 2px, ${b} 2px 5px)`;
-    case "weave":
-      return `repeating-linear-gradient(0deg, ${a} 0 2px, ${b} 2px 4px), repeating-linear-gradient(90deg, ${a} 0 2px, ${b} 2px 4px)`;
-    case "check":
-      return `repeating-conic-gradient(${a} 0 25%, ${b} 0 50%) 0/8px 8px`;
-    case "stripe":
-      return `repeating-linear-gradient(90deg, ${a} 0 4px, ${b} 4px 7px)`;
-    default:
-      return a;
-  }
-}
-
-function Swatch({
-  opt,
-  size = 24,
-  selected = false,
+function ColorDot({
+  variant,
+  selected,
   onClick,
 }: {
-  opt: ColorOption;
-  size?: number;
-  selected?: boolean;
-  onClick?: () => void;
+  variant: ColorVariant;
+  selected: boolean;
+  onClick: () => void;
 }) {
-  const bg = swatchBackground(opt);
-  const isPattern = !!opt.pattern && opt.pattern !== "solid";
   return (
     <button
       type="button"
       onClick={onClick}
-      title={`${opt.name}${opt.code ? ` · ${opt.code}` : ""}`}
-      aria-label={opt.name}
-      className={`relative shrink-0 overflow-hidden rounded-full ring-1 ring-black/15 transition-all hover:scale-110 ${
-        selected ? "ring-2 ring-primary ring-offset-2 ring-offset-card" : ""
+      title={variant.name}
+      aria-label={variant.name}
+      aria-pressed={selected}
+      className={`relative h-6 w-6 shrink-0 overflow-hidden rounded-full ring-1 ring-foreground/15 transition-all hover:scale-110 ${
+        selected ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
       }`}
-      style={{
-        width: size,
-        height: size,
-        background: isPattern ? bg : opt.hex,
-        backgroundSize: opt.pattern === "check" ? "8px 8px" : undefined,
-      }}
+      style={{ background: variant.hex }}
     >
       {selected && (
-        <span className="absolute inset-0 flex items-center justify-center bg-black/30">
-          <Check className="h-3 w-3 text-white" />
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Check className="h-3 w-3 text-white drop-shadow" strokeWidth={2.5} />
         </span>
       )}
     </button>
   );
 }
 
+const TONE_CLASSES: Record<string, string> = {
+  success: "bg-[color:var(--forest)]/12 text-[color:var(--forest)] border-[color:var(--forest)]/25",
+  amber: "bg-[color:var(--ember)]/10 text-[color:var(--ember)] border-[color:var(--ember)]/25",
+  ochre: "bg-[color:var(--ochre)]/10 text-[color:var(--ochre)] border-[color:var(--ochre)]/25",
+  neutral: "bg-muted text-muted-foreground border-border",
+};
+
+const TONE_BAR: Record<string, string> = {
+  success: "bg-[color:var(--forest)]",
+  amber: "bg-[color:var(--ember)]",
+  ochre: "bg-[color:var(--ochre)]",
+  neutral: "bg-foreground/40",
+};
+
 export function ProductRow({
   product,
+  variantId,
   qty,
-  optionId,
-  onChange,
-  onOptionChange,
+  onQtyChange,
+  onVariantChange,
   onOpenDetails,
 }: {
   product: Product;
+  variantId: string;
   qty: number;
-  optionId?: string;
-  onChange: (next: number) => void;
-  onOptionChange: (id: string) => void;
+  onQtyChange: (n: number) => void;
+  onVariantChange: (id: string) => void;
   onOpenDetails?: () => void;
 }) {
-  const cbm = unitCBM(product);
-  const lineCBM = cbm * qty;
-  const step = product.packQty;
-  const moq = product.moq;
-  const savingsPct = Math.round((1 - product.price / product.retailPrice) * 100);
-  const activeOpt = findOption(product, optionId);
-  const swatchHex = activeOpt?.hex ?? product.swatch;
+  const variant = useMemo(
+    () => product.variants.find((v) => v.id === variantId) ?? product.variants[0],
+    [product, variantId],
+  );
+  const moq = product.moqUnits;
+  const savingsPct = Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100);
+  const totalCommitted = (variant?.unitsCommitted ?? 0) + qty;
+  const moqStatus = getMoqStatus(totalCommitted, moq);
 
-  const handlePlus = () => {
-    if (qty === 0) onChange(moq); // premier ajout = MOQ
-    else onChange(qty + step);
-  };
-  const handleMinus = () => {
-    if (qty <= moq) onChange(0); // descend sous MOQ → retire la ligne
-    else onChange(Math.max(moq, qty - step));
-  };
-  const belowMoq = qty > 0 && qty < moq;
+  const inc = () => onQtyChange(qty + 1);
+  const dec = () => onQtyChange(Math.max(0, qty - 1));
 
   return (
-    <div className="group rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:shadow-sm">
-      <div className="flex items-center gap-3">
+    <article className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground/30">
+      <div className="flex gap-4">
+        {/* Visual */}
         <button
           type="button"
           onClick={onOpenDetails}
-          className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-black/5 transition-transform hover:scale-105"
-          style={{
-            background: activeOpt
-              ? swatchBackground(activeOpt)
-              : swatchHex,
-            backgroundSize: activeOpt?.pattern === "check" ? "8px 8px" : undefined,
-          }}
+          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md ring-1 ring-foreground/10 transition-transform hover:scale-[1.02] sm:h-28 sm:w-28"
           aria-label={`Voir détails ${product.name}`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/15 to-black/15" />
+          <img
+            src={product.mainImageUrl}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+          <span
+            className="absolute inset-x-0 bottom-0 h-2"
+            style={{ backgroundColor: variant?.hex }}
+          />
         </button>
+
+        {/* Body */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <button
-              type="button"
-              onClick={onOpenDetails}
-              className="group/name inline-flex items-center gap-1 truncate text-left text-sm font-medium text-foreground hover:text-primary"
-            >
-              <span className="truncate">{product.name}</span>
-              <Info className="h-3 w-3 opacity-0 transition-opacity group-hover/name:opacity-100" />
-            </button>
-            <div className="flex shrink-0 items-baseline gap-1.5">
-              <span className="text-[11px] text-muted-foreground line-through tabular-nums">
-                €{product.retailPrice}
-              </span>
-              <span className="text-sm font-semibold tabular-nums text-primary">
-                €{product.price}
-              </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <button
+                type="button"
+                onClick={onOpenDetails}
+                className="group/name inline-flex items-baseline gap-1.5 truncate text-left"
+              >
+                <span className="truncate font-display text-base font-semibold tracking-tight">
+                  {product.name}
+                </span>
+                <Info className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover/name:opacity-100" />
+              </button>
+              <div className="label-eyebrow mt-0.5 text-muted-foreground">
+                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×{product.dimensions.w}×{product.dimensions.h} cm · {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-lg font-semibold tabular-nums">
+                {formatEUR(product.basePriceHt)}
+              </div>
+              <div className="text-[11px] text-muted-foreground tabular-nums">
+                <span className="line-through">{formatEUR(product.retailPriceRef)}</span>
+                <span className="ml-1.5 font-medium text-[color:var(--ember)]">−{savingsPct}%</span>
+              </div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">
+                + éco-part {product.ecoContribution.toFixed(2)}€
+              </div>
             </div>
           </div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 font-medium text-primary">
-              −{savingsPct}%
-            </span>
-            <span className="rounded-sm bg-muted px-1.5 py-0.5 font-medium text-foreground/70">
-              MOQ {moq}
-            </span>
-            <span className="truncate">{product.blurb}</span>
+
+          {/* Variantes */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="label-eyebrow text-muted-foreground">Couleur :</span>
+            {product.variants.map((v) => (
+              <ColorDot
+                key={v.id}
+                variant={v}
+                selected={v.id === variantId}
+                onClick={() => onVariantChange(v.id)}
+              />
+            ))}
+            {variant && (
+              <span className="text-xs text-foreground/80">
+                Sélectionné : <span className="font-medium">{variant.name}</span>
+              </span>
+            )}
           </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleMinus}
-            disabled={qty === 0}
-            aria-label="Retirer"
-          >
-            <Minus className="h-3.5 w-3.5" />
-          </Button>
-          <div className="w-10 text-center text-sm font-semibold tabular-nums">
-            {qty}
+
+          {/* MOQ progress */}
+          <div className="mt-3">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <span className="label-eyebrow text-muted-foreground">
+                MOQ {variant?.name}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium ${TONE_CLASSES[moqStatus.tone]}`}
+              >
+                {moqStatus.status === "reached" ? (
+                  <Check className="h-3 w-3" strokeWidth={2.5} />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                {moqStatus.label}
+              </span>
+            </div>
+            <div className="h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
+              <div
+                className={`h-full transition-all duration-500 ${TONE_BAR[moqStatus.tone]}`}
+                style={{ width: `${Math.min(100, moqStatus.percent)}%` }}
+              />
+            </div>
           </div>
-          <Button
-            size="icon"
-            className="h-8 w-8"
-            onClick={handlePlus}
-            aria-label={qty === 0 ? `Ajouter (min. ${moq})` : `Ajouter ${step}`}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+
+          {/* Quantité + détails */}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-sm hover:bg-background"
+                onClick={dec}
+                disabled={qty === 0}
+                aria-label="Diminuer"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </Button>
+              <input
+                type="number"
+                value={qty}
+                onChange={(e) => onQtyChange(Math.max(0, parseInt(e.target.value || "0", 10)))}
+                className="w-12 bg-transparent text-center text-sm font-semibold tabular-nums focus:outline-none"
+                aria-label="Quantité"
+                min={0}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-sm hover:bg-background"
+                onClick={inc}
+                aria-label="Augmenter"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-sm border-[color:var(--sand-deep)] text-xs"
+              onClick={onOpenDetails}
+            >
+              Détails
+            </Button>
+          </div>
         </div>
       </div>
-
-      {product.customizations && product.customizations.length > 0 && (
-        <div className="mt-3 space-y-2 border-t border-border/60 pt-2.5">
-          {product.customizations.map((group) => {
-            const activeInGroup = group.options.find((o) => o.id === optionId);
-            return (
-              <div key={group.kind} className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {group.label}
-                  </div>
-                  {activeInGroup && (
-                    <div className="text-[10px] tabular-nums text-foreground/70">
-                      {activeInGroup.code ? `${activeInGroup.code} · ` : ""}
-                      {activeInGroup.name}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {group.options.map((opt) => (
-                    <Swatch
-                      key={opt.id}
-                      opt={opt}
-                      selected={opt.id === optionId}
-                      onClick={() => onOptionChange(opt.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {qty > 0 && (
-        <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>
-            {qty / step} carton{qty / step > 1 ? "s" : ""} · {cbm.toFixed(3)} m³ / unité
-          </span>
-          <span className="tabular-nums text-primary">{lineCBM.toFixed(2)} m³</span>
-        </div>
-      )}
-
-      {belowMoq && (
-        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
-          <AlertCircle className="h-3 w-3" />
-          Quantité minimum : {moq} unités
-        </div>
-      )}
-    </div>
+    </article>
   );
 }

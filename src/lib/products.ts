@@ -1,254 +1,308 @@
 // ============================================================
-// Container Club — catalogue, palettes usine, MOQ
+// Container Club — catalogue, variantes, container courant
 // ============================================================
 
-export type SwatchPattern = "solid" | "chevron" | "diamond" | "stripe" | "weave" | "check";
+export type ProductCategory = "chair" | "armchair" | "table" | "bench";
 
-export type ColorOption = {
+export interface ColorVariant {
   id: string;
   name: string;
-  /** Code usine (ex. S-PE003, TS-052) */
-  code?: string;
-  /** Couleur dominante (sert au rendu 3D et au swatch) */
   hex: string;
-  /** Couleur secondaire (motif tissé) */
-  hex2?: string;
-  pattern?: SwatchPattern;
-};
+  imageUrl?: string;
+  /** Unités déjà engagées par d'autres pros (simulé) */
+  unitsCommitted: number;
+}
 
-export type OptionGroup = {
-  /** Ce que customise ce groupe */
-  kind: "weave" | "textilene" | "frame" | "top";
-  label: string;
-  options: ColorOption[];
-};
-
-export type Product = {
+export interface Product {
   id: string;
+  sku: string;
+  category: ProductCategory;
   name: string;
-  category: "Chaise" | "Fauteuil" | "Tabouret" | "Table" | "Terrasse";
-  price: number;          // EUR HT — Container Club price
-  retailPrice: number;    // EUR HT — équivalent grossiste FR
-  /** Dimensions emballage (m) [largeur, profondeur, hauteur] pour 1 carton */
-  packDim: [number, number, number];
-  /** Unités par carton */
-  packQty: number;
-  /** MOQ — quantité minimum de commande (en unités) */
-  moq: number;
-  /** Couleur 3D par défaut (cadre) */
-  baseColor: string;
-  swatch: string;
-  blurb: string;
-  /** Une chaise peut proposer plusieurs familles : tressage OU textilène */
-  customizations?: OptionGroup[];
+  description: string;
+  /** cm */
+  dimensions: { l: number; w: number; h: number };
+  /** m³ par unité (carton ou unité finie) */
+  cbmPerUnit: number;
+  weightKg: number;
+  /** 50 assises · 20 tables */
+  moqUnits: number;
+  basePriceHt: number;
+  retailPriceRef: number;
+  ecoContribution: number;
+  mainImageUrl: string;
+  galleryUrls: string[];
+  variants: ColorVariant[];
+  features: string[];
+  fireRating?: "M1" | "M2";
+}
+
+export const CATEGORY_LABEL: Record<ProductCategory, string> = {
+  chair: "Chaise",
+  armchair: "Fauteuil",
+  table: "Table",
+  bench: "Banc",
 };
-
-// ────────────────────────────────────────────────────────────
-// Palettes usine — inspirées des planches S-PE / TS du catalog
-// ────────────────────────────────────────────────────────────
-
-// Tressage rotin synthétique — codes S-PE
-const WEAVE_COLORS: ColorOption[] = [
-  { id: "pe001", code: "S-PE001", name: "Indigo / Gris",   hex: "#2b3a72", hex2: "#c5c8cf", pattern: "chevron" },
-  { id: "pe002", code: "S-PE002", name: "Kaki Mêlé",       hex: "#5a5135", hex2: "#9a8f6a", pattern: "chevron" },
-  { id: "pe003", code: "S-PE003", name: "Orange Vif",      hex: "#d24a1b", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "pe004", code: "S-PE004", name: "Vert Sapin",      hex: "#2f5d4a", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "pe005", code: "S-PE005", name: "Jaune Soleil",    hex: "#e8b91b", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "pe006", code: "S-PE006", name: "Rouge / Marine",  hex: "#a93030", hex2: "#1f3a5f", pattern: "weave" },
-  { id: "pe007", code: "S-PE007", name: "Bleu Marseille",  hex: "#1f4a8a", hex2: "#ece4d4", pattern: "weave" },
-  { id: "pe008", code: "S-PE008", name: "Mandarine",       hex: "#d96a1f", hex2: "#3a3528", pattern: "weave" },
-  { id: "pe009", code: "S-PE009", name: "Beige Naturel",   hex: "#dccfa8", hex2: "#b85c3a", pattern: "weave" },
-  { id: "pe010", code: "S-PE010", name: "Anthracite",      hex: "#3a3a3f", hex2: "#b8b2a4", pattern: "diamond" },
-  { id: "pe011", code: "S-PE011", name: "Bleu Roi",        hex: "#1a4faa", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "pe012", code: "S-PE012", name: "Vert Paris",      hex: "#2d5a3d", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "pe013", code: "S-PE013", name: "Miel",            hex: "#b8853f", hex2: "#3a2a1a", pattern: "diamond" },
-  { id: "pe017", code: "S-PE017", name: "Bordeaux Ivoire", hex: "#7a2230", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "pe018", code: "S-PE018", name: "Noir / Blanc",    hex: "#1a1a1c", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "pe025", code: "S-PE025", name: "Vert Forêt",      hex: "#2a4a35", hex2: "#1a1a1c", pattern: "diamond" },
-];
-
-// Textilène / toile — codes TS
-const TEXTILENE_COLORS: ColorOption[] = [
-  { id: "ts007", code: "TS-007", name: "Lin Naturel",    hex: "#d8d2c4", pattern: "weave" },
-  { id: "ts066", code: "TS-066", name: "Blanc Cassé",    hex: "#e8e4dc", pattern: "weave" },
-  { id: "ts003", code: "TS-003", name: "Noir Profond",   hex: "#1c1c1e", pattern: "weave" },
-  { id: "ts048", code: "TS-048", name: "Olive Mêlée",    hex: "#6b6a3a", hex2: "#3a3528", pattern: "weave" },
-  { id: "ts018", code: "TS-018", name: "Pied-de-Poule",  hex: "#1a1a1c", hex2: "#ece4d4", pattern: "check" },
-  { id: "ts011", code: "TS-011", name: "Terracotta",     hex: "#b85c3a", hex2: "#ece4d4", pattern: "weave" },
-  { id: "ts009", code: "TS-009", name: "Rouge Damier",   hex: "#a83030", hex2: "#ece4d4", pattern: "check" },
-  { id: "ts010", code: "TS-010", name: "Bleu Tissé",     hex: "#3a5a8a", hex2: "#ece4d4", pattern: "weave" },
-  { id: "ts031", code: "TS-031", name: "Chevron Noir",   hex: "#1c1c1e", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "ts052", code: "TS-052", name: "Chevron Vert",   hex: "#2a6a4a", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "ts020", code: "TS-020", name: "Chevron Soleil", hex: "#e8b91b", hex2: "#3a3528", pattern: "chevron" },
-  { id: "ts057", code: "TS-057", name: "Chevron Marine", hex: "#1a3a6a", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "ts058", code: "TS-058", name: "Chevron Sapin",  hex: "#1f5a3a", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "ts036", code: "TS-036", name: "Chevron Rouge",  hex: "#c43030", hex2: "#ece4d4", pattern: "chevron" },
-  { id: "ts080", code: "TS-080", name: "Diamant Gris",   hex: "#5a5a5e", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "ts082", code: "TS-082", name: "Diamant Rouge",  hex: "#b83030", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "ts016", code: "TS-016", name: "Diamant Sarcelle", hex: "#2a7a8a", hex2: "#ece4d4", pattern: "diamond" },
-  { id: "ts056", code: "TS-056", name: "Vichy Noir",     hex: "#1c1c1e", hex2: "#ece4d4", pattern: "check" },
-];
-
-const FRAME_FINISHES: ColorOption[] = [
-  { id: "noir",   name: "Noir mat",    hex: "#1c1c1e" },
-  { id: "blanc",  name: "Blanc cassé", hex: "#ece4d4" },
-  { id: "bronze", name: "Bronze",      hex: "#6b4a2a" },
-  { id: "vert",   name: "Vert sapin",  hex: "#2d4435" },
-];
-
-// Plateaux table — 4 finitions au choix
-const TOP_FINISHES: ColorOption[] = [
-  { id: "marbre-blanc", name: "Marbre Blanc", hex: "#e8e4dc" },
-  { id: "marbre-noir",  name: "Marbre Noir",  hex: "#222226" },
-  { id: "chene-clair",  name: "Chêne Clair",  hex: "#c9a878" },
-  { id: "compact-noir", name: "Compact Noir", hex: "#2a2a2e" },
-];
-
-// ────────────────────────────────────────────────────────────
-// Catalogue produits
-// ────────────────────────────────────────────────────────────
-
-const CHAIR_PACK: [number, number, number] = [0.52, 0.55, 2.8];
-const FAUTEUIL_PACK: [number, number, number] = [0.62, 0.65, 2.6];
 
 export const PRODUCTS: Product[] = [
-  // — Chaises —
   {
-    id: "bistrot-rotin",
-    name: "Chaise Bistrot Rotin",
-    category: "Chaise",
-    price: 42, retailPrice: 89,
-    packDim: CHAIR_PACK, packQty: 10, moq: 50,
-    baseColor: "#b8853f", swatch: "#b8853f",
-    blurb: "Tressé synthétique · alu · empilable ×10",
-    customizations: [
-      { kind: "weave",     label: "Tressage rotin",   options: WEAVE_COLORS },
-      { kind: "textilene", label: "Toile textilène",  options: TEXTILENE_COLORS },
+    id: "p1",
+    sku: "CHA-CAN-001",
+    category: "chair",
+    name: "Chaise Cannes Empilable",
+    description:
+      "Chaise outdoor en rotin synthétique S-PE tressé sur structure aluminium thermolaqué. Empilable jusqu'à 8 unités.",
+    dimensions: { l: 55, w: 58, h: 85 },
+    cbmPerUnit: 0.08,
+    weightKg: 4.2,
+    moqUnits: 50,
+    basePriceHt: 89.0,
+    retailPriceRef: 149.0,
+    ecoContribution: 0.3,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1551298370-9d3d53740c72?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=900&q=80",
+    ],
+    features: [
+      "Empilable x8",
+      "Rotin synthétique S-PE",
+      "Aluminium thermolaqué",
+      "Résistant UV 5 ans",
+      "Anti-corrosion marine",
+    ],
+    fireRating: "M2",
+    variants: [
+      { id: "v1a", name: "Noir charbon", hex: "#1f1f1f", unitsCommitted: 38 },
+      { id: "v1b", name: "Gris ardoise", hex: "#5e5e5e", unitsCommitted: 22 },
+      { id: "v1c", name: "Beige sable", hex: "#c9b88a", unitsCommitted: 52 },
+      { id: "v1d", name: "Brun expresso", hex: "#3d2817", unitsCommitted: 12 },
+      { id: "v1e", name: "Blanc craie", hex: "#e8e0d0", unitsCommitted: 0 },
+      { id: "v1f", name: "Vert olive", hex: "#5a6b3a", unitsCommitted: 8 },
     ],
   },
   {
-    id: "bistrot-cannage",
-    name: "Chaise Bistrot Cannage",
-    category: "Chaise",
-    price: 48, retailPrice: 109,
-    packDim: [0.5, 0.55, 2.6], packQty: 10, moq: 50,
-    baseColor: "#1a1a1c", swatch: "#1a1a1c",
-    blurb: "Dossier rond cannage · cadre acier · empilable ×10",
-    customizations: [
-      { kind: "frame", label: "Finition cadre", options: FRAME_FINISHES },
+    id: "p2",
+    sku: "FAU-MAL-002",
+    category: "armchair",
+    name: "Fauteuil Malibu Lounge",
+    description:
+      "Fauteuil large outdoor avec coussins déperlants inclus. Structure aluminium et tressage rotin synthétique haute densité.",
+    dimensions: { l: 78, w: 82, h: 78 },
+    cbmPerUnit: 0.35,
+    weightKg: 11.5,
+    moqUnits: 50,
+    basePriceHt: 245.0,
+    retailPriceRef: 429.0,
+    ecoContribution: 1.0,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [],
+    features: [
+      "Coussins inclus",
+      "Tissu déperlant",
+      "Rotin synthétique HD",
+      "Structure renforcée",
+      "Charge max 150 kg",
+    ],
+    fireRating: "M1",
+    variants: [
+      { id: "v2a", name: "Noir / coussin écru", hex: "#1f1f1f", unitsCommitted: 28 },
+      { id: "v2b", name: "Gris / coussin anthracite", hex: "#5e5e5e", unitsCommitted: 18 },
+      { id: "v2c", name: "Naturel / coussin lin", hex: "#c9b88a", unitsCommitted: 50 },
     ],
   },
   {
-    id: "chaise-riviera",
-    name: "Chaise Riviera",
-    category: "Chaise",
-    price: 46, retailPrice: 99,
-    packDim: CHAIR_PACK, packQty: 10, moq: 50,
-    baseColor: "#1f4a8a", swatch: "#1f4a8a",
-    blurb: "Assise tressée bicolore · style Côte d'Azur",
-    customizations: [
-      { kind: "weave",     label: "Tressage rotin",  options: WEAVE_COLORS },
-      { kind: "textilene", label: "Toile textilène", options: TEXTILENE_COLORS },
+    id: "p3",
+    sku: "TAB-LYO-003",
+    category: "table",
+    name: "Table Lyon Pied Central",
+    description:
+      "Table outdoor ronde 80 cm, plateau HPL résistant et pied central aluminium. Idéale brasseries et terrasses.",
+    dimensions: { l: 80, w: 80, h: 73 },
+    cbmPerUnit: 0.25,
+    weightKg: 18.0,
+    moqUnits: 20,
+    basePriceHt: 189.0,
+    retailPriceRef: 320.0,
+    ecoContribution: 2.0,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [],
+    features: [
+      "Plateau HPL 12 mm",
+      "Anti-UV",
+      "Anti-rayures",
+      "Pied alu thermolaqué",
+      "Empilable démontée",
     ],
-  },
-  // — Fauteuils —
-  {
-    id: "fauteuil-marais",
-    name: "Fauteuil Marais",
-    category: "Fauteuil",
-    price: 78, retailPrice: 169,
-    packDim: FAUTEUIL_PACK, packQty: 6, moq: 50,
-    baseColor: "#2d5a3d", swatch: "#2d5a3d",
-    blurb: "Accoudoirs bois · dossier tressé · empilable ×6",
-    customizations: [
-      { kind: "weave",     label: "Tressage rotin",  options: WEAVE_COLORS },
-      { kind: "textilene", label: "Toile textilène", options: TEXTILENE_COLORS },
-    ],
-  },
-  {
-    id: "fauteuil-lounge",
-    name: "Fauteuil Lounge Pro",
-    category: "Fauteuil",
-    price: 95, retailPrice: 209,
-    packDim: [0.7, 0.7, 2.4], packQty: 4, moq: 50,
-    baseColor: "#3a3a3f", swatch: "#3a3a3f",
-    blurb: "Coque enveloppante · cadre alu · empilable ×4",
-    customizations: [
-      { kind: "weave",     label: "Tressage rotin",  options: WEAVE_COLORS },
-      { kind: "textilene", label: "Toile textilène", options: TEXTILENE_COLORS },
-    ],
-  },
-  // — Tabouret —
-  {
-    id: "tabouret-bistrot",
-    name: "Tabouret Bistrot H75",
-    category: "Tabouret",
-    price: 58, retailPrice: 129,
-    packDim: [0.45, 0.45, 1.95], packQty: 8, moq: 50,
-    baseColor: "#b8853f", swatch: "#b8853f",
-    blurb: "Repose-pied · tressé · empilable ×8",
-    customizations: [
-      { kind: "weave",     label: "Tressage rotin",  options: WEAVE_COLORS },
-      { kind: "textilene", label: "Toile textilène", options: TEXTILENE_COLORS },
-    ],
-  },
-  // — Tables —
-  {
-    id: "table-bistrot-60",
-    name: "Table Bistrot Ø60 — Pied fonte",
-    category: "Table",
-    price: 89, retailPrice: 199,
-    packDim: [0.68, 0.68, 0.42], packQty: 2, moq: 20,
-    baseColor: "#e8e4dc", swatch: "#e8e4dc",
-    blurb: "Plateau 4 finitions · pied fonte noir",
-    customizations: [
-      { kind: "top", label: "Plateau (4 finitions)", options: TOP_FINISHES },
+    fireRating: "M1",
+    variants: [
+      { id: "v3a", name: "Plateau Teck", hex: "#a87344", unitsCommitted: 14 },
+      { id: "v3b", name: "Plateau Ardoise", hex: "#3a3a3e", unitsCommitted: 8 },
+      { id: "v3c", name: "Plateau Marbre blanc", hex: "#e8e4dc", unitsCommitted: 22 },
+      { id: "v3d", name: "Plateau Béton", hex: "#8a8580", unitsCommitted: 6 },
     ],
   },
   {
-    id: "mange-debout",
-    name: "Table Mange-Debout Ø70",
-    category: "Table",
-    price: 119, retailPrice: 259,
-    packDim: [0.78, 0.78, 1.15], packQty: 1, moq: 20,
-    baseColor: "#c9a878", swatch: "#c9a878",
-    blurb: "Hauteur 110 cm · plateau au choix · pied alu",
-    customizations: [
-      { kind: "top", label: "Plateau (4 finitions)", options: TOP_FINISHES },
+    id: "p4",
+    sku: "CHA-MON-004",
+    category: "chair",
+    name: "Chaise Monaco Textilène",
+    description:
+      "Chaise outdoor textilène haute densité sur structure aluminium. Confort et légèreté pour le secteur hôtelier.",
+    dimensions: { l: 52, w: 58, h: 88 },
+    cbmPerUnit: 0.07,
+    weightKg: 3.5,
+    moqUnits: 50,
+    basePriceHt: 72.0,
+    retailPriceRef: 119.0,
+    ecoContribution: 0.3,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [],
+    features: [
+      "Textilène TS 8001",
+      "Aluminium 6063",
+      "Empilable x10",
+      "Légère 3,5 kg",
+      "Pieds anti-trace",
+    ],
+    fireRating: "M2",
+    variants: [
+      { id: "v4a", name: "Textilène Noir", hex: "#1f1f1f", unitsCommitted: 55 },
+      { id: "v4b", name: "Textilène Anthracite", hex: "#3a3a3e", unitsCommitted: 32 },
+      { id: "v4c", name: "Textilène Taupe", hex: "#9a8a7a", unitsCommitted: 18 },
+      { id: "v4d", name: "Textilène Écru", hex: "#d8cdb8", unitsCommitted: 8 },
+    ],
+  },
+  {
+    id: "p5",
+    sku: "BAN-PRO-005",
+    category: "bench",
+    name: "Banc Provence 180 cm",
+    description:
+      "Banc outdoor 3 places en rotin synthétique sur structure aluminium. Parfait pour entrées d'hôtels et halls.",
+    dimensions: { l: 180, w: 55, h: 82 },
+    cbmPerUnit: 0.45,
+    weightKg: 14.0,
+    moqUnits: 50,
+    basePriceHt: 219.0,
+    retailPriceRef: 379.0,
+    ecoContribution: 1.5,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [],
+    features: [
+      "3 places confort",
+      "Rotin synthétique S-PE",
+      "Structure renforcée",
+      "Pieds anti-glisse",
+    ],
+    variants: [
+      { id: "v5a", name: "Noir charbon", hex: "#1f1f1f", unitsCommitted: 22 },
+      { id: "v5b", name: "Beige sable", hex: "#c9b88a", unitsCommitted: 14 },
+    ],
+  },
+  {
+    id: "p6",
+    sku: "TAB-MAR-006",
+    category: "table",
+    name: "Table Marseille Rectangulaire",
+    description:
+      "Table outdoor rectangulaire 160×80 cm pour 6 personnes. Plateau HPL et structure aluminium.",
+    dimensions: { l: 160, w: 80, h: 73 },
+    cbmPerUnit: 0.45,
+    weightKg: 28.0,
+    moqUnits: 20,
+    basePriceHt: 349.0,
+    retailPriceRef: 590.0,
+    ecoContribution: 5.0,
+    mainImageUrl:
+      "https://images.unsplash.com/photo-1604578762246-41134e37f9cc?auto=format&fit=crop&w=900&q=80",
+    galleryUrls: [],
+    features: [
+      "6 couverts",
+      "Plateau HPL 12 mm",
+      "Pieds renforcés",
+      "Démontable transport",
+    ],
+    fireRating: "M1",
+    variants: [
+      { id: "v6a", name: "Plateau Teck", hex: "#a87344", unitsCommitted: 18 },
+      { id: "v6b", name: "Plateau Ardoise", hex: "#3a3a3e", unitsCommitted: 12 },
+      { id: "v6c", name: "Plateau Béton", hex: "#8a8580", unitsCommitted: 4 },
     ],
   },
 ];
 
-// 20ft High Cube — capacité utile ≈ 33 CBM
-export const CONTAINER_CBM = 33;
+export const CURRENT_CONTAINER = {
+  reference: "CC-2026-001",
+  port: "Marseille-Fos",
+  capacityCbm: 28,
+  thresholdPercent: 80,
+  minSeriesRequired: 3,
+  expectedCloseAt: "2026-03-14",
+  status: "open" as const,
+  seriesReached: 3,
+  totalSeries: 5,
+  professionalsEngaged: 12,
+};
 
-// Indication catalogue : nb de formes total (pour suggérer la profondeur)
-export const TOTAL_CHAIR_SHAPES = 28;
+export const PAST_CONTAINERS = [
+  {
+    reference: "CC-2025-014",
+    port: "Marseille-Fos",
+    deliveredAt: "2025-12-12",
+    professionalsServed: 8,
+    totalItems: 287,
+    plannedDays: 75,
+    actualDays: 78,
+    testimonial: {
+      quote: "Qualité au rendez-vous, délais tenus, on recommence sur le prochain.",
+      author: "Hôtel Le Lavandou",
+      location: "Var",
+      rating: 5,
+    },
+    photoUrl:
+      "https://images.unsplash.com/photo-1494412519320-aa613dfb7738?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    reference: "CC-2025-013",
+    port: "Le Havre",
+    deliveredAt: "2025-11-28",
+    professionalsServed: 6,
+    totalItems: 198,
+    plannedDays: 75,
+    actualDays: 71,
+    testimonial: {
+      quote: "Économies réelles vs nos fournisseurs habituels. Process clair et rassurant.",
+      author: "Camping Les Pins Bleus",
+      location: "Landes",
+      rating: 5,
+    },
+    photoUrl:
+      "https://images.unsplash.com/photo-1605283176568-9b41fde3a09c?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    reference: "CC-2025-012",
+    port: "Marseille-Fos",
+    deliveredAt: "2025-10-15",
+    professionalsServed: 11,
+    totalItems: 412,
+    plannedDays: 75,
+    actualDays: 82,
+    testimonial: {
+      quote: "Petit retard de 7 jours communiqué en transparence. Mobilier au top, prix imbattable.",
+      author: "Restaurant La Marina",
+      location: "Cap d'Agde",
+      rating: 4,
+    },
+    photoUrl:
+      "https://images.unsplash.com/photo-1516571748831-5d81767b788d?auto=format&fit=crop&w=900&q=80",
+  },
+];
 
-export function unitCBM(p: Product) {
-  const [w, d, h] = p.packDim;
-  return (w * d * h) / p.packQty;
-}
-
-/** Trouve l'option courante (toutes familles confondues) */
-export function findOption(p: Product, optionId?: string): ColorOption | undefined {
-  if (!optionId || !p.customizations) return undefined;
-  for (const g of p.customizations) {
-    const o = g.options.find((x) => x.id === optionId);
-    if (o) return o;
-  }
-  return undefined;
-}
-
-export function findOptionGroup(p: Product, optionId?: string): OptionGroup | undefined {
-  if (!optionId || !p.customizations) return undefined;
-  return p.customizations.find((g) => g.options.some((o) => o.id === optionId));
-}
-
-export function getProductColor(p: Product, optionId?: string): string {
-  return findOption(p, optionId)?.hex ?? p.baseColor;
-}
-
-export function defaultOptionId(p: Product): string | undefined {
-  return p.customizations?.[0]?.options[0]?.id;
+export function findVariant(p: Product, variantId: string): ColorVariant | undefined {
+  return p.variants.find((v) => v.id === variantId);
 }
