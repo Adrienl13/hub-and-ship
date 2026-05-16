@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
 import { ContainerScene } from "@/components/ContainerScene";
 import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 export function OrderSidebar({
   items,
