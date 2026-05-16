@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { PAST_CONTAINERS } from "@/lib/products";
+import { Reveal, RevealStagger, RevealItem } from "@/components/motion-helpers";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", {
