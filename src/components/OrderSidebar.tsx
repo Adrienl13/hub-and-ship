@@ -224,7 +224,7 @@ export function OrderSidebar({
   );
 }
 
-function Row({
+function AnimRow({
   label,
   value,
   bold,
@@ -232,7 +232,7 @@ function Row({
   hint,
 }: {
   label: string;
-  value: string;
+  value: number;
   bold?: boolean;
   muted?: boolean;
   hint?: string;
@@ -246,7 +246,7 @@ function Row({
       <span
         className={`tabular-nums ${bold ? "font-display text-base font-semibold" : muted ? "text-muted-foreground" : "font-medium"}`}
       >
-        {value}
+        <AnimatedNumber value={value} format={(n) => formatEUR(n)} />
       </span>
     </div>
   );
