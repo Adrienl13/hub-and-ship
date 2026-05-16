@@ -1,5 +1,6 @@
 import { Minus, Plus, Check, Info, Sparkles } from "lucide-react";
 import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CATEGORY_LABEL,
   type ColorVariant,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { Button } from "@/components/ui/button";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 function ColorDot({
   variant,
