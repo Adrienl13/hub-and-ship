@@ -65,16 +65,18 @@ export function OrderSidebar({
             <div className="label-eyebrow text-muted-foreground">Volume</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-display text-base font-semibold tabular-nums">
-                {fillPercent.toFixed(0)}%
+                <AnimatedNumber value={fillPercent} suffix="%" />
               </span>
               <span className="text-[10px] text-muted-foreground tabular-nums">
                 {usedCbm.toFixed(2)} / {capacity} m³
               </span>
             </div>
             <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-              <div
+              <motion.div
                 className="h-full bg-foreground"
-                style={{ width: `${fillPercent}%` }}
+                initial={false}
+                animate={{ width: `${fillPercent}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 22 }}
               />
             </div>
           </div>
