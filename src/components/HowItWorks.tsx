@@ -1,4 +1,6 @@
 import { RevealStagger, RevealItem, Reveal } from "@/components/motion-helpers";
+
+const STEPS = [
   {
     n: "01",
     title: "Réservation",
