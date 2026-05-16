@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
 import { ContainerScene } from "@/components/ContainerScene";
 import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 export function OrderSidebar({
   items,
@@ -63,16 +65,18 @@ export function OrderSidebar({
             <div className="label-eyebrow text-muted-foreground">Volume</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="font-display text-base font-semibold tabular-nums">
-                {fillPercent.toFixed(0)}%
+                <AnimatedNumber value={fillPercent} suffix="%" />
               </span>
               <span className="text-[10px] text-muted-foreground tabular-nums">
                 {usedCbm.toFixed(2)} / {capacity} m³
               </span>
             </div>
             <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-              <div
+              <motion.div
                 className="h-full bg-foreground"
-                style={{ width: `${fillPercent}%` }}
+                initial={false}
+                animate={{ width: `${fillPercent}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 22 }}
               />
             </div>
           </div>
@@ -99,27 +103,34 @@ export function OrderSidebar({
 
         {hasItems ? (
           <ul className="divide-y divide-[color:var(--sand-deep)]/60">
-            {items.map((item) => (
-              <li
-                key={`${item.product.id}:${item.variant.id}`}
-                className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full ring-1 ring-foreground/15"
-                    style={{ background: item.variant.hex }}
-                  />
-                  <span className="truncate">
-                    <span className="font-medium tabular-nums">{item.quantity}× </span>
-                    {item.product.name}
-                    <span className="text-muted-foreground"> · {item.variant.name}</span>
+            <AnimatePresence initial={false}>
+              {items.map((item) => (
+                <motion.li
+                  key={`${item.product.id}:${item.variant.id}`}
+                  layout
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full ring-1 ring-foreground/15"
+                      style={{ background: item.variant.hex }}
+                    />
+                    <span className="truncate">
+                      <span className="font-medium tabular-nums">{item.quantity}× </span>
+                      {item.product.name}
+                      <span className="text-muted-foreground"> · {item.variant.name}</span>
+                    </span>
+                  </div>
+                  <span className="shrink-0 tabular-nums font-medium">
+                    {formatEUR(item.product.basePriceHt * item.quantity)}
                   </span>
-                </div>
-                <span className="shrink-0 tabular-nums font-medium">
-                  {formatEUR(item.product.basePriceHt * item.quantity)}
-                </span>
-              </li>
-            ))}
+                </motion.li>
+              ))}
+            </AnimatePresence>
           </ul>
         ) : (
           <div className="px-4 py-6 text-center text-xs text-muted-foreground">
@@ -128,40 +139,36 @@ export function OrderSidebar({
         )}
 
         {hasItems && (
-          <div className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs">
-            <Row label="Sous-total HT" value={formatEUR(totals.subtotalHt)} />
-            <Row
+          <motion.div
+            layout
+            className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs"
+          >
+            <AnimRow label="Sous-total HT" value={totals.subtotalHt} />
+            <AnimRow
               label="Frais réservation (3%)"
-              value={formatEUR(totals.reservationFee)}
+              value={totals.reservationFee}
               hint="min 150€ / max 500€"
             />
             <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
-            <Row
-              label="À payer aujourd'hui"
-              value={formatEUR(totals.payNow)}
-              bold
-            />
-            <Row
-              label="Acompte à 80%"
-              value={formatEUR(totals.payAt80Percent)}
-              muted
-            />
-            <Row
-              label="Solde avant livraison"
-              value={formatEUR(totals.payBeforeShipping)}
-              muted
-            />
+            <AnimRow label="À payer aujourd'hui" value={totals.payNow} bold />
+            <AnimRow label="Acompte à 80%" value={totals.payAt80Percent} muted />
+            <AnimRow label="Solde avant livraison" value={totals.payBeforeShipping} muted />
             {totals.savings > 0 && (
-              <div className="mt-3 -mx-4 -mb-3 rounded-b-md bg-[color:var(--sand)] px-4 py-2.5">
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 -mx-4 -mb-3 rounded-b-md bg-[color:var(--sand)] px-4 py-2.5"
+              >
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-foreground/80">Économie totale</span>
                   <span className="font-display text-base font-semibold tabular-nums text-[color:var(--ember)]">
-                    −{formatEUR(totals.savings)}
+                    −<AnimatedNumber value={totals.savings} format={(n) => formatEUR(n)} />
                   </span>
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -217,7 +224,7 @@ export function OrderSidebar({
   );
 }
 
-function Row({
+function AnimRow({
   label,
   value,
   bold,
@@ -225,7 +232,7 @@ function Row({
   hint,
 }: {
   label: string;
-  value: string;
+  value: number;
   bold?: boolean;
   muted?: boolean;
   hint?: string;
@@ -239,7 +246,7 @@ function Row({
       <span
         className={`tabular-nums ${bold ? "font-display text-base font-semibold" : muted ? "text-muted-foreground" : "font-medium"}`}
       >
-        {value}
+        <AnimatedNumber value={value} format={(n) => formatEUR(n)} />
       </span>
     </div>
   );

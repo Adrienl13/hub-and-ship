@@ -1,5 +1,6 @@
 import { Minus, Plus, Check, Info, Sparkles } from "lucide-react";
 import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CATEGORY_LABEL,
   type ColorVariant,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { Button } from "@/components/ui/button";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 function ColorDot({
   variant,
@@ -157,22 +159,38 @@ export function ProductRow({
               <span className="label-eyebrow text-muted-foreground">
                 MOQ {variant?.name}
               </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium ${TONE_CLASSES[moqStatus.tone]}`}
-              >
-                {moqStatus.status === "reached" ? (
-                  <Check className="h-3 w-3" strokeWidth={2.5} />
-                ) : (
-                  <Sparkles className="h-3 w-3" />
-                )}
-                {moqStatus.label}
-              </span>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={moqStatus.status + moqStatus.label}
+                  initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                  transition={{ duration: 0.25 }}
+                  className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium ${TONE_CLASSES[moqStatus.tone]}`}
+                >
+                  {moqStatus.status === "reached" ? (
+                    <Check className="h-3 w-3" strokeWidth={2.5} />
+                  ) : (
+                    <Sparkles className="h-3 w-3" />
+                  )}
+                  {moqStatus.label}
+                </motion.span>
+              </AnimatePresence>
             </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-              <div
-                className={`h-full transition-all duration-500 ${TONE_BAR[moqStatus.tone]}`}
-                style={{ width: `${Math.min(100, moqStatus.percent)}%` }}
+            <div className="relative h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
+              <motion.div
+                className={`h-full ${TONE_BAR[moqStatus.tone]}`}
+                initial={false}
+                animate={{ width: `${Math.min(100, moqStatus.percent)}%` }}
+                transition={{ type: "spring", stiffness: 110, damping: 20 }}
               />
+              {moqStatus.status === "reached" && (
+                <motion.div
+                  className="absolute inset-y-[-2px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent"
+                  animate={{ x: ["-100%", "260%"] }}
+                  transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" }}
+                />
+              )}
             </div>
           </div>
 

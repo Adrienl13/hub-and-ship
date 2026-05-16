@@ -1,3 +1,5 @@
+import { RevealStagger, RevealItem, Reveal } from "@/components/motion-helpers";
+
 const STEPS = [
   {
     n: "01",
@@ -33,17 +35,17 @@ export function HowItWorks() {
       className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
     >
       <div className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-12 max-w-2xl">
+        <Reveal className="mb-12 max-w-2xl">
           <div className="label-eyebrow text-[color:var(--ember)]">Le processus</div>
           <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
             Comment se déroule une commande container.
           </h2>
-        </div>
+        </Reveal>
 
         {/* Timeline horizontale desktop, verticale mobile */}
-        <div className="grid grid-cols-1 gap-px bg-[color:var(--sand-deep)] md:grid-cols-5">
+        <RevealStagger className="grid grid-cols-1 gap-px bg-[color:var(--sand-deep)] md:grid-cols-5">
           {STEPS.map((s) => (
-            <div key={s.n} className="bg-[color:var(--sand-soft)] p-5">
+            <RevealItem key={s.n} className="bg-[color:var(--sand-soft)] p-5">
               <div className="font-display text-xs font-semibold tracking-widest text-[color:var(--ember)]">
                 {s.n}
               </div>
@@ -53,9 +55,9 @@ export function HowItWorks() {
               <p className="mt-2 text-xs leading-relaxed text-[color:var(--ink-soft)]">
                 {s.desc}
               </p>
-            </div>
+            </RevealItem>
           ))}
-        </div>
+        </RevealStagger>
 
         <div className="mt-6 text-xs">
           <a

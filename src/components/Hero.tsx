@@ -1,6 +1,7 @@
 import { ShieldCheck, Award, FileBadge } from "lucide-react";
 import { motion } from "framer-motion";
 import { CURRENT_CONTAINER } from "@/lib/products";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -111,13 +112,20 @@ export function Hero({
                 <div className="mb-1.5 flex items-baseline justify-between text-xs">
                   <span className="text-muted-foreground">Remplissage</span>
                   <span className="font-display text-lg font-semibold tabular-nums">
-                    {fillPercent.toFixed(0)}%
+                    <AnimatedNumber value={fillPercent} suffix="%" />
                   </span>
                 </div>
                 <div className="relative h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-                  <div
-                    className="h-full bg-foreground transition-all duration-700"
-                    style={{ width: `${fillPercent}%` }}
+                  <motion.div
+                    className="h-full bg-foreground"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${fillPercent}%` }}
+                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
+                  />
+                  <motion.div
+                    className="absolute inset-y-[-3px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                    animate={{ x: ["-100%", "260%"] }}
+                    transition={{ duration: 2.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.4 }}
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
@@ -135,13 +143,13 @@ export function Hero({
                 <div>
                   <div className="label-eyebrow text-muted-foreground">Séries</div>
                   <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-                    {seriesReached}/{totalSeries}
+                    <AnimatedNumber value={seriesReached} />/{totalSeries}
                   </div>
                 </div>
                 <div>
                   <div className="label-eyebrow text-muted-foreground">Pros engagés</div>
                   <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-                    {professionalsEngaged}
+                    <AnimatedNumber value={professionalsEngaged} />
                   </div>
                 </div>
               </div>
