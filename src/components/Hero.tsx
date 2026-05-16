@@ -1,6 +1,7 @@
 import { ShieldCheck, Award, FileBadge } from "lucide-react";
 import { motion } from "framer-motion";
 import { CURRENT_CONTAINER } from "@/lib/products";
+import { AnimatedNumber } from "@/components/motion-helpers";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", {
