@@ -1,43 +1,14 @@
-import { Check, Info } from "lucide-react";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
+import { Info } from "lucide-react";
 
 import { MoqProgressBar } from "@/components/MoqProgressBar";
 import { QuantityStepper } from "@/components/QuantityStepper";
+import { VariantSelector } from "@/components/VariantSelector";
 import { Button } from "@/components/ui/button";
-import { CATEGORY_LABEL, type ColorVariant, type Product } from "@/lib/products";
+import { CATEGORY_LABEL, type Product } from "@/lib/products";
 import { formatEUR, getMoqStatus } from "@/lib/order";
 
-function ColorDot({
-  variant,
-  selected,
-  onClick,
-}: {
-  variant: ColorVariant;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={variant.name}
-      aria-label={variant.name}
-      aria-pressed={selected}
-      className={`relative h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-foreground/15 transition-all ${
-        selected ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
-      }`}
-      style={{ background: variant.hex }}
-    >
-      {selected && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={2.5} />
-        </span>
-      )}
-    </button>
-  );
-}
-
-export function ProductCard({
+function ProductCardComponent({
   product,
   variantId,
   qty,
@@ -61,7 +32,10 @@ export function ProductCard({
   const moqStatus = getMoqStatus(totalCommitted, product.moqUnits);
 
   return (
-    <article className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+    <article
+      data-catalog-item-mode="mobile-card"
+      className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+    >
       <button
         type="button"
         onClick={onOpenDetails}
@@ -115,24 +89,12 @@ export function ProductCard({
           </div>
         </div>
 
-        <div>
-          <div className="label-eyebrow mb-2 text-muted-foreground">Couleur</div>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-            {product.variants.map((item) => (
-              <ColorDot
-                key={item.id}
-                variant={item}
-                selected={item.id === variantId}
-                onClick={() => onVariantChange(item.id)}
-              />
-            ))}
-          </div>
-          {variant && (
-            <div className="mt-1 text-xs text-foreground/80">
-              Sélectionné : <span className="font-medium">{variant.name}</span>
-            </div>
-          )}
-        </div>
+        <VariantSelector
+          variants={product.variants}
+          selectedVariantId={variantId}
+          onChange={onVariantChange}
+          size="lg"
+        />
 
         <MoqProgressBar label={`MOQ ${variant?.name}`} status={moqStatus} />
 
@@ -150,3 +112,5 @@ export function ProductCard({
     </article>
   );
 }
+
+export const ProductCard = memo(ProductCardComponent);

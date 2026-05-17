@@ -120,7 +120,7 @@
 ### 2.2 Catalogue produits
 - 🔄 ProductRow (desktop Lovable intégré, données mock)
 - ✅ ProductCard (mobile)
-- ❌ VariantSelector
+- ✅ VariantSelector
 - ❌ TableConfigurator (multi-axes plateau + pied)
 - ✅ QuantityStepper
 - ✅ MoqProgressBar
@@ -319,6 +319,8 @@
 - Tâches : ValueProps, ComparisonTable, bloc livraison rendu port et CTA final ajoutés dans le design Lovable.
 - Phase : Phase 2 — Catalogue mobile
 - Tâches : ProductCard mobile ajoutée, filtres catalogue rendus scrollables mobile, QuantityStepper et MoqProgressBar factorisés et partagés avec ProductRow.
+- Phase : Phase 2 — Optimisation catalogue
+- Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Search } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -19,6 +19,7 @@ import { FinalCta } from "@/components/FinalCta";
 import { Footer } from "@/components/Footer";
 import { MobileStickyBar } from "@/components/MobileStickyBar";
 import { ReservationDialog } from "@/components/ReservationDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
   CATEGORY_LABEL,
@@ -48,6 +49,22 @@ const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = 
 
 type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
 
+const MOBILE_PAGE_SIZE = 8;
+const DESKTOP_PAGE_SIZE = 18;
+
+function productSearchText(product: Product) {
+  return [
+    product.name,
+    product.sku,
+    CATEGORY_LABEL[product.category],
+    product.description,
+    ...product.features,
+    ...product.variants.map((variant) => variant.name),
+  ]
+    .join(" ")
+    .toLocaleLowerCase("fr-FR");
+}
+
 function getDefaultVariant(product: Product) {
   const variant = product.variants[0];
 
@@ -59,6 +76,9 @@ function getDefaultVariant(product: Product) {
 }
 
 function ContainerClubPage() {
+  const isMobile = useIsMobile();
+  const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
+
   // Pré-sélection couleur par produit (1ère variante)
   const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
     () => Object.fromEntries(PRODUCTS.map((p) => [p.id, getDefaultVariant(p).id])),
@@ -71,6 +91,9 @@ function ContainerClubPage() {
 
   const [filter, setFilter] = useState<"all" | ProductCategory>("all");
   const [sort, setSort] = useState<SortKey>("default");
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reserveOpen, setReserveOpen] = useState(false);
 
@@ -93,9 +116,25 @@ function ContainerClubPage() {
 
   const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
-  // Filtrage + tri
+  const categoryCounts = useMemo(() => {
+    return PRODUCTS.reduce<Record<"all" | ProductCategory, number>>(
+      (acc, product) => {
+        acc.all += 1;
+        acc[product.category] += 1;
+        return acc;
+      },
+      { all: 0, chair: 0, armchair: 0, table: 0, bench: 0 },
+    );
+  }, []);
+
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter((p) => filter === "all" || p.category === filter);
+    const query = deferredSearch.trim().toLocaleLowerCase("fr-FR");
+    let list = PRODUCTS.filter((product) => {
+      const categoryMatch = filter === "all" || product.category === filter;
+      const searchMatch = query.length === 0 || productSearchText(product).includes(query);
+      return categoryMatch && searchMatch;
+    });
+
     if (sort === "price-asc") list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
     else if (sort === "price-desc") list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
     else if (sort === "cbm-asc") list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
@@ -106,7 +145,17 @@ function ContainerClubPage() {
           a.variants.reduce((s, v) => s + v.unitsCommitted, 0),
       );
     return list;
-  }, [filter, sort]);
+  }, [deferredSearch, filter, sort]);
+
+  const visibleProducts = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount],
+  );
+  const remainingProducts = Math.max(0, filtered.length - visibleProducts.length);
+
+  useEffect(() => {
+    setVisibleCount(pageSize);
+  }, [deferredSearch, filter, pageSize, sort]);
 
   const detailProduct: Product | null = useMemo(
     () => PRODUCTS.find((p) => p.id === detailId) ?? null,
@@ -178,10 +227,7 @@ function ContainerClubPage() {
                 <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
                   {CATEGORY_FILTERS.map((f) => {
                     const active = f.id === filter;
-                    const count =
-                      f.id === "all"
-                        ? PRODUCTS.length
-                        : PRODUCTS.filter((p) => p.category === f.id).length;
+                    const count = categoryCounts[f.id];
                     return (
                       <button
                         key={f.id}
@@ -201,20 +247,37 @@ function ContainerClubPage() {
                     );
                   })}
                 </div>
-                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ArrowUpDown className="h-3 w-3" />
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as SortKey)}
-                    className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-foreground"
-                  >
-                    <option value="default">Tri par défaut</option>
-                    <option value="price-asc">Prix croissant</option>
-                    <option value="price-desc">Prix décroissant</option>
-                    <option value="cbm-asc">Volume CBM</option>
-                    <option value="popular">Popularité</option>
-                  </select>
-                </label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label className="relative block text-xs text-muted-foreground">
+                    <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Rechercher SKU, modèle, couleur..."
+                      className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:w-64 sm:text-xs"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <ArrowUpDown className="h-3 w-3" />
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as SortKey)}
+                      className="h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:text-xs"
+                    >
+                      <option value="default">Tri par défaut</option>
+                      <option value="price-asc">Prix croissant</option>
+                      <option value="price-desc">Prix décroissant</option>
+                      <option value="cbm-asc">Volume CBM</option>
+                      <option value="popular">Popularité</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {filtered.length} référence{filtered.length > 1 ? "s" : ""} trouvée
+                  {filtered.length > 1 ? "s" : ""} · {visibleProducts.length} affichée
+                  {visibleProducts.length > 1 ? "s" : ""}
+                </div>
               </div>
 
               {filtered.length === 0 ? (
@@ -223,34 +286,38 @@ function ContainerClubPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filtered.map((product) => (
-                    <div key={product.id}>
-                      <div className="md:hidden">
-                        <ProductCard
-                          product={product}
-                          variantId={
-                            variantByProduct[product.id] ?? getDefaultVariant(product).id
-                          }
-                          qty={qtyByProduct[product.id] ?? 0}
-                          onQtyChange={(n) => setQty(product.id, n)}
-                          onVariantChange={(id) => setVariant(product.id, id)}
-                          onOpenDetails={() => setDetailId(product.id)}
-                        />
-                      </div>
-                      <div className="hidden md:block">
-                        <ProductRow
-                          product={product}
-                          variantId={
-                            variantByProduct[product.id] ?? getDefaultVariant(product).id
-                          }
-                          qty={qtyByProduct[product.id] ?? 0}
-                          onQtyChange={(n) => setQty(product.id, n)}
-                          onVariantChange={(id) => setVariant(product.id, id)}
-                          onOpenDetails={() => setDetailId(product.id)}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                  {visibleProducts.map((product) => {
+                    const selectedVariantId =
+                      variantByProduct[product.id] ?? getDefaultVariant(product).id;
+                    const quantity = qtyByProduct[product.id] ?? 0;
+                    const commonProps = {
+                      product,
+                      variantId: selectedVariantId,
+                      qty: quantity,
+                      onQtyChange: (n: number) => setQty(product.id, n),
+                      onVariantChange: (id: string) => setVariant(product.id, id),
+                      onOpenDetails: () => setDetailId(product.id),
+                    };
+
+                    return isMobile ? (
+                      <ProductCard key={product.id} {...commonProps} />
+                    ) : (
+                      <ProductRow key={product.id} {...commonProps} />
+                    );
+                  })}
+                </div>
+              )}
+
+              {remainingProducts > 0 && (
+                <div className="mt-5 border-t border-[color:var(--sand-deep)] pt-5 text-center">
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/40"
+                    onClick={() => setVisibleCount((current) => current + pageSize)}
+                  >
+                    Charger {Math.min(pageSize, remainingProducts)} référence
+                    {Math.min(pageSize, remainingProducts) > 1 ? "s" : ""} de plus
+                  </button>
                 </div>
               )}
 

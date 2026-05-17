@@ -1,46 +1,13 @@
-import { Check, Info } from "lucide-react";
-import { useMemo } from "react";
-import {
-  CATEGORY_LABEL,
-  type ColorVariant,
-  type Product,
-} from "@/lib/products";
+import { memo, useMemo } from "react";
+import { Info } from "lucide-react";
+import { CATEGORY_LABEL, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { Button } from "@/components/ui/button";
 import { MoqProgressBar } from "@/components/MoqProgressBar";
 import { QuantityStepper } from "@/components/QuantityStepper";
+import { VariantSelector } from "@/components/VariantSelector";
 
-function ColorDot({
-  variant,
-  selected,
-  onClick,
-}: {
-  variant: ColorVariant;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={variant.name}
-      aria-label={variant.name}
-      aria-pressed={selected}
-      className={`relative h-6 w-6 shrink-0 overflow-hidden rounded-full ring-1 ring-foreground/15 transition-all hover:scale-110 ${
-        selected ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
-      }`}
-      style={{ background: variant.hex }}
-    >
-      {selected && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Check className="h-3 w-3 text-white drop-shadow" strokeWidth={2.5} />
-        </span>
-      )}
-    </button>
-  );
-}
-
-export function ProductRow({
+function ProductRowComponent({
   product,
   variantId,
   qty,
@@ -65,7 +32,10 @@ export function ProductRow({
   const moqStatus = getMoqStatus(totalCommitted, moq);
 
   return (
-    <article className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground/30">
+    <article
+      data-catalog-item-mode="desktop-row"
+      className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground/30"
+    >
       <div className="flex gap-4">
         {/* Visual */}
         <button
@@ -119,21 +89,12 @@ export function ProductRow({
           </div>
 
           {/* Variantes */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="label-eyebrow text-muted-foreground">Couleur :</span>
-            {product.variants.map((v) => (
-              <ColorDot
-                key={v.id}
-                variant={v}
-                selected={v.id === variantId}
-                onClick={() => onVariantChange(v.id)}
-              />
-            ))}
-            {variant && (
-              <span className="text-xs text-foreground/80">
-                Sélectionné : <span className="font-medium">{variant.name}</span>
-              </span>
-            )}
+          <div className="mt-3">
+            <VariantSelector
+              variants={product.variants}
+              selectedVariantId={variantId}
+              onChange={onVariantChange}
+            />
           </div>
 
           {/* MOQ progress */}
@@ -158,3 +119,5 @@ export function ProductRow({
     </article>
   );
 }
+
+export const ProductRow = memo(ProductRowComponent);
