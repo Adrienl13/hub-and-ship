@@ -112,6 +112,7 @@
 - 🔄 ProcessTimeline / HowItWorks Lovable intégré
 - ✅ ComparisonTable (Container Club vs concurrents)
 - 🔄 Catalogue Lovable (filtres + tri + rows) intégré avec données mock
+- ✅ Page `/catalogue` dense type order sheet
 - ✅ Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
@@ -321,6 +322,8 @@
 - Tâches : ProductCard mobile ajoutée, filtres catalogue rendus scrollables mobile, QuantityStepper et MoqProgressBar factorisés et partagés avec ProductRow.
 - Phase : Phase 2 — Optimisation catalogue
 - Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
+- Phase : Phase 2 — Catalogue dédié
+- Tâches : route `/catalogue` ajoutée, vue lignes compactes, page size 30/60/90, navigation home vers catalogue complet.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

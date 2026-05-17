@@ -22,58 +22,31 @@ import { ReservationDialog } from "@/components/ReservationDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import {
-  CATEGORY_LABEL,
   CURRENT_CONTAINER,
   PRODUCTS,
   type Product,
-  type ProductCategory,
 } from "@/lib/products";
 import {
   calculateContainerFill,
   calculateOrder,
   type CartItem,
 } from "@/lib/order";
+import {
+  CATEGORY_FILTERS,
+  filterAndSortProducts,
+  getCategoryCounts,
+  getDefaultVariant,
+  type CatalogueFilter,
+  type SortKey,
+} from "@/lib/catalogue";
 import { openQuotePDF } from "@/lib/quote";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
 });
 
-const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = [
-  { id: "all", label: "Tous" },
-  { id: "chair", label: "Chaise" },
-  { id: "armchair", label: "Fauteuil" },
-  { id: "table", label: "Table" },
-  { id: "bench", label: "Banc" },
-];
-
-type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
-
 const MOBILE_PAGE_SIZE = 8;
 const DESKTOP_PAGE_SIZE = 18;
-
-function productSearchText(product: Product) {
-  return [
-    product.name,
-    product.sku,
-    CATEGORY_LABEL[product.category],
-    product.description,
-    ...product.features,
-    ...product.variants.map((variant) => variant.name),
-  ]
-    .join(" ")
-    .toLocaleLowerCase("fr-FR");
-}
-
-function getDefaultVariant(product: Product) {
-  const variant = product.variants[0];
-
-  if (!variant) {
-    throw new Error(`Product ${product.id} must define at least one variant`);
-  }
-
-  return variant;
-}
 
 function ContainerClubPage() {
   const isMobile = useIsMobile();
@@ -89,7 +62,7 @@ function ContainerClubPage() {
     p3: 10,
   });
 
-  const [filter, setFilter] = useState<"all" | ProductCategory>("all");
+  const [filter, setFilter] = useState<CatalogueFilter>("all");
   const [sort, setSort] = useState<SortKey>("default");
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -116,35 +89,15 @@ function ContainerClubPage() {
 
   const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
-  const categoryCounts = useMemo(() => {
-    return PRODUCTS.reduce<Record<"all" | ProductCategory, number>>(
-      (acc, product) => {
-        acc.all += 1;
-        acc[product.category] += 1;
-        return acc;
-      },
-      { all: 0, chair: 0, armchair: 0, table: 0, bench: 0 },
-    );
-  }, []);
+  const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), []);
 
   const filtered = useMemo(() => {
-    const query = deferredSearch.trim().toLocaleLowerCase("fr-FR");
-    let list = PRODUCTS.filter((product) => {
-      const categoryMatch = filter === "all" || product.category === filter;
-      const searchMatch = query.length === 0 || productSearchText(product).includes(query);
-      return categoryMatch && searchMatch;
+    return filterAndSortProducts({
+      products: PRODUCTS,
+      filter,
+      search: deferredSearch,
+      sort,
     });
-
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
-    else if (sort === "price-desc") list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
-    else if (sort === "cbm-asc") list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
-    else if (sort === "popular")
-      list = [...list].sort(
-        (a, b) =>
-          b.variants.reduce((s, v) => s + v.unitsCommitted, 0) -
-          a.variants.reduce((s, v) => s + v.unitsCommitted, 0),
-      );
-    return list;
   }, [deferredSearch, filter, sort]);
 
   const visibleProducts = useMemo(
@@ -218,6 +171,12 @@ function ContainerClubPage() {
                 quantité pour faire grimper la barre et déclencher la série.
               </p>
             </div>
+            <a
+              href="/catalogue"
+              className="inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
+            >
+              Ouvrir le catalogue complet
+            </a>
           </div>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -322,15 +281,11 @@ function ContainerClubPage() {
               )}
 
               <div className="mt-4 text-[11px] text-muted-foreground">
-                {CATEGORY_LABEL.chair && (
-                  <>
-                    MOQ usine :{" "}
-                    <strong className="text-foreground/80">
-                      50 unités par modèle ET par couleur
-                    </strong>{" "}
-                    pour les assises, 20 pour les tables.
-                  </>
-                )}
+                MOQ usine :{" "}
+                <strong className="text-foreground/80">
+                  50 unités par modèle ET par couleur
+                </strong>{" "}
+                pour les assises, 20 pour les tables.
               </div>
             </div>
 

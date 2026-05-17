@@ -42,17 +42,21 @@ export function VariantSelector({
   selectedVariantId,
   onChange,
   size = "sm",
+  showLabel = true,
+  showSelectedName = true,
 }: {
   variants: ColorVariant[];
   selectedVariantId: string;
   onChange: (variantId: string) => void;
   size?: "sm" | "lg";
+  showLabel?: boolean;
+  showSelectedName?: boolean;
 }) {
   const selected = variants.find((variant) => variant.id === selectedVariantId);
 
   return (
     <div>
-      <div className="label-eyebrow mb-2 text-muted-foreground">Couleur</div>
+      {showLabel && <div className="label-eyebrow mb-2 text-muted-foreground">Couleur</div>}
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {variants.map((variant) => (
           <ColorDot
@@ -64,7 +68,7 @@ export function VariantSelector({
           />
         ))}
       </div>
-      {selected && (
+      {selected && showSelectedName && (
         <div className="mt-1 text-xs text-foreground/80">
           Sélectionné : <span className="font-medium">{selected.name}</span>
         </div>

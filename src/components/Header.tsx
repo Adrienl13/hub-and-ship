@@ -6,7 +6,7 @@ export function Header({ onReserve }: { onReserve: () => void }) {
     <header className="sticky top-0 z-40 h-16 border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]/85 backdrop-blur-md">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         {/* Logo */}
-        <a href="#top" className="flex items-center gap-2.5">
+        <a href="/#top" className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">
             C
           </span>
@@ -18,10 +18,10 @@ export function Header({ onReserve }: { onReserve: () => void }) {
         {/* Nav */}
         <nav className="hidden items-center gap-8 md:flex">
           {[
-            ["Catalogue", "#catalogue"],
-            ["Comment ça marche", "#comment"],
-            ["Containers livrés", "#livres"],
-            ["FAQ", "#faq"],
+            ["Catalogue", "/catalogue"],
+            ["Comment ça marche", "/#comment"],
+            ["Containers livrés", "/#livres"],
+            ["FAQ", "/#faq"],
           ].map(([label, href]) => (
             <a
               key={href}
