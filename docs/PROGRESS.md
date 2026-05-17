@@ -128,7 +128,7 @@
 - 🔄 ProductDetailDialog Lovable intégré
 - 🔄 ProductGallery (sélection visuels + état fournisseur à compléter)
 - 🔄 ProductDocumentsList (documents visibles + états verrouillés auth)
-- ❌ ProductReviews
+- 🔄 ProductReviews (résumé + avis vérifiés mock avant Supabase)
 
 ### 2.3 Visualisation container
 - 🔄 ContainerScene3D (R3F Lovable intégré)
@@ -332,6 +332,8 @@
 - Tâches : règle métier chaises centralisée : minimum 50 unités puis incrément par packs de 10 dans catalogue, accueil et fiche produit.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
+- Phase : Phase 2 — Avis produit
+- Tâches : ProductReviews ajouté dans ProductDetailDialog avec résumé ratings, sous-notes qualité/valeur/délais et avis vérifiés simulés par catégorie.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

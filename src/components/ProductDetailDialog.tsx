@@ -12,6 +12,7 @@ import { getMoqStatus, formatEUR } from "@/lib/order";
 import { TableConfigurator } from "@/components/TableConfigurator";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductDocumentsList } from "@/components/ProductDocumentsList";
+import { ProductReviews } from "@/components/ProductReviews";
 import { QuantityStepper } from "@/components/QuantityStepper";
 import { getQuantityRule } from "@/lib/quantity";
 
@@ -194,6 +195,8 @@ export function ProductDetailDialog({
             </div>
 
             <ProductDocumentsList product={product} />
+
+            <ProductReviews product={product} />
 
             {/* Quantité */}
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
