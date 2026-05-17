@@ -145,7 +145,7 @@
 - 🔄 PricingBreakdown Lovable intégré
 - 🔄 TieredPricingViz (paliers CBM dégressifs)
 - ❌ DeliveryInfoBox
-- ❌ Store Zustand `cart.store.ts`
+- 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
 ### 2.5 Réservation
 - 🔄 ReservationDialog Lovable intégré (4 étapes V1.3, INSEE/Stripe serveur à connecter)
@@ -338,6 +338,8 @@
 - Tâches : métriques container factorisées : statut, remplissage avec seuil 80%, séries, participants anonymisés et fallback 2D derrière la scène 3D.
 - Phase : Phase 2 — Panier
 - Tâches : TieredPricingViz ajouté dans OrderSidebar avec palier actif, marge moyenne et prochain seuil CBM.
+- Phase : Phase 2 — Panier partagé
+- Tâches : store Zustand `cart.store.ts` ajouté avec quantités, variantes, snapshot panier/totaux/remplissage et branchement home + catalogue.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

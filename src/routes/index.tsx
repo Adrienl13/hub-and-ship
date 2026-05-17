@@ -27,11 +27,6 @@ import {
   type Product,
 } from "@/lib/products";
 import {
-  calculateContainerFill,
-  calculateOrder,
-  type CartItem,
-} from "@/lib/order";
-import {
   CATEGORY_FILTERS,
   filterAndSortProducts,
   getCategoryCounts,
@@ -40,7 +35,7 @@ import {
   type SortKey,
 } from "@/lib/catalogue";
 import { openQuotePDF } from "@/lib/quote";
-import { getQuantityRule, sanitizeOrderQuantity } from "@/lib/quantity";
+import { useCart } from "@/stores/cart.store";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
@@ -52,16 +47,16 @@ const DESKTOP_PAGE_SIZE = 18;
 function ContainerClubPage() {
   const isMobile = useIsMobile();
   const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
-
-  // Pré-sélection couleur par produit (1ère variante)
-  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
-    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, getDefaultVariant(p).id])),
-  );
-  // Quantités par produit (la quantité s'applique à la variante sélectionnée)
-  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 50,
-    p3: 10,
-  });
+  const {
+    items,
+    totals,
+    fill,
+    totalUnits,
+    variantByProduct,
+    qtyByProduct,
+    setQty,
+    setVariant,
+  } = useCart();
 
   const [filter, setFilter] = useState<CatalogueFilter>("all");
   const [sort, setSort] = useState<SortKey>("default");
@@ -70,25 +65,6 @@ function ContainerClubPage() {
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reserveOpen, setReserveOpen] = useState(false);
-
-  // Construire le panier
-  const items: CartItem[] = useMemo(() => {
-    return PRODUCTS.flatMap((product) => {
-      const qty = qtyByProduct[product.id] ?? 0;
-      if (qty <= 0) return [];
-      const variantId = variantByProduct[product.id] ?? getDefaultVariant(product).id;
-      const variant = product.variants.find((v) => v.id === variantId) ?? getDefaultVariant(product);
-      return [{ product, variant, quantity: qty }];
-    });
-  }, [qtyByProduct, variantByProduct]);
-
-  const totals = useMemo(() => calculateOrder(items), [items]);
-  const fill = useMemo(
-    () => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm),
-    [items],
-  );
-
-  const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
   const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), []);
 
@@ -115,19 +91,6 @@ function ContainerClubPage() {
     () => PRODUCTS.find((p) => p.id === detailId) ?? null,
     [detailId],
   );
-
-  // Handlers
-  const setQty = (productId: string, n: number) =>
-    setQtyByProduct((prev) => {
-      const product = PRODUCTS.find((item) => item.id === productId);
-      if (!product) return prev;
-      return {
-        ...prev,
-        [productId]: sanitizeOrderQuantity(n, getQuantityRule(product)),
-      };
-    });
-  const setVariant = (productId: string, variantId: string) =>
-    setVariantByProduct((prev) => ({ ...prev, [productId]: variantId }));
 
   const handleEmail = () => {
     toast.success("Devis envoyé", {

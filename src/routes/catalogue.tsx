@@ -22,27 +22,27 @@ import {
   type SortKey,
 } from "@/lib/catalogue";
 import {
-  calculateContainerFill,
-  calculateOrder,
-  type CartItem,
   formatEUR,
 } from "@/lib/order";
 import { openQuotePDF } from "@/lib/quote";
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from "@/lib/products";
-import { getQuantityRule, sanitizeOrderQuantity } from "@/lib/quantity";
+import { useCart } from "@/stores/cart.store";
 
 export const Route = createFileRoute("/catalogue")({
   component: CataloguePage,
 });
 
 function CataloguePage() {
-  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
-    () => Object.fromEntries(PRODUCTS.map((product) => [product.id, getDefaultVariant(product).id])),
-  );
-  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 50,
-    p3: 10,
-  });
+  const {
+    items,
+    totals,
+    fill,
+    totalUnits,
+    variantByProduct,
+    qtyByProduct,
+    setQty,
+    setVariant,
+  } = useCart();
   const [filter, setFilter] = useState<CatalogueFilter>("all");
   const [sort, setSort] = useState<SortKey>("default");
   const [search, setSearch] = useState("");
@@ -52,23 +52,6 @@ function CataloguePage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reserveOpen, setReserveOpen] = useState(false);
 
-  const items: CartItem[] = useMemo(() => {
-    return PRODUCTS.flatMap((product) => {
-      const quantity = qtyByProduct[product.id] ?? 0;
-      if (quantity <= 0) return [];
-      const variantId = variantByProduct[product.id] ?? getDefaultVariant(product).id;
-      const variant =
-        product.variants.find((item) => item.id === variantId) ?? getDefaultVariant(product);
-      return [{ product, variant, quantity }];
-    });
-  }, [qtyByProduct, variantByProduct]);
-
-  const totals = useMemo(() => calculateOrder(items), [items]);
-  const fill = useMemo(
-    () => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm),
-    [items],
-  );
-  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
   const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), []);
   const filtered = useMemo(
     () =>
@@ -93,18 +76,6 @@ function CataloguePage() {
   useEffect(() => {
     setVisibleCount(pageSize);
   }, [deferredSearch, filter, pageSize, sort]);
-
-  const setQty = (productId: string, quantity: number) =>
-    setQtyByProduct((previous) => {
-      const product = PRODUCTS.find((item) => item.id === productId);
-      if (!product) return previous;
-      return {
-        ...previous,
-        [productId]: sanitizeOrderQuantity(quantity, getQuantityRule(product)),
-      };
-    });
-  const setVariant = (productId: string, variantId: string) =>
-    setVariantByProduct((previous) => ({ ...previous, [productId]: variantId }));
 
   const handleEmail = () => {
     toast.success("Devis envoyé", {
