@@ -40,6 +40,7 @@ import {
   type SortKey,
 } from "@/lib/catalogue";
 import { openQuotePDF } from "@/lib/quote";
+import { getQuantityRule, sanitizeOrderQuantity } from "@/lib/quantity";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
@@ -58,7 +59,7 @@ function ContainerClubPage() {
   );
   // Quantités par produit (la quantité s'applique à la variante sélectionnée)
   const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 24,
+    p1: 50,
     p3: 10,
   });
 
@@ -117,7 +118,14 @@ function ContainerClubPage() {
 
   // Handlers
   const setQty = (productId: string, n: number) =>
-    setQtyByProduct((prev) => ({ ...prev, [productId]: Math.max(0, n) }));
+    setQtyByProduct((prev) => {
+      const product = PRODUCTS.find((item) => item.id === productId);
+      if (!product) return prev;
+      return {
+        ...prev,
+        [productId]: sanitizeOrderQuantity(n, getQuantityRule(product)),
+      };
+    });
   const setVariant = (productId: string, variantId: string) =>
     setVariantByProduct((prev) => ({ ...prev, [productId]: variantId }));
 

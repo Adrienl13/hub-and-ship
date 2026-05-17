@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { Info } from "lucide-react";
 import { CATEGORY_LABEL, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
+import { getQuantityRule } from "@/lib/quantity";
 import { Button } from "@/components/ui/button";
 import { MoqProgressBar } from "@/components/MoqProgressBar";
 import { QuantityStepper } from "@/components/QuantityStepper";
@@ -27,6 +28,7 @@ function ProductRowComponent({
     [product, variantId],
   );
   const moq = product.moqUnits;
+  const quantityRule = getQuantityRule(product);
   const savingsPct = Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100);
   const totalCommitted = (variant?.unitsCommitted ?? 0) + qty;
   const moqStatus = getMoqStatus(totalCommitted, moq);
@@ -104,7 +106,12 @@ function ProductRowComponent({
 
           {/* Quantité + détails */}
           <div className="mt-4 flex items-center justify-between gap-3">
-            <QuantityStepper value={qty} onChange={onQtyChange} />
+            <QuantityStepper
+              value={qty}
+              onChange={onQtyChange}
+              rule={quantityRule}
+              showRule={product.category === "chair"}
+            />
             <Button
               variant="outline"
               size="sm"

@@ -127,7 +127,7 @@
 - ✅ MoqProgressBar
 - 🔄 ProductDetailDialog Lovable intégré
 - 🔄 ProductGallery (sélection visuels + état fournisseur à compléter)
-- ❌ ProductDocumentsList (auth gated)
+- 🔄 ProductDocumentsList (documents visibles + états verrouillés auth)
 - ❌ ProductReviews
 
 ### 2.3 Visualisation container
@@ -328,6 +328,10 @@
 - Tâches : TableConfigurator ajouté dans ProductDetailDialog avec format plateau, couleur plateau, finition pied et prix indicatif par configuration.
 - Phase : Phase 2 — Galerie produit
 - Tâches : ProductGallery ajouté dans ProductDetailDialog avec sélection de visuels, navigation, compteur et état à compléter pour fournisseurs sans galerie.
+- Phase : Phase 2 — Règles quantité
+- Tâches : règle métier chaises centralisée : minimum 50 unités puis incrément par packs de 10 dans catalogue, accueil et fiche produit.
+- Phase : Phase 2 — Documents produit
+- Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

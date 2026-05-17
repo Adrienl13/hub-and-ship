@@ -1,4 +1,4 @@
-import { Minus, Plus, Ruler, Weight, Package, Flame, ShieldCheck, TrendingDown, Check } from "lucide-react";
+import { Ruler, Weight, Package, Flame, ShieldCheck, TrendingDown, Check } from "lucide-react";
 import { useMemo } from "react";
 import {
   Dialog,
@@ -7,11 +7,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL, type ColorVariant, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { TableConfigurator } from "@/components/TableConfigurator";
 import { ProductGallery } from "@/components/ProductGallery";
+import { ProductDocumentsList } from "@/components/ProductDocumentsList";
+import { QuantityStepper } from "@/components/QuantityStepper";
+import { getQuantityRule } from "@/lib/quantity";
 
 function BigSwatch({
   variant,
@@ -71,6 +73,7 @@ export function ProductDetailDialog({
   const moqStatus = getMoqStatus(variant.unitsCommitted + qty, product.moqUnits);
   const totalLine = product.basePriceHt * qty;
   const lineCbm = product.cbmPerUnit * qty;
+  const quantityRule = getQuantityRule(product);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,40 +193,23 @@ export function ProductDetailDialog({
               </ul>
             </div>
 
+            <ProductDocumentsList product={product} />
+
             {/* Quantité */}
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-xs">
                   <div className="font-medium">Quantité</div>
-                  <div className="text-muted-foreground">Pas à pas · MOQ {product.moqUnits}</div>
+                  <div className="text-muted-foreground">
+                    {quantityRule.label} · MOQ {product.moqUnits}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => onQtyChange(Math.max(0, qty - 1))}
-                    disabled={qty === 0}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <input
-                    type="number"
-                    value={qty}
-                    onChange={(e) =>
-                      onQtyChange(Math.max(0, parseInt(e.target.value || "0", 10)))
-                    }
-                    className="w-14 bg-transparent text-center font-display text-lg tabular-nums focus:outline-none"
-                    min={0}
-                  />
-                  <Button
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => onQtyChange(qty + 1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <QuantityStepper
+                  value={qty}
+                  onChange={onQtyChange}
+                  size="lg"
+                  rule={quantityRule}
+                />
               </div>
               {qty > 0 && (
                 <div className="mt-3 flex items-center justify-between border-t border-[color:var(--sand-deep)] pt-2 text-sm">

@@ -7,6 +7,7 @@ import { VariantSelector } from "@/components/VariantSelector";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL, type Product } from "@/lib/products";
 import { formatEUR, getMoqStatus } from "@/lib/order";
+import { getQuantityRule } from "@/lib/quantity";
 
 function ProductCardComponent({
   product,
@@ -30,6 +31,7 @@ function ProductCardComponent({
   const savingsPct = Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100);
   const totalCommitted = (variant?.unitsCommitted ?? 0) + qty;
   const moqStatus = getMoqStatus(totalCommitted, product.moqUnits);
+  const quantityRule = getQuantityRule(product);
 
   return (
     <article
@@ -99,7 +101,13 @@ function ProductCardComponent({
         <MoqProgressBar label={`MOQ ${variant?.name}`} status={moqStatus} />
 
         <div className="flex items-center justify-between gap-3 pt-1">
-          <QuantityStepper value={qty} onChange={onQtyChange} size="lg" />
+          <QuantityStepper
+            value={qty}
+            onChange={onQtyChange}
+            size="lg"
+            rule={quantityRule}
+            showRule={product.category === "chair"}
+          />
           <Button
             variant="outline"
             className="h-11 rounded-sm border-[color:var(--sand-deep)] px-4"

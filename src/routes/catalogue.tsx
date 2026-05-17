@@ -29,6 +29,7 @@ import {
 } from "@/lib/order";
 import { openQuotePDF } from "@/lib/quote";
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from "@/lib/products";
+import { getQuantityRule, sanitizeOrderQuantity } from "@/lib/quantity";
 
 export const Route = createFileRoute("/catalogue")({
   component: CataloguePage,
@@ -39,7 +40,7 @@ function CataloguePage() {
     () => Object.fromEntries(PRODUCTS.map((product) => [product.id, getDefaultVariant(product).id])),
   );
   const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 24,
+    p1: 50,
     p3: 10,
   });
   const [filter, setFilter] = useState<CatalogueFilter>("all");
@@ -94,7 +95,14 @@ function CataloguePage() {
   }, [deferredSearch, filter, pageSize, sort]);
 
   const setQty = (productId: string, quantity: number) =>
-    setQtyByProduct((previous) => ({ ...previous, [productId]: Math.max(0, quantity) }));
+    setQtyByProduct((previous) => {
+      const product = PRODUCTS.find((item) => item.id === productId);
+      if (!product) return previous;
+      return {
+        ...previous,
+        [productId]: sanitizeOrderQuantity(quantity, getQuantityRule(product)),
+      };
+    });
   const setVariant = (productId: string, variantId: string) =>
     setVariantByProduct((previous) => ({ ...previous, [productId]: variantId }));
 

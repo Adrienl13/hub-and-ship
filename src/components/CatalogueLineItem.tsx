@@ -7,6 +7,7 @@ import { VariantSelector } from "@/components/VariantSelector";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL, type Product } from "@/lib/products";
 import { formatEUR, getMoqStatus } from "@/lib/order";
+import { getQuantityRule } from "@/lib/quantity";
 
 function CatalogueLineItemComponent({
   product,
@@ -27,6 +28,7 @@ function CatalogueLineItemComponent({
     () => product.variants.find((item) => item.id === variantId) ?? product.variants[0],
     [product.variants, variantId],
   );
+  const quantityRule = getQuantityRule(product);
   const moqStatus = getMoqStatus((variant?.unitsCommitted ?? 0) + qty, product.moqUnits);
 
   return (
@@ -104,7 +106,12 @@ function CatalogueLineItemComponent({
         </div>
       </div>
 
-      <QuantityStepper value={qty} onChange={onQtyChange} />
+      <QuantityStepper
+        value={qty}
+        onChange={onQtyChange}
+        rule={quantityRule}
+        showRule={product.category === "chair"}
+      />
 
       <Button
         variant="outline"
