@@ -23,8 +23,8 @@ const STEPS = [
   },
   {
     n: "05",
-    title: "Livraison au port",
-    desc: "Enlèvement libre au port (Marseille ou Le Havre) ou livraison forfaitaire par zone géographique.",
+    title: "Rendu port",
+    desc: "Enlèvement libre au port, transporteur déjà choisi, ou mise en relation avec des transporteurs recommandés.",
   },
 ];
 

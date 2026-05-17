@@ -112,7 +112,7 @@
 - 🔄 ProcessTimeline / HowItWorks Lovable intégré
 - ❌ ComparisonTable (Container Club vs concurrents)
 - 🔄 Catalogue Lovable (filtres + tri + rows) intégré avec données mock
-- ❌ Bloc livraison rendue port
+- 🔄 Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
 - ❌ CTA final
@@ -313,6 +313,8 @@
 ### Session du 2026-05-17
 - Phase : Session 0 — Initialisation projet
 - Tâches : starter importé, structure TanStack React Start créée, configs TypeScript/Tailwind/ESLint/Prettier/Vitest/Playwright ajoutées, dépendances installées, hooks Husky configurés, pricing tiers implémenté.
+- Phase : Phase 2 — Catalogue & Réservation
+- Tâches : design Lovable intégré, page catalogue branchée, flux de réservation V1.3 en 4 étapes ajouté (SIRET, contact, livraison, paiement placeholder), textes livraison alignés rendu port.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

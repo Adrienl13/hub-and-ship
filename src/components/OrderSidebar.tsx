@@ -152,7 +152,7 @@ export function OrderSidebar({
             <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
             <AnimRow label="À payer aujourd'hui" value={totals.payNow} bold />
             <AnimRow label="Acompte à 80%" value={totals.payAt80Percent} muted />
-            <AnimRow label="Solde avant livraison" value={totals.payBeforeShipping} muted />
+            <AnimRow label="Solde avant expédition" value={totals.payBeforeShipping} muted />
             {totals.savings > 0 && (
               <motion.div
                 layout
@@ -212,7 +212,7 @@ export function OrderSidebar({
           { Icon: RefreshCcw, t: "Remboursement 100% si Container Club annule" },
           { Icon: Lock, t: "Paiement Stripe sécurisé · 3D Secure" },
           { Icon: ShieldCheck, t: "Contrôle qualité SGS indépendant avant départ" },
-          { Icon: Truck, t: "Forfait livraison clair par zone géographique" },
+          { Icon: Truck, t: "Transport post-port organisé côté client" },
         ].map(({ Icon, t }) => (
           <li key={t} className="flex items-start gap-2">
             <Icon className="mt-0.5 h-3 w-3 shrink-0 text-foreground/50" strokeWidth={1.5} />

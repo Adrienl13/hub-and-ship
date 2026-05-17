@@ -17,7 +17,7 @@ const FAQ = [
   },
   {
     q: "Comment se passe la livraison ? Combien ça coûte ?",
-    a: "Deux options : enlèvement libre au port (Marseille-Fos ou Le Havre) gratuit, ou livraison forfaitaire par zone géographique (à partir de 89€ HT pour Île-de-France, 149€ HT pour le sud, devis transparent à la commande).",
+    a: "Container Club facture le prix rendu port. Vous pouvez enlever la marchandise à Marseille-Fos ou au Havre, organiser votre propre transporteur, ou demander une mise en relation avec des transporteurs recommandés. Le transport post-port est contractualisé et payé directement par le client.",
   },
   {
     q: "Quelle garantie sur les produits ? Et le SAV ?",
