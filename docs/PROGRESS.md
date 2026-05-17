@@ -58,8 +58,8 @@
 
 ### 1.4 Logique métier (src/lib/)
 - ✅ `pricing/tiers.ts` + tests
-- ❌ `pricing/reservation-fee.ts` + tests
-- ❌ `pricing/moq.ts` + tests
+- ✅ `pricing/reservation-fee.ts` + tests
+- ✅ `pricing/moq.ts` + tests
 - ❌ `pricing/loyalty.ts` + tests
 - ❌ `pricing/aggregation.ts` + tests
 - ❌ `pricing/referral.ts` + tests
@@ -67,8 +67,8 @@
 - ❌ `container/status.ts` + tests
 - ❌ `container/auto-open.ts` + tests
 - ❌ `claims/sav.ts` + tests
-- ❌ `validation/siret.ts` + tests (algo Luhn + checksum)
-- ❌ `validation/email.ts` + tests (détection domaines personnels)
+- ✅ `validation/siret.ts` + tests (algo Luhn + checksum)
+- ✅ `validation/email.ts` + tests (détection domaines personnels)
 - ❌ `validation/schemas.ts` (Zod schemas tous inputs API)
 
 ### 1.5 Sécurité
@@ -316,6 +316,13 @@
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
+
+### Session du 2026-05-17 — suite Phase 1.4
+- Phase : Phase 1 — Logique métier pure
+- Tâches : frais de réservation, statut MOQ, validation email perso et validation SIRET offline ajoutés.
+- Fichiers créés : `src/lib/pricing/reservation-fee.ts`, `src/lib/pricing/moq.ts`, `src/lib/validation/email.ts`, `src/lib/validation/siret.ts` et tests associés.
+- Tests : validation en cours sur typecheck, lint, Vitest et build.
+- Notes : les migrations Supabase restent non démarrées car elles modifient le schéma DB.
 
 ---
 
