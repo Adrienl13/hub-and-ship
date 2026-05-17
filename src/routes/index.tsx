@@ -8,6 +8,7 @@ import { Hero } from "@/components/Hero";
 import { ValueProps } from "@/components/ValueProps";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { ProductCard } from "@/components/ProductCard";
 import { ProductRow } from "@/components/ProductRow";
 import { ProductDetailDialog } from "@/components/ProductDetailDialog";
 import { OrderSidebar } from "@/components/OrderSidebar";
@@ -173,9 +174,8 @@ function ContainerClubPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Catalogue (60%) */}
             <div className="lg:col-span-7">
-              {/* Filtres */}
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--sand-deep)] pb-4">
-                <div className="flex flex-wrap gap-1.5">
+              <div className="mb-5 flex flex-col gap-3 border-b border-[color:var(--sand-deep)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
                   {CATEGORY_FILTERS.map((f) => {
                     const active = f.id === filter;
                     const count =
@@ -187,7 +187,7 @@ function ContainerClubPage() {
                         key={f.id}
                         type="button"
                         onClick={() => setFilter(f.id)}
-                        className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
+                        className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-0 ${
                           active
                             ? "bg-[color:var(--foreground)] text-[color:var(--background)]"
                             : "border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground"
@@ -224,17 +224,32 @@ function ContainerClubPage() {
               ) : (
                 <div className="space-y-3">
                   {filtered.map((product) => (
-                    <ProductRow
-                      key={product.id}
-                      product={product}
-                      variantId={
-                        variantByProduct[product.id] ?? getDefaultVariant(product).id
-                      }
-                      qty={qtyByProduct[product.id] ?? 0}
-                      onQtyChange={(n) => setQty(product.id, n)}
-                      onVariantChange={(id) => setVariant(product.id, id)}
-                      onOpenDetails={() => setDetailId(product.id)}
-                    />
+                    <div key={product.id}>
+                      <div className="md:hidden">
+                        <ProductCard
+                          product={product}
+                          variantId={
+                            variantByProduct[product.id] ?? getDefaultVariant(product).id
+                          }
+                          qty={qtyByProduct[product.id] ?? 0}
+                          onQtyChange={(n) => setQty(product.id, n)}
+                          onVariantChange={(id) => setVariant(product.id, id)}
+                          onOpenDetails={() => setDetailId(product.id)}
+                        />
+                      </div>
+                      <div className="hidden md:block">
+                        <ProductRow
+                          product={product}
+                          variantId={
+                            variantByProduct[product.id] ?? getDefaultVariant(product).id
+                          }
+                          qty={qtyByProduct[product.id] ?? 0}
+                          onQtyChange={(n) => setQty(product.id, n)}
+                          onVariantChange={(id) => setVariant(product.id, id)}
+                          onOpenDetails={() => setDetailId(product.id)}
+                        />
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
