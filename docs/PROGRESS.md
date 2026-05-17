@@ -143,7 +143,7 @@
 - 🔄 MobileStickyCart Lovable intégré
 - 🔄 OrderSummary Lovable intégré
 - 🔄 PricingBreakdown Lovable intégré
-- ❌ TieredPricingViz
+- 🔄 TieredPricingViz (paliers CBM dégressifs)
 - ❌ DeliveryInfoBox
 - ❌ Store Zustand `cart.store.ts`
 
@@ -336,6 +336,8 @@
 - Tâches : ProductReviews ajouté dans ProductDetailDialog avec résumé ratings, sous-notes qualité/valeur/délais et avis vérifiés simulés par catégorie.
 - Phase : Phase 2 — Visualisation container
 - Tâches : métriques container factorisées : statut, remplissage avec seuil 80%, séries, participants anonymisés et fallback 2D derrière la scène 3D.
+- Phase : Phase 2 — Panier
+- Tâches : TieredPricingViz ajouté dans OrderSidebar avec palier actif, marge moyenne et prochain seuil CBM.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

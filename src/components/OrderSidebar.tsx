@@ -7,6 +7,7 @@ import { ContainerScene3DFallback } from "@/components/ContainerScene3DFallback"
 import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
 import { ParticipantsCount } from "@/components/ParticipantsCount";
 import { SeriesProgressIndicator } from "@/components/SeriesProgressIndicator";
+import { TieredPricingViz } from "@/components/TieredPricingViz";
 import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
@@ -166,6 +167,8 @@ export function OrderSidebar({
           </motion.div>
         )}
       </div>
+
+      {hasItems && <TieredPricingViz items={items} />}
 
       {/* Actions */}
       <div className="space-y-2">
