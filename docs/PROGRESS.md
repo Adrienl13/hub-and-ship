@@ -143,7 +143,7 @@
 - 🔄 MobileStickyCart Lovable intégré
 - 🔄 OrderSummary Lovable intégré
 - 🔄 PricingBreakdown Lovable intégré
-- 🔄 TieredPricingViz (paliers CBM dégressifs)
+- 🔄 TieredPricingViz (remises quantité client 2/6/10%)
 - ❌ DeliveryInfoBox
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
@@ -337,7 +337,7 @@
 - Phase : Phase 2 — Visualisation container
 - Tâches : métriques container factorisées : statut, remplissage avec seuil 80%, séries, participants anonymisés et fallback 2D derrière la scène 3D.
 - Phase : Phase 2 — Panier
-- Tâches : TieredPricingViz ajouté dans OrderSidebar avec palier actif, marge moyenne et prochain seuil CBM.
+- Tâches : TieredPricingViz ajouté dans OrderSidebar avec remise quantité client, seuil actif et prochain seuil d'unités.
 - Phase : Phase 2 — Panier partagé
 - Tâches : store Zustand `cart.store.ts` ajouté avec quantités, variantes, snapshot panier/totaux/remplissage et branchement home + catalogue.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
