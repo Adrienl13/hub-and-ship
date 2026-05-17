@@ -4,6 +4,38 @@
 
 @layer base {
   :root {
+    --radius: 0.375rem;
+
+    --background: #f4ede1;
+    --foreground: #1a1a1c;
+    --card: #faf6ee;
+    --card-foreground: #1a1a1c;
+    --popover: #fbf8f1;
+    --popover-foreground: #1a1a1c;
+    --primary: #1a1a1c;
+    --primary-foreground: #faf6ee;
+    --secondary: #e8dfd0;
+    --secondary-foreground: #1a1a1c;
+    --muted: #e8dfd0;
+    --muted-foreground: #70695f;
+    --accent: #e8dfd0;
+    --accent-foreground: #1a1a1c;
+    --destructive: #8a3a2a;
+    --destructive-foreground: #faf6ee;
+    --border: #e8dfd0;
+    --input: #e8dfd0;
+    --ring: #1a1a1c;
+
+    --sand: #f4ede1;
+    --sand-soft: #faf6ee;
+    --sand-deep: #e8dfd0;
+    --ink: #1a1a1c;
+    --ink-soft: #5a544a;
+    --ember: #b85c1f;
+    --ember-soft: #f4e3d1;
+    --forest: #3a5a3a;
+    --ochre: #9a7b2a;
+
     --color-bg-base: #f4ede1;
     --color-bg-alt: #faf6ee;
     --color-bg-elevated: #ffffff;
@@ -36,15 +68,37 @@
 
   body {
     margin: 0;
-    background: var(--color-bg-base);
-    color: var(--color-text-primary);
+    background: var(--background);
+    color: var(--foreground);
     font-family:
       Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
       sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   a {
     color: inherit;
     text-decoration: none;
+  }
+
+  .label-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.085em;
+    text-transform: uppercase;
+  }
+
+  .shadow-paper {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   }
 }

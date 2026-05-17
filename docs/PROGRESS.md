@@ -106,31 +106,31 @@
 ## Phase 2 — Catalogue & Réservation (semaines 3-4)
 
 ### 2.1 Page d'accueil
-- ❌ Layout (Header sticky, Footer, MobileNav)
-- ❌ Section Hero
+- 🔄 Layout (Header sticky, Footer, Mobile sticky bar Lovable intégré)
+- 🔄 Section Hero Lovable intégrée
 - ❌ ValueProps (3 piliers)
-- ❌ ProcessTimeline (5 étapes)
+- 🔄 ProcessTimeline / HowItWorks Lovable intégré
 - ❌ ComparisonTable (Container Club vs concurrents)
-- ❌ Catalogue (filtres + tri + grid)
+- 🔄 Catalogue Lovable (filtres + tri + rows) intégré avec données mock
 - ❌ Bloc livraison rendue port
-- ❌ PastContainersGrid
-- ❌ FaqAccordion (5 questions)
+- 🔄 PastContainersGrid Lovable intégré
+- 🔄 FaqAccordion Lovable intégré
 - ❌ CTA final
 
 ### 2.2 Catalogue produits
-- ❌ ProductRow (desktop)
+- 🔄 ProductRow (desktop Lovable intégré, données mock)
 - ❌ ProductCard (mobile)
 - ❌ VariantSelector
 - ❌ TableConfigurator (multi-axes plateau + pied)
 - ❌ QuantityStepper
 - ❌ MoqProgressBar
-- ❌ ProductDetailDialog
+- 🔄 ProductDetailDialog Lovable intégré
 - ❌ ProductGallery
 - ❌ ProductDocumentsList (auth gated)
 - ❌ ProductReviews
 
 ### 2.3 Visualisation container
-- ❌ ContainerScene3D (R3F)
+- 🔄 ContainerScene3D (R3F Lovable intégré)
 - ❌ ContainerScene3DFallback (image statique)
 - ❌ ContainerFillBar
 - ❌ ContainerStatusBadge
@@ -138,16 +138,16 @@
 - ❌ ParticipantsCount (anonymisé)
 
 ### 2.4 Panier
-- ❌ OrderSidebar (desktop)
-- ❌ MobileStickyCart
-- ❌ OrderSummary
-- ❌ PricingBreakdown
+- 🔄 OrderSidebar (desktop Lovable intégré)
+- 🔄 MobileStickyCart Lovable intégré
+- 🔄 OrderSummary Lovable intégré
+- 🔄 PricingBreakdown Lovable intégré
 - ❌ TieredPricingViz
 - ❌ DeliveryInfoBox
 - ❌ Store Zustand `cart.store.ts`
 
 ### 2.5 Réservation
-- ❌ ReservationDialog (4 étapes)
+- 🔄 ReservationDialog Lovable intégré (2 étapes placeholder, à aligner V1.3 4 étapes)
 - ❌ Étape 1 : SIRET + vérification INSEE
 - ❌ Étape 2 : Contact + EmailDomainWarning
 - ❌ Étape 3 : DeliveryModeSelector
@@ -323,6 +323,13 @@
 - Fichiers créés : `src/lib/pricing/reservation-fee.ts`, `src/lib/pricing/moq.ts`, `src/lib/validation/email.ts`, `src/lib/validation/siret.ts` et tests associés.
 - Tests : validation en cours sur typecheck, lint, Vitest et build.
 - Notes : les migrations Supabase restent non démarrées car elles modifient le schéma DB.
+
+### Session du 2026-05-17 — intégration design Lovable
+- Phase : Phase 2 — Home/catalogue visuel
+- Tâches : design Lovable importé dans l'app locale, home catalogue remplacée, composants Header/Hero/HowItWorks/ProductRow/OrderSidebar/ContainerScene/FAQ/Footer/ReservationDialog intégrés.
+- Fichiers créés/modifiés : `src/components/`, `src/routes/index.tsx`, `src/lib/products.ts`, `src/lib/order.ts`, `src/lib/quote.ts`, thème Tailwind/CSS et dépendances UI.
+- Tests : typecheck, lint, Vitest, build et vérification navigateur local validés.
+- Notes : les composants Lovable utilisent encore des données mock et un flow réservation 2 étapes ; il faudra aligner avec le checkout V1.3 SIRET obligatoire en 4 étapes.
 
 ---
 

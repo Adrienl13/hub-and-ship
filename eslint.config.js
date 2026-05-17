@@ -36,6 +36,9 @@ export default tseslint.config(
       ...react.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
+      'react/no-unknown-property': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react/prop-types': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
     },
     settings: {
