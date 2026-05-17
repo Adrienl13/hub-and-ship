@@ -34,7 +34,7 @@ function CatalogueLineItemComponent({
   return (
     <article
       data-catalogue-line-item
-      className="grid gap-3 border-b border-[color:var(--sand-deep)] bg-card px-3 py-3 text-sm transition-colors hover:bg-[color:var(--sand-soft)] md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_122px_56px] md:items-center md:gap-2"
+      className="grid gap-3 border-b border-[color:var(--sand-deep)] bg-card px-3 py-3 text-sm transition-colors hover:bg-[color:var(--sand-soft)] md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:items-center md:gap-2"
     >
       <button
         type="button"

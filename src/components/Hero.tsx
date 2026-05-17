@@ -2,6 +2,7 @@ import { ShieldCheck, Award, FileBadge } from "lucide-react";
 import { motion } from "framer-motion";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { AnimatedNumber } from "@/components/motion-helpers";
+import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -96,9 +97,11 @@ export function Hero({
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5 shadow-paper">
               <div className="flex items-center justify-between">
                 <span className="label-eyebrow text-muted-foreground">Container en cours</span>
-                <span className="label-eyebrow rounded-sm bg-[color:var(--forest)]/12 px-2 py-0.5 text-[color:var(--forest)]">
-                  Ouvert
-                </span>
+                <ContainerStatusBadge
+                  status={CURRENT_CONTAINER.status}
+                  fillPercent={fillPercent}
+                  thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+                />
               </div>
               <div className="mt-3 font-display text-xl font-semibold tracking-tight">
                 {CURRENT_CONTAINER.reference}

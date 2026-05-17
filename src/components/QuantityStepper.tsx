@@ -23,7 +23,7 @@ export function QuantityStepper({
   showRule?: boolean;
 }) {
   const buttonSize = size === "lg" ? "h-11 w-11" : "h-7 w-7";
-  const inputSize = size === "lg" ? "h-11 w-16 text-base" : "w-12 text-sm";
+  const inputSize = size === "lg" ? "h-11 w-20 text-base" : "w-16 text-sm";
 
   return (
     <div className="min-w-0">
@@ -44,7 +44,7 @@ export function QuantityStepper({
           onChange={(event) =>
             onChange(sanitizeOrderQuantity(Number.parseInt(event.target.value || "0", 10), rule))
           }
-          className={`${inputSize} bg-transparent text-center font-semibold tabular-nums focus:outline-none`}
+          className={`${inputSize} [appearance:textfield] bg-transparent text-center font-semibold tabular-nums focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           aria-label="Quantité"
           min={0}
           step={rule.step}

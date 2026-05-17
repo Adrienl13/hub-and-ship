@@ -125,7 +125,7 @@ function CataloguePage() {
   };
 
   return (
-    <div id="top" className="min-h-screen bg-background text-foreground">
+    <div id="top" className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
       <main>
@@ -230,7 +230,7 @@ function CataloguePage() {
             </div>
 
             <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-              <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_122px_56px] md:gap-2">
+              <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:gap-2">
                 <span />
                 <span>Produit</span>
                 <span>Variante</span>

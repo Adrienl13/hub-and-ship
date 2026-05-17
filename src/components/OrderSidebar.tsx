@@ -2,6 +2,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
 import { ContainerScene } from "@/components/ContainerScene";
+import { ContainerFillBar } from "@/components/ContainerFillBar";
+import { ContainerScene3DFallback } from "@/components/ContainerScene3DFallback";
+import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
+import { ParticipantsCount } from "@/components/ParticipantsCount";
+import { SeriesProgressIndicator } from "@/components/SeriesProgressIndicator";
 import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
@@ -56,42 +61,32 @@ export function OrderSidebar({
           </Button>
         </div>
         <div className="relative h-[320px] w-full bg-[color:var(--sand)]">
+          <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
           <ContainerScene items={items} exploded={exploded} />
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-px bg-[color:var(--sand-deep)] text-xs">
-          <div className="bg-card p-3">
-            <div className="label-eyebrow text-muted-foreground">Volume</div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="font-display text-base font-semibold tabular-nums">
-                <AnimatedNumber value={fillPercent} suffix="%" />
-              </span>
-              <span className="text-[10px] text-muted-foreground tabular-nums">
-                {usedCbm.toFixed(2)} / {capacity} m³
-              </span>
-            </div>
-            <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-              <motion.div
-                className="h-full bg-[color:var(--foreground)]"
-                initial={false}
-                animate={{ width: `${fillPercent}%` }}
-                transition={{ type: "spring", stiffness: 100, damping: 22 }}
-              />
-            </div>
+        <div className="space-y-3 border-t border-[color:var(--sand-deep)] p-3 text-xs">
+          <div className="flex items-center justify-between gap-3">
+            <span className="label-eyebrow text-muted-foreground">État container</span>
+            <ContainerStatusBadge
+              status={CURRENT_CONTAINER.status}
+              fillPercent={fillPercent}
+              thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+            />
           </div>
-          <div className="bg-card p-3">
-            <div className="label-eyebrow text-muted-foreground">Séries</div>
-            <div className="mt-1 font-display text-base font-semibold tabular-nums">
-              {CURRENT_CONTAINER.seriesReached}/{CURRENT_CONTAINER.totalSeries}
-              <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
-                déclenchées
-              </span>
-            </div>
-            <div className="mt-1 text-[10px] text-muted-foreground">
-              {CURRENT_CONTAINER.professionalsEngaged} pros engagés
-            </div>
-          </div>
+          <ContainerFillBar
+            percent={fillPercent}
+            usedCbm={usedCbm}
+            capacity={capacity}
+            thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+          />
+          <SeriesProgressIndicator
+            reached={CURRENT_CONTAINER.seriesReached}
+            total={CURRENT_CONTAINER.totalSeries}
+            required={CURRENT_CONTAINER.minSeriesRequired}
+          />
+          <ParticipantsCount count={CURRENT_CONTAINER.professionalsEngaged} />
         </div>
       </div>
 

@@ -132,11 +132,11 @@
 
 ### 2.3 Visualisation container
 - 🔄 ContainerScene3D (R3F Lovable intégré)
-- ❌ ContainerScene3DFallback (image statique)
-- ❌ ContainerFillBar
-- ❌ ContainerStatusBadge
-- ❌ SeriesProgressIndicator
-- ❌ ParticipantsCount (anonymisé)
+- 🔄 ContainerScene3DFallback (fallback 2D statique)
+- 🔄 ContainerFillBar
+- 🔄 ContainerStatusBadge
+- 🔄 SeriesProgressIndicator
+- 🔄 ParticipantsCount (anonymisé)
 
 ### 2.4 Panier
 - 🔄 OrderSidebar (desktop Lovable intégré)
@@ -334,6 +334,8 @@
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit
 - Tâches : ProductReviews ajouté dans ProductDetailDialog avec résumé ratings, sous-notes qualité/valeur/délais et avis vérifiés simulés par catégorie.
+- Phase : Phase 2 — Visualisation container
+- Tâches : métriques container factorisées : statut, remplissage avec seuil 80%, séries, participants anonymisés et fallback 2D derrière la scène 3D.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
