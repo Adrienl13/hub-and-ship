@@ -1,0 +1,12 @@
+commit_msg_file="$1"
+commit_msg="$(cat "$commit_msg_file")"
+
+case "$commit_msg" in
+  feat:*|feat\(*\):*|fix:*|fix\(*\):*|refactor:*|refactor\(*\):*|test:*|test\(*\):*|docs:*|docs\(*\):*|chore:*|chore\(*\):*)
+    exit 0
+    ;;
+  *)
+    echo "Commit message must follow Conventional Commits." >&2
+    exit 1
+    ;;
+esac

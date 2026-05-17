@@ -7,9 +7,9 @@
 ## 🎯 État global
 
 **Phase actuelle** : Phase 1 (Foundations + Sécurité)
-**Démarrage projet** : [à compléter]
+**Démarrage projet** : 2026-05-17
 **Cible launch beta** : Semaine 10+
-**Première session Claude Code** : [à compléter]
+**Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
 ### Légende
 - ✅ Terminé et testé
@@ -23,15 +23,15 @@
 ## Phase 1 — Foundations + Sécurité (semaines 1-2)
 
 ### 1.1 Setup projet
-- ❌ Initialisation TanStack Start v1
-- ❌ Configuration TypeScript strict
-- ❌ Configuration Tailwind v4 + palette CSS (section 15.1)
-- ❌ Installation shadcn/ui
-- ❌ Installation dépendances principales
-- ❌ Configuration ESLint + Prettier
-- ❌ Pre-commit hooks (husky + gitleaks)
-- ❌ Configuration Vitest
-- ❌ Configuration Playwright
+- ✅ Initialisation TanStack React Start + Vite
+- ✅ Configuration TypeScript strict
+- ✅ Configuration Tailwind + palette CSS (section 15.1)
+- ✅ Infrastructure shadcn/ui minimale (`Button`, `cn`, `components.json`)
+- ✅ Installation dépendances principales
+- ✅ Configuration ESLint + Prettier
+- ✅ Pre-commit hooks (husky + gitleaks si installé)
+- ✅ Configuration Vitest
+- ✅ Configuration Playwright
 
 ### 1.2 Supabase
 - ❌ Création projet Supabase EU
@@ -57,7 +57,7 @@
 - ❌ Compte Cloudflare — Worker + WAF rules
 
 ### 1.4 Logique métier (src/lib/)
-- ❌ `pricing/tiers.ts` + tests
+- ✅ `pricing/tiers.ts` + tests
 - ❌ `pricing/reservation-fee.ts` + tests
 - ❌ `pricing/moq.ts` + tests
 - ❌ `pricing/loyalty.ts` + tests
@@ -310,12 +310,12 @@
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
-### Session du [date]
-- Phase : 
-- Tâches : 
-- Fichiers créés : 
-- Tests : 
-- Notes : 
+### Session du 2026-05-17
+- Phase : Session 0 — Initialisation projet
+- Tâches : starter importé, structure TanStack React Start créée, configs TypeScript/Tailwind/ESLint/Prettier/Vitest/Playwright ajoutées, dépendances installées, hooks Husky configurés, pricing tiers implémenté.
+- Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
+- Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
+- Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
 
 ---
 

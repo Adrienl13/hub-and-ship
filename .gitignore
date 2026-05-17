@@ -1,0 +1,79 @@
+# ============================================
+# Container Club — .gitignore
+# ============================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+
+# Build outputs
+dist/
+build/
+.output/
+.vinxi/
+.nitro/
+.tanstack/
+*.tsbuildinfo
+
+# Environment variables (CRITIQUE)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+**/supabase/.env
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Caches
+.eslintcache
+.prettiercache
+.cache/
+.parcel-cache/
+
+# Misc
+.last-progress-update
+*.pem
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*.temp

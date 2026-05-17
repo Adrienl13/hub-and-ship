@@ -1,0 +1,4 @@
+npm run check
+if command -v gitleaks >/dev/null 2>&1; then
+  npm run gitleaks
+fi

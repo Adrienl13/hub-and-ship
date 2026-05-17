@@ -190,6 +190,28 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-013 — Dépendances React 19 compatibles R3F (2026-05-17)
+
+**Statut** : Acceptée
+**Contexte** : Le template Session 0 demandait React 19 RC avec `@react-three/fiber` v8, mais npm refuse l'installation car R3F v8 déclare un peer dependency React `>=18 <19`.
+**Décision** : Conserver React 19 et mettre à jour `@react-three/fiber` en v9, `@react-three/drei` en v10, `three`, les types React/Three, et les SDK Stripe React/JS vers des versions dont les peer dependencies acceptent React 19.
+**Alternatives** : Revenir à React 18 aurait contredit la décision D-001 et la stack indiquée dans le starter.
+**Raison** : Ajustement minimal pour garder la stack React 19 tout en obtenant une installation npm propre.
+**Conséquences** : Les futures scènes 3D devront suivre les APIs R3F v9, et l'intégration paiement devra suivre les APIs Stripe React v6.
+
+---
+
+### D-014 — TanStack Start Vite actuel pour Session 0 (2026-05-17)
+
+**Statut** : Acceptée
+**Contexte** : Le template utilisait le package historique `@tanstack/start` avec `vinxi`, mais l'écosystème actuel expose TanStack React Start via `@tanstack/react-start` et Vite.
+**Décision** : Utiliser `@tanstack/react-start`, `@tanstack/react-router` et `@tanstack/router-cli` actuels, avec scripts `vite` pour dev/build/preview.
+**Alternatives** : Forcer `vinxi` aurait conservé un scaffold plus proche du template, mais avec des imports virtuels et packages React Start incohérents sur npm actuel.
+**Raison** : Obtenir une initialisation Session 0 installable, testable et maintenable sans bloquer sur une génération obsolète.
+**Conséquences** : La configuration projet est Vite-first ; les futures étapes doivent suivre la documentation TanStack React Start récente.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)
