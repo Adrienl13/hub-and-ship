@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL, type ColorVariant, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
+import { TableConfigurator } from "@/components/TableConfigurator";
 
 function BigSwatch({
   variant,
@@ -164,29 +165,36 @@ export function ProductDetailDialog({
               </div>
             </div>
 
-            {/* Couleur */}
-            <div>
-              <div className="label-eyebrow mb-2 text-muted-foreground">
-                Couleur · {variant.name}
+            {product.category === "table" ? (
+              <TableConfigurator
+                product={product}
+                variantId={variantId}
+                onVariantChange={onVariantChange}
+              />
+            ) : (
+              <div>
+                <div className="label-eyebrow mb-2 text-muted-foreground">
+                  Couleur · {variant.name}
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {product.variants.map((v) => (
+                    <BigSwatch
+                      key={v.id}
+                      variant={v}
+                      selected={v.id === variantId}
+                      onClick={() => onVariantChange(v.id)}
+                    />
+                  ))}
+                </div>
+                <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
+                  <span className="font-medium">MOQ {variant.name} :</span>{" "}
+                  <span className="tabular-nums">
+                    {variant.unitsCommitted + qty} / {product.moqUnits}
+                  </span>{" "}
+                  <span className="text-muted-foreground">— {moqStatus.label}</span>
+                </div>
               </div>
-              <div className="grid grid-cols-6 gap-2">
-                {product.variants.map((v) => (
-                  <BigSwatch
-                    key={v.id}
-                    variant={v}
-                    selected={v.id === variantId}
-                    onClick={() => onVariantChange(v.id)}
-                  />
-                ))}
-              </div>
-              <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
-                <span className="font-medium">MOQ {variant.name} :</span>{" "}
-                <span className="tabular-nums">
-                  {variant.unitsCommitted + qty} / {product.moqUnits}
-                </span>{" "}
-                <span className="text-muted-foreground">— {moqStatus.label}</span>
-              </div>
-            </div>
+            )}
 
             {/* Caractéristiques */}
             <div>

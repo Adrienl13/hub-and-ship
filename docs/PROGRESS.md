@@ -122,7 +122,7 @@
 - 🔄 ProductRow (desktop Lovable intégré, données mock)
 - ✅ ProductCard (mobile)
 - ✅ VariantSelector
-- ❌ TableConfigurator (multi-axes plateau + pied)
+- 🔄 TableConfigurator (multi-axes plateau + pied, UI détail produit)
 - ✅ QuantityStepper
 - ✅ MoqProgressBar
 - 🔄 ProductDetailDialog Lovable intégré
@@ -324,6 +324,8 @@
 - Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
 - Phase : Phase 2 — Catalogue dédié
 - Tâches : route `/catalogue` ajoutée, vue lignes compactes, page size 30/60/90, navigation home vers catalogue complet.
+- Phase : Phase 2 — Configurateur table
+- Tâches : TableConfigurator ajouté dans ProductDetailDialog avec format plateau, couleur plateau, finition pied et prix indicatif par configuration.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
