@@ -144,7 +144,7 @@
 - 🔄 OrderSummary Lovable intégré
 - 🔄 PricingBreakdown Lovable intégré
 - 🔄 TieredPricingViz (remises quantité client 2/6/10%)
-- ❌ DeliveryInfoBox
+- ✅ DeliveryInfoBox (home + rappel compact panier)
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
 ### 2.5 Réservation
@@ -340,6 +340,8 @@
 - Tâches : TieredPricingViz ajouté dans OrderSidebar avec remise quantité client, seuil actif et prochain seuil d'unités.
 - Phase : Phase 2 — Panier partagé
 - Tâches : store Zustand `cart.store.ts` ajouté avec quantités, variantes, snapshot panier/totaux/remplissage et branchement home + catalogue.
+- Phase : Phase 2 — Livraison panier
+- Tâches : DeliveryInfoBox décliné en variante compacte dans OrderSidebar pour rappeler prix rendu port, enlèvement libre et transporteurs recommandés.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.

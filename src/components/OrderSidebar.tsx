@@ -5,6 +5,7 @@ import { ContainerScene } from "@/components/ContainerScene";
 import { ContainerFillBar } from "@/components/ContainerFillBar";
 import { ContainerScene3DFallback } from "@/components/ContainerScene3DFallback";
 import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
+import { DeliveryInfoBox } from "@/components/DeliveryInfoBox";
 import { ParticipantsCount } from "@/components/ParticipantsCount";
 import { SeriesProgressIndicator } from "@/components/SeriesProgressIndicator";
 import { TieredPricingViz } from "@/components/TieredPricingViz";
@@ -169,6 +170,7 @@ export function OrderSidebar({
       </div>
 
       {hasItems && <TieredPricingViz items={items} />}
+      <DeliveryInfoBox compact />
 
       {/* Actions */}
       <div className="space-y-2">

@@ -17,7 +17,79 @@ const OPTIONS = [
   },
 ] as const;
 
-export function DeliveryInfoBox() {
+function DeliveryOptions({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={compact ? "space-y-2.5" : "space-y-4"}>
+      {OPTIONS.map(({ Icon, title, description }) => (
+        <div
+          key={title}
+          className={
+            compact
+              ? "flex gap-2.5 rounded-sm bg-[color:var(--sand-soft)] p-2.5"
+              : "flex gap-3 border-b border-[color:var(--sand-deep)] pb-4 last:border-b-0 last:pb-0"
+          }
+        >
+          <Icon
+            className={`mt-0.5 shrink-0 text-foreground/65 ${
+              compact ? "h-4 w-4" : "h-5 w-5"
+            }`}
+          />
+          <div>
+            <h3
+              className={
+                compact
+                  ? "text-xs font-medium"
+                  : "font-display text-base font-semibold tracking-tight"
+              }
+            >
+              {title}
+            </h3>
+            <p
+              className={
+                compact
+                  ? "mt-0.5 text-[11px] leading-4 text-muted-foreground"
+                  : "mt-1 text-sm leading-relaxed text-[color:var(--ink-soft)]"
+              }
+            >
+              {description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3 text-xs">
+        <div className="mb-3 flex items-start gap-2">
+          <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ember)]" />
+          <div>
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Livraison rendue port
+            </div>
+            <p className="mt-1 leading-5 text-muted-foreground">
+              Le prix inclut l'arrivée au port. Le transport final est organisé et
+              payé directement côté client.
+            </p>
+          </div>
+        </div>
+
+        <DeliveryOptions compact />
+
+        <a
+          href="/transport-partenaires"
+          className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5 text-[11px] font-medium transition-colors hover:border-foreground/40"
+        >
+          Transporteurs recommandés
+          <ArrowRight className="h-3.5 w-3.5" />
+        </a>
+      </div>
+    );
+  }
+
   return (
     <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
       <div className="mx-auto max-w-7xl px-6 py-16">
@@ -39,27 +111,12 @@ export function DeliveryInfoBox() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {OPTIONS.map(({ Icon, title, description }) => (
-              <div
-                key={title}
-                className="flex gap-3 border-b border-[color:var(--sand-deep)] pb-4 last:border-b-0 last:pb-0"
-              >
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-foreground/65" />
-                <div>
-                  <h3 className="font-display text-base font-semibold tracking-tight">
-                    {title}
-                  </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                    {description}
-                  </p>
-                </div>
-              </div>
-            ))}
+          <div>
+            <DeliveryOptions />
 
             <a
               href="/transport-partenaires"
-              className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
             >
               Voir les transporteurs recommandés
               <ArrowRight className="h-4 w-4" />
