@@ -5,12 +5,16 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { ValueProps } from "@/components/ValueProps";
 import { HowItWorks } from "@/components/HowItWorks";
+import { ComparisonTable } from "@/components/ComparisonTable";
 import { ProductRow } from "@/components/ProductRow";
 import { ProductDetailDialog } from "@/components/ProductDetailDialog";
 import { OrderSidebar } from "@/components/OrderSidebar";
+import { DeliveryInfoBox } from "@/components/DeliveryInfoBox";
 import { PastContainers } from "@/components/PastContainers";
 import { FaqAccordion } from "@/components/FaqAccordion";
+import { FinalCta } from "@/components/FinalCta";
 import { Footer } from "@/components/Footer";
 import { MobileStickyBar } from "@/components/MobileStickyBar";
 import { ReservationDialog } from "@/components/ReservationDialog";
@@ -143,7 +147,9 @@ function ContainerClubPage() {
         professionalsEngaged={CURRENT_CONTAINER.professionalsEngaged}
       />
 
+      <ValueProps />
       <HowItWorks />
+      <ComparisonTable />
 
       {/* Catalogue */}
       <section
@@ -183,7 +189,7 @@ function ContainerClubPage() {
                         onClick={() => setFilter(f.id)}
                         className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                           active
-                            ? "bg-foreground text-background"
+                            ? "bg-[color:var(--foreground)] text-[color:var(--background)]"
                             : "border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground"
                         }`}
                       >
@@ -263,8 +269,10 @@ function ContainerClubPage() {
         </div>
       </section>
 
+      <DeliveryInfoBox />
       <PastContainers />
       <FaqAccordion />
+      <FinalCta onReserve={() => setReserveOpen(true)} />
       <Footer />
 
       <MobileStickyBar

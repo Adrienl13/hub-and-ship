@@ -50,7 +50,7 @@ const TONE_BAR: Record<string, string> = {
   success: "bg-[color:var(--forest)]",
   amber: "bg-[color:var(--ember)]",
   ochre: "bg-[color:var(--ochre)]",
-  neutral: "bg-foreground/40",
+  neutral: "bg-[color:var(--ink-soft)]",
 };
 
 export function ProductRow({

@@ -73,7 +73,7 @@ export function OrderSidebar({
             </div>
             <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
               <motion.div
-                className="h-full bg-foreground"
+                className="h-full bg-[color:var(--foreground)]"
                 initial={false}
                 animate={{ width: `${fillPercent}%` }}
                 transition={{ type: "spring", stiffness: 100, damping: 22 }}
@@ -175,7 +175,7 @@ export function OrderSidebar({
       {/* Actions */}
       <div className="space-y-2">
         <Button
-          className="h-11 w-full rounded-sm bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+          className="h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)] disabled:opacity-50"
           onClick={onReserve}
           disabled={!hasItems}
         >

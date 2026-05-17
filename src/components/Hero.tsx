@@ -117,7 +117,7 @@ export function Hero({
                 </div>
                 <div className="relative h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
                   <motion.div
-                    className="h-full bg-foreground"
+                    className="h-full bg-[color:var(--foreground)]"
                     initial={{ width: 0 }}
                     animate={{ width: `${fillPercent}%` }}
                     transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}

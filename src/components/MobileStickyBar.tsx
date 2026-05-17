@@ -27,7 +27,7 @@ export function MobileStickyBar({
         </div>
         <Button
           size="sm"
-          className="h-10 shrink-0 rounded-sm bg-foreground px-4 text-background hover:bg-foreground/90"
+          className="h-10 shrink-0 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
           onClick={onReserve}
         >
           Réserver <ArrowRight className="h-3.5 w-3.5" />

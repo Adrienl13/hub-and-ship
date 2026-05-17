@@ -7,7 +7,7 @@ export function Header({ onReserve }: { onReserve: () => void }) {
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <a href="#top" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-foreground font-display text-base font-semibold text-background">
+          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">
             C
           </span>
           <span className="font-display text-base font-semibold tracking-tight">
@@ -45,7 +45,7 @@ export function Header({ onReserve }: { onReserve: () => void }) {
           <Button
             size="sm"
             onClick={onReserve}
-            className="h-9 rounded-sm bg-foreground px-4 text-background hover:bg-foreground/90"
+            className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
           >
             Réserver
             <ArrowRight className="h-3.5 w-3.5" />

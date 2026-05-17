@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="border-t border-[color:var(--sand-deep)] bg-foreground text-[color:var(--sand)]">
+    <footer className="border-t border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--sand)]">
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
           <div>

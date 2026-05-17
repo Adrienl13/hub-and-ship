@@ -207,7 +207,7 @@ export function ReservationDialog({
               <Button
                 type="submit"
                 disabled={siretCheck.status !== "verified"}
-                className="h-11 flex-1 rounded-sm bg-foreground text-background hover:bg-foreground/90"
+                className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
               >
                 Continuer
                 <ArrowRight className="h-4 w-4" />
@@ -409,7 +409,7 @@ export function ReservationDialog({
               </Button>
               <Button
                 type="button"
-                className="h-11 flex-1 rounded-sm bg-foreground text-background hover:bg-foreground/90"
+                className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
                 onClick={handlePay}
                 disabled={submitting || !cgvAccepted}
               >
@@ -479,7 +479,7 @@ function StepIndicator({ step }: { step: ReservationStep }) {
             key={label}
             className={`rounded-sm border px-2 py-1.5 text-center ${
               active || done
-                ? "border-foreground bg-foreground text-background"
+                ? "border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]"
                 : "border-[color:var(--sand-deep)] bg-card text-muted-foreground"
             }`}
           >
@@ -513,7 +513,7 @@ function DialogActions({
       <Button
         type="submit"
         disabled={nextDisabled}
-        className="h-11 flex-1 rounded-sm bg-foreground text-background hover:bg-foreground/90"
+        className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
       >
         Continuer
         <ArrowRight className="h-4 w-4" />
