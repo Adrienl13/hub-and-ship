@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL, type ColorVariant, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { TableConfigurator } from "@/components/TableConfigurator";
+import { ProductGallery } from "@/components/ProductGallery";
 
 function BigSwatch({
   variant,
@@ -71,8 +72,6 @@ export function ProductDetailDialog({
   const totalLine = product.basePriceHt * qty;
   const lineCbm = product.cbmPerUnit * qty;
 
-  const gallery = [product.mainImageUrl, ...product.galleryUrls];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-3xl">
@@ -97,25 +96,7 @@ export function ProductDetailDialog({
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Galerie */}
           <div className="space-y-2">
-            <div className="aspect-square overflow-hidden rounded-md ring-1 ring-foreground/10">
-              <img
-                src={product.mainImageUrl}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            {gallery.length > 1 && (
-              <div className="grid grid-cols-3 gap-2">
-                {gallery.slice(0, 3).map((url, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square overflow-hidden rounded-sm ring-1 ring-foreground/10"
-                  >
-                    <img src={url} alt="" className="h-full w-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
+            <ProductGallery product={product} />
 
             {/* Specs */}
             <div className="grid grid-cols-2 gap-2 pt-2 text-xs">

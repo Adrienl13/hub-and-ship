@@ -126,7 +126,7 @@
 - ✅ QuantityStepper
 - ✅ MoqProgressBar
 - 🔄 ProductDetailDialog Lovable intégré
-- ❌ ProductGallery
+- 🔄 ProductGallery (sélection visuels + état fournisseur à compléter)
 - ❌ ProductDocumentsList (auth gated)
 - ❌ ProductReviews
 
@@ -326,6 +326,8 @@
 - Tâches : route `/catalogue` ajoutée, vue lignes compactes, page size 30/60/90, navigation home vers catalogue complet.
 - Phase : Phase 2 — Configurateur table
 - Tâches : TableConfigurator ajouté dans ProductDetailDialog avec format plateau, couleur plateau, finition pied et prix indicatif par configuration.
+- Phase : Phase 2 — Galerie produit
+- Tâches : ProductGallery ajouté dans ProductDetailDialog avec sélection de visuels, navigation, compteur et état à compléter pour fournisseurs sans galerie.
 - Fichiers créés : app `src/`, tests, configs racine, workflow CI, placeholders Supabase/public, lockfile npm.
 - Tests : `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` validés pendant la session.
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
