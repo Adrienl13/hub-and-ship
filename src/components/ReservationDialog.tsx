@@ -47,7 +47,7 @@ import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER } from '@/lib/products'
 import { checkEmailDomain } from '@/lib/validation/email'
 
-type ReservationStep = 1 | 2 | 3 | 4
+type ReservationStep = 1 | 2 | 3 | 4 | 5
 type DeliveryMode =
   | 'pickup_at_port'
   | 'self_arranged'
@@ -95,6 +95,11 @@ export function ReservationDialog({
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [createdReservation, setCreatedReservation] = useState<{
+    readonly reference: string
+    readonly persisted: boolean
+    readonly payNow: number
+  } | null>(null)
   const reservationCreation = useReservationCreation()
   const siretVerification = useSiretVerification()
   const [form, setForm] = useState({
@@ -138,6 +143,7 @@ export function ReservationDialog({
     setEmailWarningAccepted(false)
     setCgvAccepted(false)
     setSubmitting(false)
+    setCreatedReservation(null)
   }
 
   useEffect(() => {
@@ -202,9 +208,12 @@ export function ReservationDialog({
       return
     }
 
-    onOpenChange(false)
-    reset()
-
+    setCreatedReservation({
+      reference: creation.reservation.reference,
+      persisted: creation.persisted,
+      payNow: draftResult.draft.payment.payNow,
+    })
+    setStep(5)
     if (creation.persisted) {
       toast.success('Réservation enregistrée', {
         description: `${creation.reservation.reference} enregistrée. Paiement Stripe à connecter pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
@@ -278,14 +287,19 @@ export function ReservationDialog({
             {step === 2 && 'Coordonnées de contact'}
             {step === 3 && 'Mode de livraison'}
             {step === 4 && 'Récapitulatif et paiement'}
+            {step === 5 && 'Réservation préparée'}
           </DialogTitle>
         </DialogHeader>
 
-        <StepIndicator step={step} />
-        <SummaryCard
-          totals={totals}
-          referralApplication={referralApplication}
-        />
+        {step < 5 && (
+          <>
+            <StepIndicator step={step} />
+            <SummaryCard
+              totals={totals}
+              referralApplication={referralApplication}
+            />
+          </>
+        )}
 
         {step === 1 && (
           <form
@@ -517,6 +531,68 @@ export function ReservationDialog({
                 {submitting
                   ? 'Traitement...'
                   : `Confirmer et payer ${formatEUR(checkoutPayNow)}`}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && createdReservation && (
+          <div className="space-y-4">
+            <div className="rounded-md border border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">
+                <ShieldCheck className="h-4 w-4" />
+                Référence créée
+              </div>
+              <div className="mt-3 font-display text-2xl font-semibold tracking-tight">
+                {createdReservation.reference}
+              </div>
+              <p className="mt-2 text-xs leading-5 text-foreground/75">
+                {createdReservation.persisted
+                  ? 'La réservation est enregistrée côté Supabase. Le paiement Stripe reste à connecter pour finaliser l’encaissement.'
+                  : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte. Elle sera synchronisable dès que Supabase et Stripe seront activés.'}
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+                <div className="label-eyebrow text-muted-foreground">
+                  Montant à régler
+                </div>
+                <div className="mt-2 font-display text-2xl font-semibold tabular-nums">
+                  {formatEUR(createdReservation.payNow)}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Frais de réservation calculés et verrouillés.
+                </div>
+              </div>
+              <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+                <div className="label-eyebrow text-muted-foreground">
+                  Prochaine étape
+                </div>
+                <div className="mt-2 text-sm font-medium">
+                  Suivi dans l’espace compte
+                </div>
+                <div className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Statut, lignes réservées, paiements et documents seront
+                  rattachés à cette référence.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                asChild
+                className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+              >
+                <a href="/account/reservations">Voir mes réservations</a>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-sm border-[color:var(--sand-deep)]"
+                onClick={() => onOpenChange(false)}
+              >
+                Fermer
               </Button>
             </div>
           </div>

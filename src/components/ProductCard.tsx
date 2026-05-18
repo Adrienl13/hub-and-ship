@@ -37,6 +37,7 @@ function ProductCardComponent({
     <article
       data-catalog-item-mode="mobile-card"
       className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "460px" }}
     >
       <button
         type="button"
@@ -48,6 +49,7 @@ function ProductCardComponent({
           src={product.mainImageUrl}
           alt={product.name}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover"
         />
         <span

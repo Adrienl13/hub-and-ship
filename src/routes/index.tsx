@@ -24,6 +24,7 @@ import {
   PRODUCTS,
   type Product,
 } from "@/lib/products";
+import { calculateStockKpis, getAvailableStockLines } from "@/lib/stock";
 import {
   CATEGORY_FILTERS,
   filterAndSortProducts,
@@ -32,6 +33,7 @@ import {
   type CatalogueFilter,
   type SortKey,
 } from "@/lib/catalogue";
+import { formatEUR } from "@/lib/order";
 import { openQuotePDF } from "@/lib/quote";
 import { useCart } from "@/stores/cart.store";
 
@@ -130,6 +132,7 @@ function ContainerClubPage() {
       />
 
       <ValueProps />
+      <Stock24hTeaser />
       <HowItWorks />
       <ComparisonTable />
 
@@ -326,4 +329,96 @@ function ContainerClubPage() {
       </Suspense>
     </div>
   );
+}
+
+function Stock24hTeaser() {
+  const stockLines = useMemo(() => getAvailableStockLines(), [])
+  const kpis = useMemo(() => calculateStockKpis(stockLines), [stockLines])
+  const topLines = stockLines.slice(0, 3)
+
+  return (
+    <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+      <div className="mx-auto grid max-w-7xl gap-6 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <div className="max-w-xl">
+          <div className="label-eyebrow text-[color:var(--ember)]">
+            Stock disponible sous 24h
+          </div>
+          <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+            Besoin d’aller vite avant le prochain container ?
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
+            Une partie du stock restant est déjà en France : utile pour une
+            ouverture de terrasse, un remplacement urgent ou un complément de
+            mobilier.
+          </p>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-sm">
+            <MiniKpi label="Références" value={`${kpis.references}`} />
+            <MiniKpi label="Unités libres" value={`${kpis.availableUnits}`} />
+            <MiniKpi label="Valeur HT" value={formatEUR(kpis.totalValueHt)} />
+          </div>
+          <a
+            href="/stock-24h"
+            className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-[color:var(--foreground)] px-4 py-2 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
+          >
+            Voir le stock 24h
+          </a>
+        </div>
+
+        <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+          {topLines.map((line) => (
+            <a
+              key={line.id}
+              href="/stock-24h"
+              className="grid grid-cols-[56px_1fr_auto] items-center gap-3 border-b border-[color:var(--sand-deep)] px-3 py-3 text-sm last:border-b-0 hover:bg-[color:var(--sand-soft)]"
+            >
+              <span className="relative h-14 w-14 overflow-hidden rounded-sm bg-[color:var(--sand)]">
+                <img
+                  src={line.product.mainImageUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
+                <span
+                  className="absolute inset-x-0 bottom-0 h-1.5"
+                  style={{ backgroundColor: line.variant.hex }}
+                />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-medium">
+                  {line.product.name}
+                </span>
+                <span className="mt-1 block truncate text-xs text-muted-foreground">
+                  {line.variant.name} · {line.location}
+                </span>
+              </span>
+              <span className="text-right">
+                <span className="block font-display text-lg font-semibold tabular-nums">
+                  {line.availableUnits}
+                </span>
+                <span className="text-[10px] text-muted-foreground">unités</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function MiniKpi({
+  label,
+  value,
+}: {
+  readonly label: string
+  readonly value: string
+}) {
+  return (
+    <div className="rounded-sm border border-[color:var(--sand-deep)] bg-card p-3">
+      <div className="label-eyebrow text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg font-semibold tabular-nums">
+        {value}
+      </div>
+    </div>
+  )
 }

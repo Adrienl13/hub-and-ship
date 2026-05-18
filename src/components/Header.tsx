@@ -19,6 +19,7 @@ export function Header({ onReserve }: { onReserve: () => void }) {
         <nav className="hidden items-center gap-8 md:flex">
           {[
             ["Catalogue", "/catalogue"],
+            ["Stock 24h", "/stock-24h"],
             ["Comment ça marche", "/#comment"],
             ["Containers livrés", "/#livres"],
             ["FAQ", "/#faq"],

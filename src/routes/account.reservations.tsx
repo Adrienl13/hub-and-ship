@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
 import { ArrowRight, Ship } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -7,9 +8,14 @@ import {
   ACCOUNT_RESERVATIONS,
   ACCOUNT_RESERVATION_STATUS_LABEL,
   calculateAccountReservationKpis,
+  mergeAccountReservations,
   type AccountReservation,
 } from '@/lib/account/reservations'
 import { formatEUR } from '@/lib/order'
+import {
+  readLocalReservationHistory,
+  type LocalReservationRecord,
+} from '@/lib/reservations/local-history'
 
 export const Route = createFileRoute('/account/reservations')({
   component: AccountReservationsPage,
@@ -20,8 +26,18 @@ function AccountReservationsPage() {
     select: (state) => state.location.pathname,
   })
   const auth = useAuth()
-  const reservations = ACCOUNT_RESERVATIONS
+  const [localRecords, setLocalRecords] = useState<
+    ReadonlyArray<LocalReservationRecord>
+  >([])
+  const reservations = mergeAccountReservations({
+    baseReservations: ACCOUNT_RESERVATIONS,
+    localRecords,
+  })
   const kpis = calculateAccountReservationKpis(reservations)
+
+  useEffect(() => {
+    setLocalRecords(readLocalReservationHistory(window.localStorage))
+  }, [])
 
   if (pathname !== '/account/reservations') {
     return <Outlet />

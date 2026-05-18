@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   ArrowLeft,
   CreditCard,
@@ -10,10 +10,16 @@ import {
 
 import { Button } from '@/components/ui/button'
 import {
+  ACCOUNT_RESERVATIONS,
   ACCOUNT_RESERVATION_STATUS_LABEL,
   getAccountReservationById,
+  mergeAccountReservations,
 } from '@/lib/account/reservations'
 import { formatEUR } from '@/lib/order'
+import {
+  readLocalReservationHistory,
+  type LocalReservationRecord,
+} from '@/lib/reservations/local-history'
 
 export const Route = createFileRoute('/account/reservations/$reservationId')({
   component: AccountReservationDetailPage,
@@ -21,7 +27,18 @@ export const Route = createFileRoute('/account/reservations/$reservationId')({
 
 function AccountReservationDetailPage() {
   const { reservationId } = Route.useParams()
-  const reservation = getAccountReservationById(reservationId)
+  const [localRecords, setLocalRecords] = useState<
+    ReadonlyArray<LocalReservationRecord>
+  >([])
+  const reservations = mergeAccountReservations({
+    baseReservations: ACCOUNT_RESERVATIONS,
+    localRecords,
+  })
+  const reservation = getAccountReservationById(reservationId, reservations)
+
+  useEffect(() => {
+    setLocalRecords(readLocalReservationHistory(window.localStorage))
+  }, [])
 
   if (!reservation) {
     return (

@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 
 import type { ReservationDraft } from '@/lib/reservations/draft'
+import { saveReservationDraftToLocalHistory } from '@/lib/reservations/local-history'
 import {
   createReservationInSupabase,
   type CreateReservationResult,
@@ -30,7 +31,17 @@ export function useReservationCreation() {
 
   const createReservation = useCallback(
     async (draft: ReservationDraft): Promise<ReservationCreationResult> => {
+      const saveLocalHistory = (persisted: boolean) => {
+        if (typeof window === 'undefined') return
+        saveReservationDraftToLocalHistory({
+          storage: window.localStorage,
+          draft,
+          persisted,
+        })
+      }
+
       if (!client) {
+        saveLocalHistory(false)
         return {
           ok: true,
           persisted: false,
@@ -44,6 +55,7 @@ export function useReservationCreation() {
           draft,
         })
 
+        saveLocalHistory(true)
         return { ok: true, persisted: true, reservation }
       } catch (error) {
         return {

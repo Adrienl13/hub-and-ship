@@ -37,6 +37,7 @@ function ProductRowComponent({
     <article
       data-catalog-item-mode="desktop-row"
       className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground/30"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "168px" }}
     >
       <div className="flex gap-4">
         {/* Visual */}
@@ -50,6 +51,7 @@ function ProductRowComponent({
             src={product.mainImageUrl}
             alt={product.name}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
           <span

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ACCOUNT_RESERVATIONS,
   calculateAccountReservationKpis,
+  mergeAccountReservations,
   getAccountReservationById,
 } from './reservations'
 
@@ -27,5 +28,27 @@ describe('account reservations fixtures', () => {
       totalCommittedHt: 20480,
       totalCbm: 26.5,
     })
+  })
+
+  it('puts local checkout reservations before demo fixtures', () => {
+    const first = ACCOUNT_RESERVATIONS[0]
+    if (!first) throw new Error('Missing reservation fixture')
+
+    const merged = mergeAccountReservations({
+      baseReservations: ACCOUNT_RESERVATIONS,
+      localRecords: [
+        {
+          id: `local-${first.draft.reference}`,
+          status: 'reserved',
+          draft: first.draft,
+          paidAmount: first.draft.payment.payNow,
+          nextActionLabel: 'Reservation locale',
+          updatedAt: first.updatedAt,
+        },
+      ],
+    })
+
+    expect(merged).toHaveLength(2)
+    expect(merged[0]?.id).toBe(`local-${first.draft.reference}`)
   })
 })

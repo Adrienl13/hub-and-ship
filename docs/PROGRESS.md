@@ -116,6 +116,7 @@
 - ✅ ComparisonTable (Container Club vs concurrents)
 - 🔄 Catalogue Lovable (filtres + tri + rows) intégré avec données mock
 - ✅ Page `/catalogue` dense type order sheet
+- ✅ Page `/stock-24h` pour lots disponibles rapidement
 - ✅ Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
@@ -151,7 +152,7 @@
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
 ### 2.5 Réservation
-- 🔄 ReservationDialog Lovable intégré (4 étapes V1.3, INSEE/Stripe serveur à connecter)
+- 🔄 ReservationDialog Lovable intégré (4 étapes V1.3 + écran confirmation, Stripe serveur à connecter)
 - 🔄 Étape 1 : SIRET + validation format, vérification INSEE Edge Function raccordée
 - ✅ Étape 2 : Contact + EmailDomainWarning
 - ✅ Étape 3 : DeliveryModeSelector
@@ -159,6 +160,7 @@
 - ✅ CgvAcceptance obligatoire
 - ✅ Code parrainage si applicable (mock V1 + remise frais réservation)
 - ✅ Draft réservation serveur (recalcul, snapshots prix/produits, payload Supabase)
+- ✅ Historique local des réservations créé au checkout et visible dans `/account/reservations`
 - ❌ Email confirmation envoyé
 - ❌ Génération devis PDF
 - ❌ Tests E2E Playwright parcours complet
@@ -328,6 +330,12 @@
 - Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
 - Phase : Phase 2 — Build/catalogue
 - Tâches : ProductDetailDialog, ReservationDialog et ContainerScene chargés en lazy chunks ; chunk panier initial réduit fortement, 3D isolée.
+- Phase : Phase 2 — Stock 24h
+- Tâches : route `/stock-24h` ajoutée avec lots disponibles sous 24h, filtres, tri, KPIs, demande rapide et teaser home.
+- Phase : Phase 2 — Réservation
+- Tâches : écran de confirmation post-checkout ajouté, historique local des drafts de réservation conservé et fusionné dans l'espace compte.
+- Phase : Phase 2 — Performance catalogue
+- Tâches : rendu des longues listes optimisé avec `content-visibility` et décodage image asynchrone sur cartes/lignes catalogue et stock.
 - Phase : Phase 4 — Espace client
 - Tâches : routes `/account/reservations` et `/account/reservations/$id` ajoutées avec KPIs, liste, détail, paiements/documents placeholders et données locales remplaçables par Supabase.
 - Phase : Phase 2 — Catalogue dédié

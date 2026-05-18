@@ -1,6 +1,7 @@
 import { getDefaultVariant } from '@/lib/catalogue'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { buildReservationDraft, type ReservationDraft } from '@/lib/reservations/draft'
+import type { LocalReservationRecord } from '@/lib/reservations/local-history'
 
 export type AccountReservationStatus =
   | 'pending_reservation_fee'
@@ -141,6 +142,39 @@ export function getAccountReservationById(
   reservations: ReadonlyArray<AccountReservation> = ACCOUNT_RESERVATIONS,
 ): AccountReservation | null {
   return reservations.find((reservation) => reservation.id === id) ?? null
+}
+
+export function accountReservationFromLocalRecord(
+  record: LocalReservationRecord,
+): AccountReservation {
+  return {
+    id: record.id,
+    status: record.status,
+    draft: record.draft,
+    paidAmount: record.paidAmount,
+    nextActionLabel: record.nextActionLabel,
+    updatedAt: record.updatedAt,
+  }
+}
+
+export function mergeAccountReservations({
+  baseReservations = ACCOUNT_RESERVATIONS,
+  localRecords,
+}: {
+  readonly baseReservations?: ReadonlyArray<AccountReservation>
+  readonly localRecords: ReadonlyArray<LocalReservationRecord>
+}): ReadonlyArray<AccountReservation> {
+  const localReservations = localRecords.map(accountReservationFromLocalRecord)
+  const localReferences = new Set(
+    localReservations.map((reservation) => reservation.draft.reference),
+  )
+
+  return [
+    ...localReservations,
+    ...baseReservations.filter(
+      (reservation) => !localReferences.has(reservation.draft.reference),
+    ),
+  ]
 }
 
 export function calculateAccountReservationKpis(
