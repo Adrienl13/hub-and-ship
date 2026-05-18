@@ -45,6 +45,7 @@
 - ❌ Migration `0008_claims_sav.sql`
 - ❌ Migration `0009_audit_log.sql`
 - 🔄 Migration `0010_security_events.sql` (V1.3, fondation incluse)
+- ✅ Migration `siret_cache.sql` (cache INSEE 7 jours)
 - ❌ Seed data complet (10 produits, 5 carrier_partners, 1 container, etc.)
 - ❌ RLS testée sur toutes tables sensibles
 - ❌ Triggers actifs (MOQ, fidélité)
@@ -72,7 +73,7 @@
 - ✅ `validation/schemas.ts` (Zod schemas checkout/callback)
 
 ### 1.5 Sécurité
-- ❌ Edge Function `verify-siret` avec cache + rate limit
+- 🔄 Edge Function `verify-siret` avec cache + rate limit (scaffold serveur)
 - ✅ Composant `SiretInput` + validation temps réel
 - ✅ Composant `SiretVerificationDisplay`
 - ✅ Composant `EmailDomainWarning`

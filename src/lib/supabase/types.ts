@@ -178,6 +178,26 @@ type SecurityEventInsert = {
 
 type SecurityEventUpdate = Partial<SecurityEventInsert>
 
+type SiretCacheRow = {
+  siret: string
+  insee_response: Json
+  is_valid: boolean
+  is_active: boolean
+  fetched_at: string
+  expires_at: string
+}
+
+type SiretCacheInsert = {
+  siret: string
+  insee_response: Json
+  is_valid: boolean
+  is_active: boolean
+  fetched_at?: string
+  expires_at?: string
+}
+
+type SiretCacheUpdate = Partial<SiretCacheInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -195,6 +215,11 @@ export interface Database {
         Row: SecurityEventRow
         Insert: SecurityEventInsert
         Update: SecurityEventUpdate
+      }
+      siret_cache: {
+        Row: SiretCacheRow
+        Insert: SiretCacheInsert
+        Update: SiretCacheUpdate
       }
     }
     Views: Record<string, never>
