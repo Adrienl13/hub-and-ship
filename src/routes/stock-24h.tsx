@@ -15,6 +15,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
 import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
@@ -27,6 +28,7 @@ import {
   type StockLine,
   type StockSortKey,
 } from '@/lib/stock'
+import { buildStockRequestDraft } from '@/lib/stock-requests'
 import { formatEUR } from '@/lib/order'
 
 export const Route = createFileRoute('/stock-24h')({
@@ -281,6 +283,8 @@ function StockRow({
 }
 
 function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
+  const stockRequestCreation = useStockRequestCreation()
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     company: '',
     email: '',
@@ -297,12 +301,44 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
     Number.isFinite(requestedQuantity) &&
     requestedQuantity > 0
 
-  const submit = () => {
+  const submit = async () => {
     if (!line || !valid) return
 
-    toast.success('Demande stock préparée', {
-      description: `${form.company} · ${requestedQuantity} ${line.product.name} · rappel sous 24h ouvrées.`,
+    const draftResult = buildStockRequestDraft({
+      line,
+      companyName: form.company,
+      contactEmail: form.email,
+      contactPhone: form.phone,
+      requestedQuantity,
     })
+
+    if (!draftResult.ok) {
+      toast.error('Demande stock à compléter', {
+        description:
+          draftResult.issues[0]?.message ?? 'Vérifiez les champs obligatoires.',
+      })
+      return
+    }
+
+    setSubmitting(true)
+    const creation = await stockRequestCreation.createStockRequest(
+      draftResult.draft,
+    )
+    setSubmitting(false)
+
+    if (!creation.ok) {
+      toast.error('Demande stock non enregistrée', {
+        description: creation.error,
+      })
+      return
+    }
+
+    toast.success('Demande stock préparée', {
+      description: creation.persisted
+        ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`
+        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé dans l'admin local.`,
+    })
+    setForm({ company: '', email: '', phone: '', quantity: '' })
   }
 
   if (!line) {
@@ -393,12 +429,12 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
 
       <Button
         type="button"
-        disabled={!valid}
+        disabled={!valid || submitting}
         onClick={submit}
         className="mt-4 h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
       >
         <Phone className="h-4 w-4" />
-        Être rappelé
+        {submitting ? 'Enregistrement...' : 'Être rappelé'}
       </Button>
       <a
         href={`mailto:contact@container-club.fr?subject=Stock 24h - ${encodeURIComponent(

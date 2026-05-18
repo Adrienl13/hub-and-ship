@@ -22,6 +22,12 @@ export type ReservationStatus =
   | 'in_transit'
   | 'delivered'
   | 'cancelled'
+export type StockRequestStatus =
+  | 'new'
+  | 'contacted'
+  | 'reserved'
+  | 'converted'
+  | 'closed'
 export type SecurityEventSeverity = 'info' | 'warning' | 'error' | 'critical'
 export type SecurityEventType =
   | 'login_attempt'
@@ -328,6 +334,58 @@ type ReservationItemInsert = {
 
 type ReservationItemUpdate = Partial<ReservationItemInsert>
 
+type StockRequestRow = {
+  id: string
+  status: StockRequestStatus
+  stock_line_id: string
+  product_id: string
+  sku: string
+  product_name: string
+  variant_id: string
+  variant_name: string
+  requested_quantity: number
+  available_units_snapshot: number
+  unit_price_ht: number
+  estimated_total_ht: number
+  company_name: string
+  contact_email: string
+  contact_phone: string
+  location: string
+  customer_note: string | null
+  internal_note: string | null
+  product_snapshot: Json
+  source: string
+  created_at: string
+  updated_at: string
+}
+
+type StockRequestInsert = {
+  id?: string
+  status?: StockRequestStatus
+  stock_line_id: string
+  product_id: string
+  sku: string
+  product_name: string
+  variant_id: string
+  variant_name: string
+  requested_quantity: number
+  available_units_snapshot: number
+  unit_price_ht: number
+  estimated_total_ht: number
+  company_name: string
+  contact_email: string
+  contact_phone: string
+  location: string
+  customer_note?: string | null
+  internal_note?: string | null
+  product_snapshot: Json
+  source?: string
+  created_at?: string
+  updated_at?: string
+}
+
+type StockRequestUpdate = Partial<StockRequestInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -361,6 +419,11 @@ export interface Database {
         Insert: ReservationItemInsert
         Update: ReservationItemUpdate
       }
+      stock_requests: {
+        Row: StockRequestRow
+        Insert: StockRequestInsert
+        Update: StockRequestUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -377,6 +440,7 @@ export interface Database {
       user_role: UserRole
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
+      stock_request_status: StockRequestStatus
       security_event_type: SecurityEventType
     }
     CompositeTypes: Record<string, never>

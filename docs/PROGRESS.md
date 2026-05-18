@@ -117,6 +117,7 @@
 - 🔄 Catalogue Lovable (filtres + tri + rows) intégré avec données mock
 - ✅ Page `/catalogue` dense type order sheet
 - ✅ Page `/stock-24h` pour lots disponibles rapidement
+- ✅ Demandes stock 24h persistables (Supabase + fallback local admin)
 - ✅ Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
@@ -226,11 +227,12 @@
 
 ## Phase 5 — Admin (semaine 7)
 
-- ❌ Layout admin + auth + role
-- ❌ `/admin` dashboard KPI
+- 🔄 Layout admin + auth + role (aperçu local, RLS admin préparée)
+- ✅ `/admin` dashboard KPI
 - ❌ `/admin/containers`
-- ❌ `/admin/products`
-- ❌ `/admin/reservations`
+- 🔄 `/admin/products` (vue stock/catalogue locale)
+- 🔄 `/admin/reservations` (vue réservations locale)
+- ✅ `/admin/stock-requests` (onglet demandes stock dans `/admin`)
 - ❌ `/admin/companies`
 - ❌ `/admin/pricing`
 - ❌ `/admin/carriers`
@@ -332,6 +334,10 @@
 - Tâches : ProductDetailDialog, ReservationDialog et ContainerScene chargés en lazy chunks ; chunk panier initial réduit fortement, 3D isolée.
 - Phase : Phase 2 — Stock 24h
 - Tâches : route `/stock-24h` ajoutée avec lots disponibles sous 24h, filtres, tri, KPIs, demande rapide et teaser home.
+- Phase : Phase 2 — Demandes stock 24h
+- Tâches : demandes stock 24h validées, sauvegardées localement en fallback, payload Supabase `stock_requests` et migration RLS ajoutés.
+- Phase : Phase 5 — Admin minimal
+- Tâches : route `/admin` ajoutée avec KPIs, onglets demandes stock, réservations et produits/stock ; lecture des demandes locales issues de `/stock-24h`.
 - Phase : Phase 2 — Réservation
 - Tâches : écran de confirmation post-checkout ajouté, historique local des drafts de réservation conservé et fusionné dans l'espace compte.
 - Phase : Phase 2 — Performance catalogue

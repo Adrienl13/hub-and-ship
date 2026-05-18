@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -25,6 +26,11 @@ const Stock24hRoute = Stock24hRouteImport.update({
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -56,6 +62,7 @@ const AccountReservationsReservationIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/catalogue'
     | '/stock-24h'
     | '/account/reservations'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/catalogue'
     | '/stock-24h'
     | '/account/reservations'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/catalogue'
     | '/stock-24h'
     | '/account/reservations'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
   Stock24hRoute: typeof Stock24hRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogue'
       fullPath: '/catalogue'
       preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -188,6 +208,7 @@ const AccountReservationsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
   Stock24hRoute: Stock24hRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
