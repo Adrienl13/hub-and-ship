@@ -82,12 +82,12 @@
 - ❌ Rate limiting Cloudflare WAF configuré
 - ❌ Bot Fight Mode activé
 - ❌ OWASP Core Rule Set activé
-- ❌ Suite tests sécurité (`tests/security/`)
+- 🔄 Suite tests sécurité (`tests/security/`)
 - ❌ Validation score A sur securityheaders.com
 
 ### 1.6 Authentification
 - ✅ Setup Supabase Auth magic link (scaffold local, env à renseigner)
-- 🔄 Page `/auth/login` avec rate limiting
+- ✅ Page `/auth/login` avec rate limiting applicatif local
 - ✅ Page `/auth/callback`
 - ✅ Hook `useAuth`
 - ✅ Helpers `src/lib/supabase/{client,server,types}.ts`

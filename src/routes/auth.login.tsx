@@ -6,6 +6,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
 import { useAuth } from '@/hooks/useAuth'
+import {
+  consumeRateLimit,
+  formatRetryAfter,
+  MAGIC_LINK_RATE_LIMIT,
+} from '@/lib/security/rate-limit'
 import { businessEmailSchema } from '@/lib/validation/schemas'
 
 export const Route = createFileRoute('/auth/login')({
@@ -24,6 +29,18 @@ function LoginPage() {
     event.preventDefault()
 
     if (!parsedEmail.success) return
+
+    const rateLimit = consumeRateLimit({
+      key: `auth:magic-link:${parsedEmail.data}`,
+      ...MAGIC_LINK_RATE_LIMIT,
+    })
+
+    if (!rateLimit.allowed) {
+      toast.error('Trop de demandes', {
+        description: `Réessayez dans ${formatRetryAfter(rateLimit.retryAfterMs)}.`,
+      })
+      return
+    }
 
     setSubmitting(true)
     const result = await auth.signInWithMagicLink(parsedEmail.data)
