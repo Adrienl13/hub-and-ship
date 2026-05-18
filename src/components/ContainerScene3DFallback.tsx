@@ -1,4 +1,5 @@
 import type { CartItem } from "@/lib/order";
+import { packContainerPackages } from "@/lib/container/packing";
 
 export function ContainerScene3DFallback({
   items,
@@ -7,7 +8,8 @@ export function ContainerScene3DFallback({
   items: CartItem[];
   fillPercent: number;
 }) {
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const packed = packContainerPackages(items);
+  const totalPackages = packed.packages.length;
   const safeFill = Math.max(0, Math.min(100, fillPercent));
 
   return (
@@ -22,17 +24,21 @@ export function ContainerScene3DFallback({
             {items.length === 0 ? (
               <div className="h-full w-full rounded-sm border border-dashed border-[color:var(--sand-deep)]" />
             ) : (
-              items.map((item) => {
-                const share = totalQuantity > 0 ? (item.quantity / totalQuantity) * safeFill : 0;
+              packed.slices.map((slice) => {
+                const share =
+                  totalPackages > 0
+                    ? (slice.packageCount / totalPackages) * safeFill
+                    : 0;
                 return (
                   <div
-                    key={`${item.product.id}-${item.variant.id}`}
+                    key={slice.productId}
                     className="min-w-2 rounded-t-sm ring-1 ring-black/10"
                     style={{
                       width: `${Math.max(4, share)}%`,
-                      height: `${Math.max(22, Math.min(95, 30 + item.quantity * 0.9))}%`,
-                      backgroundColor: item.variant.hex,
+                      height: `${Math.max(22, Math.min(95, 35 + slice.packageCount * 8))}%`,
+                      backgroundColor: slice.color,
                     }}
+                    title={`${slice.productName}: ${slice.packageCount} pile/carton`}
                   />
                 );
               })
@@ -41,7 +47,10 @@ export function ContainerScene3DFallback({
           <div className="absolute right-1 top-1/2 h-12 w-3 -translate-y-1/2 rounded-sm border border-foreground/30 bg-background/50" />
         </div>
         <div className="mt-2 text-center text-[10px] text-muted-foreground">
-          Aperçu statique affiché si la 3D n'est pas disponible.
+          Aperçu logistique par piles/cartons.
+          {packed.overflowUnits > 0
+            ? ` ${packed.overflowUnits} unité(s) hors capacité.`
+            : ""}
         </div>
       </div>
     </div>

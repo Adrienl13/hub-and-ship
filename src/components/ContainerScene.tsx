@@ -2,87 +2,15 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment, Html } from "@react-three/drei";
 import { useMemo, Suspense } from "react";
 import type { CartItem } from "@/lib/order";
+import {
+  CONTAINER_INNER_METERS,
+  packContainerPackages,
+} from "@/lib/container/packing";
 
 // 20' High Cube intérieur utile (m)
-const L = 5.9;
-const W = 2.34;
-const H = 2.69;
-
-type BoxInstance = {
-  pos: [number, number, number];
-  size: [number, number, number];
-  color: string;
-  productId: string;
-  productName: string;
-  sliceIndex: number;
-  sliceCenterX: number;
-};
-
-type Slice = {
-  productId: string;
-  productName: string;
-  centerX: number;
-  color: string;
-  qty: number;
-};
-
-function packBoxes(items: CartItem[]): { boxes: BoxInstance[]; slices: Slice[] } {
-  const boxes: BoxInstance[] = [];
-  const slices: Slice[] = [];
-  let xCursor = -L / 2;
-  let sliceIndex = 0;
-
-  for (const item of items) {
-    if (item.quantity <= 0) continue;
-    const dims = item.product.dimensions; // cm
-    let w = dims.w / 100; // depth (Z)
-    const d = dims.l / 100; // width along container length (X)
-    let h = dims.h / 100; // vertical (Y)
-    // clamp
-    if (h > H) h = H * 0.95;
-    if (w > W) w = W * 0.95;
-
-    const cellsW = Math.max(1, Math.floor(W / w));
-    const cellsH = Math.max(1, Math.floor(H / h));
-    const perCol = cellsW * cellsH;
-    const colsNeeded = Math.ceil(item.quantity / perCol);
-
-    const usedW = cellsW * w;
-    const zStart = -W / 2 + (W - usedW) / 2 + w / 2;
-    const sliceWidth = colsNeeded * d;
-    const sliceCenterX = xCursor + sliceWidth / 2;
-
-    for (let i = 0; i < item.quantity; i++) {
-      const colIdx = Math.floor(i / perCol);
-      const within = i % perCol;
-      const layer = Math.floor(within / cellsW);
-      const wIdx = within % cellsW;
-
-      const x = xCursor + colIdx * d + d / 2;
-      const y = -H / 2 + layer * h + h / 2;
-      const z = zStart + wIdx * w;
-      boxes.push({
-        pos: [x, y, z],
-        size: [d * 0.96, h * 0.96, w * 0.96],
-        color: item.variant.hex,
-        productId: item.product.id,
-        productName: item.product.name,
-        sliceIndex,
-        sliceCenterX,
-      });
-    }
-    slices.push({
-      productId: item.product.id,
-      productName: item.product.name,
-      centerX: sliceCenterX,
-      color: item.variant.hex,
-      qty: item.quantity,
-    });
-    xCursor += sliceWidth + 0.04;
-    sliceIndex++;
-  }
-  return { boxes, slices };
-}
+const L = CONTAINER_INNER_METERS.length;
+const W = CONTAINER_INNER_METERS.width;
+const H = CONTAINER_INNER_METERS.height;
 
 function ContainerShell({ opacity = 1 }: { opacity?: number }) {
   const wallColor = "#b8aea0";
@@ -125,7 +53,10 @@ export function ContainerScene({
   items: CartItem[];
   exploded?: boolean;
 }) {
-  const { boxes, slices } = useMemo(() => packBoxes(items), [items]);
+  const { packages, slices, overflowUnits } = useMemo(
+    () => packContainerPackages(items),
+    [items],
+  );
 
   const EXPLODE_GAP = 0.7;
   const explodeOffset = (sliceIndex: number, total: number) => {
@@ -166,7 +97,7 @@ export function ContainerScene({
 
       <group position={[0, 0.25, 0]}>
         <ContainerShell opacity={exploded ? 0.25 : 1} />
-        {boxes.map((b, i) => {
+        {packages.map((b, i) => {
           const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices);
           return (
             <RoundedBox
@@ -197,11 +128,24 @@ export function ContainerScene({
                   className="whitespace-nowrap rounded-sm border border-black/10 bg-white/95 px-2 py-0.5 text-[10px] font-medium text-foreground shadow-paper"
                   style={{ borderLeft: `3px solid ${s.color}` }}
                 >
-                  {s.productName} · {s.qty}
+                  {s.productName} · {s.packedUnits}/{s.requestedUnits}
+                  {s.overflowUnits > 0 ? " hors capacité" : ""}
                 </div>
               </Html>
             );
           })}
+        {overflowUnits > 0 && (
+          <Html
+            position={[L / 2 - 0.55, H / 2 + 0.25, 0]}
+            center
+            distanceFactor={9}
+            style={{ pointerEvents: "none" }}
+          >
+            <div className="whitespace-nowrap rounded-sm border border-destructive/30 bg-white/95 px-2 py-1 text-[10px] font-medium text-destructive shadow-paper">
+              {overflowUnits} unité{overflowUnits > 1 ? "s" : ""} hors capacité
+            </div>
+          </Html>
+        )}
         <ContactShadows
           position={[0, -H / 2 + 0.01, 0]}
           opacity={0.35}

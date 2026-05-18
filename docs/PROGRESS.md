@@ -136,8 +136,8 @@
 - 🔄 ProductReviews (résumé + avis vérifiés mock avant Supabase)
 
 ### 2.3 Visualisation container
-- 🔄 ContainerScene3D (R3F Lovable intégré)
-- 🔄 ContainerScene3DFallback (fallback 2D statique)
+- 🔄 ContainerScene3D (R3F Lovable intégré, packing piles/cartons)
+- 🔄 ContainerScene3DFallback (fallback 2D logistique)
 - 🔄 ContainerFillBar
 - 🔄 ContainerStatusBadge
 - 🔄 SeriesProgressIndicator
@@ -332,6 +332,8 @@
 - Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
 - Phase : Phase 2 — Build/catalogue
 - Tâches : ProductDetailDialog, ReservationDialog et ContainerScene chargés en lazy chunks ; chunk panier initial réduit fortement, 3D isolée.
+- Phase : Phase 2 — Visualisation container
+- Tâches : packing 3D corrigé avec unités logistiques ; chaises groupées en piles de 10, 4 piles sur la largeur, et aucun carton rendu hors container.
 - Phase : Phase 2 — Stock 24h
 - Tâches : route `/stock-24h` ajoutée avec lots disponibles sous 24h, filtres, tri, KPIs, demande rapide et teaser home.
 - Phase : Phase 2 — Demandes stock 24h
