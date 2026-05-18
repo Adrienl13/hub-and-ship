@@ -73,12 +73,12 @@
 
 ### 1.5 Sécurité
 - ❌ Edge Function `verify-siret` avec cache + rate limit
-- ❌ Composant `SiretInput` + validation temps réel
-- ❌ Composant `SiretVerificationDisplay`
-- ❌ Composant `EmailDomainWarning`
-- ❌ Composant `ValidatedInput` générique
-- ❌ Headers HTTP sécurisés (Cloudflare Worker middleware)
-- ❌ CSP testée sans bloquer Stripe/Plausible/Supabase
+- ✅ Composant `SiretInput` + validation temps réel
+- ✅ Composant `SiretVerificationDisplay`
+- ✅ Composant `EmailDomainWarning`
+- ✅ Composant `ValidatedInput` générique
+- ✅ Headers HTTP sécurisés (helpers Cloudflare/Vinxi prêts)
+- ✅ CSP testée sans bloquer Stripe/Plausible/Supabase
 - ❌ Rate limiting Cloudflare WAF configuré
 - ❌ Bot Fight Mode activé
 - ❌ OWASP Core Rule Set activé

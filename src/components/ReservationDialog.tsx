@@ -9,12 +9,10 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgePercent,
-  CheckCircle2,
   CreditCard,
   Lock,
   Mail,
   RefreshCcw,
-  Search,
   ShieldCheck,
   Truck,
 } from 'lucide-react'
@@ -29,6 +27,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { EmailDomainWarning } from '@/components/security/EmailDomainWarning'
+import {
+  SiretInput,
+  type SiretInputState,
+} from '@/components/security/SiretInput'
+import { ValidatedInput } from '@/components/security/ValidatedInput'
 import { toast } from 'sonner'
 import { formatEUR, type OrderTotals } from '@/lib/order'
 import {
@@ -37,18 +41,12 @@ import {
 } from '@/lib/pricing/referral'
 import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
 import { checkEmailDomain } from '@/lib/validation/email'
-import { validateSiretFormat } from '@/lib/validation/siret'
 
 type ReservationStep = 1 | 2 | 3 | 4
 type DeliveryMode =
   | 'pickup_at_port'
   | 'self_arranged'
   | 'partner_carrier_needed'
-
-type SiretCheckState =
-  | { status: 'idle' }
-  | { status: 'invalid'; reason: string }
-  | { status: 'verified'; siret: string }
 
 const DELIVERY_OPTIONS: ReadonlyArray<{
   value: DeliveryMode
@@ -84,7 +82,7 @@ export function ReservationDialog({
   totals: OrderTotals
 }) {
   const [step, setStep] = useState<ReservationStep>(1)
-  const [siretCheck, setSiretCheck] = useState<SiretCheckState>({
+  const [siretCheck, setSiretCheck] = useState<SiretInputState>({
     status: 'idle',
   })
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
@@ -151,22 +149,6 @@ export function ReservationDialog({
     }
   }, [open])
 
-  const handleSiretVerification = () => {
-    const result = validateSiretFormat(form.siret)
-
-    if (!result.valid) {
-      setSiretCheck({
-        status: 'invalid',
-        reason: result.reason ?? 'SIRET invalide',
-      })
-      return
-    }
-
-    const cleaned = result.cleaned
-    setForm((previous) => ({ ...previous, siret: cleaned }))
-    setSiretCheck({ status: 'verified', siret: cleaned })
-  }
-
   const handlePay = () => {
     setSubmitting(true)
     setTimeout(() => {
@@ -217,64 +199,24 @@ export function ReservationDialog({
               if (siretCheck.status === 'verified') setStep(2)
             }}
           >
-            <Field
-              label="Numéro SIRET *"
-              id="siret"
+            <SiretInput
               value={form.siret}
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="732 829 320 00074"
-              onChange={(value) => {
-                setForm({ ...form, siret: value })
-                setSiretCheck({ status: 'idle' })
-              }}
-              hint="Le SIRET de l'établissement de facturation. Vérification INSEE à connecter en Phase Supabase."
+              state={siretCheck}
+              onValueChange={(value) => setForm({ ...form, siret: value })}
+              onStateChange={setSiretCheck}
+              onVerified={(cleanedSiret) =>
+                setForm((previous) => ({ ...previous, siret: cleanedSiret }))
+              }
             />
 
-            {siretCheck.status === 'invalid' && (
-              <StatusBox
-                tone="error"
-                title="SIRET non valide"
-                text={siretCheck.reason}
-              />
-            )}
-
-            {siretCheck.status === 'verified' && (
-              <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4 text-sm">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--forest)]" />
-                  <div>
-                    <div className="font-medium text-[color:var(--forest)]">
-                      Format SIRET vérifié
-                    </div>
-                    <div className="text-foreground/75 mt-1 text-xs">
-                      {siretCheck.siret} - contrôle INSEE complet et
-                      anti-duplication à brancher côté serveur.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 rounded-sm border-[color:var(--sand-deep)] sm:w-auto"
-                onClick={handleSiretVerification}
-              >
-                <Search className="h-4 w-4" />
-                Vérifier mon SIRET
-              </Button>
-              <Button
-                type="submit"
-                disabled={siretCheck.status !== 'verified'}
-                className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
-              >
-                Continuer
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              disabled={siretCheck.status !== 'verified'}
+              className="h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+            >
+              Continuer
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </form>
         )}
 
@@ -322,36 +264,15 @@ export function ReservationDialog({
               />
             </div>
 
-            {emailCheck.showWarning && (
-              <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 rounded-md border p-3 text-xs">
-                <div className="font-medium text-[color:var(--ochre)]">
-                  Adresse personnelle détectée
-                </div>
-                <p className="mt-1">{emailCheck.warningMessage}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-8 rounded-sm"
-                    onClick={() => setEmailWarningAccepted(true)}
-                  >
-                    Je comprends, continuer
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 rounded-sm border-[color:var(--sand-deep)]"
-                    onClick={() => {
-                      setForm({ ...form, email: '' })
-                      setEmailWarningAccepted(false)
-                    }}
-                  >
-                    Modifier mon email
-                  </Button>
-                </div>
-              </div>
-            )}
+            <EmailDomainWarning
+              email={form.email}
+              accepted={emailWarningAccepted}
+              onAccept={() => setEmailWarningAccepted(true)}
+              onEdit={() => {
+                setForm({ ...form, email: '' })
+                setEmailWarningAccepted(false)
+              }}
+            />
 
             <DialogActions onBack={goBack} nextDisabled={!contactValid} />
           </form>
@@ -722,22 +643,17 @@ function Field({
   inputMode?: InputHTMLAttributes<HTMLInputElement>['inputMode']
 }) {
   return (
-    <div className="space-y-1">
-      <Label htmlFor={id} className="text-xs font-medium">
-        {label}
-      </Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
-      />
-      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
-    </div>
+    <ValidatedInput
+      id={id}
+      label={label}
+      value={value}
+      onValueChange={onChange}
+      type={type}
+      hint={hint}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      inputMode={inputMode}
+    />
   )
 }
 
