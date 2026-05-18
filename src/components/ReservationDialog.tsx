@@ -1,7 +1,14 @@
-import { useMemo, useState, type HTMLInputTypeAttribute, type InputHTMLAttributes } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type HTMLInputTypeAttribute,
+  type InputHTMLAttributes,
+} from 'react'
 import {
   ArrowLeft,
   ArrowRight,
+  BadgePercent,
   CheckCircle2,
   CreditCard,
   Lock,
@@ -10,130 +17,177 @@ import {
   Search,
   ShieldCheck,
   Truck,
-} from "lucide-react";
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
-import { formatEUR, type OrderTotals } from "@/lib/order";
-import { checkEmailDomain } from "@/lib/validation/email";
-import { validateSiretFormat } from "@/lib/validation/siret";
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { toast } from 'sonner'
+import { formatEUR, type OrderTotals } from '@/lib/order'
+import {
+  applyReferralCode,
+  type ReferralApplication,
+} from '@/lib/pricing/referral'
+import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
+import { checkEmailDomain } from '@/lib/validation/email'
+import { validateSiretFormat } from '@/lib/validation/siret'
 
-type ReservationStep = 1 | 2 | 3 | 4;
-type DeliveryMode = "pickup_at_port" | "self_arranged" | "partner_carrier_needed";
+type ReservationStep = 1 | 2 | 3 | 4
+type DeliveryMode =
+  | 'pickup_at_port'
+  | 'self_arranged'
+  | 'partner_carrier_needed'
 
 type SiretCheckState =
-  | { status: "idle" }
-  | { status: "invalid"; reason: string }
-  | { status: "verified"; siret: string };
+  | { status: 'idle' }
+  | { status: 'invalid'; reason: string }
+  | { status: 'verified'; siret: string }
 
 const DELIVERY_OPTIONS: ReadonlyArray<{
-  value: DeliveryMode;
-  title: string;
-  description: string;
+  value: DeliveryMode
+  title: string
+  description: string
 }> = [
   {
-    value: "pickup_at_port",
-    title: "Enlèvement libre au port",
-    description: "Gratuit. Vous récupérez la marchandise à Marseille-Fos ou au Havre.",
+    value: 'pickup_at_port',
+    title: 'Enlèvement libre au port',
+    description:
+      'Gratuit. Vous récupérez la marchandise à Marseille-Fos ou au Havre.',
   },
   {
-    value: "self_arranged",
+    value: 'self_arranged',
     title: "J'ai déjà mon transporteur",
-    description: "Nous transmettrons les informations d'arrivée et de dédouanement.",
+    description:
+      "Nous transmettrons les informations d'arrivée et de dédouanement.",
   },
   {
-    value: "partner_carrier_needed",
-    title: "Me mettre en relation",
-    description: "Nous vous enverrons une liste de transporteurs recommandés.",
+    value: 'partner_carrier_needed',
+    title: 'Me mettre en relation',
+    description: 'Nous vous enverrons une liste de transporteurs recommandés.',
   },
-] as const;
+] as const
 
 export function ReservationDialog({
   open,
   onOpenChange,
   totals,
 }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  totals: OrderTotals;
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  totals: OrderTotals
 }) {
-  const [step, setStep] = useState<ReservationStep>(1);
-  const [siretCheck, setSiretCheck] = useState<SiretCheckState>({ status: "idle" });
-  const [emailWarningAccepted, setEmailWarningAccepted] = useState(false);
-  const [cgvAccepted, setCgvAccepted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [step, setStep] = useState<ReservationStep>(1)
+  const [siretCheck, setSiretCheck] = useState<SiretCheckState>({
+    status: 'idle',
+  })
+  const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
+  const [cgvAccepted, setCgvAccepted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
-    siret: "",
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    deliveryMode: "pickup_at_port" as DeliveryMode,
-    deliveryNote: "",
-  });
+    siret: '',
+    name: '',
+    company: '',
+    email: '',
+    phone: '',
+    referralCode: '',
+    deliveryMode: 'pickup_at_port' as DeliveryMode,
+    deliveryNote: '',
+  })
 
-  const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email]);
+  const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
+  const referralApplication = useMemo(
+    () =>
+      applyReferralCode({
+        codeInput: form.referralCode,
+        reservationFee: totals.reservationFee,
+        codes: MOCK_REFERRAL_CODES,
+        referredSiret: form.siret,
+        referredEmail: form.email,
+      }),
+    [form.email, form.referralCode, form.siret, totals.reservationFee],
+  )
+  const checkoutPayNow = referralApplication.payNow
   const contactValid =
     form.name.trim().length > 1 &&
     form.company.trim().length > 1 &&
-    form.email.includes("@") &&
+    form.email.includes('@') &&
     form.phone.trim().length >= 6 &&
-    (!emailCheck.showWarning || emailWarningAccepted);
-  const deliveryValid = form.deliveryMode.length > 0;
+    (!emailCheck.showWarning || emailWarningAccepted)
+  const deliveryValid = form.deliveryMode.length > 0
 
   const reset = () => {
-    setStep(1);
-    setSiretCheck({ status: "idle" });
-    setEmailWarningAccepted(false);
-    setCgvAccepted(false);
-    setSubmitting(false);
-  };
+    setStep(1)
+    setSiretCheck({ status: 'idle' })
+    setEmailWarningAccepted(false)
+    setCgvAccepted(false)
+    setSubmitting(false)
+  }
+
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const refFromUrl = params.get('ref')
+    const storedRef = window.localStorage.getItem('container-club-ref-code')
+    const nextRef = refFromUrl ?? storedRef
+
+    if (refFromUrl) {
+      window.localStorage.setItem('container-club-ref-code', refFromUrl)
+    }
+
+    if (nextRef) {
+      setForm((previous) =>
+        previous.referralCode
+          ? previous
+          : { ...previous, referralCode: nextRef },
+      )
+    }
+  }, [open])
 
   const handleSiretVerification = () => {
-    const result = validateSiretFormat(form.siret);
+    const result = validateSiretFormat(form.siret)
 
     if (!result.valid) {
       setSiretCheck({
-        status: "invalid",
-        reason: result.reason ?? "SIRET invalide",
-      });
-      return;
+        status: 'invalid',
+        reason: result.reason ?? 'SIRET invalide',
+      })
+      return
     }
 
-    const cleaned = result.cleaned;
-    setForm((previous) => ({ ...previous, siret: cleaned }));
-    setSiretCheck({ status: "verified", siret: cleaned });
-  };
+    const cleaned = result.cleaned
+    setForm((previous) => ({ ...previous, siret: cleaned }))
+    setSiretCheck({ status: 'verified', siret: cleaned })
+  }
 
   const handlePay = () => {
-    setSubmitting(true);
+    setSubmitting(true)
     setTimeout(() => {
-      setSubmitting(false);
-      onOpenChange(false);
-      reset();
-      toast.success("Réservation enregistrée", {
-        description: `Confirmation envoyée à ${form.email}. Paiement Stripe à connecter.`,
-      });
-    }, 900);
-  };
+      setSubmitting(false)
+      onOpenChange(false)
+      reset()
+      toast.success('Réservation enregistrée', {
+        description: `Confirmation envoyée à ${form.email}. Paiement Stripe à connecter pour ${formatEUR(checkoutPayNow)}.`,
+      })
+    }, 900)
+  }
 
-  const goBack = () => setStep((current) => Math.max(1, current - 1) as ReservationStep);
+  const goBack = () =>
+    setStep((current) => Math.max(1, current - 1) as ReservationStep)
 
   return (
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        onOpenChange(value);
-        if (!value) reset();
+        onOpenChange(value)
+        if (!value) reset()
       }}
     >
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
@@ -142,22 +196,25 @@ export function ReservationDialog({
             Étape {step} / 4 - Réservation
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {step === 1 && "Identification professionnelle"}
-            {step === 2 && "Coordonnées de contact"}
-            {step === 3 && "Mode de livraison"}
-            {step === 4 && "Récapitulatif et paiement"}
+            {step === 1 && 'Identification professionnelle'}
+            {step === 2 && 'Coordonnées de contact'}
+            {step === 3 && 'Mode de livraison'}
+            {step === 4 && 'Récapitulatif et paiement'}
           </DialogTitle>
         </DialogHeader>
 
         <StepIndicator step={step} />
-        <SummaryCard totals={totals} />
+        <SummaryCard
+          totals={totals}
+          referralApplication={referralApplication}
+        />
 
         {step === 1 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
-              event.preventDefault();
-              if (siretCheck.status === "verified") setStep(2);
+              event.preventDefault()
+              if (siretCheck.status === 'verified') setStep(2)
             }}
           >
             <Field
@@ -168,26 +225,31 @@ export function ReservationDialog({
               autoComplete="off"
               placeholder="732 829 320 00074"
               onChange={(value) => {
-                setForm({ ...form, siret: value });
-                setSiretCheck({ status: "idle" });
+                setForm({ ...form, siret: value })
+                setSiretCheck({ status: 'idle' })
               }}
               hint="Le SIRET de l'établissement de facturation. Vérification INSEE à connecter en Phase Supabase."
             />
 
-            {siretCheck.status === "invalid" && (
-              <StatusBox tone="error" title="SIRET non valide" text={siretCheck.reason} />
+            {siretCheck.status === 'invalid' && (
+              <StatusBox
+                tone="error"
+                title="SIRET non valide"
+                text={siretCheck.reason}
+              />
             )}
 
-            {siretCheck.status === "verified" && (
-              <div className="rounded-md border border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 p-4 text-sm">
+            {siretCheck.status === 'verified' && (
+              <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4 text-sm">
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--forest)]" />
                   <div>
                     <div className="font-medium text-[color:var(--forest)]">
                       Format SIRET vérifié
                     </div>
-                    <div className="mt-1 text-xs text-foreground/75">
-                      {siretCheck.siret} - contrôle INSEE complet et anti-duplication à brancher côté serveur.
+                    <div className="text-foreground/75 mt-1 text-xs">
+                      {siretCheck.siret} - contrôle INSEE complet et
+                      anti-duplication à brancher côté serveur.
                     </div>
                   </div>
                 </div>
@@ -206,7 +268,7 @@ export function ReservationDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={siretCheck.status !== "verified"}
+                disabled={siretCheck.status !== 'verified'}
                 className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
               >
                 Continuer
@@ -220,8 +282,8 @@ export function ReservationDialog({
           <form
             className="space-y-4"
             onSubmit={(event) => {
-              event.preventDefault();
-              if (contactValid) setStep(3);
+              event.preventDefault()
+              if (contactValid) setStep(3)
             }}
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -246,8 +308,8 @@ export function ReservationDialog({
                 autoComplete="email"
                 value={form.email}
                 onChange={(value) => {
-                  setForm({ ...form, email: value });
-                  setEmailWarningAccepted(false);
+                  setForm({ ...form, email: value })
+                  setEmailWarningAccepted(false)
                 }}
               />
               <Field
@@ -261,7 +323,7 @@ export function ReservationDialog({
             </div>
 
             {emailCheck.showWarning && (
-              <div className="rounded-md border border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 p-3 text-xs text-foreground/80">
+              <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 rounded-md border p-3 text-xs">
                 <div className="font-medium text-[color:var(--ochre)]">
                   Adresse personnelle détectée
                 </div>
@@ -281,8 +343,8 @@ export function ReservationDialog({
                     size="sm"
                     className="h-8 rounded-sm border-[color:var(--sand-deep)]"
                     onClick={() => {
-                      setForm({ ...form, email: "" });
-                      setEmailWarningAccepted(false);
+                      setForm({ ...form, email: '' })
+                      setEmailWarningAccepted(false)
                     }}
                   >
                     Modifier mon email
@@ -299,8 +361,8 @@ export function ReservationDialog({
           <form
             className="space-y-4"
             onSubmit={(event) => {
-              event.preventDefault();
-              if (deliveryValid) setStep(4);
+              event.preventDefault()
+              if (deliveryValid) setStep(4)
             }}
           >
             <RadioGroup
@@ -313,7 +375,7 @@ export function ReservationDialog({
               {DELIVERY_OPTIONS.map((option) => (
                 <Label
                   key={option.value}
-                  className="flex cursor-pointer items-start gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3 text-sm transition-colors hover:border-foreground/40"
+                  className="hover:border-foreground/40 flex cursor-pointer items-start gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3 text-sm transition-colors"
                 >
                   <RadioGroupItem value={option.value} className="mt-0.5" />
                   <span>
@@ -346,11 +408,17 @@ export function ReservationDialog({
 
         {step === 4 && (
           <div className="space-y-4">
+            <ReferralCodePanel
+              value={form.referralCode}
+              application={referralApplication}
+              onChange={(value) => setForm({ ...form, referralCode: value })}
+            />
+
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
               <div className="mb-3 flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
                 <span className="text-sm font-medium">Carte bancaire</span>
-                <span className="ml-auto label-eyebrow text-muted-foreground">
+                <span className="label-eyebrow ml-auto text-muted-foreground">
                   Powered by Stripe
                 </span>
               </div>
@@ -367,10 +435,13 @@ export function ReservationDialog({
                   </div>
                 </div>
               </div>
-              <div className="mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px] text-foreground/75">
-                Vous serez débité aujourd'hui de{" "}
-                <strong className="font-semibold">{formatEUR(totals.payNow)}</strong> (frais
-                de réservation non-remboursables sauf annulation Container Club).
+              <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
+                Vous serez débité aujourd'hui de{' '}
+                <strong className="font-semibold">
+                  {formatEUR(checkoutPayNow)}
+                </strong>{' '}
+                (frais de réservation non-remboursables sauf annulation
+                Container Club).
               </div>
             </div>
 
@@ -387,14 +458,26 @@ export function ReservationDialog({
             </Label>
 
             <div className="space-y-1.5 text-[11px] text-muted-foreground">
-              <Reassure Icon={Lock} t="Paiement sécurisé par Stripe - 3D Secure" />
-              <Reassure Icon={Mail} t="Magic link envoyé après paiement réussi" />
+              <Reassure
+                Icon={Lock}
+                t="Paiement sécurisé par Stripe - 3D Secure"
+              />
+              <Reassure
+                Icon={Mail}
+                t="Magic link envoyé après paiement réussi"
+              />
               <Reassure
                 Icon={RefreshCcw}
                 t="Frais remboursés à 100% si Container Club annule le container"
               />
-              <Reassure Icon={ShieldCheck} t="Importation officielle - garantie 2 ans" />
-              <Reassure Icon={Truck} t="Transport post-port non facturé par Container Club" />
+              <Reassure
+                Icon={ShieldCheck}
+                t="Importation officielle - garantie 2 ans"
+              />
+              <Reassure
+                Icon={Truck}
+                t="Transport post-port non facturé par Container Club"
+              />
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -414,23 +497,31 @@ export function ReservationDialog({
                 disabled={submitting || !cgvAccepted}
               >
                 {submitting
-                  ? "Traitement..."
-                  : `Confirmer et payer ${formatEUR(totals.payNow)}`}
+                  ? 'Traitement...'
+                  : `Confirmer et payer ${formatEUR(checkoutPayNow)}`}
               </Button>
             </div>
           </div>
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-function SummaryCard({ totals }: { totals: OrderTotals }) {
+function SummaryCard({
+  totals,
+  referralApplication,
+}: {
+  totals: OrderTotals
+  referralApplication: ReferralApplication
+}) {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
-          <div className="label-eyebrow text-muted-foreground">Total commande HT</div>
+          <div className="label-eyebrow text-muted-foreground">
+            Total commande HT
+          </div>
           <div className="mt-0.5 font-display text-lg font-semibold tabular-nums">
             {formatEUR(totals.subtotalHt)}
           </div>
@@ -443,61 +534,148 @@ function SummaryCard({ totals }: { totals: OrderTotals }) {
         </div>
       </div>
       <div className="mt-3 border-t border-[color:var(--sand-deep)] pt-3">
+        <div className="mb-2 space-y-1 text-[11px] text-muted-foreground">
+          <div className="flex justify-between">
+            <span>Frais de réservation</span>
+            <span className="tabular-nums">
+              {formatEUR(totals.reservationFee)}
+            </span>
+          </div>
+          {referralApplication.status === 'applied' && (
+            <div className="flex justify-between text-[color:var(--forest)]">
+              <span>Code parrainage</span>
+              <span className="tabular-nums">
+                -{formatEUR(referralApplication.discountAmount)}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-foreground/80">À payer aujourd'hui</span>
+          <span className="text-foreground/80 text-xs">
+            À payer aujourd'hui
+          </span>
           <span className="font-display text-2xl font-semibold tabular-nums">
-            {formatEUR(totals.payNow)}
+            {formatEUR(referralApplication.payNow)}
           </span>
         </div>
         <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
           <div className="flex justify-between">
             <span>Acompte 27% à 80% remplissage</span>
-            <span className="tabular-nums">{formatEUR(totals.payAt80Percent)}</span>
+            <span className="tabular-nums">
+              {formatEUR(totals.payAt80Percent)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Solde 70% avant expédition</span>
-            <span className="tabular-nums">{formatEUR(totals.payBeforeShipping)}</span>
+            <span className="tabular-nums">
+              {formatEUR(totals.payBeforeShipping)}
+            </span>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+function ReferralCodePanel({
+  value,
+  application,
+  onChange,
+}: {
+  value: string
+  application: ReferralApplication
+  onChange: (value: string) => void
+}) {
+  const applied = application.status === 'applied'
+  const hasFeedback = application.status !== 'none'
+  const feedbackTone = applied
+    ? 'border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 text-[color:var(--forest)]'
+    : 'border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80'
+
+  return (
+    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <BadgePercent className="h-4 w-4" />
+        <span className="text-sm font-medium">Code parrainage</span>
+        <span className="ml-auto text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+          Optionnel
+        </span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+        <Input
+          value={value}
+          placeholder="CONTAINER-PIERRE-X7K9-2026"
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] font-mono text-xs uppercase focus-visible:border-foreground focus-visible:ring-0"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10 rounded-sm border-[color:var(--sand-deep)]"
+          onClick={() => onChange('')}
+          disabled={!value}
+        >
+          Effacer
+        </Button>
+      </div>
+      {hasFeedback ? (
+        <div
+          className={`mt-3 rounded-sm border px-3 py-2 text-xs ${feedbackTone}`}
+        >
+          <div className="font-medium">
+            {applied ? 'Parrainage appliqué' : 'Code non appliqué'}
+          </div>
+          <div className="mt-1 leading-5">
+            {application.message}
+            {applied && application.referrerLabel
+              ? ` ${application.referrerLabel} recevra son credit apres validation de la reservation.`
+              : ''}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+          Le filleul reçoit jusqu'à 100€ de réduction sur les frais de
+          réservation.
+        </p>
+      )}
+    </div>
+  )
 }
 
 function StepIndicator({ step }: { step: ReservationStep }) {
-  const labels = ["SIRET", "Contact", "Livraison", "Paiement"];
+  const labels = ['SIRET', 'Contact', 'Livraison', 'Paiement']
 
   return (
     <div className="grid grid-cols-4 gap-1 text-[10px]">
       {labels.map((label, index) => {
-        const current = index + 1;
-        const active = current === step;
-        const done = current < step;
+        const current = index + 1
+        const active = current === step
+        const done = current < step
 
         return (
           <div
             key={label}
             className={`rounded-sm border px-2 py-1.5 text-center ${
               active || done
-                ? "border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]"
-                : "border-[color:var(--sand-deep)] bg-card text-muted-foreground"
+                ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
+                : 'border-[color:var(--sand-deep)] bg-card text-muted-foreground'
             }`}
           >
             {label}
-            {done && " ✓"}
+            {done && ' ✓'}
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function DialogActions({
   onBack,
   nextDisabled,
 }: {
-  onBack: () => void;
-  nextDisabled: boolean;
+  onBack: () => void
+  nextDisabled: boolean
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row">
@@ -519,7 +697,7 @@ function DialogActions({
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
-  );
+  )
 }
 
 function Field({
@@ -527,21 +705,21 @@ function Field({
   id,
   value,
   onChange,
-  type = "text",
+  type = 'text',
   hint,
   placeholder,
   autoComplete,
   inputMode,
 }: {
-  label: string;
-  id: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: HTMLInputTypeAttribute;
-  hint?: string;
-  placeholder?: string;
-  autoComplete?: string;
-  inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
+  label: string
+  id: string
+  value: string
+  onChange: (v: string) => void
+  type?: HTMLInputTypeAttribute
+  hint?: string
+  placeholder?: string
+  autoComplete?: string
+  inputMode?: InputHTMLAttributes<HTMLInputElement>['inputMode']
 }) {
   return (
     <div className="space-y-1">
@@ -560,7 +738,7 @@ function Field({
       />
       {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
     </div>
-  );
+  )
 }
 
 function StatusBox({
@@ -568,28 +746,28 @@ function StatusBox({
   title,
   text,
 }: {
-  tone: "error" | "info";
-  title: string;
-  text: string;
+  tone: 'error' | 'info'
+  title: string
+  text: string
 }) {
   const classes =
-    tone === "error"
-      ? "border-destructive/30 bg-destructive/10 text-destructive"
-      : "border-[color:var(--sand-deep)] bg-[color:var(--sand)] text-foreground/80";
+    tone === 'error'
+      ? 'border-destructive/30 bg-destructive/10 text-destructive'
+      : 'border-[color:var(--sand-deep)] bg-[color:var(--sand)] text-foreground/80'
 
   return (
     <div className={`rounded-md border p-3 text-xs ${classes}`}>
       <div className="font-medium">{title}</div>
       <div className="mt-1 leading-5">{text}</div>
     </div>
-  );
+  )
 }
 
 function Reassure({ Icon, t }: { Icon: typeof Lock; t: string }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon className="h-3 w-3 text-foreground/50" strokeWidth={1.5} />
+      <Icon className="text-foreground/50 h-3 w-3" strokeWidth={1.5} />
       <span className="min-w-0 leading-4">{t}</span>
     </div>
-  );
+  )
 }

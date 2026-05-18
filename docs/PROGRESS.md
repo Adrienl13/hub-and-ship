@@ -62,7 +62,7 @@
 - ✅ `pricing/moq.ts` + tests
 - ❌ `pricing/loyalty.ts` + tests
 - ❌ `pricing/aggregation.ts` + tests
-- ❌ `pricing/referral.ts` + tests
+- ✅ `pricing/referral.ts` + tests
 - ❌ `container/fill-calculator.ts` + tests
 - ❌ `container/status.ts` + tests
 - ❌ `container/auto-open.ts` + tests
@@ -154,7 +154,7 @@
 - ✅ Étape 3 : DeliveryModeSelector
 - 🔄 Étape 4 : Paiement Stripe placeholder, Payment Element à connecter
 - ✅ CgvAcceptance obligatoire
-- ❌ Code parrainage si applicable
+- ✅ Code parrainage si applicable (mock V1 + remise frais réservation)
 - ❌ Email confirmation envoyé
 - ❌ Génération devis PDF
 - ❌ Tests E2E Playwright parcours complet
