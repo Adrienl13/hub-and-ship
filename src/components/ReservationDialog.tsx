@@ -34,6 +34,7 @@ import {
   type SiretInputState,
 } from '@/components/security/SiretInput'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
+import { useReservationCreation } from '@/hooks/useReservationCreation'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
 import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
@@ -94,6 +95,7 @@ export function ReservationDialog({
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const reservationCreation = useReservationCreation()
   const siretVerification = useSiretVerification()
   const [form, setForm] = useState({
     siret: '',
@@ -159,7 +161,7 @@ export function ReservationDialog({
     }
   }, [open])
 
-  const handlePay = () => {
+  const handlePay = async () => {
     const draftResult = buildReservationDraft({
       siret: form.siret,
       contact: {
@@ -188,14 +190,30 @@ export function ReservationDialog({
     }
 
     setSubmitting(true)
-    setTimeout(() => {
-      setSubmitting(false)
-      onOpenChange(false)
-      reset()
-      toast.success('Réservation enregistrée', {
-        description: `${draftResult.draft.reference} prête pour paiement Stripe (${formatEUR(draftResult.draft.payment.payNow)}).`,
+    const creation = await reservationCreation.createReservation(
+      draftResult.draft,
+    )
+    setSubmitting(false)
+
+    if (!creation.ok) {
+      toast.error('Réservation non enregistrée', {
+        description: creation.error,
       })
-    }, 900)
+      return
+    }
+
+    onOpenChange(false)
+    reset()
+
+    if (creation.persisted) {
+      toast.success('Réservation enregistrée', {
+        description: `${creation.reservation.reference} enregistrée. Paiement Stripe à connecter pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
+      })
+    } else {
+      toast.success('Réservation enregistrée', {
+        description: `${creation.reservation.reference} prête pour Supabase/Stripe (${formatEUR(draftResult.draft.payment.payNow)}).`,
+      })
+    }
   }
 
   const goBack = () =>
