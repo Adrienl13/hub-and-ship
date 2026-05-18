@@ -44,7 +44,7 @@
 - ❌ Migration `0007_documents.sql`
 - ❌ Migration `0008_claims_sav.sql`
 - ❌ Migration `0009_audit_log.sql`
-- ❌ Migration `0010_security_events.sql` (V1.3)
+- 🔄 Migration `0010_security_events.sql` (V1.3, fondation incluse)
 - ❌ Seed data complet (10 produits, 5 carrier_partners, 1 container, etc.)
 - ❌ RLS testée sur toutes tables sensibles
 - ❌ Triggers actifs (MOQ, fidélité)
@@ -79,6 +79,7 @@
 - ✅ Composant `ValidatedInput` générique
 - ✅ Headers HTTP sécurisés (helpers Cloudflare/Vinxi prêts)
 - ✅ CSP testée sans bloquer Stripe/Plausible/Supabase
+- ✅ Helper `security_events` + traçage magic link/rate limit
 - ❌ Rate limiting Cloudflare WAF configuré
 - ❌ Bot Fight Mode activé
 - ❌ OWASP Core Rule Set activé

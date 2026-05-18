@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
 import { useAuth } from '@/hooks/useAuth'
+import { useSecurityEvents } from '@/hooks/useSecurityEvents'
 import {
   consumeRateLimit,
   formatRetryAfter,
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/auth/login')({
 
 function LoginPage() {
   const auth = useAuth()
+  const securityEvents = useSecurityEvents()
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const parsedEmail = businessEmailSchema.safeParse(email)
@@ -36,6 +38,15 @@ function LoginPage() {
     })
 
     if (!rateLimit.allowed) {
+      void securityEvents.logEvent({
+        eventType: 'magic_link_rate_limited',
+        severity: 'warning',
+        metadata: {
+          email: parsedEmail.data,
+          limit: rateLimit.limit,
+          retryAfterMs: rateLimit.retryAfterMs,
+        },
+      })
       toast.error('Trop de demandes', {
         description: `Réessayez dans ${formatRetryAfter(rateLimit.retryAfterMs)}.`,
       })
@@ -47,6 +58,13 @@ function LoginPage() {
     setSubmitting(false)
 
     if (result.ok) {
+      void securityEvents.logEvent({
+        eventType: 'magic_link_sent',
+        metadata: {
+          email: parsedEmail.data,
+          remaining: rateLimit.remaining,
+        },
+      })
       toast.success('Lien magique envoyé', { description: result.message })
     } else {
       toast.error('Connexion indisponible', { description: result.message })
