@@ -95,7 +95,7 @@
 ### 🎯 DoD Phase 1
 - ⏳ `npm test` 100% green (tous tests métier + sécurité)
 - ⏳ `npm run typecheck` 0 erreur
-- ⏳ Supabase migrations s'exécutent sans erreur
+- 🔄 Supabase migrations fondation Auth/RLS créées (CLI local à installer pour exécution)
 - ⏳ Vérification SIRET fonctionne (testée avec 3+ SIRET réels)
 - ⏳ Login magic link fonctionne en local
 - ⏳ Headers sécurité validés (score A min)
