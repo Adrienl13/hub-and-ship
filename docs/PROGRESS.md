@@ -60,7 +60,7 @@
 - ✅ `pricing/tiers.ts` + tests
 - ✅ `pricing/reservation-fee.ts` + tests
 - ✅ `pricing/moq.ts` + tests
-- ❌ `pricing/loyalty.ts` + tests
+- ✅ `pricing/loyalty.ts` + tests
 - ❌ `pricing/aggregation.ts` + tests
 - ✅ `pricing/referral.ts` + tests
 - ❌ `container/fill-calculator.ts` + tests
