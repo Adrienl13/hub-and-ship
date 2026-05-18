@@ -61,15 +61,15 @@
 - ✅ `pricing/reservation-fee.ts` + tests
 - ✅ `pricing/moq.ts` + tests
 - ✅ `pricing/loyalty.ts` + tests
-- ❌ `pricing/aggregation.ts` + tests
+- ✅ `pricing/aggregation.ts` + tests
 - ✅ `pricing/referral.ts` + tests
-- ❌ `container/fill-calculator.ts` + tests
-- ❌ `container/status.ts` + tests
-- ❌ `container/auto-open.ts` + tests
-- ❌ `claims/sav.ts` + tests
+- ✅ `container/fill-calculator.ts` + tests
+- ✅ `container/status.ts` + tests
+- ✅ `container/auto-open.ts` + tests
+- ✅ `claims/sav.ts` + tests
 - ✅ `validation/siret.ts` + tests (algo Luhn + checksum)
 - ✅ `validation/email.ts` + tests (détection domaines personnels)
-- ❌ `validation/schemas.ts` (Zod schemas tous inputs API)
+- ✅ `validation/schemas.ts` (Zod schemas checkout/callback)
 
 ### 1.5 Sécurité
 - ❌ Edge Function `verify-siret` avec cache + rate limit
