@@ -16,6 +16,7 @@ export type SiretVerificationDisplayState =
   | {
       readonly status: 'verification_unavailable'
       readonly reason: string
+      readonly siret?: string
     }
   | {
       readonly status: 'verified'
@@ -65,7 +66,7 @@ const DISPLAY_COPY: Record<
     Icon: Info,
   },
   verified: {
-    title: 'Format SIRET vérifié',
+    title: 'SIRET vérifié',
     className:
       'border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 text-[color:var(--forest)]',
     Icon: CheckCircle2,
@@ -83,9 +84,9 @@ export function SiretVerificationDisplay({
   const Icon = copy.Icon
   const message =
     state.status === 'verified'
-      ? `${state.siret}${state.legalName ? ` - ${state.legalName}` : ''} - contrôle INSEE complet et anti-duplication à brancher côté serveur.`
+      ? `${state.siret}${state.legalName ? ` - ${state.legalName}` : ''} - contrôle INSEE complet.`
       : state.status === 'checking'
-        ? 'Nous vérifions le format et préparons la vérification INSEE serveur.'
+        ? 'Nous interrogeons la vérification INSEE sécurisée.'
         : state.reason
 
   return (

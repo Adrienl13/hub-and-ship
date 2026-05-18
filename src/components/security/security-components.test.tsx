@@ -79,6 +79,7 @@ describe('security form components', () => {
     await user.click(screen.getByRole('button', { name: 'Vérifier mon SIRET' }))
 
     expect(onValueChange).toHaveBeenCalledWith('55208131701750')
+    expect(onStateChange).toHaveBeenCalledWith({ status: 'checking' })
     expect(onStateChange).toHaveBeenCalledWith({
       status: 'verified',
       siret: '55208131701750',
@@ -115,7 +116,7 @@ describe('security form components', () => {
     }> = [
       {
         state: { status: 'verified', siret: '55208131701750' },
-        title: 'Format SIRET vérifié',
+        title: 'SIRET vérifié',
       },
       {
         state: {

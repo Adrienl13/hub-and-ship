@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -33,6 +34,7 @@ import {
   type SiretInputState,
 } from '@/components/security/SiretInput'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
+import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
 import { formatEUR, type OrderTotals } from '@/lib/order'
 import {
@@ -88,6 +90,7 @@ export function ReservationDialog({
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const siretVerification = useSiretVerification()
   const [form, setForm] = useState({
     siret: '',
     name: '',
@@ -119,6 +122,9 @@ export function ReservationDialog({
     form.phone.trim().length >= 6 &&
     (!emailCheck.showWarning || emailWarningAccepted)
   const deliveryValid = form.deliveryMode.length > 0
+  const siretCanContinue =
+    siretCheck.status === 'verified' ||
+    siretCheck.status === 'verification_unavailable'
 
   const reset = () => {
     setStep(1)
@@ -164,6 +170,47 @@ export function ReservationDialog({
   const goBack = () =>
     setStep((current) => Math.max(1, current - 1) as ReservationStep)
 
+  const verifySiret = useCallback(
+    async (cleanedSiret: string): Promise<SiretInputState> => {
+      const result = await siretVerification.verify(cleanedSiret)
+
+      if (result.status === 'verified') {
+        setForm((previous) => ({
+          ...previous,
+          siret: cleanedSiret,
+          company: previous.company || result.data.legal_name,
+        }))
+
+        return {
+          status: 'verified',
+          siret: cleanedSiret,
+          legalName: result.data.legal_name,
+        }
+      }
+
+      if (result.status === 'verification_unavailable') {
+        return {
+          status: 'verification_unavailable',
+          siret: cleanedSiret,
+          reason: result.reason,
+        }
+      }
+
+      if (result.status === 'invalid_format') {
+        return {
+          status: 'invalid',
+          reason: result.reason,
+        }
+      }
+
+      return {
+        status: result.status,
+        reason: result.reason,
+      }
+    },
+    [siretVerification],
+  )
+
   return (
     <Dialog
       open={open}
@@ -196,7 +243,7 @@ export function ReservationDialog({
             className="space-y-4"
             onSubmit={(event) => {
               event.preventDefault()
-              if (siretCheck.status === 'verified') setStep(2)
+              if (siretCanContinue) setStep(2)
             }}
           >
             <SiretInput
@@ -207,11 +254,12 @@ export function ReservationDialog({
               onVerified={(cleanedSiret) =>
                 setForm((previous) => ({ ...previous, siret: cleanedSiret }))
               }
+              onVerify={verifySiret}
             />
 
             <Button
               type="submit"
-              disabled={siretCheck.status !== 'verified'}
+              disabled={!siretCanContinue}
               className="h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
             >
               Continuer

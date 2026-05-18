@@ -151,7 +151,7 @@
 
 ### 2.5 Réservation
 - 🔄 ReservationDialog Lovable intégré (4 étapes V1.3, INSEE/Stripe serveur à connecter)
-- 🔄 Étape 1 : SIRET + validation format, vérification INSEE à connecter
+- 🔄 Étape 1 : SIRET + validation format, vérification INSEE Edge Function raccordée
 - ✅ Étape 2 : Contact + EmailDomainWarning
 - ✅ Étape 3 : DeliveryModeSelector
 - 🔄 Étape 4 : Paiement Stripe placeholder, Payment Element à connecter

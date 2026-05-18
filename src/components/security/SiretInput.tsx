@@ -16,19 +16,21 @@ export function SiretInput({
   onValueChange,
   onStateChange,
   onVerified,
+  onVerify,
 }: {
   readonly value: string
   readonly state: SiretInputState
   readonly onValueChange: (value: string) => void
   readonly onStateChange: (state: SiretInputState) => void
   readonly onVerified: (cleanedSiret: string) => void
+  readonly onVerify?: (cleanedSiret: string) => Promise<SiretInputState>
 }) {
   const handleChange = (nextValue: string) => {
     onValueChange(nextValue)
     onStateChange({ status: 'idle' })
   }
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const result = validateSiretFormat(value)
 
     if (!result.valid) {
@@ -40,8 +42,20 @@ export function SiretInput({
     }
 
     onValueChange(result.cleaned)
-    onStateChange({ status: 'verified', siret: result.cleaned })
-    onVerified(result.cleaned)
+    onStateChange({ status: 'checking' })
+
+    const nextState = onVerify
+      ? await onVerify(result.cleaned)
+      : { status: 'verified' as const, siret: result.cleaned }
+
+    onStateChange(nextState)
+
+    if (
+      nextState.status === 'verified' ||
+      nextState.status === 'verification_unavailable'
+    ) {
+      onVerified(result.cleaned)
+    }
   }
 
   return (
@@ -54,7 +68,7 @@ export function SiretInput({
         autoComplete="off"
         placeholder="732 829 320 00074"
         onValueChange={handleChange}
-        hint="Le SIRET de l'établissement de facturation. Vérification INSEE à connecter en Phase Supabase."
+        hint="Le SIRET de l'établissement de facturation. Vérification INSEE sécurisée avant réservation."
         required
       />
       <SiretVerificationDisplay state={state} />
@@ -63,6 +77,7 @@ export function SiretInput({
         variant="outline"
         className="h-11 w-full rounded-sm border-[color:var(--sand-deep)] sm:w-auto"
         onClick={handleVerify}
+        disabled={state.status === 'checking'}
       >
         <Search className="h-4 w-4" />
         Vérifier mon SIRET
