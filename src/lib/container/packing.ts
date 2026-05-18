@@ -1,4 +1,5 @@
 import type { CartItem } from '@/lib/order'
+import type { ProductCategory } from '@/lib/products'
 
 export const CONTAINER_INNER_METERS = {
   length: 5.9,
@@ -54,6 +55,7 @@ interface PackageSpec {
 
 interface PackageDraft {
   readonly size: PackageSizeMeters
+  readonly category: ProductCategory
   readonly color: string
   readonly productId: string
   readonly productName: string
@@ -68,6 +70,7 @@ interface PackingRect {
   readonly z: number
   readonly height: number
   readonly width: number
+  readonly category: ProductCategory
 }
 
 interface PackingColumn {
@@ -122,7 +125,7 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
     return {
       unitsPerPackage: CHAIR_STACK_UNITS,
       size: {
-        length: packageLengthFromCbm({ cbm: stackCbm, width, height }),
+        length: Math.max(0.8, packageLengthFromCbm({ cbm: stackCbm, width, height })),
         height,
         width,
       },
@@ -217,6 +220,7 @@ function createPackageDrafts(
       const remainingUnits = item.quantity - packageIndex * spec.unitsPerPackage
       drafts.push({
         size: spec.size,
+        category: item.product.category,
         color: item.variant.hex,
         productId: item.product.id,
         productName: item.product.name,
@@ -239,6 +243,9 @@ function sortPackagesForPacking(
   drafts: ReadonlyArray<PackageDraft>,
 ): ReadonlyArray<PackageDraft> {
   return [...drafts].sort((a, b) => {
+    const supportDelta = supportPriority(a.category) - supportPriority(b.category)
+    if (supportDelta !== 0) return supportDelta
+
     const lengthDelta = b.size.length - a.size.length
     if (Math.abs(lengthDelta) > 0.001) return lengthDelta
 
@@ -250,6 +257,51 @@ function sortPackagesForPacking(
 
     return a.originalIndex - b.originalIndex
   })
+}
+
+function supportPriority(category: ProductCategory): number {
+  if (category === 'chair') return 0
+  if (category === 'table') return 1
+  return 2
+}
+
+function zRangesOverlap(
+  a: { readonly z: number; readonly width: number },
+  b: { readonly z: number; readonly width: number },
+): boolean {
+  return a.z < b.z + b.width - 0.001 && b.z < a.z + a.width - 0.001
+}
+
+function canUseVerticalCandidate({
+  column,
+  draft,
+  y,
+  z,
+}: {
+  readonly column: PackingColumn
+  readonly draft: PackageDraft
+  readonly y: number
+  readonly z: number
+}): boolean {
+  if (y <= 0.001) return true
+
+  if (draft.category === 'chair') return false
+  if (draft.category !== 'table') return false
+
+  const supports = column.rects.filter(
+    (rect) =>
+      Math.abs(rect.y + rect.height + GAP - y) <= 0.001 &&
+      zRangesOverlap(
+        { z, width: draft.size.width },
+        { z: rect.z, width: rect.width },
+      ),
+  )
+
+  if (supports.length === 0) return false
+
+  return supports.every(
+    (rect) => rect.category === 'chair' || rect.category === 'table',
+  )
 }
 
 function tryPlaceInColumn(
@@ -282,6 +334,17 @@ function tryPlaceInColumn(
       continue
     }
 
+    if (
+      !canUseVerticalCandidate({
+        column,
+        draft,
+        y: candidate.y,
+        z: candidate.z,
+      })
+    ) {
+      continue
+    }
+
     const overlaps = column.rects.some((rect) => {
       const separated =
         candidate.z + draft.size.width + GAP <= rect.z + 0.001 ||
@@ -299,6 +362,7 @@ function tryPlaceInColumn(
       z: candidate.z,
       height: draft.size.height,
       width: draft.size.width,
+      category: draft.category,
     })
 
     return toPackedPackage({

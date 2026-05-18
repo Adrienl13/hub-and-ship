@@ -145,4 +145,31 @@ describe('container visual packing', () => {
     expect(chairFirst.overflowUnits).toBe(tableFirst.overflowUnits)
     expect(chairFirst.packages).toHaveLength(tableFirst.packages.length)
   })
+
+  it('allows tables above chair stacks but never places chairs above tables', () => {
+    const packed = packContainerPackages([
+      {
+        product: table,
+        variant: getDefaultVariant(table),
+        quantity: 1,
+      },
+      {
+        product: chair,
+        variant: getDefaultVariant(chair),
+        quantity: 40,
+      },
+    ])
+    const chairPackages = packed.packages.filter(
+      (box) => box.productId === chair.id,
+    )
+    const tablePackage = packed.packages.find((box) => box.productId === table.id)
+
+    expect(tablePackage).toBeDefined()
+    expect(chairPackages).toHaveLength(4)
+    expect(tablePackage?.pos[1]).toBeGreaterThan(
+      Math.max(...chairPackages.map((box) => box.pos[1])),
+    )
+    expect(chairPackages.every((box) => box.pos[1] < 0)).toBe(true)
+    expect(packed.overflowUnits).toBe(0)
+  })
 })

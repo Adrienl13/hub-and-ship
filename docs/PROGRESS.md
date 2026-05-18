@@ -333,7 +333,7 @@
 - Phase : Phase 2 — Build/catalogue
 - Tâches : ProductDetailDialog, ReservationDialog et ContainerScene chargés en lazy chunks ; chunk panier initial réduit fortement, 3D isolée.
 - Phase : Phase 2 — Visualisation container
-- Tâches : packing 3D corrigé avec unités logistiques ; chaises groupées en piles de 10, 4 piles sur la largeur, placement global adaptatif tables/chaises, et aucun carton rendu hors container.
+- Tâches : packing 3D corrigé avec unités logistiques ; chaises groupées en piles de 10, 4 piles sur la largeur, placement global adaptatif tables/chaises, tables autorisées au-dessus des piles de chaises mais jamais en dessous.
 - Phase : Phase 2 — Stock 24h
 - Tâches : route `/stock-24h` ajoutée avec lots disponibles sous 24h, filtres, tri, KPIs, demande rapide et teaser home.
 - Phase : Phase 2 — Demandes stock 24h
