@@ -86,11 +86,11 @@
 - ❌ Validation score A sur securityheaders.com
 
 ### 1.6 Authentification
-- ❌ Setup Supabase Auth magic link
-- ❌ Page `/auth/login` avec rate limiting
-- ❌ Page `/auth/callback`
-- ❌ Hook `useAuth`
-- ❌ Helpers `src/lib/supabase/{client,server,types}.ts`
+- ✅ Setup Supabase Auth magic link (scaffold local, env à renseigner)
+- 🔄 Page `/auth/login` avec rate limiting
+- ✅ Page `/auth/callback`
+- ✅ Hook `useAuth`
+- ✅ Helpers `src/lib/supabase/{client,server,types}.ts`
 
 ### 🎯 DoD Phase 1
 - ⏳ `npm test` 100% green (tous tests métier + sécurité)

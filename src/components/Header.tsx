@@ -35,12 +35,15 @@ export function Header({ onReserve }: { onReserve: () => void }) {
 
         <div className="flex items-center gap-2">
           <Button
+            asChild
             variant="ghost"
             size="sm"
             className="hidden h-9 gap-1.5 text-foreground/75 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <User className="h-3.5 w-3.5" />
-            Mon compte
+            <a href="/auth/login">
+              <User className="h-3.5 w-3.5" />
+              Mon compte
+            </a>
           </Button>
           <Button
             size="sm"
