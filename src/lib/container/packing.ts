@@ -52,6 +52,42 @@ interface PackageSpec {
   readonly stackableLayers: number
 }
 
+interface PackageDraft {
+  readonly size: PackageSizeMeters
+  readonly color: string
+  readonly productId: string
+  readonly productName: string
+  readonly units: number
+  readonly packageIndex: number
+  readonly sliceIndex: number
+  readonly originalIndex: number
+}
+
+interface PackingRect {
+  readonly y: number
+  readonly z: number
+  readonly height: number
+  readonly width: number
+}
+
+interface PackingColumn {
+  readonly index: number
+  readonly xStart: number
+  readonly length: number
+  readonly rects: PackingRect[]
+}
+
+interface SliceAccumulator {
+  readonly productId: string
+  readonly productName: string
+  readonly color: string
+  readonly requestedUnits: number
+  packedUnits: number
+  overflowUnits: number
+  packageCount: number
+  xWeightedSum: number
+}
+
 function round3(value: number): number {
   return Math.round((value + Number.EPSILON) * 1000) / 1000
 }
@@ -150,107 +186,228 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
   }
 }
 
-export function packContainerPackages(items: ReadonlyArray<CartItem>): PackedContainer {
-  const packages: PackedPackage[] = []
-  const slices: PackedSlice[] = []
-  let xCursor = -CONTAINER_INNER_METERS.length / 2
-  let sliceIndex = 0
-  let overflowUnits = 0
-  let overflowPackages = 0
+function createPackageDrafts(
+  items: ReadonlyArray<CartItem>,
+): {
+  readonly drafts: ReadonlyArray<PackageDraft>
+  readonly accumulators: SliceAccumulator[]
+} {
+  const drafts: PackageDraft[] = []
+  const accumulators: SliceAccumulator[] = []
+  let originalIndex = 0
 
-  for (const item of items) {
-    if (item.quantity <= 0) continue
+  items.forEach((item, sliceIndex) => {
+    if (item.quantity <= 0) return
 
     const spec = getVisualPackageSpec(item)
     const packageCount = Math.ceil(item.quantity / spec.unitsPerPackage)
-    const cellsAcrossWidth = Math.max(
-      1,
-      Math.floor(
-        (CONTAINER_INNER_METERS.width + GAP) / (spec.size.width + GAP),
-      ),
-    )
-    const layers = Math.max(1, spec.stackableLayers)
-    const packagesPerColumn = cellsAcrossWidth * layers
-    const columnsNeeded = Math.ceil(packageCount / packagesPerColumn)
-    const sliceWidth = columnsNeeded * (spec.size.length + GAP) - GAP
-    const sliceCenterX = xCursor + sliceWidth / 2
-    let packedUnits = 0
-    let packedPackageCount = 0
-
-    const usedWidth =
-      cellsAcrossWidth * spec.size.width + (cellsAcrossWidth - 1) * GAP
-    const zStart =
-      -CONTAINER_INNER_METERS.width / 2 +
-      (CONTAINER_INNER_METERS.width - usedWidth) / 2 +
-      spec.size.width / 2
+    const accumulator: SliceAccumulator = {
+      productId: item.product.id,
+      productName: item.product.name,
+      color: item.variant.hex,
+      requestedUnits: item.quantity,
+      packedUnits: 0,
+      overflowUnits: 0,
+      packageCount: 0,
+      xWeightedSum: 0,
+    }
+    accumulators[sliceIndex] = accumulator
 
     for (let packageIndex = 0; packageIndex < packageCount; packageIndex++) {
-      const columnIndex = Math.floor(packageIndex / packagesPerColumn)
-      const withinColumn = packageIndex % packagesPerColumn
-      const layerIndex = Math.floor(withinColumn / cellsAcrossWidth)
-      const widthIndex = withinColumn % cellsAcrossWidth
       const remainingUnits = item.quantity - packageIndex * spec.unitsPerPackage
-      const units = Math.min(spec.unitsPerPackage, remainingUnits)
-
-      const x = xCursor + columnIndex * (spec.size.length + GAP) + spec.size.length / 2
-      const y =
-        -CONTAINER_INNER_METERS.height / 2 +
-        layerIndex * (spec.size.height + GAP) +
-        spec.size.height / 2
-      const z = zStart + widthIndex * (spec.size.width + GAP)
-      const insideLength =
-        x - spec.size.length / 2 >= -CONTAINER_INNER_METERS.length / 2 &&
-        x + spec.size.length / 2 <= CONTAINER_INNER_METERS.length / 2
-      const insideHeight =
-        y - spec.size.height / 2 >= -CONTAINER_INNER_METERS.height / 2 &&
-        y + spec.size.height / 2 <= CONTAINER_INNER_METERS.height / 2
-      const insideWidth =
-        z - spec.size.width / 2 >= -CONTAINER_INNER_METERS.width / 2 &&
-        z + spec.size.width / 2 <= CONTAINER_INNER_METERS.width / 2
-
-      if (!insideLength || !insideHeight || !insideWidth) {
-        overflowUnits += units
-        overflowPackages += 1
-        continue
-      }
-
-      packedUnits += units
-      packedPackageCount += 1
-      packages.push({
-        pos: [round3(x), round3(y), round3(z)],
-        size: [
-          round3(spec.size.length * 0.96),
-          round3(spec.size.height * 0.96),
-          round3(spec.size.width * 0.96),
-        ],
+      drafts.push({
+        size: spec.size,
         color: item.variant.hex,
         productId: item.product.id,
         productName: item.product.name,
-        units,
+        units: Math.min(spec.unitsPerPackage, remainingUnits),
         packageIndex,
         sliceIndex,
-        sliceCenterX,
+        originalIndex,
       })
+      originalIndex += 1
+    }
+  })
+
+  return {
+    drafts,
+    accumulators,
+  }
+}
+
+function sortPackagesForPacking(
+  drafts: ReadonlyArray<PackageDraft>,
+): ReadonlyArray<PackageDraft> {
+  return [...drafts].sort((a, b) => {
+    const lengthDelta = b.size.length - a.size.length
+    if (Math.abs(lengthDelta) > 0.001) return lengthDelta
+
+    const heightDelta = b.size.height - a.size.height
+    if (Math.abs(heightDelta) > 0.001) return heightDelta
+
+    const widthDelta = b.size.width - a.size.width
+    if (Math.abs(widthDelta) > 0.001) return widthDelta
+
+    return a.originalIndex - b.originalIndex
+  })
+}
+
+function tryPlaceInColumn(
+  column: PackingColumn,
+  draft: PackageDraft,
+): PackedPackage | null {
+  if (draft.size.length > column.length + 0.001) return null
+
+  const yEdges = new Set([0])
+  const zEdges = new Set([0])
+
+  for (const rect of column.rects) {
+    yEdges.add(round3(rect.y + rect.height + GAP))
+    zEdges.add(round3(rect.z + rect.width + GAP))
+  }
+
+  const candidates = [...yEdges].flatMap((y) =>
+    [...zEdges].map((z) => ({ y, z })),
+  )
+
+  candidates.sort((a, b) => a.y - b.y || a.z - b.z)
+
+  for (const candidate of candidates) {
+    if (
+      candidate.z + draft.size.width >
+        CONTAINER_INNER_METERS.width + 0.001 ||
+      candidate.y + draft.size.height >
+        CONTAINER_INNER_METERS.height + 0.001
+    ) {
+      continue
     }
 
-    slices.push({
-      productId: item.product.id,
-      productName: item.product.name,
-      centerX: sliceCenterX,
-      color: item.variant.hex,
-      requestedUnits: item.quantity,
-      packedUnits,
-      overflowUnits: item.quantity - packedUnits,
-      packageCount: packedPackageCount,
+    const overlaps = column.rects.some((rect) => {
+      const separated =
+        candidate.z + draft.size.width + GAP <= rect.z + 0.001 ||
+        rect.z + rect.width + GAP <= candidate.z + 0.001 ||
+        candidate.y + draft.size.height + GAP <= rect.y + 0.001 ||
+        rect.y + rect.height + GAP <= candidate.y + 0.001
+
+      return !separated
     })
 
-    xCursor += sliceWidth + GAP
-    sliceIndex++
+    if (overlaps) continue
+
+    column.rects.push({
+      y: candidate.y,
+      z: candidate.z,
+      height: draft.size.height,
+      width: draft.size.width,
+    })
+
+    return toPackedPackage({
+      draft,
+      x: column.xStart + column.length / 2,
+      y:
+        -CONTAINER_INNER_METERS.height / 2 +
+        candidate.y +
+        draft.size.height / 2,
+      z:
+        -CONTAINER_INNER_METERS.width / 2 +
+        candidate.z +
+        draft.size.width / 2,
+    })
+  }
+
+  return null
+}
+
+function toPackedPackage({
+  draft,
+  x,
+  y,
+  z,
+}: {
+  readonly draft: PackageDraft
+  readonly x: number
+  readonly y: number
+  readonly z: number
+}): PackedPackage {
+  return {
+    pos: [round3(x), round3(y), round3(z)],
+    size: [
+      round3(draft.size.length * 0.96),
+      round3(draft.size.height * 0.96),
+      round3(draft.size.width * 0.96),
+    ],
+    color: draft.color,
+    productId: draft.productId,
+    productName: draft.productName,
+    units: draft.units,
+    packageIndex: draft.packageIndex,
+    sliceIndex: draft.sliceIndex,
+    sliceCenterX: round3(x),
+  }
+}
+
+export function packContainerPackages(items: ReadonlyArray<CartItem>): PackedContainer {
+  const packages: PackedPackage[] = []
+  const columns: PackingColumn[] = []
+  const { drafts, accumulators } = createPackageDrafts(items)
+  let nextXStart = -CONTAINER_INNER_METERS.length / 2
+  let overflowUnits = 0
+  let overflowPackages = 0
+
+  for (const draft of sortPackagesForPacking(drafts)) {
+    let placed: PackedPackage | null = null
+
+    for (const column of columns) {
+      placed = tryPlaceInColumn(column, draft)
+      if (placed) break
+    }
+
+    if (!placed) {
+      const nextXEnd = nextXStart + draft.size.length
+      if (nextXEnd <= CONTAINER_INNER_METERS.length / 2 + 0.001) {
+        const column: PackingColumn = {
+          index: columns.length,
+          xStart: nextXStart,
+          length: draft.size.length,
+          rects: [],
+        }
+        columns.push(column)
+        nextXStart = nextXEnd + GAP
+        placed = tryPlaceInColumn(column, draft)
+      }
+    }
+
+    const accumulator = accumulators[draft.sliceIndex]
+
+    if (placed && accumulator) {
+      accumulator.packedUnits += draft.units
+      accumulator.packageCount += 1
+      accumulator.xWeightedSum += placed.pos[0] * draft.units
+      packages.push(placed)
+    } else {
+      overflowUnits += draft.units
+      overflowPackages += 1
+      if (accumulator) accumulator.overflowUnits += draft.units
+    }
   }
 
   return {
     packages,
-    slices,
+    slices: accumulators
+      .filter(Boolean)
+      .map((accumulator): PackedSlice => ({
+        productId: accumulator.productId,
+        productName: accumulator.productName,
+        centerX:
+          accumulator.packedUnits > 0
+            ? round3(accumulator.xWeightedSum / accumulator.packedUnits)
+            : 0,
+        color: accumulator.color,
+        requestedUnits: accumulator.requestedUnits,
+        packedUnits: accumulator.packedUnits,
+        overflowUnits: accumulator.overflowUnits,
+        packageCount: accumulator.packageCount,
+      })),
     overflowUnits,
     overflowPackages,
   }

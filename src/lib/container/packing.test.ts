@@ -93,4 +93,56 @@ describe('container visual packing', () => {
     }
     expect(packed.overflowUnits).toBeGreaterThan(0)
   })
+
+  it('reuses table side gaps for chair stacks before declaring overflow', () => {
+    const packed = packContainerPackages([
+      {
+        product: table,
+        variant: getDefaultVariant(table),
+        quantity: 80,
+      },
+      {
+        product: chair,
+        variant: getDefaultVariant(chair),
+        quantity: 10,
+      },
+    ])
+
+    expect(packed.overflowUnits).toBe(0)
+    expect(packed.slices.find((slice) => slice.productId === chair.id)).toMatchObject({
+      requestedUnits: 10,
+      packedUnits: 10,
+      overflowUnits: 0,
+    })
+  })
+
+  it('packs the same mixed cart regardless of the product addition order', () => {
+    const tableFirst = packContainerPackages([
+      {
+        product: table,
+        variant: getDefaultVariant(table),
+        quantity: 80,
+      },
+      {
+        product: chair,
+        variant: getDefaultVariant(chair),
+        quantity: 10,
+      },
+    ])
+    const chairFirst = packContainerPackages([
+      {
+        product: chair,
+        variant: getDefaultVariant(chair),
+        quantity: 10,
+      },
+      {
+        product: table,
+        variant: getDefaultVariant(table),
+        quantity: 80,
+      },
+    ])
+
+    expect(chairFirst.overflowUnits).toBe(tableFirst.overflowUnits)
+    expect(chairFirst.packages).toHaveLength(tableFirst.packages.length)
+  })
 })
