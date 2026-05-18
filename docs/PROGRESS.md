@@ -46,6 +46,7 @@
 - ❌ Migration `0009_audit_log.sql`
 - 🔄 Migration `0010_security_events.sql` (V1.3, fondation incluse)
 - ✅ Migration `siret_cache.sql` (cache INSEE 7 jours)
+- ✅ Migration `reservation_foundation.sql` (reservations + reservation_items)
 - ❌ Seed data complet (10 produits, 5 carrier_partners, 1 container, etc.)
 - ❌ RLS testée sur toutes tables sensibles
 - ❌ Triggers actifs (MOQ, fidélité)
@@ -157,6 +158,7 @@
 - 🔄 Étape 4 : Paiement Stripe placeholder, Payment Element à connecter
 - ✅ CgvAcceptance obligatoire
 - ✅ Code parrainage si applicable (mock V1 + remise frais réservation)
+- ✅ Draft réservation serveur (recalcul, snapshots prix/produits, payload Supabase)
 - ❌ Email confirmation envoyé
 - ❌ Génération devis PDF
 - ❌ Tests E2E Playwright parcours complet
@@ -164,7 +166,7 @@
 ### 🎯 DoD Phase 2
 - ⏳ Parcours invité → réservation payée fonctionne end-to-end
 - ⏳ Pricing dégressif visible et exact
-- ⏳ Vérification SIRET intégrée au checkout
+- 🔄 Vérification SIRET intégrée au checkout
 - ⏳ MOQ live affiché
 - ⏳ Mobile testé 3 devices réels
 - ⏳ Lighthouse mobile ≥ 80 sur home

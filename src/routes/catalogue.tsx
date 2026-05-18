@@ -290,6 +290,7 @@ function CataloguePage() {
       <ReservationDialog
         open={reserveOpen}
         onOpenChange={setReserveOpen}
+        items={items}
         totals={totals}
       />
     </div>

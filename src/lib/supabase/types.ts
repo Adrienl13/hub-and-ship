@@ -8,6 +8,20 @@ export type Json =
 
 export type UserRole = 'buyer' | 'admin' | 'super_admin'
 export type CompanyRiskFlag = 'normal' | 'review' | 'blocked'
+export type DeliveryMode =
+  | 'pickup_at_port'
+  | 'self_arranged'
+  | 'partner_carrier_needed'
+export type ReservationStatus =
+  | 'draft'
+  | 'pending_reservation_fee'
+  | 'reserved'
+  | 'deposit_called'
+  | 'deposit_paid'
+  | 'in_production'
+  | 'in_transit'
+  | 'delivered'
+  | 'cancelled'
 export type SecurityEventSeverity = 'info' | 'warning' | 'error' | 'critical'
 export type SecurityEventType =
   | 'login_attempt'
@@ -198,6 +212,122 @@ type SiretCacheInsert = {
 
 type SiretCacheUpdate = Partial<SiretCacheInsert>
 
+type ReservationRow = {
+  id: string
+  reference: string
+  container_reference: string
+  container_id: string | null
+  user_id: string | null
+  company_id: string | null
+  siret: string
+  contact_snapshot: Json
+  delivery_mode: DeliveryMode
+  delivery_note: string | null
+  delivery_fee: number
+  subtotal_ht: number
+  eco_contribution_total: number
+  referral_code: string | null
+  referral_discount: number
+  total_ht: number
+  vat_rate: number
+  vat_amount: number
+  total_ttc: number
+  total_cbm: number
+  reservation_fee: number
+  pay_now: number
+  deposit_amount: number
+  pay_at_80_percent: number
+  balance_amount: number
+  status: ReservationStatus
+  cgv_version_accepted: string
+  cgv_accepted_at: string
+  reserved_at: string | null
+  cancelled_at: string | null
+  cancellation_reason: string | null
+  admin_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+type ReservationInsert = {
+  id?: string
+  reference: string
+  container_reference: string
+  container_id?: string | null
+  user_id?: string | null
+  company_id?: string | null
+  siret: string
+  contact_snapshot: Json
+  delivery_mode?: DeliveryMode
+  delivery_note?: string | null
+  delivery_fee?: number
+  subtotal_ht: number
+  eco_contribution_total?: number
+  referral_code?: string | null
+  referral_discount?: number
+  total_ht: number
+  vat_rate?: number
+  vat_amount: number
+  total_ttc: number
+  total_cbm: number
+  reservation_fee: number
+  pay_now: number
+  deposit_amount: number
+  pay_at_80_percent: number
+  balance_amount: number
+  status?: ReservationStatus
+  cgv_version_accepted: string
+  cgv_accepted_at: string
+  reserved_at?: string | null
+  cancelled_at?: string | null
+  cancellation_reason?: string | null
+  admin_notes?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type ReservationUpdate = Partial<ReservationInsert>
+
+type ReservationItemRow = {
+  id: string
+  reservation_id: string
+  product_id: string
+  sku: string
+  product_name: string
+  category: string
+  variant_id: string
+  variant_name: string
+  quantity: number
+  unit_price_ht: number
+  unit_eco_contribution: number
+  subtotal_ht: number
+  eco_contribution_total: number
+  cbm_total: number
+  product_snapshot: Json
+  created_at: string
+}
+
+type ReservationItemInsert = {
+  id?: string
+  reservation_id: string
+  product_id: string
+  sku: string
+  product_name: string
+  category: string
+  variant_id: string
+  variant_name: string
+  quantity: number
+  unit_price_ht: number
+  unit_eco_contribution?: number
+  subtotal_ht: number
+  eco_contribution_total?: number
+  cbm_total: number
+  product_snapshot: Json
+  created_at?: string
+}
+
+type ReservationItemUpdate = Partial<ReservationItemInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -221,6 +351,16 @@ export interface Database {
         Insert: SiretCacheInsert
         Update: SiretCacheUpdate
       }
+      reservations: {
+        Row: ReservationRow
+        Insert: ReservationInsert
+        Update: ReservationUpdate
+      }
+      reservation_items: {
+        Row: ReservationItemRow
+        Insert: ReservationItemInsert
+        Update: ReservationItemUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -235,6 +375,8 @@ export interface Database {
     }
     Enums: {
       user_role: UserRole
+      delivery_mode: DeliveryMode
+      reservation_status: ReservationStatus
       security_event_type: SecurityEventType
     }
     CompositeTypes: Record<string, never>

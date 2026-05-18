@@ -36,12 +36,14 @@ import {
 import { ValidatedInput } from '@/components/security/ValidatedInput'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
-import { formatEUR, type OrderTotals } from '@/lib/order'
+import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
 import {
   applyReferralCode,
   type ReferralApplication,
 } from '@/lib/pricing/referral'
 import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
+import { buildReservationDraft } from '@/lib/reservations/draft'
+import { CURRENT_CONTAINER } from '@/lib/products'
 import { checkEmailDomain } from '@/lib/validation/email'
 
 type ReservationStep = 1 | 2 | 3 | 4
@@ -77,10 +79,12 @@ const DELIVERY_OPTIONS: ReadonlyArray<{
 export function ReservationDialog({
   open,
   onOpenChange,
+  items,
   totals,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
+  items: ReadonlyArray<CartItem>
   totals: OrderTotals
 }) {
   const [step, setStep] = useState<ReservationStep>(1)
@@ -156,13 +160,40 @@ export function ReservationDialog({
   }, [open])
 
   const handlePay = () => {
+    const draftResult = buildReservationDraft({
+      siret: form.siret,
+      contact: {
+        name: form.name,
+        company: form.company,
+        email: form.email,
+        phone: form.phone,
+      },
+      delivery: {
+        deliveryMode: form.deliveryMode,
+        deliveryNote: form.deliveryNote,
+      },
+      referralCode: form.referralCode,
+      cgvAccepted,
+      cgvVersion: '2026-05-18',
+      items,
+      containerReference: CURRENT_CONTAINER.reference,
+      referralApplication,
+    })
+
+    if (!draftResult.ok) {
+      toast.error('Réservation à compléter', {
+        description: draftResult.issues[0]?.message ?? 'Vérifiez les champs obligatoires.',
+      })
+      return
+    }
+
     setSubmitting(true)
     setTimeout(() => {
       setSubmitting(false)
       onOpenChange(false)
       reset()
       toast.success('Réservation enregistrée', {
-        description: `Confirmation envoyée à ${form.email}. Paiement Stripe à connecter pour ${formatEUR(checkoutPayNow)}.`,
+        description: `${draftResult.draft.reference} prête pour paiement Stripe (${formatEUR(draftResult.draft.payment.payNow)}).`,
       })
     }, 900)
   }
