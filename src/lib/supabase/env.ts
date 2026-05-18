@@ -15,8 +15,11 @@ interface SupabaseEnvSource {
 }
 
 function getRuntimeEnv(): SupabaseEnvSource {
-  const meta = import.meta as ImportMeta & { readonly env?: SupabaseEnvSource }
-  return meta.env ?? {}
+  return {
+    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    VITE_APP_URL: import.meta.env.VITE_APP_URL,
+  }
 }
 
 function cleanEnv(value: string | undefined): string {

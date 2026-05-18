@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
-import { ContainerScene } from "@/components/ContainerScene";
 import { ContainerFillBar } from "@/components/ContainerFillBar";
 import { ContainerScene3DFallback } from "@/components/ContainerScene3DFallback";
 import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
@@ -13,6 +12,12 @@ import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
 import { AnimatedNumber } from "@/components/motion-helpers";
+
+const LazyContainerScene = lazy(() =>
+  import("@/components/ContainerScene").then((module) => ({
+    default: module.ContainerScene,
+  })),
+);
 
 export function OrderSidebar({
   items,
@@ -64,7 +69,9 @@ export function OrderSidebar({
         </div>
         <div className="relative h-[320px] w-full bg-[color:var(--sand)]">
           <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
-          <ContainerScene items={items} exploded={exploded} />
+          <Suspense fallback={null}>
+            <LazyContainerScene items={items} exploded={exploded} />
+          </Suspense>
         </div>
 
         {/* Stats */}

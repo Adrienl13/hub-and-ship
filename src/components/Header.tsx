@@ -40,7 +40,7 @@ export function Header({ onReserve }: { onReserve: () => void }) {
             size="sm"
             className="hidden h-9 gap-1.5 text-foreground/75 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <a href="/auth/login">
+            <a href="/account/reservations">
               <User className="h-3.5 w-3.5" />
               Mon compte
             </a>

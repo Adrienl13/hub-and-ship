@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ArrowUpDown, Layers3, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -8,8 +8,6 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { MobileStickyBar } from "@/components/MobileStickyBar";
 import { OrderSidebar } from "@/components/OrderSidebar";
-import { ProductDetailDialog } from "@/components/ProductDetailDialog";
-import { ReservationDialog } from "@/components/ReservationDialog";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORY_FILTERS,
@@ -31,6 +29,17 @@ import { useCart } from "@/stores/cart.store";
 export const Route = createFileRoute("/catalogue")({
   component: CataloguePage,
 });
+
+const LazyProductDetailDialog = lazy(() =>
+  import("@/components/ProductDetailDialog").then((module) => ({
+    default: module.ProductDetailDialog,
+  })),
+);
+const LazyReservationDialog = lazy(() =>
+  import("@/components/ReservationDialog").then((module) => ({
+    default: module.ReservationDialog,
+  })),
+);
 
 function CataloguePage() {
   const {
@@ -273,26 +282,33 @@ function CataloguePage() {
         onReserve={() => setReserveOpen(true)}
       />
 
-      <ProductDetailDialog
-        product={detailProduct}
-        open={!!detailProduct}
-        onOpenChange={(value) => !value && setDetailId(null)}
-        qty={detailProduct ? qtyByProduct[detailProduct.id] ?? 0 : 0}
-        variantId={
-          detailProduct
-            ? variantByProduct[detailProduct.id] ?? getDefaultVariant(detailProduct).id
-            : ""
-        }
-        onQtyChange={(quantity) => detailProduct && setQty(detailProduct.id, quantity)}
-        onVariantChange={(variantId) => detailProduct && setVariant(detailProduct.id, variantId)}
-      />
+      <Suspense fallback={null}>
+        {detailProduct && (
+          <LazyProductDetailDialog
+            product={detailProduct}
+            open
+            onOpenChange={(value) => !value && setDetailId(null)}
+            qty={qtyByProduct[detailProduct.id] ?? 0}
+            variantId={
+              variantByProduct[detailProduct.id] ??
+              getDefaultVariant(detailProduct).id
+            }
+            onQtyChange={(quantity) => setQty(detailProduct.id, quantity)}
+            onVariantChange={(variantId) =>
+              setVariant(detailProduct.id, variantId)
+            }
+          />
+        )}
 
-      <ReservationDialog
-        open={reserveOpen}
-        onOpenChange={setReserveOpen}
-        items={items}
-        totals={totals}
-      />
+        {reserveOpen && (
+          <LazyReservationDialog
+            open={reserveOpen}
+            onOpenChange={setReserveOpen}
+            items={items}
+            totals={totals}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

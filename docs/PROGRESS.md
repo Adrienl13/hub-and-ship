@@ -204,8 +204,8 @@
 ## Phase 4 — Espace client (semaine 6)
 
 - ❌ `/account` dashboard
-- ❌ `/account/reservations`
-- ❌ `/account/reservations/$id`
+- ✅ `/account/reservations` (aperçu local, prêt Supabase)
+- ✅ `/account/reservations/$id` (détail réservation + lignes)
 - ❌ `/account/invoices` (PDF)
 - ❌ `/account/documents` (rapports SGS, auth gated)
 - ❌ `/account/referrals` (programme parrainage)
@@ -326,6 +326,10 @@
 - Tâches : ProductCard mobile ajoutée, filtres catalogue rendus scrollables mobile, QuantityStepper et MoqProgressBar factorisés et partagés avec ProductRow.
 - Phase : Phase 2 — Optimisation catalogue
 - Tâches : rendu responsive unique ProductCard/ProductRow, recherche différée, compteurs par catégorie précalculés, pagination "charger plus" pour catalogues 100+ références.
+- Phase : Phase 2 — Build/catalogue
+- Tâches : ProductDetailDialog, ReservationDialog et ContainerScene chargés en lazy chunks ; chunk panier initial réduit fortement, 3D isolée.
+- Phase : Phase 4 — Espace client
+- Tâches : routes `/account/reservations` et `/account/reservations/$id` ajoutées avec KPIs, liste, détail, paiements/documents placeholders et données locales remplaçables par Supabase.
 - Phase : Phase 2 — Catalogue dédié
 - Tâches : route `/catalogue` ajoutée, vue lignes compactes, page size 30/60/90, navigation home vers catalogue complet.
 - Phase : Phase 2 — Configurateur table

@@ -13,6 +13,8 @@ import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
+import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
@@ -34,37 +36,74 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountReservationsRoute = AccountReservationsRouteImport.update({
+  id: '/account/reservations',
+  path: '/account/reservations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountReservationsReservationIdRoute =
+  AccountReservationsReservationIdRouteImport.update({
+    id: '/$reservationId',
+    path: '/$reservationId',
+    getParentRoute: () => AccountReservationsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/catalogue': typeof CatalogueRoute
+  '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/catalogue': typeof CatalogueRoute
+  '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/catalogue': typeof CatalogueRoute
+  '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/catalogue' | '/auth/callback' | '/auth/login'
+  fullPaths:
+    | '/'
+    | '/catalogue'
+    | '/account/reservations'
+    | '/auth/callback'
+    | '/auth/login'
+    | '/account/reservations/$reservationId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/catalogue' | '/auth/callback' | '/auth/login'
-  id: '__root__' | '/' | '/catalogue' | '/auth/callback' | '/auth/login'
+  to:
+    | '/'
+    | '/catalogue'
+    | '/account/reservations'
+    | '/auth/callback'
+    | '/auth/login'
+    | '/account/reservations/$reservationId'
+  id:
+    | '__root__'
+    | '/'
+    | '/catalogue'
+    | '/account/reservations'
+    | '/auth/callback'
+    | '/auth/login'
+    | '/account/reservations/$reservationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CatalogueRoute: typeof CatalogueRoute
+  AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
 }
@@ -99,12 +138,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/reservations': {
+      id: '/account/reservations'
+      path: '/account/reservations'
+      fullPath: '/account/reservations'
+      preLoaderRoute: typeof AccountReservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/reservations/$reservationId': {
+      id: '/account/reservations/$reservationId'
+      path: '/$reservationId'
+      fullPath: '/account/reservations/$reservationId'
+      preLoaderRoute: typeof AccountReservationsReservationIdRouteImport
+      parentRoute: typeof AccountReservationsRoute
+    }
   }
 }
+
+interface AccountReservationsRouteChildren {
+  AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
+}
+
+const AccountReservationsRouteChildren: AccountReservationsRouteChildren = {
+  AccountReservationsReservationIdRoute: AccountReservationsReservationIdRoute,
+}
+
+const AccountReservationsRouteWithChildren =
+  AccountReservationsRoute._addFileChildren(AccountReservationsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CatalogueRoute: CatalogueRoute,
+  AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
 }
