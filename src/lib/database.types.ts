@@ -21,6 +21,7 @@ export interface Database {
           phone: string;
           siret: string;
           delivery_zip: string | null;
+          is_admin: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -32,6 +33,7 @@ export interface Database {
           phone: string;
           siret: string;
           delivery_zip?: string | null;
+          is_admin?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["professionals"]["Insert"]>;
         Relationships: [];
@@ -61,8 +63,23 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: never;
-        Update: never;
+        Insert: Partial<Database["public"]["Tables"]["products"]["Row"]> & {
+          id: string;
+          sku: string;
+          category: ProductCategoryDb;
+          name: string;
+          description: string;
+          dim_length_cm: number;
+          dim_width_cm: number;
+          dim_height_cm: number;
+          cbm_per_unit: number;
+          weight_kg: number;
+          moq_units: number;
+          base_price_ht: number;
+          retail_price_ref: number;
+          main_image_url: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["products"]["Row"]>;
         Relationships: [];
       };
       product_variants: {
@@ -111,8 +128,12 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: never;
-        Update: never;
+        Insert: Partial<Database["public"]["Tables"]["containers"]["Row"]> & {
+          reference: string;
+          port: string;
+          capacity_cbm: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["containers"]["Row"]>;
         Relationships: [];
       };
       container_reservations: {

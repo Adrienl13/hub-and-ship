@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, LayoutDashboard, LogOut, User } from "lucide-react";
+import { ArrowRight, LayoutDashboard, LogOut, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -122,6 +122,14 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
                     Mes réservations
                   </Link>
                 </DropdownMenuItem>
+                {pro?.is_admin && (
+                  <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                    <Link to="/admin">
+                      <Shield className="h-3.5 w-3.5" />
+                      Espace admin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
                   <LogOut className="h-3.5 w-3.5" />
                   Se déconnecter

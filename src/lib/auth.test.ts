@@ -16,6 +16,7 @@ function mkPro(overrides: Partial<Professional> = {}): Professional {
     phone: "+33 1 23 45 67 89",
     siret: "12345678901234",
     delivery_zip: "75001",
+    is_admin: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

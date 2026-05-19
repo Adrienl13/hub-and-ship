@@ -16,7 +16,11 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompteRouteImport } from './routes/compte'
 import { Route as CgvRouteImport } from './routes/cgv'
 import { Route as CguRouteImport } from './routes/cgu'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ContainersReferenceRouteImport } from './routes/containers.$reference'
+import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminContainersRouteImport } from './routes/admin.containers'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -54,14 +58,35 @@ const CguRoute = CguRouteImport.update({
   path: '/cgu',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContainersReferenceRoute = ContainersReferenceRouteImport.update({
+  id: '/containers/$reference',
+  path: '/containers/$reference',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProductsRoute = AdminProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContainersRoute = AdminContainersRouteImport.update({
+  id: '/containers',
+  path: '/containers',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cgu': typeof CguRoute
   '/cgv': typeof CgvRoute
   '/compte': typeof CompteRoute
@@ -69,9 +94,13 @@ export interface FileRoutesByFullPath {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/containers': typeof AdminContainersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/containers/$reference': typeof ContainersReferenceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cgu': typeof CguRoute
   '/cgv': typeof CgvRoute
   '/compte': typeof CompteRoute
@@ -79,10 +108,14 @@ export interface FileRoutesByTo {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/containers': typeof AdminContainersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/containers/$reference': typeof ContainersReferenceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/cgu': typeof CguRoute
   '/cgv': typeof CgvRoute
   '/compte': typeof CompteRoute
@@ -90,11 +123,15 @@ export interface FileRoutesById {
   '/mentions-legales': typeof MentionsLegalesRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/containers': typeof AdminContainersRoute
+  '/admin/products': typeof AdminProductsRoute
+  '/containers/$reference': typeof ContainersReferenceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/cgu'
     | '/cgv'
     | '/compte'
@@ -102,9 +139,13 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/politique-confidentialite'
     | '/reset-password'
+    | '/admin/containers'
+    | '/admin/products'
+    | '/containers/$reference'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/cgu'
     | '/cgv'
     | '/compte'
@@ -112,9 +153,13 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/politique-confidentialite'
     | '/reset-password'
+    | '/admin/containers'
+    | '/admin/products'
+    | '/containers/$reference'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/cgu'
     | '/cgv'
     | '/compte'
@@ -122,10 +167,14 @@ export interface FileRouteTypes {
     | '/mentions-legales'
     | '/politique-confidentialite'
     | '/reset-password'
+    | '/admin/containers'
+    | '/admin/products'
+    | '/containers/$reference'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CguRoute: typeof CguRoute
   CgvRoute: typeof CgvRoute
   CompteRoute: typeof CompteRoute
@@ -133,6 +182,7 @@ export interface RootRouteChildren {
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ContainersReferenceRoute: typeof ContainersReferenceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CguRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -193,11 +250,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/containers/$reference': {
+      id: '/containers/$reference'
+      path: '/containers/$reference'
+      fullPath: '/containers/$reference'
+      preLoaderRoute: typeof ContainersReferenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/products': {
+      id: '/admin/products'
+      path: '/products'
+      fullPath: '/admin/products'
+      preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/containers': {
+      id: '/admin/containers'
+      path: '/containers'
+      fullPath: '/admin/containers'
+      preLoaderRoute: typeof AdminContainersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminContainersRoute: typeof AdminContainersRoute
+  AdminProductsRoute: typeof AdminProductsRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminContainersRoute: AdminContainersRoute,
+  AdminProductsRoute: AdminProductsRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   CguRoute: CguRoute,
   CgvRoute: CgvRoute,
   CompteRoute: CompteRoute,
@@ -205,6 +296,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentionsLegalesRoute: MentionsLegalesRoute,
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ContainersReferenceRoute: ContainersReferenceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

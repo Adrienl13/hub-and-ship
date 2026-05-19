@@ -46,7 +46,20 @@ export const catalogKeys = {
   currentContainer: ["catalog", "current-container"] as const,
   pastContainers: ["catalog", "past-containers"] as const,
   products: (containerId: string | undefined) => ["catalog", "products", containerId] as const,
+  containerByRef: (ref: string) => ["catalog", "container-by-ref", ref] as const,
+  containerLineup: (containerId: string) => ["catalog", "container-lineup", containerId] as const,
 };
+
+export interface ContainerLineupItem {
+  productId: string;
+  productName: string;
+  productCategory: ProductCategory;
+  variantId: string;
+  variantName: string;
+  variantHex: string;
+  unitsCommitted: number;
+  cbmTotal: number;
+}
 
 // ----------------------------------------------------------------
 // Fetchers
@@ -270,5 +283,128 @@ function mapContainer(row: ContainerRow, stats: ContainerStats): Container {
     seriesReached: stats.seriesReached,
     professionalsEngaged: Math.max(stats.realProsCount, row.display_pros_count ?? 0),
     totalItems: row.display_items_count ?? 0,
+  };
+}
+
+// ----------------------------------------------------------------
+// Container par référence (page détail publique /containers/[ref])
+// ----------------------------------------------------------------
+
+export async function fetchContainerByReference(reference: string): Promise<Container> {
+  const { data, error } = await supabase
+    .from("containers")
+    .select("*")
+    .eq("reference", reference)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error(`Container introuvable : ${reference}`);
+  const stats = await fetchContainerStats(data.id);
+  return mapContainer(data, stats);
+}
+
+/**
+ * Liste des variantes engagées sur un container, enrichies avec leur produit.
+ * Sert à afficher "qu'est-ce qui était / sera à bord" sur la page détail.
+ */
+export async function fetchContainerLineup(containerId: string): Promise<ContainerLineupItem[]> {
+  const { data: commitments, error: cErr } = await supabase
+    .from("container_variant_commitments")
+    .select("variant_id, units_committed, cbm_committed")
+    .eq("container_id", containerId);
+  if (cErr) throw cErr;
+
+  const variantIds = (commitments ?? []).map((c) => c.variant_id);
+  if (variantIds.length === 0) return [];
+
+  const { data: variants, error: vErr } = await supabase
+    .from("product_variants")
+    .select(
+      `id, name, hex, product_id,
+       products!inner ( id, name, category )`,
+    )
+    .in("id", variantIds);
+  if (vErr) throw vErr;
+
+  type VariantWithProduct = {
+    id: string;
+    name: string;
+    hex: string;
+    product_id: string;
+    products:
+      | { id: string; name: string; category: string }
+      | Array<{ id: string; name: string; category: string }>;
+  };
+
+  const byId = new Map<string, VariantWithProduct>();
+  for (const v of (variants ?? []) as unknown as VariantWithProduct[]) {
+    byId.set(v.id, v);
+  }
+
+  const lineup: ContainerLineupItem[] = [];
+  for (const c of commitments ?? []) {
+    const v = byId.get(c.variant_id);
+    if (!v) continue;
+    const product = Array.isArray(v.products) ? v.products[0] : v.products;
+    if (!product) continue;
+    lineup.push({
+      productId: product.id,
+      productName: product.name,
+      productCategory: product.category as ProductCategory,
+      variantId: v.id,
+      variantName: v.name,
+      variantHex: v.hex,
+      unitsCommitted: c.units_committed,
+      cbmTotal: Number(c.cbm_committed),
+    });
+  }
+
+  // Tri : par catégorie puis par produit
+  lineup.sort((a, b) => {
+    if (a.productCategory !== b.productCategory) {
+      return a.productCategory.localeCompare(b.productCategory);
+    }
+    if (a.productName !== b.productName) {
+      return a.productName.localeCompare(b.productName);
+    }
+    return a.variantName.localeCompare(b.variantName);
+  });
+
+  return lineup;
+}
+
+// ----------------------------------------------------------------
+// Stats agrégées : total containers livrés, pros, articles, on-time rate
+// (déjà calculé côté front à partir de fetchPastContainers, mais on
+// expose une fonction pure pour testabilité)
+// ----------------------------------------------------------------
+
+export interface PastContainersStats {
+  totalContainers: number;
+  totalProsServed: number;
+  totalItems: number;
+  onTimeRate: number; // 0..1
+}
+
+export function computePastContainersStats(containers: Container[]): PastContainersStats {
+  if (containers.length === 0) {
+    return { totalContainers: 0, totalProsServed: 0, totalItems: 0, onTimeRate: 0 };
+  }
+  let totalProsServed = 0;
+  let totalItems = 0;
+  let onTimeCount = 0;
+  let measurableCount = 0;
+  for (const c of containers) {
+    totalProsServed += c.professionalsEngaged;
+    totalItems += c.totalItems;
+    if (c.plannedDays !== null && c.actualDays !== null) {
+      measurableCount += 1;
+      if (c.actualDays <= c.plannedDays) onTimeCount += 1;
+    }
+  }
+  return {
+    totalContainers: containers.length,
+    totalProsServed,
+    totalItems,
+    onTimeRate: measurableCount > 0 ? onTimeCount / measurableCount : 0,
   };
 }
