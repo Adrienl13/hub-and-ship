@@ -154,6 +154,74 @@ Garder un commit = un changement logique. Pas de "wip", pas de "fix typo" après
 - Variables d'environnement / secrets : via `wrangler secret put`, jamais en clair dans le repo
 - Toute logique strictement serveur va dans un module `*.server.ts` ou marqué `@tanstack/react-start/server-only`
 
+## Mode autonome — contrat agent
+
+Sur ce projet, l'agent (Claude Code ou équivalent) opère en **mode autonome** : il agit d'abord, rend compte ensuite. Pas de demande de permission pour les actions routinières et réversibles. La rigueur vient des phases de travail et des garde-fous explicites ci-dessous, pas du nombre de questions posées à l'utilisateur.
+
+### Actions autorisées sans confirmation
+
+- Lecture / écriture / édition de fichiers du repo
+- `bun install`, `bun run lint`, `bun run format`, `bun run build`, `bun run dev`
+- Création de branches locales, commits (Conventional Commits)
+- Refactors, ajout/suppression de composants, migrations de schémas Zod
+- Tests locaux, lancement de scripts npm/bun
+- Spawn d'agents (Explore, Plan, general-purpose, etc.) en parallèle quand pertinent
+- Recherche documentaire (WebFetch, context7) et exploration de code
+
+### Actions qui nécessitent **toujours** une confirmation
+
+- `git push` vers `main` ou toute branche distante partagée
+- Création / merge / fermeture de Pull Request
+- Déploiement Cloudflare Workers (`wrangler deploy`)
+- Gestion de secrets (`wrangler secret put`, fichiers `.env*`)
+- Opérations destructives : `rm -rf`, `git reset --hard`, `git push --force`, suppression de branche, `git clean -fd`
+- Modification de `wrangler.jsonc`, `package.json` (deps majeures), ou de la config CI
+- Tout appel à un système externe non-idempotent (envoi d'email, paiement, API tierce en écriture)
+
+### Workflow standard — phases obligatoires
+
+Pour toute tâche de développement non triviale (>15 min ou >2 fichiers touchés), l'agent enchaîne ces phases dans l'ordre :
+
+1. **Comprendre** — lire le code existant pertinent, relire la demande, identifier le parcours client impacté. Spawn d'`Explore` si la zone est inconnue.
+2. **Planifier** — sortir un plan court (3-7 étapes) avec les fichiers à toucher et les risques. Spawn de `Plan` pour les changements à fort impact architectural.
+3. **Implémenter** — coder par petits incréments. Préférer plusieurs commits atomiques à un gros commit fourre-tout.
+4. **Auditer** *(étape sécurité)* — relire son propre diff avec les questions :
+   - Y a-t-il une fuite de secret, un input non validé, une injection possible ?
+   - Le code respecte-t-il TS strict ? Pas d'`any`, pas de `as unknown as` douteux ?
+   - Les hooks React sont-ils stables (deps array correctes, pas de re-render inutile) ?
+   - Le code tourne-t-il dans le runtime Workers (pas de `fs`, pas de `process.cwd`, etc.) ?
+   - Les composants UI restent-ils accessibles (labels, aria, focus management) ?
+5. **Tester** *(étape essai)* — `bun run lint && bun run build` doivent passer. Lancer `bun run dev` et vérifier manuellement le parcours impacté (ou demander à l'utilisateur de valider visuellement si l'UI a changé).
+6. **Repérer les opportunités** *(étape ouverture)* — noter en fin de rapport :
+   - Code dupliqué détecté en chemin
+   - Composant UI réutilisable extractible
+   - Régression ou anti-pattern repéré ailleurs dans le repo
+   - Optimisation de performance évidente (bundle, requêtes, re-renders)
+   - Amélioration UX ou de parcours client identifiable
+   Ces opportunités ne sont **pas** implémentées dans la même tâche (cf. "Don't add features beyond what the task requires") — elles sont **listées** pour décision séparée.
+7. **Comprendre le chemin client** *(étape parcours)* — pour toute modif touchant l'UI ou la logique de réservation/commande, rappeler explicitement le parcours impacté :
+   - Découverte → Sélection produit → Réservation → Paiement → Confirmation → Suivi → Livraison
+   Et signaler si la modif crée un point de friction, casse une étape, ou ouvre une opportunité de simplification.
+8. **Rendre compte** — résumé final structuré : **Fait** / **Vérifié** / **Opportunités détectées** / **Demandes de confirmation restantes**.
+
+### Usage des sous-agents
+
+- **Explore** — toute recherche multi-fichiers de plus de 3 requêtes
+- **Plan** — pour les chantiers structurels (nouvelle route, refactor majeur, intégration tierce)
+- **general-purpose / claude** — implémentation en parallèle quand les tâches sont indépendantes
+- **Lancer plusieurs agents en parallèle** dans un seul message si les travaux n'ont pas de dépendance entre eux
+- Ne jamais sous-traiter la **synthèse** ou la **décision** à un agent : l'agent principal lit les rapports et tranche
+
+### Garde-fous d'audit (rappel rapide)
+
+Avant chaque commit, l'agent vérifie mentalement :
+- [ ] Aucune clé / token / mot de passe en clair dans le diff
+- [ ] Aucun `console.log` de debug oublié
+- [ ] Pas de `TODO` sans ticket
+- [ ] Lint et build passent
+- [ ] Le diff fait **une seule chose** logique
+- [ ] Le message de commit suit Conventional Commits
+
 ## Ce qu'il ne faut pas faire
 
 - Pas de `npm install` / `pnpm install` — **uniquement `bun`** (sinon désynchro du lockfile)
