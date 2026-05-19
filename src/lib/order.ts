@@ -36,10 +36,7 @@ export function calculateReservationFee(subtotalHt: number): number {
 }
 
 export function calculateOrder(items: CartItem[]): OrderTotals {
-  const subtotalHt = items.reduce(
-    (sum, item) => sum + item.product.basePriceHt * item.quantity,
-    0,
-  );
+  const subtotalHt = items.reduce((sum, item) => sum + item.product.basePriceHt * item.quantity, 0);
   const ecoContributionTotal = items.reduce(
     (sum, item) => sum + item.product.ecoContribution * item.quantity,
     0,
@@ -125,10 +122,7 @@ export function getMoqStatus(committed: number, moqRequired: number): MoqStatus 
 }
 
 export function calculateContainerFill(items: CartItem[], capacity: number) {
-  const usedCbm = items.reduce(
-    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
-    0,
-  );
+  const usedCbm = items.reduce((sum, item) => sum + item.product.cbmPerUnit * item.quantity, 0);
   return {
     usedCbm,
     capacity,

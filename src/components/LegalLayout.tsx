@@ -9,7 +9,11 @@ export const LEGAL_PAGES = [
   { slug: "cgv", label: "Conditions générales de vente", short: "CGV B2B" },
   { slug: "confidentialite", label: "Politique de confidentialité", short: "RGPD & données" },
   { slug: "cookies", label: "Politique cookies", short: "Traceurs & consentement" },
-  { slug: "remboursement", label: "Politique de remboursement", short: "Modalités de remboursement" },
+  {
+    slug: "remboursement",
+    label: "Politique de remboursement",
+    short: "Modalités de remboursement",
+  },
 ] as const;
 
 export type LegalSlug = (typeof LEGAL_PAGES)[number]["slug"];
@@ -97,8 +101,8 @@ export function LegalLayout({
                   strokeWidth={2}
                 />
                 <p className="leading-relaxed text-foreground/85">
-                  <strong className="font-semibold">Modèle indicatif.</strong> Ce document doit
-                  être relu et validé par un conseil juridique avant publication définitive en
+                  <strong className="font-semibold">Modèle indicatif.</strong> Ce document doit être
+                  relu et validé par un conseil juridique avant publication définitive en
                   production. Adapté au modèle B2B de pré-commande groupée par container, droit
                   français applicable.
                 </p>
@@ -112,7 +116,13 @@ export function LegalLayout({
             <div className="mt-12 flex flex-wrap items-center gap-3 border-t border-[color:var(--sand-deep)] pt-6 text-xs text-muted-foreground">
               <FileText className="h-3.5 w-3.5" />
               <span>
-                Pour toute question juridique : <a href="mailto:legal@terrassea.fr" className="font-medium text-foreground underline-offset-2 hover:underline">legal@terrassea.fr</a>
+                Pour toute question juridique :{" "}
+                <a
+                  href="mailto:legal@terrassea.fr"
+                  className="font-medium text-foreground underline-offset-2 hover:underline"
+                >
+                  legal@terrassea.fr
+                </a>
               </span>
               <span>·</span>
               <span>Édité par Terrassea SAS · RCS Marseille 902 345 678</span>
@@ -136,7 +146,10 @@ export function LegalSection({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-[color:var(--sand-deep)] py-6 first:border-t-0 first:pt-0">
+    <section
+      id={id}
+      className="scroll-mt-24 border-t border-[color:var(--sand-deep)] py-6 first:border-t-0 first:pt-0"
+    >
       <h2 className="font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
         {title}
       </h2>

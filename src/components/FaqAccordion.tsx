@@ -145,7 +145,10 @@ export function FaqAccordion() {
   const current = FAQ_CATEGORIES.find((c) => c.id === activeCategory) ?? FAQ_CATEGORIES[0];
 
   return (
-    <section id="faq" className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+    <section
+      id="faq"
+      className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
+    >
       <div className="mx-auto max-w-5xl px-6 py-20">
         <div className="mb-10">
           <div className="label-eyebrow text-[color:var(--ember)]">Questions fréquentes</div>
@@ -159,8 +162,8 @@ export function FaqAccordion() {
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
               hello@terrassea.fr
-            </a>
-            {" "}— on répond sous 24h.
+            </a>{" "}
+            — on répond sous 24h.
           </p>
         </div>
 

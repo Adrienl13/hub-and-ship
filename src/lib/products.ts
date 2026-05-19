@@ -221,12 +221,7 @@ export const PRODUCTS: Product[] = [
     mainImageUrl:
       "https://images.unsplash.com/photo-1604578762246-41134e37f9cc?auto=format&fit=crop&w=900&q=80",
     galleryUrls: [],
-    features: [
-      "6 couverts",
-      "Plateau HPL 12 mm",
-      "Pieds renforcés",
-      "Démontable transport",
-    ],
+    features: ["6 couverts", "Plateau HPL 12 mm", "Pieds renforcés", "Démontable transport"],
     fireRating: "M1",
     variants: [
       { id: "v6a", name: "Plateau Teck", hex: "#a87344", unitsCommitted: 18 },

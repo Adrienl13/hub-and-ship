@@ -85,6 +85,7 @@ Configurés dans `tsconfig.json` et `components.json` :
 ### Formatage (Prettier)
 
 Configuré dans `.prettierrc` :
+
 - `printWidth: 100`
 - `semi: true`
 - `singleQuote: false` → **guillemets doubles**
@@ -123,6 +124,7 @@ Format : `<type>(<scope>): <description>` à l'impératif, ≤ 72 caractères.
 Types : `feat`, `fix`, `chore`, `refactor`, `docs`, `style`, `test`, `perf`, `build`, `ci`.
 
 Exemples :
+
 ```
 feat(order): add reservation dialog with Zod validation
 fix(hero): correct CTA alignment on mobile
@@ -163,6 +165,7 @@ claude mcp add --scope project --transport http supabase "https://mcp.supabase.c
 Authentification : `claude /mcp` dans un terminal régulier (pas l'extension IDE).
 
 **Règle d'usage côté agent :**
+
 - Avant tout appel `mcp__claude_ai_Supabase__*`, vérifier que `project_id` vaut bien `mkfztwibolswqcggukeq`. Sinon, **annuler** et alerter l'utilisateur.
 - Ne jamais se rabattre sur un MCP Supabase non scopé qui pourrait pointer vers TerrasseaHUB.
 - Si l'auth n'est pas encore faite, **mettre en pause** toute opération Supabase et demander à l'utilisateur de lancer `claude /mcp`.
@@ -206,23 +209,23 @@ Pour toute tâche de développement non triviale (>15 min ou >2 fichiers touché
 1. **Comprendre** — lire le code existant pertinent, relire la demande, identifier le parcours client impacté. Spawn d'`Explore` si la zone est inconnue.
 2. **Planifier** — sortir un plan court (3-7 étapes) avec les fichiers à toucher et les risques. Spawn de `Plan` pour les changements à fort impact architectural.
 3. **Implémenter** — coder par petits incréments. Préférer plusieurs commits atomiques à un gros commit fourre-tout.
-4. **Auditer** *(étape sécurité)* — relire son propre diff avec les questions :
+4. **Auditer** _(étape sécurité)_ — relire son propre diff avec les questions :
    - Y a-t-il une fuite de secret, un input non validé, une injection possible ?
    - Le code respecte-t-il TS strict ? Pas d'`any`, pas de `as unknown as` douteux ?
    - Les hooks React sont-ils stables (deps array correctes, pas de re-render inutile) ?
    - Le code tourne-t-il dans le runtime Workers (pas de `fs`, pas de `process.cwd`, etc.) ?
    - Les composants UI restent-ils accessibles (labels, aria, focus management) ?
-5. **Tester** *(étape essai)* — `bun run lint && bun run build` doivent passer. Lancer `bun run dev` et vérifier manuellement le parcours impacté (ou demander à l'utilisateur de valider visuellement si l'UI a changé).
-6. **Repérer les opportunités** *(étape ouverture)* — noter en fin de rapport :
+5. **Tester** _(étape essai)_ — `bun run lint && bun run build` doivent passer. Lancer `bun run dev` et vérifier manuellement le parcours impacté (ou demander à l'utilisateur de valider visuellement si l'UI a changé).
+6. **Repérer les opportunités** _(étape ouverture)_ — noter en fin de rapport :
    - Code dupliqué détecté en chemin
    - Composant UI réutilisable extractible
    - Régression ou anti-pattern repéré ailleurs dans le repo
    - Optimisation de performance évidente (bundle, requêtes, re-renders)
    - Amélioration UX ou de parcours client identifiable
-   Ces opportunités ne sont **pas** implémentées dans la même tâche (cf. "Don't add features beyond what the task requires") — elles sont **listées** pour décision séparée.
-7. **Comprendre le chemin client** *(étape parcours)* — pour toute modif touchant l'UI ou la logique de réservation/commande, rappeler explicitement le parcours impacté :
+     Ces opportunités ne sont **pas** implémentées dans la même tâche (cf. "Don't add features beyond what the task requires") — elles sont **listées** pour décision séparée.
+7. **Comprendre le chemin client** _(étape parcours)_ — pour toute modif touchant l'UI ou la logique de réservation/commande, rappeler explicitement le parcours impacté :
    - Découverte → Sélection produit → Réservation → Paiement → Confirmation → Suivi → Livraison
-   Et signaler si la modif crée un point de friction, casse une étape, ou ouvre une opportunité de simplification.
+     Et signaler si la modif crée un point de friction, casse une étape, ou ouvre une opportunité de simplification.
 8. **Rendre compte** — résumé final structuré : **Fait** / **Vérifié** / **Opportunités détectées** / **Demandes de confirmation restantes**.
 
 ### Usage des sous-agents
@@ -236,6 +239,7 @@ Pour toute tâche de développement non triviale (>15 min ou >2 fichiers touché
 ### Garde-fous d'audit (rappel rapide)
 
 Avant chaque commit, l'agent vérifie mentalement :
+
 - [ ] Aucune clé / token / mot de passe en clair dans le diff
 - [ ] Aucun `console.log` de debug oublié
 - [ ] Pas de `TODO` sans ticket

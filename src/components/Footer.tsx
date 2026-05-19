@@ -102,9 +102,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-[color:var(--sand)]/15 pt-6 text-[11px] text-[color:var(--sand)]/55 sm:flex-row sm:justify-between">
-          <span>
-            © 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678 00012
-          </span>
+          <span>© 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678 00012</span>
           <span>EORI FR902345678 · TVA FR50902345678</span>
         </div>
       </div>

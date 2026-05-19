@@ -138,134 +138,126 @@ function StatCard({
   );
 }
 
-function ContainerSection({
-  container: c,
-  index,
-}: {
-  container: PastContainer;
-  index: number;
-}) {
+function ContainerSection({ container: c, index }: { container: PastContainer; index: number }) {
   const onTime = c.actualDays <= c.plannedDays;
   const deltaDays = c.actualDays - c.plannedDays;
 
   return (
     <article id={c.slug} className="scroll-mt-24">
       <Reveal className="space-y-8">
-      {/* Header de container */}
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--sand-deep)] pb-6">
-        <div>
-          <div className="label-eyebrow text-[color:var(--ember)]">
-            Container nº{String(index).padStart(2, "0")}
-          </div>
-          <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-            {c.reference}
-          </h2>
-          <div className="mt-1 text-sm text-muted-foreground">
-            {c.originPort} → {c.port} · Livré le {formatDate(c.deliveredAt)}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={
-              onTime
-                ? "rounded-sm bg-[color:var(--forest)]/12 px-2.5 py-1 text-xs font-medium text-[color:var(--forest)]"
-                : "rounded-sm bg-[color:var(--ochre)]/15 px-2.5 py-1 text-xs font-medium text-[color:var(--ochre)]"
-            }
-          >
-            {onTime
-              ? deltaDays === 0
-                ? "Pile à date annoncée"
-                : `${Math.abs(deltaDays)}j d'avance`
-              : `+${deltaDays}j de retard (transparent)`}
-          </span>
-          <span className="rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/8 px-2.5 py-1 text-xs font-medium text-[color:var(--ember)]">
-            −{c.savingsPercent}% vs retail
-          </span>
-        </div>
-      </div>
-
-      {/* Hero image + meta principales */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-            <div className="aspect-[16/10] overflow-hidden bg-[color:var(--sand)]">
-              <img
-                src={c.photoUrl}
-                alt={`Container ${c.reference}`}
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
+        {/* Header de container */}
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--sand-deep)] pb-6">
+          <div>
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Container nº{String(index).padStart(2, "0")}
+            </div>
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">{c.reference}</h2>
+            <div className="mt-1 text-sm text-muted-foreground">
+              {c.originPort} → {c.port} · Livré le {formatDate(c.deliveredAt)}
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={
+                onTime
+                  ? "rounded-sm bg-[color:var(--forest)]/12 px-2.5 py-1 text-xs font-medium text-[color:var(--forest)]"
+                  : "rounded-sm bg-[color:var(--ochre)]/15 px-2.5 py-1 text-xs font-medium text-[color:var(--ochre)]"
+              }
+            >
+              {onTime
+                ? deltaDays === 0
+                  ? "Pile à date annoncée"
+                  : `${Math.abs(deltaDays)}j d'avance`
+                : `+${deltaDays}j de retard (transparent)`}
+            </span>
+            <span className="rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/8 px-2.5 py-1 text-xs font-medium text-[color:var(--ember)]">
+              −{c.savingsPercent}% vs retail
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-deep)] lg:col-span-2">
-          <MetaTile
-            icon={<Users className="h-3.5 w-3.5" />}
-            label="Pros mutualisés"
-            value={`${c.professionalsServed}`}
-          />
-          <MetaTile
-            icon={<Boxes className="h-3.5 w-3.5" />}
-            label="Articles livrés"
-            value={`${c.totalItems}`}
-          />
-          <MetaTile
-            icon={<Clock className="h-3.5 w-3.5" />}
-            label="Annoncé / Réel"
-            value={`${c.plannedDays}j / ${c.actualDays}j`}
-            valueClass={onTime ? "text-[color:var(--forest)]" : "text-[color:var(--ochre)]"}
-          />
-          <MetaTile
-            icon={<Truck className="h-3.5 w-3.5" />}
-            label="Économies cumulées"
-            value={eurFmt.format(c.savingsTotalEur)}
-            valueClass="text-[color:var(--ember)]"
-          />
-        </div>
-      </div>
+        {/* Hero image + meta principales */}
+        <div className="grid gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+              <div className="aspect-[16/10] overflow-hidden bg-[color:var(--sand)]">
+                <img
+                  src={c.photoUrl}
+                  alt={`Container ${c.reference}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
 
-      {/* Histoire */}
-      <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-6">
-        <div className="label-eyebrow text-muted-foreground">Le récit du container</div>
-        <p className="mt-3 text-sm leading-relaxed text-foreground/85">{c.story}</p>
-      </div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-deep)] lg:col-span-2">
+            <MetaTile
+              icon={<Users className="h-3.5 w-3.5" />}
+              label="Pros mutualisés"
+              value={`${c.professionalsServed}`}
+            />
+            <MetaTile
+              icon={<Boxes className="h-3.5 w-3.5" />}
+              label="Articles livrés"
+              value={`${c.totalItems}`}
+            />
+            <MetaTile
+              icon={<Clock className="h-3.5 w-3.5" />}
+              label="Annoncé / Réel"
+              value={`${c.plannedDays}j / ${c.actualDays}j`}
+              valueClass={onTime ? "text-[color:var(--forest)]" : "text-[color:var(--ochre)]"}
+            />
+            <MetaTile
+              icon={<Truck className="h-3.5 w-3.5" />}
+              label="Économies cumulées"
+              value={eurFmt.format(c.savingsTotalEur)}
+              valueClass="text-[color:var(--ember)]"
+            />
+          </div>
+        </div>
 
-      {/* Timeline + breakdown produits côte à côte */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <Timeline steps={c.timeline} />
+        {/* Histoire */}
+        <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-6">
+          <div className="label-eyebrow text-muted-foreground">Le récit du container</div>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/85">{c.story}</p>
         </div>
-        <div className="lg:col-span-2">
-          <BreakdownCard breakdown={c.productBreakdown} />
-          <CertificationsCard certifications={c.certifications} />
-        </div>
-      </div>
 
-      {/* Galerie */}
-      {c.gallery.length > 0 && (
-        <div>
-          <div className="label-eyebrow mb-3 text-muted-foreground">Galerie</div>
-          <RevealStagger className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {c.gallery.map((g) => (
-              <RevealItem
-                key={g.url}
-                className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-[color:var(--sand)]">
-                  <img
-                    src={g.url}
-                    alt={g.caption}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]"
-                  />
-                </div>
-                <div className="px-3 py-2 text-[11px] text-muted-foreground">{g.caption}</div>
-              </RevealItem>
-            ))}
-          </RevealStagger>
+        {/* Timeline + breakdown produits côte à côte */}
+        <div className="grid gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <Timeline steps={c.timeline} />
+          </div>
+          <div className="lg:col-span-2">
+            <BreakdownCard breakdown={c.productBreakdown} />
+            <CertificationsCard certifications={c.certifications} />
+          </div>
         </div>
-      )}
+
+        {/* Galerie */}
+        {c.gallery.length > 0 && (
+          <div>
+            <div className="label-eyebrow mb-3 text-muted-foreground">Galerie</div>
+            <RevealStagger className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {c.gallery.map((g) => (
+                <RevealItem
+                  key={g.url}
+                  className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-[color:var(--sand)]">
+                    <img
+                      src={g.url}
+                      alt={g.caption}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]"
+                    />
+                  </div>
+                  <div className="px-3 py-2 text-[11px] text-muted-foreground">{g.caption}</div>
+                </RevealItem>
+              ))}
+            </RevealStagger>
+          </div>
+        )}
 
         {/* Témoignage long */}
         <TestimonialCard testimonial={c.testimonial} />
@@ -311,9 +303,7 @@ function Timeline({ steps }: { steps: PastContainerTimelineStep[] }) {
           <li key={i} className="relative pl-7">
             <span
               className={`absolute left-0 top-1.5 h-3 w-3 rounded-full ring-2 ring-[color:var(--sand-soft)] ${
-                step.status === "delay"
-                  ? "bg-[color:var(--ochre)]"
-                  : "bg-[color:var(--forest)]"
+                step.status === "delay" ? "bg-[color:var(--ochre)]" : "bg-[color:var(--forest)]"
               }`}
             />
             {i < steps.length - 1 && (
@@ -333,11 +323,7 @@ function Timeline({ steps }: { steps: PastContainerTimelineStep[] }) {
   );
 }
 
-function BreakdownCard({
-  breakdown,
-}: {
-  breakdown: PastContainer["productBreakdown"];
-}) {
+function BreakdownCard({ breakdown }: { breakdown: PastContainer["productBreakdown"] }) {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card">
       <div className="border-b border-[color:var(--sand-deep)] px-5 py-3">
@@ -368,7 +354,10 @@ function CertificationsCard({ certifications }: { certifications: string[] }) {
       <ul className="mt-3 space-y-1.5">
         {certifications.map((cert) => (
           <li key={cert} className="flex items-start gap-2 text-xs text-foreground/80">
-            <BadgeCheck className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--forest)]" strokeWidth={2} />
+            <BadgeCheck
+              className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--forest)]"
+              strokeWidth={2}
+            />
             <span>{cert}</span>
           </li>
         ))}
@@ -377,11 +366,7 @@ function CertificationsCard({ certifications }: { certifications: string[] }) {
   );
 }
 
-function TestimonialCard({
-  testimonial: t,
-}: {
-  testimonial: PastContainer["testimonial"];
-}) {
+function TestimonialCard({ testimonial: t }: { testimonial: PastContainer["testimonial"] }) {
   return (
     <figure className="rounded-md border border-[color:var(--ember)]/20 bg-card p-7 shadow-paper">
       <div className="flex items-center gap-1 text-[color:var(--ember)]">
@@ -420,8 +405,8 @@ function BottomCta() {
               Réservez votre place dans le prochain.
             </h2>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-[color:var(--sand)]/75">
-              Les containers livrés ci-dessus ont tous démarré comme une simple ligne de pré-commande
-              à 3% de frais de réservation. Le suivant ferme bientôt.
+              Les containers livrés ci-dessus ont tous démarré comme une simple ligne de
+              pré-commande à 3% de frais de réservation. Le suivant ferme bientôt.
             </p>
           </div>
           <div className="flex flex-wrap gap-3 lg:justify-end">

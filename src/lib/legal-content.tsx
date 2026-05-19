@@ -1,5 +1,6 @@
 import { LegalSection } from "@/components/LegalLayout";
 import type { LegalSlug } from "@/components/LegalLayout";
+import { P, UL, LI, Strong } from "@/components/legal-prose";
 
 export type LegalDoc = {
   slug: LegalSlug;
@@ -8,17 +9,6 @@ export type LegalDoc = {
   metaDescription: string;
   content: React.ReactNode;
 };
-
-const P = ({ children }: { children: React.ReactNode }) => (
-  <p className="leading-relaxed">{children}</p>
-);
-const UL = ({ children }: { children: React.ReactNode }) => (
-  <ul className="ml-5 list-disc space-y-1.5 marker:text-muted-foreground">{children}</ul>
-);
-const LI = ({ children }: { children: React.ReactNode }) => <li>{children}</li>;
-const Strong = ({ children }: { children: React.ReactNode }) => (
-  <strong className="font-semibold text-foreground">{children}</strong>
-);
 
 export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
   // ============================================================
@@ -32,19 +22,40 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       <>
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
-            Le présent site, accessible à l'adresse <Strong>https://hub.terrassea.fr</Strong> (ci-après le « Site »), est édité par :
+            Le présent site, accessible à l'adresse <Strong>https://hub.terrassea.fr</Strong>{" "}
+            (ci-après le « Site »), est édité par :
           </P>
           <UL>
-            <LI><Strong>Raison sociale :</Strong> Terrassea SAS</LI>
-            <LI><Strong>Forme juridique :</Strong> Société par actions simplifiée</LI>
-            <LI><Strong>Capital social :</Strong> 50 000 € entièrement libéré</LI>
-            <LI><Strong>Siège social :</Strong> 12 quai du Lazaret, 13002 Marseille, France</LI>
-            <LI><Strong>RCS :</Strong> Marseille 902 345 678</LI>
-            <LI><Strong>SIRET :</Strong> 902 345 678 00012</LI>
-            <LI><Strong>TVA intracommunautaire :</Strong> FR50902345678</LI>
-            <LI><Strong>EORI :</Strong> FR902345678</LI>
-            <LI><Strong>Téléphone :</Strong> +33 (0)4 91 00 00 00</LI>
-            <LI><Strong>Email :</Strong> hello@terrassea.fr</LI>
+            <LI>
+              <Strong>Raison sociale :</Strong> Terrassea SAS
+            </LI>
+            <LI>
+              <Strong>Forme juridique :</Strong> Société par actions simplifiée
+            </LI>
+            <LI>
+              <Strong>Capital social :</Strong> 50 000 € entièrement libéré
+            </LI>
+            <LI>
+              <Strong>Siège social :</Strong> 12 quai du Lazaret, 13002 Marseille, France
+            </LI>
+            <LI>
+              <Strong>RCS :</Strong> Marseille 902 345 678
+            </LI>
+            <LI>
+              <Strong>SIRET :</Strong> 902 345 678 00012
+            </LI>
+            <LI>
+              <Strong>TVA intracommunautaire :</Strong> FR50902345678
+            </LI>
+            <LI>
+              <Strong>EORI :</Strong> FR902345678
+            </LI>
+            <LI>
+              <Strong>Téléphone :</Strong> +33 (0)4 91 00 00 00
+            </LI>
+            <LI>
+              <Strong>Email :</Strong> hello@terrassea.fr
+            </LI>
           </UL>
         </LegalSection>
 
@@ -62,21 +73,26 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <UL>
             <LI>Cloudflare, Inc.</LI>
             <LI>101 Townsend Street, San Francisco, CA 94107, États-Unis</LI>
-            <LI>Site : <a href="https://www.cloudflare.com" className="underline">www.cloudflare.com</a></LI>
+            <LI>
+              Site :{" "}
+              <a href="https://www.cloudflare.com" className="underline">
+                www.cloudflare.com
+              </a>
+            </LI>
           </UL>
           <P>
             Le transfert de données vers les États-Unis est encadré par les Clauses Contractuelles
-            Types adoptées par la Commission européenne et par les Data Processing Addenda
-            standards de Cloudflare. Cf. politique de confidentialité.
+            Types adoptées par la Commission européenne et par les Data Processing Addenda standards
+            de Cloudflare. Cf. politique de confidentialité.
           </P>
         </LegalSection>
 
         <LegalSection id="pi" title="4. Propriété intellectuelle">
           <P>
             L'ensemble des éléments du Site (textes, photographies, illustrations, logos,
-            graphismes, mise en page, code source, structure de base de données, marque
-            « Container Club » et « Terrassea ») est protégé par le Code de la propriété
-            intellectuelle et appartient à Terrassea SAS ou à ses partenaires concédants.
+            graphismes, mise en page, code source, structure de base de données, marque « Container
+            Club » et « Terrassea ») est protégé par le Code de la propriété intellectuelle et
+            appartient à Terrassea SAS ou à ses partenaires concédants.
           </P>
           <P>
             Toute reproduction, représentation, modification, publication, transmission ou
@@ -88,19 +104,17 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="liens" title="5. Liens hypertextes">
           <P>
-            La mise en place de liens vers le Site est libre, sous réserve d'un usage loyal et
-            non préjudiciable à l'image de Terrassea SAS. Les liens sortants depuis le Site vers
-            des sites tiers n'engagent pas la responsabilité de Terrassea SAS quant à leur
-            contenu.
+            La mise en place de liens vers le Site est libre, sous réserve d'un usage loyal et non
+            préjudiciable à l'image de Terrassea SAS. Les liens sortants depuis le Site vers des
+            sites tiers n'engagent pas la responsabilité de Terrassea SAS quant à leur contenu.
           </P>
         </LegalSection>
 
         <LegalSection id="credits" title="6. Crédits photographiques">
           <P>
-            Les photographies illustrant les containers livrés et le mobilier sont issues de
-            prises de vue réalisées en usine ou chez nos clients, ainsi que de licences libres
-            (Unsplash) pour les visuels d'illustration. Photographies clients publiées avec leur
-            accord écrit.
+            Les photographies illustrant les containers livrés et le mobilier sont issues de prises
+            de vue réalisées en usine ou chez nos clients, ainsi que de licences libres (Unsplash)
+            pour les visuels d'illustration. Photographies clients publiées avec leur accord écrit.
           </P>
         </LegalSection>
 
@@ -130,13 +144,16 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             Les présentes Conditions Générales de Vente (« CGV ») régissent les ventes conclues
             entre Terrassea SAS, exploitant la marque <Strong>Container Club</Strong>, et tout
             professionnel (personne morale ou personne physique agissant dans le cadre de son
-            activité commerciale) souhaitant participer à une opération d'achat groupé via le
-            Site (l'« Acheteur »).
+            activité commerciale) souhaitant participer à une opération d'achat groupé via le Site
+            (l'« Acheteur »).
           </P>
           <P>
-            <Strong>Ces CGV sont réservées aux professionnels au sens de l'article liminaire du
-            Code de la consommation.</Strong> Toute commande passée par un consommateur est
-            réputée nulle et sera remboursée intégralement.
+            <Strong>
+              Ces CGV sont réservées aux professionnels au sens de l'article liminaire du Code de la
+              consommation.
+            </Strong>{" "}
+            Toute commande passée par un consommateur est réputée nulle et sera remboursée
+            intégralement.
           </P>
         </LegalSection>
 
@@ -144,54 +161,53 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             Container Club organise des campagnes de pré-commande groupée de mobilier outdoor
             professionnel. Chaque container réunit plusieurs Acheteurs autour d'un objectif de
-            remplissage de 80 % minimum permettant de déclencher la production usine et
-            l'expédition vers la France.
+            remplissage de 80 % minimum permettant de déclencher la production usine et l'expédition
+            vers la France.
           </P>
         </LegalSection>
 
         <LegalSection id="acceptation" title="3. Acceptation des CGV">
           <P>
-            La validation d'une réservation sur le Site vaut acceptation pleine et sans réserve
-            des présentes CGV par l'Acheteur. Les CGV applicables sont celles en vigueur à la
-            date de la réservation.
+            La validation d'une réservation sur le Site vaut acceptation pleine et sans réserve des
+            présentes CGV par l'Acheteur. Les CGV applicables sont celles en vigueur à la date de la
+            réservation.
           </P>
         </LegalSection>
 
         <LegalSection id="prix" title="4. Prix">
           <P>
-            Les prix sont exprimés en <Strong>euros hors taxes (HT)</Strong>. La TVA française à
-            20 % est appliquée à la facturation finale et figure distinctement sur la facture.
-            Les prix incluent : importation officielle, dédouanement, contrôle qualité SGS,
-            garantie commerciale 2 ans, éco-participation. Ils excluent : les frais de
-            livraison (forfaitaires par zone, indiqués à la commande) et toute prestation
-            d'installation.
+            Les prix sont exprimés en <Strong>euros hors taxes (HT)</Strong>. La TVA française à 20
+            % est appliquée à la facturation finale et figure distinctement sur la facture. Les prix
+            incluent : importation officielle, dédouanement, contrôle qualité SGS, garantie
+            commerciale 2 ans, éco-participation. Ils excluent : les frais de livraison
+            (forfaitaires par zone, indiqués à la commande) et toute prestation d'installation.
           </P>
           <P>
-            Terrassea SAS se réserve le droit de modifier ses prix à tout moment pour les
-            campagnes à venir. Une fois la réservation validée, le prix est garanti pour
-            l'Acheteur jusqu'à la livraison.
+            Terrassea SAS se réserve le droit de modifier ses prix à tout moment pour les campagnes
+            à venir. Une fois la réservation validée, le prix est garanti pour l'Acheteur jusqu'à la
+            livraison.
           </P>
         </LegalSection>
 
         <LegalSection id="achat-groupe" title="5. Mécanisme d'achat groupé">
           <P>
             Chaque container est défini par : (i) une référence unique, (ii) une capacité en m³,
-            (iii) un seuil de déclenchement (80 % de remplissage), (iv) un MOQ usine par modèle
-            et par couleur (50 unités pour les assises, 20 pour les tables), (v) une date de
-            clôture estimée.
+            (iii) un seuil de déclenchement (80 % de remplissage), (iv) un MOQ usine par modèle et
+            par couleur (50 unités pour les assises, 20 pour les tables), (v) une date de clôture
+            estimée.
           </P>
           <P>
             <Strong>Si le seuil de 80 % n'est pas atteint</Strong> à la date de clôture, Terrassea
-            SAS peut, à sa seule discrétion : (i) prolonger la collecte de 2 semaines maximum,
-            ou (ii) annuler le container. En cas d'annulation, l'intégralité des sommes versées
-            (frais de réservation + acompte) est remboursée à l'Acheteur sous 5 jours ouvrés
-            sur le moyen de paiement original.
+            SAS peut, à sa seule discrétion : (i) prolonger la collecte de 2 semaines maximum, ou
+            (ii) annuler le container. En cas d'annulation, l'intégralité des sommes versées (frais
+            de réservation + acompte) est remboursée à l'Acheteur sous 5 jours ouvrés sur le moyen
+            de paiement original.
           </P>
           <P>
             <Strong>Si une couleur n'atteint pas son MOQ</Strong>, l'Acheteur dispose de 5 jours
-            ouvrés à compter de la notification pour : (i) migrer vers une couleur confirmée du
-            même produit, (ii) reporter sa commande sur le container suivant, ou (iii) être
-            remboursé sur la ligne concernée.
+            ouvrés à compter de la notification pour : (i) migrer vers une couleur confirmée du même
+            produit, (ii) reporter sa commande sur le container suivant, ou (iii) être remboursé sur
+            la ligne concernée.
           </P>
         </LegalSection>
 
@@ -199,15 +215,17 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>L'échéancier de paiement est le suivant :</P>
           <UL>
             <LI>
-              <Strong>Étape 1 — Réservation :</Strong> 3 % du sous-total HT (minimum 150 €,
-              maximum 500 €) prélevés immédiatement par carte bancaire via Stripe.
-              <Strong> Ces frais ne sont pas remboursables, sauf annulation du container par
-              Terrassea SAS.</Strong>
+              <Strong>Étape 1 — Réservation :</Strong> 3 % du sous-total HT (minimum 150 €, maximum
+              500 €) prélevés immédiatement par carte bancaire via Stripe.
+              <Strong>
+                {" "}
+                Ces frais ne sont pas remboursables, sauf annulation du container par Terrassea SAS.
+              </Strong>
             </LI>
             <LI>
-              <Strong>Étape 2 — Acompte 27 % :</Strong> Appelé lorsque le container atteint 80 %
-              de remplissage. L'Acheteur est prévenu 48 h à l'avance par email et SMS.
-              Prélèvement automatique sur le moyen de paiement enregistré ou virement SEPA.
+              <Strong>Étape 2 — Acompte 27 % :</Strong> Appelé lorsque le container atteint 80 % de
+              remplissage. L'Acheteur est prévenu 48 h à l'avance par email et SMS. Prélèvement
+              automatique sur le moyen de paiement enregistré ou virement SEPA.
             </LI>
             <LI>
               <Strong>Étape 3 — Solde 70 % :</Strong> Exigible avant expédition usine, après
@@ -216,52 +234,50 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <P>
             En cas de défaut de paiement à l'une des étapes, après mise en demeure restée
-            infructueuse pendant 7 jours, Terrassea SAS peut résilier la commande de plein droit
-            et conserver les sommes déjà versées au titre de l'indemnisation forfaitaire (clause
+            infructueuse pendant 7 jours, Terrassea SAS peut résilier la commande de plein droit et
+            conserver les sommes déjà versées au titre de l'indemnisation forfaitaire (clause
             pénale).
           </P>
           <P>
-            Conformément à l'article L441-10 du Code de commerce, tout retard de paiement
-            entraîne de plein droit l'application de pénalités au taux de la BCE majoré de 10
-            points, ainsi qu'une indemnité forfaitaire de 40 € pour frais de recouvrement.
+            Conformément à l'article L441-10 du Code de commerce, tout retard de paiement entraîne
+            de plein droit l'application de pénalités au taux de la BCE majoré de 10 points, ainsi
+            qu'une indemnité forfaitaire de 40 € pour frais de recouvrement.
           </P>
         </LegalSection>
 
         <LegalSection id="livraison" title="7. Livraison">
           <P>
-            La livraison s'effectue par voie maritime depuis l'Asie via Marseille-Fos ou Le
-            Havre, puis par transport routier vers le lieu indiqué par l'Acheteur. Délai
-            indicatif : <Strong>75 jours</Strong> à compter de la clôture du container.
+            La livraison s'effectue par voie maritime depuis l'Asie via Marseille-Fos ou Le Havre,
+            puis par transport routier vers le lieu indiqué par l'Acheteur. Délai indicatif :{" "}
+            <Strong>75 jours</Strong> à compter de la clôture du container.
           </P>
           <P>
             Les délais annoncés sont donnés à titre indicatif. Un retard ne peut donner lieu à
             résiliation ou indemnités tant qu'il reste raisonnable (≤ 30 jours) et qu'il a été
-            communiqué dans les meilleurs délais. Un geste commercial est appliqué en cas de
-            retard supérieur à 7 jours dû à Terrassea SAS.
+            communiqué dans les meilleurs délais. Un geste commercial est appliqué en cas de retard
+            supérieur à 7 jours dû à Terrassea SAS.
           </P>
           <P>
-            Le transfert des risques s'opère à la remise des marchandises à l'Acheteur (Incoterm
-            DAP — Delivered at Place).
+            Le transfert des risques s'opère à la remise des marchandises à l'Acheteur (Incoterm DAP
+            — Delivered at Place).
           </P>
           <P>
-            L'Acheteur dispose de <Strong>7 jours</Strong> après réception pour signaler tout
-            défaut visible. Passé ce délai, les marchandises sont réputées conformes sous réserve
-            de l'application des garanties légales et commerciales.
+            L'Acheteur dispose de <Strong>7 jours</Strong> après réception pour signaler tout défaut
+            visible. Passé ce délai, les marchandises sont réputées conformes sous réserve de
+            l'application des garanties légales et commerciales.
           </P>
         </LegalSection>
 
         <LegalSection id="garanties" title="8. Garanties">
-          <P>
-            Les produits bénéficient cumulativement :
-          </P>
+          <P>Les produits bénéficient cumulativement :</P>
           <UL>
             <LI>
-              de la <Strong>garantie légale de conformité</Strong> applicable aux relations B2B
-              dans la mesure des dispositions impératives du droit français ;
+              de la <Strong>garantie légale de conformité</Strong> applicable aux relations B2B dans
+              la mesure des dispositions impératives du droit français ;
             </LI>
             <LI>
-              de la <Strong>garantie légale des vices cachés</Strong> prévue aux articles 1641
-              et suivants du Code civil ;
+              de la <Strong>garantie légale des vices cachés</Strong> prévue aux articles 1641 et
+              suivants du Code civil ;
             </LI>
             <LI>
               d'une <Strong>garantie commerciale de 2 ans</Strong> consentie par Terrassea SAS,
@@ -270,52 +286,54 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
           </UL>
           <P>
-            La garantie commerciale ne couvre pas l'usure normale, les dommages résultant d'un
-            usage inapproprié, d'une modification non autorisée ou d'un défaut d'entretien.
+            La garantie commerciale ne couvre pas l'usure normale, les dommages résultant d'un usage
+            inapproprié, d'une modification non autorisée ou d'un défaut d'entretien.
           </P>
         </LegalSection>
 
         <LegalSection id="responsabilite" title="9. Responsabilité">
           <P>
             La responsabilité de Terrassea SAS est limitée, pour les Acheteurs professionnels, au
-            montant total HT effectivement payé par l'Acheteur au titre de la commande
-            concernée. Terrassea SAS ne saurait être tenue responsable des dommages indirects,
-            pertes d'exploitation, pertes de chiffre d'affaires, atteinte à l'image ou perte de
-            clientèle.
+            montant total HT effectivement payé par l'Acheteur au titre de la commande concernée.
+            Terrassea SAS ne saurait être tenue responsable des dommages indirects, pertes
+            d'exploitation, pertes de chiffre d'affaires, atteinte à l'image ou perte de clientèle.
           </P>
         </LegalSection>
 
         <LegalSection id="force-majeure" title="10. Force majeure">
           <P>
-            Terrassea SAS n'est pas responsable des manquements dus à un événement de force
-            majeure au sens de l'article 1218 du Code civil, ni à un fait imprévisible et
-            indépendant de sa volonté (notamment : grève portuaire, fermeture douanière, conflit
-            armé, épidémie, événements climatiques exceptionnels). En cas de force majeure
-            persistant plus de 60 jours, chaque partie peut résilier la commande, l'Acheteur
-            étant remboursé intégralement.
+            Terrassea SAS n'est pas responsable des manquements dus à un événement de force majeure
+            au sens de l'article 1218 du Code civil, ni à un fait imprévisible et indépendant de sa
+            volonté (notamment : grève portuaire, fermeture douanière, conflit armé, épidémie,
+            événements climatiques exceptionnels). En cas de force majeure persistant plus de 60
+            jours, chaque partie peut résilier la commande, l'Acheteur étant remboursé
+            intégralement.
           </P>
         </LegalSection>
 
         <LegalSection id="donnees" title="11. Protection des données personnelles">
           <P>
-            Le traitement des données personnelles est régi par notre <a href="/legal/confidentialite" className="underline">Politique de confidentialité</a>, conforme au RGPD et à la loi Informatique et
-            Libertés.
+            Le traitement des données personnelles est régi par notre{" "}
+            <a href="/legal/confidentialite" className="underline">
+              Politique de confidentialité
+            </a>
+            , conforme au RGPD et à la loi Informatique et Libertés.
           </P>
         </LegalSection>
 
         <LegalSection id="mediation" title="12. Médiation et litiges">
           <P>
-            Conformément à l'article L612-1 du Code de la consommation, bien que les présentes
-            CGV soient réservées aux professionnels, Terrassea SAS propose, en cas de litige, de
-            recourir préalablement à une médiation amiable, notamment via la <Strong>FEVAD —
-            Fédération du e-commerce et de la vente à distance</Strong> ou tout autre médiateur
-            sectoriel compétent.
+            Conformément à l'article L612-1 du Code de la consommation, bien que les présentes CGV
+            soient réservées aux professionnels, Terrassea SAS propose, en cas de litige, de
+            recourir préalablement à une médiation amiable, notamment via la{" "}
+            <Strong>FEVAD — Fédération du e-commerce et de la vente à distance</Strong> ou tout
+            autre médiateur sectoriel compétent.
           </P>
           <P>
             À défaut d'accord amiable, tout litige relatif à la formation, l'interprétation,
-            l'exécution ou la rupture des présentes sera de la <Strong>compétence exclusive du
-            Tribunal de commerce de Marseille</Strong>, nonobstant pluralité de défendeurs ou
-            appel en garantie.
+            l'exécution ou la rupture des présentes sera de la{" "}
+            <Strong>compétence exclusive du Tribunal de commerce de Marseille</Strong>, nonobstant
+            pluralité de défendeurs ou appel en garantie.
           </P>
         </LegalSection>
 
@@ -340,13 +358,16 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       <>
         <LegalSection id="responsable" title="1. Responsable du traitement">
           <P>
-            Le responsable du traitement des données personnelles est <Strong>Terrassea
-            SAS</Strong>, immatriculée au RCS de Marseille sous le numéro 902 345 678, dont le
-            siège social est situé 12 quai du Lazaret, 13002 Marseille, France.
+            Le responsable du traitement des données personnelles est <Strong>Terrassea SAS</Strong>
+            , immatriculée au RCS de Marseille sous le numéro 902 345 678, dont le siège social est
+            situé 12 quai du Lazaret, 13002 Marseille, France.
           </P>
           <P>
             Pour toute question relative à la protection de vos données :{" "}
-            <a href="mailto:privacy@terrassea.fr" className="underline">privacy@terrassea.fr</a>.
+            <a href="mailto:privacy@terrassea.fr" className="underline">
+              privacy@terrassea.fr
+            </a>
+            .
           </P>
         </LegalSection>
 
@@ -361,20 +382,19 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               livraison.
             </LI>
             <LI>
-              <Strong>Données entreprise :</Strong> SIRET (au plus tard à l'appel d'acompte),
-              numéro de TVA intracommunautaire.
+              <Strong>Données entreprise :</Strong> SIRET (au plus tard à l'appel d'acompte), numéro
+              de TVA intracommunautaire.
             </LI>
             <LI>
-              <Strong>Données de commande :</Strong> historique des réservations, montants,
-              dates.
+              <Strong>Données de commande :</Strong> historique des réservations, montants, dates.
             </LI>
             <LI>
               <Strong>Données de paiement :</Strong> traitées exclusivement par Stripe (cf.
               sous-traitants). Container Club ne stocke jamais le numéro de carte bancaire (PAN).
             </LI>
             <LI>
-              <Strong>Données techniques :</Strong> adresse IP, journaux serveur, type de
-              navigateur — conservés à des fins de sécurité et d'amélioration du service.
+              <Strong>Données techniques :</Strong> adresse IP, journaux serveur, type de navigateur
+              — conservés à des fins de sécurité et d'amélioration du service.
             </LI>
           </UL>
         </LegalSection>
@@ -382,8 +402,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="finalites" title="3. Finalités et bases légales">
           <UL>
             <LI>
-              <Strong>Exécution du contrat (art. 6.1.b RGPD)</Strong> — traitement des
-              réservations, paiements, livraisons, SAV.
+              <Strong>Exécution du contrat (art. 6.1.b RGPD)</Strong> — traitement des réservations,
+              paiements, livraisons, SAV.
             </LI>
             <LI>
               <Strong>Obligations légales (art. 6.1.c RGPD)</Strong> — comptabilité, facturation,
@@ -391,12 +411,12 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Intérêt légitime (art. 6.1.f RGPD)</Strong> — prévention de la fraude,
-              sécurité du site, amélioration du service, prospection sur clients existants
-              (offres similaires).
+              sécurité du site, amélioration du service, prospection sur clients existants (offres
+              similaires).
             </LI>
             <LI>
-              <Strong>Consentement (art. 6.1.a RGPD)</Strong> — cookies non essentiels,
-              newsletters externes, communications marketing à des prospects.
+              <Strong>Consentement (art. 6.1.a RGPD)</Strong> — cookies non essentiels, newsletters
+              externes, communications marketing à des prospects.
             </LI>
           </UL>
         </LegalSection>
@@ -412,25 +432,21 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               transferts encadrés par Clauses Contractuelles Types).
             </LI>
             <LI>
-              <Strong>Supabase, Inc.</Strong> — base de données et authentification (UE,
-              eu-west-1).
+              <Strong>Supabase, Inc.</Strong> — base de données et authentification (UE, eu-west-1).
             </LI>
             <LI>
               <Strong>SGS</Strong> — contrôle qualité (données limitées au container, pas de
               transmission de données personnelles d'Acheteurs).
             </LI>
             <LI>
-              <Strong>Transporteurs partenaires</Strong> — nom et adresse de livraison
-              uniquement.
+              <Strong>Transporteurs partenaires</Strong> — nom et adresse de livraison uniquement.
             </LI>
             <LI>
-              <Strong>Cabinet comptable et conseil juridique</Strong> — pour les obligations
-              légales et la défense des intérêts de Terrassea SAS.
+              <Strong>Cabinet comptable et conseil juridique</Strong> — pour les obligations légales
+              et la défense des intérêts de Terrassea SAS.
             </LI>
           </UL>
-          <P>
-            Aucune donnée n'est revendue à des tiers à des fins commerciales.
-          </P>
+          <P>Aucune donnée n'est revendue à des tiers à des fins commerciales.</P>
         </LegalSection>
 
         <LegalSection id="duree" title="5. Durée de conservation">
@@ -464,40 +480,55 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <UL>
             <LI>droit d'accès à vos données ;</LI>
             <LI>droit de rectification ;</LI>
-            <LI>droit à l'effacement (« droit à l'oubli »), sous réserve des obligations légales de conservation ;</LI>
+            <LI>
+              droit à l'effacement (« droit à l'oubli »), sous réserve des obligations légales de
+              conservation ;
+            </LI>
             <LI>droit à la limitation du traitement ;</LI>
             <LI>droit à la portabilité de vos données ;</LI>
             <LI>droit d'opposition au traitement ;</LI>
-            <LI>droit de définir des directives relatives au sort de vos données après votre décès ;</LI>
-            <LI>droit de retirer votre consentement à tout moment lorsque le traitement repose sur celui-ci.</LI>
+            <LI>
+              droit de définir des directives relatives au sort de vos données après votre décès ;
+            </LI>
+            <LI>
+              droit de retirer votre consentement à tout moment lorsque le traitement repose sur
+              celui-ci.
+            </LI>
           </UL>
           <P>
-            Pour exercer ces droits, écrivez à <a href="mailto:privacy@terrassea.fr" className="underline">privacy@terrassea.fr</a> en joignant une copie d'une pièce d'identité. Nous
-            répondons sous 30 jours.
+            Pour exercer ces droits, écrivez à{" "}
+            <a href="mailto:privacy@terrassea.fr" className="underline">
+              privacy@terrassea.fr
+            </a>{" "}
+            en joignant une copie d'une pièce d'identité. Nous répondons sous 30 jours.
           </P>
           <P>
-            Vous avez également le droit d'introduire une réclamation auprès de la CNIL — 3,
-            place de Fontenoy, 75007 Paris, <a href="https://www.cnil.fr" className="underline">www.cnil.fr</a>.
+            Vous avez également le droit d'introduire une réclamation auprès de la CNIL — 3, place
+            de Fontenoy, 75007 Paris,{" "}
+            <a href="https://www.cnil.fr" className="underline">
+              www.cnil.fr
+            </a>
+            .
           </P>
         </LegalSection>
 
         <LegalSection id="securite" title="7. Sécurité">
           <P>
-            Terrassea SAS met en œuvre des mesures techniques et organisationnelles appropriées
-            pour assurer la sécurité de vos données : chiffrement TLS, contrôle d'accès strict,
-            hébergement sur infrastructures certifiées (Cloudflare, Supabase), revue régulière
-            des permissions, formation des équipes. En cas de violation de données susceptible
-            de présenter un risque pour vos droits, vous serez notifié(e) dans les délais
-            prévus par le RGPD.
+            Terrassea SAS met en œuvre des mesures techniques et organisationnelles appropriées pour
+            assurer la sécurité de vos données : chiffrement TLS, contrôle d'accès strict,
+            hébergement sur infrastructures certifiées (Cloudflare, Supabase), revue régulière des
+            permissions, formation des équipes. En cas de violation de données susceptible de
+            présenter un risque pour vos droits, vous serez notifié(e) dans les délais prévus par le
+            RGPD.
           </P>
         </LegalSection>
 
         <LegalSection id="transferts" title="8. Transferts hors Union européenne">
           <P>
-            Certains sous-traitants (Cloudflare, Stripe) peuvent traiter les données depuis des
-            pays hors UE, notamment les États-Unis. Ces transferts sont encadrés par les{" "}
-            <Strong>Clauses Contractuelles Types</Strong> adoptées par la Commission européenne
-            et, le cas échéant, par les mesures supplémentaires recommandées par le CEPD.
+            Certains sous-traitants (Cloudflare, Stripe) peuvent traiter les données depuis des pays
+            hors UE, notamment les États-Unis. Ces transferts sont encadrés par les{" "}
+            <Strong>Clauses Contractuelles Types</Strong> adoptées par la Commission européenne et,
+            le cas échéant, par les mesures supplémentaires recommandées par le CEPD.
           </P>
         </LegalSection>
 
@@ -524,47 +555,45 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="definition" title="1. Qu'est-ce qu'un cookie ?">
           <P>
             Un cookie est un fichier texte de petite taille déposé sur votre terminal lors de la
-            visite d'un site web. Il permet au site de reconnaître votre terminal, de mémoriser
-            vos préférences, ou de collecter des informations statistiques sur l'usage du site.
+            visite d'un site web. Il permet au site de reconnaître votre terminal, de mémoriser vos
+            préférences, ou de collecter des informations statistiques sur l'usage du site.
           </P>
         </LegalSection>
 
         <LegalSection id="categories" title="2. Catégories utilisées sur le Site">
           <UL>
             <LI>
-              <Strong>Cookies strictement nécessaires</Strong> — indispensables au fonctionnement
-              du site (gestion de la session de réservation, panier, équilibrage de charge
-              Cloudflare). Ils ne nécessitent pas de consentement.
+              <Strong>Cookies strictement nécessaires</Strong> — indispensables au fonctionnement du
+              site (gestion de la session de réservation, panier, équilibrage de charge Cloudflare).
+              Ils ne nécessitent pas de consentement.
             </LI>
             <LI>
-              <Strong>Cookies fonctionnels</Strong> — mémorisent vos préférences (langue,
-              affichage, choix de filtres catalogue). Soumis à consentement.
+              <Strong>Cookies fonctionnels</Strong> — mémorisent vos préférences (langue, affichage,
+              choix de filtres catalogue). Soumis à consentement.
             </LI>
             <LI>
               <Strong>Cookies de mesure d'audience anonymisée</Strong> — analytics sans
-              identification individuelle. Soumis à consentement si non strictement
-              anonymisés.
+              identification individuelle. Soumis à consentement si non strictement anonymisés.
             </LI>
             <LI>
-              <Strong>Cookies tiers (paiement)</Strong> — Stripe utilise ses propres cookies sur
-              la page de paiement, soumis à sa propre politique.
+              <Strong>Cookies tiers (paiement)</Strong> — Stripe utilise ses propres cookies sur la
+              page de paiement, soumis à sa propre politique.
             </LI>
           </UL>
           <P>
-            <Strong>Container Club n'utilise actuellement aucun cookie publicitaire ni aucun
-            traceur de réseau social.</Strong>
+            <Strong>
+              Container Club n'utilise actuellement aucun cookie publicitaire ni aucun traceur de
+              réseau social.
+            </Strong>
           </P>
         </LegalSection>
 
         <LegalSection id="liste" title="3. Liste détaillée des cookies déposés">
           <P>
-            La liste détaillée des cookies déposés (nom, finalité, durée, émetteur) est mise à
-            jour à chaque évolution technique du Site et accessible depuis le bandeau de
-            consentement.
+            La liste détaillée des cookies déposés (nom, finalité, durée, émetteur) est mise à jour
+            à chaque évolution technique du Site et accessible depuis le bandeau de consentement.
           </P>
-          <P>
-            Exemples de cookies actuellement déposés :
-          </P>
+          <P>Exemples de cookies actuellement déposés :</P>
           <UL>
             <LI>
               <Strong>__cf_bm</Strong> (Cloudflare, 30 min) — protection anti-bots, strictement
@@ -584,17 +613,16 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="consentement" title="4. Gestion du consentement">
           <P>
             Lors de votre première visite, un bandeau vous permet d'accepter, de refuser ou de
-            paramétrer les cookies non essentiels. Vous pouvez modifier vos choix à tout moment
-            via le lien « Gérer mes cookies » présent en bas de chaque page (en cours de mise en
-            place).
+            paramétrer les cookies non essentiels. Vous pouvez modifier vos choix à tout moment via
+            le lien « Gérer mes cookies » présent en bas de chaque page (en cours de mise en place).
           </P>
         </LegalSection>
 
         <LegalSection id="refuser" title="5. Comment refuser ou supprimer les cookies ?">
           <P>
             Vous pouvez également configurer votre navigateur pour bloquer les cookies ou être
-            averti(e) avant leur dépôt. La désactivation des cookies strictement nécessaires
-            peut toutefois empêcher le bon fonctionnement du Site (notamment la réservation).
+            averti(e) avant leur dépôt. La désactivation des cookies strictement nécessaires peut
+            toutefois empêcher le bon fonctionnement du Site (notamment la réservation).
           </P>
         </LegalSection>
       </>
@@ -612,18 +640,18 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       <>
         <LegalSection id="principe" title="1. Principe général">
           <P>
-            Container Club applique une politique de remboursement transparente et alignée sur
-            ses CGV. Les remboursements sont effectués sur le moyen de paiement original utilisé
-            pour la réservation initiale.
+            Container Club applique une politique de remboursement transparente et alignée sur ses
+            CGV. Les remboursements sont effectués sur le moyen de paiement original utilisé pour la
+            réservation initiale.
           </P>
         </LegalSection>
 
         <LegalSection id="cas" title="2. Cas donnant lieu à remboursement intégral">
           <UL>
             <LI>
-              <Strong>Annulation du container par Container Club</Strong> (seuil 80 % non
-              atteint, force majeure, défaillance partenaire usine) — remboursement de
-              l'intégralité des sommes versées, y compris les frais de réservation.
+              <Strong>Annulation du container par Container Club</Strong> (seuil 80 % non atteint,
+              force majeure, défaillance partenaire usine) — remboursement de l'intégralité des
+              sommes versées, y compris les frais de réservation.
             </LI>
             <LI>
               <Strong>Échec MOQ sur votre ligne uniquement</Strong> et choix de remboursement
@@ -641,64 +669,70 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="frais-reservation" title="3. Sort des frais de réservation (3 %)">
           <P>
-            Les frais de réservation (3 % min 150 € / max 500 €) couvrent la sécurisation de
-            votre place, la mobilisation logistique amont, et les frais de transaction Stripe.
+            Les frais de réservation (3 % min 150 € / max 500 €) couvrent la sécurisation de votre
+            place, la mobilisation logistique amont, et les frais de transaction Stripe.
           </P>
           <UL>
             <LI>
-              <Strong>Remboursés intégralement</Strong> si Container Club annule le container ou
-              ne tient pas ses engagements contractuels.
+              <Strong>Remboursés intégralement</Strong> si Container Club annule le container ou ne
+              tient pas ses engagements contractuels.
             </LI>
             <LI>
-              <Strong>Non remboursés</Strong> en cas de désistement volontaire de l'Acheteur,
-              sauf si ce désistement intervient sous 7 jours suivant la réservation initiale
-              ET avant que le container atteigne 50 % de remplissage.
+              <Strong>Non remboursés</Strong> en cas de désistement volontaire de l'Acheteur, sauf
+              si ce désistement intervient sous 7 jours suivant la réservation initiale ET avant que
+              le container atteigne 50 % de remplissage.
             </LI>
           </UL>
         </LegalSection>
 
         <LegalSection id="delais" title="4. Délais de remboursement">
           <P>
-            Les remboursements sont effectués sous <Strong>5 jours ouvrés</Strong> à compter de
-            la confirmation du motif. Le délai d'apparition sur votre compte bancaire dépend de
-            votre établissement (généralement 3 à 10 jours supplémentaires pour la carte
-            bancaire ; 1 à 2 jours pour le virement SEPA).
+            Les remboursements sont effectués sous <Strong>5 jours ouvrés</Strong> à compter de la
+            confirmation du motif. Le délai d'apparition sur votre compte bancaire dépend de votre
+            établissement (généralement 3 à 10 jours supplémentaires pour la carte bancaire ; 1 à 2
+            jours pour le virement SEPA).
           </P>
         </LegalSection>
 
         <LegalSection id="retard" title="5. Geste commercial en cas de retard">
           <P>
             En cas de retard de livraison supérieur à 7 jours par rapport à la date annoncée et
-            imputable à Container Club, un avoir commercial automatique de <Strong>2 % du
-            sous-total HT</Strong> est appliqué sur la prochaine commande. Au-delà de 30 jours
-            de retard, l'Acheteur peut résilier la commande et bénéficier d'un remboursement
-            intégral.
+            imputable à Container Club, un avoir commercial automatique de{" "}
+            <Strong>2 % du sous-total HT</Strong> est appliqué sur la prochaine commande. Au-delà de
+            30 jours de retard, l'Acheteur peut résilier la commande et bénéficier d'un
+            remboursement intégral.
           </P>
         </LegalSection>
 
         <LegalSection id="defaut-livre" title="6. Défaut détecté après livraison">
           <P>
-            L'Acheteur dispose de 7 jours après livraison pour signaler tout défaut visible
-            (photos par email à <a href="mailto:sav@terrassea.fr" className="underline">sav@terrassea.fr</a>). En cas de défaut confirmé : remplacement à
-            l'identique sur le container suivant, à défaut avoir commercial à valoir sous
-            12 mois, ou remboursement de la ligne concernée au choix de l'Acheteur.
+            L'Acheteur dispose de 7 jours après livraison pour signaler tout défaut visible (photos
+            par email à{" "}
+            <a href="mailto:sav@terrassea.fr" className="underline">
+              sav@terrassea.fr
+            </a>
+            ). En cas de défaut confirmé : remplacement à l'identique sur le container suivant, à
+            défaut avoir commercial à valoir sous 12 mois, ou remboursement de la ligne concernée au
+            choix de l'Acheteur.
           </P>
         </LegalSection>
 
         <LegalSection id="rétractation" title="7. Sur le droit de rétractation">
           <P>
-            <Strong>Les commandes B2B ne bénéficient pas du droit de rétractation</Strong> de
-            14 jours prévu par les articles L221-18 et suivants du Code de la consommation —
-            celui-ci est réservé aux consommateurs particuliers. Container Club étant
-            strictement réservé aux professionnels (cf. CGV), ce droit ne s'applique pas.
+            <Strong>Les commandes B2B ne bénéficient pas du droit de rétractation</Strong> de 14
+            jours prévu par les articles L221-18 et suivants du Code de la consommation — celui-ci
+            est réservé aux consommateurs particuliers. Container Club étant strictement réservé aux
+            professionnels (cf. CGV), ce droit ne s'applique pas.
           </P>
         </LegalSection>
 
         <LegalSection id="reclamation" title="8. Réclamations">
           <P>
             Toute demande de remboursement doit être adressée par écrit à{" "}
-            <a href="mailto:sav@terrassea.fr" className="underline">sav@terrassea.fr</a> en
-            précisant la référence du container, le numéro de commande et le motif. Une réponse
+            <a href="mailto:sav@terrassea.fr" className="underline">
+              sav@terrassea.fr
+            </a>{" "}
+            en précisant la référence du container, le numéro de commande et le motif. Une réponse
             argumentée est apportée sous 5 jours ouvrés.
           </P>
         </LegalSection>

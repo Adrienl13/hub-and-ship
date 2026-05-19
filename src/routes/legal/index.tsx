@@ -99,10 +99,13 @@ function LegalHub() {
           <p className="mt-2 leading-relaxed text-foreground/85">
             Pour toute question relative à ces documents, exercer vos droits RGPD, ou signaler un
             problème de conformité, écrivez à{" "}
-            <a href="mailto:legal@terrassea.fr" className="font-medium text-foreground underline-offset-2 hover:underline">
+            <a
+              href="mailto:legal@terrassea.fr"
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
               legal@terrassea.fr
-            </a>
-            {" "}— réponse sous 5 jours ouvrés.
+            </a>{" "}
+            — réponse sous 5 jours ouvrés.
           </p>
         </div>
       </div>
