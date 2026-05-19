@@ -1,9 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { ReservationDialog } from "@/components/ReservationDialog";
 
 export function StaticPageLayout({
   title,
@@ -16,13 +14,9 @@ export function StaticPageLayout({
   lastUpdated?: string;
   children: React.ReactNode;
 }) {
-  // Le ReservationDialog requiert items + containerId : sur une page statique
-  // on n'a pas de panier, donc on ouvre la home pour réserver
-  const [reserveOpen, setReserveOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header onReserve={() => setReserveOpen(true)} />
+      <Header />
       <main className="mx-auto max-w-3xl px-6 py-16">
         <Link
           to="/"
@@ -47,27 +41,6 @@ export function StaticPageLayout({
         </article>
       </main>
       <Footer />
-
-      <ReservationDialog
-        open={reserveOpen}
-        onOpenChange={setReserveOpen}
-        totals={{
-          subtotalHt: 0,
-          ecoContributionTotal: 0,
-          reservationFee: 0,
-          payNow: 0,
-          payAt80Percent: 0,
-          payBeforeShipping: 0,
-          totalHt: 0,
-          vat: 0,
-          totalTtc: 0,
-          retailReference: 0,
-          savings: 0,
-          savingsPercent: 0,
-        }}
-        items={[]}
-        containerId={undefined}
-      />
     </div>
   );
 }

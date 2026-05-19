@@ -8,6 +8,7 @@ import {
   CircleAlert,
   Loader2,
   Package,
+  Pencil,
   Ship,
   X,
 } from "lucide-react";
@@ -15,7 +16,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AuthDialog } from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
-import { ReservationDialog } from "@/components/ReservationDialog";
+import { ProfileEditDialog } from "@/components/ProfileEditDialog";
 import { useProfessional, useSession } from "@/lib/auth";
 import {
   fetchMyReservations,
@@ -38,7 +39,7 @@ function AccountPage() {
   const pro = proQuery.data;
 
   const [authOpen, setAuthOpen] = useState(false);
-  const [reserveOpen, setReserveOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const reservationsQuery = useQuery({
     queryKey: reservationKeys.myReservations(pro?.id),
@@ -57,7 +58,7 @@ function AccountPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={() => setReserveOpen(true)} />
+        <Header />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <h1 className="font-display text-2xl font-semibold tracking-tight">Connexion requise</h1>
           <p className="mt-3 text-sm text-muted-foreground">
@@ -84,7 +85,7 @@ function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header onReserve={() => setReserveOpen(true)} />
+      <Header />
       <main className="mx-auto max-w-5xl px-6 py-12">
         <Link
           to="/"
@@ -110,14 +111,28 @@ function AccountPage() {
 
         {/* Profil */}
         {pro && (
-          <section className="mt-8 grid gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 sm:grid-cols-4">
-            <ProfileRow label="Contact" value={pro.contact_name} />
-            <ProfileRow label="Téléphone" value={pro.phone} />
-            <ProfileRow label="Livraison" value={pro.delivery_zip ?? "Non renseignée"} />
-            <ProfileRow
-              label="Membre depuis"
-              value={new Date(pro.created_at).toLocaleDateString("fr-FR")}
-            />
+          <section className="mt-8">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg tracking-tight">Informations</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditOpen(true)}
+                className="h-8 gap-1.5 rounded-sm border-[color:var(--sand-deep)] text-xs"
+              >
+                <Pencil className="h-3 w-3" />
+                Modifier
+              </Button>
+            </div>
+            <div className="mt-3 grid gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 sm:grid-cols-4">
+              <ProfileRow label="Contact" value={pro.contact_name} />
+              <ProfileRow label="Téléphone" value={pro.phone} />
+              <ProfileRow label="Livraison" value={pro.delivery_zip ?? "Non renseignée"} />
+              <ProfileRow
+                label="Membre depuis"
+                value={new Date(pro.created_at).toLocaleDateString("fr-FR")}
+              />
+            </div>
           </section>
         )}
 
@@ -158,26 +173,7 @@ function AccountPage() {
 
       <Footer />
 
-      <ReservationDialog
-        open={reserveOpen}
-        onOpenChange={setReserveOpen}
-        totals={{
-          subtotalHt: 0,
-          ecoContributionTotal: 0,
-          reservationFee: 0,
-          payNow: 0,
-          payAt80Percent: 0,
-          payBeforeShipping: 0,
-          totalHt: 0,
-          vat: 0,
-          totalTtc: 0,
-          retailReference: 0,
-          savings: 0,
-          savingsPercent: 0,
-        }}
-        items={[]}
-        containerId={undefined}
-      />
+      {pro && <ProfileEditDialog open={editOpen} onOpenChange={setEditOpen} professional={pro} />}
     </div>
   );
 }

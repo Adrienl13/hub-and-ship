@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { signIn, signUp, isValidSiret } from "@/lib/auth";
+import { isValidSiret, requestPasswordReset, signIn, signUp } from "@/lib/auth";
 
 type Tab = "signin" | "signup";
 
@@ -71,22 +71,58 @@ function SignInForm({ onSuccess }: { onSuccess: () => void }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await signIn(email, password);
-      toast.success("Connecté");
-      onSuccess();
+      if (resetMode) {
+        await requestPasswordReset(email);
+        setResetSent(true);
+        toast.success("Email envoyé", {
+          description: "Suivez le lien reçu pour définir un nouveau mot de passe.",
+        });
+      } else {
+        await signIn(email, password);
+        toast.success("Connecté");
+        onSuccess();
+      }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Échec de connexion";
+      const msg = err instanceof Error ? err.message : "Échec";
       setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  if (resetMode && resetSent) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-foreground">
+          Un email a été envoyé à <strong>{email}</strong>.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Cliquez sur le lien reçu pour définir un nouveau mot de passe. Pensez à vérifier vos
+          spams.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setResetMode(false);
+            setResetSent(false);
+            setError(null);
+          }}
+          className="h-11 w-full rounded-sm border-[color:var(--sand-deep)]"
+        >
+          Retour à la connexion
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form className="space-y-3" onSubmit={submit}>
@@ -99,15 +135,17 @@ function SignInForm({ onSuccess }: { onSuccess: () => void }) {
         autoComplete="email"
         required
       />
-      <Field
-        label="Mot de passe"
-        id="signin-password"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        autoComplete="current-password"
-        required
-      />
+      {!resetMode && (
+        <Field
+          label="Mot de passe"
+          id="signin-password"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          required
+        />
+      )}
       {error && (
         <p className="text-xs text-[color:var(--ember)]" role="alert">
           {error}
@@ -119,8 +157,18 @@ function SignInForm({ onSuccess }: { onSuccess: () => void }) {
         className="h-11 w-full rounded-sm bg-foreground text-background hover:bg-foreground/90"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Se connecter
+        {resetMode ? "Envoyer le lien de réinitialisation" : "Se connecter"}
       </Button>
+      <button
+        type="button"
+        onClick={() => {
+          setResetMode((v) => !v);
+          setError(null);
+        }}
+        className="block w-full text-center text-xs text-muted-foreground hover:text-foreground"
+      >
+        {resetMode ? "← Retour à la connexion" : "Mot de passe oublié ?"}
+      </button>
     </form>
   );
 }

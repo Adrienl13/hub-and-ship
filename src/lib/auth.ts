@@ -57,6 +57,43 @@ export async function signOut() {
   if (error) throw error;
 }
 
+export interface UpdateProfileInput {
+  companyName: string;
+  contactName: string;
+  phone: string;
+  deliveryZip?: string | null;
+}
+
+/** Met à jour le profil pro courant. SIRET et email ne sont pas modifiables ici. */
+export async function updateProfile(userId: string, input: UpdateProfileInput) {
+  const { error } = await supabase
+    .from("professionals")
+    .update({
+      company_name: input.companyName,
+      contact_name: input.contactName,
+      phone: input.phone,
+      delivery_zip: input.deliveryZip ?? null,
+    })
+    .eq("id", userId);
+  if (error) throw error;
+}
+
+/** Envoie un email de réinitialisation de mot de passe. */
+export async function requestPasswordReset(email: string, redirectTo?: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo:
+      redirectTo ??
+      (typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined),
+  });
+  if (error) throw error;
+}
+
+/** Définit un nouveau mot de passe (l'utilisateur doit être authentifié via le lien email). */
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 export function isValidSiret(siret: string): boolean {
   return /^[0-9]{14}$/.test(siret.replace(/\s+/g, ""));
 }

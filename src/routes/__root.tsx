@@ -121,6 +121,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap",
       },
+      { rel: "canonical", href: "https://container-club.fr/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Container Club",
+          description: "Pré-commande groupée de mobilier outdoor pro par container.",
+          url: "https://container-club.fr",
+          email: "contact@container-club.fr",
+          areaServed: "FR",
+          sameAs: [],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
