@@ -3,7 +3,7 @@ import type { Database } from "./database.types";
 
 let _client: SupabaseClient<Database> | null = null;
 
-function getEnv(name: string): string | undefined {
+export function getEnv(name: string): string | undefined {
   // import.meta.env est exposé par Vite; en runtime tests Node sans Vite,
   // on retombe sur process.env (utile pour CI / tests d'intégration).
   const viteEnv =

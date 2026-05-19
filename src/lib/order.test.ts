@@ -3,6 +3,8 @@ import {
   calculateContainerFill,
   calculateOrder,
   calculateReservationFee,
+  formatEUR,
+  formatEURprecise,
   getMoqStatus,
   RESERVATION_MAX,
   RESERVATION_MIN,
@@ -156,5 +158,96 @@ describe("calculateContainerFill", () => {
     const f = calculateContainerFill([mkItem(1000)], 28);
     expect(f.percent).toBe(100);
     expect(f.remaining).toBe(0);
+  });
+
+  it("sums CBM across heterogeneous items", () => {
+    const a = mkItem(10, { cbmPerUnit: 0.1 });
+    const b = mkItem(5, { cbmPerUnit: 0.5 });
+    // 10*0.1 + 5*0.5 = 1 + 2.5 = 3.5
+    const f = calculateContainerFill([a, b], 28);
+    expect(f.usedCbm).toBeCloseTo(3.5);
+  });
+
+  it("handles a tiny container capacity", () => {
+    // 10 items × 0.1 m³ = 1 m³ → fills a 1 m³ container exactly
+    const f = calculateContainerFill([mkItem(10)], 1);
+    expect(f.percent).toBe(100);
+    expect(f.remaining).toBe(0);
+  });
+});
+
+describe("formatEUR", () => {
+  it("formats integer amount with euro sign", () => {
+    expect(formatEUR(1000)).toMatch(/1\s?000/);
+    expect(formatEUR(1000)).toContain("€");
+  });
+
+  it("rounds decimals to integer for display", () => {
+    expect(formatEUR(99.7)).toMatch(/100/);
+  });
+
+  it("formats zero", () => {
+    expect(formatEUR(0)).toContain("0");
+  });
+
+  it("handles large amounts", () => {
+    expect(formatEUR(1_234_567)).toContain("€");
+  });
+});
+
+describe("formatEURprecise", () => {
+  it("keeps 2 decimal places", () => {
+    expect(formatEURprecise(99.99)).toMatch(/99,99/);
+  });
+
+  it("pads zero decimals", () => {
+    expect(formatEURprecise(100)).toMatch(/100,00/);
+  });
+});
+
+describe("calculateOrder — edge cases", () => {
+  it("aggregates correctly across multiple line items", () => {
+    const a = mkItem(2, { basePriceHt: 100, retailPriceRef: 150 });
+    const b = mkItem(3, { basePriceHt: 50, retailPriceRef: 80 });
+    // subtotal = 200 + 150 = 350
+    const t = calculateOrder([a, b]);
+    expect(t.subtotalHt).toBe(350);
+    expect(t.retailReference).toBe(2 * 150 + 3 * 80); // 540
+    expect(t.savings).toBe(190);
+  });
+
+  it("savingsPercent stays 0 when retail reference is 0", () => {
+    const t = calculateOrder([mkItem(2, { basePriceHt: 100, retailPriceRef: 0 })]);
+    expect(t.savingsPercent).toBe(0);
+  });
+
+  it("deposit clamp triggers under 5000€ subtotal", () => {
+    // subtotal=4000 → deposit=1200, fee=150 (clamped to min), payAt80=1050
+    const t = calculateOrder([mkItem(40, { basePriceHt: 100 })]);
+    expect(t.subtotalHt).toBe(4000);
+    expect(t.reservationFee).toBe(150);
+    expect(t.payAt80Percent).toBe(1050);
+  });
+
+  it("deposit floor at 0 when fee exceeds 30%", () => {
+    // Pour subtotal = 200 → deposit 30% = 60, fee min = 150 > 60 → payAt80 = 0
+    const t = calculateOrder([mkItem(2)]);
+    expect(t.subtotalHt).toBe(200);
+    expect(t.reservationFee).toBe(150);
+    expect(t.payAt80Percent).toBe(0); // clamp à 0
+  });
+});
+
+describe("constants", () => {
+  it("RESERVATION_RATE is 3%", () => {
+    expect(RESERVATION_RATE).toBe(0.03);
+  });
+
+  it("RESERVATION_MIN floor is 150€", () => {
+    expect(RESERVATION_MIN).toBe(150);
+  });
+
+  it("RESERVATION_MAX cap is 500€", () => {
+    expect(RESERVATION_MAX).toBe(500);
   });
 });

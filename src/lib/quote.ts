@@ -23,7 +23,7 @@ const eur = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -31,16 +31,17 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildHTML(q: QuoteData): string {
+export function buildQuoteRef(containerRef: string): string {
+  return `DV-${containerRef.replace(/\D/g, "")}-${Date.now().toString(36).slice(-5).toUpperCase()}`;
+}
+
+export function buildQuoteHtml(q: QuoteData): string {
   const today = new Date().toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const ref = `DV-${q.containerRef.replace(/\D/g, "")}-${Date.now()
-    .toString(36)
-    .slice(-5)
-    .toUpperCase()}`;
+  const ref = buildQuoteRef(q.containerRef);
 
   const linesHtml = q.items
     .map((item) => {
@@ -270,7 +271,7 @@ function buildHTML(q: QuoteData): string {
 }
 
 export function openQuotePDF(q: QuoteData) {
-  const html = buildHTML(q);
+  const html = buildQuoteHtml(q);
   const win = window.open("", "_blank", "noopener,noreferrer,width=900,height=1000");
   if (!win) {
     const url = "data:text/html;charset=utf-8," + encodeURIComponent(html);
