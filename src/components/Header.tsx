@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowRight, LogOut, User } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, LayoutDashboard, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -92,6 +93,12 @@ export function Header({ onReserve }: { onReserve: () => void }) {
                   </DropdownMenuLabel>
                 )}
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                  <Link to="/compte">
+                    <LayoutDashboard className="h-3.5 w-3.5" />
+                    Mes réservations
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs">
                   <LogOut className="h-3.5 w-3.5" />
                   Se déconnecter

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Maximize2,
@@ -11,7 +11,11 @@ import {
   Truck,
   ArrowRight,
 } from "lucide-react";
-import { ContainerScene } from "@/components/ContainerScene";
+
+// Three.js est lourd : on charge ContainerScene à la demande
+const ContainerScene = lazy(() =>
+  import("@/components/ContainerScene").then((m) => ({ default: m.ContainerScene })),
+);
 import { Button } from "@/components/ui/button";
 import type { Container } from "@/lib/catalog";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
@@ -72,7 +76,15 @@ export function OrderSidebar({
           </Button>
         </div>
         <div className="relative h-[320px] w-full bg-[color:var(--sand)]">
-          <ContainerScene items={items} exploded={exploded} />
+          <Suspense
+            fallback={
+              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                Chargement de la scène 3D…
+              </div>
+            }
+          >
+            <ContainerScene items={items} exploded={exploded} />
+          </Suspense>
         </div>
 
         {/* Stats */}

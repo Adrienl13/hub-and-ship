@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export function Footer() {
   return (
     <footer className="border-t border-[color:var(--sand-deep)] bg-foreground text-[color:var(--sand)]">
@@ -20,52 +22,74 @@ export function Footer() {
           <div>
             <div className="label-eyebrow text-[color:var(--sand)]/55">Légal</div>
             <ul className="mt-4 space-y-2 text-xs">
-              {[
-                "Mentions légales",
-                "Conditions générales de vente",
-                "Politique de remboursement",
-                "Politique de confidentialité",
-              ].map((l) => (
-                <li key={l}>
-                  <a
-                    href="#"
-                    className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
-                  >
-                    {l}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link
+                  to="/mentions-legales"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Mentions légales
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/cgv"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Conditions générales de vente
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/cgu"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Conditions générales d'utilisation
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/politique-confidentialite"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Politique de confidentialité
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
             <div className="label-eyebrow text-[color:var(--sand)]/55">Contact</div>
             <ul className="mt-4 space-y-2 text-xs">
               <li>
-                <a
-                  href="mailto:hello@terrassea.fr"
+                <Link
+                  to="/contact"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
-                  hello@terrassea.fr
-                </a>
+                  Formulaire de contact
+                </Link>
               </li>
-              <li className="text-[color:var(--sand)]/65">+33 (0)4 91 00 00 00</li>
-              <li className="text-[color:var(--sand)]/65">Lun – Ven · 9h – 18h</li>
               <li>
                 <a
-                  href="https://terrassea.com"
-                  target="_blank"
-                  rel="noreferrer"
+                  href="mailto:contact@container-club.fr"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  contact@container-club.fr
+                </a>
+              </li>
+              <li className="text-[color:var(--sand)]/65">Lun – Ven · 9h – 18h</li>
+              <li>
+                <Link
+                  to="/compte"
                   className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
                 >
-                  terrassea.com →
-                </a>
+                  Espace pro →
+                </Link>
               </li>
             </ul>
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-[color:var(--sand)]/15 pt-6 text-[11px] text-[color:var(--sand)]/55 sm:flex-row sm:justify-between">
-          <span>© 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678 00012</span>
-          <span>EORI FR902345678 · TVA FR50902345678</span>
+          <span>© 2026 [Raison sociale] · RCS [ville] [n°] · SIRET [n°]</span>
+          <span>EORI [n°] · TVA [n°]</span>
         </div>
       </div>
     </footer>

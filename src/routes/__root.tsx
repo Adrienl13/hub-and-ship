@@ -73,20 +73,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Container Club — Pro outdoor furniture, factory-direct" },
+      { title: "Container Club — Mobilier outdoor pro, direct usine" },
       {
         name: "description",
         content:
-          "Reserve your spot in our next shared shipping container. Save 30-40% on pro outdoor furniture, delivered in 6 months.",
+          "Pré-commande groupée par container 20'. Jusqu'à 40% d'économie sur le mobilier outdoor pro (chaises, tables, fauteuils, bancs). Réservé aux CHR. Importation officielle France, garantie 2 ans.",
+      },
+      {
+        name: "keywords",
+        content:
+          "mobilier outdoor pro, mobilier terrasse, achat groupé, container, CHR, hôtel, restaurant, camping, direct usine",
       },
       { name: "author", content: "Container Club" },
-      { property: "og:title", content: "Container Club — Pro outdoor furniture, factory-direct" },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "Container Club — Mobilier outdoor pro" },
       {
         property: "og:description",
-        content: "Reserve your spot. Save 30-40%. Delivered in 6 months.",
+        content:
+          "Pré-commande groupée par container 20'. Jusqu'à 40% d'économie sur le mobilier outdoor pro. Réservé aux pros.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "fr_FR" },
+      { property: "og:site_name", content: "Container Club" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Container Club — Mobilier outdoor pro" },
+      {
+        name: "twitter:description",
+        content: "Pré-commande groupée par container. Jusqu'à 40% d'économie. Réservé aux pros.",
+      },
+      { name: "theme-color", content: "#1f1f1f" },
     ],
     links: [
       {
@@ -116,7 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
