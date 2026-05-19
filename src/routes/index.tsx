@@ -305,7 +305,13 @@ function ContainerClubPage() {
         onVariantChange={(id) => detailProduct && setVariant(detailProduct.id, id)}
       />
 
-      <ReservationDialog open={reserveOpen} onOpenChange={setReserveOpen} totals={totals} />
+      <ReservationDialog
+        open={reserveOpen}
+        onOpenChange={setReserveOpen}
+        totals={totals}
+        items={items}
+        containerId={container.id}
+      />
     </div>
   );
 }
