@@ -146,6 +146,27 @@ Garder un commit = un changement logique. Pas de "wip", pas de "fix typo" après
 3. Tester localement (`bun run dev`)
 4. Vérifier `wrangler.jsonc` si la modif touche le runtime serveur
 
+## Supabase — projet autorisé
+
+**⚠️ INTERDICTION ABSOLUE** d'utiliser le projet Supabase **TerrasseaHUB** (`gwgcfgeouropcighpztj`). Aucune lecture, écriture, migration ou listing autorisée sur ce projet.
+
+Le **seul** projet Supabase autorisé pour hub-and-ship est :
+
+- **Project ref : `mkfztwibolswqcggukeq`**
+
+Le serveur MCP scopé à ce projet est configuré dans le repo via :
+
+```
+claude mcp add --scope project --transport http supabase "https://mcp.supabase.com/mcp?project_ref=mkfztwibolswqcggukeq"
+```
+
+Authentification : `claude /mcp` dans un terminal régulier (pas l'extension IDE).
+
+**Règle d'usage côté agent :**
+- Avant tout appel `mcp__claude_ai_Supabase__*`, vérifier que `project_id` vaut bien `mkfztwibolswqcggukeq`. Sinon, **annuler** et alerter l'utilisateur.
+- Ne jamais se rabattre sur un MCP Supabase non scopé qui pourrait pointer vers TerrasseaHUB.
+- Si l'auth n'est pas encore faite, **mettre en pause** toute opération Supabase et demander à l'utilisateur de lancer `claude /mcp`.
+
 ## Notes Cloudflare Workers
 
 - L'entrée Worker est `src/server.ts` (champ `main` dans `wrangler.jsonc`)
