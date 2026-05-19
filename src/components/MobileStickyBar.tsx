@@ -21,9 +21,7 @@ export function MobileStickyBar({
           <div className="font-medium tabular-nums">
             {totalItems} produits · {fillPercent.toFixed(0)}% rempli
           </div>
-          <div className="text-muted-foreground tabular-nums">
-            {formatEUR(subtotalHt)} HT
-          </div>
+          <div className="text-muted-foreground tabular-nums">{formatEUR(subtotalHt)} HT</div>
         </div>
         <Button
           size="sm"

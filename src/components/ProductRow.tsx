@@ -1,11 +1,7 @@
 import { Minus, Plus, Check, Info, Sparkles } from "lucide-react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CATEGORY_LABEL,
-  type ColorVariant,
-  type Product,
-} from "@/lib/products";
+import { CATEGORY_LABEL, type ColorVariant, type Product } from "@/lib/products";
 import { getMoqStatus, formatEUR } from "@/lib/order";
 import { Button } from "@/components/ui/button";
 import { AnimatedNumber } from "@/components/motion-helpers";
@@ -118,7 +114,8 @@ export function ProductRow({
                 <Info className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover/name:opacity-100" />
               </button>
               <div className="label-eyebrow mt-0.5 text-muted-foreground">
-                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×{product.dimensions.w}×{product.dimensions.h} cm · {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
+                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×{product.dimensions.w}×
+                {product.dimensions.h} cm · {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
               </div>
             </div>
             <div className="text-right">
@@ -156,9 +153,7 @@ export function ProductRow({
           {/* MOQ progress */}
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <span className="label-eyebrow text-muted-foreground">
-                MOQ {variant?.name}
-              </span>
+              <span className="label-eyebrow text-muted-foreground">MOQ {variant?.name}</span>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={moqStatus.status + moqStatus.label}
@@ -188,7 +183,12 @@ export function ProductRow({
                 <motion.div
                   className="absolute inset-y-[-2px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent"
                   animate={{ x: ["-100%", "260%"] }}
-                  transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    repeatDelay: 1.2,
+                    ease: "easeInOut",
+                  }}
                 />
               )}
             </div>

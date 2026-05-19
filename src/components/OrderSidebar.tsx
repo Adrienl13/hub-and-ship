@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  FileText,
+  Mail,
+  Lock,
+  ShieldCheck,
+  RefreshCcw,
+  Truck,
+  ArrowRight,
+} from "lucide-react";
 import { ContainerScene } from "@/components/ContainerScene";
 import { Button } from "@/components/ui/button";
-import { CURRENT_CONTAINER } from "@/lib/products";
+import type { Container } from "@/lib/catalog";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
 import { AnimatedNumber } from "@/components/motion-helpers";
 
 export function OrderSidebar({
+  container,
   items,
   totals,
   fillPercent,
@@ -17,6 +28,7 @@ export function OrderSidebar({
   onDownloadPdf,
   onEmailQuote,
 }: {
+  container: Container;
   items: CartItem[];
   totals: OrderTotals;
   fillPercent: number;
@@ -36,10 +48,10 @@ export function OrderSidebar({
         <div className="flex items-center justify-between border-b border-[color:var(--sand-deep)] px-4 py-2.5">
           <div>
             <div className="font-display text-sm font-semibold tracking-tight">
-              {CURRENT_CONTAINER.reference}
+              {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {CURRENT_CONTAINER.port} · 20' High Cube
+              {container.port} · 20' High Cube
             </div>
           </div>
           <Button
@@ -49,9 +61,13 @@ export function OrderSidebar({
             onClick={() => setExploded((v) => !v)}
           >
             {exploded ? (
-              <><Minimize2 className="h-3 w-3" /> Regrouper</>
+              <>
+                <Minimize2 className="h-3 w-3" /> Regrouper
+              </>
             ) : (
-              <><Maximize2 className="h-3 w-3" /> Vue éclatée</>
+              <>
+                <Maximize2 className="h-3 w-3" /> Vue éclatée
+              </>
             )}
           </Button>
         </div>
@@ -83,13 +99,13 @@ export function OrderSidebar({
           <div className="bg-card p-3">
             <div className="label-eyebrow text-muted-foreground">Séries</div>
             <div className="mt-1 font-display text-base font-semibold tabular-nums">
-              {CURRENT_CONTAINER.seriesReached}/{CURRENT_CONTAINER.totalSeries}
+              {container.seriesReached}/{container.totalSeries}
               <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
                 déclenchées
               </span>
             </div>
             <div className="mt-1 text-[10px] text-muted-foreground">
-              {CURRENT_CONTAINER.professionalsEngaged} pros engagés
+              {container.professionalsEngaged} pros engagés
             </div>
           </div>
         </div>

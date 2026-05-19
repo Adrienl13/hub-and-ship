@@ -1,5 +1,12 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment, Html } from "@react-three/drei";
+import {
+  OrbitControls,
+  Edges,
+  RoundedBox,
+  ContactShadows,
+  Environment,
+  Html,
+} from "@react-three/drei";
 import { useMemo, Suspense } from "react";
 import type { CartItem } from "@/lib/order";
 
@@ -36,7 +43,7 @@ function packBoxes(items: CartItem[]): { boxes: BoxInstance[]; slices: Slice[] }
     if (item.quantity <= 0) continue;
     const dims = item.product.dimensions; // cm
     let w = dims.w / 100; // depth (Z)
-    let d = dims.l / 100; // width along container length (X)
+    const d = dims.l / 100; // width along container length (X)
     let h = dims.h / 100; // vertical (Y)
     // clamp
     if (h > H) h = H * 0.95;

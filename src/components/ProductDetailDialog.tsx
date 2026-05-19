@@ -1,4 +1,14 @@
-import { Minus, Plus, Ruler, Weight, Package, Flame, ShieldCheck, TrendingDown, Check } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  Ruler,
+  Weight,
+  Package,
+  Flame,
+  ShieldCheck,
+  TrendingDown,
+  Check,
+} from "lucide-react";
 import { useMemo } from "react";
 import {
   Dialog,
@@ -58,7 +68,8 @@ export function ProductDetailDialog({
   onVariantChange: (id: string) => void;
 }) {
   const variant = useMemo(
-    () => (product ? product.variants.find((v) => v.id === variantId) ?? product.variants[0] : null),
+    () =>
+      product ? (product.variants.find((v) => v.id === variantId) ?? product.variants[0]) : null,
     [product, variantId],
   );
 
@@ -85,9 +96,7 @@ export function ProductDetailDialog({
             </span>
             <span className="label-eyebrow text-muted-foreground">{product.sku}</span>
           </div>
-          <DialogTitle className="font-display text-2xl tracking-tight">
-            {product.name}
-          </DialogTitle>
+          <DialogTitle className="font-display text-2xl tracking-tight">{product.name}</DialogTitle>
           <DialogDescription className="text-sm leading-relaxed text-foreground/70">
             {product.description}
           </DialogDescription>
@@ -119,7 +128,11 @@ export function ProductDetailDialog({
             {/* Specs */}
             <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
               {[
-                { Icon: Ruler, k: "Dimensions", v: `${product.dimensions.l}×${product.dimensions.w}×${product.dimensions.h} cm` },
+                {
+                  Icon: Ruler,
+                  k: "Dimensions",
+                  v: `${product.dimensions.l}×${product.dimensions.w}×${product.dimensions.h} cm`,
+                },
                 { Icon: Weight, k: "Poids", v: `${product.weightKg} kg` },
                 { Icon: Package, k: "Volume", v: `${product.cbmPerUnit.toFixed(3)} m³` },
                 { Icon: ShieldCheck, k: "MOQ", v: `${product.moqUnits} unités` },
@@ -160,7 +173,11 @@ export function ProductDetailDialog({
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <TrendingDown className="h-3 w-3 text-[color:var(--ember)]" />
-                Économie <span className="font-medium text-[color:var(--ember)]">{formatEUR(savingsEur)}</span> par unité
+                Économie{" "}
+                <span className="font-medium text-[color:var(--ember)]">
+                  {formatEUR(savingsEur)}
+                </span>{" "}
+                par unité
               </div>
             </div>
 
@@ -221,17 +238,11 @@ export function ProductDetailDialog({
                   <input
                     type="number"
                     value={qty}
-                    onChange={(e) =>
-                      onQtyChange(Math.max(0, parseInt(e.target.value || "0", 10)))
-                    }
+                    onChange={(e) => onQtyChange(Math.max(0, parseInt(e.target.value || "0", 10)))}
                     className="w-14 bg-transparent text-center font-display text-lg tabular-nums focus:outline-none"
                     min={0}
                   />
-                  <Button
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => onQtyChange(qty + 1)}
-                  >
+                  <Button size="icon" className="h-9 w-9" onClick={() => onQtyChange(qty + 1)}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>

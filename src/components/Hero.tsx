@@ -1,9 +1,10 @@
 import { ShieldCheck, Award, FileBadge } from "lucide-react";
 import { motion } from "framer-motion";
-import { CURRENT_CONTAINER } from "@/lib/products";
+import type { Container } from "@/lib/catalog";
 import { AnimatedNumber } from "@/components/motion-helpers";
 
-function formatDate(iso: string) {
+function formatDate(iso: string | null) {
+  if (!iso) return "à confirmer";
   return new Date(iso).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
@@ -11,17 +12,8 @@ function formatDate(iso: string) {
   });
 }
 
-export function Hero({
-  fillPercent,
-  seriesReached,
-  totalSeries,
-  professionalsEngaged,
-}: {
-  fillPercent: number;
-  seriesReached: number;
-  totalSeries: number;
-  professionalsEngaged: number;
-}) {
+export function Hero({ container, fillPercent }: { container: Container; fillPercent: number }) {
+  const { seriesReached, totalSeries, professionalsEngaged } = container;
   return (
     <section id="top" className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-12 sm:pt-16">
@@ -37,13 +29,13 @@ export function Hero({
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--forest)]" />
           </span>
           <span className="font-medium text-foreground">
-            Container {CURRENT_CONTAINER.reference} ouvert
+            Container {container.reference} ouvert
           </span>
           <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">Destination {CURRENT_CONTAINER.port}</span>
+          <span className="text-foreground/70">Destination {container.port}</span>
           <span className="text-foreground/60">·</span>
           <span className="text-foreground/70">
-            Clôture estimée {formatDate(CURRENT_CONTAINER.expectedCloseAt)}
+            Clôture estimée {formatDate(container.expectedCloseAt)}
           </span>
         </motion.div>
 
@@ -63,9 +55,9 @@ export function Hero({
               sans intermédiaire.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)]">
-              Pré-commande groupée par container 20' avec d'autres professionnels.
-              Jusqu'à <strong className="font-semibold text-foreground">−40%</strong> vs
-              retail français. Importation, douane et garantie 2 ans incluses.
+              Pré-commande groupée par container 20' avec d'autres professionnels. Jusqu'à{" "}
+              <strong className="font-semibold text-foreground">−40%</strong> vs retail français.
+              Importation, douane et garantie 2 ans incluses.
             </p>
 
             {/* Chips réassurance */}
@@ -101,10 +93,10 @@ export function Hero({
                 </span>
               </div>
               <div className="mt-3 font-display text-xl font-semibold tracking-tight">
-                {CURRENT_CONTAINER.reference}
+                {container.reference}
               </div>
               <div className="text-xs text-muted-foreground">
-                Destination {CURRENT_CONTAINER.port} · 20' High Cube
+                Destination {container.port} · 20' High Cube
               </div>
 
               {/* Progress */}
@@ -125,16 +117,21 @@ export function Hero({
                   <motion.div
                     className="absolute inset-y-[-3px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
                     animate={{ x: ["-100%", "260%"] }}
-                    transition={{ duration: 2.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.4 }}
+                    transition={{
+                      duration: 2.6,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatDelay: 1.4,
+                    }}
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
-                    style={{ left: `${CURRENT_CONTAINER.thresholdPercent}%` }}
+                    style={{ left: `${container.thresholdPercent}%` }}
                   />
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
-                  <span>Seuil départ {CURRENT_CONTAINER.thresholdPercent}%</span>
+                  <span>Seuil départ {container.thresholdPercent}%</span>
                   <span>100%</span>
                 </div>
               </div>

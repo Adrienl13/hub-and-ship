@@ -13,8 +13,8 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-xs leading-relaxed text-[color:var(--sand)]/65">
-              Le club d'achat groupé des pros de la terrasse. Mobilier outdoor
-              direct usine, importation officielle France.
+              Le club d'achat groupé des pros de la terrasse. Mobilier outdoor direct usine,
+              importation officielle France.
             </p>
           </div>
           <div>
@@ -27,7 +27,10 @@ export function Footer() {
                 "Politique de confidentialité",
               ].map((l) => (
                 <li key={l}>
-                  <a href="#" className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]">
+                  <a
+                    href="#"
+                    className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                  >
                     {l}
                   </a>
                 </li>
@@ -38,7 +41,10 @@ export function Footer() {
             <div className="label-eyebrow text-[color:var(--sand)]/55">Contact</div>
             <ul className="mt-4 space-y-2 text-xs">
               <li>
-                <a href="mailto:hello@terrassea.fr" className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]">
+                <a
+                  href="mailto:hello@terrassea.fr"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
                   hello@terrassea.fr
                 </a>
               </li>
@@ -58,9 +64,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-[color:var(--sand)]/15 pt-6 text-[11px] text-[color:var(--sand)]/55 sm:flex-row sm:justify-between">
-          <span>
-            © 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678 00012
-          </span>
+          <span>© 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678 00012</span>
           <span>EORI FR902345678 · TVA FR50902345678</span>
         </div>
       </div>

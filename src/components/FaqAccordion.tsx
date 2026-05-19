@@ -35,7 +35,10 @@ const FAQ = [
 
 export function FaqAccordion() {
   return (
-    <section id="faq" className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+    <section
+      id="faq"
+      className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
+    >
       <div className="mx-auto max-w-3xl px-6 py-20">
         <div className="mb-10">
           <div className="label-eyebrow text-[color:var(--ember)]">Questions fréquentes</div>
@@ -46,14 +49,9 @@ export function FaqAccordion() {
 
         <div className="divide-y divide-[color:var(--sand-deep)] border-y border-[color:var(--sand-deep)]">
           {FAQ.map((item, i) => (
-            <details
-              key={i}
-              className="group [&_summary::-webkit-details-marker]:hidden"
-            >
+            <details key={i} className="group [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex cursor-pointer list-none items-start justify-between gap-4 py-5 text-sm transition-colors hover:text-[color:var(--ember)]">
-                <span className="font-display text-base font-medium tracking-tight">
-                  {item.q}
-                </span>
+                <span className="font-display text-base font-medium tracking-tight">{item.q}</span>
                 <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-xl font-light text-foreground/60 transition-transform group-open:rotate-45">
                   +
                 </span>

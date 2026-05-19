@@ -6,16 +6,8 @@
 
 export type ProductCategoryDb = "chair" | "armchair" | "table" | "bench";
 export type FireRatingDb = "M1" | "M2";
-export type ContainerStatusDb =
-  | "open"
-  | "locked"
-  | "shipping"
-  | "delivered"
-  | "cancelled";
-export type ReservationStatusDb =
-  | "pending_payment"
-  | "confirmed"
-  | "cancelled";
+export type ContainerStatusDb = "open" | "locked" | "shipping" | "delivered" | "cancelled";
+export type ReservationStatusDb = "pending_payment" | "confirmed" | "cancelled";
 
 export interface Database {
   public: {
@@ -113,6 +105,9 @@ export interface Database {
           testimonial_author: string | null;
           testimonial_location: string | null;
           testimonial_rating: number | null;
+          display_series_target: number;
+          display_pros_count: number;
+          display_items_count: number;
           created_at: string;
           updated_at: string;
         };
@@ -148,9 +143,7 @@ export interface Database {
           delivery_zip?: string | null;
           notes?: string | null;
         };
-        Update: Partial<
-          Database["public"]["Tables"]["container_reservations"]["Insert"]
-        >;
+        Update: Partial<Database["public"]["Tables"]["container_reservations"]["Insert"]>;
         Relationships: [];
       };
       container_reservation_items: {
@@ -174,9 +167,7 @@ export interface Database {
           eco_contribution_unit?: number;
           cbm_per_unit: number;
         };
-        Update: Partial<
-          Database["public"]["Tables"]["container_reservation_items"]["Insert"]
-        >;
+        Update: Partial<Database["public"]["Tables"]["container_reservation_items"]["Insert"]>;
         Relationships: [];
       };
       container_seed_commitments: {

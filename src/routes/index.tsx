@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Loader2 } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -15,18 +16,9 @@ import { Footer } from "@/components/Footer";
 import { MobileStickyBar } from "@/components/MobileStickyBar";
 import { ReservationDialog } from "@/components/ReservationDialog";
 
-import {
-  CATEGORY_LABEL,
-  CURRENT_CONTAINER,
-  PRODUCTS,
-  type Product,
-  type ProductCategory,
-} from "@/lib/products";
-import {
-  calculateContainerFill,
-  calculateOrder,
-  type CartItem,
-} from "@/lib/order";
+import { CATEGORY_LABEL, type Product, type ProductCategory } from "@/lib/products";
+import { calculateContainerFill, calculateOrder, type CartItem } from "@/lib/order";
+import { catalogKeys, fetchCurrentContainer, fetchProductsWithCommitments } from "@/lib/catalog";
 import { openQuotePDF } from "@/lib/quote";
 
 export const Route = createFileRoute("/")({
@@ -44,43 +36,72 @@ const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = 
 type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
 
 function ContainerClubPage() {
-  // Pré-sélection couleur par produit (1ère variante)
-  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
-    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, p.variants[0].id])),
-  );
-  // Quantités par produit (la quantité s'applique à la variante sélectionnée)
-  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 24,
-    p3: 10,
+  // --- Data layer (Supabase via TanStack Query) ---
+  const containerQuery = useQuery({
+    queryKey: catalogKeys.currentContainer,
+    queryFn: fetchCurrentContainer,
+    staleTime: 60_000,
   });
 
+  const containerId = containerQuery.data?.id;
+
+  const productsQuery = useQuery({
+    queryKey: catalogKeys.products(containerId),
+    queryFn: () => fetchProductsWithCommitments(containerId as string),
+    enabled: !!containerId,
+    staleTime: 60_000,
+  });
+
+  const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+  const container = containerQuery.data;
+
+  // --- État UI ---
+  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>({});
+  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({});
   const [filter, setFilter] = useState<"all" | ProductCategory>("all");
   const [sort, setSort] = useState<SortKey>("default");
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reserveOpen, setReserveOpen] = useState(false);
 
-  // Construire le panier
+  // Initialise les variantes par défaut une fois les produits chargés
+  useEffect(() => {
+    if (products.length === 0) return;
+    setVariantByProduct((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const p of products) {
+        if (!next[p.id] && p.variants[0]) {
+          next[p.id] = p.variants[0].id;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [products]);
+
+  // --- Panier ---
   const items: CartItem[] = useMemo(() => {
-    return PRODUCTS.flatMap((product) => {
+    return products.flatMap((product) => {
       const qty = qtyByProduct[product.id] ?? 0;
       if (qty <= 0) return [];
-      const variantId = variantByProduct[product.id] ?? product.variants[0].id;
+      const variantId = variantByProduct[product.id] ?? product.variants[0]?.id;
       const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
+      if (!variant) return [];
       return [{ product, variant, quantity: qty }];
     });
-  }, [qtyByProduct, variantByProduct]);
+  }, [products, qtyByProduct, variantByProduct]);
 
   const totals = useMemo(() => calculateOrder(items), [items]);
   const fill = useMemo(
-    () => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm),
-    [items],
+    () => calculateContainerFill(items, container?.capacityCbm ?? 28),
+    [items, container?.capacityCbm],
   );
 
   const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
-  // Filtrage + tri
+  // --- Filtres + tri ---
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter((p) => filter === "all" || p.category === filter);
+    let list = products.filter((p) => filter === "all" || p.category === filter);
     if (sort === "price-asc") list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
     else if (sort === "price-desc") list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
     else if (sort === "cbm-asc") list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
@@ -91,14 +112,14 @@ function ContainerClubPage() {
           a.variants.reduce((s, v) => s + v.unitsCommitted, 0),
       );
     return list;
-  }, [filter, sort]);
+  }, [filter, sort, products]);
 
   const detailProduct: Product | null = useMemo(
-    () => PRODUCTS.find((p) => p.id === detailId) ?? null,
-    [detailId],
+    () => products.find((p) => p.id === detailId) ?? null,
+    [detailId, products],
   );
 
-  // Handlers
+  // --- Handlers ---
   const setQty = (productId: string, n: number) =>
     setQtyByProduct((prev) => ({ ...prev, [productId]: Math.max(0, n) }));
   const setVariant = (productId: string, variantId: string) =>
@@ -111,35 +132,37 @@ function ContainerClubPage() {
   };
 
   const handlePdf = () => {
+    if (!container) return;
     openQuotePDF({
       items,
       totals,
       fillPercent: fill.percent,
       usedCbm: fill.usedCbm,
       capacity: fill.capacity,
-      containerRef: CURRENT_CONTAINER.reference,
-      port: CURRENT_CONTAINER.port,
+      containerRef: container.reference,
+      port: container.port,
     });
   };
+
+  // --- États de chargement / erreur ---
+  if (containerQuery.isError) {
+    return <ErrorScreen error={containerQuery.error} />;
+  }
+
+  if (!container) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <Hero
-        fillPercent={fill.percent}
-        seriesReached={CURRENT_CONTAINER.seriesReached}
-        totalSeries={CURRENT_CONTAINER.totalSeries}
-        professionalsEngaged={CURRENT_CONTAINER.professionalsEngaged}
-      />
+      <Hero container={container} fillPercent={fill.percent} />
 
       <HowItWorks />
 
       {/* Catalogue */}
-      <section
-        id="catalogue"
-        className="border-t border-[color:var(--sand-deep)] scroll-mt-20"
-      >
+      <section id="catalogue" className="border-t border-[color:var(--sand-deep)] scroll-mt-20">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
@@ -148,8 +171,8 @@ function ContainerClubPage() {
                 Choisissez vos modèles, couleur par couleur.
               </h2>
               <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
-                Chaque référence affiche son MOQ en temps réel : ajoutez votre
-                quantité pour faire grimper la barre et déclencher la série.
+                Chaque référence affiche son MOQ en temps réel : ajoutez votre quantité pour faire
+                grimper la barre et déclencher la série.
               </p>
             </div>
           </div>
@@ -164,8 +187,8 @@ function ContainerClubPage() {
                     const active = f.id === filter;
                     const count =
                       f.id === "all"
-                        ? PRODUCTS.length
-                        : PRODUCTS.filter((p) => p.category === f.id).length;
+                        ? products.length
+                        : products.filter((p) => p.category === f.id).length;
                     return (
                       <button
                         key={f.id}
@@ -178,7 +201,9 @@ function ContainerClubPage() {
                         }`}
                       >
                         {f.label}
-                        <span className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}>
+                        <span
+                          className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}
+                        >
                           {count}
                         </span>
                       </button>
@@ -201,7 +226,9 @@ function ContainerClubPage() {
                 </label>
               </div>
 
-              {filtered.length === 0 ? (
+              {productsQuery.isLoading ? (
+                <CatalogSkeleton />
+              ) : filtered.length === 0 ? (
                 <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-16 text-center text-sm text-muted-foreground">
                   Aucun produit dans cette catégorie pour ce container.
                 </div>
@@ -211,9 +238,7 @@ function ContainerClubPage() {
                     <ProductRow
                       key={product.id}
                       product={product}
-                      variantId={
-                        variantByProduct[product.id] ?? product.variants[0].id
-                      }
+                      variantId={variantByProduct[product.id] ?? product.variants[0]?.id ?? ""}
                       qty={qtyByProduct[product.id] ?? 0}
                       onQtyChange={(n) => setQty(product.id, n)}
                       onVariantChange={(id) => setVariant(product.id, id)}
@@ -239,6 +264,7 @@ function ContainerClubPage() {
             {/* Sidebar (40%) */}
             <aside className="lg:col-span-5">
               <OrderSidebar
+                container={container}
                 items={items}
                 totals={totals}
                 fillPercent={fill.percent}
@@ -269,21 +295,57 @@ function ContainerClubPage() {
         product={detailProduct}
         open={!!detailProduct}
         onOpenChange={(v) => !v && setDetailId(null)}
-        qty={detailProduct ? qtyByProduct[detailProduct.id] ?? 0 : 0}
+        qty={detailProduct ? (qtyByProduct[detailProduct.id] ?? 0) : 0}
         variantId={
           detailProduct
-            ? variantByProduct[detailProduct.id] ?? detailProduct.variants[0].id
+            ? (variantByProduct[detailProduct.id] ?? detailProduct.variants[0]?.id ?? "")
             : ""
         }
         onQtyChange={(n) => detailProduct && setQty(detailProduct.id, n)}
         onVariantChange={(id) => detailProduct && setVariant(detailProduct.id, id)}
       />
 
-      <ReservationDialog
-        open={reserveOpen}
-        onOpenChange={setReserveOpen}
-        totals={totals}
-      />
+      <ReservationDialog open={reserveOpen} onOpenChange={setReserveOpen} totals={totals} />
+    </div>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Chargement du container en cours…
+      </div>
+    </div>
+  );
+}
+
+function ErrorScreen({ error }: { error: unknown }) {
+  const message = error instanceof Error ? error.message : "Erreur inconnue";
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+      <div className="max-w-md text-center">
+        <h1 className="font-display text-2xl font-semibold">Impossible de charger le catalogue</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{message}</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Vérifie les variables d'environnement <code>VITE_SUPABASE_URL</code> et{" "}
+          <code>VITE_SUPABASE_ANON_KEY</code>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CatalogSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="h-44 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
+        />
+      ))}
     </div>
   );
 }

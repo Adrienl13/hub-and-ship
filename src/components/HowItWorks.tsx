@@ -52,18 +52,13 @@ export function HowItWorks() {
               <h3 className="mt-3 font-display text-base font-semibold tracking-tight">
                 {s.title}
               </h3>
-              <p className="mt-2 text-xs leading-relaxed text-[color:var(--ink-soft)]">
-                {s.desc}
-              </p>
+              <p className="mt-2 text-xs leading-relaxed text-[color:var(--ink-soft)]">{s.desc}</p>
             </RevealItem>
           ))}
         </RevealStagger>
 
         <div className="mt-6 text-xs">
-          <a
-            href="#faq"
-            className="text-[color:var(--ember)] underline-offset-4 hover:underline"
-          >
+          <a href="#faq" className="text-[color:var(--ember)] underline-offset-4 hover:underline">
             Politique de remboursement complète →
           </a>
         </div>
