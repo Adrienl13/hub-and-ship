@@ -49,15 +49,15 @@
   --radius: 0.375rem; /* 6px cards, 4px buttons via radius-sm */
 
   /* Sable / lin */
-  --background: oklch(0.945 0.022 78);   /* #f4ede1 sable */
+  --background: oklch(0.945 0.022 78); /* #f4ede1 sable */
   --sand: oklch(0.945 0.022 78);
-  --sand-soft: oklch(0.965 0.014 78);    /* #faf6ee lin clair */
-  --sand-deep: oklch(0.895 0.020 75);    /* #e8dfd0 bordure */
+  --sand-soft: oklch(0.965 0.014 78); /* #faf6ee lin clair */
+  --sand-deep: oklch(0.895 0.02 75); /* #e8dfd0 bordure */
 
   /* Encre */
-  --foreground: oklch(0.18 0.005 60);    /* #1a1a1c noir profond */
+  --foreground: oklch(0.18 0.005 60); /* #1a1a1c noir profond */
   --ink: oklch(0.18 0.005 60);
-  --ink-soft: oklch(0.40 0.010 70);      /* #5a544a gris chaud */
+  --ink-soft: oklch(0.4 0.01 70); /* #5a544a gris chaud */
 
   /* Surfaces */
   --card: oklch(0.965 0.014 78);
@@ -69,29 +69,29 @@
   --primary: oklch(0.18 0.005 60);
   --primary-foreground: oklch(0.97 0.012 78);
 
-  --secondary: oklch(0.91 0.020 75);
+  --secondary: oklch(0.91 0.02 75);
   --secondary-foreground: var(--foreground);
 
-  --muted: oklch(0.91 0.020 75);
+  --muted: oklch(0.91 0.02 75);
   --muted-foreground: oklch(0.45 0.012 70);
 
-  --accent: oklch(0.91 0.020 75);
+  --accent: oklch(0.91 0.02 75);
   --accent-foreground: var(--foreground);
 
   /* Terracotta / ambre brûlé pour économies & remises */
-  --ember: oklch(0.58 0.135 48);         /* #b85c1f */
-  --ember-soft: oklch(0.86 0.060 60);
+  --ember: oklch(0.58 0.135 48); /* #b85c1f */
+  --ember-soft: oklch(0.86 0.06 60);
 
   /* Vert forêt désaturé */
-  --forest: oklch(0.45 0.045 145);       /* #3a5a3a */
+  --forest: oklch(0.45 0.045 145); /* #3a5a3a */
   /* Ocre alerte MOQ */
-  --ochre: oklch(0.62 0.090 80);         /* #9a7b2a */
+  --ochre: oklch(0.62 0.09 80); /* #9a7b2a */
 
-  --destructive: oklch(0.55 0.20 25);
+  --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.97 0.012 78);
 
-  --border: oklch(0.895 0.020 75);
-  --input: oklch(0.895 0.020 75);
+  --border: oklch(0.895 0.02 75);
+  --input: oklch(0.895 0.02 75);
   --ring: oklch(0.18 0.005 60);
 }
 
@@ -104,11 +104,11 @@
   --popover-foreground: var(--foreground);
   --primary: oklch(0.95 0.014 78);
   --primary-foreground: oklch(0.18 0.005 60);
-  --secondary: oklch(0.28 0.010 60);
+  --secondary: oklch(0.28 0.01 60);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.28 0.010 60);
+  --muted: oklch(0.28 0.01 60);
   --muted-foreground: oklch(0.72 0.014 70);
-  --accent: oklch(0.28 0.010 60);
+  --accent: oklch(0.28 0.01 60);
   --accent-foreground: var(--foreground);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
@@ -116,25 +116,35 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.025em;
     font-weight: 600;
   }
-  h1 { letter-spacing: -0.035em; }
+  h1 {
+    letter-spacing: -0.035em;
+  }
   .label-eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.085em;
     font-weight: 500;
     font-size: 11px;
   }
-  .shadow-paper { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .shadow-paper {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
 }

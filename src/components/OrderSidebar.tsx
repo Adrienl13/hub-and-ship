@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  FileText,
+  Mail,
+  Lock,
+  ShieldCheck,
+  RefreshCcw,
+  Truck,
+  ArrowRight,
+} from "lucide-react";
 import { ContainerScene } from "@/components/ContainerScene";
 import { Button } from "@/components/ui/button";
 import { CURRENT_CONTAINER } from "@/lib/products";
@@ -49,9 +59,13 @@ export function OrderSidebar({
             onClick={() => setExploded((v) => !v)}
           >
             {exploded ? (
-              <><Minimize2 className="h-3 w-3" /> Regrouper</>
+              <>
+                <Minimize2 className="h-3 w-3" /> Regrouper
+              </>
             ) : (
-              <><Maximize2 className="h-3 w-3" /> Vue éclatée</>
+              <>
+                <Maximize2 className="h-3 w-3" /> Vue éclatée
+              </>
             )}
           </Button>
         </div>

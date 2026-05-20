@@ -12,10 +12,7 @@ function formatDate(iso: string) {
 
 export function PastContainers() {
   return (
-    <section
-      id="livres"
-      className="border-t border-[color:var(--sand-deep)]"
-    >
+    <section id="livres" className="border-t border-[color:var(--sand-deep)]">
       <div className="mx-auto max-w-7xl px-6 py-20">
         <Reveal className="mb-12 flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
@@ -25,8 +22,8 @@ export function PastContainers() {
             </h2>
           </div>
           <p className="max-w-sm text-sm text-[color:var(--ink-soft)]">
-            Chaque container est documenté de la cale au quai : transparence sur
-            les délais réels et la qualité reçue.
+            Chaque container est documenté de la cale au quai : transparence sur les délais réels et
+            la qualité reçue.
           </p>
         </Reveal>
 
@@ -67,7 +64,11 @@ export function PastContainers() {
                         </strong>{" "}
                         articles
                       </span>
-                      <span className={onTime ? "text-[color:var(--forest)]" : "text-[color:var(--ochre)]"}>
+                      <span
+                        className={
+                          onTime ? "text-[color:var(--forest)]" : "text-[color:var(--ochre)]"
+                        }
+                      >
                         Annoncé {c.plannedDays}j / Réel {c.actualDays}j
                       </span>
                     </div>

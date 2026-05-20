@@ -63,9 +63,9 @@ export function Hero({
               sans intermédiaire.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)]">
-              Pré-commande groupée par container 20' avec d'autres professionnels.
-              Jusqu'à <strong className="font-semibold text-foreground">−40%</strong> vs
-              retail français. Importation, douane et garantie 2 ans incluses.
+              Pré-commande groupée par container 20' avec d'autres professionnels. Jusqu'à{" "}
+              <strong className="font-semibold text-foreground">−40%</strong> vs retail français.
+              Importation, douane et garantie 2 ans incluses.
             </p>
 
             {/* Chips réassurance */}
@@ -125,7 +125,12 @@ export function Hero({
                   <motion.div
                     className="absolute inset-y-[-3px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
                     animate={{ x: ["-100%", "260%"] }}
-                    transition={{ duration: 2.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.4 }}
+                    transition={{
+                      duration: 2.6,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                      repeatDelay: 1.4,
+                    }}
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"

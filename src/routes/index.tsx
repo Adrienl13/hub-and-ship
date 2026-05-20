@@ -22,11 +22,7 @@ import {
   type Product,
   type ProductCategory,
 } from "@/lib/products";
-import {
-  calculateContainerFill,
-  calculateOrder,
-  type CartItem,
-} from "@/lib/order";
+import { calculateContainerFill, calculateOrder, type CartItem } from "@/lib/order";
 import { openQuotePDF } from "@/lib/quote";
 
 export const Route = createFileRoute("/")({
@@ -45,8 +41,8 @@ type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
 
 function ContainerClubPage() {
   // Pré-sélection couleur par produit (1ère variante)
-  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(
-    () => Object.fromEntries(PRODUCTS.map((p) => [p.id, p.variants[0].id])),
+  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(() =>
+    Object.fromEntries(PRODUCTS.map((p) => [p.id, p.variants[0].id])),
   );
   // Quantités par produit (la quantité s'applique à la variante sélectionnée)
   const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
@@ -71,10 +67,7 @@ function ContainerClubPage() {
   }, [qtyByProduct, variantByProduct]);
 
   const totals = useMemo(() => calculateOrder(items), [items]);
-  const fill = useMemo(
-    () => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm),
-    [items],
-  );
+  const fill = useMemo(() => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm), [items]);
 
   const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
@@ -136,10 +129,7 @@ function ContainerClubPage() {
       <HowItWorks />
 
       {/* Catalogue */}
-      <section
-        id="catalogue"
-        className="border-t border-[color:var(--sand-deep)] scroll-mt-20"
-      >
+      <section id="catalogue" className="border-t border-[color:var(--sand-deep)] scroll-mt-20">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
@@ -148,8 +138,8 @@ function ContainerClubPage() {
                 Choisissez vos modèles, couleur par couleur.
               </h2>
               <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
-                Chaque référence affiche son MOQ en temps réel : ajoutez votre
-                quantité pour faire grimper la barre et déclencher la série.
+                Chaque référence affiche son MOQ en temps réel : ajoutez votre quantité pour faire
+                grimper la barre et déclencher la série.
               </p>
             </div>
           </div>
@@ -178,7 +168,9 @@ function ContainerClubPage() {
                         }`}
                       >
                         {f.label}
-                        <span className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}>
+                        <span
+                          className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}
+                        >
                           {count}
                         </span>
                       </button>
@@ -211,9 +203,7 @@ function ContainerClubPage() {
                     <ProductRow
                       key={product.id}
                       product={product}
-                      variantId={
-                        variantByProduct[product.id] ?? product.variants[0].id
-                      }
+                      variantId={variantByProduct[product.id] ?? product.variants[0].id}
                       qty={qtyByProduct[product.id] ?? 0}
                       onQtyChange={(n) => setQty(product.id, n)}
                       onVariantChange={(id) => setVariant(product.id, id)}
@@ -269,21 +259,15 @@ function ContainerClubPage() {
         product={detailProduct}
         open={!!detailProduct}
         onOpenChange={(v) => !v && setDetailId(null)}
-        qty={detailProduct ? qtyByProduct[detailProduct.id] ?? 0 : 0}
+        qty={detailProduct ? (qtyByProduct[detailProduct.id] ?? 0) : 0}
         variantId={
-          detailProduct
-            ? variantByProduct[detailProduct.id] ?? detailProduct.variants[0].id
-            : ""
+          detailProduct ? (variantByProduct[detailProduct.id] ?? detailProduct.variants[0].id) : ""
         }
         onQtyChange={(n) => detailProduct && setQty(detailProduct.id, n)}
         onVariantChange={(id) => detailProduct && setVariant(detailProduct.id, id)}
       />
 
-      <ReservationDialog
-        open={reserveOpen}
-        onOpenChange={setReserveOpen}
-        totals={totals}
-      />
+      <ReservationDialog open={reserveOpen} onOpenChange={setReserveOpen} totals={totals} />
     </div>
   );
 }

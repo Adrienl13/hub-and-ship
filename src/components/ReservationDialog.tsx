@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Lock, Mail, RefreshCcw, ShieldCheck, CreditCard } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ArrowLeft,
+  ArrowRight,
+  Lock,
+  Mail,
+  RefreshCcw,
+  ShieldCheck,
+  CreditCard,
+} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,9 +194,9 @@ export function ReservationDialog({
               </div>
               <div className="mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px] text-foreground/75">
                 Vous serez débité aujourd'hui de{" "}
-                <strong className="font-semibold">{formatEUR(totals.payNow)}</strong> (frais
-                de réservation non-remboursables sauf annulation Container Club). Aucun
-                autre prélèvement avant que le container atteigne 80%.
+                <strong className="font-semibold">{formatEUR(totals.payNow)}</strong> (frais de
+                réservation non-remboursables sauf annulation Container Club). Aucun autre
+                prélèvement avant que le container atteigne 80%.
               </div>
             </div>
 
@@ -223,9 +226,7 @@ export function ReservationDialog({
                 onClick={handlePay}
                 disabled={submitting}
               >
-                {submitting
-                  ? "Traitement…"
-                  : `Confirmer et payer ${formatEUR(totals.payNow)}`}
+                {submitting ? "Traitement…" : `Confirmer et payer ${formatEUR(totals.payNow)}`}
               </Button>
             </div>
           </div>
