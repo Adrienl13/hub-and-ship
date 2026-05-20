@@ -1,75 +1,234 @@
-import { useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Lock,
-  Mail,
-  RefreshCcw,
-  ShieldCheck,
-  CreditCard,
-} from "lucide-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
+import { Mail, RefreshCcw, ShieldCheck, Lock } from "lucide-react";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { toast } from "sonner";
-import { formatEUR, type OrderTotals } from "@/lib/order";
+
+import { formatEUR, type CartItem, type OrderTotals } from "@/lib/order";
+import {
+  createReservation,
+  type ReservationContact,
+  type CreateReservationResult,
+} from "@/lib/reservations";
+
+// ---------------------------------------------------------------
+// Validation schema
+// ---------------------------------------------------------------
+
+const reservationSchema = z.object({
+  name: z.string().trim().min(2, "Nom requis").max(120),
+  company: z.string().trim().min(2, "Société requise").max(200),
+  email: z.string().trim().toLowerCase().email("Email invalide").max(200),
+  phone: z
+    .string()
+    .trim()
+    .regex(
+      /^(?:\+33|0)[1-9](?:[\s.-]?\d{2}){4}$/,
+      "Téléphone FR invalide (ex : 06 12 34 56 78 ou +33 6 12 34 56 78)",
+    ),
+  zip: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{5}$/, "Code postal à 5 chiffres")
+    .optional()
+    .or(z.literal("")),
+  siret: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{14}$/, "SIRET à 14 chiffres")
+    .optional()
+    .or(z.literal("")),
+  consent: z.literal(true, {
+    errorMap: () => ({ message: "Consentement requis" }),
+  }),
+});
+
+type ReservationFormValues = z.infer<typeof reservationSchema>;
+
+const DEFAULT_VALUES: ReservationFormValues = {
+  name: "",
+  company: "",
+  email: "",
+  phone: "",
+  zip: "",
+  siret: "",
+  // Default checkbox to `false`. Zod treats it as invalid until user
+  // ticks it, which is what we want.
+  consent: false as unknown as true,
+};
+
+// ---------------------------------------------------------------
+// Stored confirmation contract (mirrors /reservation/$id)
+// ---------------------------------------------------------------
+
+type StoredItem = {
+  productName: string;
+  productSku: string;
+  mainImageUrl: string;
+  variantName: string;
+  variantHex: string;
+  quantity: number;
+  unitPriceHt: number;
+};
+
+type StoredConfirmation = {
+  contact: ReservationContact;
+  items: StoredItem[];
+  totals: OrderTotals;
+  containerReference: string;
+  createdAt: string;
+};
+
+function toStoredItems(items: CartItem[]): StoredItem[] {
+  return items.map((item) => ({
+    productName: item.product.name,
+    productSku: item.product.sku,
+    mainImageUrl: item.product.mainImageUrl,
+    variantName: item.variant.name,
+    variantHex: item.variant.hex,
+    quantity: item.quantity,
+    unitPriceHt: item.product.basePriceHt,
+  }));
+}
+
+// ---------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------
+
+type Props = {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  totals: OrderTotals;
+  items: CartItem[];
+  containerReference: string;
+  usedCbm: number;
+};
 
 export function ReservationDialog({
   open,
   onOpenChange,
   totals,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  totals: OrderTotals;
-}) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [form, setForm] = useState({
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    zip: "",
-    siret: "",
+  items,
+  containerReference,
+  usedCbm,
+}: Props) {
+  const navigate = useNavigate();
+  const hasItems = items.length > 0;
+
+  const form = useForm<ReservationFormValues>({
+    resolver: zodResolver(reservationSchema),
+    defaultValues: DEFAULT_VALUES,
+    mode: "onBlur",
   });
-  const [submitting, setSubmitting] = useState(false);
 
-  const canContinue =
-    form.name.trim() && form.company.trim() && form.email.includes("@") && form.phone.length >= 6;
-
-  const reset = () => {
-    setStep(1);
-    setSubmitting(false);
-  };
-
-  const handlePay = () => {
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      onOpenChange(false);
-      reset();
-      toast.success("Réservation enregistrée", {
-        description: `Confirmation envoyée à ${form.email}. Paiement Stripe à connecter.`,
+  const mutation = useMutation<CreateReservationResult, Error, { contact: ReservationContact }>({
+    mutationFn: async ({ contact }) => {
+      return createReservation({
+        containerReference,
+        contact,
+        items,
+        totals,
+        usedCbm,
       });
-    }, 900);
-  };
+    },
+    onSuccess: (result, variables) => {
+      if (!result.ok) {
+        toast.error("Réservation impossible", { description: result.error });
+        return;
+      }
+
+      // Persist confirmation payload for the /reservation/$id page.
+      const stored: StoredConfirmation = {
+        contact: variables.contact,
+        items: toStoredItems(items),
+        totals,
+        containerReference,
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(
+            `reservation_confirmation_${result.reservationId}`,
+            JSON.stringify(stored),
+          );
+        }
+      } catch {
+        // Storage disabled — fallback page handles missing payload.
+      }
+
+      toast.success("Réservation enregistrée", {
+        description: `Confirmation envoyée à ${variables.contact.email}.`,
+      });
+
+      // Close the dialog and reset the form only after success.
+      onOpenChange(false);
+      form.reset(DEFAULT_VALUES);
+
+      navigate({
+        to: "/reservation/$id",
+        params: { id: result.reservationId },
+      });
+    },
+    onError: (err) => {
+      toast.error("Une erreur est survenue", {
+        description: err.message || "Veuillez réessayer dans quelques instants.",
+      });
+    },
+  });
+
+  // If the parent closes the dialog programmatically while we are
+  // pending, we cancel the mutation state visually but keep form
+  // values intact (user can reopen and submit again).
+  useEffect(() => {
+    if (!open) {
+      mutation.reset();
+    }
+    // We only want this on `open` changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const onSubmit = form.handleSubmit((values) => {
+    if (!hasItems) return;
+
+    const contact: ReservationContact = {
+      name: values.name.trim(),
+      company: values.company.trim(),
+      email: values.email.trim().toLowerCase(),
+      phone: values.phone.trim(),
+      zip: values.zip?.trim() ? values.zip.trim() : undefined,
+      siret: values.siret?.trim() ? values.siret.trim() : undefined,
+    };
+
+    mutation.mutate({ contact });
+  });
+
+  const submitting = mutation.isPending;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v);
-        if (!v) reset();
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
         <DialogHeader>
-          <div className="label-eyebrow text-[color:var(--ember)]">
-            Étape {step} / 2 · Réservation
-          </div>
+          <div className="label-eyebrow text-[color:var(--ember)]">Réservation</div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {step === 1 ? "Vos informations" : "Paiement de la réservation"}
+            Vos informations
           </DialogTitle>
         </DialogHeader>
 
@@ -91,7 +250,7 @@ export function ReservationDialog({
           </div>
           <div className="mt-3 border-t border-[color:var(--sand-deep)] pt-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-xs text-foreground/80">À payer aujourd'hui</span>
+              <span className="text-xs text-foreground/80">Réservation (acompte différé)</span>
               <span className="font-display text-2xl font-semibold tabular-nums">
                 {formatEUR(totals.payNow)}
               </span>
@@ -109,161 +268,215 @@ export function ReservationDialog({
           </div>
         </div>
 
-        {step === 1 ? (
-          <form
-            className="space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (canContinue) setStep(2);
-            }}
-          >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field
-                label="Nom complet *"
-                id="name"
-                value={form.name}
-                onChange={(v) => setForm({ ...form, name: v })}
-              />
-              <Field
-                label="Société / établissement *"
-                id="company"
-                value={form.company}
-                onChange={(v) => setForm({ ...form, company: v })}
-              />
-              <Field
-                label="Email pro *"
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(v) => setForm({ ...form, email: v })}
-              />
-              <Field
-                label="Téléphone *"
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(v) => setForm({ ...form, phone: v })}
-              />
-              <Field
-                label="Code postal livraison"
-                id="zip"
-                value={form.zip}
-                onChange={(v) => setForm({ ...form, zip: v })}
-              />
-              <Field
-                label="SIRET (optionnel)"
-                id="siret"
-                value={form.siret}
-                onChange={(v) => setForm({ ...form, siret: v })}
-                hint="Demandé plus tard pour la facturation"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={!canContinue}
-              className="h-11 w-full rounded-sm bg-foreground text-background hover:bg-foreground/90"
-            >
-              Continuer vers le paiement
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </form>
+        {!hasItems ? (
+          <EmptyState onClose={() => onOpenChange(false)} />
         ) : (
-          <div className="space-y-4">
-            {/* Stripe placeholder */}
-            <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                <span className="text-sm font-medium">Carte bancaire</span>
-                <span className="ml-auto label-eyebrow text-muted-foreground">
-                  Powered by Stripe
-                </span>
-              </div>
-              <div className="space-y-2">
-                <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                  4242 4242 4242 4242
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                    MM / AA
-                  </div>
-                  <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                    CVC
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px] text-foreground/75">
-                Vous serez débité aujourd'hui de{" "}
-                <strong className="font-semibold">{formatEUR(totals.payNow)}</strong> (frais de
-                réservation non-remboursables sauf annulation Container Club). Aucun autre
-                prélèvement avant que le container atteigne 80%.
-              </div>
-            </div>
+          <Form {...form}>
+            <form className="space-y-4" onSubmit={onSubmit} noValidate>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">Nom complet *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          autoComplete="name"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="space-y-1.5 text-[11px] text-muted-foreground">
-              <Reassure Icon={Lock} t="Paiement sécurisé par Stripe · 3D Secure" />
-              <Reassure Icon={Mail} t="Confirmation immédiate par email avec devis PDF" />
-              <Reassure
-                Icon={RefreshCcw}
-                t="Frais remboursés à 100% si Container Club annule le container"
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">
+                        Société / établissement *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          autoComplete="organization"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">Email pro *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          autoComplete="email"
+                          inputMode="email"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">Téléphone *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="tel"
+                          autoComplete="tel"
+                          inputMode="tel"
+                          placeholder="06 12 34 56 78"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="zip"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">Code postal livraison</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          autoComplete="postal-code"
+                          inputMode="numeric"
+                          placeholder="75001"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="siret"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs font-medium">SIRET (optionnel)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          inputMode="numeric"
+                          placeholder="14 chiffres"
+                          className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-[10px]">
+                        Demandé plus tard pour la facturation
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="consent"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1.5 rounded-sm border border-[color:var(--sand-deep)] bg-card p-3">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === true}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          aria-label="Consentement RGPD"
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-xs leading-relaxed font-normal text-foreground/85">
+                        J'accepte que mes données soient utilisées pour gérer ma réservation. Voir{" "}
+                        <a
+                          href="/legal/confidentialite"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline underline-offset-2 hover:text-foreground"
+                        >
+                          politique de confidentialité
+                        </a>
+                        .
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <Reassure Icon={ShieldCheck} t="Importation officielle · garantie 2 ans" />
-            </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 rounded-sm border-[color:var(--sand-deep)]"
-                onClick={() => setStep(1)}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Retour
-              </Button>
-              <Button
-                type="button"
-                className="h-11 flex-1 rounded-sm bg-foreground text-background hover:bg-foreground/90"
-                onClick={handlePay}
-                disabled={submitting}
-              >
-                {submitting ? "Traitement…" : `Confirmer et payer ${formatEUR(totals.payNow)}`}
-              </Button>
-            </div>
-          </div>
+              {/* Reassurance (no Stripe, no 3DS) */}
+              <div className="space-y-1.5 text-[11px] text-muted-foreground">
+                <Reassure Icon={Lock} t="Données protégées · RGPD" />
+                <Reassure Icon={Mail} t="Confirmation immédiate par email" />
+                <Reassure
+                  Icon={RefreshCcw}
+                  t="Réservation remboursée à 100% si Container Club annule le container"
+                />
+                <Reassure Icon={ShieldCheck} t="Importation officielle · garantie 2 ans" />
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-11 w-full rounded-sm bg-foreground text-background hover:bg-foreground/90"
+                >
+                  {submitting ? "Enregistrement…" : "Enregistrer ma réservation"}
+                </Button>
+                <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+                  Aucun débit n'est effectué aujourd'hui. Un membre Terrassea vous recontacte sous
+                  24 h ouvrées pour finaliser le paiement de la réservation (
+                  {formatEUR(totals.payNow)}) et bloquer votre place.
+                </p>
+              </div>
+            </form>
+          </Form>
         )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function Field({
-  label,
-  id,
-  value,
-  onChange,
-  type = "text",
-  hint,
-}: {
-  label: string;
-  id: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  hint?: string;
-}) {
+function EmptyState({ onClose }: { onClose: () => void }) {
   return (
-    <div className="space-y-1">
-      <Label htmlFor={id} className="text-xs font-medium">
-        {label}
-      </Label>
-      <Input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 rounded-none border-[color:var(--sand-deep)] bg-card focus-visible:border-foreground focus-visible:ring-0"
-      />
-      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+    <div className="space-y-4 py-6 text-center">
+      <p className="text-sm text-foreground/80">
+        Ajoutez d'abord des produits à votre commande avant de réserver.
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}
+        className="h-10 rounded-sm border-[color:var(--sand-deep)]"
+      >
+        Fermer
+      </Button>
     </div>
   );
 }

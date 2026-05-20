@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArrowUpDown } from "lucide-react";
 
@@ -15,15 +15,10 @@ import { Footer } from "@/components/Footer";
 import { MobileStickyBar } from "@/components/MobileStickyBar";
 import { ReservationDialog } from "@/components/ReservationDialog";
 
-import {
-  CATEGORY_LABEL,
-  CURRENT_CONTAINER,
-  PRODUCTS,
-  type Product,
-  type ProductCategory,
-} from "@/lib/products";
+import { CATEGORY_LABEL, type Product, type ProductCategory } from "@/lib/products";
 import { calculateContainerFill, calculateOrder, type CartItem } from "@/lib/order";
 import { openQuotePDF } from "@/lib/quote";
+import { useCatalog, useCurrentContainer } from "@/hooks/useCatalog";
 
 export const Route = createFileRoute("/")({
   component: ContainerClubPage,
@@ -40,15 +35,39 @@ const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = 
 type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
 
 function ContainerClubPage() {
-  // Pré-sélection couleur par produit (1ère variante)
-  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>(() =>
-    Object.fromEntries(PRODUCTS.map((p) => [p.id, p.variants[0].id])),
-  );
-  // Quantités par produit (la quantité s'applique à la variante sélectionnée)
-  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({
-    p1: 24,
-    p3: 10,
-  });
+  const { data: container, isLoading: containerLoading } = useCurrentContainer();
+  const { data: catalogData, isLoading: catalogLoading } = useCatalog(container?.id);
+
+  const products = useMemo<Product[]>(() => catalogData ?? [], [catalogData]);
+  const productsReady = !catalogLoading && products.length > 0;
+
+  // Pré-sélection couleur par produit (1ère variante). On initialise
+  // à `{}` puis on remplit via un `useEffect` une fois les produits
+  // chargés depuis Supabase — la liste n'existe pas encore au premier
+  // render.
+  const [variantByProduct, setVariantByProduct] = useState<Record<string, string>>({});
+  // Quantités par produit (la quantité s'applique à la variante sélectionnée).
+  // Démarre vide : pas de pré-remplissage du panier.
+  const [qtyByProduct, setQtyByProduct] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!productsReady) return;
+    setVariantByProduct((prev) => {
+      // On garde les choix utilisateur déjà faits, on n'initialise
+      // que les produits qui n'ont pas encore de variante choisie.
+      let mutated = false;
+      const next = { ...prev };
+      for (const product of products) {
+        if (next[product.id]) continue;
+        const firstVariant = product.variants[0]?.id;
+        if (firstVariant) {
+          next[product.id] = firstVariant;
+          mutated = true;
+        }
+      }
+      return mutated ? next : prev;
+    });
+  }, [products, productsReady]);
 
   const [filter, setFilter] = useState<"all" | ProductCategory>("all");
   const [sort, setSort] = useState<SortKey>("default");
@@ -57,23 +76,25 @@ function ContainerClubPage() {
 
   // Construire le panier
   const items: CartItem[] = useMemo(() => {
-    return PRODUCTS.flatMap((product) => {
+    return products.flatMap((product) => {
       const qty = qtyByProduct[product.id] ?? 0;
       if (qty <= 0) return [];
-      const variantId = variantByProduct[product.id] ?? product.variants[0].id;
+      const variantId = variantByProduct[product.id] ?? product.variants[0]?.id;
       const variant = product.variants.find((v) => v.id === variantId) ?? product.variants[0];
+      if (!variant) return [];
       return [{ product, variant, quantity: qty }];
     });
-  }, [qtyByProduct, variantByProduct]);
+  }, [products, qtyByProduct, variantByProduct]);
 
   const totals = useMemo(() => calculateOrder(items), [items]);
-  const fill = useMemo(() => calculateContainerFill(items, CURRENT_CONTAINER.capacityCbm), [items]);
+  const capacityCbm = container?.capacityCbm ?? 28;
+  const fill = useMemo(() => calculateContainerFill(items, capacityCbm), [items, capacityCbm]);
 
   const totalUnits = items.reduce((s, i) => s + i.quantity, 0);
 
   // Filtrage + tri
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter((p) => filter === "all" || p.category === filter);
+    let list = products.filter((p) => filter === "all" || p.category === filter);
     if (sort === "price-asc") list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
     else if (sort === "price-desc") list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
     else if (sort === "cbm-asc") list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
@@ -84,11 +105,11 @@ function ContainerClubPage() {
           a.variants.reduce((s, v) => s + v.unitsCommitted, 0),
       );
     return list;
-  }, [filter, sort]);
+  }, [products, filter, sort]);
 
   const detailProduct: Product | null = useMemo(
-    () => PRODUCTS.find((p) => p.id === detailId) ?? null,
-    [detailId],
+    () => products.find((p) => p.id === detailId) ?? null,
+    [products, detailId],
   );
 
   // Handlers
@@ -96,6 +117,14 @@ function ContainerClubPage() {
     setQtyByProduct((prev) => ({ ...prev, [productId]: Math.max(0, n) }));
   const setVariant = (productId: string, variantId: string) =>
     setVariantByProduct((prev) => ({ ...prev, [productId]: variantId }));
+
+  const containerRef = container?.reference ?? "";
+  const containerPort = container?.port ?? "";
+  const seriesReached = container?.seriesReached ?? 0;
+  const totalSeries = container?.totalSeries ?? 0;
+  const professionalsEngaged = container?.professionalsEngaged ?? 0;
+  const thresholdPercent = container?.thresholdPercent ?? 80;
+  const expectedCloseAt = container?.expectedCloseAt ?? "";
 
   const handleEmail = () => {
     toast.success("Devis envoyé", {
@@ -110,10 +139,12 @@ function ContainerClubPage() {
       fillPercent: fill.percent,
       usedCbm: fill.usedCbm,
       capacity: fill.capacity,
-      containerRef: CURRENT_CONTAINER.reference,
-      port: CURRENT_CONTAINER.port,
+      containerRef,
+      port: containerPort,
     });
   };
+
+  const showCatalogSkeleton = containerLoading || catalogLoading;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -121,9 +152,13 @@ function ContainerClubPage() {
 
       <Hero
         fillPercent={fill.percent}
-        seriesReached={CURRENT_CONTAINER.seriesReached}
-        totalSeries={CURRENT_CONTAINER.totalSeries}
-        professionalsEngaged={CURRENT_CONTAINER.professionalsEngaged}
+        seriesReached={seriesReached}
+        totalSeries={totalSeries}
+        professionalsEngaged={professionalsEngaged}
+        containerRef={containerRef}
+        port={containerPort}
+        expectedCloseAt={expectedCloseAt}
+        thresholdPercent={thresholdPercent}
       />
 
       <HowItWorks />
@@ -154,8 +189,8 @@ function ContainerClubPage() {
                     const active = f.id === filter;
                     const count =
                       f.id === "all"
-                        ? PRODUCTS.length
-                        : PRODUCTS.filter((p) => p.category === f.id).length;
+                        ? products.length
+                        : products.filter((p) => p.category === f.id).length;
                     return (
                       <button
                         key={f.id}
@@ -193,7 +228,16 @@ function ContainerClubPage() {
                 </label>
               </div>
 
-              {filtered.length === 0 ? (
+              {showCatalogSkeleton ? (
+                <div className="space-y-3" aria-busy="true" aria-live="polite">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-32 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
+                    />
+                  ))}
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-16 text-center text-sm text-muted-foreground">
                   Aucun produit dans cette catégorie pour ce container.
                 </div>
@@ -203,7 +247,7 @@ function ContainerClubPage() {
                     <ProductRow
                       key={product.id}
                       product={product}
-                      variantId={variantByProduct[product.id] ?? product.variants[0].id}
+                      variantId={variantByProduct[product.id] ?? product.variants[0]?.id ?? ""}
                       qty={qtyByProduct[product.id] ?? 0}
                       onQtyChange={(n) => setQty(product.id, n)}
                       onVariantChange={(id) => setVariant(product.id, id)}
@@ -234,6 +278,11 @@ function ContainerClubPage() {
                 fillPercent={fill.percent}
                 usedCbm={fill.usedCbm}
                 capacity={fill.capacity}
+                containerRef={containerRef}
+                port={containerPort}
+                seriesReached={seriesReached}
+                totalSeries={totalSeries}
+                professionalsEngaged={professionalsEngaged}
                 onReserve={() => setReserveOpen(true)}
                 onDownloadPdf={handlePdf}
                 onEmailQuote={handleEmail}
@@ -261,13 +310,22 @@ function ContainerClubPage() {
         onOpenChange={(v) => !v && setDetailId(null)}
         qty={detailProduct ? (qtyByProduct[detailProduct.id] ?? 0) : 0}
         variantId={
-          detailProduct ? (variantByProduct[detailProduct.id] ?? detailProduct.variants[0].id) : ""
+          detailProduct
+            ? (variantByProduct[detailProduct.id] ?? detailProduct.variants[0]?.id ?? "")
+            : ""
         }
         onQtyChange={(n) => detailProduct && setQty(detailProduct.id, n)}
         onVariantChange={(id) => detailProduct && setVariant(detailProduct.id, id)}
       />
 
-      <ReservationDialog open={reserveOpen} onOpenChange={setReserveOpen} totals={totals} />
+      <ReservationDialog
+        open={reserveOpen}
+        onOpenChange={setReserveOpen}
+        totals={totals}
+        items={items}
+        containerReference={container?.reference ?? ""}
+        usedCbm={fill.usedCbm}
+      />
     </div>
   );
 }

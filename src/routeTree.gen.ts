@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LivresRouteImport } from './routes/livres'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
+import { Route as ReservationIdRouteImport } from './routes/reservation/$id'
 import { Route as LegalSlugRouteImport } from './routes/legal/$slug'
 
 const LivresRoute = LivresRouteImport.update({
@@ -29,6 +30,11 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
   path: '/legal/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReservationIdRoute = ReservationIdRouteImport.update({
+  id: '/reservation/$id',
+  path: '/reservation/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalSlugRoute = LegalSlugRouteImport.update({
   id: '/legal/$slug',
   path: '/legal/$slug',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/livres': typeof LivresRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/reservation/$id': typeof ReservationIdRoute
   '/legal/': typeof LegalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/livres': typeof LivresRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/reservation/$id': typeof ReservationIdRoute
   '/legal': typeof LegalIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/livres': typeof LivresRoute
   '/legal/$slug': typeof LegalSlugRoute
+  '/reservation/$id': typeof ReservationIdRoute
   '/legal/': typeof LegalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/livres' | '/legal/$slug' | '/legal/'
+  fullPaths: '/' | '/livres' | '/legal/$slug' | '/reservation/$id' | '/legal/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/livres' | '/legal/$slug' | '/legal'
-  id: '__root__' | '/' | '/livres' | '/legal/$slug' | '/legal/'
+  to: '/' | '/livres' | '/legal/$slug' | '/reservation/$id' | '/legal'
+  id:
+    | '__root__'
+    | '/'
+    | '/livres'
+    | '/legal/$slug'
+    | '/reservation/$id'
+    | '/legal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LivresRoute: typeof LivresRoute
   LegalSlugRoute: typeof LegalSlugRoute
+  ReservationIdRoute: typeof ReservationIdRoute
   LegalIndexRoute: typeof LegalIndexRoute
 }
 
@@ -92,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reservation/$id': {
+      id: '/reservation/$id'
+      path: '/reservation/$id'
+      fullPath: '/reservation/$id'
+      preLoaderRoute: typeof ReservationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/legal/$slug': {
       id: '/legal/$slug'
       path: '/legal/$slug'
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LivresRoute: LivresRoute,
   LegalSlugRoute: LegalSlugRoute,
+  ReservationIdRoute: ReservationIdRoute,
   LegalIndexRoute: LegalIndexRoute,
 }
 export const routeTree = rootRouteImport
