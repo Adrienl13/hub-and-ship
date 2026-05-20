@@ -1,46 +1,48 @@
-import { useMemo } from "react";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { useMemo } from 'react'
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { getDefaultVariant } from "@/lib/catalogue";
+import { getDefaultVariant } from '@/lib/catalogue'
 import {
   calculateContainerFill,
   calculateOrder,
   type CartItem,
   type OrderTotals,
-} from "@/lib/order";
-import { CURRENT_CONTAINER, PRODUCTS, type Product } from "@/lib/products";
-import { getQuantityRule, sanitizeOrderQuantity } from "@/lib/quantity";
+} from '@/lib/order'
+import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
+import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 
-export type ProductVariantSelection = Record<string, string>;
-export type ProductQuantitySelection = Record<string, number>;
+export type ProductVariantSelection = Record<string, string>
+export type ProductQuantitySelection = Record<string, number>
 
 export interface CartSnapshot {
-  items: CartItem[];
-  totals: OrderTotals;
-  fill: ReturnType<typeof calculateContainerFill>;
-  totalUnits: number;
+  items: CartItem[]
+  totals: OrderTotals
+  fill: ReturnType<typeof calculateContainerFill>
+  totalUnits: number
 }
 
 interface CartStoreState {
-  variantByProduct: ProductVariantSelection;
-  qtyByProduct: ProductQuantitySelection;
-  setQty: (productId: string, quantity: number) => void;
-  setVariant: (productId: string, variantId: string) => void;
-  resetCart: () => void;
+  variantByProduct: ProductVariantSelection
+  qtyByProduct: ProductQuantitySelection
+  setQty: (productId: string, quantity: number) => void
+  setVariant: (productId: string, variantId: string) => void
+  resetCart: () => void
 }
 
-function createDefaultVariantByProduct(products: Product[] = PRODUCTS): ProductVariantSelection {
+function createDefaultVariantByProduct(
+  products: Product[] = PRODUCTS,
+): ProductVariantSelection {
   return Object.fromEntries(
     products.map((product) => [product.id, getDefaultVariant(product).id]),
-  );
+  )
 }
 
 function createDefaultQtyByProduct(): ProductQuantitySelection {
   return {
     p1: 50,
     p3: 10,
-  };
+  }
 }
 
 export function createCartSnapshot({
@@ -49,32 +51,34 @@ export function createCartSnapshot({
   products = PRODUCTS,
   capacityCbm = CURRENT_CONTAINER.capacityCbm,
 }: {
-  qtyByProduct: ProductQuantitySelection;
-  variantByProduct: ProductVariantSelection;
-  products?: Product[];
-  capacityCbm?: number;
+  qtyByProduct: ProductQuantitySelection
+  variantByProduct: ProductVariantSelection
+  products?: Product[]
+  capacityCbm?: number
 }): CartSnapshot {
   const items = products.flatMap((product) => {
-    const quantity = qtyByProduct[product.id] ?? 0;
-    if (quantity <= 0) return [];
+    const quantity = qtyByProduct[product.id] ?? 0
+    if (quantity <= 0) return []
 
-    const variantId = variantByProduct[product.id] ?? getDefaultVariant(product).id;
+    const variantId =
+      variantByProduct[product.id] ?? getDefaultVariant(product).id
     const variant =
-      product.variants.find((item) => item.id === variantId) ?? getDefaultVariant(product);
+      product.variants.find((item) => item.id === variantId) ??
+      getDefaultVariant(product)
 
-    return [{ product, variant, quantity }];
-  });
+    return [{ product, variant, quantity }]
+  })
 
-  const totals = calculateOrder(items);
-  const fill = calculateContainerFill(items, capacityCbm);
-  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totals = calculateOrder(items)
+  const fill = calculateContainerFill(items, capacityCbm)
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return {
     items,
     totals,
     fill,
     totalUnits,
-  };
+  }
 }
 
 export const useCartStore = create<CartStoreState>()(
@@ -84,15 +88,18 @@ export const useCartStore = create<CartStoreState>()(
       qtyByProduct: createDefaultQtyByProduct(),
       setQty: (productId, quantity) =>
         set((previous) => {
-          const product = PRODUCTS.find((item) => item.id === productId);
-          if (!product) return previous;
+          const product = PRODUCTS.find((item) => item.id === productId)
+          if (!product) return previous
 
           return {
             qtyByProduct: {
               ...previous.qtyByProduct,
-              [productId]: sanitizeOrderQuantity(quantity, getQuantityRule(product)),
+              [productId]: sanitizeOrderQuantity(
+                quantity,
+                getQuantityRule(product),
+              ),
             },
-          };
+          }
         }),
       setVariant: (productId, variantId) =>
         set((previous) => ({
@@ -108,7 +115,7 @@ export const useCartStore = create<CartStoreState>()(
         }),
     }),
     {
-      name: "container-club-cart",
+      name: 'container-club-cart',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         variantByProduct: state.variantByProduct,
@@ -116,18 +123,18 @@ export const useCartStore = create<CartStoreState>()(
       }),
     },
   ),
-);
+)
 
 export function useCart() {
-  const variantByProduct = useCartStore((state) => state.variantByProduct);
-  const qtyByProduct = useCartStore((state) => state.qtyByProduct);
-  const setQty = useCartStore((state) => state.setQty);
-  const setVariant = useCartStore((state) => state.setVariant);
+  const variantByProduct = useCartStore((state) => state.variantByProduct)
+  const qtyByProduct = useCartStore((state) => state.qtyByProduct)
+  const setQty = useCartStore((state) => state.setQty)
+  const setVariant = useCartStore((state) => state.setVariant)
 
   const snapshot = useMemo(
     () => createCartSnapshot({ qtyByProduct, variantByProduct }),
     [qtyByProduct, variantByProduct],
-  );
+  )
 
   return {
     ...snapshot,
@@ -135,5 +142,5 @@ export function useCart() {
     qtyByProduct,
     setQty,
     setVariant,
-  };
+  }
 }

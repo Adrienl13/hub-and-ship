@@ -1,16 +1,16 @@
-import { Check } from "lucide-react";
+import { Check } from 'lucide-react'
 
 export function SeriesProgressIndicator({
   reached,
   total,
   required,
 }: {
-  reached: number;
-  total: number;
-  required: number;
+  reached: number
+  total: number
+  required: number
 }) {
-  const safeTotal = Math.max(1, total);
-  const safeReached = Math.max(0, Math.min(reached, safeTotal));
+  const safeTotal = Math.max(1, total)
+  const safeReached = Math.max(0, Math.min(reached, safeTotal))
 
   return (
     <div>
@@ -20,31 +20,34 @@ export function SeriesProgressIndicator({
           {safeReached}/{safeTotal}
         </span>
       </div>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${safeTotal}, minmax(0, 1fr))` }}>
+      <div
+        className="grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${safeTotal}, minmax(0, 1fr))` }}
+      >
         {Array.from({ length: safeTotal }).map((_, index) => {
-          const done = index < safeReached;
-          const requiredMarker = index + 1 === required;
+          const done = index < safeReached
+          const requiredMarker = index + 1 === required
           return (
             <span
               key={index}
               className={`relative grid h-7 place-items-center rounded-sm border text-[10px] ${
                 done
-                  ? "border-[color:var(--forest)] bg-[color:var(--forest)]/10 text-[color:var(--forest)]"
-                  : "border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-muted-foreground"
+                  ? 'bg-[color:var(--forest)]/10 border-[color:var(--forest)] text-[color:var(--forest)]'
+                  : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-muted-foreground'
               }`}
-              title={requiredMarker ? "Minimum de séries requis" : undefined}
+              title={requiredMarker ? 'Minimum de séries requis' : undefined}
             >
               {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
               {requiredMarker && (
                 <span className="absolute -bottom-1 left-1/2 h-1.5 w-px -translate-x-1/2 bg-[color:var(--ember)]" />
               )}
             </span>
-          );
+          )
         })}
       </div>
       <div className="mt-1 text-[10px] text-muted-foreground">
         Minimum production : {required} séries confirmées.
       </div>
     </div>
-  );
+  )
 }

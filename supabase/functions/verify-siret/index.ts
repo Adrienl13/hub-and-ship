@@ -100,7 +100,8 @@ interface CompanyRow {
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
@@ -116,7 +117,10 @@ async function handleVerifySiret(request: Request): Promise<Response> {
   }
 
   if (request.method !== 'POST') {
-    return json({ status: 'invalid_format', reason: 'Méthode non autorisée' }, 405)
+    return json(
+      { status: 'invalid_format', reason: 'Méthode non autorisée' },
+      405,
+    )
   }
 
   const env = getRuntimeEnv()
@@ -133,7 +137,10 @@ async function handleVerifySiret(request: Request): Promise<Response> {
 
   const authorization = request.headers.get('Authorization')
   if (!authorization) {
-    return json({ status: 'invalid_format', reason: 'Authentification requise' }, 401)
+    return json(
+      { status: 'invalid_format', reason: 'Authentification requise' },
+      401,
+    )
   }
 
   const userId = await getUserIdFromToken(env, authorization)
@@ -146,7 +153,10 @@ async function handleVerifySiret(request: Request): Promise<Response> {
     await logSecurityEvent(env, {
       event_type: 'rate_limit_hit',
       user_id: userId,
-      metadata: { endpoint: 'verify-siret', retryAfterSeconds: rateLimit.retryAfterSeconds },
+      metadata: {
+        endpoint: 'verify-siret',
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+      },
       severity: 'warning',
     })
 
@@ -161,7 +171,8 @@ async function handleVerifySiret(request: Request): Promise<Response> {
   }
 
   const body = await parseJsonBody(request)
-  const siret = typeof body.siret === 'string' ? body.siret.replace(/\s/g, '') : ''
+  const siret =
+    typeof body.siret === 'string' ? body.siret.replace(/\s/g, '') : ''
   const formatCheck = validateSiretFormat(siret)
 
   if (!formatCheck.valid) {
@@ -177,7 +188,9 @@ async function handleVerifySiret(request: Request): Promise<Response> {
 
   const cached = await getCachedSiret(env, siret)
   if (cached) {
-    return json(await buildVerificationFromInsee(env, siret, cached.insee_response))
+    return json(
+      await buildVerificationFromInsee(env, siret, cached.insee_response),
+    )
   }
 
   const token = await getInseeAccessToken(env)
@@ -233,7 +246,8 @@ function getRuntimeEnv(): RuntimeEnv | null {
   const supabaseServiceRoleKey = env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   const inseeApiBaseUrl =
     env.get('INSEE_API_BASE_URL') ?? 'https://api.insee.fr/api-sirene/3.11'
-  const inseeOauthUrl = env.get('INSEE_OAUTH_URL') ?? 'https://api.insee.fr/token'
+  const inseeOauthUrl =
+    env.get('INSEE_OAUTH_URL') ?? 'https://api.insee.fr/token'
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
     return null
@@ -270,7 +284,9 @@ async function getUserIdFromToken(
 
 function consumeRateLimit(key: string, now = Date.now()): RateLimitStatus {
   const windowStart = now - rateLimitRule.windowMs
-  const activeHits = (rateLimitHits.get(key) ?? []).filter((hit) => hit > windowStart)
+  const activeHits = (rateLimitHits.get(key) ?? []).filter(
+    (hit) => hit > windowStart,
+  )
 
   if (activeHits.length >= rateLimitRule.limit) {
     const resetAt = (activeHits[0] ?? now) + rateLimitRule.windowMs
@@ -284,9 +300,15 @@ function consumeRateLimit(key: string, now = Date.now()): RateLimitStatus {
   return { allowed: true, retryAfterSeconds: 0 }
 }
 
-function validateSiretFormat(siret: string): { readonly valid: boolean; readonly reason?: string } {
+function validateSiretFormat(siret: string): {
+  readonly valid: boolean
+  readonly reason?: string
+} {
   if (!/^\d{14}$/.test(siret)) {
-    return { valid: false, reason: 'Le SIRET doit contenir exactement 14 chiffres' }
+    return {
+      valid: false,
+      reason: 'Le SIRET doit contenir exactement 14 chiffres',
+    }
   }
 
   let sum = 0
@@ -304,7 +326,10 @@ function validateSiretFormat(siret: string): { readonly valid: boolean; readonly
   return { valid: true }
 }
 
-async function getCachedSiret(env: RuntimeEnv, siret: string): Promise<CacheRow | null> {
+async function getCachedSiret(
+  env: RuntimeEnv,
+  siret: string,
+): Promise<CacheRow | null> {
   const url = new URL(`${env.supabaseUrl}/rest/v1/siret_cache`)
   url.searchParams.set('siret', `eq.${siret}`)
   url.searchParams.set('expires_at', `gt.${new Date().toISOString()}`)
@@ -370,7 +395,10 @@ async function buildVerificationFromInsee(
   }
 }
 
-async function findCompanyBySiret(env: RuntimeEnv, siret: string): Promise<CompanyRow | null> {
+async function findCompanyBySiret(
+  env: RuntimeEnv,
+  siret: string,
+): Promise<CompanyRow | null> {
   const url = new URL(`${env.supabaseUrl}/rest/v1/companies`)
   url.searchParams.set('siret', `eq.${siret}`)
   url.searchParams.set('select', 'id')
@@ -406,7 +434,10 @@ async function getInseeAccessToken(env: RuntimeEnv): Promise<string> {
   return data.access_token
 }
 
-function extractSiretData(siret: string, inseeResponse: InseeResponse): SiretData {
+function extractSiretData(
+  siret: string,
+  inseeResponse: InseeResponse,
+): SiretData {
   const etablissement = inseeResponse.etablissement ?? {}
   const uniteLegale = etablissement.uniteLegale ?? {}
   const adresse = etablissement.adresseEtablissement ?? {}
@@ -496,7 +527,9 @@ function supabaseServiceHeaders(
   }
 }
 
-async function parseJsonBody(request: Request): Promise<{ readonly siret?: unknown }> {
+async function parseJsonBody(
+  request: Request,
+): Promise<{ readonly siret?: unknown }> {
   try {
     return (await request.json()) as { readonly siret?: unknown }
   } catch {

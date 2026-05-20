@@ -6,20 +6,23 @@
 ## 🚀 Démarrage session
 
 ### Session standard
+
 ```
 Lis PROGRESS.md et continue la prochaine tâche non terminée.
 Avant tout code, propose-moi ton plan.
 ```
 
 ### Session focus phase
+
 ```
-Phase X. Lis PROGRESS.md section "Phase X" et finalise toutes les 
+Phase X. Lis PROGRESS.md section "Phase X" et finalise toutes les
 tâches restantes. Pose-moi questions seulement si bloqué.
 ```
 
 ### Session reprise après pause
+
 ```
-Lis PROGRESS.md + CHANGELOG.md + 10 derniers commits Git. 
+Lis PROGRESS.md + CHANGELOG.md + 10 derniers commits Git.
 Résume en 5 lignes où on en est et propose la suite.
 ```
 
@@ -28,6 +31,7 @@ Résume en 5 lignes où on en est et propose la suite.
 ## 🎯 Implémentation
 
 ### Nouvelle feature
+
 ```
 Implémente [nom feature] selon section [X.Y] du brief.
 Approche :
@@ -39,6 +43,7 @@ Approche :
 ```
 
 ### Composant React
+
 ```
 Crée le composant [NomComposant] selon les specs du brief.
 Contraintes :
@@ -50,6 +55,7 @@ Contraintes :
 ```
 
 ### Edge Function Supabase
+
 ```
 Crée l'Edge Function [nom] avec :
 - Auth obligatoire (vérification JWT)
@@ -65,6 +71,7 @@ Crée l'Edge Function [nom] avec :
 ## 🧪 Tests
 
 ### Test logique métier
+
 ```
 Écris des tests Vitest exhaustifs pour src/lib/[fichier].ts.
 Couvre :
@@ -75,8 +82,9 @@ Couvre :
 ```
 
 ### Test sécurité
+
 ```
-Écris un test sécurité dans tests/security/[nom].test.ts qui vérifie 
+Écris un test sécurité dans tests/security/[nom].test.ts qui vérifie
 que [scénario d'attaque] est bloqué.
 Pattern :
 1. Setup users A et B avec données distinctes
@@ -85,6 +93,7 @@ Pattern :
 ```
 
 ### Test E2E
+
 ```
 Écris un test Playwright pour le parcours [nom].
 Utilise les data-testid existants ou ajoute-les si manquants.
@@ -96,6 +105,7 @@ Utilise les data-testid existants ou ajoute-les si manquants.
 ## 🔧 Refactoring
 
 ### Split fichier trop long
+
 ```
 Le fichier [chemin] fait plus de 300 lignes. Split-le proprement :
 1. Identifie les responsabilités
@@ -106,6 +116,7 @@ Le fichier [chemin] fait plus de 300 lignes. Split-le proprement :
 ```
 
 ### Extraction logique métier
+
 ```
 Extrais la logique métier du composant [X] vers src/lib/.
 Le composant ne doit garder que présentation et appels aux helpers.
@@ -117,6 +128,7 @@ Ajoute des tests Vitest sur la logique extraite.
 ## 🐛 Debug
 
 ### Erreur TypeScript
+
 ```
 J'ai cette erreur TypeScript : [paste error]
 Analyse, propose le fix, applique-le, vérifie typecheck.
@@ -124,13 +136,15 @@ Si c'est un faux positif, explique pourquoi mais ne mets PAS de @ts-ignore.
 ```
 
 ### Test qui échoue
+
 ```
 Le test [nom] échoue. Lance-le, analyse l'erreur, propose le fix.
-Si le test est obsolète vs nouvelle spec, propose de l'updater 
+Si le test est obsolète vs nouvelle spec, propose de l'updater
 plutôt que le code.
 ```
 
 ### Bug en runtime
+
 ```
 J'observe ce bug : [description]
 URL : [url]
@@ -146,6 +160,7 @@ Analyse, hypothèses, fix.
 ## 📦 Database
 
 ### Nouvelle migration
+
 ```
 Crée une migration Supabase pour [description].
 Contraintes :
@@ -157,6 +172,7 @@ Contraintes :
 ```
 
 ### Modification schéma
+
 ```
 Modifie la table [nom] pour [changement].
 Génère :
@@ -172,6 +188,7 @@ Génère :
 ## 🚢 Deployment
 
 ### Pre-deploy check
+
 ```
 Avant deploy, vérifie :
 1. npm run check passe (typecheck + lint + test)
@@ -183,6 +200,7 @@ Liste tout problème détecté.
 ```
 
 ### Post-deploy validation
+
 ```
 Après deploy, valide :
 1. Lighthouse mobile/desktop sur 5 pages clés
@@ -197,6 +215,7 @@ Génère un rapport synthétique.
 ## 📝 Documentation
 
 ### Update PROGRESS.md
+
 ```
 Update PROGRESS.md selon les changements depuis le dernier commit.
 - Marque les tâches terminées ✅
@@ -206,6 +225,7 @@ Update PROGRESS.md selon les changements depuis le dernier commit.
 ```
 
 ### Ajout décision
+
 ```
 Une décision technique vient d'être prise : [titre]
 Ajoute une entrée D-XXX dans DECISIONS.md avec :
@@ -217,6 +237,7 @@ Ajoute une entrée D-XXX dans DECISIONS.md avec :
 ```
 
 ### Document bug pattern
+
 ```
 On vient de résoudre [bug]. C'est probablement récurrent.
 Ajoute-le dans KNOWN_ISSUES.md comme PATTERN-XXX avec :
@@ -231,8 +252,9 @@ Ajoute-le dans KNOWN_ISSUES.md comme PATTERN-XXX avec :
 ## 🎨 Design/UX
 
 ### Implémentation design
+
 ```
-Implémente le design de [section] selon les specs visuelles du brief 
+Implémente le design de [section] selon les specs visuelles du brief
 section [X.Y].
 Utilise les CSS variables existantes (palette section 15.1).
 Mobile-first impératif.
@@ -240,6 +262,7 @@ Test sur viewport 375px (iPhone SE) et 1280px (desktop standard).
 ```
 
 ### Optimisation Lighthouse
+
 ```
 Améliore le score Lighthouse mobile de la page [X].
 Objectif : > 85.
@@ -252,6 +275,7 @@ Mesures : analyse rapport, propose 3-5 actions concrètes, applique.
 ## 💰 Pricing & Business logic
 
 ### Modification pricing
+
 ```
 ⚠️ Modification logique pricing — demande confirmation avant.
 Modification souhaitée : [description]
@@ -260,6 +284,7 @@ Tests à ajouter : [scenarios]
 ```
 
 ### Nouvelle règle métier
+
 ```
 Ajoute la règle métier : [description]
 Contraintes :
@@ -274,6 +299,7 @@ Contraintes :
 ## 🔐 Sécurité
 
 ### Audit sécurité ad hoc
+
 ```
 Audite la sécurité de [feature/endpoint] :
 - Authentication
@@ -286,11 +312,12 @@ Propose améliorations.
 ```
 
 ### Patch CVE
+
 ```
 CVE détectée : [ID]
 Package : [nom]
 Sévérité : [HIGH/CRITICAL]
-Vérifie l'impact sur notre stack, propose le fix, applique-le, 
+Vérifie l'impact sur notre stack, propose le fix, applique-le,
 update KNOWN_ISSUES.md.
 ```
 
@@ -299,8 +326,9 @@ update KNOWN_ISSUES.md.
 ## 🤖 Workflows automatiques
 
 ### Mode autonome (à utiliser avec prudence)
+
 ```
-Mode autonome : implémente toutes les tâches de la phase X 
+Mode autonome : implémente toutes les tâches de la phase X
 en autonomie complète.
 Tu peux :
 - Créer/modifier fichiers
@@ -318,6 +346,7 @@ Stop si tests échouent et propose le fix.
 ```
 
 ### Audit complet
+
 ```
 Mode audit complet du projet :
 1. Tests : lance npm run test:all, liste échecs

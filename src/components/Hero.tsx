@@ -1,15 +1,15 @@
-import { ShieldCheck, Award, FileBadge } from "lucide-react";
-import { motion } from "framer-motion";
-import { CURRENT_CONTAINER } from "@/lib/products";
-import { AnimatedNumber } from "@/components/motion-helpers";
-import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
+import { ShieldCheck, Award, FileBadge } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CURRENT_CONTAINER } from '@/lib/products'
+import { AnimatedNumber } from '@/components/motion-helpers'
+import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 export function Hero({
@@ -18,10 +18,10 @@ export function Hero({
   totalSeries,
   professionalsEngaged,
 }: {
-  fillPercent: number;
-  seriesReached: number;
-  totalSeries: number;
-  professionalsEngaged: number;
+  fillPercent: number
+  seriesReached: number
+  totalSeries: number
+  professionalsEngaged: number
 }) {
   return (
     <section id="top" className="relative overflow-hidden">
@@ -31,7 +31,7 @@ export function Hero({
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10 inline-flex items-center gap-2 rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/8 px-3 py-1.5 text-xs"
+          className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/8 mb-10 inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-xs"
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--forest)] opacity-60" />
@@ -41,7 +41,9 @@ export function Hero({
             Container {CURRENT_CONTAINER.reference} ouvert
           </span>
           <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">Destination {CURRENT_CONTAINER.port}</span>
+          <span className="text-foreground/70">
+            Destination {CURRENT_CONTAINER.port}
+          </span>
           <span className="text-foreground/60">·</span>
           <span className="text-foreground/70">
             Clôture estimée {formatDate(CURRENT_CONTAINER.expectedCloseAt)}
@@ -64,23 +66,27 @@ export function Hero({
               sans intermédiaire.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)]">
-              Pré-commande groupée par container 20' avec d'autres professionnels.
-              Jusqu'à <strong className="font-semibold text-foreground">−40%</strong> vs
+              Pré-commande groupée par container 20' avec d'autres
+              professionnels. Jusqu'à{' '}
+              <strong className="font-semibold text-foreground">−40%</strong> vs
               retail français. Importation, douane et garantie 2 ans incluses.
             </p>
 
             {/* Chips réassurance */}
             <div className="mt-8 flex flex-wrap gap-2">
               {[
-                { Icon: FileBadge, label: "Importateur officiel français" },
-                { Icon: Award, label: "Contrôle qualité SGS avant expédition" },
-                { Icon: ShieldCheck, label: "Garantie 2 ans + SAV France" },
+                { Icon: FileBadge, label: 'Importateur officiel français' },
+                { Icon: Award, label: 'Contrôle qualité SGS avant expédition' },
+                { Icon: ShieldCheck, label: 'Garantie 2 ans + SAV France' },
               ].map(({ Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-1.5 text-xs text-foreground/80"
+                  className="text-foreground/80 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-1.5 text-xs"
                 >
-                  <Icon className="h-3.5 w-3.5 text-foreground/60" strokeWidth={1.5} />
+                  <Icon
+                    className="text-foreground/60 h-3.5 w-3.5"
+                    strokeWidth={1.5}
+                  />
                   {label}
                 </span>
               ))}
@@ -94,9 +100,11 @@ export function Hero({
             transition={{ duration: 0.6, delay: 0.15 }}
             className="lg:col-span-5"
           >
-            <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5 shadow-paper">
+            <div className="shadow-paper rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5">
               <div className="flex items-center justify-between">
-                <span className="label-eyebrow text-muted-foreground">Container en cours</span>
+                <span className="label-eyebrow text-muted-foreground">
+                  Container en cours
+                </span>
                 <ContainerStatusBadge
                   status={CURRENT_CONTAINER.status}
                   fillPercent={fillPercent}
@@ -123,12 +131,21 @@ export function Hero({
                     className="h-full bg-[color:var(--foreground)]"
                     initial={{ width: 0 }}
                     animate={{ width: `${fillPercent}%` }}
-                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
+                    transition={{
+                      duration: 1.1,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.25,
+                    }}
                   />
                   <motion.div
                     className="absolute inset-y-[-3px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                    animate={{ x: ["-100%", "260%"] }}
-                    transition={{ duration: 2.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.4 }}
+                    animate={{ x: ['-100%', '260%'] }}
+                    transition={{
+                      duration: 2.6,
+                      ease: 'easeInOut',
+                      repeat: Infinity,
+                      repeatDelay: 1.4,
+                    }}
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
@@ -137,20 +154,26 @@ export function Hero({
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
-                  <span>Seuil départ {CURRENT_CONTAINER.thresholdPercent}%</span>
+                  <span>
+                    Seuil départ {CURRENT_CONTAINER.thresholdPercent}%
+                  </span>
                   <span>100%</span>
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[color:var(--sand-deep)] pt-4 text-xs">
                 <div>
-                  <div className="label-eyebrow text-muted-foreground">Séries</div>
+                  <div className="label-eyebrow text-muted-foreground">
+                    Séries
+                  </div>
                   <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
                     <AnimatedNumber value={seriesReached} />/{totalSeries}
                   </div>
                 </div>
                 <div>
-                  <div className="label-eyebrow text-muted-foreground">Pros engagés</div>
+                  <div className="label-eyebrow text-muted-foreground">
+                    Pros engagés
+                  </div>
                   <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
                     <AnimatedNumber value={professionalsEngaged} />
                   </div>
@@ -161,5 +184,5 @@ export function Hero({
         </div>
       </div>
     </section>
-  );
+  )
 }

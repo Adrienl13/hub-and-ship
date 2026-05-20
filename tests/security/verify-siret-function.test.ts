@@ -35,7 +35,9 @@ describe('verify-siret Edge Function scaffold', () => {
   })
 
   it('adds a protected siret_cache table', () => {
-    expect(cacheMigration).toContain('create table if not exists public.siret_cache')
+    expect(cacheMigration).toContain(
+      'create table if not exists public.siret_cache',
+    )
     expect(cacheMigration).toContain('idx_siret_cache_expires')
     expect(cacheMigration).toContain(
       'alter table public.siret_cache enable row level security',

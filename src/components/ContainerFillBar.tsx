@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion'
 
-import { AnimatedNumber } from "@/components/motion-helpers";
+import { AnimatedNumber } from '@/components/motion-helpers'
 
 export function ContainerFillBar({
   percent,
@@ -9,13 +9,13 @@ export function ContainerFillBar({
   thresholdPercent,
   compact = false,
 }: {
-  percent: number;
-  usedCbm: number;
-  capacity: number;
-  thresholdPercent: number;
-  compact?: boolean;
+  percent: number
+  usedCbm: number
+  capacity: number
+  thresholdPercent: number
+  compact?: boolean
 }) {
-  const safePercent = Math.max(0, Math.min(100, percent));
+  const safePercent = Math.max(0, Math.min(100, percent))
 
   return (
     <div>
@@ -30,7 +30,7 @@ export function ContainerFillBar({
           className="h-full rounded-full bg-[color:var(--foreground)]"
           initial={false}
           animate={{ width: `${safePercent}%` }}
-          transition={{ type: "spring", stiffness: 100, damping: 22 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 22 }}
         />
         <div
           className="absolute inset-y-[-3px] w-px bg-[color:var(--ember)]"
@@ -46,5 +46,5 @@ export function ContainerFillBar({
         </div>
       )}
     </div>
-  );
+  )
 }

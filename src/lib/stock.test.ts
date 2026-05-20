@@ -36,9 +36,7 @@ describe('available stock catalogue', () => {
       sort: 'priority',
     })
 
-    expect(filtered.map((line) => line.id)).toEqual([
-      'stock-monaco-anthracite',
-    ])
+    expect(filtered.map((line) => line.id)).toEqual(['stock-monaco-anthracite'])
   })
 
   it('sorts by available stock descending', () => {

@@ -1,13 +1,13 @@
-import { Info } from "lucide-react";
-import { memo, useMemo } from "react";
+import { Info } from 'lucide-react'
+import { memo, useMemo } from 'react'
 
-import { MoqProgressBar } from "@/components/MoqProgressBar";
-import { QuantityStepper } from "@/components/QuantityStepper";
-import { VariantSelector } from "@/components/VariantSelector";
-import { Button } from "@/components/ui/button";
-import { CATEGORY_LABEL, type Product } from "@/lib/products";
-import { formatEUR, getMoqStatus } from "@/lib/order";
-import { getQuantityRule } from "@/lib/quantity";
+import { MoqProgressBar } from '@/components/MoqProgressBar'
+import { QuantityStepper } from '@/components/QuantityStepper'
+import { VariantSelector } from '@/components/VariantSelector'
+import { Button } from '@/components/ui/button'
+import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { formatEUR, getMoqStatus } from '@/lib/order'
+import { getQuantityRule } from '@/lib/quantity'
 
 function CatalogueLineItemComponent({
   product,
@@ -17,30 +17,35 @@ function CatalogueLineItemComponent({
   onVariantChange,
   onOpenDetails,
 }: {
-  product: Product;
-  variantId: string;
-  qty: number;
-  onQtyChange: (value: number) => void;
-  onVariantChange: (variantId: string) => void;
-  onOpenDetails: () => void;
+  product: Product
+  variantId: string
+  qty: number
+  onQtyChange: (value: number) => void
+  onVariantChange: (variantId: string) => void
+  onOpenDetails: () => void
 }) {
   const variant = useMemo(
-    () => product.variants.find((item) => item.id === variantId) ?? product.variants[0],
+    () =>
+      product.variants.find((item) => item.id === variantId) ??
+      product.variants[0],
     [product.variants, variantId],
-  );
-  const quantityRule = getQuantityRule(product);
-  const moqStatus = getMoqStatus((variant?.unitsCommitted ?? 0) + qty, product.moqUnits);
+  )
+  const quantityRule = getQuantityRule(product)
+  const moqStatus = getMoqStatus(
+    (variant?.unitsCommitted ?? 0) + qty,
+    product.moqUnits,
+  )
 
   return (
     <article
       data-catalogue-line-item
       className="grid gap-3 border-b border-[color:var(--sand-deep)] bg-card px-3 py-3 text-sm transition-colors hover:bg-[color:var(--sand-soft)] md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:items-center md:gap-2"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "104px" }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '104px' }}
     >
       <button
         type="button"
         onClick={onOpenDetails}
-        className="relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 ring-foreground/10 md:h-[52px] md:w-[52px]"
+        className="ring-foreground/10 relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 md:h-[52px] md:w-[52px]"
         aria-label={`Voir détails ${product.name}`}
       >
         <img
@@ -73,7 +78,11 @@ function CatalogueLineItemComponent({
               {formatEUR(product.basePriceHt)}
             </div>
             <div className="text-[10px] text-[color:var(--ember)]">
-              -{Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100)}%
+              -
+              {Math.round(
+                (1 - product.basePriceHt / product.retailPriceRef) * 100,
+              )}
+              %
             </div>
           </div>
         </div>
@@ -81,7 +90,8 @@ function CatalogueLineItemComponent({
           <span>{product.sku}</span>
           <span>{CATEGORY_LABEL[product.category]}</span>
           <span>
-            {product.dimensions.l}x{product.dimensions.w}x{product.dimensions.h} cm
+            {product.dimensions.l}x{product.dimensions.w}x{product.dimensions.h}{' '}
+            cm
           </span>
           <span>{product.cbmPerUnit.toFixed(2)} m3/u</span>
         </div>
@@ -101,9 +111,15 @@ function CatalogueLineItemComponent({
           {formatEUR(product.basePriceHt)}
         </div>
         <div className="text-[10px] text-muted-foreground">
-          <span className="line-through">{formatEUR(product.retailPriceRef)}</span>
+          <span className="line-through">
+            {formatEUR(product.retailPriceRef)}
+          </span>
           <span className="ml-1 text-[color:var(--ember)]">
-            -{Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100)}%
+            -
+            {Math.round(
+              (1 - product.basePriceHt / product.retailPriceRef) * 100,
+            )}
+            %
           </span>
         </div>
       </div>
@@ -112,7 +128,7 @@ function CatalogueLineItemComponent({
         value={qty}
         onChange={onQtyChange}
         rule={quantityRule}
-        showRule={product.category === "chair"}
+        showRule={product.category === 'chair'}
       />
 
       <Button
@@ -124,7 +140,7 @@ function CatalogueLineItemComponent({
         Voir
       </Button>
     </article>
-  );
+  )
 }
 
-export const CatalogueLineItem = memo(CatalogueLineItemComponent);
+export const CatalogueLineItem = memo(CatalogueLineItemComponent)

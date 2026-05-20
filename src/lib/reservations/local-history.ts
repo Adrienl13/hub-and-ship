@@ -1,7 +1,6 @@
 import type { ReservationDraft } from './draft'
 
-export const LOCAL_RESERVATION_HISTORY_KEY =
-  'container-club-local-reservations'
+export const LOCAL_RESERVATION_HISTORY_KEY = 'container-club-local-reservations'
 
 export interface LocalReservationRecord {
   readonly id: string
@@ -17,7 +16,9 @@ export interface ReservationHistoryStorage {
   readonly setItem: (key: string, value: string) => void
 }
 
-function isLocalReservationRecord(value: unknown): value is LocalReservationRecord {
+function isLocalReservationRecord(
+  value: unknown,
+): value is LocalReservationRecord {
   if (!value || typeof value !== 'object') return false
 
   const candidate = value as Partial<LocalReservationRecord>

@@ -13,6 +13,7 @@ Aucun changement en cours.
 ## [1.3.0] — 2026-05-17
 
 ### Ajouté
+
 - **Vérification SIRET obligatoire** via API INSEE Sirene au checkout/devis/callback (section 6.8)
 - **Section 18.bis** : Sécurité B2B blindée (OWASP Top 10 2025, 11 sous-sections, ~500 lignes)
 - **Table `security_events`** : tracking événements sécurité avec enum
@@ -28,12 +29,14 @@ Aucun changement en cours.
 - **Plan réponse incident** documenté
 
 ### Modifié
+
 - Section 16.7 checkout : flow 4 étapes avec SIRET obligatoire en étape 1
 - Variables env : ajout INSEE_API_KEY, INSEE_OAUTH_URL, blocklist emails personnels
 - Phase 1 plan livraison enrichie (sécurité dès le départ)
 - Checklist pré-launch : nouvelle section "Sécurité" complète
 
 ### Décisions clés
+
 - SIRET cessé/inactif → **blocage strict** création compte
 - Emails personnels (gmail, etc.) → **warning souple**, pas blocage
 - Rate limiting V1 → **Cloudflare WAF** (gratuit), Upstash prévu V2
@@ -45,6 +48,7 @@ Aucun changement en cours.
 ## [1.2.0] — 2026-05-17
 
 ### Ajouté
+
 - **Table `carrier_partners`** : transporteurs recommandés sans contrat
 - **Table `delivery_history`** : préparée pour V2 (estimateur dynamique futur)
 - **Page publique `/transport-partenaires`** : liste transporteurs avec tarifs indicatifs
@@ -55,12 +59,14 @@ Aucun changement en cours.
 - 5 transporteurs initiaux dans seed data (Geodis, Heppner, Mauffrey, Dachser, Upela)
 
 ### Modifié
+
 - `delivery_mode` enum simplifié : 3 valeurs (pickup_at_port, partner_carrier_needed, self_arranged)
 - Checkout : étape choix livraison obligatoire (3 radio buttons)
 - Section 7.1 home : nouveau bloc "Comment la livraison fonctionne"
 - Section 14.2 multi-pays : précision sur évolution livraison
 
 ### Supprimé
+
 - Table `delivery_zones` (réintroduisable en V2)
 - Table `postal_code_zones` (réintroduisable en V2)
 - Composant `DeliveryZoneCalculator`
@@ -68,6 +74,7 @@ Aucun changement en cours.
 - Champ `delivery_zone_id` dans `reservations`
 
 ### Décisions clés
+
 - Container Club ne facture PAS la livraison post-port en V1
 - Raison : pas de partenariats transporteurs + délai 60j incompatible avec devis transport
 - Approche : "Le prix d'un grossiste pro, le prix juste sur le transport"
@@ -77,6 +84,7 @@ Aucun changement en cours.
 ## [1.1.0] — 2026-05-17
 
 ### Ajouté
+
 - **Architecture multi-pays prête** dès V1 : table `countries` avec `is_active` flag
 - **Table `referral_codes`** + `referrals` : programme parrainage complet
 - **Table `reviews`** + `review_helpfulness` : système notation
@@ -94,11 +102,13 @@ Aucun changement en cours.
 - 9 migrations SQL versionnées
 
 ### Modifié
+
 - `cost_fob_eur` → `cost_landed_port_eur` (prix usine inclut transport jusqu'au port FR)
 - Catégories produits réduites : chair, armchair, table, bench, accessory
 - Tiers de marge INCRÉMENTAUX (méthode anti-profit-leakage)
 
 ### Décisions clés
+
 - Marges dégressives : 35% (0-0.8m³) / 32% (0.8-2) / 30% (2-4) / 27% (4-8) / 25% (8+)
 - MOQ : 50 unités chaises, 20 unités tables
 - Frais réservation : 3% HT min 150€ max 500€
@@ -110,6 +120,7 @@ Aucun changement en cours.
 ## [1.0.0] — 2026-05-15
 
 ### Initial
+
 - Brief initial Container Club (28kb)
 - Vision B2B pré-commande groupée mobilier outdoor
 - Modèle économique de base
@@ -122,6 +133,7 @@ Aucun changement en cours.
 ## 🔗 Format des entrées
 
 Chaque version doit contenir :
+
 - **Date** : YYYY-MM-DD
 - **Ajouté** : nouvelles features
 - **Modifié** : changements de comportement
@@ -133,6 +145,7 @@ Chaque version doit contenir :
 ## 📌 Versionning
 
 Format SemVer :
+
 - **MAJEUR** : breaking changes schéma DB ou API publique
 - **MINEUR** : nouvelles features rétro-compatibles
 - **PATCH** : corrections, ajustements

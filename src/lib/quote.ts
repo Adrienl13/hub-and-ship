@@ -2,50 +2,50 @@
 // Container Club — devis PDF (print-to-PDF)
 // ============================================================
 
-import { CATEGORY_LABEL } from "./products";
-import type { CartItem, OrderTotals } from "./order";
+import { CATEGORY_LABEL } from './products'
+import type { CartItem, OrderTotals } from './order'
 
 export type QuoteData = {
-  items: CartItem[];
-  totals: OrderTotals;
-  fillPercent: number;
-  usedCbm: number;
-  capacity: number;
-  containerRef: string;
-  port: string;
-  buyer?: { name?: string; company?: string; email?: string };
-};
+  items: CartItem[]
+  totals: OrderTotals
+  fillPercent: number
+  usedCbm: number
+  capacity: number
+  containerRef: string
+  port: string
+  buyer?: { name?: string; company?: string; email?: string }
+}
 
 const eur = (n: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
+  new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(n)
 
 function escapeHtml(s: string): string {
   return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 function buildHTML(q: QuoteData): string {
-  const today = new Date().toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const ref = `DV-${q.containerRef.replace(/\D/g, "")}-${Date.now()
+  const today = new Date().toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  const ref = `DV-${q.containerRef.replace(/\D/g, '')}-${Date.now()
     .toString(36)
     .slice(-5)
-    .toUpperCase()}`;
+    .toUpperCase()}`
 
   const linesHtml = q.items
     .map((item) => {
-      const cbm = item.product.cbmPerUnit * item.quantity;
-      const lineTotal = item.product.basePriceHt * item.quantity;
+      const cbm = item.product.cbmPerUnit * item.quantity
+      const lineTotal = item.product.basePriceHt * item.quantity
       return `
         <tr>
           <td>
@@ -65,12 +65,12 @@ function buildHTML(q: QuoteData): string {
           <td class="num">${eur(item.product.basePriceHt)}</td>
           <td class="num">${cbm.toFixed(2)} m³</td>
           <td class="num bold">${eur(lineTotal)}</td>
-        </tr>`;
+        </tr>`
     })
-    .join("");
+    .join('')
 
-  const buyer = q.buyer ?? {};
-  const t = q.totals;
+  const buyer = q.buyer ?? {}
+  const t = q.totals
 
   return `<!doctype html>
 <html lang="fr">
@@ -198,9 +198,9 @@ function buildHTML(q: QuoteData): string {
       <div class="card">
         <h3>Client</h3>
         <div class="body">
-          <strong>${escapeHtml(buyer.company || "—")}</strong>
-          ${buyer.name ? escapeHtml(buyer.name) + "<br/>" : ""}
-          ${buyer.email ? escapeHtml(buyer.email) : ""}
+          <strong>${escapeHtml(buyer.company || '—')}</strong>
+          ${buyer.name ? escapeHtml(buyer.name) + '<br/>' : ''}
+          ${buyer.email ? escapeHtml(buyer.email) : ''}
         </div>
       </div>
       <div class="card">
@@ -266,18 +266,22 @@ function buildHTML(q: QuoteData): string {
     </footer>
   </div>
 </body>
-</html>`;
+</html>`
 }
 
 export function openQuotePDF(q: QuoteData) {
-  const html = buildHTML(q);
-  const win = window.open("", "_blank", "noopener,noreferrer,width=900,height=1000");
+  const html = buildHTML(q)
+  const win = window.open(
+    '',
+    '_blank',
+    'noopener,noreferrer,width=900,height=1000',
+  )
   if (!win) {
-    const url = "data:text/html;charset=utf-8," + encodeURIComponent(html);
-    window.open(url, "_blank");
-    return;
+    const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
+    window.open(url, '_blank')
+    return
   }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  win.document.open()
+  win.document.write(html)
+  win.document.close()
 }

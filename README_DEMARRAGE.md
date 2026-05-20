@@ -92,6 +92,7 @@ claude code
 Une fois Claude Code démarré, **copie-colle** le contenu du fichier `PROMPT_INITIAL_CLAUDE_CODE.md` (à la racine du starter).
 
 C'est tout. Claude Code va :
+
 1. Lire automatiquement `.claude/context.md`
 2. Créer la structure du projet (`src/`, `tests/`, `supabase/`, etc.)
 3. Initialiser `package.json`, `tsconfig.json`, configs depuis les templates
@@ -149,6 +150,7 @@ claude code
 ```
 
 Claude Code va :
+
 1. Lire `.claude/context.md` automatiquement (règles projet)
 2. Lire `docs/PROGRESS.md` (où on en est)
 3. Identifier la prochaine tâche
@@ -173,6 +175,7 @@ git push
 ### Si tu rencontres un bug
 
 Dans Claude Code :
+
 ```
 J'observe ce bug : [description]
 URL : [url]
@@ -181,6 +184,7 @@ Console errors : [paste]
 ```
 
 Claude Code va :
+
 1. Vérifier `docs/KNOWN_ISSUES.md` si pattern connu
 2. Analyser, hypothèses, fix
 3. Si pattern récurrent, ajouter dans `docs/KNOWN_ISSUES.md`
@@ -203,12 +207,14 @@ Claude Code va ajouter une entrée D-XXX dans `docs/DECISIONS.md`.
 ### Mode autonome (par défaut)
 
 Claude Code peut :
+
 - ✅ Créer/modifier des fichiers de code
 - ✅ Lancer des tests
 - ✅ Faire des commits Git
 - ✅ Mettre à jour la documentation
 
 Claude Code **doit demander avant** :
+
 - ⚠️ Modifier le schéma DB (migrations)
 - ⚠️ Ajouter une dépendance npm majeure
 - ⚠️ Modifier les politiques RLS Supabase
@@ -220,8 +226,9 @@ Claude Code **doit demander avant** :
 ### Mode strict (pour éviter surprises)
 
 Si tu préfères tout valider, dis-lui :
+
 ```
-Mode strict activé. Demande-moi confirmation avant chaque modification 
+Mode strict activé. Demande-moi confirmation avant chaque modification
 de fichier. Montre-moi le diff complet avant d'appliquer.
 ```
 
@@ -266,6 +273,7 @@ Liste complète dans `docs/SCRIPTS.md`.
 ### Le brief technique fait 5100 lignes, Claude Code va le relire à chaque fois ?
 
 Non. Le système est conçu pour éviter ça. Claude Code lit en priorité :
+
 1. `.claude/context.md` (règles, 100 lignes)
 2. `docs/PROGRESS.md` (état, 350 lignes)
 3. `docs/CHANGELOG.md` (versions, 150 lignes)
@@ -284,6 +292,7 @@ Le brief complet n'est consulté **que sur les sections nécessaires** à la tâ
 ### Et si je veux travailler à plusieurs sur le projet ?
 
 Le système est compatible. Chaque dev :
+
 1. Pull la dernière version
 2. Lit `docs/PROGRESS.md` pour voir où on en est
 3. Implémente sa partie
@@ -325,6 +334,7 @@ Puis redémarre une nouvelle session avec instruction claire.
 ## 📞 Support
 
 Cette conversation Claude reste disponible pour :
+
 - Modifier le brief technique (v1.4, v1.5...)
 - Ajouter des features non prévues
 - Debug des problèmes complexes

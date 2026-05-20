@@ -1,6 +1,6 @@
 /**
  * EXAMPLE DE RÉFÉRENCE — Tests Vitest exhaustifs
- * 
+ *
  * À adapter pour src/lib/pricing/tiers.test.ts
  * Doit couvrir : nominal, edge cases, précision décimale
  */
@@ -39,17 +39,19 @@ describe('calculateOrderPricing — cas nominal', () => {
     // 5 × 0.1 = 0.5 CBM, donc tier 1 (35%)
     expect(result.totalCbm).toBe(0.5)
     expect(result.effectiveMarginPercent).toBe(35)
-    
+
     // Prix unitaire = 50 × 1.35 + 0.5 = 68
     expect(result.lines[0].unitPriceHt).toBe(68)
     expect(result.lines[0].effectiveMargin).toBe(35)
-    
+
     // Subtotal = 68 × 5 = 340
     expect(result.subtotalHt).toBe(340)
   })
 
   it('devrait appliquer le tier 2 quand on dépasse 0.80 CBM', () => {
-    const lines = [createLine({ quantity: 15, cbmPerUnit: 0.1, costLanded: 50 })]
+    const lines = [
+      createLine({ quantity: 15, cbmPerUnit: 0.1, costLanded: 50 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     // 15 × 0.1 = 1.5 CBM
@@ -61,7 +63,9 @@ describe('calculateOrderPricing — cas nominal', () => {
   })
 
   it('devrait appliquer le tier le plus bas pour très gros volume', () => {
-    const lines = [createLine({ quantity: 100, cbmPerUnit: 0.1, costLanded: 50 })]
+    const lines = [
+      createLine({ quantity: 100, cbmPerUnit: 0.1, costLanded: 50 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     // 100 × 0.1 = 10 CBM, donc tous tiers traversés
@@ -83,11 +87,13 @@ describe('calculateOrderPricing — edge cases', () => {
     expect(result.totalCbm).toBe(0)
     expect(result.subtotalHt).toBe(0)
     expect(result.totalHt).toBe(0)
-    expect(result.effectiveMarginPercent).toBe(35)  // tier par défaut
+    expect(result.effectiveMarginPercent).toBe(35) // tier par défaut
   })
 
   it('devrait gérer une seule unité', () => {
-    const lines = [createLine({ quantity: 1, cbmPerUnit: 0.08, costLanded: 45 })]
+    const lines = [
+      createLine({ quantity: 1, cbmPerUnit: 0.08, costLanded: 45 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     expect(result.totalCbm).toBe(0.08)
@@ -98,22 +104,32 @@ describe('calculateOrderPricing — edge cases', () => {
 
   it('devrait gérer plusieurs lignes avec accumulation CBM', () => {
     const lines = [
-      createLine({ productId: 'p1', quantity: 10, cbmPerUnit: 0.08, costLanded: 45 }),   // 0.8 CBM
-      createLine({ productId: 'p2', quantity: 5, cbmPerUnit: 0.25, costLanded: 95 }),    // 1.25 CBM (total 2.05)
+      createLine({
+        productId: 'p1',
+        quantity: 10,
+        cbmPerUnit: 0.08,
+        costLanded: 45,
+      }), // 0.8 CBM
+      createLine({
+        productId: 'p2',
+        quantity: 5,
+        cbmPerUnit: 0.25,
+        costLanded: 95,
+      }), // 1.25 CBM (total 2.05)
     ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     expect(result.totalCbm).toBe(2.05)
     expect(result.lines).toHaveLength(2)
-    
+
     // Ligne 1 : entièrement dans tier 1 (35%)
     expect(result.lines[0].effectiveMargin).toBe(35)
-    
+
     // Ligne 2 : commence à 0.80, va jusqu'à 2.05
     // Tier 2 (0.80-2.00) : 1.20 × 32%
     // Tier 3 (2.00-2.05) : 0.05 × 30%
     // Moyenne : (1.20 × 32 + 0.05 × 30) / 1.25
-    const expectedMarginLine2 = (1.20 * 32 + 0.05 * 30) / 1.25
+    const expectedMarginLine2 = (1.2 * 32 + 0.05 * 30) / 1.25
     expect(result.lines[1].effectiveMargin).toBeCloseTo(expectedMarginLine2, 2)
   })
 
@@ -126,7 +142,9 @@ describe('calculateOrderPricing — edge cases', () => {
   })
 
   it('devrait gérer un coût de 0 (cas produit "pied seul -30%")', () => {
-    const lines = [createLine({ quantity: 5, costLanded: 0, ecoContribution: 1 })]
+    const lines = [
+      createLine({ quantity: 5, costLanded: 0, ecoContribution: 1 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     // Prix = 0 × 1.35 + 1 = 1
@@ -139,7 +157,7 @@ describe('calculateOrderPricing — edge cases', () => {
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     expect(result.ecoContributionTotal).toBe(0)
-    expect(result.lines[0].unitPriceHt).toBe(67.5)  // 50 × 1.35
+    expect(result.lines[0].unitPriceHt).toBe(67.5) // 50 × 1.35
   })
 })
 
@@ -150,12 +168,15 @@ describe('calculateOrderPricing — edge cases', () => {
 describe('calculateOrderPricing — précision décimale', () => {
   it('devrait arrondir à 2 décimales (centimes)', () => {
     // Cas qui produirait normalement une longue décimale
-    const lines = [createLine({ quantity: 7, cbmPerUnit: 0.0833, costLanded: 33.33 })]
+    const lines = [
+      createLine({ quantity: 7, cbmPerUnit: 0.0833, costLanded: 33.33 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     // Vérifier que tous les montants sont arrondis à 2 décimales
-    const isRounded = (n: number) => Math.abs(n * 100 - Math.round(n * 100)) < 0.0001
-    
+    const isRounded = (n: number) =>
+      Math.abs(n * 100 - Math.round(n * 100)) < 0.0001
+
     expect(isRounded(result.subtotalHt)).toBe(true)
     expect(isRounded(result.totalHt)).toBe(true)
     expect(isRounded(result.lines[0].unitPriceHt)).toBe(true)
@@ -164,7 +185,13 @@ describe('calculateOrderPricing — précision décimale', () => {
   it("ne devrait pas avoir d'erreur d'addition flottante sur de nombreuses lignes", () => {
     // 0.1 + 0.2 = 0.30000000000000004 en JS pur
     const lines = Array.from({ length: 100 }, (_, i) =>
-      createLine({ productId: `p${i}`, quantity: 1, cbmPerUnit: 0.001, costLanded: 0.10, ecoContribution: 0.10 }),
+      createLine({
+        productId: `p${i}`,
+        quantity: 1,
+        cbmPerUnit: 0.001,
+        costLanded: 0.1,
+        ecoContribution: 0.1,
+      }),
     )
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
@@ -183,8 +210,10 @@ describe('calculateOrderPricing — tiers personnalisés', () => {
       { minCbm: 0, maxCbm: 1, marginPercent: 50 },
       { minCbm: 1, maxCbm: null, marginPercent: 20 },
     ]
-    
-    const lines = [createLine({ quantity: 10, cbmPerUnit: 0.1, costLanded: 50 })]
+
+    const lines = [
+      createLine({ quantity: 10, cbmPerUnit: 0.1, costLanded: 50 }),
+    ]
     const result = calculateOrderPricing(lines, customTiers)
 
     // 10 × 0.1 = 1 CBM, exactement à la frontière
@@ -195,7 +224,7 @@ describe('calculateOrderPricing — tiers personnalisés', () => {
     const customTiers: PricingTier[] = [
       { minCbm: 0, maxCbm: null, marginPercent: 30 },
     ]
-    
+
     const lines = [
       createLine({ productId: 'p1', quantity: 1 }),
       createLine({ productId: 'p2', quantity: 50 }),
@@ -225,7 +254,9 @@ describe('calculateOrderPricing — cohérence globale', () => {
   })
 
   it('la marge effective globale devrait être entre les bornes des tiers utilisés', () => {
-    const lines = [createLine({ quantity: 60, cbmPerUnit: 0.1, costLanded: 50 })]
+    const lines = [
+      createLine({ quantity: 60, cbmPerUnit: 0.1, costLanded: 50 }),
+    ]
     const result = calculateOrderPricing(lines, DEFAULT_PRICING_TIERS)
 
     // 6 CBM, traverse tiers 1, 2, 3, 4

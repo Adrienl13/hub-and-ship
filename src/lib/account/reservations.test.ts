@@ -23,11 +23,13 @@ describe('account reservations fixtures', () => {
   })
 
   it('calculates account KPIs from reservations', () => {
-    expect(calculateAccountReservationKpis(ACCOUNT_RESERVATIONS)).toMatchObject({
-      activeCount: 2,
-      totalCommittedHt: 20480,
-      totalCbm: 26.5,
-    })
+    expect(calculateAccountReservationKpis(ACCOUNT_RESERVATIONS)).toMatchObject(
+      {
+        activeCount: 2,
+        totalCommittedHt: 20480,
+        totalCbm: 26.5,
+      },
+    )
   })
 
   it('puts local checkout reservations before demo fixtures', () => {

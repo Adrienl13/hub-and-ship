@@ -1,6 +1,9 @@
 import { getDefaultVariant } from '@/lib/catalogue'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
-import { buildReservationDraft, type ReservationDraft } from '@/lib/reservations/draft'
+import {
+  buildReservationDraft,
+  type ReservationDraft,
+} from '@/lib/reservations/draft'
 import type { LocalReservationRecord } from '@/lib/reservations/local-history'
 
 export type AccountReservationStatus =
@@ -30,7 +33,8 @@ export interface AccountReservationKpis {
 
 function requireProduct(id: string): Product {
   const product = PRODUCTS.find((item) => item.id === id)
-  if (!product) throw new Error(`Missing account reservation fixture product ${id}`)
+  if (!product)
+    throw new Error(`Missing account reservation fixture product ${id}`)
 
   return product
 }
@@ -39,7 +43,9 @@ const chair = requireProduct('p1')
 const armchair = requireProduct('p2')
 const table = requireProduct('p3')
 
-function requireDraft(result: ReturnType<typeof buildReservationDraft>): ReservationDraft {
+function requireDraft(
+  result: ReturnType<typeof buildReservationDraft>,
+): ReservationDraft {
   if (!result.ok) {
     throw new Error(result.issues[0]?.message ?? 'Reservation fixture invalid')
   }

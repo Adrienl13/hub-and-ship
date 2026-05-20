@@ -1,6 +1,6 @@
 /**
  * EXAMPLE DE RÉFÉRENCE — Composant React de qualité
- * 
+ *
  * Ce composant illustre :
  * - TypeScript strict avec props typées
  * - forwardRef pour accessibilité
@@ -9,7 +9,7 @@
  * - Touch target ≥44px (mobile-first)
  * - Accessibilité WCAG AA (aria-* appropriés)
  * - Documentation JSDoc
- * 
+ *
  * À adapter pour src/components/ui/Button.tsx
  */
 
@@ -38,23 +38,24 @@ const buttonVariants = cva(
     'transition-all duration-200',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2',
     'disabled:pointer-events-none disabled:opacity-50',
-    'min-h-touch',  // 44px minimum hauteur
+    'min-h-touch', // 44px minimum hauteur
   ].join(' '),
   {
     variants: {
       variant: {
         primary: 'bg-cta text-cta-text hover:bg-cta-hover',
-        secondary: 'bg-bg-elevated text-text-primary border border-border hover:border-border-strong',
+        secondary:
+          'bg-bg-elevated text-text-primary border border-border hover:border-border-strong',
         accent: 'bg-accent text-white hover:bg-accent-hover',
         ghost: 'text-text-primary hover:bg-bg-alt',
         danger: 'bg-danger text-white hover:bg-danger/90',
         link: 'text-accent underline-offset-4 hover:underline min-h-fit',
       },
       size: {
-        sm: 'px-3 py-1.5 text-sm min-h-[36px]',  // exception: bouton secondaire petit
+        sm: 'px-3 py-1.5 text-sm min-h-[36px]', // exception: bouton secondaire petit
         md: 'px-4 py-2 text-base',
         lg: 'px-6 py-3 text-lg',
-        icon: 'h-touch w-touch p-0',  // bouton carré 44x44
+        icon: 'h-touch w-touch p-0', // bouton carré 44x44
       },
       fullWidth: {
         true: 'w-full',
@@ -74,18 +75,19 @@ const buttonVariants = cva(
 // ============================================
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   /**
    * État loading (affiche un spinner et désactive le bouton)
    */
   loading?: boolean
-  
+
   /**
    * Icône à afficher avant le texte
    */
   iconLeft?: React.ReactNode
-  
+
   /**
    * Icône à afficher après le texte
    */
@@ -98,12 +100,12 @@ export interface ButtonProps
 
 /**
  * Bouton principal de l'application Container Club.
- * 
+ *
  * Conformité :
  * - Touch target ≥44px (mobile-first)
  * - WCAG AA (focus visible, état disabled clair)
  * - Variants couvrant tous les cas d'usage UI
- * 
+ *
  * @example
  * <Button variant="primary" size="lg">Réserver mon container</Button>
  * <Button variant="secondary" loading>Chargement...</Button>

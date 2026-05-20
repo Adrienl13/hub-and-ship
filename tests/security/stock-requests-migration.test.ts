@@ -4,17 +4,16 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync(
-  join(
-    process.cwd(),
-    'supabase/migrations/20260518204500_stock_requests.sql',
-  ),
+  join(process.cwd(), 'supabase/migrations/20260518204500_stock_requests.sql'),
   'utf8',
 )
 
 describe('stock requests migration', () => {
   it('creates the stock request status enum and table', () => {
     expect(migration).toContain('create type public.stock_request_status')
-    expect(migration).toContain('create table if not exists public.stock_requests')
+    expect(migration).toContain(
+      'create table if not exists public.stock_requests',
+    )
     expect(migration).toContain('requested_quantity int not null')
   })
 

@@ -1,23 +1,33 @@
-import { lazy, Suspense, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Maximize2, Minimize2, FileText, Mail, Lock, ShieldCheck, RefreshCcw, Truck, ArrowRight } from "lucide-react";
-import { ContainerFillBar } from "@/components/ContainerFillBar";
-import { ContainerScene3DFallback } from "@/components/ContainerScene3DFallback";
-import { ContainerStatusBadge } from "@/components/ContainerStatusBadge";
-import { DeliveryInfoBox } from "@/components/DeliveryInfoBox";
-import { ParticipantsCount } from "@/components/ParticipantsCount";
-import { SeriesProgressIndicator } from "@/components/SeriesProgressIndicator";
-import { TieredPricingViz } from "@/components/TieredPricingViz";
-import { Button } from "@/components/ui/button";
-import { CURRENT_CONTAINER } from "@/lib/products";
-import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
-import { AnimatedNumber } from "@/components/motion-helpers";
+import { lazy, Suspense, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Maximize2,
+  Minimize2,
+  FileText,
+  Mail,
+  Lock,
+  ShieldCheck,
+  RefreshCcw,
+  Truck,
+  ArrowRight,
+} from 'lucide-react'
+import { ContainerFillBar } from '@/components/ContainerFillBar'
+import { ContainerScene3DFallback } from '@/components/ContainerScene3DFallback'
+import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
+import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
+import { ParticipantsCount } from '@/components/ParticipantsCount'
+import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
+import { TieredPricingViz } from '@/components/TieredPricingViz'
+import { Button } from '@/components/ui/button'
+import { CURRENT_CONTAINER } from '@/lib/products'
+import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
+import { AnimatedNumber } from '@/components/motion-helpers'
 
 const LazyContainerScene = lazy(() =>
-  import("@/components/ContainerScene").then((module) => ({
+  import('@/components/ContainerScene').then((module) => ({
     default: module.ContainerScene,
   })),
-);
+)
 
 export function OrderSidebar({
   items,
@@ -29,17 +39,17 @@ export function OrderSidebar({
   onDownloadPdf,
   onEmailQuote,
 }: {
-  items: CartItem[];
-  totals: OrderTotals;
-  fillPercent: number;
-  usedCbm: number;
-  capacity: number;
-  onReserve: () => void;
-  onDownloadPdf: () => void;
-  onEmailQuote: () => void;
+  items: CartItem[]
+  totals: OrderTotals
+  fillPercent: number
+  usedCbm: number
+  capacity: number
+  onReserve: () => void
+  onDownloadPdf: () => void
+  onEmailQuote: () => void
 }) {
-  const [exploded, setExploded] = useState(false);
-  const hasItems = items.length > 0;
+  const [exploded, setExploded] = useState(false)
+  const hasItems = items.length > 0
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -55,15 +65,19 @@ export function OrderSidebar({
             </div>
           </div>
           <Button
-            variant={exploded ? "default" : "outline"}
+            variant={exploded ? 'default' : 'outline'}
             size="sm"
             className="h-7 gap-1 rounded-sm border-[color:var(--sand-deep)] px-2 text-[11px]"
             onClick={() => setExploded((v) => !v)}
           >
             {exploded ? (
-              <><Minimize2 className="h-3 w-3" /> Regrouper</>
+              <>
+                <Minimize2 className="h-3 w-3" /> Regrouper
+              </>
             ) : (
-              <><Maximize2 className="h-3 w-3" /> Vue éclatée</>
+              <>
+                <Maximize2 className="h-3 w-3" /> Vue éclatée
+              </>
             )}
           </Button>
         </div>
@@ -77,7 +91,9 @@ export function OrderSidebar({
         {/* Stats */}
         <div className="space-y-3 border-t border-[color:var(--sand-deep)] p-3 text-xs">
           <div className="flex items-center justify-between gap-3">
-            <span className="label-eyebrow text-muted-foreground">État container</span>
+            <span className="label-eyebrow text-muted-foreground">
+              État container
+            </span>
             <ContainerStatusBadge
               status={CURRENT_CONTAINER.status}
               fillPercent={fillPercent}
@@ -102,11 +118,13 @@ export function OrderSidebar({
       {/* Récap */}
       <div className="rounded-md border border-[color:var(--sand-deep)] bg-card">
         <div className="border-b border-[color:var(--sand-deep)] px-4 py-3">
-          <div className="label-eyebrow text-muted-foreground">Votre commande</div>
+          <div className="label-eyebrow text-muted-foreground">
+            Votre commande
+          </div>
         </div>
 
         {hasItems ? (
-          <ul className="divide-y divide-[color:var(--sand-deep)]/60">
+          <ul className="divide-[color:var(--sand-deep)]/60 divide-y">
             <AnimatePresence initial={false}>
               {items.map((item) => (
                 <motion.li
@@ -120,16 +138,21 @@ export function OrderSidebar({
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className="h-3 w-3 shrink-0 rounded-full ring-1 ring-foreground/15"
+                      className="ring-foreground/15 h-3 w-3 shrink-0 rounded-full ring-1"
                       style={{ background: item.variant.hex }}
                     />
                     <span className="truncate">
-                      <span className="font-medium tabular-nums">{item.quantity}× </span>
+                      <span className="font-medium tabular-nums">
+                        {item.quantity}×{' '}
+                      </span>
                       {item.product.name}
-                      <span className="text-muted-foreground"> · {item.variant.name}</span>
+                      <span className="text-muted-foreground">
+                        {' '}
+                        · {item.variant.name}
+                      </span>
                     </span>
                   </div>
-                  <span className="shrink-0 tabular-nums font-medium">
+                  <span className="shrink-0 font-medium tabular-nums">
                     {formatEUR(item.product.basePriceHt * item.quantity)}
                   </span>
                 </motion.li>
@@ -155,19 +178,31 @@ export function OrderSidebar({
             />
             <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
             <AnimRow label="À payer aujourd'hui" value={totals.payNow} bold />
-            <AnimRow label="Acompte à 80%" value={totals.payAt80Percent} muted />
-            <AnimRow label="Solde avant expédition" value={totals.payBeforeShipping} muted />
+            <AnimRow
+              label="Acompte à 80%"
+              value={totals.payAt80Percent}
+              muted
+            />
+            <AnimRow
+              label="Solde avant expédition"
+              value={totals.payBeforeShipping}
+              muted
+            />
             {totals.savings > 0 && (
               <motion.div
                 layout
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-3 -mx-4 -mb-3 rounded-b-md bg-[color:var(--sand)] px-4 py-2.5"
+                className="-mx-4 -mb-3 mt-3 rounded-b-md bg-[color:var(--sand)] px-4 py-2.5"
               >
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-foreground/80">Économie totale</span>
                   <span className="font-display text-base font-semibold tabular-nums text-[color:var(--ember)]">
-                    −<AnimatedNumber value={totals.savings} format={(n) => formatEUR(n)} />
+                    −
+                    <AnimatedNumber
+                      value={totals.savings}
+                      format={(n) => formatEUR(n)}
+                    />
                   </span>
                 </div>
               </motion.div>
@@ -214,21 +249,30 @@ export function OrderSidebar({
       </div>
 
       {/* Trust */}
-      <ul className="space-y-1.5 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3 text-[11px] text-foreground/75">
+      <ul className="text-foreground/75 space-y-1.5 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3 text-[11px]">
         {[
-          { Icon: RefreshCcw, t: "Remboursement 100% si Container Club annule" },
-          { Icon: Lock, t: "Paiement Stripe sécurisé · 3D Secure" },
-          { Icon: ShieldCheck, t: "Contrôle qualité SGS indépendant avant départ" },
-          { Icon: Truck, t: "Transport post-port organisé côté client" },
+          {
+            Icon: RefreshCcw,
+            t: 'Remboursement 100% si Container Club annule',
+          },
+          { Icon: Lock, t: 'Paiement Stripe sécurisé · 3D Secure' },
+          {
+            Icon: ShieldCheck,
+            t: 'Contrôle qualité SGS indépendant avant départ',
+          },
+          { Icon: Truck, t: 'Transport post-port organisé côté client' },
         ].map(({ Icon, t }) => (
           <li key={t} className="flex items-start gap-2">
-            <Icon className="mt-0.5 h-3 w-3 shrink-0 text-foreground/50" strokeWidth={1.5} />
+            <Icon
+              className="text-foreground/50 mt-0.5 h-3 w-3 shrink-0"
+              strokeWidth={1.5}
+            />
             {t}
           </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
 function AnimRow({
@@ -238,23 +282,27 @@ function AnimRow({
   muted,
   hint,
 }: {
-  label: string;
-  value: number;
-  bold?: boolean;
-  muted?: boolean;
-  hint?: string;
+  label: string
+  value: number
+  bold?: boolean
+  muted?: boolean
+  hint?: string
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span className={muted ? "text-muted-foreground" : "text-foreground/80"}>
+      <span className={muted ? 'text-muted-foreground' : 'text-foreground/80'}>
         {label}
-        {hint && <span className="ml-1 text-[10px] text-muted-foreground">({hint})</span>}
+        {hint && (
+          <span className="ml-1 text-[10px] text-muted-foreground">
+            ({hint})
+          </span>
+        )}
       </span>
       <span
-        className={`tabular-nums ${bold ? "font-display text-base font-semibold" : muted ? "text-muted-foreground" : "font-medium"}`}
+        className={`tabular-nums ${bold ? 'font-display text-base font-semibold' : muted ? 'text-muted-foreground' : 'font-medium'}`}
       >
         <AnimatedNumber value={value} format={(n) => formatEUR(n)} />
       </span>
     </div>
-  );
+  )
 }

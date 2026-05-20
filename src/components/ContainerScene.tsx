@@ -1,32 +1,52 @@
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Edges, RoundedBox, ContactShadows, Environment, Html } from "@react-three/drei";
-import { useMemo, Suspense } from "react";
-import type { CartItem } from "@/lib/order";
+import { Canvas } from '@react-three/fiber'
+import {
+  OrbitControls,
+  Edges,
+  RoundedBox,
+  ContactShadows,
+  Environment,
+  Html,
+} from '@react-three/drei'
+import { useMemo, Suspense } from 'react'
+import type { CartItem } from '@/lib/order'
 import {
   CONTAINER_INNER_METERS,
   packContainerPackages,
-} from "@/lib/container/packing";
+} from '@/lib/container/packing'
 
 // 20' High Cube intérieur utile (m)
-const L = CONTAINER_INNER_METERS.length;
-const W = CONTAINER_INNER_METERS.width;
-const H = CONTAINER_INNER_METERS.height;
+const L = CONTAINER_INNER_METERS.length
+const W = CONTAINER_INNER_METERS.width
+const H = CONTAINER_INNER_METERS.height
 
 function ContainerShell({ opacity = 1 }: { opacity?: number }) {
-  const wallColor = "#b8aea0";
+  const wallColor = '#b8aea0'
   return (
     <group>
       <mesh position={[0, -H / 2 - 0.011, 0]} receiveShadow>
         <boxGeometry args={[L, 0.02, W]} />
-        <meshStandardMaterial color="#6e5e4a" roughness={0.95} transparent opacity={opacity} />
+        <meshStandardMaterial
+          color="#6e5e4a"
+          roughness={0.95}
+          transparent
+          opacity={opacity}
+        />
       </mesh>
       <mesh position={[0, 0, -W / 2]}>
         <boxGeometry args={[L, H, 0.015]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.18 * opacity} />
+        <meshStandardMaterial
+          color={wallColor}
+          transparent
+          opacity={0.18 * opacity}
+        />
       </mesh>
       <mesh position={[-L / 2, 0, 0]}>
         <boxGeometry args={[0.015, H, W]} />
-        <meshStandardMaterial color={wallColor} transparent opacity={0.22 * opacity} />
+        <meshStandardMaterial
+          color={wallColor}
+          transparent
+          opacity={0.22 * opacity}
+        />
       </mesh>
       <mesh>
         <boxGeometry args={[L, H, W]} />
@@ -34,7 +54,7 @@ function ContainerShell({ opacity = 1 }: { opacity?: number }) {
         <Edges color="#1a1a1c" threshold={1} />
       </mesh>
     </group>
-  );
+  )
 }
 
 function LoadingMesh() {
@@ -43,41 +63,41 @@ function LoadingMesh() {
       <boxGeometry args={[2, 0.5, 2]} />
       <meshStandardMaterial color="#e8dfd0" />
     </mesh>
-  );
+  )
 }
 
 export function ContainerScene({
   items,
   exploded = false,
 }: {
-  items: CartItem[];
-  exploded?: boolean;
+  items: CartItem[]
+  exploded?: boolean
 }) {
   const { packages, slices, overflowUnits } = useMemo(
     () => packContainerPackages(items),
     [items],
-  );
+  )
 
-  const EXPLODE_GAP = 0.7;
+  const EXPLODE_GAP = 0.7
   const explodeOffset = (sliceIndex: number, total: number) => {
-    if (!exploded || total <= 1) return { dx: 0, dy: 0 };
-    const centered = sliceIndex - (total - 1) / 2;
+    if (!exploded || total <= 1) return { dx: 0, dy: 0 }
+    const centered = sliceIndex - (total - 1) / 2
     return {
       dx: centered * EXPLODE_GAP,
       dy: sliceIndex % 2 === 0 ? 0.18 : -0.05,
-    };
-  };
-  const totalSlices = slices.length;
+    }
+  }
+  const totalSlices = slices.length
 
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
       camera={{ position: [8, 5.5, 7.5], fov: 35 }}
-      style={{ background: "transparent" }}
+      style={{ background: 'transparent' }}
     >
-      <color attach="background" args={["#f4ede1"]} />
-      <fog attach="fog" args={["#f4ede1", 18, 32]} />
+      <color attach="background" args={['#f4ede1']} />
+      <fog attach="fog" args={['#f4ede1', 18, 32]} />
       <ambientLight intensity={0.55} />
       <directionalLight
         position={[7, 11, 6]}
@@ -98,7 +118,7 @@ export function ContainerScene({
       <group position={[0, 0.25, 0]}>
         <ContainerShell opacity={exploded ? 0.25 : 1} />
         {packages.map((b, i) => {
-          const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices);
+          const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices)
           return (
             <RoundedBox
               key={i}
@@ -109,40 +129,44 @@ export function ContainerScene({
               castShadow
               receiveShadow
             >
-              <meshStandardMaterial color={b.color} roughness={0.78} metalness={0.05} />
+              <meshStandardMaterial
+                color={b.color}
+                roughness={0.78}
+                metalness={0.05}
+              />
             </RoundedBox>
-          );
+          )
         })}
         {exploded &&
           slices.map((s, i) => {
-            const { dx } = explodeOffset(i, totalSlices);
+            const { dx } = explodeOffset(i, totalSlices)
             return (
               <Html
                 key={s.productId}
                 position={[s.centerX + dx, -H / 2 - 0.25, 0]}
                 center
                 distanceFactor={10}
-                style={{ pointerEvents: "none" }}
+                style={{ pointerEvents: 'none' }}
               >
                 <div
-                  className="whitespace-nowrap rounded-sm border border-black/10 bg-white/95 px-2 py-0.5 text-[10px] font-medium text-foreground shadow-paper"
+                  className="shadow-paper whitespace-nowrap rounded-sm border border-black/10 bg-white/95 px-2 py-0.5 text-[10px] font-medium text-foreground"
                   style={{ borderLeft: `3px solid ${s.color}` }}
                 >
                   {s.productName} · {s.packedUnits}/{s.requestedUnits}
-                  {s.overflowUnits > 0 ? " hors capacité" : ""}
+                  {s.overflowUnits > 0 ? ' hors capacité' : ''}
                 </div>
               </Html>
-            );
+            )
           })}
         {overflowUnits > 0 && (
           <Html
             position={[L / 2 - 0.55, H / 2 + 0.25, 0]}
             center
             distanceFactor={9}
-            style={{ pointerEvents: "none" }}
+            style={{ pointerEvents: 'none' }}
           >
-            <div className="whitespace-nowrap rounded-sm border border-destructive/30 bg-white/95 px-2 py-1 text-[10px] font-medium text-destructive shadow-paper">
-              {overflowUnits} unité{overflowUnits > 1 ? "s" : ""} hors capacité
+            <div className="border-destructive/30 shadow-paper whitespace-nowrap rounded-sm border bg-white/95 px-2 py-1 text-[10px] font-medium text-destructive">
+              {overflowUnits} unité{overflowUnits > 1 ? 's' : ''} hors capacité
             </div>
           </Html>
         )}
@@ -164,5 +188,5 @@ export function ContainerScene({
         autoRotateSpeed={0.45}
       />
     </Canvas>
-  );
+  )
 }

@@ -171,6 +171,7 @@ git push --force-with-lease          # Push force safe
 Voir `PROMPTS.md` pour la liste complète.
 
 Raccourcis fréquents :
+
 - "Continue depuis PROGRESS.md"
 - "Implémente la prochaine tâche de la phase X"
 - "Lance test:all et fix les erreurs"

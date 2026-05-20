@@ -1,30 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { ArrowUpDown, Search } from "lucide-react";
-
-import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
-import { ValueProps } from "@/components/ValueProps";
-import { HowItWorks } from "@/components/HowItWorks";
-import { ComparisonTable } from "@/components/ComparisonTable";
-import { ProductCard } from "@/components/ProductCard";
-import { ProductRow } from "@/components/ProductRow";
-import { OrderSidebar } from "@/components/OrderSidebar";
-import { DeliveryInfoBox } from "@/components/DeliveryInfoBox";
-import { PastContainers } from "@/components/PastContainers";
-import { FaqAccordion } from "@/components/FaqAccordion";
-import { FinalCta } from "@/components/FinalCta";
-import { Footer } from "@/components/Footer";
-import { MobileStickyBar } from "@/components/MobileStickyBar";
-import { useIsMobile } from "@/hooks/use-mobile";
-
+import { createFileRoute } from '@tanstack/react-router'
 import {
-  CURRENT_CONTAINER,
-  PRODUCTS,
-  type Product,
-} from "@/lib/products";
-import { calculateStockKpis, getAvailableStockLines } from "@/lib/stock";
+  lazy,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { toast } from 'sonner'
+import { ArrowUpDown, Search } from 'lucide-react'
+
+import { Header } from '@/components/Header'
+import { Hero } from '@/components/Hero'
+import { ValueProps } from '@/components/ValueProps'
+import { HowItWorks } from '@/components/HowItWorks'
+import { ComparisonTable } from '@/components/ComparisonTable'
+import { ProductCard } from '@/components/ProductCard'
+import { ProductRow } from '@/components/ProductRow'
+import { OrderSidebar } from '@/components/OrderSidebar'
+import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
+import { PastContainers } from '@/components/PastContainers'
+import { FaqAccordion } from '@/components/FaqAccordion'
+import { FinalCta } from '@/components/FinalCta'
+import { Footer } from '@/components/Footer'
+import { MobileStickyBar } from '@/components/MobileStickyBar'
+import { useIsMobile } from '@/hooks/use-mobile'
+
+import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
+import { calculateStockKpis, getAvailableStockLines } from '@/lib/stock'
 import {
   CATEGORY_FILTERS,
   filterAndSortProducts,
@@ -32,31 +35,31 @@ import {
   getDefaultVariant,
   type CatalogueFilter,
   type SortKey,
-} from "@/lib/catalogue";
-import { formatEUR } from "@/lib/order";
-import { openQuotePDF } from "@/lib/quote";
-import { useCart } from "@/stores/cart.store";
+} from '@/lib/catalogue'
+import { formatEUR } from '@/lib/order'
+import { openQuotePDF } from '@/lib/quote'
+import { useCart } from '@/stores/cart.store'
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
   component: ContainerClubPage,
-});
+})
 
-const MOBILE_PAGE_SIZE = 8;
-const DESKTOP_PAGE_SIZE = 18;
+const MOBILE_PAGE_SIZE = 8
+const DESKTOP_PAGE_SIZE = 18
 const LazyProductDetailDialog = lazy(() =>
-  import("@/components/ProductDetailDialog").then((module) => ({
+  import('@/components/ProductDetailDialog').then((module) => ({
     default: module.ProductDetailDialog,
   })),
-);
+)
 const LazyReservationDialog = lazy(() =>
-  import("@/components/ReservationDialog").then((module) => ({
+  import('@/components/ReservationDialog').then((module) => ({
     default: module.ReservationDialog,
   })),
-);
+)
 
 function ContainerClubPage() {
-  const isMobile = useIsMobile();
-  const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
+  const isMobile = useIsMobile()
+  const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE
   const {
     items,
     totals,
@@ -66,17 +69,17 @@ function ContainerClubPage() {
     qtyByProduct,
     setQty,
     setVariant,
-  } = useCart();
+  } = useCart()
 
-  const [filter, setFilter] = useState<CatalogueFilter>("all");
-  const [sort, setSort] = useState<SortKey>("default");
-  const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
-  const [visibleCount, setVisibleCount] = useState(pageSize);
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const [reserveOpen, setReserveOpen] = useState(false);
+  const [filter, setFilter] = useState<CatalogueFilter>('all')
+  const [sort, setSort] = useState<SortKey>('default')
+  const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
+  const [visibleCount, setVisibleCount] = useState(pageSize)
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [reserveOpen, setReserveOpen] = useState(false)
 
-  const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), []);
+  const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), [])
 
   const filtered = useMemo(() => {
     return filterAndSortProducts({
@@ -84,29 +87,32 @@ function ContainerClubPage() {
       filter,
       search: deferredSearch,
       sort,
-    });
-  }, [deferredSearch, filter, sort]);
+    })
+  }, [deferredSearch, filter, sort])
 
   const visibleProducts = useMemo(
     () => filtered.slice(0, visibleCount),
     [filtered, visibleCount],
-  );
-  const remainingProducts = Math.max(0, filtered.length - visibleProducts.length);
+  )
+  const remainingProducts = Math.max(
+    0,
+    filtered.length - visibleProducts.length,
+  )
 
   useEffect(() => {
-    setVisibleCount(pageSize);
-  }, [deferredSearch, filter, pageSize, sort]);
+    setVisibleCount(pageSize)
+  }, [deferredSearch, filter, pageSize, sort])
 
   const detailProduct: Product | null = useMemo(
     () => PRODUCTS.find((p) => p.id === detailId) ?? null,
     [detailId],
-  );
+  )
 
   const handleEmail = () => {
-    toast.success("Devis envoyé", {
-      description: "Vous recevrez votre devis PDF par email sous 2 minutes.",
-    });
-  };
+    toast.success('Devis envoyé', {
+      description: 'Vous recevrez votre devis PDF par email sous 2 minutes.',
+    })
+  }
 
   const handlePdf = () => {
     openQuotePDF({
@@ -117,8 +123,8 @@ function ContainerClubPage() {
       capacity: fill.capacity,
       containerRef: CURRENT_CONTAINER.reference,
       port: CURRENT_CONTAINER.port,
-    });
-  };
+    })
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
@@ -139,12 +145,14 @@ function ContainerClubPage() {
       {/* Catalogue */}
       <section
         id="catalogue"
-        className="border-t border-[color:var(--sand-deep)] scroll-mt-20"
+        className="scroll-mt-20 border-t border-[color:var(--sand-deep)]"
       >
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
-              <div className="label-eyebrow text-[color:var(--ember)]">Catalogue</div>
+              <div className="label-eyebrow text-[color:var(--ember)]">
+                Catalogue
+              </div>
               <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
                 Choisissez vos modèles, couleur par couleur.
               </h2>
@@ -167,8 +175,8 @@ function ContainerClubPage() {
               <div className="mb-5 flex flex-col gap-3 border-b border-[color:var(--sand-deep)] pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
                   {CATEGORY_FILTERS.map((f) => {
-                    const active = f.id === filter;
-                    const count = categoryCounts[f.id];
+                    const active = f.id === filter
+                    const count = categoryCounts[f.id]
                     return (
                       <button
                         key={f.id}
@@ -176,16 +184,18 @@ function ContainerClubPage() {
                         onClick={() => setFilter(f.id)}
                         className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-0 ${
                           active
-                            ? "bg-[color:var(--foreground)] text-[color:var(--background)]"
-                            : "border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground"
+                            ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
+                            : 'text-foreground/75 hover:border-foreground/40 border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] hover:text-foreground'
                         }`}
                       >
                         {f.label}
-                        <span className={`ml-1.5 tabular-nums ${active ? "opacity-70" : "opacity-50"}`}>
+                        <span
+                          className={`ml-1.5 tabular-nums ${active ? 'opacity-70' : 'opacity-50'}`}
+                        >
                           {count}
                         </span>
                       </button>
-                    );
+                    )
                   })}
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -215,9 +225,11 @@ function ContainerClubPage() {
                   </label>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {filtered.length} référence{filtered.length > 1 ? "s" : ""} trouvée
-                  {filtered.length > 1 ? "s" : ""} · {visibleProducts.length} affichée
-                  {visibleProducts.length > 1 ? "s" : ""}
+                  {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
+                  trouvée
+                  {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
+                  affichée
+                  {visibleProducts.length > 1 ? 's' : ''}
                 </div>
               </div>
 
@@ -229,22 +241,24 @@ function ContainerClubPage() {
                 <div className="space-y-3">
                   {visibleProducts.map((product) => {
                     const selectedVariantId =
-                      variantByProduct[product.id] ?? getDefaultVariant(product).id;
-                    const quantity = qtyByProduct[product.id] ?? 0;
+                      variantByProduct[product.id] ??
+                      getDefaultVariant(product).id
+                    const quantity = qtyByProduct[product.id] ?? 0
                     const commonProps = {
                       product,
                       variantId: selectedVariantId,
                       qty: quantity,
                       onQtyChange: (n: number) => setQty(product.id, n),
-                      onVariantChange: (id: string) => setVariant(product.id, id),
+                      onVariantChange: (id: string) =>
+                        setVariant(product.id, id),
                       onOpenDetails: () => setDetailId(product.id),
-                    };
+                    }
 
                     return isMobile ? (
                       <ProductCard key={product.id} {...commonProps} />
                     ) : (
                       <ProductRow key={product.id} {...commonProps} />
-                    );
+                    )
                   })}
                 </div>
               )}
@@ -253,20 +267,23 @@ function ContainerClubPage() {
                 <div className="mt-5 border-t border-[color:var(--sand-deep)] pt-5 text-center">
                   <button
                     type="button"
-                    className="min-h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/40"
-                    onClick={() => setVisibleCount((current) => current + pageSize)}
+                    className="hover:border-foreground/40 min-h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-sm font-medium transition-colors"
+                    onClick={() =>
+                      setVisibleCount((current) => current + pageSize)
+                    }
                   >
                     Charger {Math.min(pageSize, remainingProducts)} référence
-                    {Math.min(pageSize, remainingProducts) > 1 ? "s" : ""} de plus
+                    {Math.min(pageSize, remainingProducts) > 1 ? 's' : ''} de
+                    plus
                   </button>
                 </div>
               )}
 
               <div className="mt-4 text-[11px] text-muted-foreground">
-                MOQ usine :{" "}
+                MOQ usine :{' '}
                 <strong className="text-foreground/80">
                   50 unités par modèle ET par couleur
-                </strong>{" "}
+                </strong>{' '}
                 pour les assises, 20 pour les tables.
               </div>
             </div>
@@ -328,7 +345,7 @@ function ContainerClubPage() {
         )}
       </Suspense>
     </div>
-  );
+  )
 }
 
 function Stock24hTeaser() {
@@ -396,7 +413,9 @@ function Stock24hTeaser() {
                 <span className="block font-display text-lg font-semibold tabular-nums">
                   {line.availableUnits}
                 </span>
-                <span className="text-[10px] text-muted-foreground">unités</span>
+                <span className="text-[10px] text-muted-foreground">
+                  unités
+                </span>
               </span>
             </a>
           ))}

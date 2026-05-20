@@ -1,31 +1,31 @@
-import { Check, Sparkles } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { Check, Sparkles } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
-import type { MoqStatus } from "@/lib/order";
+import type { MoqStatus } from '@/lib/order'
 
-const TONE_CLASSES: Record<MoqStatus["tone"], string> = {
+const TONE_CLASSES: Record<MoqStatus['tone'], string> = {
   success:
-    "bg-[color:var(--forest)]/12 text-[color:var(--forest)] border-[color:var(--forest)]/25",
+    'bg-[color:var(--forest)]/12 text-[color:var(--forest)] border-[color:var(--forest)]/25',
   amber:
-    "bg-[color:var(--ember)]/10 text-[color:var(--ember)] border-[color:var(--ember)]/25",
+    'bg-[color:var(--ember)]/10 text-[color:var(--ember)] border-[color:var(--ember)]/25',
   ochre:
-    "bg-[color:var(--ochre)]/10 text-[color:var(--ochre)] border-[color:var(--ochre)]/25",
-  neutral: "bg-muted text-muted-foreground border-border",
-};
+    'bg-[color:var(--ochre)]/10 text-[color:var(--ochre)] border-[color:var(--ochre)]/25',
+  neutral: 'bg-muted text-muted-foreground border-border',
+}
 
-const TONE_BAR: Record<MoqStatus["tone"], string> = {
-  success: "bg-[color:var(--forest)]",
-  amber: "bg-[color:var(--ember)]",
-  ochre: "bg-[color:var(--ochre)]",
-  neutral: "bg-[color:var(--ink-soft)]",
-};
+const TONE_BAR: Record<MoqStatus['tone'], string> = {
+  success: 'bg-[color:var(--forest)]',
+  amber: 'bg-[color:var(--ember)]',
+  ochre: 'bg-[color:var(--ochre)]',
+  neutral: 'bg-[color:var(--ink-soft)]',
+}
 
 export function MoqProgressBar({
   label,
   status,
 }: {
-  label: string;
-  status: MoqStatus;
+  label: string
+  status: MoqStatus
 }) {
   return (
     <div>
@@ -40,7 +40,7 @@ export function MoqProgressBar({
             transition={{ duration: 0.25 }}
             className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-medium ${TONE_CLASSES[status.tone]}`}
           >
-            {status.status === "reached" ? (
+            {status.status === 'reached' ? (
               <Check className="h-3 w-3" strokeWidth={2.5} />
             ) : (
               <Sparkles className="h-3 w-3" />
@@ -54,21 +54,21 @@ export function MoqProgressBar({
           className={`h-full ${TONE_BAR[status.tone]}`}
           initial={false}
           animate={{ width: `${Math.min(100, status.percent)}%` }}
-          transition={{ type: "spring", stiffness: 110, damping: 20 }}
+          transition={{ type: 'spring', stiffness: 110, damping: 20 }}
         />
-        {status.status === "reached" && (
+        {status.status === 'reached' && (
           <motion.div
             className="absolute inset-y-[-2px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent"
-            animate={{ x: ["-100%", "260%"] }}
+            animate={{ x: ['-100%', '260%'] }}
             transition={{
               duration: 1.8,
               repeat: Infinity,
               repeatDelay: 1.2,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
           />
         )}
       </div>
     </div>
-  );
+  )
 }

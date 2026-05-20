@@ -24,10 +24,7 @@ import {
 } from '@/lib/account/reservations'
 import { CURRENT_CONTAINER, CATEGORY_LABEL } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
-import {
-  STOCK_CONDITION_LABEL,
-  type StockLine,
-} from '@/lib/stock'
+import { STOCK_CONDITION_LABEL, type StockLine } from '@/lib/stock'
 import {
   STOCK_REQUEST_STATUS_LABEL,
   readLocalStockRequests,
@@ -52,7 +49,9 @@ function AdminPage() {
   }, [])
 
   const stockRequests = useMemo(() => {
-    const localIds = new Set(localStockRequests.map((request) => request.localId))
+    const localIds = new Set(
+      localStockRequests.map((request) => request.localId),
+    )
     return [
       ...localStockRequests,
       ...ADMIN_DEMO_STOCK_REQUESTS.filter(
@@ -84,7 +83,10 @@ function AdminPage() {
               le catalogue et le remplissage du container.
             </p>
           </div>
-          <AdminAccessBox status={auth.status} isConfigured={auth.isConfigured} />
+          <AdminAccessBox
+            status={auth.status}
+            isConfigured={auth.isConfigured}
+          />
         </div>
       </section>
 
@@ -105,7 +107,7 @@ function AdminPage() {
                 className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                   active
                     ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
-                    : 'border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground'
+                    : 'text-foreground/75 hover:border-foreground/40 border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] hover:text-foreground'
                 }`}
               >
                 {label}
@@ -131,7 +133,7 @@ function AdminPage() {
 
 function AdminTopBar() {
   return (
-    <header className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]/85 backdrop-blur-md">
+    <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <a href="/" className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">
@@ -148,7 +150,12 @@ function AdminTopBar() {
           >
             Stock 24h
           </a>
-          <Button asChild size="sm" variant="outline" className="h-9 rounded-sm">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="h-9 rounded-sm"
+          >
             <a href="/catalogue">Catalogue</a>
           </Button>
         </nav>
@@ -219,10 +226,16 @@ function Overview({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Demandes stock à rappeler">
-          <StockRequestsTable requests={snapshot.stockRequests.slice(0, 4)} compact />
+          <StockRequestsTable
+            requests={snapshot.stockRequests.slice(0, 4)}
+            compact
+          />
         </Panel>
         <Panel title="Réservations récentes">
-          <ReservationsTable reservations={snapshot.reservations.slice(0, 4)} compact />
+          <ReservationsTable
+            reservations={snapshot.reservations.slice(0, 4)}
+            compact
+          />
         </Panel>
       </div>
     </div>
@@ -245,7 +258,7 @@ function StockRequestsTable({
         <span className="text-right">Total HT</span>
         <span>Statut</span>
       </div>
-      <div className="divide-y divide-[color:var(--sand-deep)]/70">
+      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
         {requests.map((request) => (
           <article
             key={request.localId}
@@ -298,7 +311,7 @@ function ReservationsTable({
         <span className="text-right">Montant HT</span>
         <span />
       </div>
-      <div className="divide-y divide-[color:var(--sand-deep)]/70">
+      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
         {reservations.map((reservation) => (
           <article
             key={reservation.id}
@@ -354,7 +367,7 @@ function ProductsAndStockTable({
         <span>État</span>
         <span className="text-right">Prix stock</span>
       </div>
-      <div className="divide-y divide-[color:var(--sand-deep)]/70">
+      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
         {stockLines.map((line) => (
           <article
             key={line.id}
@@ -369,7 +382,9 @@ function ProductsAndStockTable({
             <div className="text-xs text-muted-foreground">
               {CATEGORY_LABEL[line.product.category]}
             </div>
-            <div className="font-medium tabular-nums">{line.availableUnits}</div>
+            <div className="font-medium tabular-nums">
+              {line.availableUnits}
+            </div>
             <StatusPill label={STOCK_CONDITION_LABEL[line.condition]} />
             <div className="font-medium tabular-nums md:text-right">
               {formatEUR(line.stockPriceHt)}
@@ -428,7 +443,7 @@ function Kpi({
 
 function StatusPill({ label }: { readonly label: string }) {
   return (
-    <span className="inline-flex h-7 w-fit items-center rounded-sm border border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 px-2 text-[11px] font-medium">
+    <span className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 inline-flex h-7 w-fit items-center rounded-sm border px-2 text-[11px] font-medium">
       {label}
     </span>
   )
@@ -436,7 +451,7 @@ function StatusPill({ label }: { readonly label: string }) {
 
 function AdminWarning() {
   return (
-    <div className="flex items-start gap-2 rounded-md border border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 p-3 text-xs leading-5 text-foreground/75">
+    <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/75 flex items-start gap-2 rounded-md border p-3 text-xs leading-5">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       Les actions de changement de statut seront branchées après connexion
       Supabase admin.

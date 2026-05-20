@@ -1,7 +1,7 @@
-import { Users } from "lucide-react";
+import { Users } from 'lucide-react'
 
 export function ParticipantsCount({ count }: { count: number }) {
-  const visibleAvatars = Math.min(4, Math.max(0, count));
+  const visibleAvatars = Math.min(4, Math.max(0, count))
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-sm bg-[color:var(--sand-soft)] px-3 py-2 text-xs">
@@ -22,5 +22,5 @@ export function ParticipantsCount({ count }: { count: number }) {
         ))}
       </div>
     </div>
-  );
+  )
 }

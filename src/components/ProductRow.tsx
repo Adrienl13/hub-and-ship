@@ -1,12 +1,12 @@
-import { memo, useMemo } from "react";
-import { Info } from "lucide-react";
-import { CATEGORY_LABEL, type Product } from "@/lib/products";
-import { getMoqStatus, formatEUR } from "@/lib/order";
-import { getQuantityRule } from "@/lib/quantity";
-import { Button } from "@/components/ui/button";
-import { MoqProgressBar } from "@/components/MoqProgressBar";
-import { QuantityStepper } from "@/components/QuantityStepper";
-import { VariantSelector } from "@/components/VariantSelector";
+import { memo, useMemo } from 'react'
+import { Info } from 'lucide-react'
+import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { getMoqStatus, formatEUR } from '@/lib/order'
+import { getQuantityRule } from '@/lib/quantity'
+import { Button } from '@/components/ui/button'
+import { MoqProgressBar } from '@/components/MoqProgressBar'
+import { QuantityStepper } from '@/components/QuantityStepper'
+import { VariantSelector } from '@/components/VariantSelector'
 
 function ProductRowComponent({
   product,
@@ -16,35 +16,38 @@ function ProductRowComponent({
   onVariantChange,
   onOpenDetails,
 }: {
-  product: Product;
-  variantId: string;
-  qty: number;
-  onQtyChange: (n: number) => void;
-  onVariantChange: (id: string) => void;
-  onOpenDetails?: () => void;
+  product: Product
+  variantId: string
+  qty: number
+  onQtyChange: (n: number) => void
+  onVariantChange: (id: string) => void
+  onOpenDetails?: () => void
 }) {
   const variant = useMemo(
-    () => product.variants.find((v) => v.id === variantId) ?? product.variants[0],
+    () =>
+      product.variants.find((v) => v.id === variantId) ?? product.variants[0],
     [product, variantId],
-  );
-  const moq = product.moqUnits;
-  const quantityRule = getQuantityRule(product);
-  const savingsPct = Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100);
-  const totalCommitted = (variant?.unitsCommitted ?? 0) + qty;
-  const moqStatus = getMoqStatus(totalCommitted, moq);
+  )
+  const moq = product.moqUnits
+  const quantityRule = getQuantityRule(product)
+  const savingsPct = Math.round(
+    (1 - product.basePriceHt / product.retailPriceRef) * 100,
+  )
+  const totalCommitted = (variant?.unitsCommitted ?? 0) + qty
+  const moqStatus = getMoqStatus(totalCommitted, moq)
 
   return (
     <article
       data-catalog-item-mode="desktop-row"
-      className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground/30"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "168px" }}
+      className="hover:border-foreground/30 group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '168px' }}
     >
       <div className="flex gap-4">
         {/* Visual */}
         <button
           type="button"
           onClick={onOpenDetails}
-          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md ring-1 ring-foreground/10 transition-transform hover:scale-[1.02] sm:h-28 sm:w-28"
+          className="ring-foreground/10 relative h-24 w-24 shrink-0 overflow-hidden rounded-md ring-1 transition-transform hover:scale-[1.02] sm:h-28 sm:w-28"
           aria-label={`Voir détails ${product.name}`}
         >
           <img
@@ -75,16 +78,22 @@ function ProductRowComponent({
                 <Info className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover/name:opacity-100" />
               </button>
               <div className="label-eyebrow mt-0.5 text-muted-foreground">
-                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×{product.dimensions.w}×{product.dimensions.h} cm · {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
+                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×
+                {product.dimensions.w}×{product.dimensions.h} cm ·{' '}
+                {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
               </div>
             </div>
             <div className="text-right">
               <div className="font-display text-lg font-semibold tabular-nums">
                 {formatEUR(product.basePriceHt)}
               </div>
-              <div className="text-[11px] text-muted-foreground tabular-nums">
-                <span className="line-through">{formatEUR(product.retailPriceRef)}</span>
-                <span className="ml-1.5 font-medium text-[color:var(--ember)]">−{savingsPct}%</span>
+              <div className="text-[11px] tabular-nums text-muted-foreground">
+                <span className="line-through">
+                  {formatEUR(product.retailPriceRef)}
+                </span>
+                <span className="ml-1.5 font-medium text-[color:var(--ember)]">
+                  −{savingsPct}%
+                </span>
               </div>
               <div className="mt-0.5 text-[10px] text-muted-foreground">
                 + éco-part {product.ecoContribution.toFixed(2)}€
@@ -112,7 +121,7 @@ function ProductRowComponent({
               value={qty}
               onChange={onQtyChange}
               rule={quantityRule}
-              showRule={product.category === "chair"}
+              showRule={product.category === 'chair'}
             />
             <Button
               variant="outline"
@@ -126,7 +135,7 @@ function ProductRowComponent({
         </div>
       </div>
     </article>
-  );
+  )
 }
 
-export const ProductRow = memo(ProductRowComponent);
+export const ProductRow = memo(ProductRowComponent)

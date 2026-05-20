@@ -31,7 +31,9 @@ export interface SecurityEventLogResult {
 
 export interface SecurityEventClient {
   from: (table: 'security_events') => {
-    insert: (payload: SecurityEventInsert) => PromiseLike<SecurityEventInsertResult>
+    insert: (
+      payload: SecurityEventInsert,
+    ) => PromiseLike<SecurityEventInsertResult>
   }
 }
 

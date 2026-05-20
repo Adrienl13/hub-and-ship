@@ -12,6 +12,7 @@
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
 ### Légende
+
 - ✅ Terminé et testé
 - 🔄 En cours
 - ⏳ Démarrage prévu
@@ -23,6 +24,7 @@
 ## Phase 1 — Foundations + Sécurité (semaines 1-2)
 
 ### 1.1 Setup projet
+
 - ✅ Initialisation TanStack React Start + Vite
 - ✅ Configuration TypeScript strict
 - ✅ Configuration Tailwind + palette CSS (section 15.1)
@@ -34,6 +36,7 @@
 - ✅ Configuration Playwright
 
 ### 1.2 Supabase
+
 - ❌ Création projet Supabase EU
 - ❌ Migration `0001_init_schema.sql` (schéma complet section 5.1)
 - ❌ Migration `0002_pricing_config.sql` (seed app_config)
@@ -53,12 +56,14 @@
 - ❌ Realtime activé sur 4 tables critiques
 
 ### 1.3 Tiers externes
+
 - ❌ Compte Stripe (test) — Radar + 3DS2 activés
 - ❌ Compte Resend — domaine vérifié
 - ❌ Compte API INSEE Sirene — OAuth client_id/secret
 - ❌ Compte Cloudflare — Worker + WAF rules
 
 ### 1.4 Logique métier (src/lib/)
+
 - ✅ `pricing/tiers.ts` + tests
 - ✅ `pricing/reservation-fee.ts` + tests
 - ✅ `pricing/moq.ts` + tests
@@ -74,6 +79,7 @@
 - ✅ `validation/schemas.ts` (Zod schemas checkout/callback)
 
 ### 1.5 Sécurité
+
 - 🔄 Edge Function `verify-siret` avec cache + rate limit (scaffold serveur)
 - ✅ Composant `SiretInput` + validation temps réel
 - ✅ Composant `SiretVerificationDisplay`
@@ -89,6 +95,7 @@
 - ❌ Validation score A sur securityheaders.com
 
 ### 1.6 Authentification
+
 - ✅ Setup Supabase Auth magic link (scaffold local, env à renseigner)
 - ✅ Page `/auth/login` avec rate limiting applicatif local
 - ✅ Page `/auth/callback`
@@ -96,6 +103,7 @@
 - ✅ Helpers `src/lib/supabase/{client,server,types}.ts`
 
 ### 🎯 DoD Phase 1
+
 - ⏳ `npm test` 100% green (tous tests métier + sécurité)
 - ⏳ `npm run typecheck` 0 erreur
 - 🔄 Supabase migrations fondation Auth/RLS créées (CLI local à installer pour exécution)
@@ -109,6 +117,7 @@
 ## Phase 2 — Catalogue & Réservation (semaines 3-4)
 
 ### 2.1 Page d'accueil
+
 - 🔄 Layout (Header sticky, Footer, Mobile sticky bar Lovable intégré)
 - 🔄 Section Hero Lovable intégrée
 - ✅ ValueProps (3 piliers)
@@ -124,6 +133,7 @@
 - ✅ CTA final
 
 ### 2.2 Catalogue produits
+
 - 🔄 ProductRow (desktop Lovable intégré, données mock)
 - ✅ ProductCard (mobile)
 - ✅ VariantSelector
@@ -136,6 +146,7 @@
 - 🔄 ProductReviews (résumé + avis vérifiés mock avant Supabase)
 
 ### 2.3 Visualisation container
+
 - 🔄 ContainerScene3D (R3F Lovable intégré, packing piles/cartons)
 - 🔄 ContainerScene3DFallback (fallback 2D logistique)
 - 🔄 ContainerFillBar
@@ -144,6 +155,7 @@
 - 🔄 ParticipantsCount (anonymisé)
 
 ### 2.4 Panier
+
 - 🔄 OrderSidebar (desktop Lovable intégré)
 - 🔄 MobileStickyCart Lovable intégré
 - 🔄 OrderSummary Lovable intégré
@@ -153,6 +165,7 @@
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
 ### 2.5 Réservation
+
 - 🔄 ReservationDialog Lovable intégré (4 étapes V1.3 + écran confirmation, Stripe serveur à connecter)
 - 🔄 Étape 1 : SIRET + validation format, vérification INSEE Edge Function raccordée
 - ✅ Étape 2 : Contact + EmailDomainWarning
@@ -167,6 +180,7 @@
 - ❌ Tests E2E Playwright parcours complet
 
 ### 🎯 DoD Phase 2
+
 - ⏳ Parcours invité → réservation payée fonctionne end-to-end
 - ⏳ Pricing dégressif visible et exact
 - 🔄 Vérification SIRET intégrée au checkout
@@ -179,17 +193,20 @@
 ## Phase 3 — Temps réel & Visibilité (semaine 5)
 
 ### 3.1 Realtime
+
 - ❌ Hook `useContainerRealtime`
 - ❌ Toasts anonymisés rate-limited
 - ❌ Animations fluides progress bar
 - ❌ Animations 3D apparition nouveaux blocs
 
 ### 3.2 Pages publiques
+
 - ❌ `/containers/[ref]` détail container
 - ❌ `/containers/historique`
 - ❌ `/transport-partenaires`
 
 ### 3.3 SEO/GEO/LLM
+
 - ❌ Schema.org JSON-LD toutes pages
 - ❌ Sitemap dynamique `/sitemap.xml`
 - ❌ Fichier `llms.txt` racine
@@ -197,6 +214,7 @@
 - ❌ OpenGraph + Twitter Cards
 
 ### 🎯 DoD Phase 3
+
 - ⏳ Realtime fonctionne (test multi-onglets)
 - ⏳ Toasts pas de spam
 - ⏳ Pages SEO indexables
@@ -218,6 +236,7 @@
 - ❌ Bottom nav mobile espace client
 
 ### 🎯 DoD Phase 4
+
 - ⏳ Tous écrans client fonctionnels
 - ⏳ Parrainage : flow complet testé
 - ⏳ Documents qualité accessibles auth-only
@@ -245,6 +264,7 @@
 - ❌ 2FA TOTP admin
 
 ### 🎯 DoD Phase 5
+
 - ⏳ Tous écrans admin fonctionnels
 - ⏳ Tests autorisation (buyer ne peut pas accéder)
 - ⏳ 2FA TOTP testé
@@ -268,6 +288,7 @@
 - ❌ Webhooks Resend (bounce tracking)
 
 ### 🎯 DoD Phase 6
+
 - ⏳ Tous crons configurés et testés
 - ⏳ Workflow complet automatisable
 - ⏳ Emails partent aux bons moments
@@ -290,6 +311,7 @@
 - ❌ Sentry configuré et testé
 
 ### 🎯 DoD Phase 7
+
 - ⏳ Toutes pages publiques live
 - ⏳ Lighthouse ≥ 85 mobile / ≥ 90 desktop
 - ⏳ 0 erreur axe-core critique
@@ -308,6 +330,7 @@
 - ❌ Préparation campagne LinkedIn
 
 ### 🎯 DoD Phase 8
+
 - ⏳ Beta validée
 - ⏳ Premier container clôturé avec succès
 - ⏳ Process opérationnel maîtrisé
@@ -320,6 +343,7 @@
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
 ### Session du 2026-05-17
+
 - Phase : Session 0 — Initialisation projet
 - Tâches : starter importé, structure TanStack React Start créée, configs TypeScript/Tailwind/ESLint/Prettier/Vitest/Playwright ajoutées, dépendances installées, hooks Husky configurés, pricing tiers implémenté.
 - Phase : Phase 2 — Catalogue & Réservation
@@ -371,6 +395,7 @@
 - Notes : migration de compatibilité vers `@tanstack/react-start` + Vite et dépendances React 19 documentée dans `docs/DECISIONS.md`.
 
 ### Session du 2026-05-17 — suite Phase 1.4
+
 - Phase : Phase 1 — Logique métier pure
 - Tâches : frais de réservation, statut MOQ, validation email perso et validation SIRET offline ajoutés.
 - Fichiers créés : `src/lib/pricing/reservation-fee.ts`, `src/lib/pricing/moq.ts`, `src/lib/validation/email.ts`, `src/lib/validation/siret.ts` et tests associés.
@@ -378,6 +403,7 @@
 - Notes : les migrations Supabase restent non démarrées car elles modifient le schéma DB.
 
 ### Session du 2026-05-17 — intégration design Lovable
+
 - Phase : Phase 2 — Home/catalogue visuel
 - Tâches : design Lovable importé dans l'app locale, home catalogue remplacée, composants Header/Hero/HowItWorks/ProductRow/OrderSidebar/ContainerScene/FAQ/Footer/ReservationDialog intégrés.
 - Fichiers créés/modifiés : `src/components/`, `src/routes/index.tsx`, `src/lib/products.ts`, `src/lib/order.ts`, `src/lib/quote.ts`, thème Tailwind/CSS et dépendances UI.

@@ -3,30 +3,38 @@ import {
   PRODUCTS,
   type Product,
   type ProductCategory,
-} from "@/lib/products";
+} from '@/lib/products'
 
-export const CATEGORY_FILTERS: Array<{ id: "all" | ProductCategory; label: string }> = [
-  { id: "all", label: "Tous" },
-  { id: "chair", label: "Chaise" },
-  { id: "armchair", label: "Fauteuil" },
-  { id: "table", label: "Table" },
-  { id: "bench", label: "Banc" },
-];
+export const CATEGORY_FILTERS: Array<{
+  id: 'all' | ProductCategory
+  label: string
+}> = [
+  { id: 'all', label: 'Tous' },
+  { id: 'chair', label: 'Chaise' },
+  { id: 'armchair', label: 'Fauteuil' },
+  { id: 'table', label: 'Table' },
+  { id: 'bench', label: 'Banc' },
+]
 
-export type CatalogueFilter = "all" | ProductCategory;
-export type SortKey = "default" | "price-asc" | "price-desc" | "cbm-asc" | "popular";
+export type CatalogueFilter = 'all' | ProductCategory
+export type SortKey =
+  | 'default'
+  | 'price-asc'
+  | 'price-desc'
+  | 'cbm-asc'
+  | 'popular'
 
-export const PAGE_SIZE_OPTIONS = [30, 60, 90] as const;
-export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
+export const PAGE_SIZE_OPTIONS = [30, 60, 90] as const
+export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number]
 
 export function getDefaultVariant(product: Product) {
-  const variant = product.variants[0];
+  const variant = product.variants[0]
 
   if (!variant) {
-    throw new Error(`Product ${product.id} must define at least one variant`);
+    throw new Error(`Product ${product.id} must define at least one variant`)
   }
 
-  return variant;
+  return variant
 }
 
 export function productSearchText(product: Product) {
@@ -38,19 +46,19 @@ export function productSearchText(product: Product) {
     ...product.features,
     ...product.variants.map((variant) => variant.name),
   ]
-    .join(" ")
-    .toLocaleLowerCase("fr-FR");
+    .join(' ')
+    .toLocaleLowerCase('fr-FR')
 }
 
 export function getCategoryCounts(products: Product[] = PRODUCTS) {
   return products.reduce<Record<CatalogueFilter, number>>(
     (acc, product) => {
-      acc.all += 1;
-      acc[product.category] += 1;
-      return acc;
+      acc.all += 1
+      acc[product.category] += 1
+      return acc
     },
     { all: 0, chair: 0, armchair: 0, table: 0, bench: 0 },
-  );
+  )
 }
 
 export function filterAndSortProducts({
@@ -59,31 +67,32 @@ export function filterAndSortProducts({
   search,
   sort,
 }: {
-  products?: Product[];
-  filter: CatalogueFilter;
-  search: string;
-  sort: SortKey;
+  products?: Product[]
+  filter: CatalogueFilter
+  search: string
+  sort: SortKey
 }) {
-  const query = search.trim().toLocaleLowerCase("fr-FR");
+  const query = search.trim().toLocaleLowerCase('fr-FR')
   let list = products.filter((product) => {
-    const categoryMatch = filter === "all" || product.category === filter;
-    const searchMatch = query.length === 0 || productSearchText(product).includes(query);
-    return categoryMatch && searchMatch;
-  });
+    const categoryMatch = filter === 'all' || product.category === filter
+    const searchMatch =
+      query.length === 0 || productSearchText(product).includes(query)
+    return categoryMatch && searchMatch
+  })
 
-  if (sort === "price-asc") {
-    list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt);
-  } else if (sort === "price-desc") {
-    list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt);
-  } else if (sort === "cbm-asc") {
-    list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit);
-  } else if (sort === "popular") {
+  if (sort === 'price-asc') {
+    list = [...list].sort((a, b) => a.basePriceHt - b.basePriceHt)
+  } else if (sort === 'price-desc') {
+    list = [...list].sort((a, b) => b.basePriceHt - a.basePriceHt)
+  } else if (sort === 'cbm-asc') {
+    list = [...list].sort((a, b) => a.cbmPerUnit - b.cbmPerUnit)
+  } else if (sort === 'popular') {
     list = [...list].sort(
       (a, b) =>
         b.variants.reduce((sum, variant) => sum + variant.unitsCommitted, 0) -
         a.variants.reduce((sum, variant) => sum + variant.unitsCommitted, 0),
-    );
+    )
   }
 
-  return list;
+  return list
 }

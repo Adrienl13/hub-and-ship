@@ -3,10 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { getDefaultVariant } from '@/lib/catalogue'
 import { PRODUCTS } from '@/lib/products'
 import type { ReferralApplication } from '@/lib/pricing/referral'
-import {
-  buildReservationDraft,
-  createReservationReference,
-} from './draft'
+import { buildReservationDraft, createReservationReference } from './draft'
 
 const chair = PRODUCTS.find((product) => product.category === 'chair')!
 const table = PRODUCTS.find((product) => product.category === 'table')!

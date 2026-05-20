@@ -61,7 +61,10 @@ function AccountReservationsPage() {
                 documents liés à chaque réservation.
               </p>
             </div>
-            <AuthStateBox status={auth.status} isConfigured={auth.isConfigured} />
+            <AuthStateBox
+              status={auth.status}
+              isConfigured={auth.isConfigured}
+            />
           </div>
         </div>
       </section>
@@ -72,7 +75,10 @@ function AccountReservationsPage() {
             <Kpi label="Réservations actives" value={`${kpis.activeCount}`} />
             <Kpi label="Engagé HT" value={formatEUR(kpis.totalCommittedHt)} />
             <Kpi label="Déjà réglé" value={formatEUR(kpis.totalPaid)} />
-            <Kpi label="Volume réservé" value={`${kpis.totalCbm.toFixed(1)} m³`} />
+            <Kpi
+              label="Volume réservé"
+              value={`${kpis.totalCbm.toFixed(1)} m³`}
+            />
           </div>
         </aside>
 
@@ -86,7 +92,7 @@ function AccountReservationsPage() {
               <span>Prochaine action</span>
               <span />
             </div>
-            <div className="divide-y divide-[color:var(--sand-deep)]/70">
+            <div className="divide-[color:var(--sand-deep)]/70 divide-y">
               {reservations.map((reservation) => (
                 <ReservationRow
                   key={reservation.id}
@@ -103,7 +109,7 @@ function AccountReservationsPage() {
 
 function AccountTopBar() {
   return (
-    <header className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]/85 backdrop-blur-md">
+    <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <a href="/" className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">

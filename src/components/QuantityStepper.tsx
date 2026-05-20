@@ -1,29 +1,29 @@
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus } from 'lucide-react'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   DEFAULT_QUANTITY_RULE,
   getNextOrderQuantity,
   getPreviousOrderQuantity,
   sanitizeOrderQuantity,
   type QuantityRule,
-} from "@/lib/quantity";
+} from '@/lib/quantity'
 
 export function QuantityStepper({
   value,
   onChange,
-  size = "sm",
+  size = 'sm',
   rule = DEFAULT_QUANTITY_RULE,
   showRule = false,
 }: {
-  value: number;
-  onChange: (value: number) => void;
-  size?: "sm" | "lg";
-  rule?: QuantityRule;
-  showRule?: boolean;
+  value: number
+  onChange: (value: number) => void
+  size?: 'sm' | 'lg'
+  rule?: QuantityRule
+  showRule?: boolean
 }) {
-  const buttonSize = size === "lg" ? "h-11 w-11" : "h-7 w-7";
-  const inputSize = size === "lg" ? "h-11 w-20 text-base" : "w-16 text-sm";
+  const buttonSize = size === 'lg' ? 'h-11 w-11' : 'h-7 w-7'
+  const inputSize = size === 'lg' ? 'h-11 w-20 text-base' : 'w-16 text-sm'
 
   return (
     <div className="min-w-0">
@@ -42,9 +42,14 @@ export function QuantityStepper({
           type="number"
           value={value}
           onChange={(event) =>
-            onChange(sanitizeOrderQuantity(Number.parseInt(event.target.value || "0", 10), rule))
+            onChange(
+              sanitizeOrderQuantity(
+                Number.parseInt(event.target.value || '0', 10),
+                rule,
+              ),
+            )
           }
-          className={`${inputSize} [appearance:textfield] bg-transparent text-center font-semibold tabular-nums focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+          className={`${inputSize} bg-transparent text-center font-semibold tabular-nums [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           aria-label="Quantité"
           min={0}
           step={rule.step}
@@ -65,5 +70,5 @@ export function QuantityStepper({
         </div>
       )}
     </div>
-  );
+  )
 }

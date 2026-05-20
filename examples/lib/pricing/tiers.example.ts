@@ -1,13 +1,13 @@
 /**
  * EXAMPLE DE RÉFÉRENCE — Style de code attendu pour la logique métier
- * 
+ *
  * Ce fichier sert d'exemple à Claude Code pour comprendre :
  * - Le style TypeScript strict
  * - La séparation des types et fonctions pures
  * - L'utilisation de fonctions auxiliaires
  * - Les JSDoc explicatives
  * - La précision décimale
- * 
+ *
  * À adapter pour l'implémentation finale dans src/lib/pricing/tiers.ts
  */
 
@@ -17,7 +17,7 @@
 
 export interface PricingTier {
   readonly minCbm: number
-  readonly maxCbm: number | null  // null = pas de limite supérieure
+  readonly maxCbm: number | null // null = pas de limite supérieure
   readonly marginPercent: number
 }
 
@@ -56,11 +56,11 @@ export interface PricingResult {
  * Méthode INCRÉMENTALE : chaque tranche facturée au tier correspondant.
  */
 export const DEFAULT_PRICING_TIERS: ReadonlyArray<PricingTier> = [
-  { minCbm: 0, maxCbm: 0.80, marginPercent: 35 },
-  { minCbm: 0.80, maxCbm: 2.00, marginPercent: 32 },
-  { minCbm: 2.00, maxCbm: 4.00, marginPercent: 30 },
-  { minCbm: 4.00, maxCbm: 8.00, marginPercent: 27 },
-  { minCbm: 8.00, maxCbm: null, marginPercent: 25 },
+  { minCbm: 0, maxCbm: 0.8, marginPercent: 35 },
+  { minCbm: 0.8, maxCbm: 2.0, marginPercent: 32 },
+  { minCbm: 2.0, maxCbm: 4.0, marginPercent: 30 },
+  { minCbm: 4.0, maxCbm: 8.0, marginPercent: 27 },
+  { minCbm: 8.0, maxCbm: null, marginPercent: 25 },
 ] as const
 
 // ============================================
@@ -107,7 +107,7 @@ function calculateLineEffectiveMargin(
 
   return cbmAccountedFor > 0
     ? weightedMarginSum / cbmAccountedFor
-    : tiers[0]?.marginPercent ?? 0
+    : (tiers[0]?.marginPercent ?? 0)
 }
 
 // ============================================
@@ -116,14 +116,14 @@ function calculateLineEffectiveMargin(
 
 /**
  * Calcule le pricing complet d'une commande avec tiers dégressifs incrémentaux.
- * 
+ *
  * Méthode INCRÉMENTALE : chaque tranche de CBM est facturée au tier correspondant.
  * Évite le profit leakage et le fractionnement de commandes.
- * 
+ *
  * @param lines - Lignes du panier (triées par ordre d'ajout)
  * @param tiers - Configuration des tiers de marge
  * @returns Résultat complet du pricing
- * 
+ *
  * @example
  * const result = calculateOrderPricing([
  *   { productId: 'p1', variantId: 'v1', quantity: 10, cbmPerUnit: 0.08, costLanded: 45, ecoContribution: 0.30 },
@@ -159,7 +159,11 @@ export function calculateOrderPricing(
     const cbmEnd = cbmCumulative + lineCbmTotal
 
     // Calcul marge effective pour cette ligne (peut chevaucher plusieurs tiers)
-    const effectiveMargin = calculateLineEffectiveMargin(cbmStart, cbmEnd, sortedTiers)
+    const effectiveMargin = calculateLineEffectiveMargin(
+      cbmStart,
+      cbmEnd,
+      sortedTiers,
+    )
 
     // Calcul du prix de vente unitaire
     const unitPriceHt = round2(
@@ -183,7 +187,10 @@ export function calculateOrderPricing(
 
   // Agrégation finale
   const subtotalHt = pricedLines.reduce((sum, l) => sum + l.subtotalHt, 0)
-  const ecoContributionTotal = pricedLines.reduce((sum, l) => sum + l.ecoContributionTotal, 0)
+  const ecoContributionTotal = pricedLines.reduce(
+    (sum, l) => sum + l.ecoContributionTotal,
+    0,
+  )
   const totalCbm = pricedLines.reduce((sum, l) => sum + l.cbmTotal, 0)
 
   // Marge effective globale (pondérée par CBM)
@@ -191,9 +198,10 @@ export function calculateOrderPricing(
     (sum, l) => sum + l.effectiveMargin * l.cbmTotal,
     0,
   )
-  const effectiveMarginPercent = totalCbm > 0
-    ? totalWeightedMargin / totalCbm
-    : sortedTiers[0]?.marginPercent ?? 0
+  const effectiveMarginPercent =
+    totalCbm > 0
+      ? totalWeightedMargin / totalCbm
+      : (sortedTiers[0]?.marginPercent ?? 0)
 
   return {
     lines: pricedLines,

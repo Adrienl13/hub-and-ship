@@ -7,11 +7,11 @@
 ## 📋 Le prompt à copier
 
 ```
-Tu vas implémenter Container Club, plateforme B2B de pré-commande groupée 
+Tu vas implémenter Container Club, plateforme B2B de pré-commande groupée
 de mobilier outdoor par container maritime.
 
 CONTEXTE PROJET
-Importateur officiel France (Terrassea SAS). Cible 2-3 containers/mois. 
+Importateur officiel France (Terrassea SAS). Cible 2-3 containers/mois.
 Cible utilisateurs : hôtels, restaurants, paysagistes, revendeurs B2B.
 
 LIS D'ABORD CES FICHIERS DANS L'ORDRE (obligatoire) :
@@ -27,9 +27,9 @@ CONFIRME en 5 lignes max :
 
 PUIS ATTAQUE LA SESSION 0 : INITIALISATION DU PROJET
 
-OBJECTIF SESSION 0 : créer la structure de fichiers complète, initialiser 
-les configs, installer les dépendances, faire les premiers commits. 
-SANS connexion aux services externes (Supabase prod, Stripe, etc.) — 
+OBJECTIF SESSION 0 : créer la structure de fichiers complète, initialiser
+les configs, installer les dépendances, faire les premiers commits.
+SANS connexion aux services externes (Supabase prod, Stripe, etc.) —
 on fera ça plus tard.
 
 PLAN D'EXÉCUTION (suis-le pas à pas, fais des commits après chaque étape) :
@@ -115,8 +115,8 @@ Commit : "chore(deps): install all dependencies"
 
 ÉTAPE 8 — Setup shadcn/ui
 - Initialise shadcn/ui (npx shadcn@latest init)
-- Installe les composants de base : button, input, label, dialog, 
-  sheet, toast, dropdown-menu, select, checkbox, radio-group, 
+- Installe les composants de base : button, input, label, dialog,
+  sheet, toast, dropdown-menu, select, checkbox, radio-group,
   accordion, card, badge, alert, separator, tabs
 Commit : "feat(ui): setup shadcn/ui with base components"
 
@@ -156,12 +156,12 @@ Commit final : "chore: complete session 0 - project initialization"
 RÈGLES IMPORTANTES PENDANT TOUTE LA SESSION
 1. TypeScript strict : JAMAIS de "any", JAMAIS de @ts-ignore
 2. Commits atomiques avec format Conventional Commits
-3. Demande confirmation AVANT toute action listée comme "demande avant" 
+3. Demande confirmation AVANT toute action listée comme "demande avant"
    dans .claude/context.md
 4. Si tu hésites, pose-moi la question
 5. Si un fichier dépasse 300 lignes, split-le
 6. Update docs/PROGRESS.md à chaque étape complétée
-7. Si tu prends une décision technique non triviale, ajoute-la dans 
+7. Si tu prends une décision technique non triviale, ajoute-la dans
    docs/DECISIONS.md
 8. Si tu rencontres un bug récurrent, documente-le dans docs/KNOWN_ISSUES.md
 
@@ -193,6 +193,7 @@ Colle le prompt entier dans Claude Code. Laisse-le travailler. Il va probablemen
 ### Si Claude Code va trop vite
 
 Dis-lui :
+
 ```
 Stop. Avant d'aller plus loin, montre-moi le diff complet et attends ma validation.
 ```
@@ -200,6 +201,7 @@ Stop. Avant d'aller plus loin, montre-moi le diff complet et attends ma validati
 ### Si Claude Code se trompe
 
 Pour annuler les derniers commits :
+
 ```bash
 # Voir les commits
 git log --oneline -10
@@ -239,6 +241,7 @@ Pas `shadcn-ui` (ancienne version). Si Claude Code se trompe, corrige-le.
 ### Pour TanStack Start
 
 C'est un framework récent. Si Claude Code n'est pas à jour, il pourrait utiliser des patterns Next.js. Surveille la création des routes :
+
 - Route file-based dans `src/routes/`
 - Format `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/products/$id.tsx`
 
@@ -253,22 +256,28 @@ Tailwind v4 utilise une nouvelle config (`@import "tailwindcss"` dans CSS au lie
 ## 💡 Tips pour économiser des tokens
 
 ### Bonne pratique
+
 ```
 Continue depuis docs/PROGRESS.md
 ```
+
 → ~8k tokens
 
 ### Moins bien
+
 ```
 Voici tout le contexte de mon projet [colle 5100 lignes du brief]...
 ```
+
 → ~50k tokens (gaspillage)
 
 ### Idéal pour une question ciblée
+
 ```
-Question sur section 6.8 du brief (validation SIRET) : 
+Question sur section 6.8 du brief (validation SIRET) :
 comment gérer le cas où l'API INSEE est down pendant le checkout ?
 ```
+
 → Claude Code va lire UNIQUEMENT cette section. ~3k tokens.
 
 ---
@@ -277,8 +286,8 @@ comment gérer le cas où l'API INSEE est down pendant le checkout ?
 
 Sur l'ensemble du projet (Phase 1 à 8, ~10 semaines) :
 
-| Sans tooling | Avec tooling | Économie |
-|---|---|---|
+| Sans tooling     | Avec tooling     | Économie  |
+| ---------------- | ---------------- | --------- |
 | ~500$ API Claude | ~150$ API Claude | **~350$** |
 
 Plus rapide à exécuter, moins cher, code de meilleure qualité grâce aux examples de référence.

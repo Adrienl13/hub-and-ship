@@ -41,12 +41,12 @@ describe('checkEmailDomain', () => {
   })
 
   it('supports custom personal domain lists', () => {
-    expect(checkEmailDomain('hello@example.test', ['example.test'])).toMatchObject(
-      {
-        isPersonal: true,
-        domain: 'example.test',
-      },
-    )
+    expect(
+      checkEmailDomain('hello@example.test', ['example.test']),
+    ).toMatchObject({
+      isPersonal: true,
+      domain: 'example.test',
+    })
   })
 
   it('exports the expected V1 warning domains', () => {

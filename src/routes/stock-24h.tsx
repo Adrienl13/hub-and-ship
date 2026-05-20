@@ -73,9 +73,9 @@ function Stock24hPage() {
                 Une solution rapide quand le container est trop loin.
               </h1>
               <p className="mt-4 text-sm leading-6 text-[color:var(--ink-soft)]">
-                Quelques lots sont déjà en France. Ils permettent de dépanner une
-                ouverture, une terrasse urgente ou un complément de mobilier sans
-                attendre une précommande groupée.
+                Quelques lots sont déjà en France. Ils permettent de dépanner
+                une ouverture, une terrasse urgente ou un complément de mobilier
+                sans attendre une précommande groupée.
               </p>
               <div className="mt-6 flex flex-wrap gap-2 text-xs">
                 <Badge>Retrait Marseille-Fos</Badge>
@@ -95,7 +95,7 @@ function Stock24hPage() {
 
         <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            <div className="sticky top-16 z-20 border-b border-[color:var(--sand-deep)] bg-background/95 py-4 backdrop-blur">
+            <div className="bg-background/95 sticky top-16 z-20 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur">
               <div className="flex flex-col gap-3">
                 <div className="flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
                   {STOCK_FILTERS.map((entry) => {
@@ -108,7 +108,7 @@ function Stock24hPage() {
                         className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                           active
                             ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
-                            : 'border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/75 hover:border-foreground/40 hover:text-foreground'
+                            : 'text-foreground/75 hover:border-foreground/40 border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] hover:text-foreground'
                         }`}
                       >
                         {entry.label}
@@ -145,7 +145,9 @@ function Stock24hPage() {
                       className="h-11 min-w-48 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     >
                       <option value="priority">Priorité stock</option>
-                      <option value="available-desc">Quantité disponible</option>
+                      <option value="available-desc">
+                        Quantité disponible
+                      </option>
                       <option value="price-asc">Prix croissant</option>
                     </select>
                   </label>
@@ -162,7 +164,7 @@ function Stock24hPage() {
                 <span className="text-right">Prix HT</span>
                 <span />
               </div>
-              <div className="divide-y divide-[color:var(--sand-deep)]/70">
+              <div className="divide-[color:var(--sand-deep)]/70 divide-y">
                 {filtered.length === 0 ? (
                   <div className="px-4 py-16 text-center text-sm text-muted-foreground">
                     Aucun lot disponible ne correspond à cette recherche.
@@ -206,14 +208,16 @@ function StockRow({
   return (
     <article
       className={`grid gap-3 bg-card px-3 py-3 text-sm transition-colors md:grid-cols-[52px_minmax(180px,1.2fr)_92px_92px_96px_112px] md:items-center md:gap-3 ${
-        selected ? 'bg-[color:var(--sand-soft)]' : 'hover:bg-[color:var(--sand-soft)]'
+        selected
+          ? 'bg-[color:var(--sand-soft)]'
+          : 'hover:bg-[color:var(--sand-soft)]'
       }`}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '92px' }}
     >
       <button
         type="button"
         onClick={onSelect}
-        className="relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 ring-foreground/10 md:h-[52px] md:w-[52px]"
+        className="ring-foreground/10 relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 md:h-[52px] md:w-[52px]"
         aria-label={`Sélectionner ${line.product.name}`}
       >
         <img
@@ -257,7 +261,7 @@ function StockRow({
         </div>
       </div>
 
-      <span className="inline-flex h-7 w-fit items-center rounded-sm border border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 px-2 text-[11px] font-medium text-[color:var(--forest)]">
+      <span className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 inline-flex h-7 w-fit items-center rounded-sm border px-2 text-[11px] font-medium text-[color:var(--forest)]">
         {STOCK_CONDITION_LABEL[line.condition]}
       </span>
 
@@ -351,13 +355,18 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
 
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
-      <div className="label-eyebrow text-[color:var(--ember)]">Demande rapide</div>
+      <div className="label-eyebrow text-[color:var(--ember)]">
+        Demande rapide
+      </div>
       <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
         {line.product.name}
       </h2>
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
         <PanelFact Icon={Clock3} text={line.readyLabel} />
-        <PanelFact Icon={PackageCheck} text={`${line.availableUnits} unités libres`} />
+        <PanelFact
+          Icon={PackageCheck}
+          text={`${line.availableUnits} unités libres`}
+        />
         <PanelFact Icon={MapPin} text={line.location} />
       </div>
       <p className="mt-4 rounded-sm bg-[color:var(--sand-soft)] px-3 py-2 text-xs leading-5 text-muted-foreground">
@@ -440,7 +449,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
         href={`mailto:contact@container-club.fr?subject=Stock 24h - ${encodeURIComponent(
           line.product.name,
         )}`}
-        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors hover:border-foreground/40"
+        className="hover:border-foreground/40 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors"
       >
         <Mail className="h-4 w-4" />
         Envoyer un email
@@ -449,7 +458,13 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
   )
 }
 
-function Kpi({ label, value }: { readonly label: string; readonly value: string }) {
+function Kpi({
+  label,
+  value,
+}: {
+  readonly label: string
+  readonly value: string
+}) {
   return (
     <div className="rounded-sm bg-[color:var(--sand-soft)] p-3">
       <div className="label-eyebrow text-muted-foreground">{label}</div>
@@ -477,7 +492,7 @@ function PanelFact({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Icon className="h-4 w-4 text-foreground/70" />
+      <Icon className="text-foreground/70 h-4 w-4" />
       <span>{text}</span>
     </div>
   )

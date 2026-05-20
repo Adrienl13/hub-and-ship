@@ -19,7 +19,9 @@ describe('reservation foundation migration', () => {
   })
 
   it('creates reservation and reservation item tables', () => {
-    expect(migration).toContain('create table if not exists public.reservations')
+    expect(migration).toContain(
+      'create table if not exists public.reservations',
+    )
     expect(migration).toContain(
       'create table if not exists public.reservation_items',
     )

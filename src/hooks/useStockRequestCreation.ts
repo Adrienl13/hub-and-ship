@@ -32,9 +32,7 @@ export function useStockRequestCreation() {
   }, [config])
 
   const createStockRequest = useCallback(
-    async (
-      draft: StockRequestDraft,
-    ): Promise<StockRequestCreationResult> => {
+    async (draft: StockRequestDraft): Promise<StockRequestCreationResult> => {
       const saveLocal = () => {
         if (typeof window === 'undefined') return
         saveStockRequestToLocalHistory({

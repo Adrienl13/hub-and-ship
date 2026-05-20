@@ -3,10 +3,7 @@ import forms from '@tailwindcss/forms'
 import typography from '@tailwindcss/typography'
 
 const config: Config = {
-  content: [
-    './src/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}', './app/**/*.{ts,tsx}'],
   theme: {
     extend: {
       // Palette Container Club — section 15.1 du brief
@@ -104,29 +101,38 @@ const config: Config = {
       },
       fontSize: {
         // Typo responsive avec clamp() — section 15.2
-        'display': ['clamp(2rem, 5vw, 3.5rem)', { letterSpacing: '-0.04em', lineHeight: '1.05' }],
-        'h1': ['clamp(1.75rem, 4vw, 2.5rem)', { letterSpacing: '-0.03em', lineHeight: '1.15' }],
-        'h2': ['clamp(1.5rem, 3vw, 2rem)', { letterSpacing: '-0.02em', lineHeight: '1.2' }],
-        'h3': ['1.25rem', { letterSpacing: '-0.01em', lineHeight: '1.35' }],
-        'body': ['1rem', { lineHeight: '1.6' }],
-        'label': ['0.75rem', { letterSpacing: '0.1em', lineHeight: '1.4' }],
+        display: [
+          'clamp(2rem, 5vw, 3.5rem)',
+          { letterSpacing: '-0.04em', lineHeight: '1.05' },
+        ],
+        h1: [
+          'clamp(1.75rem, 4vw, 2.5rem)',
+          { letterSpacing: '-0.03em', lineHeight: '1.15' },
+        ],
+        h2: [
+          'clamp(1.5rem, 3vw, 2rem)',
+          { letterSpacing: '-0.02em', lineHeight: '1.2' },
+        ],
+        h3: ['1.25rem', { letterSpacing: '-0.01em', lineHeight: '1.35' }],
+        body: ['1rem', { lineHeight: '1.6' }],
+        label: ['0.75rem', { letterSpacing: '0.1em', lineHeight: '1.4' }],
       },
       borderRadius: {
         DEFAULT: '4px',
-        'lg': '8px',
-        'xl': '12px',
+        lg: '8px',
+        xl: '12px',
       },
       boxShadow: {
-        'subtle': '0 1px 2px rgba(0, 0, 0, 0.04)',
-        'soft': '0 2px 8px rgba(0, 0, 0, 0.06)',
-        'medium': '0 4px 16px rgba(0, 0, 0, 0.08)',
+        subtle: '0 1px 2px rgba(0, 0, 0, 0.04)',
+        soft: '0 2px 8px rgba(0, 0, 0, 0.06)',
+        medium: '0 4px 16px rgba(0, 0, 0, 0.08)',
       },
       // Touch targets ≥44px — mobile first
       minHeight: {
-        'touch': '44px',
+        touch: '44px',
       },
       minWidth: {
-        'touch': '44px',
+        touch: '44px',
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out',
@@ -154,17 +160,14 @@ const config: Config = {
       },
     },
     screens: {
-      'sm': '640px',
-      'md': '768px',
-      'lg': '1024px',
-      'xl': '1280px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
       '2xl': '1536px',
     },
   },
-  plugins: [
-    forms,
-    typography,
-  ],
+  plugins: [forms, typography],
 }
 
 export default config

@@ -29,9 +29,13 @@ export interface AdminDashboardSnapshot {
   }
 }
 
-function requireStockRequest(result: ReturnType<typeof buildStockRequestDraft>) {
+function requireStockRequest(
+  result: ReturnType<typeof buildStockRequestDraft>,
+) {
   if (!result.ok) {
-    throw new Error(result.issues[0]?.message ?? 'Invalid stock request fixture')
+    throw new Error(
+      result.issues[0]?.message ?? 'Invalid stock request fixture',
+    )
   }
 
   return result.draft

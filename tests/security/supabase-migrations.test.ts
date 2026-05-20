@@ -14,8 +14,12 @@ const migration = readFileSync(
 describe('Supabase auth/security migration', () => {
   it('creates the auth-adjacent business tables', () => {
     expect(migration).toContain('create table if not exists public.companies')
-    expect(migration).toContain('create table if not exists public.users_profile')
-    expect(migration).toContain('create table if not exists public.security_events')
+    expect(migration).toContain(
+      'create table if not exists public.users_profile',
+    )
+    expect(migration).toContain(
+      'create table if not exists public.security_events',
+    )
   })
 
   it('enables RLS and company/profile policies', () => {
@@ -30,7 +34,9 @@ describe('Supabase auth/security migration', () => {
   })
 
   it('wires new Supabase Auth users into users_profile', () => {
-    expect(migration).toContain('create or replace function public.handle_new_user')
+    expect(migration).toContain(
+      'create or replace function public.handle_new_user',
+    )
     expect(migration).toContain('create trigger on_auth_user_created')
     expect(migration).toContain('after insert on auth.users')
   })

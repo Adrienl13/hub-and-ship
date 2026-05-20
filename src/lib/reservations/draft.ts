@@ -105,7 +105,10 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100
 }
 
-function toIssue(path: string, message: string): ReservationDraftValidationIssue {
+function toIssue(
+  path: string,
+  message: string,
+): ReservationDraftValidationIssue {
   return { path, message }
 }
 
@@ -119,7 +122,10 @@ export function createReservationReference({
   readonly sequence?: number
 }): string {
   const datePart = now.toISOString().slice(0, 10).replace(/-/g, '')
-  const sequencePart = String(Math.max(1, Math.trunc(sequence))).padStart(4, '0')
+  const sequencePart = String(Math.max(1, Math.trunc(sequence))).padStart(
+    4,
+    '0',
+  )
 
   return `${containerReference}-${datePart}-${sequencePart}`
 }

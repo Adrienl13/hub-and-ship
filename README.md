@@ -122,6 +122,7 @@ npm run test:coverage
 ## 🔒 Sécurité
 
 Container Club applique **OWASP Top 10 2025** strictement :
+
 - RLS Supabase sur toutes tables sensibles
 - Validation Zod côté serveur systématique
 - Magic link only (pas de password)

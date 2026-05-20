@@ -1,8 +1,8 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { formatEUR } from "@/lib/order";
-import { ContainerFillBar } from "@/components/ContainerFillBar";
-import { CURRENT_CONTAINER } from "@/lib/products";
+import { ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { formatEUR } from '@/lib/order'
+import { ContainerFillBar } from '@/components/ContainerFillBar'
+import { CURRENT_CONTAINER } from '@/lib/products'
 
 export function MobileStickyBar({
   totalItems,
@@ -10,14 +10,14 @@ export function MobileStickyBar({
   subtotalHt,
   onReserve,
 }: {
-  totalItems: number;
-  fillPercent: number;
-  subtotalHt: number;
-  onReserve: () => void;
+  totalItems: number
+  fillPercent: number
+  subtotalHt: number
+  onReserve: () => void
 }) {
-  if (totalItems <= 0) return null;
+  if (totalItems <= 0) return null
   return (
-    <div className="sticky bottom-0 z-30 border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/95 px-4 py-2.5 backdrop-blur lg:hidden">
+    <div className="bg-[color:var(--sand-soft)]/95 sticky bottom-0 z-30 border-t border-[color:var(--sand-deep)] px-4 py-2.5 backdrop-blur lg:hidden">
       <div className="mx-auto max-w-7xl">
         <ContainerFillBar
           percent={fillPercent}
@@ -31,7 +31,7 @@ export function MobileStickyBar({
             <div className="font-medium tabular-nums">
               {totalItems} produits
             </div>
-            <div className="text-muted-foreground tabular-nums">
+            <div className="tabular-nums text-muted-foreground">
               {formatEUR(subtotalHt)} HT
             </div>
           </div>
@@ -45,5 +45,5 @@ export function MobileStickyBar({
         </div>
       </div>
     </div>
-  );
+  )
 }

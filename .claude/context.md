@@ -23,6 +23,7 @@
 ## 📚 Examples de référence (code qualité)
 
 Pour comprendre le style de code attendu, consulte `examples/` :
+
 - `examples/lib/pricing/tiers.example.ts` — Style logique métier
 - `examples/lib/pricing/tiers.example.test.ts` — Style tests Vitest
 - `examples/components/ui/Button.example.tsx` — Style composant React
@@ -34,6 +35,7 @@ Lis `examples/README.md` pour plus d'infos.
 ## 🎯 Templates de fichiers
 
 Pour initialiser des fichiers de config, utilise `.templates/` :
+
 - `package.json.template`
 - `tsconfig.json.template`
 - `tailwind.config.template`
@@ -107,6 +109,7 @@ DevOps : Vitest + Playwright + Plausible + Sentry + Dependabot + Snyk Free + git
 ## 🚨 Quand demander confirmation à l'utilisateur
 
 Toujours demander avant :
+
 - Modifier le schéma DB (migrations)
 - Ajouter une dépendance npm majeure
 - Modifier les politiques RLS
@@ -116,6 +119,7 @@ Toujours demander avant :
 - Ignorer une erreur TypeScript
 
 Jamais besoin de demander pour :
+
 - Implémenter un composant selon spec
 - Ajouter des tests
 - Corriger un typage
@@ -124,6 +128,7 @@ Jamais besoin de demander pour :
 ## 📞 En cas d'ambiguïté
 
 Si la spec est ambigüe sur un point :
+
 1. Cherche dans `docs/DECISIONS.md` si la question a déjà été tranchée
 2. Cherche dans `examples/` si un pattern existe
 3. Sinon, pose la question à l'utilisateur AVANT d'écrire du code

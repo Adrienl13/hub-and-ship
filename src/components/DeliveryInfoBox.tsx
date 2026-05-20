@@ -1,45 +1,45 @@
-import { ArrowRight, Handshake, PackageCheck, Truck } from "lucide-react";
+import { ArrowRight, Handshake, PackageCheck, Truck } from 'lucide-react'
 
-import { Reveal } from "@/components/motion-helpers";
+import { Reveal } from '@/components/motion-helpers'
 
 const OPTIONS = [
   {
     Icon: PackageCheck,
-    title: "Enlèvement libre au port",
+    title: 'Enlèvement libre au port',
     description:
-      "Vous récupérez la marchandise au Havre ou à Marseille-Fos avec votre organisation habituelle.",
+      'Vous récupérez la marchandise au Havre ou à Marseille-Fos avec votre organisation habituelle.',
   },
   {
     Icon: Handshake,
-    title: "Transporteur recommandé",
+    title: 'Transporteur recommandé',
     description:
-      "Nous fournissons une liste de transporteurs présélectionnés à contacter directement.",
+      'Nous fournissons une liste de transporteurs présélectionnés à contacter directement.',
   },
-] as const;
+] as const
 
 function DeliveryOptions({ compact = false }: { compact?: boolean }) {
   return (
-    <div className={compact ? "space-y-2.5" : "space-y-4"}>
+    <div className={compact ? 'space-y-2.5' : 'space-y-4'}>
       {OPTIONS.map(({ Icon, title, description }) => (
         <div
           key={title}
           className={
             compact
-              ? "flex gap-2.5 rounded-sm bg-[color:var(--sand-soft)] p-2.5"
-              : "flex gap-3 border-b border-[color:var(--sand-deep)] pb-4 last:border-b-0 last:pb-0"
+              ? 'flex gap-2.5 rounded-sm bg-[color:var(--sand-soft)] p-2.5'
+              : 'flex gap-3 border-b border-[color:var(--sand-deep)] pb-4 last:border-b-0 last:pb-0'
           }
         >
           <Icon
-            className={`mt-0.5 shrink-0 text-foreground/65 ${
-              compact ? "h-4 w-4" : "h-5 w-5"
+            className={`text-foreground/65 mt-0.5 shrink-0 ${
+              compact ? 'h-4 w-4' : 'h-5 w-5'
             }`}
           />
           <div>
             <h3
               className={
                 compact
-                  ? "text-xs font-medium"
-                  : "font-display text-base font-semibold tracking-tight"
+                  ? 'text-xs font-medium'
+                  : 'font-display text-base font-semibold tracking-tight'
               }
             >
               {title}
@@ -47,8 +47,8 @@ function DeliveryOptions({ compact = false }: { compact?: boolean }) {
             <p
               className={
                 compact
-                  ? "mt-0.5 text-[11px] leading-4 text-muted-foreground"
-                  : "mt-1 text-sm leading-relaxed text-[color:var(--ink-soft)]"
+                  ? 'mt-0.5 text-[11px] leading-4 text-muted-foreground'
+                  : 'mt-1 text-sm leading-relaxed text-[color:var(--ink-soft)]'
               }
             >
               {description}
@@ -57,7 +57,7 @@ function DeliveryOptions({ compact = false }: { compact?: boolean }) {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
@@ -71,8 +71,8 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
               Livraison rendue port
             </div>
             <p className="mt-1 leading-5 text-muted-foreground">
-              Le prix inclut l'arrivée au port. Le transport final est organisé et
-              payé directement côté client.
+              Le prix inclut l'arrivée au port. Le transport final est organisé
+              et payé directement côté client.
             </p>
           </div>
         </div>
@@ -81,19 +81,19 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
 
         <a
           href="/transport-partenaires"
-          className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5 text-[11px] font-medium transition-colors hover:border-foreground/40"
+          className="hover:border-foreground/40 mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5 text-[11px] font-medium transition-colors"
         >
           Transporteurs recommandés
           <ArrowRight className="h-3.5 w-3.5" />
         </a>
       </div>
-    );
+    )
   }
 
   return (
     <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <Reveal className="grid gap-8 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 shadow-paper md:grid-cols-[0.9fr_1.1fr] md:p-7">
+        <Reveal className="shadow-paper grid gap-8 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 md:grid-cols-[0.9fr_1.1fr] md:p-7">
           <div>
             <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-sm bg-[color:var(--ember-soft)] text-[color:var(--ember)]">
               <Truck className="h-5 w-5" />
@@ -105,9 +105,9 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
               Notre prix s'arrête au port d'arrivée.
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-              Le transport final varie fortement selon votre zone, votre quai, votre
-              volume et vos habitudes logistiques. Container Club ne prend pas de
-              marge cachée dessus.
+              Le transport final varie fortement selon votre zone, votre quai,
+              votre volume et vos habitudes logistiques. Container Club ne prend
+              pas de marge cachée dessus.
             </p>
           </div>
 
@@ -125,5 +125,5 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
         </Reveal>
       </div>
     </section>
-  );
+  )
 }

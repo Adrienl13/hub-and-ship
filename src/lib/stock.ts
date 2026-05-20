@@ -183,8 +183,7 @@ export function filterAndSortStockLines({
 }): ReadonlyArray<StockLine> {
   const query = search.trim().toLocaleLowerCase('fr-FR')
   let result = lines.filter((line) => {
-    const categoryMatch =
-      filter === 'all' || line.product.category === filter
+    const categoryMatch = filter === 'all' || line.product.category === filter
     const searchMatch =
       query.length === 0 || productStockSearchText(line).includes(query)
 
@@ -215,9 +214,7 @@ export function getStockCategoryCounts(
   )
 }
 
-export function calculateStockKpis(
-  lines: ReadonlyArray<StockLine>,
-): StockKpis {
+export function calculateStockKpis(lines: ReadonlyArray<StockLine>): StockKpis {
   return {
     references: lines.length,
     availableUnits: lines.reduce((sum, line) => sum + line.availableUnits, 0),

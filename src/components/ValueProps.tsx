@@ -1,27 +1,27 @@
-import { Factory, ShieldCheck, UsersRound } from "lucide-react";
+import { Factory, ShieldCheck, UsersRound } from 'lucide-react'
 
-import { RevealItem, RevealStagger } from "@/components/motion-helpers";
+import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 
 const VALUE_PROPS = [
   {
     Icon: Factory,
-    title: "Direct usine",
+    title: 'Direct usine',
     description:
-      "Les prix sont négociés au niveau container, sans empilement de marges ni stock dormant à financer.",
+      'Les prix sont négociés au niveau container, sans empilement de marges ni stock dormant à financer.',
   },
   {
     Icon: UsersRound,
-    title: "Groupé entre pros",
+    title: 'Groupé entre pros',
     description:
-      "Chaque réservation contribue au remplissage et aux MOQ couleur. Le départ se déclenche quand le seuil est atteint.",
+      'Chaque réservation contribue au remplissage et aux MOQ couleur. Le départ se déclenche quand le seuil est atteint.',
   },
   {
     Icon: ShieldCheck,
-    title: "Tout est géré",
+    title: 'Tout est géré',
     description:
-      "Importation, douane, conformité, contrôle SGS, facture française et garantie 2 ans restent centralisés chez Container Club.",
+      'Importation, douane, conformité, contrôle SGS, facture française et garantie 2 ans restent centralisés chez Container Club.',
   },
-] as const;
+] as const
 
 export function ValueProps() {
   return (
@@ -33,7 +33,9 @@ export function ValueProps() {
               <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]">
                 <Icon className="h-4 w-4" strokeWidth={1.7} />
               </div>
-              <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
+              <h2 className="font-display text-lg font-semibold tracking-tight">
+                {title}
+              </h2>
               <p className="mt-2 text-sm leading-relaxed text-[color:var(--ink-soft)]">
                 {description}
               </p>
@@ -42,5 +44,5 @@ export function ValueProps() {
         </RevealStagger>
       </div>
     </section>
-  );
+  )
 }

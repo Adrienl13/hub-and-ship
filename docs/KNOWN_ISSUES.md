@@ -35,6 +35,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : Realtime WebSocket peut se déconnecter (timeout proxy, network, etc.)
 **Solution préventive** :
+
 - Configurer reconnection automatique dans le hook `useContainerRealtime`
 - Heartbeat 30 secondes
 - Indicateur UI discret quand déconnecté ("● Reconnexion...")
@@ -45,6 +46,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : Les webhooks Stripe peuvent arriver dans un ordre inattendu
 **Solution préventive** :
+
 - Idempotency keys obligatoires
 - Vérifier le statut actuel avant d'appliquer un changement
 - Logs détaillés pour debug
@@ -54,6 +56,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : 30 req/min limit, possible burst
 **Solution préventive** :
+
 - Cache 7 jours (table `siret_cache`) couvre 95% des cas
 - Queue avec retry exponential backoff
 - Fallback : accepter SIRET non vérifié + cron de re-vérification
@@ -63,6 +66,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : Workers ont 50ms CPU, 30s wall time
 **Solution préventive** :
+
 - Pas de calculs lourds en Worker (déléguer Edge Functions Supabase)
 - Lazy loading agressif
 - Tests de perf en CI
@@ -71,6 +75,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : Migrations DB en prod peuvent lock long
 **Solution préventive** :
+
 - Migrations testées en staging d'abord
 - Migrations CONCURRENTLY pour index
 - Backup avant chaque migration
@@ -80,6 +85,7 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Contexte** : React Three Fiber + dépendances peuvent gonfler
 **Solution préventive** :
+
 - Code splitting par route (natif TanStack Start)
 - Lazy load 3D scene (Suspense)
 - Bundle analyzer en CI
@@ -95,20 +101,22 @@ Liste des points connus pour être problématiques, à anticiper.
 
 **Symptôme** : Query Supabase retourne 0 rows alors qu'il devrait y en avoir
 **Debug** :
+
 1. Tester la même query avec service_role (bypass RLS)
 2. Vérifier la policy concernée
 3. Vérifier les jointures (RLS peut bloquer sur table jointe)
 4. Vérifier auth.uid() dans la session
-**Fix typique** : Ajuster la policy ou utiliser une RPC SECURITY DEFINER
+   **Fix typique** : Ajuster la policy ou utiliser une RPC SECURITY DEFINER
 
 ### PATTERN-002 — Stripe Payment Intent statut bloqué
 
 **Symptôme** : Payment Intent reste en `requires_action`
 **Debug** :
+
 1. Vérifier 3DS2 challenge complété
 2. Vérifier next_action dans la PI
 3. Vérifier webhook signature
-**Fix typique** : Forcer rafraîchissement client + nouveau confirm()
+   **Fix typique** : Forcer rafraîchissement client + nouveau confirm()
 
 ### PATTERN-003 — TypeScript types Supabase obsolètes
 

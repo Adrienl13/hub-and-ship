@@ -8,6 +8,7 @@
 ## 📝 CHANGELOG v1.2 → v1.3
 
 **Décisions stratégiques** :
+
 1. **SIRET obligatoire** lors de toute demande de devis, paiement, ou callback (validation API INSEE Sirene)
 2. **Sécurité B2B blindée** : nouvelle section dédiée 18.bis avec implémentation détaillée
 3. **Anti-fraude** sur parrainage, MOQ, reviews, card testing
@@ -56,6 +57,7 @@
 **Approche** : tu travailleras par phases (1 à 8, détaillées section 18). Ne saute pas de phase. Valide chaque livrable avant de passer à la suivante.
 
 **Règles absolues** :
+
 - TypeScript strict (jamais `any`)
 - Mobile-first absolu (touch targets ≥44px, breakpoints sm/md/lg/xl)
 - Tests unitaires Vitest sur toute la logique métier (`src/lib/`)
@@ -65,6 +67,7 @@
 - Commits atomiques avec messages clairs
 
 **Ne PAS** :
+
 - Réécrire des composants shadcn existants
 - Mettre de la logique métier dans les composants (toujours dans `src/lib/`)
 - Exposer côté client les champs admin (`cost_landed_port_eur`, marges)
@@ -93,7 +96,7 @@
 16. Mobile optimisation
 17. SEO / GEO / LLM
 18. Protection juridique B2B (intégrée)
-18.bis **Sécurité B2B blindée (V1.3)** — OWASP 2025, anti-fraude, rate limiting
+    18.bis **Sécurité B2B blindée (V1.3)** — OWASP 2025, anti-fraude, rate limiting
 19. Intégrations tierces
 20. Sécurité & RGPD
 21. Données de seed
@@ -107,14 +110,17 @@
 ## 1. VISION & DIFFÉRENCIATION
 
 ### 1.1 Pitch
+
 Container Club est une plateforme B2B de pré-commande groupée mensuelle de mobilier outdoor par container maritime 20' HC, réservée aux professionnels. L'importateur officiel (Terrassea SAS) mutualise un container entre 6-12 pros, déclenche la production à 80% de remplissage et 3 séries minimum, livre en 90 jours environ.
 
 ### 1.2 Positionnement
+
 **Le prix d'un grossiste pro avec la qualité d'un revendeur premium.**
 
 Pas de communication agressive sur "le moins cher" car les volumes pros ont déjà des grossistes agressifs. Le positionnement est qualité/prix : rapports SGS, certifications M1/M2, garantie 2 ans, SAV France, importateur déclaré, conformité produit assumée.
 
 ### 1.3 Concurrents identifiés
+
 - FTS Direct (BrandSource USA) — modèle proche mais membres-only
 - Grossistes pro standard (équivalent Métro Pro, Sodema, Vega) — bon prix mais qualité variable
 - Revendeurs spécialisés français — bonne qualité mais marges importantes
@@ -123,6 +129,7 @@ Pas de communication agressive sur "le moins cher" car les volumes pros ont déj
 **Container Club = direct usine + importateur officiel + qualité garantie + livraison France.**
 
 ### 1.4 Modèle de revenus
+
 Marge brute moyenne ~30% sur le HT, calibrée via tiers dégressifs (25-35% selon volume client). Frais de réservation 3% (min 150€, max 500€) sécurisent le BFR et financent les frais fixes container.
 
 ---
@@ -135,6 +142,7 @@ Marge brute moyenne ~30% sur le HT, calibrée via tiers dégressifs (25-35% selo
 Le prix usine inclut le transport jusqu'au port français (Le Havre ou Fos-sur-Mer). Donc tu n'ajoutes pas de fret par produit, juste la mutualisation des frais douane + commissionnaire au niveau container.
 
 **Prix de vente HT affiché client** :
+
 ```
 prix_vente_ht = cost_landed_port × (1 + marge_appliquée) + eco_contribution_unitaire
 ```
@@ -145,13 +153,13 @@ La marge dépend du volume CBM cumulé du client sur le container (tier dégress
 
 Méthode **incrémentale** (pas all-units) pour éviter le profit leakage et le fractionnement de commandes :
 
-| Tranche CBM cumulée | Marge appliquée | Justification |
-|---|---|---|
-| 0,00 — 0,80 m³ | **35%** | Petite commande, protège ta marge |
-| 0,80 — 2,00 m³ | **32%** | Engagement moyen |
-| 2,00 — 4,00 m³ | **30%** | MOQ solo atteint |
-| 4,00 — 8,00 m³ | **27%** | Gros engagement |
-| 8,00 m³ et + | **25%** | Très gros (revendeur, chaîne) |
+| Tranche CBM cumulée | Marge appliquée | Justification                     |
+| ------------------- | --------------- | --------------------------------- |
+| 0,00 — 0,80 m³      | **35%**         | Petite commande, protège ta marge |
+| 0,80 — 2,00 m³      | **32%**         | Engagement moyen                  |
+| 2,00 — 4,00 m³      | **30%**         | MOQ solo atteint                  |
+| 4,00 — 8,00 m³      | **27%**         | Gros engagement                   |
+| 8,00 m³ et +        | **25%**         | Très gros (revendeur, chaîne)     |
 
 **Stockés dans `app_config.pricing_tiers`** (modifiables sans redéploiement).
 
@@ -160,11 +168,13 @@ Méthode **incrémentale** (pas all-units) pour éviter le profit leakage et le 
 **Anti-fractionnement** : agrégation automatique des réservations du même `company_id` sur le **même container**. Si un client a déjà une réservation `reserved`, sa nouvelle commande cumule le CBM pour recalculer le tier.
 
 ### 2.3 Frais de réservation
+
 - **3% du HT, min 150€, max 500€**, non remboursables sauf cas listés section 18
 - Prélevés à la réservation via Stripe Payment Intent
 - Constituent la première fraction de l'acompte 30%
 
 ### 2.4 Acompte et solde
+
 - **À 80% remplissage + 3 séries MOQ atteintes** : appel acompte 27% (= 30% total - 3% frais déjà payés)
 - **Avant expédition usine** (après contrôle qualité SGS) : solde 70%
 - Stripe Payment Link envoyé par email pour chacun, paiement carte ou SEPA
@@ -188,6 +198,7 @@ Méthode **incrémentale** (pas all-units) pour éviter le profit leakage et le 
 **Décision stratégique V1** : Container Club ne facture pas la livraison du port jusqu'au client final. Le prix produit s'arrête au port d'arrivée (Le Havre ou Marseille-Fos pour la France).
 
 **Pourquoi ce choix** :
+
 - Pas de partenariats transporteurs signés au lancement
 - Délai de 60 jours entre réservation et arrivée port rend impossible un devis fiable à T0 (les tarifs transporteurs sont valables 7-30 jours max)
 - Beaucoup de pros B2B préfèrent gérer leur transport (déjà des partenaires habituels, contrôle des créneaux et conditions)
@@ -209,6 +220,7 @@ Méthode **incrémentale** (pas all-units) pour éviter le profit leakage et le 
 ### 2.7 Liste des transporteurs recommandés (V1)
 
 Table `carrier_partners` peuplée avec 4-6 transporteurs présélectionnés sans contrat ni engagement :
+
 - Geodis Distribution Palette
 - Heppner
 - Mauffrey
@@ -217,6 +229,7 @@ Table `carrier_partners` peuplée avec 4-6 transporteurs présélectionnés sans
 - Upela (comparateur multi-transporteurs)
 
 Pour chacun, Container Club affiche :
+
 - Nom, logo, description
 - Zones couvertes (national, régional, international)
 - Fourchettes de prix indicatives par zone (sans engagement)
@@ -229,10 +242,11 @@ Page dédiée `/transport-partenaires` (publique, SEO friendly).
 ### 2.8 Évolution future (V2, post-30 livraisons)
 
 Table `delivery_history` préparée dès la V1 (vide au démarrage). À chaque livraison :
+
 - Admin enregistre manuellement le coût réel facturé par le transporteur
 - Date, zone, distance, volume, transporteur utilisé, prix payé par le client
 
-Dans 6-12 mois, avec 30-50 livraisons d'historique, possibilité d'activer un **estimateur dynamique** basé sur les vrais coûts moyens par zone et par transporteur, sans dépendre d'API externe. Section visible client : *"Fourchette indicative basée sur nos 30 dernières livraisons sur votre zone : 380-520€"*.
+Dans 6-12 mois, avec 30-50 livraisons d'historique, possibilité d'activer un **estimateur dynamique** basé sur les vrais coûts moyens par zone et par transporteur, sans dépendre d'API externe. Section visible client : _"Fourchette indicative basée sur nos 30 dernières livraisons sur votre zone : 380-520€"_.
 
 L'introduction de tarifs forfaitaires facturés par Container Club n'interviendra qu'après signature d'un contrat-cadre transporteur (V2 ou V3).
 
@@ -241,11 +255,11 @@ L'introduction de tarifs forfaitaires facturés par Container Club n'interviendr
 Remise automatique selon containers livrés au même `company_id` :
 
 | Containers livrés | Remise sur HT |
-|---|---|
-| 2 | -2% |
-| 3-4 | -3% |
-| 5-9 | -4% |
-| 10+ | -5% |
+| ----------------- | ------------- |
+| 2                 | -2%           |
+| 3-4               | -3%           |
+| 5-9               | -4%           |
+| 10+               | -5%           |
 
 Cumulable avec tiers dégressifs, appliquée sur `total_ht` avant TVA.
 
@@ -255,7 +269,7 @@ Cumulable avec tiers dégressifs, appliquée sur `total_ht` avant TVA.
 
 ### 3.1 Personae cibles
 
-- **Sophie** — gérante hôtel 4* — desktop bureau + mobile inspections
+- **Sophie** — gérante hôtel 4\* — desktop bureau + mobile inspections
 - **Marc** — paysagiste indépendant — mobile prédominant (terrain)
 - **Antoine** — gérant restaurant plage — équilibré
 - **Camille** — acheteuse chaîne campings — desktop majoritaire
@@ -675,24 +689,24 @@ create table ports (
 
 create table carrier_partners (
   id uuid primary key default gen_random_uuid(),
-  
+
   -- Identité
   name text not null,
   logo_url text,
   description text,
   website_url text,
-  
+
   -- Spécialités et couverture
   specialties text[] default array[]::text[],  -- ['national','palette','mobilier','express']
   coverage_zones text[] default array[]::text[],  -- ['national_fr','region_idf','europe']
   countries_served text[] default array['FR']::text[],
-  
+
   -- Contact
   contact_url text,             -- URL devis en ligne
   contact_phone text,
   contact_email text,
   dedicated_contact_name text,  -- "Mr Dupont, contact dédié pour Container Club"
-  
+
   -- Tarifs indicatifs (SANS ENGAGEMENT — uniquement pour info client)
   -- Format texte libre pour flexibilité
   typical_price_range_near text,      -- "200-300€" (<200 km du port)
@@ -700,16 +714,16 @@ create table carrier_partners (
   typical_price_range_far text,       -- "600-800€" (500-900 km)
   typical_price_range_extreme text,   -- "Sur devis" (>900 km, Corse, DOM)
   typical_delay_days int,             -- 3 (jours moyens)
-  
+
   -- Notes
   notes_for_customers text,           -- "Mentionnez Container Club pour suivi prioritaire"
   internal_notes text,                -- ADMIN ONLY
-  
+
   -- Position et activation
   is_recommended boolean default true,
   is_active boolean default true,
   display_order int default 0,
-  
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -724,46 +738,46 @@ create table delivery_history (
   id uuid primary key default gen_random_uuid(),
   reservation_id uuid references reservations(id),
   company_id uuid references companies(id),
-  
+
   -- Origine
   port_id uuid references ports(id),
   port_name text,
-  
+
   -- Destination
   delivery_postal_code text,
   delivery_city text,
   delivery_country text default 'FR',
   estimated_distance_km int,
-  
+
   -- Transport effectif
   carrier_partner_id uuid references carrier_partners(id),
   carrier_name_used text,       -- au cas où ce n'est pas un partner
-  
+
   -- Logistique
   palettes_count int,
   total_weight_kg numeric(8,2),
   total_cbm numeric(6,4),
-  
+
   -- Coûts (renseigné par admin a posteriori)
   cost_paid_by_client numeric(10,2),
-  
+
   -- Timing
   pickup_date date,
   delivery_date date,
   actual_delay_days int,
-  
+
   -- Notes
   admin_notes text,
-  
+
   created_at timestamptz default now()
 );
 
 create index idx_delivery_history_destination on delivery_history(delivery_postal_code, delivery_country);
 create index idx_delivery_history_carrier on delivery_history(carrier_partner_id);
 
--- NOTE V1 : les tables delivery_zones et postal_code_zones de la v1.1 
--- ont été retirées. Elles pourront être réintroduites en V2 quand des 
--- contrats transporteurs cadres seront signés et que Container Club 
+-- NOTE V1 : les tables delivery_zones et postal_code_zones de la v1.1
+-- ont été retirées. Elles pourront être réintroduites en V2 quand des
+-- contrats transporteurs cadres seront signés et que Container Club
 -- facturera lui-même la livraison.
 
 -- ============================================
@@ -778,40 +792,40 @@ create table products (
   slug text unique not null,        -- pour URLs SEO
   description text,
   long_description text,
-  
+
   -- Dimensions et logistique
   dimensions_cm jsonb not null,     -- { l, w, h }
   cbm_per_unit numeric(6,4) not null,
   weight_kg numeric(6,2),
-  
+
   -- MOQ et coût
   moq_units int not null,
   cost_landed_port_eur numeric(10,2) not null,  -- ADMIN ONLY
   retail_price_ref numeric(10,2),               -- pour affichage économie
-  
+
   -- Variantes multi-axes (table : ['top_config', 'leg_finish'])
   variant_types text[] default array[]::text[],
-  
+
   -- Conformité
   hs_code text,
   fire_rating text,
   eco_category text,
   eco_contribution numeric(6,2) default 0,
-  
+
   -- Médias
   main_image_url text,
   gallery_urls text[] default array[]::text[],
   thumb_url text,
-  
+
   -- Métadonnées
   features text[] default array[]::text[],
   materials text[] default array[]::text[],
   warranty_months int default 24,
-  
+
   -- SEO
   meta_title text,
   meta_description text,
-  
+
   is_active boolean default true,
   display_order int default 0,
   created_at timestamptz default now(),
@@ -873,12 +887,12 @@ create table containers (
   reference text unique not null,   -- 'CC-2026-001'
   port_id uuid references ports(id),
   country_code text references countries(code),  -- denorm pour query rapide
-  
+
   -- Capacité
   capacity_cbm numeric(6,2) not null default 28.00,
   threshold_percent int not null default 80,
   min_series_required int not null default 3,
-  
+
   -- Cycle de vie
   status container_status not null default 'draft',
   opened_at timestamptz,
@@ -890,23 +904,23 @@ create table containers (
   shipped_at timestamptz,
   arrived_at timestamptz,
   delivered_at timestamptz,
-  
+
   -- Métadonnées
   factory_partner text,
   shipping_line text,
   bill_of_lading text,
   vessel_name text,
   customs_declaration_ref text,
-  
+
   -- Coûts ADMIN ONLY
   total_landed_cost numeric(10,2),
   customs_duty numeric(10,2),
   customs_agent_fees numeric(10,2),
-  
+
   -- Médias (containers livrés)
   cover_image_url text,
   gallery_urls text[] default array[]::text[],
-  
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -947,14 +961,14 @@ create table companies (
   id uuid primary key default gen_random_uuid(),
   legal_name text not null,
   trading_name text,
-  
+
   -- Identifiants nationaux (V1.3)
   siret text,                       -- 14 chiffres (FR)
   siren text,                       -- 9 chiffres (FR, dérivé du SIRET)
   vat_number text,                  -- TVA intracom si applicable
   national_business_id text,        -- Pour autres pays (NIF ES, P.IVA IT, etc.)
   country_code text references countries(code) default 'FR',
-  
+
   -- Vérification SIRET (V1.3 — via API INSEE)
   siret_verified boolean default false,
   siret_verified_at timestamptz,
@@ -966,45 +980,45 @@ create table companies (
   creation_date date,               -- date création entreprise
   is_active_company boolean default true,  -- false si cessée à l'INSEE
   inactive_since date,
-  
+
   -- Anti-fraude / risque (V1.3)
   risk_flag text default 'normal' check (risk_flag in ('normal','review','blocked')),
   risk_notes text,                  -- ADMIN ONLY
-  
+
   -- Contact
   billing_email text,
   billing_phone text,
-  
+
   -- Adresses
   billing_address jsonb,            -- pré-rempli depuis SIRET si dispo
   default_delivery_address jsonb,
   default_delivery_postal_code text,
   default_delivery_country text,
-  
+
   -- Statut
   is_verified boolean default false,
   verified_at timestamptz,
   verification_notes text,
-  
+
   -- Fidélité
   loyalty_tier int default 0,
   total_containers_completed int default 0,
   total_lifetime_value numeric(12,2) default 0,
-  
+
   -- Parrainage
   referred_by_code_id uuid,         -- FK différée vers referral_codes
-  
+
   -- Préférences
   preferred_locale text default 'fr-FR',
-  
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
 -- V1.3 : Contrainte d'unicité SIRET (anti-spam comptes)
 -- Un SIRET ne peut être lié qu'à un seul compte company actif
-create unique index idx_companies_siret_unique 
-  on companies(siret) 
+create unique index idx_companies_siret_unique
+  on companies(siret)
   where siret is not null and risk_flag != 'blocked';
 
 create table users_profile (
@@ -1015,13 +1029,13 @@ create table users_profile (
   email text not null,
   phone text,
   role user_role default 'buyer',
-  
+
   -- Consentements RGPD
   email_marketing_consent boolean default false,
   email_marketing_consent_at timestamptz,
   cgv_accepted_at timestamptz,
   cgv_version_accepted text,
-  
+
   last_login_at timestamptz,
   preferred_locale text default 'fr-FR',
   created_at timestamptz default now()
@@ -1037,7 +1051,7 @@ create table reservations (
   container_id uuid references containers(id),
   user_id uuid references users_profile(id),
   company_id uuid references companies(id),
-  
+
   -- Livraison (V1 : aucune facturation par Container Club)
   delivery_mode delivery_mode default 'pickup_at_port',
   delivery_postal_code text,        -- pour info uniquement
@@ -1045,7 +1059,7 @@ create table reservations (
   delivery_country text default 'FR',
   delivery_fee numeric(8,2) default 0,  -- toujours 0 en V1, gardé pour V2
   delivery_notes text,              -- notes du client sur ses besoins transport
-  
+
   -- Montants HT
   subtotal_ht numeric(10,2) not null,
   eco_contribution_total numeric(8,2) default 0,
@@ -1055,20 +1069,20 @@ create table reservations (
   vat_rate numeric(4,2) not null default 20.00,
   vat_amount numeric(10,2) not null,
   total_ttc numeric(10,2) not null,
-  
+
   -- Marge ADMIN ONLY
   total_cbm numeric(6,4) not null,
   effective_margin_percent numeric(5,2),
   total_landed_cost numeric(10,2),
-  
+
   -- Acomptes
   reservation_fee numeric(8,2) not null,
   deposit_amount numeric(10,2),
   balance_amount numeric(10,2),
-  
+
   -- Statut
   status reservation_status not null default 'cart',
-  
+
   -- Timeline
   reserved_at timestamptz,
   deposit_called_at timestamptz,
@@ -1077,17 +1091,17 @@ create table reservations (
   balance_paid_at timestamptz,
   cancelled_at timestamptz,
   cancellation_reason text,
-  
+
   -- CGV
   cgv_version_accepted text,
   cgv_accepted_at timestamptz,
-  
+
   -- Parrainage
   referral_code_used_id uuid,       -- FK différée
-  
+
   -- Notes admin
   admin_notes text,
-  
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -1098,26 +1112,26 @@ create table reservation_items (
   product_id uuid references products(id),
   variant_id uuid references product_variants(id),
   variant_combination_id uuid references product_variant_combinations(id),
-  
+
   quantity int not null check (quantity > 0),
-  
+
   -- Prix bloqués à la réservation
   unit_cost_landed numeric(10,2) not null,  -- ADMIN ONLY
   unit_price_ht numeric(10,2) not null,
   unit_eco_contribution numeric(6,2) default 0,
-  
+
   subtotal_ht numeric(10,2) not null,
   eco_contribution_total numeric(8,2) default 0,
   cbm_total numeric(6,4) not null,
-  
+
   moq_pool_id uuid references moq_pools(id),
-  
+
   -- Changement post-clôture (MOQ non atteint)
   original_variant_id uuid references product_variants(id),
   original_variant_combination_id uuid references product_variant_combinations(id),
   variant_changed_at timestamptz,
   variant_change_reason text,
-  
+
   created_at timestamptz default now()
 );
 
@@ -1129,25 +1143,25 @@ create table payments (
   id uuid primary key default gen_random_uuid(),
   reservation_id uuid references reservations(id),
   company_id uuid references companies(id),
-  
+
   type payment_type not null,
   amount numeric(10,2) not null,
   currency text default 'EUR',
   status payment_status not null default 'pending',
-  
+
   stripe_payment_intent_id text unique,
   stripe_charge_id text,
   stripe_payment_method text,
-  
+
   is_refundable boolean default false,
   refundable_until timestamptz,
-  
+
   initiated_at timestamptz default now(),
   paid_at timestamptz,
   refunded_at timestamptz,
   refund_amount numeric(10,2),
   refund_reason text,
-  
+
   created_at timestamptz default now()
 );
 
@@ -1187,24 +1201,24 @@ create table referrals (
   referrer_company_id uuid references companies(id),
   referred_company_id uuid references companies(id),
   referred_reservation_id uuid references reservations(id),
-  
+
   -- Récompenses (paramétrables)
   referrer_credit_amount numeric(8,2) not null,
   referred_discount_amount numeric(8,2) not null,
-  
+
   status referral_status not null default 'pending',
   validated_at timestamptz,
-  
+
   created_at timestamptz default now()
 );
 
 -- Liaison différée
-alter table companies 
-  add constraint companies_referred_by_fk 
+alter table companies
+  add constraint companies_referred_by_fk
   foreign key (referred_by_code_id) references referral_codes(id);
 
-alter table reservations 
-  add constraint reservations_referral_code_fk 
+alter table reservations
+  add constraint reservations_referral_code_fk
   foreign key (referral_code_used_id) references referral_codes(id);
 
 -- ============================================
@@ -1215,26 +1229,26 @@ create table reviews (
   id uuid primary key default gen_random_uuid(),
   reservation_id uuid references reservations(id) unique,
   company_id uuid references companies(id),
-  
+
   overall_rating int not null check (overall_rating between 1 and 5),
   quality_rating int check (quality_rating between 1 and 5),
   value_rating int check (value_rating between 1 and 5),
   delivery_rating int check (delivery_rating between 1 and 5),
   communication_rating int check (communication_rating between 1 and 5),
-  
+
   title text,
   comment text,
   photo_urls text[],
-  
+
   is_verified_purchase boolean default true,
   is_published boolean default false,
   published_at timestamptz,
-  
+
   admin_response text,
   admin_response_at timestamptz,
-  
+
   helpful_count int default 0,
-  
+
   created_at timestamptz default now()
 );
 
@@ -1248,7 +1262,7 @@ create table review_helpfulness (
 
 -- Vue matérialisée pour ratings produit
 create materialized view product_ratings as
-select 
+select
   ri.product_id,
   avg(r.overall_rating)::numeric(3,2) as average_rating,
   avg(r.quality_rating)::numeric(3,2) as quality_avg,
@@ -1275,24 +1289,24 @@ create table callback_requests (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users_profile(id),
   company_id uuid references companies(id),
-  
+
   name text not null,
   company_name text,
   phone text not null,
   email text,
-  
+
   preferred_slot callback_slot,
   scheduled_at timestamptz,
   subject text,
   context_url text,
   reservation_id uuid references reservations(id),
-  
+
   status callback_status not null default 'pending',
   assigned_to_admin uuid references users_profile(id),
   called_at timestamptz,
   call_notes text,
   outcome text,
-  
+
   created_at timestamptz default now()
 );
 
@@ -1306,27 +1320,27 @@ create table claims (
   reservation_id uuid references reservations(id),
   reservation_item_id uuid references reservation_items(id),
   company_id uuid references companies(id),
-  
+
   claim_type claim_type not null,
   description text not null,
   photo_urls text[] not null default array[]::text[],
-  
+
   affected_quantity int,
-  
+
   status claim_status not null default 'open',
-  
+
   -- Timeline
   reported_at timestamptz default now(),
   delivered_at_reservation timestamptz,
   days_since_delivery int,
-  
+
   -- Résolution
   resolution_type text,             -- 'replacement', 'partial_refund', 'full_refund', 'rejected'
   resolution_amount numeric(8,2),
   resolved_at timestamptz,
   admin_notes text,
   customer_communication text,
-  
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -1409,33 +1423,33 @@ create table security_events (
   event_type security_event_type not null,
   user_id uuid references users_profile(id),
   company_id uuid references companies(id),
-  
+
   -- Contexte technique
   ip_address inet,
   user_agent text,
   request_id text,                 -- pour correlation logs Cloudflare
-  
+
   -- Données contextuelles
   metadata jsonb,                  -- ex: { siret_attempted: '...', reason: '...' }
   severity text default 'info' check (severity in ('info','warning','error','critical')),
-  
+
   -- Investigation admin
   reviewed_by uuid references users_profile(id),
   reviewed_at timestamptz,
   resolution text,
-  
+
   created_at timestamptz default now()
 );
 
-create index idx_security_events_type_created 
+create index idx_security_events_type_created
   on security_events(event_type, created_at desc);
-create index idx_security_events_ip_created 
+create index idx_security_events_ip_created
   on security_events(ip_address, created_at desc);
-create index idx_security_events_user 
-  on security_events(user_id, created_at desc) 
+create index idx_security_events_user
+  on security_events(user_id, created_at desc)
   where user_id is not null;
-create index idx_security_events_severity 
-  on security_events(severity, created_at desc) 
+create index idx_security_events_severity
+  on security_events(severity, created_at desc)
   where severity in ('error','critical');
 
 -- ============================================
@@ -1497,19 +1511,19 @@ insert into app_config (key, value, description) values
   "max_uses_per_code": 10
 }'::jsonb, 'Programme parrainage - montants ajustables'),
 
-('container_auto_open_mode', '"manual"'::jsonb, 
+('container_auto_open_mode', '"manual"'::jsonb,
  'manual | semi_auto | full_auto'),
 
-('container_capacity_default', '28'::jsonb, 
+('container_capacity_default', '28'::jsonb,
  'Capacité CBM par défaut pour nouveau container 20HC'),
 
-('container_threshold_percent', '80'::jsonb, 
+('container_threshold_percent', '80'::jsonb,
  'Seuil de remplissage pour déclencher production'),
 
-('min_series_required', '3'::jsonb, 
+('min_series_required', '3'::jsonb,
  'Minimum séries MOQ atteintes pour déclencher production'),
 
-('cgv_current_version', '"1.0"'::jsonb, 
+('cgv_current_version', '"1.0"'::jsonb,
  'Version CGV en vigueur'),
 
 ('callback_business_hours', '{
@@ -1528,7 +1542,7 @@ create index idx_products_active on products(is_active) where is_active = true;
 create index idx_products_category on products(category);
 create index idx_products_slug on products(slug);
 
-create index idx_containers_status on containers(status) 
+create index idx_containers_status on containers(status)
   where status in ('open','threshold_reached');
 create index idx_containers_port on containers(port_id);
 create index idx_containers_country on containers(country_code);
@@ -1544,7 +1558,7 @@ create index idx_moq_pools_reached on moq_pools(container_id) where is_reached =
 create index idx_payments_reservation on payments(reservation_id);
 create index idx_payments_stripe on payments(stripe_payment_intent_id);
 
-create index idx_carrier_partners_active on carrier_partners(is_active, display_order) 
+create index idx_carrier_partners_active on carrier_partners(is_active, display_order)
   where is_active = true;
 
 create index idx_email_log_user on email_log(user_id, sent_at desc);
@@ -1585,10 +1599,10 @@ begin
   select container_id into v_container_id
   from reservations
   where id = coalesce(new.reservation_id, old.reservation_id);
-  
+
   -- Recalcule le pool MOQ concerné
   update moq_pools mp
-  set 
+  set
     units_committed = coalesce((
       select sum(ri.quantity)
       from reservation_items ri
@@ -1603,25 +1617,25 @@ begin
     ), 0),
     updated_at = now()
   where mp.container_id = v_container_id;
-  
+
   -- Mise à jour is_reached et reached_at
   update moq_pools
-  set 
+  set
     is_reached = (units_committed >= moq_required),
-    reached_at = case 
+    reached_at = case
       when is_reached = false and units_committed >= moq_required then now()
       when units_committed < moq_required then null
       else reached_at
     end
   where container_id = v_container_id;
-  
+
   -- Recalcul métriques container
   insert into container_metrics (container_id)
   values (v_container_id)
   on conflict (container_id) do nothing;
-  
+
   update container_metrics cm
-  set 
+  set
     total_cbm_committed = coalesce((
       select sum(ri.cbm_total)
       from reservation_items ri
@@ -1639,11 +1653,11 @@ begin
       group by c.capacity_cbm
     ), 0),
     series_reached = (
-      select count(*) from moq_pools 
+      select count(*) from moq_pools
       where container_id = v_container_id and is_reached = true
     ),
     series_in_progress = (
-      select count(*) from moq_pools 
+      select count(*) from moq_pools
       where container_id = v_container_id and is_reached = false and units_committed > 0
     ),
     professionals_engaged = (
@@ -1667,7 +1681,7 @@ begin
     ), 0),
     last_calculated_at = now()
   where cm.container_id = v_container_id;
-  
+
   return coalesce(new, old);
 end;
 $$ language plpgsql;
@@ -1682,24 +1696,24 @@ returns trigger as $$
 begin
   if new.status = 'delivered' and old.status != 'delivered' then
     update companies c
-    set 
+    set
       total_containers_completed = total_containers_completed + (
-        select count(distinct r.id) 
-        from reservations r 
-        where r.company_id = c.id 
+        select count(distinct r.id)
+        from reservations r
+        where r.company_id = c.id
           and r.container_id = new.id
           and r.status in ('paid_full')
       ),
       total_lifetime_value = total_lifetime_value + coalesce((
         select sum(r.total_ht)
-        from reservations r 
-        where r.company_id = c.id 
+        from reservations r
+        where r.company_id = c.id
           and r.container_id = new.id
           and r.status in ('paid_full')
       ), 0)
     where c.id in (
-      select distinct r.company_id 
-      from reservations r 
+      select distinct r.company_id
+      from reservations r
       where r.container_id = new.id
     );
   end if;
@@ -1739,7 +1753,7 @@ create policy "Users see own reservations" on reservations for select
 
 create policy "Users see own items" on reservation_items for select
   using (reservation_id in (
-    select id from reservations 
+    select id from reservations
     where company_id in (select company_id from users_profile where id = auth.uid())
   ));
 
@@ -1754,7 +1768,7 @@ create policy "Users see own credits" on credits for select
 
 create policy "Users see own callbacks" on callback_requests for select
   using (
-    user_id = auth.uid() 
+    user_id = auth.uid()
     or company_id in (select company_id from users_profile where id = auth.uid())
   );
 
@@ -1805,6 +1819,7 @@ alter publication supabase_realtime add table reservations;
 ### 5.2 Tables publiquement lisibles
 
 Lecture sans auth (pas de RLS bloquante) :
+
 - `countries` (où `is_active = true`)
 - `ports` (où `is_active = true`)
 - `delivery_zones` ❌ supprimée en v1.2
@@ -1867,7 +1882,7 @@ export interface PricingResult {
  */
 export function calculateOrderPricing(
   lines: CartLineForPricing[],
-  tiers: PricingTier[]
+  tiers: PricingTier[],
 ): PricingResult {
   if (lines.length === 0) {
     return {
@@ -1881,44 +1896,45 @@ export function calculateOrderPricing(
   }
 
   const sortedTiers = [...tiers].sort((a, b) => a.minCbm - b.minCbm)
-  
+
   // Tri stable : les lignes traitées dans l'ordre d'ajout au panier
   // Cela donne un calcul déterministe et juste
   let cbmCumulative = 0
   const pricedLines: PricedLine[] = []
-  
+
   for (const line of lines) {
     const lineCbmTotal = line.cbmPerUnit * line.quantity
     const cbmStart = cbmCumulative
     const cbmEnd = cbmCumulative + lineCbmTotal
-    
+
     let weightedMarginSum = 0
     let cbmAccountedFor = 0
-    
+
     for (const tier of sortedTiers) {
       const tierStart = tier.minCbm
       const tierEnd = tier.maxCbm ?? Infinity
-      
+
       const overlapStart = Math.max(cbmStart, tierStart)
       const overlapEnd = Math.min(cbmEnd, tierEnd)
       const overlap = Math.max(0, overlapEnd - overlapStart)
-      
+
       if (overlap > 0) {
         weightedMarginSum += overlap * tier.marginPercent
         cbmAccountedFor += overlap
       }
     }
-    
-    const effectiveMargin = cbmAccountedFor > 0 
-      ? weightedMarginSum / cbmAccountedFor 
-      : sortedTiers[0].marginPercent
-    
+
+    const effectiveMargin =
+      cbmAccountedFor > 0
+        ? weightedMarginSum / cbmAccountedFor
+        : sortedTiers[0].marginPercent
+
     const unitPriceHt = round2(
-      line.costLanded * (1 + effectiveMargin / 100) + line.ecoContribution
+      line.costLanded * (1 + effectiveMargin / 100) + line.ecoContribution,
     )
     const subtotalHt = round2(unitPriceHt * line.quantity)
     const ecoContributionTotal = round2(line.ecoContribution * line.quantity)
-    
+
     pricedLines.push({
       ...line,
       effectiveMargin,
@@ -1927,21 +1943,24 @@ export function calculateOrderPricing(
       ecoContributionTotal,
       cbmTotal: lineCbmTotal,
     })
-    
+
     cbmCumulative = cbmEnd
   }
-  
+
   const subtotalHt = pricedLines.reduce((s, l) => s + l.subtotalHt, 0)
-  const ecoContributionTotal = pricedLines.reduce((s, l) => s + l.ecoContributionTotal, 0)
-  const totalCbm = pricedLines.reduce((s, l) => s + l.cbmTotal, 0)
-  
-  const totalWeightedMargin = pricedLines.reduce(
-    (s, l) => s + (l.effectiveMargin * l.cbmTotal), 0
+  const ecoContributionTotal = pricedLines.reduce(
+    (s, l) => s + l.ecoContributionTotal,
+    0,
   )
-  const effectiveMarginPercent = totalCbm > 0 
-    ? totalWeightedMargin / totalCbm 
-    : sortedTiers[0].marginPercent
-  
+  const totalCbm = pricedLines.reduce((s, l) => s + l.cbmTotal, 0)
+
+  const totalWeightedMargin = pricedLines.reduce(
+    (s, l) => s + l.effectiveMargin * l.cbmTotal,
+    0,
+  )
+  const effectiveMarginPercent =
+    totalCbm > 0 ? totalWeightedMargin / totalCbm : sortedTiers[0].marginPercent
+
   return {
     lines: pricedLines,
     totalCbm,
@@ -1967,16 +1986,22 @@ Quand un client crée une réservation, vérifier s'il a déjà des réservation
 export async function getCumulativeCbmForCompany(
   companyId: string,
   containerId: string,
-  excludeReservationId?: string
+  excludeReservationId?: string,
 ): Promise<number> {
   const { data } = await supabase
     .from('reservations')
     .select('total_cbm')
     .eq('company_id', companyId)
     .eq('container_id', containerId)
-    .in('status', ['reserved','pending_deposit','deposit_paid','pending_balance','paid_full'])
+    .in('status', [
+      'reserved',
+      'pending_deposit',
+      'deposit_paid',
+      'pending_balance',
+      'paid_full',
+    ])
     .neq('id', excludeReservationId ?? '00000000-0000-0000-0000-000000000000')
-  
+
   return (data ?? []).reduce((sum, r) => sum + Number(r.total_cbm), 0)
 }
 
@@ -1988,10 +2013,10 @@ export async function calculatePricingWithExisting(
   newLines: CartLineForPricing[],
   companyId: string,
   containerId: string,
-  tiers: PricingTier[]
+  tiers: PricingTier[],
 ): Promise<PricingResult> {
   const existingCbm = await getCumulativeCbmForCompany(companyId, containerId)
-  
+
   // On crée une ligne "fantôme" représentant le CBM déjà engagé
   // pour démarrer le calcul incrémental au bon endroit
   const ghostLine: CartLineForPricing = {
@@ -2003,9 +2028,9 @@ export async function calculatePricingWithExisting(
     costLanded: 0,
     ecoContribution: 0,
   }
-  
+
   const result = calculateOrderPricing([ghostLine, ...newLines], tiers)
-  
+
   // On retire la ligne fantôme du résultat
   return {
     ...result,
@@ -2022,14 +2047,14 @@ export async function calculatePricingWithExisting(
 // src/lib/pricing/reservation-fee.ts
 
 export interface ReservationFeeConfig {
-  rate: number      // 0.03
-  min: number       // 150
-  max: number       // 500
+  rate: number // 0.03
+  min: number // 150
+  max: number // 500
 }
 
 export function calculateReservationFee(
   subtotalHt: number,
-  config: ReservationFeeConfig
+  config: ReservationFeeConfig,
 ): number {
   const calculated = subtotalHt * config.rate
   const result = Math.min(Math.max(calculated, config.min), config.max)
@@ -2053,18 +2078,18 @@ export interface MoqStatus {
 }
 
 export function getMoqStatus(
-  unitsCommitted: number, 
-  moqRequired: number
+  unitsCommitted: number,
+  moqRequired: number,
 ): MoqStatus {
   const percent = (unitsCommitted / moqRequired) * 100
   const remaining = Math.max(0, moqRequired - unitsCommitted)
-  
+
   if (unitsCommitted === 0) {
     return {
-      status: 'empty', 
-      unitsCommitted, 
-      unitsRequired: moqRequired, 
-      unitsRemaining: remaining, 
+      status: 'empty',
+      unitsCommitted,
+      unitsRequired: moqRequired,
+      unitsRemaining: remaining,
       percent: 0,
       message: 'Soyez le premier à engager cette série',
       colorClass: 'muted',
@@ -2073,9 +2098,9 @@ export function getMoqStatus(
   if (unitsCommitted >= moqRequired) {
     return {
       status: 'reached',
-      unitsCommitted, 
-      unitsRequired: moqRequired, 
-      unitsRemaining: 0, 
+      unitsCommitted,
+      unitsRequired: moqRequired,
+      unitsRemaining: 0,
       percent: 100,
       message: `✓ Série confirmée (${unitsCommitted}/${moqRequired})`,
       colorClass: 'success',
@@ -2084,9 +2109,9 @@ export function getMoqStatus(
   if (percent >= 80) {
     return {
       status: 'almost',
-      unitsCommitted, 
-      unitsRequired: moqRequired, 
-      unitsRemaining: remaining, 
+      unitsCommitted,
+      unitsRequired: moqRequired,
+      unitsRemaining: remaining,
       percent,
       message: `Presque atteint ! Manque ${remaining} unités`,
       colorClass: 'amber',
@@ -2095,9 +2120,9 @@ export function getMoqStatus(
   if (percent >= 40) {
     return {
       status: 'progressing',
-      unitsCommitted, 
-      unitsRequired: moqRequired, 
-      unitsRemaining: remaining, 
+      unitsCommitted,
+      unitsRequired: moqRequired,
+      unitsRemaining: remaining,
       percent,
       message: `En cours · Manque ${remaining} unités`,
       colorClass: 'amber',
@@ -2105,9 +2130,9 @@ export function getMoqStatus(
   }
   return {
     status: 'starting',
-    unitsCommitted, 
-    unitsRequired: moqRequired, 
-    unitsRemaining: remaining, 
+    unitsCommitted,
+    unitsRequired: moqRequired,
+    unitsRemaining: remaining,
     percent,
     message: `Démarrage · Manque ${remaining} unités`,
     colorClass: 'neutral',
@@ -2127,10 +2152,10 @@ export interface LoyaltyTier {
 
 export function getLoyaltyDiscount(
   companyContainersCompleted: number,
-  tiers: LoyaltyTier[]
+  tiers: LoyaltyTier[],
 ): number {
   const applicable = tiers
-    .filter(t => companyContainersCompleted >= t.minContainers)
+    .filter((t) => companyContainersCompleted >= t.minContainers)
     .sort((a, b) => b.discountPercent - a.discountPercent)
   return applicable[0]?.discountPercent ?? 0
 }
@@ -2138,10 +2163,11 @@ export function getLoyaltyDiscount(
 export function applyLoyaltyDiscount(
   totalHt: number,
   containersCompleted: number,
-  tiers: LoyaltyTier[]
+  tiers: LoyaltyTier[],
 ): { discountPercent: number; discountAmount: number; totalAfter: number } {
   const discountPercent = getLoyaltyDiscount(containersCompleted, tiers)
-  const discountAmount = Math.round(totalHt * (discountPercent / 100) * 100) / 100
+  const discountAmount =
+    Math.round(totalHt * (discountPercent / 100) * 100) / 100
   return {
     discountPercent,
     discountAmount,
@@ -2155,10 +2181,17 @@ export function applyLoyaltyDiscount(
 ```typescript
 // src/lib/container/status.ts
 
-export type ContainerStatus = 
-  | 'draft' | 'open' | 'threshold_reached' | 'production'
-  | 'manufactured' | 'shipped' | 'customs' | 'arrived' 
-  | 'delivered' | 'cancelled'
+export type ContainerStatus =
+  | 'draft'
+  | 'open'
+  | 'threshold_reached'
+  | 'production'
+  | 'manufactured'
+  | 'shipped'
+  | 'customs'
+  | 'arrived'
+  | 'delivered'
+  | 'cancelled'
 
 const ALLOWED_TRANSITIONS: Record<ContainerStatus, ContainerStatus[]> = {
   draft: ['open', 'cancelled'],
@@ -2174,8 +2207,8 @@ const ALLOWED_TRANSITIONS: Record<ContainerStatus, ContainerStatus[]> = {
 }
 
 export function canTransition(
-  from: ContainerStatus, 
-  to: ContainerStatus
+  from: ContainerStatus,
+  to: ContainerStatus,
 ): boolean {
   return ALLOWED_TRANSITIONS[from]?.includes(to) ?? false
 }
@@ -2193,17 +2226,21 @@ export function canStartProduction(c: ProductionConditions): {
   reasons: string[]
 } {
   const reasons: string[] = []
-  
+
   if (c.fillPercent < c.thresholdPercent) {
-    reasons.push(`Remplissage ${c.fillPercent.toFixed(1)}% < ${c.thresholdPercent}%`)
+    reasons.push(
+      `Remplissage ${c.fillPercent.toFixed(1)}% < ${c.thresholdPercent}%`,
+    )
   }
   if (c.seriesReached < c.minSeriesRequired) {
-    reasons.push(`${c.seriesReached} séries atteintes / ${c.minSeriesRequired} requises`)
+    reasons.push(
+      `${c.seriesReached} séries atteintes / ${c.minSeriesRequired} requises`,
+    )
   }
   if (c.hasUnpaidDeposits) {
     reasons.push('Acomptes non encore tous payés')
   }
-  
+
   return {
     canStart: reasons.length === 0,
     reasons,
@@ -2216,7 +2253,11 @@ export function canStartProduction(c: ProductionConditions): {
 ```typescript
 // src/lib/claims/sav.ts
 
-export type ClaimType = 'apparent_defect' | 'non_conformity' | 'hidden_defect' | 'transport_damage'
+export type ClaimType =
+  | 'apparent_defect'
+  | 'non_conformity'
+  | 'hidden_defect'
+  | 'transport_damage'
 
 export interface ClaimRules {
   type: ClaimType
@@ -2228,15 +2269,17 @@ export interface ClaimRules {
 export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   apparent_defect: {
     type: 'apparent_defect',
-    maxDaysAfterDelivery: 2,  // 48h
+    maxDaysAfterDelivery: 2, // 48h
     requiresPhotos: true,
-    description: 'Défaut visible à la réception (casse, manquant, défaut esthétique évident)',
+    description:
+      'Défaut visible à la réception (casse, manquant, défaut esthétique évident)',
   },
   transport_damage: {
     type: 'transport_damage',
-    maxDaysAfterDelivery: 2,  // 48h
+    maxDaysAfterDelivery: 2, // 48h
     requiresPhotos: true,
-    description: 'Dommage causé par le transport (à signaler aussi au transporteur)',
+    description:
+      'Dommage causé par le transport (à signaler aussi au transporteur)',
   },
   non_conformity: {
     type: 'non_conformity',
@@ -2246,24 +2289,27 @@ export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   },
   hidden_defect: {
     type: 'hidden_defect',
-    maxDaysAfterDelivery: 730,  // 2 ans = garantie légale
+    maxDaysAfterDelivery: 730, // 2 ans = garantie légale
     requiresPhotos: true,
-    description: 'Vice caché découvert après usage normal (garantie légale 2 ans)',
+    description:
+      'Vice caché découvert après usage normal (garantie légale 2 ans)',
   },
 }
 
 export function isClaimEligible(
   claimType: ClaimType,
   deliveredAt: Date,
-  reportedAt: Date = new Date()
+  reportedAt: Date = new Date(),
 ): { eligible: boolean; daysElapsed: number; deadline: Date } {
   const rules = CLAIM_RULES[claimType]
   const msPerDay = 1000 * 60 * 60 * 24
   const daysElapsed = Math.floor(
-    (reportedAt.getTime() - deliveredAt.getTime()) / msPerDay
+    (reportedAt.getTime() - deliveredAt.getTime()) / msPerDay,
   )
-  const deadline = new Date(deliveredAt.getTime() + rules.maxDaysAfterDelivery * msPerDay)
-  
+  const deadline = new Date(
+    deliveredAt.getTime() + rules.maxDaysAfterDelivery * msPerDay,
+  )
+
   return {
     eligible: daysElapsed <= rules.maxDaysAfterDelivery,
     daysElapsed,
@@ -2275,6 +2321,7 @@ export function isClaimEligible(
 ### 6.8 Validation SIRET via API INSEE (V1.3)
 
 **Quand vérifier ?** Le SIRET est demandé et vérifié **dès qu'un utilisateur veut** :
+
 - Soumettre une réservation (paiement frais)
 - Recevoir un devis par email
 - Soumettre une demande de callback commercial
@@ -2293,33 +2340,46 @@ export type SiretValidationResult =
   | { status: 'inactive'; reason: string; inactive_since?: string }
   | { status: 'duplicate'; reason: string; existing_company_id: string }
   | { status: 'verified'; data: SiretData }
-  | { status: 'verification_unavailable'; data: { format_ok: true }; reason: string }
+  | {
+      status: 'verification_unavailable'
+      data: { format_ok: true }
+      reason: string
+    }
 
 /**
  * Étape 1 : Validation algorithmique (offline, jamais bloquante)
  */
-export function validateSiretFormat(siret: string): { valid: boolean; reason?: string } {
+export function validateSiretFormat(siret: string): {
+  valid: boolean
+  reason?: string
+} {
   const cleaned = siret.replace(/\s/g, '')
-  
+
   // 14 chiffres exactement
   if (!/^\d{14}$/.test(cleaned)) {
-    return { valid: false, reason: 'Le SIRET doit contenir exactement 14 chiffres' }
+    return {
+      valid: false,
+      reason: 'Le SIRET doit contenir exactement 14 chiffres',
+    }
   }
-  
+
   // Algorithme de Luhn modifié pour SIRET français
   // (le SIRET utilise une variante de Luhn — somme pondérée modulo 10)
   let sum = 0
   for (let i = 0; i < 14; i++) {
     let digit = parseInt(cleaned[i])
-    if (i % 2 === 0) digit *= 2  // poids 2 pour positions paires
+    if (i % 2 === 0) digit *= 2 // poids 2 pour positions paires
     if (digit > 9) digit -= 9
     sum += digit
   }
-  
+
   if (sum % 10 !== 0) {
-    return { valid: false, reason: 'Numéro SIRET invalide (clé de contrôle incorrecte)' }
+    return {
+      valid: false,
+      reason: 'Numéro SIRET invalide (clé de contrôle incorrecte)',
+    }
   }
-  
+
   return { valid: true }
 }
 
@@ -2327,54 +2387,55 @@ export function validateSiretFormat(siret: string): { valid: boolean; reason?: s
  * Étape 2 : Vérification API INSEE avec cache
  */
 export async function verifySiretWithInsee(
-  siret: string
+  siret: string,
 ): Promise<SiretValidationResult> {
   // 1. Validation algorithmique préalable
   const formatCheck = validateSiretFormat(siret)
   if (!formatCheck.valid) {
     return { status: 'invalid_format', reason: formatCheck.reason! }
   }
-  
+
   // 2. Check cache local (table siret_cache, TTL 7j)
   const cached = await getCachedSiret(siret)
   if (cached && cached.expires_at > new Date()) {
     return interpretCachedResponse(cached)
   }
-  
+
   // 3. Appel API INSEE via Edge Function
   try {
     const response = await callInseeApi(siret)
-    
+
     if (!response.ok) {
       if (response.status === 404) {
-        return { 
-          status: 'not_found', 
-          reason: 'Ce SIRET n\'existe pas dans le répertoire INSEE Sirene' 
+        return {
+          status: 'not_found',
+          reason: "Ce SIRET n'existe pas dans le répertoire INSEE Sirene",
         }
       }
       // 5xx, timeout, etc. → fallback gracieux
       return {
         status: 'verification_unavailable',
         data: { format_ok: true },
-        reason: 'Service de vérification temporairement indisponible. Votre SIRET sera vérifié sous 24h.',
+        reason:
+          'Service de vérification temporairement indisponible. Votre SIRET sera vérifié sous 24h.',
       }
     }
-    
+
     const data = await response.json()
-    
+
     // 4. Cache la réponse
     await cacheSiretResponse(siret, data)
-    
+
     // 5. Vérifier statut entreprise
     if (data.etablissement.etatAdministratifEtablissement === 'F') {
       // Établissement fermé
       return {
         status: 'inactive',
-        reason: 'Cet établissement est fermé selon l\'INSEE',
+        reason: "Cet établissement est fermé selon l'INSEE",
         inactive_since: data.etablissement.dateFermetureEtablissement,
       }
     }
-    
+
     // 6. Vérifier non-duplication
     const existing = await findCompanyBySiret(siret)
     if (existing) {
@@ -2384,7 +2445,7 @@ export async function verifySiretWithInsee(
         existing_company_id: existing.id,
       }
     }
-    
+
     // 7. SIRET vérifié OK
     return {
       status: 'verified',
@@ -2403,41 +2464,43 @@ export async function verifySiretWithInsee(
 export interface SiretData {
   siret: string
   siren: string
-  legal_name: string              // Raison sociale
-  trading_name?: string            // Nom commercial
-  legal_form: string               // SARL, SAS, EI, etc.
-  legal_form_code: string          // Code juridique INSEE
-  naf_code: string                 // Ex: 5510Z
-  naf_label: string                // Ex: "Hôtels et hébergement similaire"
+  legal_name: string // Raison sociale
+  trading_name?: string // Nom commercial
+  legal_form: string // SARL, SAS, EI, etc.
+  legal_form_code: string // Code juridique INSEE
+  naf_code: string // Ex: 5510Z
+  naf_label: string // Ex: "Hôtels et hébergement similaire"
   address: {
     street: string
     postal_code: string
     city: string
     country: string
   }
-  creation_date: string            // ISO date
+  creation_date: string // ISO date
   is_active: boolean
-  is_diffusable: boolean           // false si statut "diffusion partielle"
-  raw_response: object             // payload brut INSEE
+  is_diffusable: boolean // false si statut "diffusion partielle"
+  raw_response: object // payload brut INSEE
 }
 
 function extractSiretData(inseeResponse: any): SiretData {
   const etab = inseeResponse.etablissement
   const ul = etab.uniteLegale
   const adresse = etab.adresseEtablissement
-  
+
   return {
     siret: etab.siret,
     siren: etab.siren,
-    legal_name: ul.denominationUniteLegale 
-                || `${ul.prenom1UniteLegale ?? ''} ${ul.nomUniteLegale ?? ''}`.trim(),
+    legal_name:
+      ul.denominationUniteLegale ||
+      `${ul.prenom1UniteLegale ?? ''} ${ul.nomUniteLegale ?? ''}`.trim(),
     trading_name: etab.denominationUsuelleEtablissement,
     legal_form: getLegalFormLabel(ul.categorieJuridiqueUniteLegale),
     legal_form_code: ul.categorieJuridiqueUniteLegale,
     naf_code: etab.activitePrincipaleEtablissement,
     naf_label: getNafLabel(etab.activitePrincipaleEtablissement),
     address: {
-      street: `${adresse.numeroVoieEtablissement ?? ''} ${adresse.typeVoieEtablissement ?? ''} ${adresse.libelleVoieEtablissement ?? ''}`.trim(),
+      street:
+        `${adresse.numeroVoieEtablissement ?? ''} ${adresse.typeVoieEtablissement ?? ''} ${adresse.libelleVoieEtablissement ?? ''}`.trim(),
       postal_code: adresse.codePostalEtablissement ?? '',
       city: adresse.libelleCommuneEtablissement ?? '',
       country: 'FR',
@@ -2452,15 +2515,15 @@ function extractSiretData(inseeResponse: any): SiretData {
 
 **Comportement bloquant** (selon décision section 18.bis) :
 
-| Cas | Action |
-|---|---|
-| Format invalide | Erreur affichée, blocage formulaire |
-| Checksum invalide | Erreur affichée, blocage formulaire |
-| SIRET non trouvé INSEE | Erreur affichée, blocage formulaire |
-| Établissement fermé/cessé | **Blocage strict**, message clair, suggestion contact admin |
-| SIRET déjà utilisé (autre compte) | Blocage + suggestion "Vous avez peut-être déjà un compte" |
-| API INSEE down | **Non bloquant** : on accepte, on flag `siret_verified = false`, re-vérif auto sous 24h |
-| Verified OK | Auto-remplissage form, passage à l'étape suivante |
+| Cas                               | Action                                                                                  |
+| --------------------------------- | --------------------------------------------------------------------------------------- |
+| Format invalide                   | Erreur affichée, blocage formulaire                                                     |
+| Checksum invalide                 | Erreur affichée, blocage formulaire                                                     |
+| SIRET non trouvé INSEE            | Erreur affichée, blocage formulaire                                                     |
+| Établissement fermé/cessé         | **Blocage strict**, message clair, suggestion contact admin                             |
+| SIRET déjà utilisé (autre compte) | Blocage + suggestion "Vous avez peut-être déjà un compte"                               |
+| API INSEE down                    | **Non bloquant** : on accepte, on flag `siret_verified = false`, re-vérif auto sous 24h |
+| Verified OK                       | Auto-remplissage form, passage à l'étape suivante                                       |
 
 **Edge Function `verify-siret`** :
 
@@ -2471,7 +2534,7 @@ Deno.serve(async (req) => {
   // 1. Auth requise (uniquement utilisateurs en cours de checkout)
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) return new Response('Unauthorized', { status: 401 })
-  
+
   // 2. Rate limiting (30 req/min/user)
   const userId = await getUserIdFromToken(authHeader)
   const rateLimit = await checkRateLimit(`siret:${userId}`, 30, 60)
@@ -2483,9 +2546,9 @@ Deno.serve(async (req) => {
     })
     return new Response('Too many requests', { status: 429 })
   }
-  
+
   const { siret } = await req.json()
-  
+
   // 3. Validation format
   const formatCheck = validateSiretFormat(siret)
   if (!formatCheck.valid) {
@@ -2494,25 +2557,28 @@ Deno.serve(async (req) => {
       user_id: userId,
       metadata: { siret, reason: formatCheck.reason },
     })
-    return new Response(JSON.stringify({
-      status: 'invalid_format',
-      reason: formatCheck.reason,
-    }), { status: 400 })
+    return new Response(
+      JSON.stringify({
+        status: 'invalid_format',
+        reason: formatCheck.reason,
+      }),
+      { status: 400 },
+    )
   }
-  
+
   // 4. Check cache
   const cached = await getCachedSiret(siret)
   if (cached) return new Response(JSON.stringify(cached))
-  
+
   // 5. OAuth INSEE (token cached côté serveur)
   const token = await getInseeAccessToken()
-  
+
   // 6. Appel INSEE
   const response = await fetch(
     `${Deno.env.get('INSEE_API_BASE_URL')}/siret/${siret}`,
-    { headers: { 'Authorization': `Bearer ${token}` } }
+    { headers: { Authorization: `Bearer ${token}` } },
   )
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       await logSecurityEvent({
@@ -2520,36 +2586,44 @@ Deno.serve(async (req) => {
         user_id: userId,
         metadata: { siret, status: 404 },
       })
-      return new Response(JSON.stringify({
-        status: 'not_found',
-      }), { status: 404 })
+      return new Response(
+        JSON.stringify({
+          status: 'not_found',
+        }),
+        { status: 404 },
+      )
     }
     // 5xx → fallback
-    return new Response(JSON.stringify({
-      status: 'verification_unavailable',
-    }), { status: 200 }) // pas d'erreur côté client, on accepte
+    return new Response(
+      JSON.stringify({
+        status: 'verification_unavailable',
+      }),
+      { status: 200 },
+    ) // pas d'erreur côté client, on accepte
   }
-  
+
   const inseeData = await response.json()
-  
+
   // 7. Cache 7 jours
   await cacheSiretResponse(siret, inseeData)
-  
+
   // 8. Log success
   await logSecurityEvent({
     event_type: 'siret_lookup_success',
     user_id: userId,
     metadata: { siret },
   })
-  
+
   // 9. Vérif duplication
   const existing = await findCompanyBySiret(siret)
-  
-  return new Response(JSON.stringify({
-    status: existing ? 'duplicate' : 'verified',
-    data: extractSiretData(inseeData),
-    existing_company_id: existing?.id,
-  }))
+
+  return new Response(
+    JSON.stringify({
+      status: existing ? 'duplicate' : 'verified',
+      data: extractSiretData(inseeData),
+      existing_company_id: existing?.id,
+    }),
+  )
 })
 ```
 
@@ -2565,9 +2639,22 @@ Pour tous les `companies.siret_verified = false`, relance la vérification INSEE
 // src/lib/validation/email.ts
 
 const PERSONAL_EMAIL_DOMAINS = [
-  'gmail.com', 'yahoo.com', 'yahoo.fr', 'hotmail.com', 'hotmail.fr',
-  'outlook.com', 'outlook.fr', 'free.fr', 'orange.fr', 'wanadoo.fr',
-  'laposte.net', 'sfr.fr', 'bbox.fr', 'neuf.fr', 'icloud.com', 'me.com'
+  'gmail.com',
+  'yahoo.com',
+  'yahoo.fr',
+  'hotmail.com',
+  'hotmail.fr',
+  'outlook.com',
+  'outlook.fr',
+  'free.fr',
+  'orange.fr',
+  'wanadoo.fr',
+  'laposte.net',
+  'sfr.fr',
+  'bbox.fr',
+  'neuf.fr',
+  'icloud.com',
+  'me.com',
 ]
 
 export function checkEmailDomain(email: string): {
@@ -2578,12 +2665,12 @@ export function checkEmailDomain(email: string): {
 } {
   const domain = email.split('@')[1]?.toLowerCase() ?? ''
   const isPersonal = PERSONAL_EMAIL_DOMAINS.includes(domain)
-  
+
   return {
     isPersonal,
     domain,
     showWarning: isPersonal,
-    warningMessage: isPersonal 
+    warningMessage: isPersonal
       ? 'Cette adresse semble personnelle. Pour une activité professionnelle, nous recommandons fortement un email à votre nom de domaine. Vous pouvez continuer si nécessaire.'
       : undefined,
   }
@@ -2599,7 +2686,11 @@ Le warning est tracé dans `security_events` (type `email_warning_shown`) pour a
 ```typescript
 // src/lib/claims/sav.ts
 
-export type ClaimType = 'apparent_defect' | 'non_conformity' | 'hidden_defect' | 'transport_damage'
+export type ClaimType =
+  | 'apparent_defect'
+  | 'non_conformity'
+  | 'hidden_defect'
+  | 'transport_damage'
 
 export interface ClaimRules {
   type: ClaimType
@@ -2611,15 +2702,17 @@ export interface ClaimRules {
 export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   apparent_defect: {
     type: 'apparent_defect',
-    maxDaysAfterDelivery: 2,  // 48h
+    maxDaysAfterDelivery: 2, // 48h
     requiresPhotos: true,
-    description: 'Défaut visible à la réception (casse, manquant, défaut esthétique évident)',
+    description:
+      'Défaut visible à la réception (casse, manquant, défaut esthétique évident)',
   },
   transport_damage: {
     type: 'transport_damage',
-    maxDaysAfterDelivery: 2,  // 48h
+    maxDaysAfterDelivery: 2, // 48h
     requiresPhotos: true,
-    description: 'Dommage causé par le transport (à signaler aussi au transporteur)',
+    description:
+      'Dommage causé par le transport (à signaler aussi au transporteur)',
   },
   non_conformity: {
     type: 'non_conformity',
@@ -2629,24 +2722,27 @@ export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   },
   hidden_defect: {
     type: 'hidden_defect',
-    maxDaysAfterDelivery: 730,  // 2 ans = garantie légale
+    maxDaysAfterDelivery: 730, // 2 ans = garantie légale
     requiresPhotos: true,
-    description: 'Vice caché découvert après usage normal (garantie légale 2 ans)',
+    description:
+      'Vice caché découvert après usage normal (garantie légale 2 ans)',
   },
 }
 
 export function isClaimEligible(
   claimType: ClaimType,
   deliveredAt: Date,
-  reportedAt: Date = new Date()
+  reportedAt: Date = new Date(),
 ): { eligible: boolean; daysElapsed: number; deadline: Date } {
   const rules = CLAIM_RULES[claimType]
   const msPerDay = 1000 * 60 * 60 * 24
   const daysElapsed = Math.floor(
-    (reportedAt.getTime() - deliveredAt.getTime()) / msPerDay
+    (reportedAt.getTime() - deliveredAt.getTime()) / msPerDay,
   )
-  const deadline = new Date(deliveredAt.getTime() + rules.maxDaysAfterDelivery * msPerDay)
-  
+  const deadline = new Date(
+    deliveredAt.getTime() + rules.maxDaysAfterDelivery * msPerDay,
+  )
+
   return {
     eligible: daysElapsed <= rules.maxDaysAfterDelivery,
     daysElapsed,
@@ -2664,6 +2760,7 @@ export function isClaimEligible(
 Architecture verticale (mobile-first), 9 sections :
 
 **A. Header sticky (h-14 mobile / h-16 desktop)**
+
 - Logo monogramme "C" + wordmark
 - Desktop nav : Catalogue / Comment ça marche / Containers livrés / FAQ / Mon compte
 - Mobile : burger menu (Sheet shadcn)
@@ -2671,6 +2768,7 @@ Architecture verticale (mobile-first), 9 sections :
 - Bouton callback flottant : "💬 Discuter avec un expert" (fixed bottom-right, mobile en bas avant sticky cart)
 
 **B. Hero**
+
 - Badge dynamique haut : "🟢 Container CC-2026-001 — Marseille — J-{X} — {%} rempli"
 - H1 : "Mobilier outdoor pro, direct usine, sans intermédiaire"
 - Sous-titre : "Pré-commande groupée par container 20'. Le prix d'un grossiste pro, la qualité d'un revendeur premium. Engagez-vous à partir de 150€."
@@ -2717,6 +2815,7 @@ Tri : Prix croissant, décroissant, Volume CBM, Popularité (reviews)
 **ProductCard mobile** — voir mockup section précédente.
 
 **Pour les tables (multi-variantes)** : composant `TableConfigurator` dédié qui présente :
+
 1. Choix configuration plateau (cards visuelles : Rond 80, Carré 70, Rect 160×80, Pied seul -30%)
 2. Si plateau choisi → choix couleur plateau (4 swatches)
 3. Choix finition pied (2 swatches)
@@ -2761,6 +2860,7 @@ Grid 3 cards desktop / scroll horizontal mobile.
 ### 7.2 Détail container `/containers/[ref]`
 
 Page publique (SEO friendly) :
+
 - Header : référence, port, statut, dates clés
 - Visualisation 3D plein largeur
 - Participants anonymisés ("Un professionnel du sud de la France — 60 chaises Cannes Beige")
@@ -2770,6 +2870,7 @@ Page publique (SEO friendly) :
 - Pour containers passés : galerie photo + témoignages
 
 ### 7.3 Historique `/containers/historique`
+
 Tous les containers (filtres par port, année, statut). SEO majeur.
 
 ### 7.4 Espace client `/account/*`
@@ -2794,10 +2895,12 @@ Page publique dédiée à la liste des transporteurs recommandés. **SEO friendl
 **Structure** :
 
 **Header**
+
 - Titre H1 : "Transporteurs recommandés"
 - Sous-titre : "Container Club ne facture pas la livraison finale. Vous contactez directement le transporteur de votre choix qui établira un devis selon vos besoins."
 
 **Section "Pourquoi cette approche"** (texte assumé)
+
 > "Nous avons choisi de ne pas inclure la livraison du port jusqu'à votre établissement dans nos prix. Trois raisons : transparence (les coûts varient selon votre zone), choix (vous gardez la main sur votre transporteur), simplicité pour vous (un appel, un devis, vous décidez). Cette approche nous permet de garder nos prix imbattables sans marge cachée sur le transport."
 
 **Tarifs indicatifs** (encart informatif, pas un engagement)
@@ -2810,14 +2913,15 @@ Zone moyenne     (200-500 km) → 350-500€
 Zone lointaine   (500-900 km) → 600-800€
 Zone extrême     (> 900 km / Corse / DOM) → Sur devis
 
-Ces fourchettes sont indicatives. Le tarif définitif est établi 
-par le transporteur selon votre configuration précise (accessibilité, 
+Ces fourchettes sont indicatives. Le tarif définitif est établi
+par le transporteur selon votre configuration précise (accessibilité,
 créneau, urgence).
 ```
 
 **Liste des transporteurs** (issue de `carrier_partners`)
 
 Pour chaque transporteur, une card :
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ [Logo]  GEODIS DISTRIBUTION                              │
@@ -2843,6 +2947,7 @@ Pour chaque transporteur, une card :
 ```
 
 **FAQ transport** en bas de page (5-6 questions essentielles) :
+
 1. Comment se passe l'enlèvement au port ?
 2. Que dois-je communiquer au transporteur ?
 3. Quand puis-je organiser le transport ?
@@ -2869,6 +2974,7 @@ Pour chaque transporteur, une card :
 ### 8.1 Architecture
 
 Supabase Realtime (WebSocket) sur 4 tables :
+
 - `containers` (changements statut)
 - `container_metrics` (% fill, séries, pros engagés)
 - `moq_pools` (MOQ atteint par variante)
@@ -2884,14 +2990,14 @@ import { useContainerStore } from '@/stores/realtime.store'
 import { toast } from '@/lib/toast'
 
 export function useContainerRealtime(containerId: string) {
-  const update = useContainerStore(s => s.updateFromRealtime)
-  
+  const update = useContainerStore((s) => s.updateFromRealtime)
+
   useEffect(() => {
     if (!containerId) return
-    
+
     let toastQueue: string[] = []
     let toastTimer: number | null = null
-    
+
     const flushToasts = () => {
       if (toastQueue.length > 0) {
         const message = toastQueue[toastQueue.length - 1]
@@ -2900,60 +3006,75 @@ export function useContainerRealtime(containerId: string) {
       }
       toastTimer = null
     }
-    
+
     const queueToast = (message: string) => {
       toastQueue.push(message)
       if (!toastTimer) {
         toastTimer = window.setTimeout(flushToasts, 60_000) // max 1/min
       }
     }
-    
+
     const channel = supabase
       .channel(`container-${containerId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'container_metrics',
-        filter: `container_id=eq.${containerId}`,
-      }, (payload) => {
-        const newMetrics = payload.new as any
-        const oldMetrics = payload.old as any
-        update.metrics(newMetrics)
-        
-        // Toasts subtils sur paliers
-        const newFill = Number(newMetrics.fill_percent)
-        const oldFill = Number(oldMetrics?.fill_percent ?? 0)
-        if (oldFill < 50 && newFill >= 50) queueToast('Container à 50% de remplissage 🎯')
-        if (oldFill < 70 && newFill >= 70) queueToast('Container à 70% — plus que 10% avant production')
-        if (oldFill < 80 && newFill >= 80) queueToast('🎉 Container à 80% — production lancée !')
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'moq_pools',
-        filter: `container_id=eq.${containerId}`,
-      }, (payload) => {
-        const pool = payload.new as any
-        const oldPool = payload.old as any
-        update.moqPool(pool)
-        
-        if (!oldPool?.is_reached && pool.is_reached) {
-          queueToast('Une nouvelle série vient d\'être confirmée ✓')
-        }
-      })
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'reservations',
-        filter: `container_id=eq.${containerId}`,
-      }, () => {
-        queueToast('Un professionnel vient de rejoindre ce container 🤝')
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'container_metrics',
+          filter: `container_id=eq.${containerId}`,
+        },
+        (payload) => {
+          const newMetrics = payload.new as any
+          const oldMetrics = payload.old as any
+          update.metrics(newMetrics)
+
+          // Toasts subtils sur paliers
+          const newFill = Number(newMetrics.fill_percent)
+          const oldFill = Number(oldMetrics?.fill_percent ?? 0)
+          if (oldFill < 50 && newFill >= 50)
+            queueToast('Container à 50% de remplissage 🎯')
+          if (oldFill < 70 && newFill >= 70)
+            queueToast('Container à 70% — plus que 10% avant production')
+          if (oldFill < 80 && newFill >= 80)
+            queueToast('🎉 Container à 80% — production lancée !')
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'moq_pools',
+          filter: `container_id=eq.${containerId}`,
+        },
+        (payload) => {
+          const pool = payload.new as any
+          const oldPool = payload.old as any
+          update.moqPool(pool)
+
+          if (!oldPool?.is_reached && pool.is_reached) {
+            queueToast("Une nouvelle série vient d'être confirmée ✓")
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'reservations',
+          filter: `container_id=eq.${containerId}`,
+        },
+        () => {
+          queueToast('Un professionnel vient de rejoindre ce container 🤝')
+        },
+      )
       .subscribe()
-    
-    return () => { 
+
+    return () => {
       if (toastTimer) window.clearTimeout(toastTimer)
-      supabase.removeChannel(channel) 
+      supabase.removeChannel(channel)
     }
   }, [containerId, update])
 }
@@ -2985,8 +3106,9 @@ Sur les pastilles MOQ : pulse animation quand seuil franchi.
 Justification : éviter pillage concurrent, créer valeur ajoutée à la création de compte.
 
 RLS Supabase :
+
 ```sql
-create policy "Authenticated users see published documents" 
+create policy "Authenticated users see published documents"
   on product_documents for select
   using (auth.role() = 'authenticated' and is_published = true);
 ```
@@ -3006,6 +3128,7 @@ create policy "Authenticated users see published documents"
 ### 9.3 UI fiche produit
 
 Si utilisateur non connecté → bandeau :
+
 ```
 🔒 Documents qualité (rapports SGS, certifications)
    Connectez-vous pour consulter les 4 documents disponibles
@@ -3095,6 +3218,7 @@ Pour les clients connectés : tous les documents de tous les produits qu'ils ont
 ### 11.2 Notes détaillées
 
 Note globale (obligatoire 1-5) + 4 notes optionnelles :
+
 - Qualité produits
 - Rapport qualité/prix
 - Livraison
@@ -3103,6 +3227,7 @@ Note globale (obligatoire 1-5) + 4 notes optionnelles :
 ### 11.3 UX
 
 **Sur fiche produit (en bas)** :
+
 ```
 ⭐⭐⭐⭐☆ 4,6/5  (47 avis vérifiés)
 
@@ -3118,12 +3243,13 @@ Trier : [Plus utiles ↓] [Plus récents] [Plus anciens]
 ```
 
 **Card avis individuel** :
+
 ```
-⭐⭐⭐⭐⭐ 
+⭐⭐⭐⭐⭐
 "Excellente qualité, exactement comme décrit"
 — Hôtellerie · Achat vérifié · 15 mars 2026
 
-Détails : Qualité ⭐⭐⭐⭐⭐ · Rapport prix ⭐⭐⭐⭐ 
+Détails : Qualité ⭐⭐⭐⭐⭐ · Rapport prix ⭐⭐⭐⭐
           Livraison ⭐⭐⭐⭐⭐ · Communication ⭐⭐⭐⭐⭐
 
 [Texte du commentaire...]
@@ -3132,34 +3258,35 @@ Détails : Qualité ⭐⭐⭐⭐⭐ · Rapport prix ⭐⭐⭐⭐
 
 👍 Utile (12) · 🚩 Signaler
 
-↳ Réponse de Container Club : 
+↳ Réponse de Container Club :
    "Merci beaucoup pour votre retour ! ..."
 ```
 
 ### 11.4 Schema.org pour SEO
 
 Implémentation `AggregateRating` et `Review` sur les fiches produits :
+
 ```html
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Chaise Cannes Empilable",
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.6",
-    "reviewCount": "47"
-  },
-  "review": [
-    {
-      "@type": "Review",
-      "author": "Hôtellerie",
-      "datePublished": "2026-03-15",
-      "reviewRating": {"ratingValue": "5"},
-      "reviewBody": "..."
-    }
-  ]
-}
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Chaise Cannes Empilable",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.6",
+      "reviewCount": "47"
+    },
+    "review": [
+      {
+        "@type": "Review",
+        "author": "Hôtellerie",
+        "datePublished": "2026-03-15",
+        "reviewRating": { "ratingValue": "5" },
+        "reviewBody": "..."
+      }
+    ]
+  }
 </script>
 ```
 
@@ -3170,6 +3297,7 @@ Implémentation `AggregateRating` et `Review` sur les fiches produits :
 ### 12.1 Mécanique
 
 Bouton "Discuter avec un expert" visible :
+
 - Header desktop (top right)
 - Bouton flottant mobile (bottom right, au-dessus sticky cart)
 - Fin de fiche produit pour les produits >5 unités MOQ
@@ -3216,6 +3344,7 @@ Si l'utilisateur choisit "Dans l'heure" hors horaires ouvrés → message :
 ### 12.4 Admin
 
 Dashboard `/admin/callbacks` :
+
 - Liste triée par urgence (créneaux les plus proches en haut)
 - Notifications Slack/email à chaque nouvelle demande
 - Bouton "Marquer comme appelé" + champ notes + outcome
@@ -3228,16 +3357,19 @@ Dashboard `/admin/callbacks` :
 ### 13.1 Trois modes (config `container_auto_open_mode`)
 
 **Mode `manual`** (recommandé pour démarrage)
+
 - Aucune auto-ouverture
 - L'admin crée chaque nouveau container manuellement
 - Le système peut juste **suggérer** : "Le container CC-2026-001 est passé en production il y a 7 jours, ouvrir CC-2026-002 ?"
 
 **Mode `semi_auto`**
+
 - Détection automatique des conditions
 - Notification admin avec bouton "Approuver l'ouverture"
 - 1 clic confirme et ouvre le nouveau container
 
 **Mode `full_auto`**
+
 - Ouverture automatique sans intervention
 - Garde-fous : max 1 container `open` par port simultanément
 - Notification admin systématique avec possibilité d'annuler dans les 24h
@@ -3251,7 +3383,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
 
 Deno.serve(async () => {
@@ -3261,21 +3393,21 @@ Deno.serve(async () => {
     .select('value')
     .eq('key', 'container_auto_open_mode')
     .single()
-  
+
   const mode = (config?.value as string) ?? 'manual'
-  
+
   if (mode === 'manual') {
     // Juste générer une notification admin si conditions remplies
     await suggestNewContainerToAdmin()
     return new Response('Manual mode — admin notified if applicable')
   }
-  
+
   // Récupère les ports actifs
   const { data: ports } = await supabase
     .from('ports')
     .select('*')
     .eq('is_active', true)
-  
+
   for (const port of ports ?? []) {
     // Vérifie qu'aucun container 'open' n'existe pour ce port
     const { count: openCount } = await supabase
@@ -3283,9 +3415,9 @@ Deno.serve(async () => {
       .select('*', { count: 'exact', head: true })
       .eq('port_id', port.id)
       .eq('status', 'open')
-    
+
     if ((openCount ?? 0) > 0) continue
-    
+
     // Récupère le dernier container de ce port
     const { data: lastContainer } = await supabase
       .from('containers')
@@ -3294,28 +3426,34 @@ Deno.serve(async () => {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    
+
     // Conditions d'ouverture du suivant
-    const shouldOpen = 
+    const shouldOpen =
       !lastContainer ||
-      ['production','manufactured','shipped','customs','arrived','delivered']
-        .includes(lastContainer.status)
-    
+      [
+        'production',
+        'manufactured',
+        'shipped',
+        'customs',
+        'arrived',
+        'delivered',
+      ].includes(lastContainer.status)
+
     if (!shouldOpen) continue
-    
+
     // Génère la référence
     const year = new Date().getFullYear()
     const { count: yearCount } = await supabase
       .from('containers')
       .select('*', { count: 'exact', head: true })
       .like('reference', `CC-${year}-%`)
-    
+
     const newRef = `CC-${year}-${String((yearCount ?? 0) + 1).padStart(3, '0')}`
-    
+
     // Calcul date de clôture estimée (35 jours)
     const expectedCloseAt = new Date()
     expectedCloseAt.setDate(expectedCloseAt.getDate() + 35)
-    
+
     // Créer
     const { data: newContainer } = await supabase
       .from('containers')
@@ -3332,19 +3470,19 @@ Deno.serve(async () => {
       })
       .select()
       .single()
-    
+
     if (mode === 'semi_auto') {
       // Notifier admin pour validation
       await notifyAdmin('Nouveau container prêt à être ouvert', newContainer)
     } else {
       // Full auto : créer pools MOQ automatiquement pour tous les produits actifs
       await createMoqPoolsForContainer(newContainer.id)
-      
+
       // Email broadcast aux clients existants
       await broadcastNewContainerEmail(newContainer)
     }
   }
-  
+
   return new Response('OK')
 })
 ```
@@ -3356,6 +3494,7 @@ Cette function tourne quotidiennement à 7h via Supabase scheduled tasks.
 ### 13.4 Toggle admin
 
 Page `/admin/settings` permet de basculer le mode :
+
 ```
 Mode auto-ouverture
 ○ Manual (recommandé pour démarrage)
@@ -3376,6 +3515,7 @@ Système entièrement préparé pour multi-pays dès le départ, mais **seul `FR
 ### 14.2 Comment l'ajout d'un pays se passe (futur)
 
 Pour activer l'Espagne par exemple, l'admin :
+
 1. `UPDATE countries SET is_active = true WHERE code = 'ES'`
 2. Ajoute ses ports (Barcelone, Valence) via admin `/admin/countries`
 3. Ajoute des transporteurs partenaires couvrant l'Espagne via `/admin/carriers`
@@ -3388,7 +3528,8 @@ Pour activer l'Espagne par exemple, l'admin :
 
 **Phase 1 (FR uniquement)** : pas de sélecteur visible, FR est implicite.
 
-**Phase 2+ (multi-pays)** : 
+**Phase 2+ (multi-pays)** :
+
 - Bannière haut : "🇫🇷 Vous êtes en France · Changer"
 - Détection auto via IP (geo Cloudflare)
 - Stocké en cookie + `country.store.ts`
@@ -3402,14 +3543,16 @@ Pour activer l'Espagne par exemple, l'admin :
 ### 14.4 i18n
 
 Structure prête dans `src/lib/i18n/locales/` :
+
 - `fr.ts` (complet au lancement)
 - `en.ts` (Lorem ipsum / placeholder, activable plus tard)
 - `es.ts`, `it.ts`, `de.ts` (placeholders)
 
 Hook `useTranslation` minimal :
+
 ```typescript
 export function useTranslation() {
-  const locale = useCountryStore(s => s.locale)
+  const locale = useCountryStore((s) => s.locale)
   return {
     t: (key: string) => getTranslation(locale, key) ?? key,
     locale,
@@ -3441,22 +3584,22 @@ Le routing TanStack Start supporte ça nativement via param dynamique.
     --color-bg-alt: #faf6ee;
     --color-bg-elevated: #ffffff;
     --color-bg-dark: #1a1a1c;
-    
+
     /* Texte */
     --color-text-primary: #1a1a1c;
     --color-text-secondary: #5a544a;
     --color-text-muted: #8a8276;
     --color-text-on-dark: #faf6ee;
-    
+
     /* Accents */
     --color-accent-primary: #b85c1f;
     --color-accent-hover: #9d4d18;
     --color-accent-light: #f4e3d1;
-    
+
     /* Bordures */
     --color-border-base: #e8dfd0;
     --color-border-strong: #c9bfac;
-    
+
     /* États */
     --color-success: #3a5a3a;
     --color-success-bg: #e8eee0;
@@ -3466,7 +3609,7 @@ Le routing TanStack Start supporte ça nativement via param dynamique.
     --color-danger-bg: #f0d8cc;
     --color-info: #3a4f6a;
     --color-info-bg: #d8e0e8;
-    
+
     /* CTAs */
     --color-cta-primary: #1a1a1c;
     --color-cta-primary-hover: #2a2a2c;
@@ -3480,6 +3623,7 @@ Le routing TanStack Start supporte ça nativement via param dynamique.
 Police principale : Inter (Google Fonts) + JetBrains Mono pour les références et montants.
 
 Hiérarchie clamp pour responsive automatique :
+
 - Display : `clamp(2rem, 5vw, 3.5rem)` letter-spacing -0.04em
 - H1 : `clamp(1.75rem, 4vw, 2.5rem)` letter-spacing -0.03em
 - H2 : `clamp(1.5rem, 3vw, 2rem)` letter-spacing -0.02em
@@ -3507,12 +3651,14 @@ Esthétique éditoriale premium, jamais brillante ou tech criarde.
 ### 16.2 Performance
 
 Cibles :
+
 - LCP < 2.5s sur 4G
 - INP < 200ms
 - CLS < 0.1
 - Bundle JS initial < 200kb gzipped
 
 Stratégies :
+
 - Code splitting par route (TanStack Start natif)
 - Lazy load 3D scene, modals, composants lourds
 - Images Cloudflare Images avec srcset auto WebP/AVIF
@@ -3521,6 +3667,7 @@ Stratégies :
 ### 16.3 Forms mobile
 
 Toujours :
+
 - `inputmode` correct (email, tel, numeric)
 - `autocomplete` correct (email, tel, organization, postal-code, given-name, family-name)
 - Stepper +/- pour quantités (pas input number sur mobile)
@@ -3542,6 +3689,7 @@ ProductCard verticale, quick-add bouton, filtres en Sheet bottom-up.
 ### 16.6 Sticky cart bar
 
 Visible dès 1 item au panier, hauteur 56px, fixed bottom :
+
 ```
 3 articles · 72% rempli · 4 943€ HT     [ Réserver → ]
 ```
@@ -3574,6 +3722,7 @@ Visible dès 1 item au panier, hauteur 56px, fixed bottom :
 ```
 
 **Cas d'erreur SIRET** (selon section 6.8) :
+
 - Format invalide → message inline "Format incorrect (14 chiffres attendus)"
 - Non trouvé INSEE → "Ce SIRET n'existe pas. Vérifiez votre saisie."
 - **Établissement cessé** → "Cet établissement est fermé selon l'INSEE. Si vous pensez qu'il s'agit d'une erreur, [contactez-nous]." → **blocage strict**
@@ -3589,10 +3738,12 @@ Téléphone *        [________________]  (autocomplete tel)
 ```
 
 **Validation email** :
+
 - Si domaine personnel (gmail, yahoo, etc.) → encart orange visible :
+
 ```
-⚠️ Cette adresse semble personnelle. Pour une activité 
-   professionnelle, nous recommandons un email à votre nom 
+⚠️ Cette adresse semble personnelle. Pour une activité
+   professionnelle, nous recommandons un email à votre nom
    de domaine. Vous pouvez continuer si nécessaire.
    [ Je comprends, continuer ]  [ Modifier mon email ]
 ```
@@ -3608,6 +3759,7 @@ Note optionnelle : ____________________________________
 ```
 
 **Étape 4 — Récap + paiement**
+
 - Récap commande (items, prix, économies, frais réservation)
 - **Acceptation CGV obligatoire** (case à cocher avec lien vers CGV)
 - Stripe Payment Element (3DS2 systématique)
@@ -3617,12 +3769,14 @@ Note optionnelle : ____________________________________
 **Aucune facturation de transport** à aucune étape. Le `delivery_fee` reste à 0 en V1.
 
 **Création compte automatique** :
+
 - Pas de "create account" forcé
 - Magic link envoyé après paiement réussi
 - Toutes les données SIRET et contact sont stockées dans `companies` et `users_profile`
 - `siret_verified = true` si l'API INSEE a répondu OK, sinon `false` avec re-vérification cron quotidien
 
 **Indicateur de progression** :
+
 ```
 [Étape 1: SIRET ✓] [Étape 2: Contact ✓] [Étape 3: Livraison ✓] [Étape 4: Paiement ●]
 ```
@@ -3634,6 +3788,7 @@ Note optionnelle : ____________________________________
 ### 17.1 SEO classique
 
 **Pages indexables prioritaires** :
+
 - `/` (catalogue principal)
 - `/produits/[slug]` (futur, page produit dédiée par produit)
 - `/containers/[ref]` (chaque container = une page riche)
@@ -3643,6 +3798,7 @@ Note optionnelle : ____________________________________
 - `/contact`
 
 **Métadonnées dynamiques par page** :
+
 ```typescript
 // Pour /containers/CC-2026-001
 title: "Container CC-2026-001 Marseille — 72% rempli — Container Club"
@@ -3651,6 +3807,7 @@ og: { image, type: 'website', locale: 'fr_FR' }
 ```
 
 **Structured data JSON-LD** sur toutes les pages :
+
 - Home : `Organization` + `WebSite` + `BreadcrumbList`
 - Catalogue : `ItemList` avec products
 - Produit : `Product` + `AggregateRating` + `Offer`
@@ -3676,15 +3833,15 @@ og: { image, type: 'website', locale: 'fr_FR' }
 ```
 # Container Club
 
-> Plateforme B2B française de pré-commande groupée de mobilier outdoor 
-> par container maritime, à destination des hôtels, restaurants, 
+> Plateforme B2B française de pré-commande groupée de mobilier outdoor
+> par container maritime, à destination des hôtels, restaurants,
 > paysagistes et revendeurs professionnels.
 
 ## Modèle économique
 
-Container Club mutualise un container maritime 20' High Cube entre 6-12 
-professionnels. La production usine se déclenche dès 80% de remplissage 
-et 3 séries (MOQ 50 unités) confirmées. Container Club est l'importateur 
+Container Club mutualise un container maritime 20' High Cube entre 6-12
+professionnels. La production usine se déclenche dès 80% de remplissage
+et 3 séries (MOQ 50 unités) confirmées. Container Club est l'importateur
 officiel (Terrassea SAS, France), gère douane, TVA autoliquidée et SAV.
 
 ## Différenciation vs concurrents
@@ -3730,6 +3887,7 @@ https://containerclub.fr
 ### 17.4 Blog SEO (post-MVP)
 
 Articles à fort potentiel longue traîne :
+
 - "Comment équiper sa terrasse de restaurant en 2026"
 - "Mobilier outdoor pour ERP : normes feu M1/M2 expliquées"
 - "Importer du mobilier de Chine : guide complet"
@@ -3739,6 +3897,7 @@ Articles à fort potentiel longue traîne :
 ### 17.5 Backlinks stratégiques (post-MVP)
 
 Viser citations sur :
+
 - L'Hôtellerie Restauration (presse pro HCR)
 - Néo-Restauration
 - LesEchos.fr (rubrique entreprises)
@@ -3753,12 +3912,14 @@ Viser citations sur :
 ### 18.1 Principes
 
 Container Club est en B2B pur, ce qui permet :
+
 - Liberté contractuelle large (vs B2C)
 - Limitation de responsabilité valide sous conditions
 - Délais de réclamation raccourcis pour vices apparents
 - Exclusions de garantie limitées (entre pros)
 
 **Lignes rouges absolues** (jurisprudence) :
+
 - Ne pas vider l'obligation essentielle de sa substance (Chronopost 1996)
 - Pas de protection contre faute lourde ou dolosive
 - Pas de déséquilibre significatif (L.442-1 Code commerce)
@@ -3774,12 +3935,12 @@ Container Club est en B2B pur, ce qui permet :
 
 Validé section 6.7, implémenté techniquement dans `claims` :
 
-| Type | Délai | Photos | Remède |
-|---|---|---|---|
-| Vice apparent | 48h ouvrées | Obligatoires | Remplacement ou remboursement |
-| Dommage transport | 48h ouvrées | Obligatoires | Remplacement (recours transporteur) |
-| Non-conformité | 14 jours | Obligatoires | Remplacement ou échange |
-| Vice caché | 2 ans (garantie légale) | Obligatoires | Au choix Container Club : remplacement ou remboursement au prorata |
+| Type              | Délai                   | Photos       | Remède                                                             |
+| ----------------- | ----------------------- | ------------ | ------------------------------------------------------------------ |
+| Vice apparent     | 48h ouvrées             | Obligatoires | Remplacement ou remboursement                                      |
+| Dommage transport | 48h ouvrées             | Obligatoires | Remplacement (recours transporteur)                                |
+| Non-conformité    | 14 jours                | Obligatoires | Remplacement ou échange                                            |
+| Vice caché        | 2 ans (garantie légale) | Obligatoires | Au choix Container Club : remplacement ou remboursement au prorata |
 
 ### 18.4 Clauses CGV essentielles à intégrer
 
@@ -3794,73 +3955,73 @@ Acceptation explicite (case à cocher obligatoire au checkout), version CGV trac
 **Article 2 — Réception et vérification (CRITIQUE)**
 
 ```
-Sauf vice caché, l'Acheteur dispose d'un délai strict pour formuler 
+Sauf vice caché, l'Acheteur dispose d'un délai strict pour formuler
 des réserves sur la livraison :
 
-Vices apparents et défauts de conformité visibles : toute réserve doit 
-être formulée par écrit et accompagnée de photographies dans un délai 
-de QUARANTE-HUIT (48) HEURES OUVRÉES à compter de la réception 
+Vices apparents et défauts de conformité visibles : toute réserve doit
+être formulée par écrit et accompagnée de photographies dans un délai
+de QUARANTE-HUIT (48) HEURES OUVRÉES à compter de la réception
 effective.
 
-Non-conformités constatables après examen approfondi : QUATORZE (14) 
+Non-conformités constatables après examen approfondi : QUATORZE (14)
 JOURS à compter de la réception.
 
 Passé ces délais, les Produits sont réputés acceptés sans réserve.
 
-L'Acheteur s'engage à examiner avec diligence dès réception, à 
-vérifier la conformité, et à émettre toutes réserves auprès du 
+L'Acheteur s'engage à examiner avec diligence dès réception, à
+vérifier la conformité, et à émettre toutes réserves auprès du
 transporteur (mention bordereau) ET du Vendeur (email sav@).
 ```
 
 **Article 3 — Limitation de responsabilité (CRITIQUE)**
 
 ```
-Sauf cas de faute lourde, dolosive ou dommage corporel, la 
-responsabilité totale et cumulée de Container Club au titre du 
-Contrat, toutes causes confondues et tous préjudices réunis, est 
-expressément limitée au montant hors taxes effectivement payé par 
+Sauf cas de faute lourde, dolosive ou dommage corporel, la
+responsabilité totale et cumulée de Container Club au titre du
+Contrat, toutes causes confondues et tous préjudices réunis, est
+expressément limitée au montant hors taxes effectivement payé par
 l'Acheteur pour les Produits concernés par le litige.
 
 Container Club ne pourra en aucun cas être tenu responsable :
-- des dommages indirects, immatériels ou consécutifs (perte 
-  d'exploitation, perte de chiffre d'affaires, perte de clientèle, 
+- des dommages indirects, immatériels ou consécutifs (perte
+  d'exploitation, perte de chiffre d'affaires, perte de clientèle,
   atteinte à l'image, manque à gagner) ;
-- des dommages résultant d'une utilisation non conforme à la 
+- des dommages résultant d'une utilisation non conforme à la
   destination ou aux notices ;
-- des dommages résultant d'un défaut d'entretien ou exposition à 
+- des dommages résultant d'un défaut d'entretien ou exposition à
   des conditions excédant les spécifications.
 
-Cette limitation est consentie en considération du prix particulièrement 
-attractif des Produits, résultant du modèle de pré-commande groupée 
-qui caractérise l'activité de Container Club, ce que l'Acheteur 
+Cette limitation est consentie en considération du prix particulièrement
+attractif des Produits, résultant du modèle de pré-commande groupée
+qui caractérise l'activité de Container Club, ce que l'Acheteur
 reconnaît expressément.
 ```
 
 **Article 4 — Garantie vices cachés**
 
 ```
-Container Club garantit l'Acheteur contre les vices cachés au sens 
-des articles 1641 et suivants du Code civil dans les conditions 
+Container Club garantit l'Acheteur contre les vices cachés au sens
+des articles 1641 et suivants du Code civil dans les conditions
 suivantes :
 
-ÉTENDUE : couvre les vices rendant le Produit impropre à l'usage 
-professionnel en environnement extérieur, selon les conditions 
+ÉTENDUE : couvre les vices rendant le Produit impropre à l'usage
+professionnel en environnement extérieur, selon les conditions
 d'utilisation et d'entretien préconisées.
 
-DURÉE : action à engager dans un délai de DEUX (2) ANS à compter de 
-la découverte du vice, sans excéder TROIS (3) ANS à compter de la 
+DURÉE : action à engager dans un délai de DEUX (2) ANS à compter de
+la découverte du vice, sans excéder TROIS (3) ANS à compter de la
 livraison.
 
-NOTIFICATION : par lettre recommandée AR ou email avec accusé de 
-réception, dans un délai maximum de TRENTE (30) JOURS après 
+NOTIFICATION : par lettre recommandée AR ou email avec accusé de
+réception, dans un délai maximum de TRENTE (30) JOURS après
 découverte, avec justificatifs et photographies.
 
-RÉPARATION : au choix exclusif de Container Club, remplacement OU 
-remboursement au prorata du prix payé, à l'exclusion de toute autre 
+RÉPARATION : au choix exclusif de Container Club, remplacement OU
+remboursement au prorata du prix payé, à l'exclusion de toute autre
 indemnité.
 
-EXCLUSIONS : usage non conforme, défaut d'entretien, conditions 
-extrêmes hors spécifications, modification/réparation par tiers, 
+EXCLUSIONS : usage non conforme, défaut d'entretien, conditions
+extrêmes hors spécifications, modification/réparation par tiers,
 usure normale.
 ```
 
@@ -3877,20 +4038,20 @@ Constituent des cas d'exonération de responsabilité de Container Club :
 - fluctuations de cours du fret >30% du cours à la date de réservation
 - restrictions import/export
 
-Container Club informe sans délai et propose : (i) report, 
-(ii) remboursement intégral (hors frais de réservation post-80%), 
+Container Club informe sans délai et propose : (i) report,
+(ii) remboursement intégral (hors frais de réservation post-80%),
 (iii) compensation sur container ultérieur.
 ```
 
 **Article 6 — Réserve de propriété**
 
 ```
-Container Club conserve l'entière propriété des Produits jusqu'au 
-paiement intégral et effectif en principal et accessoires, 
+Container Club conserve l'entière propriété des Produits jusqu'au
+paiement intégral et effectif en principal et accessoires,
 conformément à la loi n° 80-335 du 12 mai 1980.
 
-Le transfert de propriété est suspendu jusqu'à parfait paiement. 
-En cas de non-paiement, Container Club pourra revendiquer les 
+Le transfert de propriété est suspendu jusqu'à parfait paiement.
+En cas de non-paiement, Container Club pourra revendiquer les
 Produits aux frais, risques et périls de l'Acheteur.
 
 Le transfert des risques s'opère dès la livraison.
@@ -3899,64 +4060,64 @@ Le transfert des risques s'opère dès la livraison.
 **Article 7 — Frais de réservation**
 
 ```
-Le frais de réservation représente 3% du montant HT de la commande 
-avec un minimum de 150 € et un maximum de 500 €. Il est dû dès la 
+Le frais de réservation représente 3% du montant HT de la commande
+avec un minimum de 150 € et un maximum de 500 €. Il est dû dès la
 réservation et conditionne la prise en compte de celle-ci.
 
-Le frais de réservation est NON REMBOURSABLE, sauf dans les cas 
-suivants : annulation du container par Container Club, MOQ non 
+Le frais de réservation est NON REMBOURSABLE, sauf dans les cas
+suivants : annulation du container par Container Club, MOQ non
 atteint sans solution alternative acceptable pour l'Acheteur.
 
-En cas d'annulation par l'Acheteur AVANT 80% de remplissage du 
-container : le frais peut être converti en avoir utilisable 12 mois 
+En cas d'annulation par l'Acheteur AVANT 80% de remplissage du
+container : le frais peut être converti en avoir utilisable 12 mois
 sur un container ultérieur.
 
-En cas d'annulation par l'Acheteur APRÈS 80% de remplissage 
+En cas d'annulation par l'Acheteur APRÈS 80% de remplissage
 (production engagée) : le frais reste acquis à Container Club.
 ```
 
 **Article 8 — Livraison et transport (V1.2 — critique)**
 
 ```
-LIEU DE LIVRAISON : la livraison s'entend rendue au port d'arrivée du 
-container (Le Havre ou Marseille-Fos pour la France métropolitaine, 
-ou tout autre port mentionné sur le devis). Le prix des Produits inclut 
+LIEU DE LIVRAISON : la livraison s'entend rendue au port d'arrivée du
+container (Le Havre ou Marseille-Fos pour la France métropolitaine,
+ou tout autre port mentionné sur le devis). Le prix des Produits inclut
 le transport jusqu'à ce port.
 
-TRANSPORT POST-PORT : le transport du port jusqu'au lieu d'utilisation 
-finale est à la charge exclusive de l'Acheteur. Container Club n'organise 
+TRANSPORT POST-PORT : le transport du port jusqu'au lieu d'utilisation
+finale est à la charge exclusive de l'Acheteur. Container Club n'organise
 ni ne facture ce transport.
 
-TRANSPORTEURS RECOMMANDÉS : à titre purement informatif, Container Club 
-peut fournir à l'Acheteur une liste de transporteurs partenaires 
-présélectionnés. Cette mise à disposition d'informations ne constitue 
-ni une recommandation engageante, ni un mandat. La relation 
-contractuelle pour le transport est exclusivement entre l'Acheteur 
+TRANSPORTEURS RECOMMANDÉS : à titre purement informatif, Container Club
+peut fournir à l'Acheteur une liste de transporteurs partenaires
+présélectionnés. Cette mise à disposition d'informations ne constitue
+ni une recommandation engageante, ni un mandat. La relation
+contractuelle pour le transport est exclusivement entre l'Acheteur
 et le transporteur choisi.
 
-TRANSFERT DES RISQUES : conformément à l'article 6 (Réserve de 
-propriété), le transfert des risques s'opère dès la prise en charge 
-par le transporteur de l'Acheteur au port. Tout dommage survenu après 
+TRANSFERT DES RISQUES : conformément à l'article 6 (Réserve de
+propriété), le transfert des risques s'opère dès la prise en charge
+par le transporteur de l'Acheteur au port. Tout dommage survenu après
 ce point n'engage pas la responsabilité de Container Club.
 
-NOTIFICATION D'ARRIVÉE : Container Club informe l'Acheteur de la date 
-d'arrivée prévue au port au moins 7 jours avant cette arrivée, et lui 
+NOTIFICATION D'ARRIVÉE : Container Club informe l'Acheteur de la date
+d'arrivée prévue au port au moins 7 jours avant cette arrivée, et lui
 communique les coordonnées précises du point d'enlèvement.
 
-DÉLAI D'ENLÈVEMENT : l'Acheteur dispose de 14 jours calendaires à 
-compter de la notification d'arrivée pour organiser l'enlèvement de 
-ses Produits. Passé ce délai, des frais de stockage portuaire pourront 
-être facturés (montants variables selon le port et publiés au tarif 
+DÉLAI D'ENLÈVEMENT : l'Acheteur dispose de 14 jours calendaires à
+compter de la notification d'arrivée pour organiser l'enlèvement de
+ses Produits. Passé ce délai, des frais de stockage portuaire pourront
+être facturés (montants variables selon le port et publiés au tarif
 en vigueur).
 ```
 
 **Article 9 — Pénalités de retard de paiement**
 
 ```
-Tout retard de paiement entraîne de plein droit, sans mise en demeure 
+Tout retard de paiement entraîne de plein droit, sans mise en demeure
 préalable :
 - pénalité de retard au taux de 3 fois le taux d'intérêt légal
-- indemnité forfaitaire de 40 € pour frais de recouvrement 
+- indemnité forfaitaire de 40 € pour frais de recouvrement
   (art. L.441-10 Code de commerce)
 - exigibilité immédiate de toutes les sommes dues
 - suspension de toutes commandes en cours
@@ -3965,50 +4126,48 @@ préalable :
 **Article 10 — Droit applicable et juridiction**
 
 ```
-Le présent Contrat est régi par le droit français à l'exclusion de 
+Le présent Contrat est régi par le droit français à l'exclusion de
 la Convention de Vienne du 11 avril 1980.
 
-Tout différend sera soumis à la compétence exclusive du Tribunal de 
-Commerce de [VILLE SIÈGE], nonobstant pluralité de défendeurs ou 
+Tout différend sera soumis à la compétence exclusive du Tribunal de
+Commerce de [VILLE SIÈGE], nonobstant pluralité de défendeurs ou
 appel en garantie.
 ```
 
 ### 18.5 Documents juridiques obligatoires
 
 **Externes (visibles client)** :
+
 1. CGV B2B (rédigées par avocat spécialisé)
 2. Politique de remboursement
 3. Politique de confidentialité RGPD
 4. Mentions légales
 
-**Internes** :
-5. Contrat-cadre usine (clauses recours en cas de défaut)
-6. Contrat transporteur affilié
-7. Mandat commissionnaire en douane
-8. Police RC produit pro (1500-2500€/an)
-9. Police assurance transport maritime
-10. DPA Supabase, Stripe, Resend, Cloudflare
-11. Registre traitements RGPD
+**Internes** : 5. Contrat-cadre usine (clauses recours en cas de défaut) 6. Contrat transporteur affilié 7. Mandat commissionnaire en douane 8. Police RC produit pro (1500-2500€/an) 9. Police assurance transport maritime 10. DPA Supabase, Stripe, Resend, Cloudflare 11. Registre traitements RGPD
 
 ### 18.6 Acceptation CGV en checkout
 
 Implémentation technique :
+
 ```tsx
-<CgvAcceptance
-  onAccept={(version) => setCgvAccepted(version)}
-  required
-/>
+;<CgvAcceptance onAccept={(version) => setCgvAccepted(version)} required />
 
 // Stocke en DB au paiement :
-await supabase.from('users_profile').update({
-  cgv_accepted_at: new Date().toISOString(),
-  cgv_version_accepted: currentCgvVersion,
-}).eq('id', userId)
+await supabase
+  .from('users_profile')
+  .update({
+    cgv_accepted_at: new Date().toISOString(),
+    cgv_version_accepted: currentCgvVersion,
+  })
+  .eq('id', userId)
 
-await supabase.from('reservations').update({
-  cgv_accepted_at: new Date().toISOString(),
-  cgv_version_accepted: currentCgvVersion,
-}).eq('id', reservationId)
+await supabase
+  .from('reservations')
+  .update({
+    cgv_accepted_at: new Date().toISOString(),
+    cgv_version_accepted: currentCgvVersion,
+  })
+  .eq('id', reservationId)
 ```
 
 Audit trail complet : qui a accepté quelle version à quelle date.
@@ -4028,6 +4187,7 @@ Sur 75 000€ par container : provision ~2 000€ par container pour défauts, c
 Container Club gère des données sensibles B2B : identités entreprises (SIRET, RIB futurs, adresses), paiements, commandes commerciales. Une fuite ou intrusion = catastrophe réputationnelle et juridique. Cette section décrit la **stratégie de défense en profondeur** alignée OWASP Top 10 2025.
 
 **Principes** :
+
 1. Validation côté serveur **systématique** (jamais confiance au client)
 2. Authentification magic link (pas de password volable)
 3. Authorization via RLS Supabase + audit trail
@@ -4041,6 +4201,7 @@ Container Club gère des données sensibles B2B : identités entreprises (SIRET,
 **A01 — Broken Access Control** (#1 risque 2025)
 
 Mesures Container Club :
+
 - **RLS Supabase obligatoire** sur toutes tables sensibles (companies, reservations, payments, claims, reviews privées, callback_requests, credits, etc.)
 - **UUID v4** pour tous les IDs publics (jamais d'IDs séquentiels)
 - **Vérification ownership** dans chaque endpoint API (le user_id du token correspond bien au company_id de la ressource demandée)
@@ -4048,19 +4209,20 @@ Mesures Container Club :
 - **Tests automatisés access control** : suite Vitest qui vérifie qu'un user A ne peut JAMAIS accéder aux ressources d'un user B (15+ scénarios à couvrir)
 
 Exemple de test obligatoire :
+
 ```typescript
 // tests/security/access-control.test.ts
 test('User A cannot access User B reservations', async () => {
   const userA = await createTestUser('a@test.com')
   const userB = await createTestUser('b@test.com')
   const resB = await createReservationFor(userB)
-  
+
   const result = await supabaseAsUser(userA)
     .from('reservations')
     .select('*')
     .eq('id', resB.id)
-  
-  expect(result.data).toHaveLength(0)  // RLS doit bloquer
+
+  expect(result.data).toHaveLength(0) // RLS doit bloquer
 })
 ```
 
@@ -4082,30 +4244,43 @@ test('User A cannot access User B reservations', async () => {
 - Templates emails React Email : escape automatique
 
 Exemple validation Zod systématique :
+
 ```typescript
 // src/lib/validation/schemas.ts
 import { z } from 'zod'
 
-export const SiretSchema = z.string()
+export const SiretSchema = z
+  .string()
   .regex(/^\d{14}$/, 'Le SIRET doit contenir 14 chiffres')
-  .refine(s => validateSiretChecksum(s), 'SIRET invalide')
+  .refine((s) => validateSiretChecksum(s), 'SIRET invalide')
 
-export const EmailSchema = z.string()
+export const EmailSchema = z
+  .string()
   .email('Email invalide')
   .max(254)
   .toLowerCase()
 
-export const PhoneSchema = z.string()
+export const PhoneSchema = z
+  .string()
   .regex(/^\+?[\d\s.-]{10,20}$/, 'Téléphone invalide')
 
 export const ReservationCreateSchema = z.object({
   containerId: z.string().uuid(),
-  items: z.array(z.object({
-    productId: z.string().uuid(),
-    variantId: z.string().uuid().nullable(),
-    quantity: z.number().int().positive().max(10000),
-  })).min(1).max(50),
-  deliveryMode: z.enum(['pickup_at_port', 'partner_carrier_needed', 'self_arranged']),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().uuid(),
+        variantId: z.string().uuid().nullable(),
+        quantity: z.number().int().positive().max(10000),
+      }),
+    )
+    .min(1)
+    .max(50),
+  deliveryMode: z.enum([
+    'pickup_at_port',
+    'partner_carrier_needed',
+    'self_arranged',
+  ]),
   deliveryPostalCode: z.string().regex(/^\d{5}$/),
   cgvVersionAccepted: z.string(),
 })
@@ -4116,6 +4291,7 @@ export const ReservationCreateSchema = z.object({
 C'est là que se cachent les fraudes business logic. Voir section 18.bis.4 (anti-fraude business).
 
 Mesures :
+
 - **Pricing recalculé serveur** systématiquement avant chaque Stripe Payment Intent (jamais confiance au total client)
 - Limites métier appliquées côté serveur (MOQ, quantité max, etc.)
 - Threat modeling : pour chaque feature, lister les abus possibles avant de coder
@@ -4123,6 +4299,7 @@ Mesures :
 **A05 — Security Misconfiguration**
 
 Mesures :
+
 - Headers de sécurité stricts (voir 18.bis.5)
 - Pas de mode debug en production
 - Messages d'erreur génériques côté client (jamais de stack trace exposée)
@@ -4140,6 +4317,7 @@ Mesures :
 **A07 — Identification and Authentication Failures**
 
 Mesures Container Club :
+
 - **Magic link uniquement** (pas de password volable)
 - Magic link single-use, expiry 60 min, généré côté serveur
 - **Rate limiting magic links** : 3 par email par 15 min (anti-énumération)
@@ -4157,6 +4335,7 @@ Mesures Container Club :
 **A09 — Security Logging and Monitoring Failures**
 
 Mesures :
+
 - `audit_log` obligatoire sur actions sensibles
 - `security_events` (V1.3) sur tentatives auth, SIRET, rate limits
 - **Sentry** : alerte pic d'erreurs 4xx/5xx
@@ -4176,26 +4355,28 @@ Mesures :
 
 **Règles Cloudflare WAF à configurer** :
 
-| Endpoint / Pattern | Limite | Action |
-|---|---|---|
-| `POST /api/auth/magic-link` | 3 / 15min / IP | Challenge CAPTCHA |
-| `POST /api/auth/magic-link` (par email) | 3 / 15min / email | Block |
-| `POST /api/verify-siret` | 30 / min / IP | Block |
-| `POST /api/callback-requests` | 3 / 15min / IP | Block |
-| `POST /api/reservations` | 5 / min / user | Block |
-| `POST /api/checkout` | 5 / min / user | Block |
-| `POST /api/reviews` | 1 / heure / user | Block |
-| `GET /api/*` lectures publiques | 100 / min / IP | Challenge |
-| `/admin/*` | 30 / min / IP | Challenge si non-auth |
-| Webhooks Stripe `/api/webhooks/stripe` | Pas de limite | (signature verifiée) |
+| Endpoint / Pattern                      | Limite            | Action                |
+| --------------------------------------- | ----------------- | --------------------- |
+| `POST /api/auth/magic-link`             | 3 / 15min / IP    | Challenge CAPTCHA     |
+| `POST /api/auth/magic-link` (par email) | 3 / 15min / email | Block                 |
+| `POST /api/verify-siret`                | 30 / min / IP     | Block                 |
+| `POST /api/callback-requests`           | 3 / 15min / IP    | Block                 |
+| `POST /api/reservations`                | 5 / min / user    | Block                 |
+| `POST /api/checkout`                    | 5 / min / user    | Block                 |
+| `POST /api/reviews`                     | 1 / heure / user  | Block                 |
+| `GET /api/*` lectures publiques         | 100 / min / IP    | Challenge             |
+| `/admin/*`                              | 30 / min / IP     | Challenge si non-auth |
+| Webhooks Stripe `/api/webhooks/stripe`  | Pas de limite     | (signature verifiée)  |
 
 **Configuration Cloudflare** :
+
 - Page Rules pour `/api/*` → enable "Rate Limiting"
 - Custom Rules pour patterns spécifiques
 - Bot Fight Mode activé (anti-scraping)
 - WAF Managed Rules : OWASP Core Rule Set activé
 
 **Architecture future Upstash** (V2 si nécessaire) :
+
 - Rate limiting applicatif fin par user_id (pas juste IP)
 - Counters distribués (résiste DDoS multi-IP)
 - Coût ~10€/mois pour notre volume
@@ -4207,6 +4388,7 @@ Mesures :
 Scénario : un user crée N comptes avec N SIRET (achetés ou empruntés) pour empiler des crédits de 200€.
 
 Protections en place :
+
 - **Contrainte DB** : 1 SIRET = 1 compte company (`unique idx_companies_siret_unique`)
 - Validation parrainage uniquement après paiement frais réservation succeeded (donc 200€ chacun)
 - **Pattern detection** : Edge Function `detect-referral-fraud` qui flag si 3+ comptes créés en <1h avec parrainage du même `referrer_code_id`
@@ -4219,6 +4401,7 @@ Protections en place :
 Scénario : ajoute 50 unités pour déclencher production puis annule pour bénéficier d'un avoir.
 
 Protections en place :
+
 - Frais réservation 150-500€ **non remboursable après 80% atteint**
 - Le `company_id` est tracké : audit log si même company annule >2 réservations en 6 mois
 - Flag admin manuel si pattern détecté
@@ -4229,6 +4412,7 @@ Protections en place :
 Scénario : modifier le total côté client avant envoi à Stripe.
 
 Protections en place :
+
 - **Recalcul serveur systématique** dans `verify-siret` puis dans `create-payment-intent` :
   ```typescript
   // src/lib/server/pricing-server.ts
@@ -4236,23 +4420,23 @@ Protections en place :
     const order = await fetchOrderFromDb(orderId)
     const items = await fetchItemsFromDb(orderId)
     const tiers = await fetchPricingTiersFromConfig()
-    
+
     const recalculated = calculateOrderPricing(items, tiers)
-    
+
     // Comparaison stricte
     if (Math.abs(recalculated.totalHt - order.total_ht) > 0.01) {
       await logSecurityEvent({
         event_type: 'suspicious_pattern',
-        metadata: { 
-          order_id: orderId, 
-          client_total: order.total_ht, 
-          server_total: recalculated.totalHt 
+        metadata: {
+          order_id: orderId,
+          client_total: order.total_ht,
+          server_total: recalculated.totalHt,
         },
         severity: 'critical',
       })
       throw new Error('Order pricing mismatch — security violation')
     }
-    
+
     return recalculated
   }
   ```
@@ -4263,6 +4447,7 @@ Protections en place :
 Scénario : tester en masse des cartes volées via le frais de réservation à 150€.
 
 Protections en place :
+
 - **Stripe Radar activé** (anti-fraude gratuit jusqu'à 120k$/an)
 - **3D Secure 2 systématique** (PSD2 conforme, demande auth bancaire)
 - Rate limit création Payment Intent : 5/min/user
@@ -4274,6 +4459,7 @@ Protections en place :
 Scénario : créer N comptes pour booster artificiellement les notes.
 
 Protections en place :
+
 - Reviews uniquement sur réservations `paid_full` ET container `delivered`
 - 1 review max par réservation
 - Modération admin avant publication (default `is_published = false`)
@@ -4284,6 +4470,7 @@ Protections en place :
 Scénario : multiplier les réclamations pour obtenir remboursements.
 
 Protections en place :
+
 - Photos obligatoires (`photo_urls not null` en logique applicative)
 - Délais stricts (48h vices apparents)
 - Métriques admin : flag si >30% de réclamations par company
@@ -4298,52 +4485,58 @@ Protections en place :
 
 export function applySecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers)
-  
+
   // CSP strict
-  headers.set('Content-Security-Policy', [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' js.stripe.com plausible.io",
-    "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
-    "img-src 'self' data: https:",
-    "font-src 'self' fonts.gstatic.com",
-    "connect-src 'self' *.supabase.co api.stripe.com plausible.io",
-    "frame-src js.stripe.com hooks.stripe.com",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "upgrade-insecure-requests",
-  ].join('; '))
-  
+  headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' js.stripe.com plausible.io",
+      "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
+      "img-src 'self' data: https:",
+      "font-src 'self' fonts.gstatic.com",
+      "connect-src 'self' *.supabase.co api.stripe.com plausible.io",
+      'frame-src js.stripe.com hooks.stripe.com',
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      'upgrade-insecure-requests',
+    ].join('; '),
+  )
+
   // HSTS
   headers.set(
-    'Strict-Transport-Security', 
-    'max-age=31536000; includeSubDomains; preload'
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains; preload',
   )
-  
+
   // Anti-clickjacking
   headers.set('X-Frame-Options', 'DENY')
-  
+
   // Anti-MIME sniffing
   headers.set('X-Content-Type-Options', 'nosniff')
-  
+
   // Referrer policy
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  
+
   // Permissions Policy (anciennement Feature-Policy)
-  headers.set('Permissions-Policy', [
-    'geolocation=()',
-    'microphone=()',
-    'camera=()',
-    'payment=(self "https://js.stripe.com")',
-    'usb=()',
-    'magnetometer=()',
-    'gyroscope=()',
-  ].join(', '))
-  
+  headers.set(
+    'Permissions-Policy',
+    [
+      'geolocation=()',
+      'microphone=()',
+      'camera=()',
+      'payment=(self "https://js.stripe.com")',
+      'usb=()',
+      'magnetometer=()',
+      'gyroscope=()',
+    ].join(', '),
+  )
+
   // Anti-XSS legacy (peut être désactivé mais safe)
   headers.set('X-XSS-Protection', '1; mode=block')
-  
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -4364,24 +4557,27 @@ export async function POST(req: Request) {
   try {
     // 1. Auth
     const userId = await requireAuth(req)
-    
+
     // 2. Rate limit
     await rateLimit(`reservations:${userId}`, 5, 60)
-    
+
     // 3. Validation Zod (parse + validate)
     const body = await req.json()
     const parsed = ReservationCreateSchema.safeParse(body)
     if (!parsed.success) {
-      return jsonResponse({ error: 'Invalid input', issues: parsed.error.issues }, 400)
+      return jsonResponse(
+        { error: 'Invalid input', issues: parsed.error.issues },
+        400,
+      )
     }
-    
+
     // 4. Authorization métier (le user peut-il créer une résa sur ce container ?)
     const canCreate = await checkUserCanReserve(userId, parsed.data.containerId)
     if (!canCreate) return jsonResponse({ error: 'Forbidden' }, 403)
-    
+
     // 5. Logique métier sécurisée (recalcul serveur)
     const result = await createReservationSafely(userId, parsed.data)
-    
+
     // 6. Audit log
     await logAudit({
       user_id: userId,
@@ -4389,7 +4585,7 @@ export async function POST(req: Request) {
       entity_type: 'reservation',
       entity_id: result.id,
     })
-    
+
     return jsonResponse(result, 201)
   } catch (err) {
     // 7. Erreurs : log côté serveur, message générique côté client
@@ -4402,6 +4598,7 @@ export async function POST(req: Request) {
 ### 18.bis.7 Secrets management
 
 **Règles absolues** :
+
 - ❌ JAMAIS de secret en clair dans Git
 - ❌ JAMAIS de secret dans le code client (`src/components/*`, `src/routes/*` côté client)
 - ✅ Secrets serveur dans Cloudflare Worker Secrets (chiffrés at-rest)
@@ -4409,6 +4606,7 @@ export async function POST(req: Request) {
 - ✅ `.env.example` versionné (sans valeurs)
 
 **Pre-commit hook obligatoire** :
+
 ```bash
 # .husky/pre-commit
 #!/bin/sh
@@ -4425,6 +4623,7 @@ npm run test:unit
 ```
 
 **Rotation périodique** (calendrier admin) :
+
 - Stripe keys : tous les 6 mois
 - Resend API key : tous les 6 mois
 - INSEE OAuth keys : tous les 12 mois
@@ -4435,23 +4634,27 @@ npm run test:unit
 **Données personnelles minimisation** :
 
 Container Club collecte uniquement :
+
 - Identité : nom, prénom, email, téléphone
 - Identité société : SIRET, raison sociale, adresse (données déjà publiques via INSEE)
 - Paiements : géré par Stripe, jamais stocké chez nous
 - Logs techniques : IP, user agent (anonymisés après 90 jours)
 
 **Bouton "Supprimer mon compte" obligatoire** (`/account/settings`) :
+
 - Anonymisation des données personnelles (nom → "Utilisateur supprimé", email → hash)
 - Conservation des données comptables (factures, paiements) pour obligations légales 10 ans
 - Suppression effective sous 30 jours
 - Email de confirmation
 
 **Export des données** :
+
 - Bouton "Exporter mes données" → ZIP avec JSON de toutes les données du user
 - Inclut : profil, company, réservations, items, paiements, factures, reviews, callbacks
 - Délai : sous 30 jours conformément à l'article 20 RGPD
 
 **Anonymisation IP** :
+
 - Plausible Analytics : par design anonyme
 - Logs Cloudflare : conservation 30 jours puis purge
 - IP dans `security_events` et `audit_log` : conservées 1 an puis purge
@@ -4474,6 +4677,7 @@ Container Club collecte uniquement :
 ```
 
 **Scans automatisés CI** :
+
 - **SAST** : Semgrep (gratuit) sur PR
 - **SCA** : Snyk Free + Dependabot
 - **Secret scanning** : gitleaks pre-commit + GitHub native
@@ -4501,12 +4705,14 @@ Container Club collecte uniquement :
 ### 18.bis.11 Coût total sécurité
 
 **Investissement initial** (one-shot) :
+
 - Configuration headers, CSP, WAF Cloudflare : inclus stack actuel
 - Setup tests sécurité, CI sécurité : 2-3 jours dev
 - Configuration Sentry + Plausible : 1 jour
 - **Total : ~3-5 jours de dev**
 
 **Coûts récurrents annuels** :
+
 - Sentry : gratuit jusqu'à 5k events/mois (suffisant V1)
 - Snyk Free : gratuit
 - Cloudflare WAF : inclus dans Cloudflare gratuit
@@ -4515,6 +4721,7 @@ Container Club collecte uniquement :
 - **Total : ~110€/an + assurance cyber optionnelle 800-1500€/an**
 
 **Pentest pro** (post-V1, après 3-5 containers livrés) :
+
 - 1500-3000€ pour un pentest manuel sur app + API
 - À budgétiser dans les 6-12 mois après lancement
 
@@ -4525,6 +4732,7 @@ Container Club collecte uniquement :
 ### 19.1 Stripe
 
 Setup standard (Payment Intent, Webhooks). Trois flows :
+
 1. Frais réservation (immédiat, Payment Element)
 2. Acompte 27% (Payment Link par email)
 3. Solde 70% (Payment Link par email)
@@ -4611,20 +4819,20 @@ Toutes actions sensibles loggées : changement statut container, modification pr
 ### 21.1 Catalogue (10 produits)
 
 **Chaises** :
+
 1. `CHA-CAN-001` Chaise Cannes Empilable — cost 45€ / retail 149€ / MOQ 50 / 0.08 CBM / 6 couleurs
 2. `CHA-MON-002` Chaise Monaco Textilène — cost 38€ / retail 119€ / MOQ 50 / 0.07 CBM / 4 couleurs
 3. `CHA-NIC-003` Chaise Nice Bistrot — cost 34€ / retail 110€ / MOQ 50 / 0.075 CBM / 5 couleurs
 4. `CHA-CAP-004` Chaise Cap-Ferret Bois — cost 49€ / retail 159€ / MOQ 50 / 0.09 CBM / 3 couleurs
 
-**Fauteuils** :
-5. `FAU-MAL-005` Fauteuil Malibu Lounge — cost 128€ / retail 429€ / MOQ 50 / 0.35 CBM / 3 couleurs
-6. `FAU-IBI-006` Fauteuil Ibiza Tressé — cost 99€ / retail 329€ / MOQ 50 / 0.28 CBM / 4 couleurs
+**Fauteuils** : 5. `FAU-MAL-005` Fauteuil Malibu Lounge — cost 128€ / retail 429€ / MOQ 50 / 0.35 CBM / 3 couleurs 6. `FAU-IBI-006` Fauteuil Ibiza Tressé — cost 99€ / retail 329€ / MOQ 50 / 0.28 CBM / 4 couleurs
 
-**Tables (catégorie unifiée)** :
-7. `TAB-LYO-007` Table Lyon Pied Central — cost 95€ / retail 320€ / MOQ 20 / 0.25 CBM
-   - 3 configs plateau : Rond 80, Carré 70, Pied seul (-30%)
-   - 4 couleurs plateau : Teck / Ardoise / Marbre blanc / Béton
-   - 2 finitions pied : Noir mat / Anthracite
+**Tables (catégorie unifiée)** : 7. `TAB-LYO-007` Table Lyon Pied Central — cost 95€ / retail 320€ / MOQ 20 / 0.25 CBM
+
+- 3 configs plateau : Rond 80, Carré 70, Pied seul (-30%)
+- 4 couleurs plateau : Teck / Ardoise / Marbre blanc / Béton
+- 2 finitions pied : Noir mat / Anthracite
+
 8. `TAB-MAR-008` Table Marseille Rectangle — cost 175€ / retail 590€ / MOQ 20 / 0.45 CBM
    - 2 configs : Rectangle 160×80, Pied seul (-30%)
    - 4 couleurs plateau / 2 finitions pied
@@ -4632,8 +4840,7 @@ Toutes actions sensibles loggées : changement statut container, modification pr
    - 3 configs : Carré 70, Carré 80, Pied seul (-30%)
    - 4 couleurs plateau / 2 finitions pied
 
-**Bancs** :
-10. `BAN-PRO-010` Banc Provence 180cm — cost 110€ / retail 379€ / MOQ 50 / 0.45 CBM / 2 couleurs
+**Bancs** : 10. `BAN-PRO-010` Banc Provence 180cm — cost 110€ / retail 379€ / MOQ 50 / 0.45 CBM / 2 couleurs
 
 ### 21.2 Container actuel
 
@@ -4748,6 +4955,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 1 — Foundations + Sécurité (semaines 1-2)
 
 **Livrables** :
+
 - Setup projet + tooling
 - Schéma SQL Supabase complet (migrations 0001-0010 incluant security_events, siret_cache)
 - Seed data complet incluant 5 carrier_partners
@@ -4786,6 +4994,7 @@ One-click sur tous emails marketing (RGPD).
   - `tests/security/pricing-manipulation.test.ts`
 
 **DoD Phase 1** :
+
 - `npm test` : 100% des tests métier ET sécurité passent
 - Supabase migrations s'exécutent sans erreur
 - Login magic link fonctionnel
@@ -4798,6 +5007,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 2 — Catalogue & Réservation (semaines 3-4)
 
 **Livrables** :
+
 - Page d'accueil complète (toutes sections 7.1)
 - ProductRow + ProductCard responsives
 - TableConfigurator multi-axes
@@ -4819,6 +5029,7 @@ One-click sur tous emails marketing (RGPD).
 - Tests E2E parcours complet réservation
 
 **DoD Phase 2** :
+
 - Parcours invité → réservation payée fonctionne end-to-end
 - Pricing dégressif visible et exact
 - MOQ live affiché
@@ -4828,6 +5039,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 3 — Temps réel & Visibilité (semaine 5)
 
 **Livrables** :
+
 - Hook `useContainerRealtime` connecté
 - Updates en direct fill_percent, MOQ, séries
 - Toast notifications anonymisées rate-limited
@@ -4840,6 +5052,7 @@ One-click sur tous emails marketing (RGPD).
 - Métadonnées dynamiques par page
 
 **DoD Phase 3** :
+
 - Realtime fonctionne (test multi-onglets)
 - Toasts pas de spam (max 1/min)
 - Pages SEO indexables
@@ -4849,6 +5062,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 4 — Espace client (semaine 6)
 
 **Livrables** :
+
 - `/account` dashboard avec stats
 - `/account/reservations` liste + détails
 - `/account/invoices` factures PDF
@@ -4861,6 +5075,7 @@ One-click sur tous emails marketing (RGPD).
 - Génération facture PDF serveur
 
 **DoD Phase 4** :
+
 - Tous écrans client fonctionnels
 - Parrainage : flow complet testé (génération code → utilisation → validation → crédit)
 - Documents qualité accessibles uniquement aux connectés
@@ -4869,6 +5084,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 5 — Admin (semaine 7)
 
 **Livrables** :
+
 - Layout admin avec auth + role
 - Dashboard KPI temps réel
 - Gestion containers (CRUD, machine états, override conditions)
@@ -4884,6 +5100,7 @@ One-click sur tous emails marketing (RGPD).
 - 2FA admin activé
 
 **DoD Phase 5** :
+
 - Tous écrans admin fonctionnels
 - Tests d'autorisation (buyer ne peut pas accéder)
 - 2FA TOTP testé
@@ -4892,6 +5109,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 6 — Automatisations (semaine 8)
 
 **Livrables** :
+
 - Edge Function `check-container-fill` (cron quotidien)
 - Edge Function `process-deposit-call` (déclenche acomptes)
 - Edge Function `process-balance-call`
@@ -4905,6 +5123,7 @@ One-click sur tous emails marketing (RGPD).
 - Webhooks Resend pour bounce tracking
 
 **DoD Phase 6** :
+
 - Tous crons configurés et testés
 - Workflow complet automatisable (réservation → 80% → acompte → production → livraison)
 - Emails partent aux bons moments
@@ -4913,6 +5132,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 7 — Pages secondaires & polish (semaine 9)
 
 **Livrables** :
+
 - `/comment-ca-marche` (timeline détaillée)
 - `/faq` (FAQ complète recherchable)
 - `/conditions/cgv` (CGV blindées par avocat)
@@ -4928,6 +5148,7 @@ One-click sur tous emails marketing (RGPD).
 - Sentry configuré et testé
 
 **DoD Phase 7** :
+
 - Toutes pages publiques live
 - Lighthouse ≥85 mobile / ≥90 desktop
 - 0 erreur axe-core critique
@@ -4937,6 +5158,7 @@ One-click sur tous emails marketing (RGPD).
 ### Phase 8 — Beta privée & launch (semaine 10+)
 
 **Livrables** :
+
 - Beta avec 5-10 pros du réseau Terrassea
 - Premier container `CC-2026-001` créé
 - Photos produits réelles intégrées
@@ -4948,6 +5170,7 @@ One-click sur tous emails marketing (RGPD).
 - Newsletter de lancement
 
 **DoD Phase 8** :
+
 - Beta validée
 - Premier container clôturé avec succès
 - Transporteurs partenaires validés et contactables
@@ -4959,6 +5182,7 @@ One-click sur tous emails marketing (RGPD).
 ## 25. CHECKLIST PRÉ-LAUNCH
 
 ### Technique
+
 - [ ] Tous tests unitaires verts
 - [ ] Tests E2E parcours réservation complet
 - [ ] Tests sécurité (suite `tests/security/`) verts
@@ -4974,6 +5198,7 @@ One-click sur tous emails marketing (RGPD).
 - [ ] Domain emails Resend vérifié (DKIM/SPF/DMARC OK)
 
 ### Sécurité (V1.3 — NOUVEAU)
+
 - [ ] **API INSEE Sirene** : compte actif, clés en production, quota suffisant
 - [ ] Vérification SIRET testée avec 5+ SIRET réels (incluant fermés et "non diffusibles")
 - [ ] Suite tests sécurité complète passe (access-control, input-validation, pricing-manipulation, etc.)
@@ -4992,6 +5217,7 @@ One-click sur tous emails marketing (RGPD).
 - [ ] Logs sensibles purgés automatiquement (IP > 90 jours)
 
 ### Business
+
 - [ ] Adhésion Eco-mobilier finalisée
 - [ ] EORI vérifié actif
 - [ ] Autoliquidation TVA validée avec expert-comptable
@@ -5002,6 +5228,7 @@ One-click sur tous emails marketing (RGPD).
 - [ ] 3-5 documents qualité par produit uploadés
 
 ### Légal
+
 - [ ] CGV rédigées par avocat (PAS Lorem ipsum) — **clause SIRET obligatoire incluse**
 - [ ] Politique remboursement validée
 - [ ] RGPD complet (consentement, export, suppression)
@@ -5011,6 +5238,7 @@ One-click sur tous emails marketing (RGPD).
 - [ ] Assurance transport maritime active
 
 ### Marketing
+
 - [ ] Container CC-2026-001 créé et prêt à ouvrir
 - [ ] 10 pros pré-identifiés réseau Terrassea (beta)
 - [ ] Newsletter lancement rédigée
@@ -5024,9 +5252,9 @@ One-click sur tous emails marketing (RGPD).
 Pour démarrer, copie ce prompt dans Claude Code après avoir placé ce fichier `CONTAINER_CLUB_SPEC.md` à la racine du repo :
 
 ```
-Tu vas implémenter Container Club, plateforme B2B de pré-commande groupée 
-de mobilier outdoor par container maritime. Le brief technique complet 
-v1.2 est dans CONTAINER_CLUB_SPEC.md à la racine. Lis-le intégralement 
+Tu vas implémenter Container Club, plateforme B2B de pré-commande groupée
+de mobilier outdoor par container maritime. Le brief technique complet
+v1.2 est dans CONTAINER_CLUB_SPEC.md à la racine. Lis-le intégralement
 avant de commencer, en commençant par le CHANGELOG en haut.
 
 CONTEXTE
@@ -5053,18 +5281,18 @@ ATTAQUE PHASE 1 (foundations) MAINTENANT
 
 1. Vérifie/crée la structure de fichiers (section 4.2)
 2. Crée les migrations Supabase :
-   - 0001_init_schema.sql (schéma complet section 5.1 — NOTE : delivery_zones 
-     et postal_code_zones supprimées en v1.2, remplacées par carrier_partners 
+   - 0001_init_schema.sql (schéma complet section 5.1 — NOTE : delivery_zones
+     et postal_code_zones supprimées en v1.2, remplacées par carrier_partners
      et delivery_history)
    - 0002_pricing_config.sql (seed app_config)
    - Pousse vers Supabase et vérifie qu'elles passent
-3. Crée le seed data (section 21) dans supabase/seed.sql incluant 
+3. Crée le seed data (section 21) dans supabase/seed.sql incluant
    les 5 carrier_partners initiaux
 4. Active Supabase Realtime sur les 4 tables critiques
 5. Installe les dépendances :
-   @supabase/supabase-js, stripe, @stripe/stripe-js, resend, 
-   react-email, @react-three/fiber, @react-three/drei, lucide-react, 
-   zustand, react-hook-form, zod, @hookform/resolvers, 
+   @supabase/supabase-js, stripe, @stripe/stripe-js, resend,
+   react-email, @react-three/fiber, @react-three/drei, lucide-react,
+   zustand, react-hook-form, zod, @hookform/resolvers,
    @tanstack/react-query, vitest, @testing-library/react
 6. Configure Tailwind v4 avec la palette (section 15.1)
 7. Configure les variables env (.env.example) selon section 4.3

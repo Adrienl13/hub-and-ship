@@ -6,6 +6,7 @@
 ## 🎯 Utilisation
 
 Claude Code consulte ces fichiers quand il a besoin de comprendre :
+
 - Le style de code attendu
 - Les patterns à respecter
 - Le format des tests
@@ -18,6 +19,7 @@ Claude Code consulte ces fichiers quand il a besoin de comprendre :
 ### `lib/pricing/tiers.example.ts`
 
 Illustre :
+
 - TypeScript strict avec types `readonly`
 - Séparation types / fonctions / constantes
 - Fonctions pures testables
@@ -30,6 +32,7 @@ Illustre :
 ### `lib/pricing/tiers.example.test.ts`
 
 Illustre :
+
 - Tests Vitest exhaustifs
 - Helpers de test réutilisables
 - Couverture cas nominal + edge cases + précision
@@ -41,11 +44,12 @@ Illustre :
 ### `components/ui/Button.example.tsx`
 
 Illustre :
+
 - Composant React avec `forwardRef`
 - Variants via `class-variance-authority`
 - Classnames composables (`twMerge` + `clsx`)
 - Touch targets ≥ 44px (mobile-first)
-- Accessibilité WCAG AA (aria-*, focus visible)
+- Accessibilité WCAG AA (aria-\*, focus visible)
 - Documentation JSDoc + exemples
 
 À adapter pour : `src/components/ui/Button.tsx`
@@ -53,6 +57,7 @@ Illustre :
 ### `tests/security/access-control.example.test.ts`
 
 Illustre :
+
 - Tests d'isolation RLS Supabase
 - Helpers de setup/teardown
 - Patterns d'attaques courantes
@@ -63,6 +68,7 @@ Illustre :
 ### `migrations/0001_init.example.sql`
 
 Illustre :
+
 - Conventions de nommage SQL
 - Extensions PostgreSQL nécessaires
 - Tables avec RLS systématique
@@ -75,6 +81,7 @@ Illustre :
 ## 🔄 Quand ces examples seront obsolètes ?
 
 Une fois le projet stabilisé en Phase 7 :
+
 - Les composants `src/components/` deviennent eux-mêmes les références
 - Les tests `tests/` deviennent les références
 - Le dossier `examples/` peut être supprimé ou archivé
@@ -93,6 +100,7 @@ Quand tu implémentes un nouveau composant/fonction :
 ## 🎨 Niveau de qualité attendu
 
 Les examples respectent ces critères :
+
 - ✅ TypeScript strict (jamais `any`)
 - ✅ Tests exhaustifs (>90% coverage)
 - ✅ Documentation JSDoc claire

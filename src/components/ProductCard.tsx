@@ -1,13 +1,13 @@
-import { memo, useMemo } from "react";
-import { Info } from "lucide-react";
+import { memo, useMemo } from 'react'
+import { Info } from 'lucide-react'
 
-import { MoqProgressBar } from "@/components/MoqProgressBar";
-import { QuantityStepper } from "@/components/QuantityStepper";
-import { VariantSelector } from "@/components/VariantSelector";
-import { Button } from "@/components/ui/button";
-import { CATEGORY_LABEL, type Product } from "@/lib/products";
-import { formatEUR, getMoqStatus } from "@/lib/order";
-import { getQuantityRule } from "@/lib/quantity";
+import { MoqProgressBar } from '@/components/MoqProgressBar'
+import { QuantityStepper } from '@/components/QuantityStepper'
+import { VariantSelector } from '@/components/VariantSelector'
+import { Button } from '@/components/ui/button'
+import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { formatEUR, getMoqStatus } from '@/lib/order'
+import { getQuantityRule } from '@/lib/quantity'
 
 function ProductCardComponent({
   product,
@@ -17,27 +17,31 @@ function ProductCardComponent({
   onVariantChange,
   onOpenDetails,
 }: {
-  product: Product;
-  variantId: string;
-  qty: number;
-  onQtyChange: (value: number) => void;
-  onVariantChange: (id: string) => void;
-  onOpenDetails?: () => void;
+  product: Product
+  variantId: string
+  qty: number
+  onQtyChange: (value: number) => void
+  onVariantChange: (id: string) => void
+  onOpenDetails?: () => void
 }) {
   const variant = useMemo(
-    () => product.variants.find((item) => item.id === variantId) ?? product.variants[0],
+    () =>
+      product.variants.find((item) => item.id === variantId) ??
+      product.variants[0],
     [product.variants, variantId],
-  );
-  const savingsPct = Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100);
-  const totalCommitted = (variant?.unitsCommitted ?? 0) + qty;
-  const moqStatus = getMoqStatus(totalCommitted, product.moqUnits);
-  const quantityRule = getQuantityRule(product);
+  )
+  const savingsPct = Math.round(
+    (1 - product.basePriceHt / product.retailPriceRef) * 100,
+  )
+  const totalCommitted = (variant?.unitsCommitted ?? 0) + qty
+  const moqStatus = getMoqStatus(totalCommitted, product.moqUnits)
+  const quantityRule = getQuantityRule(product)
 
   return (
     <article
       data-catalog-item-mode="mobile-card"
       className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "460px" }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '460px' }}
     >
       <button
         type="button"
@@ -56,7 +60,7 @@ function ProductCardComponent({
           className="absolute inset-x-0 bottom-0 h-2"
           style={{ backgroundColor: variant?.hex }}
         />
-        <span className="absolute left-3 top-3 rounded-sm bg-[color:var(--sand-soft)]/90 px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
+        <span className="bg-[color:var(--sand-soft)]/90 absolute left-3 top-3 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
           {CATEGORY_LABEL[product.category]}
         </span>
       </button>
@@ -75,8 +79,9 @@ function ProductCardComponent({
               <Info className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </button>
             <div className="mt-1 text-[11px] text-muted-foreground">
-              {product.dimensions.l}×{product.dimensions.w}×{product.dimensions.h} cm ·{" "}
-              {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {product.moqUnits}
+              {product.dimensions.l}×{product.dimensions.w}×
+              {product.dimensions.h} cm · {product.cbmPerUnit.toFixed(2)} m³/u ·
+              MOQ {product.moqUnits}
             </div>
           </div>
 
@@ -84,8 +89,10 @@ function ProductCardComponent({
             <div className="font-display text-xl font-semibold tabular-nums">
               {formatEUR(product.basePriceHt)}
             </div>
-            <div className="text-[11px] text-muted-foreground tabular-nums">
-              <span className="line-through">{formatEUR(product.retailPriceRef)}</span>
+            <div className="text-[11px] tabular-nums text-muted-foreground">
+              <span className="line-through">
+                {formatEUR(product.retailPriceRef)}
+              </span>
               <span className="ml-1 font-medium text-[color:var(--ember)]">
                 -{savingsPct}%
               </span>
@@ -108,7 +115,7 @@ function ProductCardComponent({
             onChange={onQtyChange}
             size="lg"
             rule={quantityRule}
-            showRule={product.category === "chair"}
+            showRule={product.category === 'chair'}
           />
           <Button
             variant="outline"
@@ -120,7 +127,7 @@ function ProductCardComponent({
         </div>
       </div>
     </article>
-  );
+  )
 }
 
-export const ProductCard = memo(ProductCardComponent);
+export const ProductCard = memo(ProductCardComponent)

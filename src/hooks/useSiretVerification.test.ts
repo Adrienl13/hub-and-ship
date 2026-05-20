@@ -8,7 +8,9 @@ describe('useSiretVerification', () => {
     const { result } = renderHook(() => useSiretVerification())
 
     expect(result.current.isConfigured).toBe(false)
-    await expect(result.current.verify('55208131701750')).resolves.toMatchObject({
+    await expect(
+      result.current.verify('55208131701750'),
+    ).resolves.toMatchObject({
       status: 'verification_unavailable',
       data: { format_ok: true },
     })

@@ -125,7 +125,10 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
     return {
       unitsPerPackage: CHAIR_STACK_UNITS,
       size: {
-        length: Math.max(0.8, packageLengthFromCbm({ cbm: stackCbm, width, height })),
+        length: Math.max(
+          0.8,
+          packageLengthFromCbm({ cbm: stackCbm, width, height }),
+        ),
         height,
         width,
       },
@@ -189,9 +192,7 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
   }
 }
 
-function createPackageDrafts(
-  items: ReadonlyArray<CartItem>,
-): {
+function createPackageDrafts(items: ReadonlyArray<CartItem>): {
   readonly drafts: ReadonlyArray<PackageDraft>
   readonly accumulators: SliceAccumulator[]
 } {
@@ -243,7 +244,8 @@ function sortPackagesForPacking(
   drafts: ReadonlyArray<PackageDraft>,
 ): ReadonlyArray<PackageDraft> {
   return [...drafts].sort((a, b) => {
-    const supportDelta = supportPriority(a.category) - supportPriority(b.category)
+    const supportDelta =
+      supportPriority(a.category) - supportPriority(b.category)
     if (supportDelta !== 0) return supportDelta
 
     const lengthDelta = b.size.length - a.size.length
@@ -326,10 +328,8 @@ function tryPlaceInColumn(
 
   for (const candidate of candidates) {
     if (
-      candidate.z + draft.size.width >
-        CONTAINER_INNER_METERS.width + 0.001 ||
-      candidate.y + draft.size.height >
-        CONTAINER_INNER_METERS.height + 0.001
+      candidate.z + draft.size.width > CONTAINER_INNER_METERS.width + 0.001 ||
+      candidate.y + draft.size.height > CONTAINER_INNER_METERS.height + 0.001
     ) {
       continue
     }
@@ -372,10 +372,7 @@ function tryPlaceInColumn(
         -CONTAINER_INNER_METERS.height / 2 +
         candidate.y +
         draft.size.height / 2,
-      z:
-        -CONTAINER_INNER_METERS.width / 2 +
-        candidate.z +
-        draft.size.width / 2,
+      z: -CONTAINER_INNER_METERS.width / 2 + candidate.z + draft.size.width / 2,
     })
   }
 
@@ -410,7 +407,9 @@ function toPackedPackage({
   }
 }
 
-export function packContainerPackages(items: ReadonlyArray<CartItem>): PackedContainer {
+export function packContainerPackages(
+  items: ReadonlyArray<CartItem>,
+): PackedContainer {
   const packages: PackedPackage[] = []
   const columns: PackingColumn[] = []
   const { drafts, accumulators } = createPackageDrafts(items)
@@ -457,9 +456,8 @@ export function packContainerPackages(items: ReadonlyArray<CartItem>): PackedCon
 
   return {
     packages,
-    slices: accumulators
-      .filter(Boolean)
-      .map((accumulator): PackedSlice => ({
+    slices: accumulators.filter(Boolean).map(
+      (accumulator): PackedSlice => ({
         productId: accumulator.productId,
         productName: accumulator.productName,
         centerX:
@@ -471,7 +469,8 @@ export function packContainerPackages(items: ReadonlyArray<CartItem>): PackedCon
         packedUnits: accumulator.packedUnits,
         overflowUnits: accumulator.overflowUnits,
         packageCount: accumulator.packageCount,
-      })),
+      }),
+    ),
     overflowUnits,
     overflowPackages,
   }

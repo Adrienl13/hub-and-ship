@@ -60,10 +60,5 @@
     "*.config.ts",
     ".vinxi/**/*"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".output",
-    "build"
-  ]
+  "exclude": ["node_modules", "dist", ".output", "build"]
 }

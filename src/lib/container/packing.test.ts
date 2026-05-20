@@ -84,12 +84,24 @@ describe('container visual packing', () => {
       const [x, y, z] = box.pos
       const [length, height, width] = box.size
 
-      expect(x - length / 2).toBeGreaterThanOrEqual(-CONTAINER_INNER_METERS.length / 2)
-      expect(x + length / 2).toBeLessThanOrEqual(CONTAINER_INNER_METERS.length / 2)
-      expect(y - height / 2).toBeGreaterThanOrEqual(-CONTAINER_INNER_METERS.height / 2)
-      expect(y + height / 2).toBeLessThanOrEqual(CONTAINER_INNER_METERS.height / 2)
-      expect(z - width / 2).toBeGreaterThanOrEqual(-CONTAINER_INNER_METERS.width / 2)
-      expect(z + width / 2).toBeLessThanOrEqual(CONTAINER_INNER_METERS.width / 2)
+      expect(x - length / 2).toBeGreaterThanOrEqual(
+        -CONTAINER_INNER_METERS.length / 2,
+      )
+      expect(x + length / 2).toBeLessThanOrEqual(
+        CONTAINER_INNER_METERS.length / 2,
+      )
+      expect(y - height / 2).toBeGreaterThanOrEqual(
+        -CONTAINER_INNER_METERS.height / 2,
+      )
+      expect(y + height / 2).toBeLessThanOrEqual(
+        CONTAINER_INNER_METERS.height / 2,
+      )
+      expect(z - width / 2).toBeGreaterThanOrEqual(
+        -CONTAINER_INNER_METERS.width / 2,
+      )
+      expect(z + width / 2).toBeLessThanOrEqual(
+        CONTAINER_INNER_METERS.width / 2,
+      )
     }
     expect(packed.overflowUnits).toBeGreaterThan(0)
   })
@@ -109,7 +121,9 @@ describe('container visual packing', () => {
     ])
 
     expect(packed.overflowUnits).toBe(0)
-    expect(packed.slices.find((slice) => slice.productId === chair.id)).toMatchObject({
+    expect(
+      packed.slices.find((slice) => slice.productId === chair.id),
+    ).toMatchObject({
       requestedUnits: 10,
       packedUnits: 10,
       overflowUnits: 0,
@@ -162,7 +176,9 @@ describe('container visual packing', () => {
     const chairPackages = packed.packages.filter(
       (box) => box.productId === chair.id,
     )
-    const tablePackage = packed.packages.find((box) => box.productId === table.id)
+    const tablePackage = packed.packages.find(
+      (box) => box.productId === table.id,
+    )
 
     expect(tablePackage).toBeDefined()
     expect(chairPackages).toHaveLength(4)
