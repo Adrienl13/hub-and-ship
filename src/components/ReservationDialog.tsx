@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Mail, RefreshCcw, ShieldCheck, Lock } from "lucide-react";
 
@@ -27,6 +28,7 @@ import {
   type ReservationContact,
   type CreateReservationResult,
 } from "@/lib/reservations";
+import { createCheckoutSession } from "@/lib/checkout.server";
 
 // ---------------------------------------------------------------
 // Validation schema
@@ -131,6 +133,7 @@ export function ReservationDialog({
 }: Props) {
   const navigate = useNavigate();
   const hasItems = items.length > 0;
+  const startCheckout = useServerFn(createCheckoutSession);
 
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(reservationSchema),
@@ -148,13 +151,18 @@ export function ReservationDialog({
         usedCbm,
       });
     },
-    onSuccess: (result, variables) => {
+    onSuccess: async (result, variables) => {
       if (!result.ok) {
         toast.error("Réservation impossible", { description: result.error });
         return;
       }
 
+      const reservationId = result.reservationId;
+
       // Persist confirmation payload for the /reservation/$id page.
+      // Done BEFORE attempting Stripe so that, regardless of outcome
+      // (Stripe redirect, skipped, or error), the confirmation page
+      // can always render the full recap.
       const stored: StoredConfirmation = {
         contact: variables.contact,
         items: toStoredItems(items),
@@ -166,7 +174,7 @@ export function ReservationDialog({
       try {
         if (typeof window !== "undefined") {
           window.sessionStorage.setItem(
-            `reservation_confirmation_${result.reservationId}`,
+            `reservation_confirmation_${reservationId}`,
             JSON.stringify(stored),
           );
         }
@@ -174,18 +182,47 @@ export function ReservationDialog({
         // Storage disabled — fallback page handles missing payload.
       }
 
-      toast.success("Réservation enregistrée", {
-        description: `Confirmation envoyée à ${variables.contact.email}.`,
-      });
-
-      // Close the dialog and reset the form only after success.
+      // Close the dialog and reset the form before any redirect.
       onOpenChange(false);
       form.reset(DEFAULT_VALUES);
 
-      navigate({
-        to: "/reservation/$id",
-        params: { id: result.reservationId },
-      });
+      // Attempt to launch Stripe Checkout. Three branches:
+      //   1. `skipped: false` → redirect to Stripe (success/cancel will
+      //      bring the user back to /reservation/$id with query params).
+      //   2. `skipped: true`  → Stripe not configured server-side → keep
+      //      the legacy success UX (navigate to the confirmation page).
+      //   3. Error            → reservation IS in DB but we failed to
+      //      start the payment session. Show a toast and still take the
+      //      user to the confirmation page so they have their reference.
+      try {
+        const checkout = await startCheckout({ data: { reservationId } });
+
+        if (!checkout.skipped) {
+          if (typeof window !== "undefined") {
+            window.location.assign(checkout.url);
+          }
+          return;
+        }
+
+        // Stripe not configured → legacy path.
+        toast.success("Réservation enregistrée", {
+          description: `Confirmation envoyée à ${variables.contact.email}.`,
+        });
+        navigate({
+          to: "/reservation/$id",
+          params: { id: reservationId },
+        });
+      } catch (err) {
+        // Reservation is saved; only the payment hand-off failed.
+        const message = err instanceof Error ? err.message : "Erreur inconnue";
+        toast.error("Paiement indisponible", {
+          description: `Votre réservation #${reservationId} est bien enregistrée, mais nous n'avons pas pu lancer le paiement Stripe (${message}). Un membre Terrassea vous recontacte.`,
+        });
+        navigate({
+          to: "/reservation/$id",
+          params: { id: reservationId },
+        });
+      }
     },
     onError: (err) => {
       toast.error("Une erreur est survenue", {
@@ -447,12 +484,12 @@ export function ReservationDialog({
                   disabled={submitting}
                   className="h-11 w-full rounded-sm bg-foreground text-background hover:bg-foreground/90"
                 >
-                  {submitting ? "Enregistrement…" : "Enregistrer ma réservation"}
+                  {submitting ? "Enregistrement…" : "Réserver et payer ma place"}
                 </Button>
                 <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-                  Aucun débit n'est effectué aujourd'hui. Un membre Terrassea vous recontacte sous
-                  24 h ouvrées pour finaliser le paiement de la réservation (
-                  {formatEUR(totals.payNow)}) et bloquer votre place.
+                  Paiement sécurisé via Stripe ({formatEUR(totals.payNow)}) pour bloquer votre
+                  place. En cas d'indisponibilité du paiement en ligne, un membre Terrassea vous
+                  recontacte sous 24 h ouvrées.
                 </p>
               </div>
             </form>

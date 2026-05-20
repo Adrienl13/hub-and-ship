@@ -1,7 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Check, Mail, Phone, Truck, Factory } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  Check,
+  Mail,
+  Phone,
+  Truck,
+  Factory,
+} from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,6 +22,7 @@ import { Button } from "@/components/ui/button";
 
 import { formatEUR, formatEURprecise, type OrderTotals } from "@/lib/order";
 import type { ReservationContact } from "@/lib/reservations";
+import { createCheckoutSession } from "@/lib/checkout.server";
 
 type StoredItem = {
   productName: string;
@@ -28,8 +42,20 @@ type StoredConfirmation = {
   createdAt: string;
 };
 
+// `canceled` can land either as the boolean `true` (typed redirects) or as
+// the string "true" (when Stripe builds the URL). Coerce both to a plain
+// boolean so downstream logic can do `if (canceled)` without surprises.
+const searchSchema = z.object({
+  session_id: z.string().optional(),
+  canceled: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((v) => v === true || v === "true"),
+});
+
 export const Route = createFileRoute("/reservation/$id")({
   component: ReservationConfirmationPage,
+  validateSearch: searchSchema,
   head: ({ params }) => ({
     meta: [
       {
@@ -59,6 +85,7 @@ function readConfirmation(id: string): StoredConfirmation | null {
 
 function ReservationConfirmationPage() {
   const { id } = Route.useParams();
+  const { session_id, canceled } = Route.useSearch();
   const navigate = useNavigate();
   const [confirmation, setConfirmation] = useState<StoredConfirmation | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -72,16 +99,53 @@ function ReservationConfirmationPage() {
     navigate({ to: "/" });
   };
 
+  // Mutually exclusive: a session_id means the user came back from a
+  // successful Checkout; canceled means they aborted on Stripe's page.
+  // If both are set (defensive), prefer the success signal.
+  const isPaid = Boolean(session_id);
+  const isCanceled = !isPaid && canceled === true;
+
+  const startCheckout = useServerFn(createCheckoutSession);
+  const retryMutation = useMutation({
+    mutationFn: async () => {
+      return startCheckout({ data: { reservationId: id } });
+    },
+    onSuccess: (result) => {
+      if (result.skipped) {
+        toast.info("Paiement en ligne indisponible", {
+          description: "Un membre Terrassea vous recontacte sous 24 h ouvrées.",
+        });
+        return;
+      }
+      if (typeof window !== "undefined") {
+        window.location.assign(result.url);
+      }
+    },
+    onError: (err) => {
+      toast.error("Impossible de relancer le paiement", {
+        description: err instanceof Error ? err.message : "Veuillez réessayer dans un instant.",
+      });
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={handleBackToCatalog} />
 
       <main className="border-t border-[color:var(--sand-deep)]">
         <div className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
+          {isPaid && <PaidBanner />}
+          {isCanceled && (
+            <CanceledBanner
+              onRetry={() => retryMutation.mutate()}
+              isRetrying={retryMutation.isPending}
+            />
+          )}
+
           {!hydrated ? (
             <LoadingState />
           ) : confirmation ? (
-            <FullConfirmation id={id} confirmation={confirmation} />
+            <FullConfirmation id={id} confirmation={confirmation} isPaid={isPaid} />
           ) : (
             <FallbackConfirmation id={id} />
           )}
@@ -106,6 +170,53 @@ function ReservationConfirmationPage() {
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+function PaidBanner() {
+  return (
+    <div
+      role="status"
+      className="mb-10 flex items-start gap-3 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/8 p-4 text-sm text-foreground"
+    >
+      <CheckCircle2
+        className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--forest)]"
+        strokeWidth={2}
+      />
+      <div>
+        <div className="font-semibold">Paiement confirmé</div>
+        <div className="mt-0.5 text-foreground/80">Votre réservation est validée.</div>
+      </div>
+    </div>
+  );
+}
+
+function CanceledBanner({ onRetry, isRetrying }: { onRetry: () => void; isRetrying: boolean }) {
+  return (
+    <div
+      role="alert"
+      className="mb-10 flex flex-col gap-3 rounded-md border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/8 p-4 text-sm text-foreground sm:flex-row sm:items-start"
+    >
+      <AlertTriangle
+        className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--ember)]"
+        strokeWidth={2}
+      />
+      <div className="flex-1">
+        <div className="font-semibold">Paiement annulé</div>
+        <div className="mt-0.5 text-foreground/80">
+          Votre réservation reste en attente. Vous pouvez relancer le paiement quand vous le
+          souhaitez.
+        </div>
+      </div>
+      <Button
+        type="button"
+        onClick={onRetry}
+        disabled={isRetrying}
+        className="h-10 shrink-0 rounded-sm bg-foreground text-background hover:bg-foreground/90"
+      >
+        {isRetrying ? "Redirection…" : "Retenter le paiement"}
+      </Button>
     </div>
   );
 }
@@ -155,9 +266,16 @@ function CopyableId({ id }: { id: string }) {
   );
 }
 
-function FullConfirmation({ id, confirmation }: { id: string; confirmation: StoredConfirmation }) {
+function FullConfirmation({
+  id,
+  confirmation,
+  isPaid,
+}: {
+  id: string;
+  confirmation: StoredConfirmation;
+  isPaid: boolean;
+}) {
   const { contact, items, totals, containerReference } = confirmation;
-  const firstName = contact.name.trim().split(/\s+/)[0] ?? contact.name;
 
   return (
     <div className="space-y-12">
@@ -287,18 +405,33 @@ function FullConfirmation({ id, confirmation }: { id: string; confirmation: Stor
               </>
             }
           />
-          <StepItem
-            index={2}
-            icon={<Phone className="h-4 w-4" />}
-            title="Appel sous 24 h ouvrées"
-            description={
-              <>
-                Un membre de l'équipe Terrassea vous recontacte au{" "}
-                <span className="font-medium text-foreground">{contact.phone}</span> pour finaliser
-                le paiement des frais de réservation et valider votre commande.
-              </>
-            }
-          />
+          {isPaid ? (
+            <StepItem
+              index={2}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              title="Votre réservation est confirmée et payée"
+              description={
+                <>
+                  Les frais de réservation ont bien été encaissés. Votre place dans le container{" "}
+                  <span className="font-medium text-foreground">{containerReference}</span> est
+                  désormais bloquée.
+                </>
+              }
+            />
+          ) : (
+            <StepItem
+              index={2}
+              icon={<Phone className="h-4 w-4" />}
+              title="Appel sous 24 h ouvrées"
+              description={
+                <>
+                  Un membre de l'équipe Terrassea vous recontacte au{" "}
+                  <span className="font-medium text-foreground">{contact.phone}</span> pour
+                  finaliser le paiement des frais de réservation et valider votre commande.
+                </>
+              }
+            />
+          )}
           <StepItem
             index={3}
             icon={<Factory className="h-4 w-4" />}
