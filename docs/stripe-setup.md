@@ -146,3 +146,34 @@ Autres cartes test utiles (<https://docs.stripe.com/testing>) :
 - Le webhook doit **toujours** vérifier la signature Stripe via `stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET)`. Sans cette vérification, n'importe qui peut appeler l'endpoint et marquer une réservation comme payée.
 - Le serveur **re-lit** `reservation_fee_cents` depuis la base de données (à partir de l'`id` de réservation) avant de créer la Checkout Session. **Jamais** depuis un montant passé par le client — sinon trivial à falsifier côté browser.
 - En cas de fuite suspectée d'un secret : révoquer immédiatement depuis le dashboard Stripe (Developers → API keys → Roll key) ou Supabase (Settings → API → Reset service_role), puis re-`wrangler secret put`.
+
+---
+
+## 8. État de l'intégration
+
+| Élément | Statut |
+|---|---|
+| Server fn `createCheckoutSession` (`src/lib/checkout.server.ts`) | ✅ implémenté |
+| Webhook `POST /api/stripe/webhook` (`src/routes/api/stripe/webhook.ts`) | ✅ implémenté, signature vérifiée via `SubtleCryptoProvider` (Workers-compat) |
+| UI redirect (`ReservationDialog`) | ✅ branchée — `skipped=true` → fallback contact manuel, `skipped=false` → `window.location` vers Stripe, erreur → toast + navigate quand même |
+| États `?session_id` / `?canceled` sur `/reservation/$id` | ✅ branchés, bouton "Retenter le paiement" inclus |
+| Lecture serveur du montant depuis la DB (anti-tampering) | ✅ |
+| Idempotence webhook (`WHERE status='pending'`) | ✅ vérifiée par smoke test |
+| Mode prod (clés `sk_live_*` + webhook prod) | ⏳ à activer quand le flow test est validé en bout-en-bout sur staging |
+| Restricted key (`rk_*`) pour la prod | ⏳ recommandé — permissions ciblées Checkout Sessions + Payment Intents |
+
+### Smoke test E2E
+
+Validé le 2026-05-20 via `stripe trigger checkout.session.completed --override metadata.reservation_id=<uuid>` relayé par `stripe listen` :
+
+```
+[200] POST /api/stripe/webhook → reservations.status='pending' → 'paid'
+                                  stripe_payment_intent_id rempli
+2nd trigger same id            → [200] mais DB inchangée (idempotence OK)
+```
+
+### Sauts logiques restants (Phase 3)
+
+- Email transactionnel à `checkout.session.completed` (Resend / Postmark / SES).
+- Espace pro authentifié pour suivre ses réservations payées.
+- Reminder automatique 24 h après `checkout.session.expired` (Cloudflare Cron Trigger).
