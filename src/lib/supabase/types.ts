@@ -251,6 +251,10 @@ type ReservationRow = {
   cancelled_at: string | null
   cancellation_reason: string | null
   admin_notes: string | null
+  stripe_payment_intent_id: string | null
+  stripe_customer_id: string | null
+  stripe_checkout_session_id: string | null
+  paid_reservation_fee_at: string | null
   created_at: string
   updated_at: string
 }
@@ -288,6 +292,10 @@ type ReservationInsert = {
   cancelled_at?: string | null
   cancellation_reason?: string | null
   admin_notes?: string | null
+  stripe_payment_intent_id?: string | null
+  stripe_customer_id?: string | null
+  stripe_checkout_session_id?: string | null
+  paid_reservation_fee_at?: string | null
   created_at?: string
   updated_at?: string
 }

@@ -1,12 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import {
+  AlertTriangle,
   ArrowLeft,
+  CheckCircle2,
   CreditCard,
   FileText,
   PackageCheck,
   Ship,
 } from 'lucide-react'
+import { useServerFn } from '@tanstack/react-start'
+import { toast } from 'sonner'
+import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -20,16 +25,29 @@ import {
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
+import { createCheckoutSession } from '@/lib/stripe/checkout'
+
+const reservationSearchSchema = z.object({
+  session_id: z.string().optional(),
+  canceled: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((value) => value === true || value === 'true'),
+})
 
 export const Route = createFileRoute('/account/reservations/$reservationId')({
   component: AccountReservationDetailPage,
+  validateSearch: reservationSearchSchema,
 })
 
 function AccountReservationDetailPage() {
   const { reservationId } = Route.useParams()
+  const { session_id: sessionId, canceled } = Route.useSearch()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
   >([])
+  const [retryingPayment, setRetryingPayment] = useState(false)
+  const startCheckout = useServerFn(createCheckoutSession)
   const reservations = mergeAccountReservations({
     baseReservations: ACCOUNT_RESERVATIONS,
     localRecords,
@@ -39,6 +57,29 @@ function AccountReservationDetailPage() {
   useEffect(() => {
     setLocalRecords(readLocalReservationHistory(window.localStorage))
   }, [])
+
+  const handleRetryPayment = async () => {
+    setRetryingPayment(true)
+    try {
+      const result = await startCheckout({ data: { reservationId } })
+      if (result.skipped) {
+        toast.message('Paiement à connecter', {
+          description:
+            'Le paiement Stripe n’est pas encore configuré. Nous reprendrons contact sous 24 h.',
+        })
+        return
+      }
+      window.location.assign(result.url)
+    } catch (error) {
+      console.error('retry checkout failed', error)
+      toast.error('Paiement temporairement indisponible', {
+        description:
+          'Impossible de relancer le paiement. Réessayez dans quelques minutes.',
+      })
+    } finally {
+      setRetryingPayment(false)
+    }
+  }
 
   if (!reservation) {
     return (
@@ -60,17 +101,65 @@ function AccountReservationDetailPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]/85">
+      <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <a href="/account/reservations" className="inline-flex items-center gap-2 text-sm">
+          <a
+            href="/account/reservations"
+            className="inline-flex items-center gap-2 text-sm"
+          >
             <ArrowLeft className="h-4 w-4" />
             Mes réservations
           </a>
-          <Button asChild size="sm" variant="outline" className="h-9 rounded-sm">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="h-9 rounded-sm"
+          >
             <a href="/catalogue">Catalogue</a>
           </Button>
         </div>
       </header>
+
+      {sessionId ? (
+        <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 border-b">
+          <div className="mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm text-[color:var(--forest)]">
+            <CheckCircle2 className="mt-0.5 h-4 w-4" />
+            <div>
+              <div className="font-medium">Paiement confirmé</div>
+              <div className="mt-0.5 text-xs leading-5">
+                Votre réservation est validée. La confirmation et la facture
+                vous parviennent par email.
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {canceled ? (
+        <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 border-b">
+          <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-[color:var(--ochre)]" />
+            <div className="flex-1">
+              <div className="font-medium">Paiement non finalisé</div>
+              <div className="mt-0.5 text-xs leading-5">
+                Vous avez quitté la page de paiement avant la fin. La
+                réservation est toujours en attente — vous pouvez retenter
+                immédiatement.
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+              onClick={handleRetryPayment}
+              disabled={retryingPayment}
+            >
+              {retryingPayment ? 'Redirection...' : 'Retenter le paiement'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
         <div className="mx-auto max-w-7xl px-6 py-8">
@@ -86,7 +175,7 @@ function AccountReservationDetailPage() {
                 {reservation.draft.contact.company} · {reservation.draft.siret}
               </p>
             </div>
-            <span className="inline-flex h-8 items-center rounded-sm border border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 px-3 text-xs font-medium">
+            <span className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 inline-flex h-8 items-center rounded-sm border px-3 text-xs font-medium">
               {ACCOUNT_RESERVATION_STATUS_LABEL[reservation.status]}
             </span>
           </div>
@@ -125,7 +214,7 @@ function AccountReservationDetailPage() {
                 Lignes réservées
               </div>
             </div>
-            <div className="divide-y divide-[color:var(--sand-deep)]/70">
+            <div className="divide-[color:var(--sand-deep)]/70 divide-y">
               {reservation.draft.lines.map((line) => (
                 <div
                   key={`${line.productId}:${line.variantId}`}
@@ -149,7 +238,10 @@ function AccountReservationDetailPage() {
             </div>
             <div className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-4 text-sm">
               <div className="ml-auto max-w-sm space-y-2">
-                <AmountRow label="Total HT" value={reservation.draft.totals.subtotalHt} />
+                <AmountRow
+                  label="Total HT"
+                  value={reservation.draft.totals.subtotalHt}
+                />
                 <AmountRow label="TVA" value={reservation.draft.totals.vat} />
                 <AmountRow
                   label="Total TTC"
@@ -183,7 +275,9 @@ function InfoBlock({
         <span className="label-eyebrow">{label}</span>
       </div>
       <div className="mt-2 font-medium">{value}</div>
-      <div className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</div>
+      <div className="mt-1 text-xs leading-5 text-muted-foreground">
+        {detail}
+      </div>
     </div>
   )
 }

@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Truck,
 } from 'lucide-react'
+import { useServerFn } from '@tanstack/react-start'
+import { createCheckoutSession } from '@/lib/stripe/checkout'
 import {
   Dialog,
   DialogContent,
@@ -52,6 +54,34 @@ type DeliveryMode =
   | 'pickup_at_port'
   | 'self_arranged'
   | 'partner_carrier_needed'
+
+interface StoredConfirmationItem {
+  readonly productId: string
+  readonly productName: string
+  readonly variantName: string
+  readonly quantity: number
+  readonly subtotalHt: number
+}
+
+interface StoredConfirmation {
+  readonly reservationId: string
+  readonly reference: string
+  readonly contact: {
+    readonly name: string
+    readonly company: string
+    readonly email: string
+    readonly phone: string
+  }
+  readonly containerReference: string
+  readonly createdAt: string
+  readonly payNow: number
+  readonly items: ReadonlyArray<StoredConfirmationItem>
+  readonly totals: {
+    readonly subtotalHt: number
+    readonly vat: number
+    readonly totalTtc: number
+  }
+}
 
 const DELIVERY_OPTIONS: ReadonlyArray<{
   value: DeliveryMode
@@ -101,6 +131,7 @@ export function ReservationDialog({
     readonly payNow: number
   } | null>(null)
   const reservationCreation = useReservationCreation()
+  const startCheckout = useServerFn(createCheckoutSession)
   const siretVerification = useSiretVerification()
   const [form, setForm] = useState({
     siret: '',
@@ -190,7 +221,8 @@ export function ReservationDialog({
 
     if (!draftResult.ok) {
       toast.error('Réservation à compléter', {
-        description: draftResult.issues[0]?.message ?? 'Vérifiez les champs obligatoires.',
+        description:
+          draftResult.issues[0]?.message ?? 'Vérifiez les champs obligatoires.',
       })
       return
     }
@@ -199,15 +231,80 @@ export function ReservationDialog({
     const creation = await reservationCreation.createReservation(
       draftResult.draft,
     )
-    setSubmitting(false)
 
     if (!creation.ok) {
+      setSubmitting(false)
       toast.error('Réservation non enregistrée', {
         description: creation.error,
       })
       return
     }
 
+    // Persist a lightweight confirmation snapshot the success page can use
+    // to render an immediate recap before the webhook completes.
+    if (creation.persisted && typeof window !== 'undefined') {
+      try {
+        const snapshot: StoredConfirmation = {
+          reservationId: creation.reservation.id,
+          reference: creation.reservation.reference,
+          contact: draftResult.draft.contact,
+          containerReference: draftResult.draft.containerReference,
+          createdAt: new Date().toISOString(),
+          payNow: draftResult.draft.payment.payNow,
+          items: draftResult.draft.lines.map((line) => ({
+            productId: line.productId,
+            productName: line.productName,
+            variantName: line.variantName,
+            quantity: line.quantity,
+            subtotalHt: line.subtotalHt,
+          })),
+          totals: {
+            subtotalHt: draftResult.draft.totals.subtotalHt,
+            vat: draftResult.draft.totals.vat,
+            totalTtc: draftResult.draft.totals.totalTtc,
+          },
+        }
+        window.sessionStorage.setItem(
+          `reservation_confirmation_${creation.reservation.id}`,
+          JSON.stringify(snapshot),
+        )
+      } catch {
+        // sessionStorage may be unavailable (private mode etc.) — ignore.
+      }
+    }
+
+    // Persisted reservations can be paid via Stripe. Local-only ones
+    // (Supabase missing) fall through to the existing confirmation step.
+    if (creation.persisted) {
+      try {
+        const checkout = await startCheckout({
+          data: { reservationId: creation.reservation.id },
+        })
+
+        if (!checkout.skipped) {
+          // Redirect to the hosted Stripe Checkout page. The dialog stays
+          // mounted; on cancel/return the user lands on
+          // /account/reservations/<id>?session_id=… or ?canceled=true.
+          window.location.assign(checkout.url)
+          return
+        }
+
+        // Stripe not configured — graceful fallback: keep the reservation
+        // and surface a "contact manuel" message.
+        toast.message('Paiement à connecter', {
+          description:
+            'Réservation enregistrée. Nous vous contactons sous 24 h pour finaliser le règlement des frais.',
+        })
+      } catch (error) {
+        console.error('createCheckoutSession failed', error)
+        toast.error('Paiement temporairement indisponible', {
+          description:
+            'Votre réservation est enregistrée. Nous reviendrons vers vous pour finaliser le paiement.',
+        })
+      }
+    }
+
+    setSubmitting(false)
     setCreatedReservation({
       reference: creation.reservation.reference,
       persisted: creation.persisted,
@@ -216,7 +313,7 @@ export function ReservationDialog({
     setStep(5)
     if (creation.persisted) {
       toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} enregistrée. Paiement Stripe à connecter pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
+        description: `${creation.reservation.reference} enregistrée. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
       })
     } else {
       toast.success('Réservation enregistrée', {
@@ -449,26 +546,17 @@ export function ReservationDialog({
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
               <div className="mb-3 flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
-                <span className="text-sm font-medium">Carte bancaire</span>
-                <span className="label-eyebrow ml-auto text-muted-foreground">
-                  Powered by Stripe
+                <span className="text-sm font-medium">
+                  Paiement carte sécurisé
                 </span>
               </div>
-              <div className="space-y-2">
-                <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                  4242 4242 4242 4242
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                    MM / AA
-                  </div>
-                  <div className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm text-muted-foreground">
-                    CVC
-                  </div>
-                </div>
-              </div>
+              <p className="text-foreground/80 text-xs leading-5">
+                Vous serez redirigé vers la page de paiement sécurisée pour
+                régler les frais de réservation. Aucun numéro de carte n'est
+                saisi sur Container Club.
+              </p>
               <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
-                Vous serez débité aujourd'hui de{' '}
+                Montant à régler aujourd'hui :{' '}
                 <strong className="font-semibold">
                   {formatEUR(checkoutPayNow)}
                 </strong>{' '}
@@ -538,7 +626,7 @@ export function ReservationDialog({
 
         {step === 5 && createdReservation && (
           <div className="space-y-4">
-            <div className="rounded-md border border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 p-4">
+            <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">
                 <ShieldCheck className="h-4 w-4" />
                 Référence créée
@@ -546,9 +634,9 @@ export function ReservationDialog({
               <div className="mt-3 font-display text-2xl font-semibold tracking-tight">
                 {createdReservation.reference}
               </div>
-              <p className="mt-2 text-xs leading-5 text-foreground/75">
+              <p className="text-foreground/75 mt-2 text-xs leading-5">
                 {createdReservation.persisted
-                  ? 'La réservation est enregistrée côté Supabase. Le paiement Stripe reste à connecter pour finaliser l’encaissement.'
+                  ? 'La réservation est enregistrée. Si le paiement n’a pas pu démarrer, nous reviendrons vers vous sous 24 h pour finaliser les frais de réservation.'
                   : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte. Elle sera synchronisable dès que Supabase et Stripe seront activés.'}
               </p>
             </div>
