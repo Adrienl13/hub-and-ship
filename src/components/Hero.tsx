@@ -1,10 +1,12 @@
 import { ShieldCheck, Award, FileBadge } from "lucide-react";
 import { motion } from "framer-motion";
-import { CURRENT_CONTAINER } from "@/lib/products";
 import { AnimatedNumber } from "@/components/motion-helpers";
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -16,12 +18,21 @@ export function Hero({
   seriesReached,
   totalSeries,
   professionalsEngaged,
+  containerRef,
+  port,
+  expectedCloseAt,
+  thresholdPercent,
 }: {
   fillPercent: number;
   seriesReached: number;
   totalSeries: number;
   professionalsEngaged: number;
+  containerRef: string;
+  port: string;
+  expectedCloseAt: string;
+  thresholdPercent: number;
 }) {
+  const closeLabel = formatDate(expectedCloseAt);
   return (
     <section id="top" className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-12 sm:pt-16">
@@ -36,15 +47,15 @@ export function Hero({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--forest)] opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--forest)]" />
           </span>
-          <span className="font-medium text-foreground">
-            Container {CURRENT_CONTAINER.reference} ouvert
-          </span>
+          <span className="font-medium text-foreground">Container {containerRef} ouvert</span>
           <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">Destination {CURRENT_CONTAINER.port}</span>
-          <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">
-            Clôture estimée {formatDate(CURRENT_CONTAINER.expectedCloseAt)}
-          </span>
+          <span className="text-foreground/70">Destination {port}</span>
+          {closeLabel && (
+            <>
+              <span className="text-foreground/60">·</span>
+              <span className="text-foreground/70">Clôture estimée {closeLabel}</span>
+            </>
+          )}
         </motion.div>
 
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
@@ -101,10 +112,10 @@ export function Hero({
                 </span>
               </div>
               <div className="mt-3 font-display text-xl font-semibold tracking-tight">
-                {CURRENT_CONTAINER.reference}
+                {containerRef}
               </div>
               <div className="text-xs text-muted-foreground">
-                Destination {CURRENT_CONTAINER.port} · 20' High Cube
+                Destination {port} · 20' High Cube
               </div>
 
               {/* Progress */}
@@ -134,12 +145,12 @@ export function Hero({
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
-                    style={{ left: `${CURRENT_CONTAINER.thresholdPercent}%` }}
+                    style={{ left: `${thresholdPercent}%` }}
                   />
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
-                  <span>Seuil départ {CURRENT_CONTAINER.thresholdPercent}%</span>
+                  <span>Seuil départ {thresholdPercent}%</span>
                   <span>100%</span>
                 </div>
               </div>

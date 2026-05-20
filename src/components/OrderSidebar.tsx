@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Maximize2,
@@ -11,11 +11,36 @@ import {
   Truck,
   ArrowRight,
 } from "lucide-react";
-import { ContainerScene } from "@/components/ContainerScene";
 import { Button } from "@/components/ui/button";
-import { CURRENT_CONTAINER } from "@/lib/products";
 import { type CartItem, type OrderTotals, formatEUR } from "@/lib/order";
 import { AnimatedNumber } from "@/components/motion-helpers";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+
+const ContainerScene = lazy(() =>
+  import("@/components/ContainerScene").then((m) => ({ default: m.ContainerScene })),
+);
+
+function ContainerScenePlaceholder({ label }: { label?: string }) {
+  return (
+    <div
+      className="h-[320px] w-full animate-pulse rounded-md bg-[color:var(--sand-soft)]"
+      aria-label={label ?? "Chargement de la vue 3D du container"}
+      role="img"
+    />
+  );
+}
+
+function ContainerSceneStatic() {
+  return (
+    <div
+      className="flex h-[320px] w-full items-center justify-center rounded-md bg-[color:var(--sand-soft)] text-xs text-muted-foreground"
+      role="img"
+      aria-label="Vue du container (animations désactivées)"
+    >
+      Vue 3D désactivée (préférence système : animations réduites)
+    </div>
+  );
+}
 
 export function OrderSidebar({
   items,
@@ -23,6 +48,11 @@ export function OrderSidebar({
   fillPercent,
   usedCbm,
   capacity,
+  containerRef,
+  port,
+  seriesReached,
+  totalSeries,
+  professionalsEngaged,
   onReserve,
   onDownloadPdf,
   onEmailQuote,
@@ -32,11 +62,17 @@ export function OrderSidebar({
   fillPercent: number;
   usedCbm: number;
   capacity: number;
+  containerRef: string;
+  port: string;
+  seriesReached: number;
+  totalSeries: number;
+  professionalsEngaged: number;
   onReserve: () => void;
   onDownloadPdf: () => void;
   onEmailQuote: () => void;
 }) {
   const [exploded, setExploded] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const hasItems = items.length > 0;
 
   return (
@@ -45,12 +81,8 @@ export function OrderSidebar({
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         <div className="flex items-center justify-between border-b border-[color:var(--sand-deep)] px-4 py-2.5">
           <div>
-            <div className="font-display text-sm font-semibold tracking-tight">
-              {CURRENT_CONTAINER.reference}
-            </div>
-            <div className="text-[11px] text-muted-foreground">
-              {CURRENT_CONTAINER.port} · 20' High Cube
-            </div>
+            <div className="font-display text-sm font-semibold tracking-tight">{containerRef}</div>
+            <div className="text-[11px] text-muted-foreground">{port} · 20' High Cube</div>
           </div>
           <Button
             variant={exploded ? "default" : "outline"}
@@ -70,7 +102,13 @@ export function OrderSidebar({
           </Button>
         </div>
         <div className="relative h-[320px] w-full bg-[color:var(--sand)]">
-          <ContainerScene items={items} exploded={exploded} />
+          {prefersReducedMotion ? (
+            <ContainerSceneStatic />
+          ) : (
+            <Suspense fallback={<ContainerScenePlaceholder />}>
+              <ContainerScene items={items} exploded={exploded} />
+            </Suspense>
+          )}
         </div>
 
         {/* Stats */}
@@ -97,13 +135,13 @@ export function OrderSidebar({
           <div className="bg-card p-3">
             <div className="label-eyebrow text-muted-foreground">Séries</div>
             <div className="mt-1 font-display text-base font-semibold tabular-nums">
-              {CURRENT_CONTAINER.seriesReached}/{CURRENT_CONTAINER.totalSeries}
+              {seriesReached}/{totalSeries}
               <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
                 déclenchées
               </span>
             </div>
             <div className="mt-1 text-[10px] text-muted-foreground">
-              {CURRENT_CONTAINER.professionalsEngaged} pros engagés
+              {professionalsEngaged} pros engagés
             </div>
           </div>
         </div>

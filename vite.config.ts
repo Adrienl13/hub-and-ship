@@ -12,4 +12,25 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  // Extra Vite overrides — merged on top of the helper's base config.
+  vite: {
+    build: {
+      // Default is 500 kB; raise slightly so the (now smaller) main chunk doesn't trip the warning
+      // while three/recharts/motion sit in their own dedicated chunks.
+      chunkSizeWarningLimit: 700,
+      rollupOptions: {
+        output: {
+          // Split heavy vendor libs into dedicated chunks so the route entry stays small
+          // and these caches can be reused independently across deploys.
+          manualChunks(id) {
+            if (id.includes("node_modules")) {
+              if (id.includes("three") || id.includes("@react-three")) return "three";
+              if (id.includes("recharts") || id.includes("d3-")) return "recharts";
+              if (id.includes("framer-motion")) return "motion";
+            }
+          },
+        },
+      },
+    },
+  },
 });
