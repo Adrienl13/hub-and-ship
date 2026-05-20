@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalIndexRouteImport } from './routes/legal/index'
 import { Route as ReservationIdRouteImport } from './routes/reservation/$id'
 import { Route as LegalSlugRouteImport } from './routes/legal/$slug'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 
 const LivresRoute = LivresRouteImport.update({
   id: '/livres',
@@ -40,6 +41,11 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
   path: '/legal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/legal/$slug': typeof LegalSlugRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/legal/': typeof LegalIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/legal/$slug': typeof LegalSlugRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/legal': typeof LegalIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +70,25 @@ export interface FileRoutesById {
   '/legal/$slug': typeof LegalSlugRoute
   '/reservation/$id': typeof ReservationIdRoute
   '/legal/': typeof LegalIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/livres' | '/legal/$slug' | '/reservation/$id' | '/legal/'
+  fullPaths:
+    | '/'
+    | '/livres'
+    | '/legal/$slug'
+    | '/reservation/$id'
+    | '/legal/'
+    | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/livres' | '/legal/$slug' | '/reservation/$id' | '/legal'
+  to:
+    | '/'
+    | '/livres'
+    | '/legal/$slug'
+    | '/reservation/$id'
+    | '/legal'
+    | '/api/stripe/webhook'
   id:
     | '__root__'
     | '/'
@@ -75,6 +96,7 @@ export interface FileRouteTypes {
     | '/legal/$slug'
     | '/reservation/$id'
     | '/legal/'
+    | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +105,7 @@ export interface RootRouteChildren {
   LegalSlugRoute: typeof LegalSlugRoute
   ReservationIdRoute: typeof ReservationIdRoute
   LegalIndexRoute: typeof LegalIndexRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -122,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -131,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalSlugRoute: LegalSlugRoute,
   ReservationIdRoute: ReservationIdRoute,
   LegalIndexRoute: LegalIndexRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
