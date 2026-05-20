@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, FileText, AlertTriangle } from "lucide-react";
+import { ChevronRight, FileText } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -23,13 +23,11 @@ export function LegalLayout({
   title,
   updatedAt,
   children,
-  showDisclaimer = true,
 }: {
   slug: LegalSlug;
   title: string;
   updatedAt: string;
   children: React.ReactNode;
-  showDisclaimer?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -93,21 +91,6 @@ export function LegalLayout({
                 Dernière mise à jour : {updatedAt}
               </p>
             </header>
-
-            {showDisclaimer && (
-              <div className="mt-6 flex items-start gap-3 rounded-md border border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/8 p-4 text-xs">
-                <AlertTriangle
-                  className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ochre)]"
-                  strokeWidth={2}
-                />
-                <p className="leading-relaxed text-foreground/85">
-                  <strong className="font-semibold">Modèle indicatif.</strong> Ce document doit être
-                  relu et validé par un conseil juridique avant publication définitive en
-                  production. Adapté au modèle B2B de pré-commande groupée par container, droit
-                  français applicable.
-                </p>
-              </div>
-            )}
 
             <article className="legal-prose mt-8 max-w-none text-sm leading-relaxed text-foreground/85">
               {children}

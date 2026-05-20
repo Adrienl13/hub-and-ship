@@ -73,20 +73,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Container Club — Pro outdoor furniture, factory-direct" },
+      {
+        title: "Container Club Terrassea — Mobilier outdoor pro mutualisé par container",
+      },
       {
         name: "description",
         content:
-          "Reserve your spot in our next shared shipping container. Save 30-40% on pro outdoor furniture, delivered in 6 months.",
+          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle Terrassea.",
       },
-      { name: "author", content: "Container Club" },
-      { property: "og:title", content: "Container Club — Pro outdoor furniture, factory-direct" },
+      { name: "author", content: "Terrassea" },
+      {
+        property: "og:title",
+        content: "Container Club Terrassea — Mobilier outdoor pro mutualisé par container",
+      },
       {
         property: "og:description",
-        content: "Reserve your spot. Save 30-40%. Delivered in 6 months.",
+        content:
+          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle Terrassea.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "fr_FR" },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "Container Club Terrassea — Mobilier outdoor pro mutualisé par container",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Réservez votre place sur le prochain container : mobilier outdoor pour pros à prix usine grâce à l'achat groupé. Importation officielle Terrassea.",
+      },
     ],
     links: [
       {
@@ -116,7 +132,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>

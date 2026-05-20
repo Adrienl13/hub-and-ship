@@ -1,8 +1,20 @@
-import { ArrowRight, User } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+const NAV_LINKS: ReadonlyArray<readonly [string, string]> = [
+  ["Catalogue", "/#catalogue"],
+  ["Comment ça marche", "/#comment"],
+  ["Containers livrés", "/livres"],
+  ["FAQ", "/#faq"],
+];
 
 export function Header({ onReserve }: { onReserve?: () => void }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const handleReserve = () => {
+    setMobileOpen(false);
     if (onReserve) {
       onReserve();
     } else if (typeof window !== "undefined") {
@@ -24,14 +36,9 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
           </span>
         </a>
 
-        {/* Nav */}
+        {/* Nav desktop */}
         <nav className="hidden items-center gap-8 md:flex">
-          {[
-            ["Catalogue", "/#catalogue"],
-            ["Comment ça marche", "/#comment"],
-            ["Containers livrés", "/livres"],
-            ["FAQ", "/#faq"],
-          ].map(([label, href]) => (
+          {NAV_LINKS.map(([label, href]) => (
             <a
               key={href}
               href={href}
@@ -44,21 +51,55 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
 
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="hidden h-9 gap-1.5 text-foreground/75 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
-          >
-            <User className="h-3.5 w-3.5" />
-            Mon compte
-          </Button>
-          <Button
             size="sm"
             onClick={handleReserve}
-            className="h-9 rounded-sm bg-foreground px-4 text-background hover:bg-foreground/90"
+            className="hidden h-9 rounded-sm bg-foreground px-4 text-background hover:bg-foreground/90 sm:inline-flex"
           >
             Réserver
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
+
+          {/* Mobile menu */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 md:hidden"
+                aria-label="Ouvrir le menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="flex w-72 flex-col bg-[color:var(--sand)] p-0">
+              <SheetHeader className="border-b border-[color:var(--sand-deep)] p-6 pb-4">
+                <SheetTitle className="text-left font-display text-base font-semibold tracking-tight">
+                  Container Club
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
+                {NAV_LINKS.map(([label, href]) => (
+                  <a
+                    key={href}
+                    href={href}
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-sm px-3 py-3 text-base text-foreground/85 transition-colors hover:bg-[color:var(--sand-soft)] hover:text-foreground"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </nav>
+              <div className="border-t border-[color:var(--sand-deep)] p-4">
+                <Button
+                  onClick={handleReserve}
+                  className="h-10 w-full rounded-sm bg-foreground px-4 text-background hover:bg-foreground/90"
+                >
+                  Réserver
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
