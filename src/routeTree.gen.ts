@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransportPartenairesRouteImport } from './routes/transport-partenaires'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
 import { Route as LivresRouteImport } from './routes/livres'
@@ -25,6 +26,11 @@ import { Route as AccountReservationsRouteImport } from './routes/account.reserv
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 
+const TransportPartenairesRoute = TransportPartenairesRouteImport.update({
+  id: '/transport-partenaires',
+  path: '/transport-partenaires',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Stock24hRoute = Stock24hRouteImport.update({
   id: '/stock-24h',
   path: '/stock-24h',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/livres'
     | '/qualite'
     | '/stock-24h'
+    | '/transport-partenaires'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/livres'
     | '/qualite'
     | '/stock-24h'
+    | '/transport-partenaires'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/livres'
     | '/qualite'
     | '/stock-24h'
+    | '/transport-partenaires'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   LivresRoute: typeof LivresRouteWithChildren
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
+  TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -225,6 +238,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/transport-partenaires': {
+      id: '/transport-partenaires'
+      path: '/transport-partenaires'
+      fullPath: '/transport-partenaires'
+      preLoaderRoute: typeof TransportPartenairesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stock-24h': {
       id: '/stock-24h'
       path: '/stock-24h'
@@ -374,6 +394,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivresRoute: LivresRouteWithChildren,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
+  TransportPartenairesRoute: TransportPartenairesRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,

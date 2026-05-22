@@ -53,6 +53,43 @@ export function Footer() {
           </div>
           <div>
             <div className="label-eyebrow text-[color:var(--sand)]/55">
+              Logistique
+            </div>
+            <ul className="mt-4 space-y-2 text-xs">
+              <li>
+                <a
+                  href="/transport-partenaires"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Transporteurs partenaires
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/stock-24h"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Espace disponibilité 24h
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/qualite"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Qualité & rapports SGS
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/livres"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Containers livrés
+                </a>
+              </li>
+            </ul>
+            <div className="label-eyebrow text-[color:var(--sand)]/55 mt-6">
               Contact
             </div>
             <ul className="mt-4 space-y-2 text-xs">
@@ -85,8 +122,8 @@ export function Footer() {
         </div>
         <div className="border-[color:var(--sand)]/15 text-[color:var(--sand)]/55 mt-12 flex flex-col gap-2 border-t pt-6 text-[11px] sm:flex-row sm:justify-between">
           <span>
-            © 2026 Pros Import EURL · RCS Paris 988 269 981 · SIRET 988 269 981
-            00012
+            © 2026 Pros Import EURL · RCS Paris 988 269 981 · SIRET
+            98826998100011
           </span>
           <span>EORI FR98826998100011 · TVA FR08988269981</span>
         </div>
