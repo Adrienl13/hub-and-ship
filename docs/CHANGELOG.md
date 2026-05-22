@@ -10,6 +10,71 @@ Aucun changement en cours.
 
 ---
 
+## [1.5.0] — 2026-05-22
+
+### Ajouté
+
+- **SEO public** :
+  - `public/robots.txt` (allow `/`, disallow `/admin`, `/account`, `/api`, `/auth`)
+  - `public/sitemap.xml` (14 URLs : home, catalogue, livres, qualite, stock-24h, faq, legal hub + 6 docs, transport-partenaires)
+  - **JSON-LD** `schema.org/Organization` inline dans `__root.tsx` avec l'identité réelle Pros Import EURL (legalName, founder Adrien Laniez, address 60 Rue François Ier 75008 Paris, SIRET, SIREN, EORI, VAT)
+- **`AdminGuard`** (`src/components/AdminGuard.tsx`) — wrappe `/admin` :
+  - Spinner pendant la vérif role (`useIsAdmin` hook)
+  - Écran "Espace administrateur" + lien `/auth/login` si anonyme
+  - Écran "Authentification indisponible" si Supabase pas configuré
+  - Écran "Accès refusé" si authentifié mais role ≠ admin/super_admin
+  - RLS reste la source de vérité côté serveur — le guard est la couche UX
+- **Page `/transport-partenaires`** (`src/routes/transport-partenaires.tsx`) — la promesse de `DeliveryInfoBox` et du `ReservationDialog` est enfin tenue. Liste éditoriale de 5 partenaires (Geodis, Heppner, Mauffrey, Dachser, Upela) avec specialty, coverage, indicative pricing 2025-2026, contact direct, sans commission Container Club. Hero + process 3 étapes + grille de cards + FAQ transporteurs + CTA email pour zones hors-liste.
+- **Onglet admin "Catalogue" éditable** :
+  - `AdminCatalogueTab` + `AdminProductEditor` (CRUD complet : scalaires produit + grille variantes inline avec color picker + grille variantes × containers pour seed commitments)
+- **Onglet admin "Demandes stock" éditable** (DB live, plus mock) :
+  - Boutons inline pour transitions de statut `new ⇄ contacted ⇄ reserved ⇄ converted ⇄ closed` + `Rouvrir` + `internal_note` save-on-blur
+- **Onglet admin "Réservations" éditable** (DB live, plus mock) :
+  - Boutons inline pour les 8 transitions de statut codex (pending_reservation_fee → reserved → deposit_called → deposit_paid → in_production → in_transit → delivered + Annuler)
+  - Dialog d'annulation avec select `cancellation_reason` (client_request / minimum_not_reached / supplier_issue / other)
+  - `admin_notes` save-on-blur
+  - Lien externe vers `dashboard.stripe.com/test/payments/<pi_id>` quand `stripe_payment_intent_id` est rempli (le refund effectif se fait depuis Stripe)
+- **Onglet admin "Transporteurs"** (nouveau) :
+  - DB-backed via la table `carrier_partners` (5 seeds migrés depuis `src/lib/carriers.ts`)
+  - CRUD complet : Ajouter / Éditer / Désactiver / Activer / Supprimer + repeatable `strengths`
+  - La page publique `/transport-partenaires` fetch désormais depuis DB (fallback silencieux sur la const TS si Supabase pas configuré ou vide)
+
+### Modifié
+
+- `src/routes/__root.tsx` : refonte meta SEO + JSON-LD inline via `scripts` array.
+- `src/routes/admin.tsx` : route maintenant wrappée `<AdminGuard><AdminPage /></AdminGuard>`. Tab `Catalogue` rend `AdminCatalogueTab` au lieu du read-only `ProductsAndStockTable`. Tab `Demandes stock` rend `StockRequestsAdminPanel` DB-backed. Tab `Réservations` rend `ReservationsAdminPanel` DB-backed. Nouveau tab `Transporteurs`.
+- `src/components/Footer.tsx` : nouvelle colonne "Logistique" (Transporteurs, Stock 24h, Qualité, Containers livrés) + correction SIRET (`988 269 981 00012` → `98826998100011`).
+- `src/lib/supabase/types.ts` : `Database` étendu avec `products`, `product_variants`, `container_seed_commitments`, `carrier_partners` + enums `ProductCategoryDb`, `FireRatingDb`, `CarrierSpecialtyDb`.
+
+### DB / Migrations appliquées
+
+```
+20260522095933  carrier_partners       (table + enum carrier_specialty + RLS + 5 seeds)
+```
+
+### Tests
+
+- 193/193 Vitest verts (43 fichiers de test)
+- tsc + ESLint `--max-warnings=0` + Vite build : tous verts
+
+### Maintenance dépôt
+
+- Branches obsolètes supprimées : `feat/integrate-all`, `codex/session-0-initialization`, `claude/analyze-project-status-zIlOM`, `feat/trust-pages-and-legal` (pruned).
+- Archives sauvegardées en tags : `archive/main-stripe-stack-2026-05-22`, `archive/claude-analyze-2026-05-22`.
+- `adrienlaniez1@gmail.com` créé dans `auth.users` + promu `role='admin'` dans `users_profile`.
+
+### À faire avant ouverture publique (rappel)
+
+- Brancher SMTP custom sur Supabase Auth (Resend / Postmark) — sinon magic link login impraticable.
+- Poser secrets prod via `wrangler secret put` : `STRIPE_SECRET_KEY` (sk*live*), `STRIPE_WEBHOOK_SECRET` (whsec\_), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`.
+- Webhook Stripe prod côté dashboard avec URL Worker prod.
+- Uploader vrais PDFs SGS dans le bucket `quality-reports`.
+- Validation juridique des 6 docs `/legal/*`.
+- Téléphone placeholder `+33 (0)4 91 00 00 00` à remplacer par un vrai numéro.
+- Domaine prod : actuellement `container-club.fr` dans sitemap + robots + JSON-LD — confirmer ou ajuster.
+
+---
+
 ## [1.4.0] — 2026-05-22
 
 ### Ajouté
@@ -50,7 +115,7 @@ Aucun changement en cours.
 ### À faire avant ouverture publique
 
 - Brancher SMTP custom sur Supabase Auth (Resend / Postmark) — limite par défaut 3-4 mails/h.
-- Poser secrets prod via `wrangler secret put` : `STRIPE_SECRET_KEY` (sk*live*_), `STRIPE_WEBHOOK_SECRET` (whsec\__), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`.
+- Poser secrets prod via `wrangler secret put` : `STRIPE_SECRET_KEY` (sk*live*\_), `STRIPE_WEBHOOK_SECRET` (whsec\_\_), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`.
 - Configurer webhook Stripe prod côté dashboard avec l'URL Worker prod + events `checkout.session.completed/expired/async_payment_failed`.
 - Uploader les vrais PDFs SGS dans le bucket `quality-reports` via l'admin web ou Dashboard Supabase.
 - Faire valider les 6 textes légaux par un conseil juridique (modèles indicatifs).

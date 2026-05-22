@@ -6,18 +6,34 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 1.4 (Stripe + Containers livrés + Qualité + Légal)
+**Phase actuelle** : Phase 1.5 (SEO + Admin éditable + Transporteurs)
 **Démarrage projet** : 2026-05-17
 **Dernière mise à jour** : 2026-05-22
 **Cible launch beta** : Semaine 10+
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
-### Récap dernière session (2026-05-20 → 2026-05-22)
+### Récap dernière session (2026-05-22, après v1.4.0)
 
-Intégration de toutes les features dans une branche unique `feat/integrate-all` ramenée sur `main` :
+Couverture des derniers angles morts du back-office et SEO public :
+
+- ✅ **SEO public branché** — `robots.txt`, `sitemap.xml` (14 URLs), JSON-LD `Organization` avec Pros Import EURL
+- ✅ **`AdminGuard`** sur `/admin` — 4 états (loading / unconfigured / anonymous / authenticated-non-admin / admin), RLS reste source de vérité côté serveur
+- ✅ **Page `/transport-partenaires`** créée (la promesse `DeliveryInfoBox` + `ReservationDialog` est tenue) — 5 transporteurs (Geodis, Heppner, Mauffrey, Dachser, Upela)
+- ✅ **Admin totalement éditable** maintenant — 7 onglets dont 5 avec édition réelle :
+  - Overview (read-only KPIs)
+  - Demandes stock 24h → DB live + transitions de statut inline
+  - Réservations → DB live + 8 transitions + annulation + admin_notes + lien Stripe
+  - Catalogue → CRUD produits + variants + commitments
+  - Containers → CRUD complet (déjà en v1.4)
+  - Qualité → CRUD rapports + upload PDF (déjà en v1.4)
+  - Transporteurs → CRUD via table `carrier_partners` (DB-backed)
+- ✅ **`adrienlaniez1@gmail.com` promu admin** (créé dans auth.users + role='admin' dans users_profile)
+- ✅ **Cleanup repo** — 3 branches obsolètes supprimées + 2 tags d'archive (`archive/main-stripe-stack-2026-05-22`, `archive/claude-analyze-2026-05-22`)
+
+### Récap session précédente (2026-05-20 → 2026-05-22, v1.4.0)
 
 - ✅ Stripe Checkout (redirect, frais de réservation) — server fn + webhook + UI badges Stripe/Qonto — E2E validé
-- ✅ DB Supabase refondue sur schéma codex (companies, users_profile, reservations enrichi, stock_requests…) — 8 migrations appliquées sur `mkfztwibolswqcggukeq`
+- ✅ DB Supabase refondue sur schéma codex (companies, users_profile, reservations enrichi, stock_requests…) — 9 migrations appliquées sur `mkfztwibolswqcggukeq`
 - ✅ Bug RLS RETURNING corrigé sur `reservations` (UUID client-side, no `.select()`)
 - ✅ Containers livrés — `/livres` + `/livres/$slug` + admin tab "Containers" + 3 seeds (CC-2025-012/013/014)
 - ✅ Quality reports — `/qualite` + auth gate PDF + admin tab "Qualité" + upload PDF + bucket Storage privé + 3 SGS AQL seeds
@@ -28,7 +44,7 @@ Intégration de toutes les features dans une branche unique `feat/integrate-all`
 - ✅ Pre-commit hook codex (tsc + lint --max-warnings=0 + 193 Vitest)
 - ✅ Migration de rattrapage Supabase pour formaliser le schéma drifté
 
-Voir `docs/CHANGELOG.md` §1.4.0 pour le détail exhaustif.
+Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 
 ### Légende
 
