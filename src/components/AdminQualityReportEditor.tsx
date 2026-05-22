@@ -1,5 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { FileText, Plus, Trash2, Upload } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,9 @@ export interface AdminQualityReportEditorProps {
   readonly onCancel: () => void
 }
 
+const QUALITY_BUCKET = 'quality-reports'
+const MAX_PDF_BYTES = 10 * 1024 * 1024 // 10 MB — keep in sync with bucket file_size_limit
+
 interface EditableState {
   organization: QualityReportOrganization
   reportType: QualityReportType
@@ -45,10 +48,28 @@ interface EditableState {
   title: string
   summary: string
   filePath: string
+  fileSizeBytes: number | null
+  fileMime: string | null
   previewImageUrl: string
   containerId: string // '' = none
   productCategories: ProductCategory[]
   highlights: QualityHighlight[]
+}
+
+function slugifyReference(ref: string): string {
+  return (
+    ref
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'report'
+  )
+}
+
+function formatBytes(bytes: number | null): string {
+  if (bytes == null) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} kB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function fromDetail(detail: QualityReportDetail): EditableState {
@@ -60,6 +81,8 @@ function fromDetail(detail: QualityReportDetail): EditableState {
     title: detail.title,
     summary: detail.summary ?? '',
     filePath: detail.filePath ?? '',
+    fileSizeBytes: detail.fileSizeBytes ?? null,
+    fileMime: detail.fileMime ?? null,
     previewImageUrl: detail.previewImageUrl ?? '',
     containerId: '',
     productCategories: [...detail.productCategories],
@@ -80,6 +103,8 @@ function toUpdate(
     title: state.title.trim(),
     summary: state.summary.trim() || null,
     file_path: state.filePath.trim() || null,
+    file_size_bytes: state.filePath.trim() ? state.fileSizeBytes : null,
+    file_mime: state.filePath.trim() ? state.fileMime : null,
     preview_image_url: state.previewImageUrl.trim() || null,
     product_categories: state.productCategories,
     highlights: state.highlights.filter(
@@ -99,6 +124,9 @@ export function AdminQualityReportEditor({
   const [initialContainerId, setInitialContainerId] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   // We don't carry the original container_id in QualityReportDetail (the
   // public type only joins the reference/slug). So we resolve it from the
@@ -155,6 +183,85 @@ export function AdminQualityReportEditor({
     setState((prev) => ({
       ...prev,
       highlights: [...prev.highlights, { label: '', value: '' }],
+    }))
+  }
+
+  async function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const file = event.target.files?.[0]
+    // Reset the input so re-selecting the same file still fires onChange.
+    if (event.target) event.target.value = ''
+    if (!file) return
+    setUploadError(null)
+
+    if (file.type !== 'application/pdf') {
+      setUploadError('Format invalide. Seul un PDF est accepté.')
+      return
+    }
+    if (file.size > MAX_PDF_BYTES) {
+      setUploadError(
+        `Fichier trop volumineux (${formatBytes(file.size)} > 10 MB).`,
+      )
+      return
+    }
+    if (!state.referenceNumber.trim()) {
+      setUploadError(
+        "Renseigne le numéro de référence avant d'uploader le PDF.",
+      )
+      return
+    }
+
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) {
+      setUploadError('Supabase non configuré localement.')
+      return
+    }
+
+    setUploading(true)
+    const client = createSupabaseBrowserClient(config)
+    const path = `reports/${state.organization}/${slugifyReference(state.referenceNumber)}_${Date.now()}.pdf`
+    const previousPath = state.filePath
+    const { error: uploadErr } = await client.storage
+      .from(QUALITY_BUCKET)
+      .upload(path, file, {
+        upsert: false,
+        contentType: 'application/pdf',
+      })
+
+    if (uploadErr) {
+      setUploadError(uploadErr.message)
+      setUploading(false)
+      return
+    }
+
+    // Best-effort cleanup of the previous file (admin RLS will allow it).
+    if (previousPath && previousPath !== path) {
+      await client.storage.from(QUALITY_BUCKET).remove([previousPath])
+    }
+
+    setState((prev) => ({
+      ...prev,
+      filePath: path,
+      fileSizeBytes: file.size,
+      fileMime: 'application/pdf',
+    }))
+    setUploading(false)
+  }
+
+  async function handleRemoveFile(): Promise<void> {
+    if (!state.filePath) return
+    setUploadError(null)
+    const config = getSupabasePublicConfig()
+    if (config.isConfigured) {
+      const client = createSupabaseBrowserClient(config)
+      await client.storage.from(QUALITY_BUCKET).remove([state.filePath])
+    }
+    setState((prev) => ({
+      ...prev,
+      filePath: '',
+      fileSizeBytes: null,
+      fileMime: null,
     }))
   }
 
@@ -274,22 +381,78 @@ export function AdminQualityReportEditor({
               onChange={(e) => setField('summary', e.target.value)}
             />
           </Field>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="URL image preview (publique)">
-              <Input
-                value={state.previewImageUrl}
-                onChange={(e) => setField('previewImageUrl', e.target.value)}
-                placeholder="https://…"
-              />
-            </Field>
-            <Field label="Chemin fichier (Supabase Storage)">
-              <Input
-                value={state.filePath}
-                onChange={(e) => setField('filePath', e.target.value)}
-                placeholder="reports/sgs/cc_2025_014_aql.pdf"
-              />
-            </Field>
-          </div>
+          <Field label="URL image preview (publique)">
+            <Input
+              value={state.previewImageUrl}
+              onChange={(e) => setField('previewImageUrl', e.target.value)}
+              placeholder="https://…"
+            />
+          </Field>
+          <Field label="Fichier PDF du rapport (privé · 10 MB max)">
+            {state.filePath ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-xs">
+                  <FileText className="text-foreground/60 h-4 w-4 shrink-0" />
+                  <span className="text-foreground/80 flex-1 truncate font-mono">
+                    {state.filePath}
+                  </span>
+                  {state.fileSizeBytes != null && (
+                    <span className="text-foreground/55 shrink-0 tabular-nums">
+                      {formatBytes(state.fileSizeBytes)}
+                    </span>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void handleRemoveFile()}
+                    disabled={uploading || saving}
+                    className="h-7 gap-1 px-2 text-xs text-red-700 hover:bg-red-50 hover:text-red-800"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Supprimer
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || saving}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {uploading ? 'Remplacement…' : 'Remplacer'}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || saving || !state.referenceNumber.trim()}
+                className="h-11 w-full justify-center gap-2 border-dashed"
+              >
+                <Upload className="h-4 w-4" />
+                {uploading ? 'Upload en cours…' : 'Choisir un PDF'}
+              </Button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => void handleFileChange(e)}
+              className="hidden"
+            />
+            {uploadError && (
+              <p className="mt-1 text-[11px] text-red-700">{uploadError}</p>
+            )}
+            {!state.filePath && !state.referenceNumber.trim() && (
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Renseigne d'abord le numéro de référence — il sert au nommage du
+                fichier dans le bucket.
+              </p>
+            )}
+          </Field>
         </div>
       </Fieldset>
 
