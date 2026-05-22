@@ -28,6 +28,12 @@ export type StockRequestStatus =
   | 'reserved'
   | 'converted'
   | 'closed'
+export type ContainerStatus =
+  | 'open'
+  | 'locked'
+  | 'shipping'
+  | 'delivered'
+  | 'cancelled'
 export type SecurityEventSeverity = 'info' | 'warning' | 'error' | 'critical'
 export type SecurityEventType =
   | 'login_attempt'
@@ -394,6 +400,84 @@ type StockRequestInsert = {
 
 type StockRequestUpdate = Partial<StockRequestInsert>
 
+type ContainerRow = {
+  id: string
+  reference: string
+  port: string
+  capacity_cbm: number
+  threshold_percent: number
+  min_series_required: number
+  expected_close_at: string | null
+  status: ContainerStatus
+  delivered_at: string | null
+  planned_days: number | null
+  actual_days: number | null
+  photo_url: string | null
+  testimonial_quote: string | null
+  testimonial_author: string | null
+  testimonial_location: string | null
+  testimonial_rating: number | null
+  created_at: string
+  updated_at: string
+  display_series_target: number
+  display_pros_count: number
+  display_items_count: number
+  slug: string | null
+  origin_port: string | null
+  total_items: number | null
+  professionals_served: number | null
+  savings_total_eur: number | null
+  savings_percent: number | null
+  story: string | null
+  certifications: Json
+  timeline: Json
+  product_breakdown: Json
+  gallery: Json
+  testimonial_long_quote: string | null
+  testimonial_role: string | null
+  published_at: string | null
+}
+
+type ContainerInsert = {
+  id?: string
+  reference: string
+  port: string
+  capacity_cbm: number
+  threshold_percent: number
+  min_series_required: number
+  expected_close_at?: string | null
+  status?: ContainerStatus
+  delivered_at?: string | null
+  planned_days?: number | null
+  actual_days?: number | null
+  photo_url?: string | null
+  testimonial_quote?: string | null
+  testimonial_author?: string | null
+  testimonial_location?: string | null
+  testimonial_rating?: number | null
+  created_at?: string
+  updated_at?: string
+  display_series_target?: number
+  display_pros_count?: number
+  display_items_count?: number
+  slug?: string | null
+  origin_port?: string | null
+  total_items?: number | null
+  professionals_served?: number | null
+  savings_total_eur?: number | null
+  savings_percent?: number | null
+  story?: string | null
+  certifications?: Json
+  timeline?: Json
+  product_breakdown?: Json
+  gallery?: Json
+  testimonial_long_quote?: string | null
+  testimonial_role?: string | null
+  published_at?: string | null
+}
+
+type ContainerUpdate = Partial<ContainerInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -432,6 +516,11 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      containers: {
+        Row: ContainerRow
+        Insert: ContainerInsert
+        Update: ContainerUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -450,6 +539,7 @@ export interface Database {
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
       security_event_type: SecurityEventType
+      container_status: ContainerStatus
     }
     CompositeTypes: Record<string, never>
   }

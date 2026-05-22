@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
+import { Route as LivresRouteImport } from './routes/livres'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
@@ -22,6 +24,11 @@ import { Route as AccountReservationsReservationIdRouteImport } from './routes/a
 const Stock24hRoute = Stock24hRouteImport.update({
   id: '/stock-24h',
   path: '/stock-24h',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LivresRoute = LivresRouteImport.update({
+  id: '/livres',
+  path: '/livres',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CatalogueRoute = CatalogueRouteImport.update({
@@ -38,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LivresSlugRoute = LivresSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => LivresRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
@@ -70,10 +82,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/livres': typeof LivresRouteWithChildren
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -81,10 +95,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/livres': typeof LivresRouteWithChildren
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -93,10 +109,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/livres': typeof LivresRouteWithChildren
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -106,10 +124,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/livres'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -117,10 +137,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/livres'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   id:
@@ -128,10 +150,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/livres'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
@@ -140,6 +164,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
+  LivresRoute: typeof LivresRouteWithChildren
   Stock24hRoute: typeof Stock24hRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -154,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/stock-24h'
       fullPath: '/stock-24h'
       preLoaderRoute: typeof Stock24hRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/livres': {
+      id: '/livres'
+      path: '/livres'
+      fullPath: '/livres'
+      preLoaderRoute: typeof LivresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/catalogue': {
@@ -176,6 +208,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/livres/$slug': {
+      id: '/livres/$slug'
+      path: '/$slug'
+      fullPath: '/livres/$slug'
+      preLoaderRoute: typeof LivresSlugRouteImport
+      parentRoute: typeof LivresRoute
     }
     '/auth/login': {
       id: '/auth/login'
@@ -215,6 +254,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LivresRouteChildren {
+  LivresSlugRoute: typeof LivresSlugRoute
+}
+
+const LivresRouteChildren: LivresRouteChildren = {
+  LivresSlugRoute: LivresSlugRoute,
+}
+
+const LivresRouteWithChildren =
+  LivresRoute._addFileChildren(LivresRouteChildren)
+
 interface AccountReservationsRouteChildren {
   AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
 }
@@ -230,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
+  LivresRoute: LivresRouteWithChildren,
   Stock24hRoute: Stock24hRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,

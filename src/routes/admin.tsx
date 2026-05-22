@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -35,7 +36,12 @@ export const Route = createFileRoute('/admin')({
   component: AdminPage,
 })
 
-type AdminTab = 'overview' | 'stock-requests' | 'reservations' | 'products'
+type AdminTab =
+  | 'overview'
+  | 'stock-requests'
+  | 'reservations'
+  | 'products'
+  | 'containers'
 
 function AdminPage() {
   const auth = useAuth()
@@ -97,6 +103,7 @@ function AdminPage() {
             ['stock-requests', 'Demandes stock'],
             ['reservations', 'Réservations'],
             ['products', 'Produits & stock'],
+            ['containers', 'Containers'],
           ].map(([id, label]) => {
             const active = activeTab === id
             return (
@@ -125,6 +132,9 @@ function AdminPage() {
         )}
         {activeTab === 'products' && (
           <ProductsAndStockTable stockLines={snapshot.stockLines} />
+        )}
+        {activeTab === 'containers' && (
+          <AdminContainersTab authStatus={auth.status} />
         )}
       </section>
     </main>
