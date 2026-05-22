@@ -261,8 +261,8 @@ function buildHTML(q: QuoteData): string {
     </div>
 
     <footer>
-      <div>Container Club — édité par Terrassea SAS · hello@terrassea.fr</div>
-      <div>RCS Marseille 902 345 678 · EORI FR902345678 · TVA FR50902345678</div>
+      <div>Container Club — édité par Pros Import SAS · hello@terrassea.fr</div>
+      <div>RCS Paris 988 269 981 · EORI FR98826998100011 · TVA FR08988269981</div>
     </footer>
   </div>
 </body>

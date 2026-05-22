@@ -133,7 +133,7 @@ export function LegalLayout({
                 </a>
               </span>
               <span>·</span>
-              <span>Édité par Terrassea SAS · RCS Marseille 902 345 678</span>
+              <span>Édité par Pros Import SAS · RCS Paris 988 269 981</span>
             </div>
           </main>
         </div>

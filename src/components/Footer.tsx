@@ -85,10 +85,10 @@ export function Footer() {
         </div>
         <div className="border-[color:var(--sand)]/15 text-[color:var(--sand)]/55 mt-12 flex flex-col gap-2 border-t pt-6 text-[11px] sm:flex-row sm:justify-between">
           <span>
-            © 2026 Terrassea SAS · RCS Marseille 902 345 678 · SIRET 902 345 678
+            © 2026 Pros Import SAS · RCS Paris 988 269 981 · SIRET 988 269 981
             00012
           </span>
-          <span>EORI FR902345678 · TVA FR50902345678</span>
+          <span>EORI FR98826998100011 · TVA FR08988269981</span>
         </div>
       </div>
     </footer>

@@ -17,7 +17,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Mentions légales',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Mentions légales du site Container Club, édité par Terrassea SAS — éditeur, hébergeur, propriété intellectuelle.',
+      'Mentions légales du site Container Club, édité par Pros Import SAS — éditeur, hébergeur, propriété intellectuelle.',
     content: (
       <>
         <LegalSection id="editeur" title="1. Éditeur du site">
@@ -28,7 +28,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <UL>
             <LI>
-              <Strong>Raison sociale :</Strong> Terrassea SAS
+              <Strong>Raison sociale :</Strong> Pros Import SAS
             </LI>
             <LI>
               <Strong>Forme juridique :</Strong> Société par actions simplifiée
@@ -37,20 +37,20 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>Capital social :</Strong> 50 000 € entièrement libéré
             </LI>
             <LI>
-              <Strong>Siège social :</Strong> 12 quai du Lazaret, 13002
-              Marseille, France
+              <Strong>Siège social :</Strong> 60 Rue François Ier, 75008 Paris,
+              France
             </LI>
             <LI>
-              <Strong>RCS :</Strong> Marseille 902 345 678
+              <Strong>RCS :</Strong> Paris 988 269 981
             </LI>
             <LI>
-              <Strong>SIRET :</Strong> 902 345 678 00012
+              <Strong>SIRET :</Strong> 98826998100011
             </LI>
             <LI>
-              <Strong>TVA intracommunautaire :</Strong> FR50902345678
+              <Strong>TVA intracommunautaire :</Strong> FR08988269981
             </LI>
             <LI>
-              <Strong>EORI :</Strong> FR902345678
+              <Strong>EORI :</Strong> FR98826998100011
             </LI>
             <LI>
               <Strong>Téléphone :</Strong> +33 (0)4 91 00 00 00
@@ -63,7 +63,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="directeur" title="2. Directeur de la publication">
           <P>
-            Adrien Laniez, en qualité de Président de Terrassea SAS, est le
+            Adrien Laniez, en qualité de Président de Pros Import SAS, est le
             directeur de la publication du Site.
           </P>
         </LegalSection>
@@ -97,13 +97,13 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             illustrations, logos, graphismes, mise en page, code source,
             structure de base de données, marque « Container Club » et «
             Terrassea ») est protégé par le Code de la propriété intellectuelle
-            et appartient à Terrassea SAS ou à ses partenaires concédants.
+            et appartient à Pros Import SAS ou à ses partenaires concédants.
           </P>
           <P>
             Toute reproduction, représentation, modification, publication,
             transmission ou adaptation totale ou partielle, par quelque procédé
             que ce soit, est interdite sans autorisation écrite préalable de
-            Terrassea SAS, à l'exception du droit de copie privée et de courte
+            Pros Import SAS, à l'exception du droit de copie privée et de courte
             citation prévu par la loi.
           </P>
         </LegalSection>
@@ -111,9 +111,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="liens" title="5. Liens hypertextes">
           <P>
             La mise en place de liens vers le Site est libre, sous réserve d'un
-            usage loyal et non préjudiciable à l'image de Terrassea SAS. Les
+            usage loyal et non préjudiciable à l'image de Pros Import SAS. Les
             liens sortants depuis le Site vers des sites tiers n'engagent pas la
-            responsabilité de Terrassea SAS quant à leur contenu.
+            responsabilité de Pros Import SAS quant à leur contenu.
           </P>
         </LegalSection>
 
@@ -152,7 +152,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="preambule" title="1. Préambule">
           <P>
             Les présentes Conditions Générales de Vente (« CGV ») régissent les
-            ventes conclues entre Terrassea SAS, exploitant la marque{' '}
+            ventes conclues entre Pros Import SAS, exploitant la marque{' '}
             <Strong>Container Club</Strong>, et tout professionnel (personne
             morale ou personne physique agissant dans le cadre de son activité
             commerciale) souhaitant participer à une opération d'achat groupé
@@ -197,9 +197,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             d'installation.
           </P>
           <P>
-            Terrassea SAS se réserve le droit de modifier ses prix à tout moment
-            pour les campagnes à venir. Une fois la réservation validée, le prix
-            est garanti pour l'Acheteur jusqu'à la livraison.
+            Pros Import SAS se réserve le droit de modifier ses prix à tout
+            moment pour les campagnes à venir. Une fois la réservation validée,
+            le prix est garanti pour l'Acheteur jusqu'à la livraison.
           </P>
         </LegalSection>
 
@@ -213,7 +213,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <P>
             <Strong>Si le seuil de 80 % n'est pas atteint</Strong> à la date de
-            clôture, Terrassea SAS peut, à sa seule discrétion : (i) prolonger
+            clôture, Pros Import SAS peut, à sa seule discrétion : (i) prolonger
             la collecte de 2 semaines maximum, ou (ii) annuler le container. En
             cas d'annulation, l'intégralité des sommes versées (frais de
             réservation + acompte) est remboursée à l'Acheteur sous 5 jours
@@ -238,7 +238,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>
                 {' '}
                 Ces frais ne sont pas remboursables, sauf annulation du
-                container par Terrassea SAS.
+                container par Pros Import SAS.
               </Strong>
             </LI>
             <LI>
@@ -254,7 +254,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <P>
             En cas de défaut de paiement à l'une des étapes, après mise en
-            demeure restée infructueuse pendant 7 jours, Terrassea SAS peut
+            demeure restée infructueuse pendant 7 jours, Pros Import SAS peut
             résilier la commande de plein droit et conserver les sommes déjà
             versées au titre de l'indemnisation forfaitaire (clause pénale).
           </P>
@@ -278,7 +278,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             donner lieu à résiliation ou indemnités tant qu'il reste raisonnable
             (≤ 30 jours) et qu'il a été communiqué dans les meilleurs délais. Un
             geste commercial est appliqué en cas de retard supérieur à 7 jours
-            dû à Terrassea SAS.
+            dû à Pros Import SAS.
           </P>
           <P>
             Le transfert des risques s'opère à la remise des marchandises à
@@ -306,8 +306,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               d'une <Strong>garantie commerciale de 2 ans</Strong> consentie par
-              Terrassea SAS, couvrant les défauts de pièces et de structure dans
-              le cadre d'un usage normal et professionnel.
+              Pros Import SAS, couvrant les défauts de pièces et de structure
+              dans le cadre d'un usage normal et professionnel.
             </LI>
           </UL>
           <P>
@@ -319,9 +319,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="responsabilite" title="9. Responsabilité">
           <P>
-            La responsabilité de Terrassea SAS est limitée, pour les Acheteurs
+            La responsabilité de Pros Import SAS est limitée, pour les Acheteurs
             professionnels, au montant total HT effectivement payé par
-            l'Acheteur au titre de la commande concernée. Terrassea SAS ne
+            l'Acheteur au titre de la commande concernée. Pros Import SAS ne
             saurait être tenue responsable des dommages indirects, pertes
             d'exploitation, pertes de chiffre d'affaires, atteinte à l'image ou
             perte de clientèle.
@@ -330,7 +330,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="force-majeure" title="10. Force majeure">
           <P>
-            Terrassea SAS n'est pas responsable des manquements dus à un
+            Pros Import SAS n'est pas responsable des manquements dus à un
             événement de force majeure au sens de l'article 1218 du Code civil,
             ni à un fait imprévisible et indépendant de sa volonté (notamment :
             grève portuaire, fermeture douanière, conflit armé, épidémie,
@@ -356,9 +356,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="mediation" title="12. Médiation et litiges">
           <P>
             Conformément à l'article L612-1 du Code de la consommation, bien que
-            les présentes CGV soient réservées aux professionnels, Terrassea SAS
-            propose, en cas de litige, de recourir préalablement à une médiation
-            amiable, notamment via la{' '}
+            les présentes CGV soient réservées aux professionnels, Pros Import
+            SAS propose, en cas de litige, de recourir préalablement à une
+            médiation amiable, notamment via la{' '}
             <Strong>
               FEVAD — Fédération du e-commerce et de la vente à distance
             </Strong>{' '}
@@ -368,7 +368,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             À défaut d'accord amiable, tout litige relatif à la formation,
             l'interprétation, l'exécution ou la rupture des présentes sera de la{' '}
             <Strong>
-              compétence exclusive du Tribunal de commerce de Marseille
+              compétence exclusive du Tribunal de commerce de Paris
             </Strong>
             , nonobstant pluralité de défendeurs ou appel en garantie.
           </P>
@@ -397,8 +397,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="objet" title="1. Objet">
           <P>
             Les présentes Conditions Générales d'Utilisation (« CGU ») régissent
-            l'accès et l'usage du site Container Club, édité par Terrassea SAS.
-            Elles complètent les{' '}
+            l'accès et l'usage du site Container Club, édité par Pros Import
+            SAS. Elles complètent les{' '}
             <a href="/legal/cgv" className="underline">
               Conditions Générales de Vente
             </a>{' '}
@@ -492,7 +492,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             Les présentes CGU sont soumises au droit français. Tout litige
             relatif à leur interprétation ou à leur exécution relève de la
-            compétence exclusive du Tribunal de commerce de Marseille.
+            compétence exclusive du Tribunal de commerce de Paris.
           </P>
         </LegalSection>
       </>
@@ -511,9 +511,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="responsable" title="1. Responsable du traitement">
           <P>
             Le responsable du traitement des données personnelles est{' '}
-            <Strong>Terrassea SAS</Strong>, immatriculée au RCS de Marseille
-            sous le numéro 902 345 678, dont le siège social est situé 12 quai
-            du Lazaret, 13002 Marseille, France.
+            <Strong>Pros Import SAS</Strong>, immatriculée au RCS de Paris sous
+            le numéro 988 269 981, dont le siège social est situé 60 Rue
+            François Ier, 75008 Paris, France.
           </P>
           <P>
             Pour toute question relative à la protection de vos données :{' '}
@@ -611,7 +611,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Cabinet comptable et conseil juridique</Strong> — pour les
-              obligations légales et la défense des intérêts de Terrassea SAS.
+              obligations légales et la défense des intérêts de Pros Import SAS.
             </LI>
           </UL>
           <P>
@@ -689,7 +689,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="securite" title="7. Sécurité">
           <P>
-            Terrassea SAS met en œuvre des mesures techniques et
+            Pros Import SAS met en œuvre des mesures techniques et
             organisationnelles appropriées pour assurer la sécurité de vos
             données : chiffrement TLS, contrôle d'accès strict, hébergement sur
             infrastructures certifiées (Cloudflare, Supabase), revue régulière
