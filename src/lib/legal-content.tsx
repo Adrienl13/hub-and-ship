@@ -17,7 +17,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Mentions légales',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Mentions légales du site Container Club, édité par Pros Import SAS — éditeur, hébergeur, propriété intellectuelle.',
+      'Mentions légales du site Container Club, édité par Pros Import EURL — éditeur, hébergeur, propriété intellectuelle.',
     content: (
       <>
         <LegalSection id="editeur" title="1. Éditeur du site">
@@ -28,13 +28,14 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <UL>
             <LI>
-              <Strong>Raison sociale :</Strong> Pros Import SAS
+              <Strong>Raison sociale :</Strong> Pros Import EURL
             </LI>
             <LI>
-              <Strong>Forme juridique :</Strong> Société par actions simplifiée
+              <Strong>Forme juridique :</Strong> Entreprise unipersonnelle à
+              responsabilité limitée
             </LI>
             <LI>
-              <Strong>Capital social :</Strong> 50 000 € entièrement libéré
+              <Strong>Capital social :</Strong> 500 € entièrement libéré
             </LI>
             <LI>
               <Strong>Siège social :</Strong> 60 Rue François Ier, 75008 Paris,
@@ -56,14 +57,14 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>Téléphone :</Strong> +33 (0)4 91 00 00 00
             </LI>
             <LI>
-              <Strong>Email :</Strong> hello@terrassea.fr
+              <Strong>Email :</Strong> adrienlaniez1@gmail.com
             </LI>
           </UL>
         </LegalSection>
 
         <LegalSection id="directeur" title="2. Directeur de la publication">
           <P>
-            Adrien Laniez, en qualité de Président de Pros Import SAS, est le
+            Adrien Laniez, en qualité de Gérant de Pros Import EURL, est le
             directeur de la publication du Site.
           </P>
         </LegalSection>
@@ -97,23 +98,23 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             illustrations, logos, graphismes, mise en page, code source,
             structure de base de données, marque « Container Club » et «
             Terrassea ») est protégé par le Code de la propriété intellectuelle
-            et appartient à Pros Import SAS ou à ses partenaires concédants.
+            et appartient à Pros Import EURL ou à ses partenaires concédants.
           </P>
           <P>
             Toute reproduction, représentation, modification, publication,
             transmission ou adaptation totale ou partielle, par quelque procédé
             que ce soit, est interdite sans autorisation écrite préalable de
-            Pros Import SAS, à l'exception du droit de copie privée et de courte
-            citation prévu par la loi.
+            Pros Import EURL, à l'exception du droit de copie privée et de
+            courte citation prévu par la loi.
           </P>
         </LegalSection>
 
         <LegalSection id="liens" title="5. Liens hypertextes">
           <P>
             La mise en place de liens vers le Site est libre, sous réserve d'un
-            usage loyal et non préjudiciable à l'image de Pros Import SAS. Les
+            usage loyal et non préjudiciable à l'image de Pros Import EURL. Les
             liens sortants depuis le Site vers des sites tiers n'engagent pas la
-            responsabilité de Pros Import SAS quant à leur contenu.
+            responsabilité de Pros Import EURL quant à leur contenu.
           </P>
         </LegalSection>
 
@@ -152,7 +153,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="preambule" title="1. Préambule">
           <P>
             Les présentes Conditions Générales de Vente (« CGV ») régissent les
-            ventes conclues entre Pros Import SAS, exploitant la marque{' '}
+            ventes conclues entre Pros Import EURL, exploitant la marque{' '}
             <Strong>Container Club</Strong>, et tout professionnel (personne
             morale ou personne physique agissant dans le cadre de son activité
             commerciale) souhaitant participer à une opération d'achat groupé
@@ -197,7 +198,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             d'installation.
           </P>
           <P>
-            Pros Import SAS se réserve le droit de modifier ses prix à tout
+            Pros Import EURL se réserve le droit de modifier ses prix à tout
             moment pour les campagnes à venir. Une fois la réservation validée,
             le prix est garanti pour l'Acheteur jusqu'à la livraison.
           </P>
@@ -213,11 +214,11 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <P>
             <Strong>Si le seuil de 80 % n'est pas atteint</Strong> à la date de
-            clôture, Pros Import SAS peut, à sa seule discrétion : (i) prolonger
-            la collecte de 2 semaines maximum, ou (ii) annuler le container. En
-            cas d'annulation, l'intégralité des sommes versées (frais de
-            réservation + acompte) est remboursée à l'Acheteur sous 5 jours
-            ouvrés sur le moyen de paiement original.
+            clôture, Pros Import EURL peut, à sa seule discrétion : (i)
+            prolonger la collecte de 2 semaines maximum, ou (ii) annuler le
+            container. En cas d'annulation, l'intégralité des sommes versées
+            (frais de réservation + acompte) est remboursée à l'Acheteur sous 5
+            jours ouvrés sur le moyen de paiement original.
           </P>
           <P>
             <Strong>Si une couleur n'atteint pas son MOQ</Strong>, l'Acheteur
@@ -238,7 +239,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>
                 {' '}
                 Ces frais ne sont pas remboursables, sauf annulation du
-                container par Pros Import SAS.
+                container par Pros Import EURL.
               </Strong>
             </LI>
             <LI>
@@ -254,7 +255,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <P>
             En cas de défaut de paiement à l'une des étapes, après mise en
-            demeure restée infructueuse pendant 7 jours, Pros Import SAS peut
+            demeure restée infructueuse pendant 7 jours, Pros Import EURL peut
             résilier la commande de plein droit et conserver les sommes déjà
             versées au titre de l'indemnisation forfaitaire (clause pénale).
           </P>
@@ -278,7 +279,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             donner lieu à résiliation ou indemnités tant qu'il reste raisonnable
             (≤ 30 jours) et qu'il a été communiqué dans les meilleurs délais. Un
             geste commercial est appliqué en cas de retard supérieur à 7 jours
-            dû à Pros Import SAS.
+            dû à Pros Import EURL.
           </P>
           <P>
             Le transfert des risques s'opère à la remise des marchandises à
@@ -306,7 +307,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               d'une <Strong>garantie commerciale de 2 ans</Strong> consentie par
-              Pros Import SAS, couvrant les défauts de pièces et de structure
+              Pros Import EURL, couvrant les défauts de pièces et de structure
               dans le cadre d'un usage normal et professionnel.
             </LI>
           </UL>
@@ -319,9 +320,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="responsabilite" title="9. Responsabilité">
           <P>
-            La responsabilité de Pros Import SAS est limitée, pour les Acheteurs
-            professionnels, au montant total HT effectivement payé par
-            l'Acheteur au titre de la commande concernée. Pros Import SAS ne
+            La responsabilité de Pros Import EURL est limitée, pour les
+            Acheteurs professionnels, au montant total HT effectivement payé par
+            l'Acheteur au titre de la commande concernée. Pros Import EURL ne
             saurait être tenue responsable des dommages indirects, pertes
             d'exploitation, pertes de chiffre d'affaires, atteinte à l'image ou
             perte de clientèle.
@@ -330,7 +331,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="force-majeure" title="10. Force majeure">
           <P>
-            Pros Import SAS n'est pas responsable des manquements dus à un
+            Pros Import EURL n'est pas responsable des manquements dus à un
             événement de force majeure au sens de l'article 1218 du Code civil,
             ni à un fait imprévisible et indépendant de sa volonté (notamment :
             grève portuaire, fermeture douanière, conflit armé, épidémie,
@@ -511,7 +512,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="responsable" title="1. Responsable du traitement">
           <P>
             Le responsable du traitement des données personnelles est{' '}
-            <Strong>Pros Import SAS</Strong>, immatriculée au RCS de Paris sous
+            <Strong>Pros Import EURL</Strong>, immatriculée au RCS de Paris sous
             le numéro 988 269 981, dont le siège social est situé 60 Rue
             François Ier, 75008 Paris, France.
           </P>
@@ -611,7 +612,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Cabinet comptable et conseil juridique</Strong> — pour les
-              obligations légales et la défense des intérêts de Pros Import SAS.
+              obligations légales et la défense des intérêts de Pros Import
+              EURL.
             </LI>
           </UL>
           <P>
@@ -689,7 +691,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="securite" title="7. Sécurité">
           <P>
-            Pros Import SAS met en œuvre des mesures techniques et
+            Pros Import EURL met en œuvre des mesures techniques et
             organisationnelles appropriées pour assurer la sécurité de vos
             données : chiffrement TLS, contrôle d'accès strict, hébergement sur
             infrastructures certifiées (Cloudflare, Supabase), revue régulière

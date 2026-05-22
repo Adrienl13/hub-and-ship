@@ -58,10 +58,10 @@ export function Footer() {
             <ul className="mt-4 space-y-2 text-xs">
               <li>
                 <a
-                  href="mailto:hello@terrassea.fr"
+                  href="mailto:adrienlaniez1@gmail.com"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
-                  hello@terrassea.fr
+                  adrienlaniez1@gmail.com
                 </a>
               </li>
               <li className="text-[color:var(--sand)]/65">
@@ -85,7 +85,7 @@ export function Footer() {
         </div>
         <div className="border-[color:var(--sand)]/15 text-[color:var(--sand)]/55 mt-12 flex flex-col gap-2 border-t pt-6 text-[11px] sm:flex-row sm:justify-between">
           <span>
-            © 2026 Pros Import SAS · RCS Paris 988 269 981 · SIRET 988 269 981
+            © 2026 Pros Import EURL · RCS Paris 988 269 981 · SIRET 988 269 981
             00012
           </span>
           <span>EORI FR98826998100011 · TVA FR08988269981</span>

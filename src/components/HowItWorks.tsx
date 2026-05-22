@@ -19,7 +19,7 @@ const STEPS = [
   {
     n: '04',
     title: 'Expédition + douane',
-    desc: '30 jours de transit maritime + dédouanement géré par Pros Import SAS, votre importateur officiel.',
+    desc: '30 jours de transit maritime + dédouanement géré par Pros Import EURL, votre importateur officiel.',
   },
   {
     n: '05',

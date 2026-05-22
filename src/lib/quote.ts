@@ -261,7 +261,7 @@ function buildHTML(q: QuoteData): string {
     </div>
 
     <footer>
-      <div>Container Club — édité par Pros Import SAS · hello@terrassea.fr</div>
+      <div>Container Club — édité par Pros Import EURL · adrienlaniez1@gmail.com</div>
       <div>RCS Paris 988 269 981 · EORI FR98826998100011 · TVA FR08988269981</div>
     </footer>
   </div>

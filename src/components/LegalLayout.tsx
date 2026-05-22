@@ -133,7 +133,7 @@ export function LegalLayout({
                 </a>
               </span>
               <span>·</span>
-              <span>Édité par Pros Import SAS · RCS Paris 988 269 981</span>
+              <span>Édité par Pros Import EURL · RCS Paris 988 269 981</span>
             </div>
           </main>
         </div>

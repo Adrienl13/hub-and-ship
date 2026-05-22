@@ -32,7 +32,7 @@ const ICONS: Record<LegalSlug, typeof FileText> = {
 
 const DESCRIPTIONS: Record<LegalSlug, string> = {
   'mentions-legales':
-    'Éditeur, hébergement, propriété intellectuelle et coordonnées de Pros Import SAS.',
+    'Éditeur, hébergement, propriété intellectuelle et coordonnées de Pros Import EURL.',
   cgv: 'Conditions générales de vente B2B — pré-commande groupée, échéancier, garanties, médiation.',
   cgu: 'Conditions générales d’utilisation du Site — accès, compte, comportements interdits.',
   confidentialite:
@@ -86,7 +86,7 @@ function LegalHub() {
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[color:var(--ink-soft)]">
             Tous les documents légaux régissant l'utilisation du site Container
-            Club et les relations commerciales avec Pros Import SAS. Adaptés au
+            Club et les relations commerciales avec Pros Import EURL. Adaptés au
             modèle B2B de pré-commande groupée, conformes au droit français.
           </p>
         </header>
