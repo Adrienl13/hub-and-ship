@@ -30,6 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { PaymentTrustBadges } from '@/components/PaymentTrustBadges'
 import { EmailDomainWarning } from '@/components/security/EmailDomainWarning'
 import {
   SiretInput,
@@ -577,10 +578,12 @@ export function ReservationDialog({
               </span>
             </Label>
 
+            <PaymentTrustBadges />
+
             <div className="space-y-1.5 text-[11px] text-muted-foreground">
               <Reassure
                 Icon={Lock}
-                t="Paiement sécurisé par Stripe - 3D Secure"
+                t="Paiement sécurisé par Stripe - 3D Secure obligatoire"
               />
               <Reassure
                 Icon={Mail}
