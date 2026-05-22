@@ -22,21 +22,33 @@ export function Footer() {
               Légal
             </div>
             <ul className="mt-4 space-y-2 text-xs">
-              {[
-                'Mentions légales',
-                'Conditions générales de vente',
-                'Politique de remboursement',
-                'Politique de confidentialité',
-              ].map((l) => (
-                <li key={l}>
+              {(
+                [
+                  ['Mentions légales', '/legal/mentions-legales'],
+                  ['Conditions générales de vente', '/legal/cgv'],
+                  ['Conditions générales d’utilisation', '/legal/cgu'],
+                  ['Politique de remboursement', '/legal/remboursement'],
+                  ['Politique de confidentialité', '/legal/confidentialite'],
+                  ['Politique cookies', '/legal/cookies'],
+                ] as const
+              ).map(([label, href]) => (
+                <li key={href}>
                   <a
-                    href="#"
+                    href={href}
                     className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                   >
-                    {l}
+                    {label}
                   </a>
                 </li>
               ))}
+              <li className="pt-1">
+                <a
+                  href="/legal"
+                  className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
+                >
+                  Tous les documents légaux →
+                </a>
+              </li>
             </ul>
           </div>
           <div>

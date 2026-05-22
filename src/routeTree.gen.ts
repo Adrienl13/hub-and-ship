@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
 import { Route as LivresRouteImport } from './routes/livres'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
+import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
@@ -37,6 +40,16 @@ const LivresRoute = LivresRouteImport.update({
   path: '/livres',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
@@ -56,6 +69,11 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => LivresRoute,
+} as any)
+const LegalSlugRoute = LegalSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => LegalRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
@@ -88,12 +106,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/faq': typeof FaqRoute
+  '/legal': typeof LegalRouteWithChildren
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -102,12 +123,15 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/faq': typeof FaqRoute
+  '/legal': typeof LegalRouteWithChildren
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -117,12 +141,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
+  '/faq': typeof FaqRoute
+  '/legal': typeof LegalRouteWithChildren
   '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -133,12 +160,15 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/faq'
+    | '/legal'
     | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/legal/$slug'
     | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
@@ -147,12 +177,15 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/faq'
+    | '/legal'
     | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/legal/$slug'
     | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
@@ -161,12 +194,15 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/catalogue'
+    | '/faq'
+    | '/legal'
     | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
+    | '/legal/$slug'
     | '/livres/$slug'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
@@ -176,6 +212,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
+  FaqRoute: typeof FaqRoute
+  LegalRoute: typeof LegalRouteWithChildren
   LivresRoute: typeof LivresRouteWithChildren
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
@@ -208,6 +246,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivresRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalogue': {
       id: '/catalogue'
       path: '/catalogue'
@@ -235,6 +287,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/livres/$slug'
       preLoaderRoute: typeof LivresSlugRouteImport
       parentRoute: typeof LivresRoute
+    }
+    '/legal/$slug': {
+      id: '/legal/$slug'
+      path: '/$slug'
+      fullPath: '/legal/$slug'
+      preLoaderRoute: typeof LegalSlugRouteImport
+      parentRoute: typeof LegalRoute
     }
     '/auth/login': {
       id: '/auth/login'
@@ -274,6 +333,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LegalRouteChildren {
+  LegalSlugRoute: typeof LegalSlugRoute
+}
+
+const LegalRouteChildren: LegalRouteChildren = {
+  LegalSlugRoute: LegalSlugRoute,
+}
+
+const LegalRouteWithChildren = LegalRoute._addFileChildren(LegalRouteChildren)
+
 interface LivresRouteChildren {
   LivresSlugRoute: typeof LivresSlugRoute
 }
@@ -300,6 +369,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
+  FaqRoute: FaqRoute,
+  LegalRoute: LegalRouteWithChildren,
   LivresRoute: LivresRouteWithChildren,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
