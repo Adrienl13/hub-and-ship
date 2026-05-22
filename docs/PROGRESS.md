@@ -6,10 +6,29 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 1 (Foundations + Sécurité)
+**Phase actuelle** : Phase 1.4 (Stripe + Containers livrés + Qualité + Légal)
 **Démarrage projet** : 2026-05-17
+**Dernière mise à jour** : 2026-05-22
 **Cible launch beta** : Semaine 10+
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
+
+### Récap dernière session (2026-05-20 → 2026-05-22)
+
+Intégration de toutes les features dans une branche unique `feat/integrate-all` ramenée sur `main` :
+
+- ✅ Stripe Checkout (redirect, frais de réservation) — server fn + webhook + UI badges Stripe/Qonto — E2E validé
+- ✅ DB Supabase refondue sur schéma codex (companies, users_profile, reservations enrichi, stock_requests…) — 8 migrations appliquées sur `mkfztwibolswqcggukeq`
+- ✅ Bug RLS RETURNING corrigé sur `reservations` (UUID client-side, no `.select()`)
+- ✅ Containers livrés — `/livres` + `/livres/$slug` + admin tab "Containers" + 3 seeds (CC-2025-012/013/014)
+- ✅ Quality reports — `/qualite` + auth gate PDF + admin tab "Qualité" + upload PDF + bucket Storage privé + 3 SGS AQL seeds
+- ✅ Pages légales `/legal/*` (6 docs) + page FAQ dédiée `/faq` + Footer liens corrigés
+- ✅ Identité légale réelle (Pros Import EURL, SIRET 98826998100011, RCS Paris, Adrien Laniez gérant)
+- ✅ Bundle perf -73 % (lazy 3D + manualChunks)
+- ✅ CI GitHub Actions
+- ✅ Pre-commit hook codex (tsc + lint --max-warnings=0 + 193 Vitest)
+- ✅ Migration de rattrapage Supabase pour formaliser le schéma drifté
+
+Voir `docs/CHANGELOG.md` §1.4.0 pour le détail exhaustif.
 
 ### Légende
 

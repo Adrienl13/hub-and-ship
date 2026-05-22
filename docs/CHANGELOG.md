@@ -10,6 +10,54 @@ Aucun changement en cours.
 
 ---
 
+## [1.4.0] — 2026-05-22
+
+### Ajouté
+
+- **Stripe Checkout** (redirect, frais de réservation uniquement) — server function `createCheckoutSession` (`src/lib/stripe/checkout.ts`), webhook signé `POST /api/stripe/webhook`, badges trust Stripe + Qonto dans le `ReservationDialog` step 4. E2E validé via `stripe trigger` (status → `reserved`, idempotence sur retries).
+- **Containers livrés** — pages publiques `/livres` (liste + stats cumulées) et `/livres/$slug` (timeline color-coded, breakdown produits, galerie, témoignage long, certifications). Composant home `PastContainers` câblé à Supabase, fallback mock si non configuré.
+- **Qualité & Tests** (SGS / Eurofins / CE…) — page `/qualite` publique avec preview metadata, accès au PDF complet gated par auth via server fn `getReportFileUrl` (signed URL Supabase Storage TTL 60 s). 3 rapports SGS AQL seedés.
+- **Bucket Storage `quality-reports`** (private, 10 MB, application/pdf) + RLS admin sur `storage.objects`.
+- **Upload PDF dans l'admin** — input file caché + validation client (mime, taille) + naming auto + cleanup de l'ancien fichier au remplacement, dans `AdminQualityReportEditor`.
+- **Pages légales** — `/legal` hub + `/legal/$slug` dynamique pour 6 docs : mentions-legales, cgv, cgu, confidentialite, cookies, remboursement.
+- **Page FAQ dédiée** `/faq` (vs ancre `#faq` sur la home).
+- **Tab admin "Containers"** — édition complète des containers livrés (timeline, gallery, breakdown, témoignage long) + boutons Publier / Dépublier.
+- **Tab admin "Qualité"** — CRUD rapports qualité + upload PDF + bannière warn pour les non-admins.
+
+### Modifié
+
+- **Identité légale réelle** : `Terrassea SAS` → `Pros Import EURL`, SIRET `98826998100011`, TVA `FR08988269981`, EORI `FR98826998100011`, RCS Paris `988 269 981`, siège `60 Rue François Ier, 75008 Paris`, gérant Adrien Laniez, contact `adrienlaniez1@gmail.com`. Tribunal de commerce passé à Paris dans les clauses contentieux. Capital social 500 €.
+- **Header** : nav `Containers livrés` pointe vers `/livres` (vraie page), nav `FAQ` vers `/faq`.
+- **Footer** : 4 placeholder `href="#"` remplacés par les vrais slugs légaux + ajout liens CGU, Cookies, "Tous les documents légaux →".
+- **`reservations` schema DB** : passage du schéma anon (cents, name/company) au schéma codex (reference, contact_snapshot jsonb, reservation_fee numeric EUR, status enum 9 valeurs). Ancien schéma droppé sans perte de données (0 lignes).
+- **Bug RLS RETURNING corrigé** : `createReservation` génère désormais l'UUID côté client + `.insert()` sans `.select()` pour éviter le rejet RLS 42501 sur les tables write-only. Throttle anti-double-clic 30 s ajouté.
+- **Bundle perf** : lazy-loading 3D `ContainerScene` + manualChunks Vite (three, recharts, motion). Chunk client `1 105 kB → 295 kB` (gzip 307 → 92 kB).
+- **Meta SEO** : `<html lang="fr">`, og:locale `fr_FR`, titres/descr FR.
+
+### DB / Migrations appliquées sur `mkfztwibolswqcggukeq`
+
+```
+20260522072602  auth_security_foundation
+20260522072619  siret_cache
+20260522072640  reservation_foundation
+20260522072652  stock_requests
+20260522072655  stripe_payment_columns
+20260522080351  delivered_containers_publication
+20260522082730  quality_reports
+20260522084627  quality_reports_storage_bucket
+```
+
+### À faire avant ouverture publique
+
+- Brancher SMTP custom sur Supabase Auth (Resend / Postmark) — limite par défaut 3-4 mails/h.
+- Poser secrets prod via `wrangler secret put` : `STRIPE_SECRET_KEY` (sk*live*_), `STRIPE_WEBHOOK_SECRET` (whsec\__), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`.
+- Configurer webhook Stripe prod côté dashboard avec l'URL Worker prod + events `checkout.session.completed/expired/async_payment_failed`.
+- Uploader les vrais PDFs SGS dans le bucket `quality-reports` via l'admin web ou Dashboard Supabase.
+- Faire valider les 6 textes légaux par un conseil juridique (modèles indicatifs).
+- Remplacer le téléphone placeholder `+33 (0)4 91 00 00 00` (Marseille) par un vrai numéro Paris.
+
+---
+
 ## [1.3.0] — 2026-05-17
 
 ### Ajouté
