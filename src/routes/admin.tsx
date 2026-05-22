@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { AdminContainersTab } from '@/components/AdminContainersTab'
+import { AdminGuard } from '@/components/AdminGuard'
 import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -34,8 +35,16 @@ import {
 } from '@/lib/stock-requests'
 
 export const Route = createFileRoute('/admin')({
-  component: AdminPage,
+  component: AdminRoute,
 })
+
+function AdminRoute() {
+  return (
+    <AdminGuard>
+      <AdminPage />
+    </AdminGuard>
+  )
+}
 
 type AdminTab =
   | 'overview'

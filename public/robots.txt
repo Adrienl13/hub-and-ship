@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Private surfaces — auth-only or write-only endpoints
+Disallow: /account
+Disallow: /admin
+Disallow: /api
+Disallow: /auth
+
+Sitemap: https://container-club.fr/sitemap.xml
