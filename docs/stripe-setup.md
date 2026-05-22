@@ -16,7 +16,7 @@ Si les secrets Stripe ne sont pas posés (clé secrète ou webhook), le code ret
 | `src/lib/stripe/checkout.ts`                                    | `createCheckoutSession` server function (anti-tampering via re-lecture DB)                                         |
 | `src/lib/supabase/admin.ts`                                     | Service role client (RLS bypass) — server only                                                                     |
 | `src/routes/api/stripe/webhook.ts`                              | Endpoint `POST /api/stripe/webhook` (signature vérifiée, idempotent)                                               |
-| `supabase/migrations/20260520160000_stripe_payment_columns.sql` | Colonnes `stripe_payment_intent_id`, `stripe_customer_id`, `stripe_checkout_session_id`, `paid_reservation_fee_at` |
+| `supabase/migrations/20260522072655_stripe_payment_columns.sql` | Colonnes `stripe_payment_intent_id`, `stripe_customer_id`, `stripe_checkout_session_id`, `paid_reservation_fee_at` |
 | `src/components/ReservationDialog.tsx`                          | Appelle `createCheckoutSession` et redirige vers Stripe                                                            |
 | `src/routes/account.reservations.$reservationId.tsx`            | Bandeaux paid / canceled + bouton "Retenter le paiement"                                                           |
 
@@ -30,7 +30,7 @@ supabase db push
 
 # ou en collant le SQL dans le dashboard Supabase (SQL editor)
 # Voir le contenu de :
-#   supabase/migrations/20260520160000_stripe_payment_columns.sql
+#   supabase/migrations/20260522072655_stripe_payment_columns.sql
 ```
 
 La migration est additive et idempotente (`add column if not exists`). Elle peut être appliquée sans risque sur une base existante.
@@ -194,9 +194,25 @@ URL de retour :
 | États `?session_id` / `?canceled` sur `/account/reservations/$reservationId` | OK — bandeaux dédiés, bouton "Retenter le paiement" inclus                                                           |
 | Lecture serveur du montant depuis la DB (anti-tampering)                     | OK                                                                                                                   |
 | Idempotence webhook (`WHERE status='pending_reservation_fee'`)               | OK — testable via `stripe trigger checkout.session.completed --override metadata.reservation_id=<uuid>`              |
-| Migration DB `20260520160000_stripe_payment_columns.sql`                     | À appliquer (`supabase db push`) — additive et idempotente                                                           |
+| Migration DB `20260522072655_stripe_payment_columns.sql`                     | **Appliquée** le 2026-05-22 sur `mkfztwibolswqcggukeq` (avec les 4 migrations codex préalables)                       |
 | Mode prod (clés `sk_live_*` + webhook prod)                                  | À activer après validation du flux test                                                                              |
 | Restricted key (`rk_*`) pour la prod                                         | Recommandé — permissions ciblées Checkout Sessions + Payment Intents                                                 |
+
+### Smoke test E2E
+
+Validé le 2026-05-22 sur la stack codex (port 5173, `stripe listen` avec whsec éphémère) :
+
+```
+INSERT reservations (status='pending_reservation_fee')  →  id dd60e13d-…
+stripe trigger checkout.session.completed
+  --override metadata.reservation_id=dd60e13d-…
+→ [200] POST /api/stripe/webhook
+→ DB: status='reserved', reserved_at, paid_reservation_fee_at,
+       stripe_payment_intent_id = pi_3TZnVrKo4iVk8XT00VPHHScF
+       stripe_checkout_session_id = cs_test_a1yVHjdHWG…
+```
+
+Ligne de test ensuite supprimée. Idempotence garantie par `WHERE status='pending_reservation_fee'` dans le `UPDATE`.
 
 ---
 
