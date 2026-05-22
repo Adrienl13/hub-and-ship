@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
+import { Route as QualiteRouteImport } from './routes/qualite'
 import { Route as LivresRouteImport } from './routes/livres'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -24,6 +25,11 @@ import { Route as AccountReservationsReservationIdRouteImport } from './routes/a
 const Stock24hRoute = Stock24hRouteImport.update({
   id: '/stock-24h',
   path: '/stock-24h',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QualiteRoute = QualiteRouteImport.update({
+  id: '/qualite',
+  path: '/qualite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LivresRoute = LivresRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/livres': typeof LivresRouteWithChildren
+  '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/livres': typeof LivresRouteWithChildren
+  '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/livres': typeof LivresRouteWithChildren
+  '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/livres'
+    | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/livres'
+    | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/livres'
+    | '/qualite'
     | '/stock-24h'
     | '/account/reservations'
     | '/auth/callback'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
   LivresRoute: typeof LivresRouteWithChildren
+  QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       path: '/stock-24h'
       fullPath: '/stock-24h'
       preLoaderRoute: typeof Stock24hRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qualite': {
+      id: '/qualite'
+      path: '/qualite'
+      fullPath: '/qualite'
+      preLoaderRoute: typeof QualiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/livres': {
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
   LivresRoute: LivresRouteWithChildren,
+  QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,

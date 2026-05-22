@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { AdminContainersTab } from '@/components/AdminContainersTab'
+import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -42,6 +43,7 @@ type AdminTab =
   | 'reservations'
   | 'products'
   | 'containers'
+  | 'quality'
 
 function AdminPage() {
   const auth = useAuth()
@@ -104,6 +106,7 @@ function AdminPage() {
             ['reservations', 'Réservations'],
             ['products', 'Produits & stock'],
             ['containers', 'Containers'],
+            ['quality', 'Qualité'],
           ].map(([id, label]) => {
             const active = activeTab === id
             return (
@@ -135,6 +138,9 @@ function AdminPage() {
         )}
         {activeTab === 'containers' && (
           <AdminContainersTab authStatus={auth.status} />
+        )}
+        {activeTab === 'quality' && (
+          <AdminQualityReportsTab authStatus={auth.status} />
         )}
       </section>
     </main>

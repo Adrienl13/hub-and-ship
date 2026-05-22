@@ -34,6 +34,24 @@ export type ContainerStatus =
   | 'shipping'
   | 'delivered'
   | 'cancelled'
+export type QualityReportOrganization =
+  | 'sgs'
+  | 'eurofins'
+  | 'tuv'
+  | 'bureau_veritas'
+  | 'dekra'
+  | 'intertek'
+  | 'other'
+export type QualityReportType =
+  | 'aql_inspection'
+  | 'pre_shipment_inspection'
+  | 'ce_compliance'
+  | 'fire_rating'
+  | 'material_test'
+  | 'reach_compliance'
+  | 'load_test'
+  | 'eco_certification'
+  | 'other'
 export type SecurityEventSeverity = 'info' | 'warning' | 'error' | 'critical'
 export type SecurityEventType =
   | 'login_attempt'
@@ -478,6 +496,50 @@ type ContainerInsert = {
 
 type ContainerUpdate = Partial<ContainerInsert>
 
+type QualityReportRow = {
+  id: string
+  container_id: string | null
+  organization: QualityReportOrganization
+  report_type: QualityReportType
+  reference_number: string
+  issued_at: string
+  product_categories: string[]
+  title: string
+  summary: string | null
+  highlights: Json
+  file_path: string | null
+  file_size_bytes: number | null
+  file_mime: string | null
+  preview_image_url: string | null
+  is_active: boolean
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+type QualityReportInsert = {
+  id?: string
+  container_id?: string | null
+  organization: QualityReportOrganization
+  report_type: QualityReportType
+  reference_number: string
+  issued_at: string
+  product_categories?: string[]
+  title: string
+  summary?: string | null
+  highlights?: Json
+  file_path?: string | null
+  file_size_bytes?: number | null
+  file_mime?: string | null
+  preview_image_url?: string | null
+  is_active?: boolean
+  published_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type QualityReportUpdate = Partial<QualityReportInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -521,6 +583,11 @@ export interface Database {
         Insert: ContainerInsert
         Update: ContainerUpdate
       }
+      quality_reports: {
+        Row: QualityReportRow
+        Insert: QualityReportInsert
+        Update: QualityReportUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -540,6 +607,8 @@ export interface Database {
       stock_request_status: StockRequestStatus
       security_event_type: SecurityEventType
       container_status: ContainerStatus
+      quality_report_organization: QualityReportOrganization
+      quality_report_type: QualityReportType
     }
     CompositeTypes: Record<string, never>
   }
