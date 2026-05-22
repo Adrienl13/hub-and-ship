@@ -52,6 +52,14 @@ export type QualityReportType =
   | 'load_test'
   | 'eco_certification'
   | 'other'
+export type ProductCategoryDb = 'chair' | 'armchair' | 'table' | 'bench'
+export type FireRatingDb = 'M1' | 'M2'
+export type CarrierSpecialtyDb =
+  | 'national'
+  | 'regional_sud_est'
+  | 'regional_ouest'
+  | 'international'
+  | 'plateforme'
 export type SecurityEventSeverity = 'info' | 'warning' | 'error' | 'critical'
 export type SecurityEventType =
   | 'login_attempt'
@@ -540,6 +548,136 @@ type QualityReportInsert = {
 
 type QualityReportUpdate = Partial<QualityReportInsert>
 
+type ProductRow = {
+  id: string
+  sku: string
+  category: ProductCategoryDb
+  name: string
+  description: string
+  dim_length_cm: number
+  dim_width_cm: number
+  dim_height_cm: number
+  cbm_per_unit: number
+  weight_kg: number
+  moq_units: number
+  base_price_ht: number
+  retail_price_ref: number
+  eco_contribution: number
+  main_image_url: string
+  gallery_urls: string[]
+  features: string[]
+  fire_rating: FireRatingDb | null
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+type ProductInsert = {
+  id: string
+  sku: string
+  category: ProductCategoryDb
+  name: string
+  description: string
+  dim_length_cm: number
+  dim_width_cm: number
+  dim_height_cm: number
+  cbm_per_unit: number
+  weight_kg: number
+  moq_units: number
+  base_price_ht: number
+  retail_price_ref: number
+  eco_contribution?: number
+  main_image_url: string
+  gallery_urls?: string[]
+  features?: string[]
+  fire_rating?: FireRatingDb | null
+  is_active?: boolean
+  sort_order?: number
+  created_at?: string
+  updated_at?: string
+}
+
+type ProductUpdate = Partial<ProductInsert>
+
+type ProductVariantRow = {
+  id: string
+  product_id: string
+  name: string
+  hex: string
+  image_url: string | null
+  sort_order: number
+  created_at: string
+}
+
+type ProductVariantInsert = {
+  id: string
+  product_id: string
+  name: string
+  hex: string
+  image_url?: string | null
+  sort_order?: number
+  created_at?: string
+}
+
+type ProductVariantUpdate = Partial<ProductVariantInsert>
+
+type ContainerSeedCommitmentRow = {
+  container_id: string
+  variant_id: string
+  units_committed: number
+}
+
+type ContainerSeedCommitmentInsert = {
+  container_id: string
+  variant_id: string
+  units_committed: number
+}
+
+type ContainerSeedCommitmentUpdate = Partial<ContainerSeedCommitmentInsert>
+
+type CarrierPartnerRow = {
+  id: string
+  slug: string
+  name: string
+  specialty: CarrierSpecialtyDb
+  specialty_label: string
+  summary: string
+  strengths: Json
+  coverage: string
+  indicative_pricing: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  contact_website: string | null
+  source: 'partenaire-direct' | 'plateforme-publique'
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+type CarrierPartnerInsert = {
+  id?: string
+  slug: string
+  name: string
+  specialty: CarrierSpecialtyDb
+  specialty_label: string
+  summary: string
+  strengths?: Json
+  coverage: string
+  indicative_pricing?: string | null
+  contact_phone?: string | null
+  contact_email?: string | null
+  contact_website?: string | null
+  source?: 'partenaire-direct' | 'plateforme-publique'
+  sort_order?: number
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+type CarrierPartnerUpdate = Partial<CarrierPartnerInsert>
+
 export interface Database {
   public: {
     Tables: {
@@ -588,6 +726,26 @@ export interface Database {
         Insert: QualityReportInsert
         Update: QualityReportUpdate
       }
+      products: {
+        Row: ProductRow
+        Insert: ProductInsert
+        Update: ProductUpdate
+      }
+      product_variants: {
+        Row: ProductVariantRow
+        Insert: ProductVariantInsert
+        Update: ProductVariantUpdate
+      }
+      container_seed_commitments: {
+        Row: ContainerSeedCommitmentRow
+        Insert: ContainerSeedCommitmentInsert
+        Update: ContainerSeedCommitmentUpdate
+      }
+      carrier_partners: {
+        Row: CarrierPartnerRow
+        Insert: CarrierPartnerInsert
+        Update: CarrierPartnerUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -609,6 +767,9 @@ export interface Database {
       container_status: ContainerStatus
       quality_report_organization: QualityReportOrganization
       quality_report_type: QualityReportType
+      product_category: ProductCategoryDb
+      fire_rating: FireRatingDb
+      carrier_specialty: CarrierSpecialtyDb
     }
     CompositeTypes: Record<string, never>
   }

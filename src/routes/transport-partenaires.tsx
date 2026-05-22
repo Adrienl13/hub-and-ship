@@ -8,13 +8,16 @@ import {
   Ship,
   Truck,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { ReservationDialog } from '@/components/ReservationDialog'
 import { Button } from '@/components/ui/button'
 import { CARRIER_FAQ, CARRIERS, type Carrier } from '@/lib/carriers'
+import { listPublishedCarriers } from '@/lib/carrier-partners/repository'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/transport-partenaires')({
@@ -35,16 +38,35 @@ export const Route = createFileRoute('/transport-partenaires')({
 
 function TransportPartenairesPage() {
   const [reserveOpen, setReserveOpen] = useState(false)
+  const [carriers, setCarriers] = useState<ReadonlyArray<Carrier>>(CARRIERS)
   const cart = useCart()
+
+  useEffect(() => {
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(config)
+        const list = await listPublishedCarriers(client)
+        if (!cancelled && list.length > 0) setCarriers(list)
+      } catch {
+        // Silently fall back to the static CARRIERS const.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
       <main>
-        <HeroSection />
+        <HeroSection carrierCount={carriers.length} />
         <ProcessSection />
-        <CarriersGrid />
+        <CarriersGrid carriers={carriers} />
         <FaqSection />
         <ContactCta />
       </main>
@@ -61,7 +83,7 @@ function TransportPartenairesPage() {
   )
 }
 
-function HeroSection() {
+function HeroSection({ carrierCount }: { readonly carrierCount: number }) {
   return (
     <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
       <div className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
@@ -79,7 +101,7 @@ function HeroSection() {
           <strong>Aucune commission de notre part — contact direct.</strong>
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs">
-          <Pill>{`${CARRIERS.length} transporteurs référencés`}</Pill>
+          <Pill>{`${carrierCount} transporteurs référencés`}</Pill>
           <Pill>Contact direct sans intermédiaire</Pill>
           <Pill>Tarifs indicatifs 2025–2026</Pill>
         </div>
@@ -139,7 +161,11 @@ function ProcessSection() {
   )
 }
 
-function CarriersGrid() {
+function CarriersGrid({
+  carriers,
+}: {
+  readonly carriers: ReadonlyArray<Carrier>
+}) {
   return (
     <section className="border-b border-[color:var(--sand-deep)]">
       <div className="mx-auto max-w-5xl px-6 py-16">
@@ -153,7 +179,7 @@ function CarriersGrid() {
         </p>
 
         <div className="mt-8 space-y-4">
-          {CARRIERS.map((carrier) => (
+          {carriers.map((carrier) => (
             <CarrierCard key={carrier.slug} carrier={carrier} />
           ))}
         </div>

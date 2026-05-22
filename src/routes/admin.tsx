@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Boxes,
+  ExternalLink,
   LayoutDashboard,
   PackageCheck,
   Ship,
@@ -12,27 +13,41 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { AdminCarrierPartnersTab } from '@/components/AdminCarrierPartnersTab'
+import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
 import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
 import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/useAuth'
+import {
+  listAllReservations,
+  updateReservationAdminNote,
+  updateReservationStatus,
+  type AdminReservationRow,
+  type AdminReservationsClient,
+} from '@/lib/account/admin-reservations.repository'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
 } from '@/lib/admin/dashboard'
-import {
-  ACCOUNT_RESERVATION_STATUS_LABEL,
-  type AccountReservation,
-} from '@/lib/account/reservations'
-import { CURRENT_CONTAINER, CATEGORY_LABEL } from '@/lib/products'
+import { CURRENT_CONTAINER } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
-import { STOCK_CONDITION_LABEL, type StockLine } from '@/lib/stock'
 import {
-  STOCK_REQUEST_STATUS_LABEL,
-  readLocalStockRequests,
-  type StockRequestDraft,
-} from '@/lib/stock-requests'
+  listAllStockRequests,
+  updateStockRequestInternalNote,
+  updateStockRequestStatus,
+  type StockRequestAdminClient,
+  type StockRequestAdminRow,
+} from '@/lib/stock-requests/admin-repository'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import type {
+  ReservationStatus,
+  StockRequestStatus,
+} from '@/lib/supabase/types'
 
 export const Route = createFileRoute('/admin')({
   component: AdminRoute,
@@ -53,34 +68,40 @@ type AdminTab =
   | 'products'
   | 'containers'
   | 'quality'
+  | 'carriers'
+
+const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
+  draft: 'Brouillon',
+  pending_reservation_fee: 'Frais réservation',
+  reserved: 'Réservée',
+  deposit_called: 'Acompte appelé',
+  deposit_paid: 'Acompte payé',
+  in_production: 'En production',
+  in_transit: 'En transit',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
+}
+
+const STOCK_REQUEST_STATUS_LABEL_LOCAL: Record<StockRequestStatus, string> = {
+  new: 'Nouveau',
+  contacted: 'Contactée',
+  reserved: 'Réservée',
+  converted: 'Convertie',
+  closed: 'Fermée',
+}
+
+const CANCELLATION_REASONS = [
+  { value: 'client_request', label: 'Demande client' },
+  { value: 'minimum_not_reached', label: 'Minimum non atteint' },
+  { value: 'supplier_issue', label: 'Problème fournisseur' },
+  { value: 'other', label: 'Autre' },
+] as const
 
 function AdminPage() {
   const auth = useAuth()
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
-  const [localStockRequests, setLocalStockRequests] = useState<
-    ReadonlyArray<StockRequestDraft>
-  >([])
 
-  useEffect(() => {
-    setLocalStockRequests(readLocalStockRequests(window.localStorage))
-  }, [])
-
-  const stockRequests = useMemo(() => {
-    const localIds = new Set(
-      localStockRequests.map((request) => request.localId),
-    )
-    return [
-      ...localStockRequests,
-      ...ADMIN_DEMO_STOCK_REQUESTS.filter(
-        (request) => !localIds.has(request.localId),
-      ),
-    ]
-  }, [localStockRequests])
-
-  const snapshot = useMemo(
-    () => createAdminDashboardSnapshot({ stockRequests }),
-    [stockRequests],
-  )
+  const snapshot = useMemo(() => createAdminDashboardSnapshot(), [])
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -109,20 +130,23 @@ function AdminPage() {
 
       <section className="mx-auto max-w-7xl px-6 py-6">
         <div className="mb-5 flex gap-1.5 overflow-x-auto pb-1">
-          {[
-            ['overview', 'Vue générale'],
-            ['stock-requests', 'Demandes stock'],
-            ['reservations', 'Réservations'],
-            ['products', 'Produits & stock'],
-            ['containers', 'Containers'],
-            ['quality', 'Qualité'],
-          ].map(([id, label]) => {
+          {(
+            [
+              ['overview', 'Vue générale'],
+              ['stock-requests', 'Demandes stock'],
+              ['reservations', 'Réservations'],
+              ['products', 'Catalogue'],
+              ['containers', 'Containers'],
+              ['quality', 'Qualité'],
+              ['carriers', 'Transporteurs'],
+            ] as const
+          ).map(([id, label]) => {
             const active = activeTab === id
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => setActiveTab(id as AdminTab)}
+                onClick={() => setActiveTab(id)}
                 className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors ${
                   active
                     ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
@@ -137,19 +161,22 @@ function AdminPage() {
 
         {activeTab === 'overview' && <Overview snapshot={snapshot} />}
         {activeTab === 'stock-requests' && (
-          <StockRequestsTable requests={snapshot.stockRequests} />
+          <StockRequestsAdminPanel authStatus={auth.status} />
         )}
         {activeTab === 'reservations' && (
-          <ReservationsTable reservations={snapshot.reservations} />
+          <ReservationsAdminPanel authStatus={auth.status} />
         )}
         {activeTab === 'products' && (
-          <ProductsAndStockTable stockLines={snapshot.stockLines} />
+          <AdminCatalogueTab authStatus={auth.status} />
         )}
         {activeTab === 'containers' && (
           <AdminContainersTab authStatus={auth.status} />
         )}
         {activeTab === 'quality' && (
           <AdminQualityReportsTab authStatus={auth.status} />
+        )}
+        {activeTab === 'carriers' && (
+          <AdminCarrierPartnersTab authStatus={auth.status} />
         )}
       </section>
     </main>
@@ -237,7 +264,7 @@ function Overview({
         />
         <Kpi
           Icon={PackageCheck}
-          label="Demandes stock"
+          label="Demandes stock (demo)"
           value={`${snapshot.kpis.newStockRequests}`}
           detail="À traiter"
         />
@@ -249,195 +276,603 @@ function Overview({
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Demandes stock à rappeler">
-          <StockRequestsTable
-            requests={snapshot.stockRequests.slice(0, 4)}
-            compact
-          />
-        </Panel>
-        <Panel title="Réservations récentes">
-          <ReservationsTable
-            reservations={snapshot.reservations.slice(0, 4)}
-            compact
-          />
-        </Panel>
+      <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-xs text-muted-foreground">
+        Les listes complètes (réservations + demandes stock) sont désormais
+        servies par Supabase dans les onglets dédiés.
       </div>
     </div>
   )
 }
 
-function StockRequestsTable({
-  requests,
-  compact = false,
+// ============================================================================
+// Stock requests admin panel — DB-backed via stock-requests/admin-repository
+// ============================================================================
+
+function STOCK_REQUEST_NEXT_BUTTONS(
+  status: StockRequestStatus,
+): Array<{ readonly label: string; readonly target: StockRequestStatus }> {
+  switch (status) {
+    case 'new':
+      return [
+        { label: 'Contactée', target: 'contacted' },
+        { label: 'Convertie', target: 'converted' },
+        { label: 'Fermée', target: 'closed' },
+      ]
+    case 'contacted':
+      return [
+        { label: 'Réservée', target: 'reserved' },
+        { label: 'Convertie', target: 'converted' },
+        { label: 'Fermée', target: 'closed' },
+      ]
+    case 'reserved':
+      return [
+        { label: 'Convertie', target: 'converted' },
+        { label: 'Fermée', target: 'closed' },
+      ]
+    case 'converted':
+    case 'closed':
+      return [{ label: 'Rouvrir', target: 'new' }]
+    default:
+      return []
+  }
+}
+
+function StockRequestsAdminPanel({
+  authStatus,
 }: {
-  readonly requests: ReadonlyArray<StockRequestDraft>
-  readonly compact?: boolean
+  readonly authStatus: string
 }) {
-  return (
-    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-      <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[1fr_1fr_90px_110px_88px] md:gap-3">
-        <span>Client</span>
-        <span>Produit</span>
-        <span>Quantité</span>
-        <span className="text-right">Total HT</span>
-        <span>Statut</span>
+  const [rows, setRows] = useState<ReadonlyArray<StockRequestAdminRow>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  const config = useMemo(() => getSupabasePublicConfig(), [])
+  const isConfigured = config.isConfigured
+
+  const refresh = useMemo(() => {
+    return async () => {
+      if (!isConfigured) {
+        setRows([])
+        setError('Supabase non configuré.')
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as StockRequestAdminClient
+      try {
+        const list = await listAllStockRequests(client)
+        setRows(list)
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      }
+      setLoading(false)
+    }
+  }, [config, isConfigured])
+
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  async function changeStatus(
+    row: StockRequestAdminRow,
+    target: StockRequestStatus,
+  ): Promise<void> {
+    if (!isConfigured) return
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as StockRequestAdminClient
+    try {
+      await updateStockRequestStatus(client, row.id, target)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
+  async function saveNote(
+    row: StockRequestAdminRow,
+    note: string,
+  ): Promise<void> {
+    if (!isConfigured) return
+    const trimmed = note.trim()
+    if ((row.internalNote ?? '') === trimmed) return
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as StockRequestAdminClient
+    try {
+      await updateStockRequestInternalNote(
+        client,
+        row.id,
+        trimmed.length === 0 ? null : trimmed,
+      )
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+  }
+
+  if (!isConfigured) {
+    return (
+      <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
+        Supabase non configuré : seules les demandes stock locales (démo) sont
+        consultables côté navigation publique.
       </div>
-      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-        {requests.map((request) => (
-          <article
-            key={request.localId}
-            className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1fr_1fr_90px_110px_88px] md:items-center md:gap-3"
-          >
-            <div className="min-w-0">
-              <div className="font-medium">{request.companyName}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">
-                {request.contactEmail} · {request.contactPhone}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="truncate font-medium">{request.productName}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">
-                {request.variantName} · {request.location}
-              </div>
-            </div>
-            <div className="tabular-nums">
-              {request.requestedQuantity} / {request.availableUnitsSnapshot}
-            </div>
-            <div className="font-medium tabular-nums md:text-right">
-              {formatEUR(request.estimatedTotalHt)}
-            </div>
-            <StatusPill label={STOCK_REQUEST_STATUS_LABEL[request.status]} />
-            {!compact && request.customerNote && (
-              <p className="text-xs leading-5 text-muted-foreground md:col-span-5">
-                {request.customerNote}
-              </p>
-            )}
-          </article>
-        ))}
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {authStatus !== 'authenticated' && (
+        <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-3 text-xs text-foreground">
+          Vous n&apos;êtes pas connecté en tant qu&apos;admin. Les actions de
+          changement de statut seront refusées par RLS.
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
+          {error}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+        {loading ? (
+          <div className="px-4 py-8 text-sm text-muted-foreground">
+            Chargement…
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="px-4 py-8 text-sm text-muted-foreground">
+            Aucune demande stock.
+          </div>
+        ) : (
+          <div className="divide-[color:var(--sand-deep)]/70 divide-y">
+            {rows.map((row) => {
+              const busy = busyId === row.id
+              const buttons = STOCK_REQUEST_NEXT_BUTTONS(row.status)
+              return (
+                <article
+                  key={row.id}
+                  className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1fr_1fr_120px_120px] md:items-start md:gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium">{row.companyName}</div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      {row.contactEmail} · {row.contactPhone}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">
+                      {row.productName}
+                    </div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      {row.sku} · {row.variantName}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {row.requestedQuantity} u / {row.availableUnitsSnapshot} ·{' '}
+                      {formatEUR(row.estimatedTotalHt)}
+                    </div>
+                  </div>
+                  <StatusPill
+                    label={STOCK_REQUEST_STATUS_LABEL_LOCAL[row.status]}
+                  />
+                  <div className="flex flex-wrap gap-1.5">
+                    {buttons.map((b) => (
+                      <Button
+                        key={b.target}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        className="h-7 rounded-sm px-2 text-[11px]"
+                        onClick={() => void changeStatus(row, b.target)}
+                      >
+                        {b.label}
+                      </Button>
+                    ))}
+                  </div>
+                  {row.customerNote && (
+                    <p className="text-xs leading-5 text-muted-foreground md:col-span-4">
+                      <strong>Client :</strong> {row.customerNote}
+                    </p>
+                  )}
+                  <div className="md:col-span-4">
+                    <NoteField
+                      initialValue={row.internalNote ?? ''}
+                      placeholder="Note interne (save on blur)"
+                      onCommit={(value) => void saveNote(row, value)}
+                    />
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function ReservationsTable({
-  reservations,
-  compact = false,
+// ============================================================================
+// Reservations admin panel — DB-backed via account/admin-reservations.repo
+// ============================================================================
+
+const RESERVATION_ACTIONS: Record<
+  ReservationStatus,
+  ReadonlyArray<{
+    readonly label: string
+    readonly target: ReservationStatus
+    readonly variant?: 'default' | 'outline' | 'destructive'
+  }>
+> = {
+  draft: [
+    { label: 'Marquer en attente', target: 'pending_reservation_fee' },
+    { label: 'Annuler', target: 'cancelled', variant: 'destructive' },
+  ],
+  pending_reservation_fee: [
+    { label: 'Marquer payée (reserved)', target: 'reserved' },
+    { label: 'Annuler', target: 'cancelled', variant: 'destructive' },
+  ],
+  reserved: [
+    { label: 'Demander acompte', target: 'deposit_called' },
+    { label: 'Annuler', target: 'cancelled', variant: 'destructive' },
+  ],
+  deposit_called: [
+    { label: 'Acompte reçu', target: 'deposit_paid' },
+    { label: 'Annuler', target: 'cancelled', variant: 'destructive' },
+  ],
+  deposit_paid: [
+    { label: 'Lancer production', target: 'in_production' },
+    { label: 'Annuler', target: 'cancelled', variant: 'destructive' },
+  ],
+  in_production: [{ label: 'Embarquée (in_transit)', target: 'in_transit' }],
+  in_transit: [{ label: 'Livrée', target: 'delivered' }],
+  delivered: [],
+  cancelled: [],
+}
+
+const NON_FINAL_STATUSES: ReadonlySet<ReservationStatus> =
+  new Set<ReservationStatus>([
+    'draft',
+    'pending_reservation_fee',
+    'reserved',
+    'deposit_called',
+    'deposit_paid',
+    'in_production',
+    'in_transit',
+  ])
+
+function sortReservationsForAdmin(
+  rows: ReadonlyArray<AdminReservationRow>,
+): ReadonlyArray<AdminReservationRow> {
+  return [...rows].sort((a, b) => {
+    const aFinal = !NON_FINAL_STATUSES.has(a.status)
+    const bFinal = !NON_FINAL_STATUSES.has(b.status)
+    if (aFinal !== bFinal) return aFinal ? 1 : -1
+    return b.createdAt.localeCompare(a.createdAt)
+  })
+}
+
+function ReservationsAdminPanel({
+  authStatus,
 }: {
-  readonly reservations: ReadonlyArray<AccountReservation>
-  readonly compact?: boolean
+  readonly authStatus: string
 }) {
-  return (
-    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-      <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[1.2fr_1fr_100px_120px_42px] md:gap-3">
-        <span>Référence</span>
-        <span>Client</span>
-        <span>Statut</span>
-        <span className="text-right">Montant HT</span>
-        <span />
+  const [rows, setRows] = useState<ReadonlyArray<AdminReservationRow>>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [cancelReason, setCancelReason] =
+    useState<(typeof CANCELLATION_REASONS)[number]['value']>('client_request')
+
+  const config = useMemo(() => getSupabasePublicConfig(), [])
+  const isConfigured = config.isConfigured
+
+  const refresh = useMemo(() => {
+    return async () => {
+      if (!isConfigured) {
+        setRows([])
+        setError('Supabase non configuré.')
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as AdminReservationsClient
+      try {
+        const list = await listAllReservations(client)
+        setRows(sortReservationsForAdmin(list))
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      }
+      setLoading(false)
+    }
+  }, [config, isConfigured])
+
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  async function changeStatus(
+    row: AdminReservationRow,
+    target: ReservationStatus,
+  ): Promise<void> {
+    if (!isConfigured) return
+
+    if (target === 'cancelled') {
+      // Force the inline UI for cancellation_reason.
+      setCancellingId(row.id)
+      return
+    }
+
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as AdminReservationsClient
+    try {
+      await updateReservationStatus(client, row.id, { status: target })
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
+  async function confirmCancel(row: AdminReservationRow): Promise<void> {
+    if (!isConfigured) return
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as AdminReservationsClient
+    try {
+      await updateReservationStatus(client, row.id, {
+        status: 'cancelled',
+        cancellationReason: cancelReason,
+      })
+      setCancellingId(null)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
+  async function saveNote(
+    row: AdminReservationRow,
+    note: string,
+  ): Promise<void> {
+    if (!isConfigured) return
+    const trimmed = note.trim()
+    if ((row.adminNotes ?? '') === trimmed) return
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as AdminReservationsClient
+    try {
+      await updateReservationAdminNote(
+        client,
+        row.id,
+        trimmed.length === 0 ? null : trimmed,
+      )
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+  }
+
+  if (!isConfigured) {
+    return (
+      <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
+        Supabase non configuré : impossible de charger les réservations.
       </div>
-      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-        {reservations.map((reservation) => (
-          <article
-            key={reservation.id}
-            className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1.2fr_1fr_100px_120px_42px] md:items-center md:gap-3"
-          >
-            <div className="min-w-0">
-              <div className="truncate font-medium">
-                {reservation.draft.reference}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {reservation.draft.lines.length} ligne(s)
-              </div>
-            </div>
-            <div className="truncate text-xs text-muted-foreground">
-              {reservation.draft.contact.company}
-            </div>
-            <StatusPill
-              label={ACCOUNT_RESERVATION_STATUS_LABEL[reservation.status]}
-            />
-            <div className="font-medium tabular-nums md:text-right">
-              {formatEUR(reservation.draft.totals.subtotalHt)}
-            </div>
-            {!compact && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-9 w-full rounded-sm border-[color:var(--sand-deep)] md:w-9 md:px-0"
-              >
-                <a href={`/account/reservations/${reservation.id}`}>
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </Button>
-            )}
-          </article>
-        ))}
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {authStatus !== 'authenticated' && (
+        <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-3 text-xs text-foreground">
+          Vous n&apos;êtes pas connecté en tant qu&apos;admin. Les actions de
+          changement de statut seront refusées par RLS.
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
+          {error}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+        {loading ? (
+          <div className="px-4 py-8 text-sm text-muted-foreground">
+            Chargement…
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="px-4 py-8 text-sm text-muted-foreground">
+            Aucune réservation.
+          </div>
+        ) : (
+          <div className="divide-[color:var(--sand-deep)]/70 divide-y">
+            {rows.map((row) => {
+              const busy = busyId === row.id
+              const actions = RESERVATION_ACTIONS[row.status]
+              const isCancelling = cancellingId === row.id
+              const readOnly =
+                row.status === 'delivered' || row.status === 'cancelled'
+              return (
+                <article
+                  key={row.id}
+                  className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1.2fr_1fr_120px_120px] md:items-start md:gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{row.reference}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {row.containerReference} · SIRET {row.siret}
+                    </div>
+                    {row.stripePaymentIntentId && (
+                      <a
+                        href={`https://dashboard.stripe.com/test/payments/${row.stripePaymentIntentId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-xs text-[color:var(--ember)] hover:underline"
+                      >
+                        Stripe PaymentIntent
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-xs">
+                      {row.companyLegalName ?? '—'}
+                    </div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      {row.contactName ?? ''} · {row.contactEmail ?? ''}
+                    </div>
+                    <div className="mt-1 text-xs tabular-nums">
+                      {formatEUR(row.totalHt)} · {row.totalCbm.toFixed(1)} m³
+                    </div>
+                  </div>
+                  <StatusPill label={RESERVATION_STATUS_LABEL[row.status]} />
+                  <div className="flex flex-wrap gap-1.5">
+                    {readOnly && (
+                      <span className="text-xs text-muted-foreground">
+                        Lecture seule
+                      </span>
+                    )}
+                    {!readOnly &&
+                      actions.map((a) => (
+                        <Button
+                          key={a.target}
+                          type="button"
+                          size="sm"
+                          variant={a.variant ?? 'outline'}
+                          disabled={busy}
+                          className={`h-7 rounded-sm px-2 text-[11px] ${
+                            a.variant === 'destructive'
+                              ? 'border-red-300 text-red-700 hover:bg-red-50'
+                              : ''
+                          }`}
+                          onClick={() => void changeStatus(row, a.target)}
+                        >
+                          {a.label}
+                        </Button>
+                      ))}
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-sm px-2 text-[11px]"
+                    >
+                      <a href={`/account/reservations/${row.id}`}>
+                        <ArrowRight className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  </div>
+
+                  {isCancelling && (
+                    <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 col-span-full rounded-md border p-3 text-xs">
+                      <div className="mb-2 font-medium">
+                        Confirmer l&apos;annulation
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={cancelReason}
+                          onChange={(e) =>
+                            setCancelReason(
+                              e.target
+                                .value as (typeof CANCELLATION_REASONS)[number]['value'],
+                            )
+                          }
+                          className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
+                        >
+                          {CANCELLATION_REASONS.map((r) => (
+                            <option key={r.value} value={r.value}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-sm border-red-300 text-red-700 hover:bg-red-50"
+                          disabled={busy}
+                          onClick={() => void confirmCancel(row)}
+                        >
+                          Confirmer annulation
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-sm"
+                          onClick={() => setCancellingId(null)}
+                        >
+                          Abandonner
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="md:col-span-4">
+                    <NoteField
+                      initialValue={row.adminNotes ?? ''}
+                      placeholder="Note admin (save on blur)"
+                      onCommit={(value) => void saveNote(row, value)}
+                      multiline
+                    />
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function ProductsAndStockTable({
-  stockLines,
+function NoteField({
+  initialValue,
+  placeholder,
+  onCommit,
+  multiline = false,
 }: {
-  readonly stockLines: ReadonlyArray<StockLine>
+  readonly initialValue: string
+  readonly placeholder?: string
+  readonly onCommit: (value: string) => void | Promise<void>
+  readonly multiline?: boolean
 }) {
+  const [value, setValue] = useState(initialValue)
+  useEffect(() => setValue(initialValue), [initialValue])
+  if (multiline) {
+    return (
+      <Textarea
+        rows={2}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => void onCommit(value)}
+        className="text-xs"
+      />
+    )
+  }
   return (
-    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-      <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[1.2fr_100px_90px_100px_110px] md:gap-3">
-        <span>Produit</span>
-        <span>Catégorie</span>
-        <span>Stock</span>
-        <span>État</span>
-        <span className="text-right">Prix stock</span>
-      </div>
-      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-        {stockLines.map((line) => (
-          <article
-            key={line.id}
-            className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1.2fr_100px_90px_100px_110px] md:items-center md:gap-3"
-          >
-            <div className="min-w-0">
-              <div className="truncate font-medium">{line.product.name}</div>
-              <div className="mt-1 truncate text-xs text-muted-foreground">
-                {line.product.sku} · {line.variant.name}
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {CATEGORY_LABEL[line.product.category]}
-            </div>
-            <div className="font-medium tabular-nums">
-              {line.availableUnits}
-            </div>
-            <StatusPill label={STOCK_CONDITION_LABEL[line.condition]} />
-            <div className="font-medium tabular-nums md:text-right">
-              {formatEUR(line.stockPriceHt)}
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function Panel({
-  title,
-  children,
-}: {
-  readonly title: string
-  readonly children: ReactNode
-}) {
-  return (
-    <section>
-      <div className="mb-3 flex items-center gap-2">
-        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-display text-xl font-semibold tracking-tight">
-          {title}
-        </h2>
-      </div>
-      {children}
-    </section>
+    <Input
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => void onCommit(value)}
+      className="text-xs"
+    />
   )
 }
 
@@ -478,8 +913,35 @@ function AdminWarning() {
   return (
     <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/75 flex items-start gap-2 rounded-md border p-3 text-xs leading-5">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-      Les actions de changement de statut seront branchées après connexion
-      Supabase admin.
+      KPIs basés sur les fixtures démo. Les onglets Réservations, Demandes
+      stock, Catalogue et Transporteurs lisent les données Supabase en direct.
     </div>
+  )
+}
+
+// Re-export legacy symbols used elsewhere if any (kept for compatibility).
+export { ADMIN_DEMO_STOCK_REQUESTS }
+
+// Lay-out wrapper for the dashboard panels (kept for shape parity)
+export function AdminDashboardLayout({
+  children,
+}: {
+  readonly children: ReactNode
+}) {
+  return <LayoutDashboardWrapper>{children}</LayoutDashboardWrapper>
+}
+
+function LayoutDashboardWrapper({
+  children,
+}: {
+  readonly children: ReactNode
+}) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+      </div>
+      {children}
+    </section>
   )
 }
