@@ -1,5 +1,6 @@
 import {
   HeadContent,
+  Link,
   Outlet,
   Scripts,
   createRootRoute,
@@ -43,7 +44,46 @@ const ORGANIZATION_JSON_LD = {
   sameAs: [],
 }
 
+function NotFoundComponent() {
+  return (
+    <html lang="fr">
+      <head>
+        <HeadContent />
+        <title>Page introuvable — Container Club</title>
+      </head>
+      <body className="bg-background text-foreground">
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="label-eyebrow text-[color:var(--ember)]">404</div>
+          <h1 className="mt-2 font-display text-4xl tracking-tight">
+            Page introuvable.
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+            Le lien que vous avez suivi est cassé ou la page a été déplacée.
+            Vous pouvez retourner à l&apos;accueil ou consulter le catalogue.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/"
+              className="hover:bg-foreground/90 inline-flex h-11 items-center rounded-sm bg-foreground px-4 text-sm font-medium text-background"
+            >
+              Retour à l&apos;accueil
+            </Link>
+            <Link
+              to="/catalogue"
+              className="hover:border-foreground/40 inline-flex h-11 items-center rounded-sm border border-[color:var(--sand-deep)] px-4 text-sm font-medium"
+            >
+              Voir le catalogue
+            </Link>
+          </div>
+        </main>
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
 export const Route = createRootRoute({
+  notFoundComponent: NotFoundComponent,
   head: () => ({
     meta: [
       { charSet: 'utf-8' },

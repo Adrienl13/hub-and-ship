@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react'
 import { ArrowUpDown, Layers3, Search } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { CatalogueLineItem } from '@/components/CatalogueLineItem'
 import { Footer } from '@/components/Footer'
@@ -28,7 +27,8 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
-import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
+import { type Product } from '@/lib/products'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/catalogue')({
@@ -47,6 +47,8 @@ const LazyReservationDialog = lazy(() =>
 )
 
 function CataloguePage() {
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
   const {
     items,
     totals,
@@ -56,7 +58,10 @@ function CataloguePage() {
     qtyByProduct,
     setQty,
     setVariant,
-  } = useCart()
+  } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [filter, setFilter] = useState<CatalogueFilter>('all')
   const [sort, setSort] = useState<SortKey>('default')
   const [search, setSearch] = useState('')
@@ -66,16 +71,19 @@ function CataloguePage() {
   const [detailId, setDetailId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
 
-  const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), [])
+  const categoryCounts = useMemo(
+    () => getCategoryCounts(productsArray),
+    [productsArray],
+  )
   const filtered = useMemo(
     () =>
       filterAndSortProducts({
-        products: PRODUCTS,
+        products: productsArray,
         filter,
         search: deferredSearch,
         sort,
       }),
-    [deferredSearch, filter, sort],
+    [deferredSearch, filter, sort, productsArray],
   )
   const visibleProducts = useMemo(
     () => filtered.slice(0, visibleCount),
@@ -86,19 +94,13 @@ function CataloguePage() {
     filtered.length - visibleProducts.length,
   )
   const detailProduct: Product | null = useMemo(
-    () => PRODUCTS.find((product) => product.id === detailId) ?? null,
-    [detailId],
+    () => productsArray.find((product) => product.id === detailId) ?? null,
+    [detailId, productsArray],
   )
 
   useEffect(() => {
     setVisibleCount(pageSize)
   }, [deferredSearch, filter, pageSize, sort])
-
-  const handleEmail = () => {
-    toast.success('Devis envoyé', {
-      description: 'Vous recevrez votre devis PDF par email sous 2 minutes.',
-    })
-  }
 
   const handlePdf = () => {
     openQuotePDF({
@@ -107,8 +109,8 @@ function CataloguePage() {
       fillPercent: fill.percent,
       usedCbm: fill.usedCbm,
       capacity: fill.capacity,
-      containerRef: CURRENT_CONTAINER.reference,
-      port: CURRENT_CONTAINER.port,
+      containerRef: currentContainer.reference,
+      port: currentContainer.port,
     })
   }
 
@@ -298,7 +300,7 @@ function CataloguePage() {
               capacity={fill.capacity}
               onReserve={() => setReserveOpen(true)}
               onDownloadPdf={handlePdf}
-              onEmailQuote={handleEmail}
+              container={currentContainer}
             />
           </aside>
         </section>
@@ -311,6 +313,7 @@ function CataloguePage() {
         fillPercent={fill.percent}
         subtotalHt={totals.subtotalHt}
         onReserve={() => setReserveOpen(true)}
+        container={currentContainer}
       />
 
       <Suspense fallback={null}>
@@ -337,6 +340,7 @@ function CataloguePage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>

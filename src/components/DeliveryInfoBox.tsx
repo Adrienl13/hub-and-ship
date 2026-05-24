@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { ArrowRight, Handshake, PackageCheck, Truck } from 'lucide-react'
 
 import { Reveal } from '@/components/motion-helpers'
@@ -79,13 +80,13 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
 
         <DeliveryOptions compact />
 
-        <a
-          href="/transport-partenaires"
+        <Link
+          to="/transport-partenaires"
           className="hover:border-foreground/40 mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5 text-[11px] font-medium transition-colors"
         >
           Transporteurs recommandés
           <ArrowRight className="h-3.5 w-3.5" />
-        </a>
+        </Link>
       </div>
     )
   }
@@ -114,13 +115,13 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
           <div>
             <DeliveryOptions />
 
-            <a
-              href="/transport-partenaires"
+            <Link
+              to="/transport-partenaires"
               className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
             >
               Voir les transporteurs recommandés
               <ArrowRight className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
         </Reveal>
       </div>

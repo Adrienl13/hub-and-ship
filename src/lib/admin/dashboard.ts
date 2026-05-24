@@ -1,5 +1,4 @@
 import {
-  ACCOUNT_RESERVATIONS,
   calculateAccountReservationKpis,
   type AccountReservation,
 } from '@/lib/account/reservations'
@@ -69,7 +68,7 @@ export const ADMIN_DEMO_STOCK_REQUESTS: ReadonlyArray<StockRequestDraft> = [
 ] as const
 
 export function createAdminDashboardSnapshot({
-  reservations = ACCOUNT_RESERVATIONS,
+  reservations = [],
   stockRequests = ADMIN_DEMO_STOCK_REQUESTS,
   stock = stockLines,
 }: {

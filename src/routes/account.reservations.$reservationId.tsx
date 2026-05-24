@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import {
   AlertTriangle,
@@ -14,18 +14,23 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 import {
-  ACCOUNT_RESERVATIONS,
   ACCOUNT_RESERVATION_STATUS_LABEL,
+  accountReservationFromMyReservation,
   getAccountReservationById,
   mergeAccountReservations,
+  type AccountReservation,
 } from '@/lib/account/reservations'
 import { formatEUR } from '@/lib/order'
 import {
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
+import { listMyReservationsFromSupabase } from '@/lib/reservations/repository'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 const reservationSearchSchema = z.object({
   session_id: z.string().optional(),
@@ -43,20 +48,74 @@ export const Route = createFileRoute('/account/reservations/$reservationId')({
 function AccountReservationDetailPage() {
   const { reservationId } = Route.useParams()
   const { session_id: sessionId, canceled } = Route.useSearch()
+  const auth = useAuth()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
   >([])
+  const [remoteReservations, setRemoteReservations] = useState<
+    ReadonlyArray<AccountReservation>
+  >([])
+  const [localLoaded, setLocalLoaded] = useState(false)
+  const [remoteLoaded, setRemoteLoaded] = useState(false)
   const [retryingPayment, setRetryingPayment] = useState(false)
   const startCheckout = useServerFn(createCheckoutSession)
   const reservations = mergeAccountReservations({
-    baseReservations: ACCOUNT_RESERVATIONS,
+    remoteReservations,
     localRecords,
   })
   const reservation = getAccountReservationById(reservationId, reservations)
 
   useEffect(() => {
     setLocalRecords(readLocalReservationHistory(window.localStorage))
+    setLocalLoaded(true)
   }, [])
+
+  useEffect(() => {
+    if (auth.status === 'loading') {
+      setRemoteLoaded(false)
+      return
+    }
+    if (auth.status !== 'authenticated') {
+      setRemoteReservations([])
+      setRemoteLoaded(true)
+      return
+    }
+
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) {
+      setRemoteLoaded(true)
+      return
+    }
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(config)
+        const list = await listMyReservationsFromSupabase(
+          client as unknown as Parameters<
+            typeof listMyReservationsFromSupabase
+          >[0],
+        )
+        if (cancelled) return
+        setRemoteReservations(list.map(accountReservationFromMyReservation))
+      } catch (error) {
+        if (!cancelled) {
+          console.error('account reservation fetch failed', error)
+        }
+      } finally {
+        if (!cancelled) setRemoteLoaded(true)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [auth.status])
+
+  const fullyResolved = localLoaded && remoteLoaded
+  if (fullyResolved && !reservation) {
+    throw notFound()
+  }
 
   const handleRetryPayment = async () => {
     setRetryingPayment(true)
@@ -86,14 +145,13 @@ function AccountReservationDetailPage() {
       <main className="min-h-screen bg-background px-6 py-10 text-foreground">
         <div className="mx-auto max-w-3xl">
           <Button asChild variant="outline">
-            <a href="/account/reservations">
+            <Link to="/account/reservations">
               <ArrowLeft className="h-4 w-4" />
               Retour
-            </a>
+            </Link>
           </Button>
-          <h1 className="mt-8 font-display text-3xl tracking-tight">
-            Réservation introuvable
-          </h1>
+          <div className="bg-primary/10 mt-8 h-12 w-2/3 animate-pulse rounded" />
+          <div className="bg-primary/10 mt-4 h-24 animate-pulse rounded" />
         </div>
       </main>
     )
@@ -103,20 +161,20 @@ function AccountReservationDetailPage() {
     <main className="min-h-screen bg-background text-foreground">
       <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <a
-            href="/account/reservations"
+          <Link
+            to="/account/reservations"
             className="inline-flex items-center gap-2 text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Mes réservations
-          </a>
+          </Link>
           <Button
             asChild
             size="sm"
             variant="outline"
             className="h-9 rounded-sm"
           >
-            <a href="/catalogue">Catalogue</a>
+            <Link to="/catalogue">Catalogue</Link>
           </Button>
         </div>
       </header>

@@ -446,7 +446,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
         {submitting ? 'Enregistrement...' : 'Être rappelé'}
       </Button>
       <a
-        href={`mailto:contact@container-club.fr?subject=Stock 24h - ${encodeURIComponent(
+        href={`mailto:adrienlaniez1@gmail.com?subject=Stock 24h - ${encodeURIComponent(
           line.product.name,
         )}`}
         className="hover:border-foreground/40 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors"

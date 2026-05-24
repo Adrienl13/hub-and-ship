@@ -57,8 +57,7 @@
     "src/**/*",
     "tests/**/*",
     "supabase/functions/**/*",
-    "*.config.ts",
-    ".vinxi/**/*"
+    "*.config.ts"
   ],
   "exclude": ["node_modules", "dist", ".output", "build"]
 }

@@ -52,7 +52,10 @@ export function useAuth() {
   }, [client])
 
   const signInWithMagicLink = useCallback(
-    async (email: string): Promise<MagicLinkResult> => {
+    async (
+      email: string,
+      options: { readonly returnTo?: string } = {},
+    ): Promise<MagicLinkResult> => {
       if (!client) {
         return {
           ok: false,
@@ -61,7 +64,10 @@ export function useAuth() {
         }
       }
 
-      const redirectTo = `${config.appUrl.replace(/\/$/, '')}/auth/callback`
+      const base = `${config.appUrl.replace(/\/$/, '')}/auth/callback`
+      const redirectTo = options.returnTo
+        ? `${base}?returnTo=${encodeURIComponent(options.returnTo)}`
+        : base
       const { error } = await client.auth.signInWithOtp({
         email,
         options: {

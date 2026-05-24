@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import { DeliveredContainerCard } from '@/components/DeliveredContainerCard'
@@ -119,12 +120,12 @@ export function PastContainers() {
         </RevealStagger>
 
         <div className="mt-10 flex justify-center">
-          <a
-            href="/livres"
+          <Link
+            to="/livres"
             className="inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
           >
             Voir tous les containers livrés
-          </a>
+          </Link>
         </div>
       </div>
     </section>

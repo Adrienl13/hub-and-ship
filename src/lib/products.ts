@@ -271,14 +271,28 @@ export const PRODUCTS: Product[] = [
   },
 ]
 
-export const CURRENT_CONTAINER = {
+export interface ContainerSummary {
+  readonly id?: string
+  readonly reference: string
+  readonly port: string
+  readonly capacityCbm: number
+  readonly thresholdPercent: number
+  readonly minSeriesRequired: number
+  readonly expectedCloseAt: string | null
+  readonly status: 'open'
+  readonly seriesReached: number
+  readonly totalSeries: number
+  readonly professionalsEngaged: number
+}
+
+export const CURRENT_CONTAINER: ContainerSummary = {
   reference: 'CC-2026-001',
   port: 'Marseille-Fos',
   capacityCbm: 28,
   thresholdPercent: 80,
   minSeriesRequired: 3,
   expectedCloseAt: '2026-03-14',
-  status: 'open' as const,
+  status: 'open',
   seriesReached: 3,
   totalSeries: 5,
   professionalsEngaged: 12,

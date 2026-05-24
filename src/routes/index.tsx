@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   lazy,
   Suspense,
@@ -7,7 +7,6 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { toast } from 'sonner'
 import { ArrowUpDown, Search } from 'lucide-react'
 
 import { Header } from '@/components/Header'
@@ -26,7 +25,7 @@ import { Footer } from '@/components/Footer'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { useIsMobile } from '@/hooks/use-mobile'
 
-import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
+import { type Product } from '@/lib/products'
 import { calculateStockKpis, getAvailableStockLines } from '@/lib/stock'
 import {
   CATEGORY_FILTERS,
@@ -38,6 +37,7 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/')({
@@ -60,6 +60,8 @@ const LazyReservationDialog = lazy(() =>
 function ContainerClubPage() {
   const isMobile = useIsMobile()
   const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
   const {
     items,
     totals,
@@ -69,7 +71,10 @@ function ContainerClubPage() {
     qtyByProduct,
     setQty,
     setVariant,
-  } = useCart()
+  } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
 
   const [filter, setFilter] = useState<CatalogueFilter>('all')
   const [sort, setSort] = useState<SortKey>('default')
@@ -79,16 +84,19 @@ function ContainerClubPage() {
   const [detailId, setDetailId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
 
-  const categoryCounts = useMemo(() => getCategoryCounts(PRODUCTS), [])
+  const categoryCounts = useMemo(
+    () => getCategoryCounts(productsArray),
+    [productsArray],
+  )
 
   const filtered = useMemo(() => {
     return filterAndSortProducts({
-      products: PRODUCTS,
+      products: productsArray,
       filter,
       search: deferredSearch,
       sort,
     })
-  }, [deferredSearch, filter, sort])
+  }, [deferredSearch, filter, sort, productsArray])
 
   const visibleProducts = useMemo(
     () => filtered.slice(0, visibleCount),
@@ -104,15 +112,9 @@ function ContainerClubPage() {
   }, [deferredSearch, filter, pageSize, sort])
 
   const detailProduct: Product | null = useMemo(
-    () => PRODUCTS.find((p) => p.id === detailId) ?? null,
-    [detailId],
+    () => productsArray.find((p) => p.id === detailId) ?? null,
+    [detailId, productsArray],
   )
-
-  const handleEmail = () => {
-    toast.success('Devis envoyé', {
-      description: 'Vous recevrez votre devis PDF par email sous 2 minutes.',
-    })
-  }
 
   const handlePdf = () => {
     openQuotePDF({
@@ -121,8 +123,8 @@ function ContainerClubPage() {
       fillPercent: fill.percent,
       usedCbm: fill.usedCbm,
       capacity: fill.capacity,
-      containerRef: CURRENT_CONTAINER.reference,
-      port: CURRENT_CONTAINER.port,
+      containerRef: currentContainer.reference,
+      port: currentContainer.port,
     })
   }
 
@@ -132,9 +134,10 @@ function ContainerClubPage() {
 
       <Hero
         fillPercent={fill.percent}
-        seriesReached={CURRENT_CONTAINER.seriesReached}
-        totalSeries={CURRENT_CONTAINER.totalSeries}
-        professionalsEngaged={CURRENT_CONTAINER.professionalsEngaged}
+        seriesReached={currentContainer.seriesReached}
+        totalSeries={currentContainer.totalSeries}
+        professionalsEngaged={currentContainer.professionalsEngaged}
+        container={currentContainer}
       />
 
       <ValueProps />
@@ -161,12 +164,12 @@ function ContainerClubPage() {
                 quantité pour faire grimper la barre et déclencher la série.
               </p>
             </div>
-            <a
-              href="/catalogue"
+            <Link
+              to="/catalogue"
               className="inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
             >
               Ouvrir le catalogue complet
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -298,7 +301,7 @@ function ContainerClubPage() {
                 capacity={fill.capacity}
                 onReserve={() => setReserveOpen(true)}
                 onDownloadPdf={handlePdf}
-                onEmailQuote={handleEmail}
+                container={currentContainer}
               />
             </aside>
           </div>
@@ -316,6 +319,7 @@ function ContainerClubPage() {
         fillPercent={fill.percent}
         subtotalHt={totals.subtotalHt}
         onReserve={() => setReserveOpen(true)}
+        container={currentContainer}
       />
 
       {/* Modals */}
@@ -341,6 +345,7 @@ function ContainerClubPage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>
@@ -373,19 +378,19 @@ function Stock24hTeaser() {
             <MiniKpi label="Unités libres" value={`${kpis.availableUnits}`} />
             <MiniKpi label="Valeur HT" value={formatEUR(kpis.totalValueHt)} />
           </div>
-          <a
-            href="/stock-24h"
+          <Link
+            to="/stock-24h"
             className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-[color:var(--foreground)] px-4 py-2 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
           >
             Voir le stock 24h
-          </a>
+          </Link>
         </div>
 
         <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
           {topLines.map((line) => (
-            <a
+            <Link
               key={line.id}
-              href="/stock-24h"
+              to="/stock-24h"
               className="grid grid-cols-[56px_1fr_auto] items-center gap-3 border-b border-[color:var(--sand-deep)] px-3 py-3 text-sm last:border-b-0 hover:bg-[color:var(--sand-soft)]"
             >
               <span className="relative h-14 w-14 overflow-hidden rounded-sm bg-[color:var(--sand)]">
@@ -417,7 +422,7 @@ function Stock24hTeaser() {
                   unités
                 </span>
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

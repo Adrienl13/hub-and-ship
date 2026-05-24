@@ -21,6 +21,7 @@ import {
 } from '@/lib/quality-reports/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/qualite')({
@@ -49,7 +50,12 @@ type CategoryFilter = ProductCategory | 'all'
 
 function QualitePage() {
   const auth = useAuth()
-  const { items, totals } = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [reports, setReports] = useState<ReadonlyArray<QualityReportListItem>>(
     [],
   )
@@ -119,7 +125,9 @@ function QualitePage() {
         action: {
           label: 'Se connecter',
           onClick: () => {
-            window.location.assign('/auth/login?returnTo=/qualite')
+            window.location.assign(
+              `/auth/login?returnTo=${encodeURIComponent('/qualite')}`,
+            )
           },
         },
       })
@@ -259,6 +267,7 @@ function QualitePage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>

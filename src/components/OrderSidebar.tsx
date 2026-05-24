@@ -4,7 +4,6 @@ import {
   Maximize2,
   Minimize2,
   FileText,
-  Mail,
   Lock,
   ShieldCheck,
   RefreshCcw,
@@ -19,7 +18,7 @@ import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
-import { CURRENT_CONTAINER } from '@/lib/products'
+import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
 import { AnimatedNumber } from '@/components/motion-helpers'
 
@@ -37,7 +36,7 @@ export function OrderSidebar({
   capacity,
   onReserve,
   onDownloadPdf,
-  onEmailQuote,
+  container = CURRENT_CONTAINER,
 }: {
   items: CartItem[]
   totals: OrderTotals
@@ -46,7 +45,7 @@ export function OrderSidebar({
   capacity: number
   onReserve: () => void
   onDownloadPdf: () => void
-  onEmailQuote: () => void
+  container?: ContainerSummary
 }) {
   const [exploded, setExploded] = useState(false)
   const hasItems = items.length > 0
@@ -58,10 +57,10 @@ export function OrderSidebar({
         <div className="flex items-center justify-between border-b border-[color:var(--sand-deep)] px-4 py-2.5">
           <div>
             <div className="font-display text-sm font-semibold tracking-tight">
-              {CURRENT_CONTAINER.reference}
+              {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {CURRENT_CONTAINER.port} · 20' High Cube
+              {container.port} · 20' High Cube
             </div>
           </div>
           <Button
@@ -95,23 +94,23 @@ export function OrderSidebar({
               État container
             </span>
             <ContainerStatusBadge
-              status={CURRENT_CONTAINER.status}
+              status={container.status}
               fillPercent={fillPercent}
-              thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+              thresholdPercent={container.thresholdPercent}
             />
           </div>
           <ContainerFillBar
             percent={fillPercent}
             usedCbm={usedCbm}
             capacity={capacity}
-            thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+            thresholdPercent={container.thresholdPercent}
           />
           <SeriesProgressIndicator
-            reached={CURRENT_CONTAINER.seriesReached}
-            total={CURRENT_CONTAINER.totalSeries}
-            required={CURRENT_CONTAINER.minSeriesRequired}
+            reached={container.seriesReached}
+            total={container.totalSeries}
+            required={container.minSeriesRequired}
           />
-          <ParticipantsCount count={CURRENT_CONTAINER.professionalsEngaged} />
+          <ParticipantsCount count={container.professionalsEngaged} />
         </div>
       </div>
 
@@ -224,28 +223,16 @@ export function OrderSidebar({
           Confirmer ma réservation
           <ArrowRight className="h-4 w-4" />
         </Button>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-sm border-[color:var(--sand-deep)] text-xs"
-            onClick={onDownloadPdf}
-            disabled={!hasItems}
-          >
-            <FileText className="h-3.5 w-3.5" />
-            Devis PDF
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-sm border-[color:var(--sand-deep)] text-xs"
-            onClick={onEmailQuote}
-            disabled={!hasItems}
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Par email
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 w-full rounded-sm border-[color:var(--sand-deep)] text-xs"
+          onClick={onDownloadPdf}
+          disabled={!hasItems}
+        >
+          <FileText className="h-3.5 w-3.5" />
+          Télécharger le devis PDF
+        </Button>
       </div>
 
       {/* Trust */}

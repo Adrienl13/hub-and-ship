@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   Truck,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
+import { sendReservationConfirmation } from '@/lib/email/reservation-confirmation'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
 import {
   Dialog,
@@ -47,7 +49,7 @@ import {
 } from '@/lib/pricing/referral'
 import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
 import { buildReservationDraft } from '@/lib/reservations/draft'
-import { CURRENT_CONTAINER } from '@/lib/products'
+import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { checkEmailDomain } from '@/lib/validation/email'
 
 type ReservationStep = 1 | 2 | 3 | 4 | 5
@@ -113,11 +115,13 @@ export function ReservationDialog({
   onOpenChange,
   items,
   totals,
+  container = CURRENT_CONTAINER,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   items: ReadonlyArray<CartItem>
   totals: OrderTotals
+  container?: ContainerSummary
 }) {
   const [step, setStep] = useState<ReservationStep>(1)
   const [siretCheck, setSiretCheck] = useState<SiretInputState>({
@@ -133,6 +137,7 @@ export function ReservationDialog({
   } | null>(null)
   const reservationCreation = useReservationCreation()
   const startCheckout = useServerFn(createCheckoutSession)
+  const sendConfirmationEmail = useServerFn(sendReservationConfirmation)
   const siretVerification = useSiretVerification()
   const [form, setForm] = useState({
     siret: '',
@@ -216,7 +221,8 @@ export function ReservationDialog({
       cgvAccepted,
       cgvVersion: '2026-05-18',
       items,
-      containerReference: CURRENT_CONTAINER.reference,
+      containerReference: container.reference,
+      containerId: container.id,
       referralApplication,
     })
 
@@ -274,6 +280,18 @@ export function ReservationDialog({
       }
     }
 
+    // Fire the transactional emails (user + admin) in the background.
+    // We don't await — the dialog should proceed to Stripe/confirmation
+    // instantly. If Resend isn't configured, the server function returns
+    // skipped and we just log it.
+    if (creation.persisted) {
+      void sendConfirmationEmail({
+        data: { reservationId: creation.reservation.id },
+      }).catch((error: unknown) => {
+        console.error('sendReservationConfirmation failed', error)
+      })
+    }
+
     // Persisted reservations can be paid via Stripe. Local-only ones
     // (Supabase missing) fall through to the existing confirmation step.
     if (creation.persisted) {
@@ -314,11 +332,11 @@ export function ReservationDialog({
     setStep(5)
     if (creation.persisted) {
       toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} enregistrée. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
+        description: `${creation.reservation.reference} — confirmation envoyée par email. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
       })
     } else {
       toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} prête pour Supabase/Stripe (${formatEUR(draftResult.draft.payment.payNow)}).`,
+        description: `${creation.reservation.reference} gardée sur cet appareil. Reconnectez-vous pour la synchroniser.`,
       })
     }
   }
@@ -639,8 +657,8 @@ export function ReservationDialog({
               </div>
               <p className="text-foreground/75 mt-2 text-xs leading-5">
                 {createdReservation.persisted
-                  ? 'La réservation est enregistrée. Si le paiement n’a pas pu démarrer, nous reviendrons vers vous sous 24 h pour finaliser les frais de réservation.'
-                  : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte. Elle sera synchronisable dès que Supabase et Stripe seront activés.'}
+                  ? 'Réservation enregistrée. Une confirmation par email vient de partir vers votre adresse — vérifiez votre boîte (et le dossier spam au cas où).'
+                  : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte dès que les services seront activés.'}
               </p>
             </div>
 
@@ -675,7 +693,7 @@ export function ReservationDialog({
                 asChild
                 className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
               >
-                <a href="/account/reservations">Voir mes réservations</a>
+                <Link to="/account/reservations">Voir mes réservations</Link>
               </Button>
               <Button
                 type="button"

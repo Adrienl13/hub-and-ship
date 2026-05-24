@@ -2,18 +2,20 @@ import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatEUR } from '@/lib/order'
 import { ContainerFillBar } from '@/components/ContainerFillBar'
-import { CURRENT_CONTAINER } from '@/lib/products'
+import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 
 export function MobileStickyBar({
   totalItems,
   fillPercent,
   subtotalHt,
   onReserve,
+  container = CURRENT_CONTAINER,
 }: {
   totalItems: number
   fillPercent: number
   subtotalHt: number
   onReserve: () => void
+  container?: ContainerSummary
 }) {
   if (totalItems <= 0) return null
   return (
@@ -22,8 +24,8 @@ export function MobileStickyBar({
         <ContainerFillBar
           percent={fillPercent}
           usedCbm={0}
-          capacity={CURRENT_CONTAINER.capacityCbm}
-          thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+          capacity={container.capacityCbm}
+          thresholdPercent={container.thresholdPercent}
           compact
         />
         <div className="mt-2 flex items-center gap-3">

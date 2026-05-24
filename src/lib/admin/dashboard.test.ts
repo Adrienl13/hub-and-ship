@@ -6,18 +6,18 @@ import {
 } from './dashboard'
 
 describe('admin dashboard snapshot', () => {
-  it('combines reservations, stock and stock requests KPIs', () => {
+  it('zeros out reservation KPIs when no reservations are passed in', () => {
     const snapshot = createAdminDashboardSnapshot()
 
     expect(snapshot.kpis).toMatchObject({
-      activeReservations: 2,
-      revenueHt: 20480,
-      reservedCbm: 26.5,
+      activeReservations: 0,
+      revenueHt: 0,
+      reservedCbm: 0,
       stockAvailableUnits: 199,
       newStockRequests: 2,
       productReferences: 6,
     })
-    expect(snapshot.kpis.fillPercent).toBeCloseTo(94.64, 1)
+    expect(snapshot.kpis.fillPercent).toBe(0)
   })
 
   it('exposes deterministic demo stock requests for the admin page', () => {

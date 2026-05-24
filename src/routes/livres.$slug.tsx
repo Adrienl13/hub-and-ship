@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Clock, Quote, Star } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
@@ -12,6 +12,7 @@ import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL } from '@/lib/products'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/livres/$slug')({
@@ -35,10 +36,15 @@ function formatDate(iso: string | null): string {
 
 function LivreDetailPage() {
   const { slug } = Route.useParams()
-  const { items, totals } = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [container, setContainer] = useState<DeliveredContainer | null>(null)
   const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
+  const [isNotFound, setIsNotFound] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
 
@@ -56,7 +62,7 @@ function LivreDetailPage() {
       .then((data) => {
         if (cancelled) return
         if (!data) {
-          setNotFound(true)
+          setIsNotFound(true)
         } else {
           setContainer(data)
           if (typeof document !== 'undefined') {
@@ -93,8 +99,10 @@ function LivreDetailPage() {
             ))}
           </div>
         </main>
-      ) : notFound ? (
-        <NotFound slug={slug} />
+      ) : isNotFound ? (
+        (() => {
+          throw notFound()
+        })()
       ) : error ? (
         <main className="mx-auto max-w-3xl px-6 py-24 text-center">
           <h1 className="font-display text-3xl">Erreur</h1>
@@ -113,6 +121,7 @@ function LivreDetailPage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>
@@ -120,29 +129,6 @@ function LivreDetailPage() {
   )
 }
 
-function NotFound({ slug }: { readonly slug: string }) {
-  return (
-    <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-      <div className="label-eyebrow text-[color:var(--ember)]">404</div>
-      <h1 className="mt-2 font-display text-4xl tracking-tight">
-        Container introuvable.
-      </h1>
-      <p className="mt-3 text-sm text-muted-foreground">
-        Le container{' '}
-        <code className="rounded bg-[color:var(--sand-soft)] px-1.5 py-0.5">
-          {slug}
-        </code>{' '}
-        n&apos;existe pas ou n&apos;a pas encore été publié.
-      </p>
-      <a
-        href="/livres"
-        className="mt-8 inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
-      >
-        Voir tous les containers livrés
-      </a>
-    </main>
-  )
-}
 
 function DeliveredContainerView({
   container,
@@ -158,12 +144,12 @@ function DeliveredContainerView({
     <main>
       <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
         <div className="mx-auto max-w-7xl px-6 pt-10">
-          <a
-            href="/livres"
+          <Link
+            to="/livres"
             className="text-xs text-muted-foreground hover:text-foreground"
           >
             ← Tous les containers livrés
-          </a>
+          </Link>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
               <div className="label-eyebrow text-[color:var(--ember)]">

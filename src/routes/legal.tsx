@@ -8,11 +8,12 @@ import {
   Scroll,
   Shield,
 } from 'lucide-react'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { LEGAL_PAGES, type LegalSlug } from '@/components/LegalLayout'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -58,7 +59,12 @@ export const Route = createFileRoute('/legal')({
 })
 
 function LegalHub() {
-  const { items, totals } = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [reserveOpen, setReserveOpen] = useState(false)
 
   return (
@@ -145,6 +151,7 @@ function LegalHub() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>

@@ -1,10 +1,14 @@
-import { getDefaultVariant } from '@/lib/catalogue'
-import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
-import {
-  buildReservationDraft,
-  type ReservationDraft,
+import type { OrderTotals } from '@/lib/order'
+import type {
+  ReservationDraft,
+  ReservationDraftLine,
 } from '@/lib/reservations/draft'
 import type { LocalReservationRecord } from '@/lib/reservations/local-history'
+import type {
+  MyReservation,
+  ReservationItemRow,
+  ReservationRow,
+} from '@/lib/reservations/repository'
 
 export type AccountReservationStatus =
   | 'pending_reservation_fee'
@@ -31,105 +35,6 @@ export interface AccountReservationKpis {
   readonly totalCbm: number
 }
 
-function requireProduct(id: string): Product {
-  const product = PRODUCTS.find((item) => item.id === id)
-  if (!product)
-    throw new Error(`Missing account reservation fixture product ${id}`)
-
-  return product
-}
-
-const chair = requireProduct('p1')
-const armchair = requireProduct('p2')
-const table = requireProduct('p3')
-
-function requireDraft(
-  result: ReturnType<typeof buildReservationDraft>,
-): ReservationDraft {
-  if (!result.ok) {
-    throw new Error(result.issues[0]?.message ?? 'Reservation fixture invalid')
-  }
-
-  return result.draft
-}
-
-const activeDraft = requireDraft(
-  buildReservationDraft({
-    siret: '55208131701750',
-    contact: {
-      name: 'Adrien Laniez',
-      company: 'Hotel Demo',
-      email: 'direction@hotel-demo.fr',
-      phone: '+33 6 12 34 56 78',
-    },
-    delivery: {
-      deliveryMode: 'pickup_at_port',
-      deliveryNote: 'Enlevement par transporteur partenaire.',
-    },
-    cgvAccepted: true,
-    cgvVersion: '2026-05-18',
-    containerReference: CURRENT_CONTAINER.reference,
-    now: new Date('2026-05-18T10:00:00.000Z'),
-    sequence: 18,
-    items: [
-      {
-        product: chair,
-        variant: getDefaultVariant(chair),
-        quantity: 50,
-      },
-      {
-        product: table,
-        variant: getDefaultVariant(table),
-        quantity: 20,
-      },
-    ],
-  }),
-)
-
-const paidDraft = requireDraft(
-  buildReservationDraft({
-    siret: '55208131701750',
-    contact: {
-      name: 'Adrien Laniez',
-      company: 'Hotel Demo',
-      email: 'direction@hotel-demo.fr',
-      phone: '+33 6 12 34 56 78',
-    },
-    delivery: { deliveryMode: 'self_arranged' },
-    cgvAccepted: true,
-    cgvVersion: '2026-05-18',
-    containerReference: 'CC-2025-014',
-    now: new Date('2025-12-12T09:30:00.000Z'),
-    sequence: 4,
-    items: [
-      {
-        product: armchair,
-        variant: getDefaultVariant(armchair),
-        quantity: 50,
-      },
-    ],
-  }),
-)
-
-export const ACCOUNT_RESERVATIONS: ReadonlyArray<AccountReservation> = [
-  {
-    id: 'res-demo-active',
-    status: 'pending_reservation_fee',
-    draft: activeDraft,
-    paidAmount: 0,
-    nextActionLabel: 'Frais de reservation a regler',
-    updatedAt: '2026-05-18T10:00:00.000Z',
-  },
-  {
-    id: 'res-demo-paid',
-    status: 'in_transit',
-    draft: paidDraft,
-    paidAmount: paidDraft.payment.depositAmount,
-    nextActionLabel: 'Solde avant expedition a venir',
-    updatedAt: '2026-01-28T08:00:00.000Z',
-  },
-] as const
-
 export const ACCOUNT_RESERVATION_STATUS_LABEL: Record<
   AccountReservationStatus,
   string
@@ -143,11 +48,146 @@ export const ACCOUNT_RESERVATION_STATUS_LABEL: Record<
   cancelled: 'Annulee',
 }
 
-export function getAccountReservationById(
-  id: string,
-  reservations: ReadonlyArray<AccountReservation> = ACCOUNT_RESERVATIONS,
-): AccountReservation | null {
-  return reservations.find((reservation) => reservation.id === id) ?? null
+const ACTIVE_STATUSES: ReadonlySet<AccountReservationStatus> = new Set([
+  'pending_reservation_fee',
+  'reserved',
+  'deposit_called',
+  'in_production',
+  'in_transit',
+])
+
+function nextActionLabelFor(status: AccountReservationStatus): string {
+  switch (status) {
+    case 'pending_reservation_fee':
+      return 'Frais de reservation a regler'
+    case 'reserved':
+      return 'Acompte de 30 % a appeler'
+    case 'deposit_called':
+      return 'Acompte en attente de paiement'
+    case 'in_production':
+      return 'Production en cours'
+    case 'in_transit':
+      return 'Solde avant expedition a venir'
+    case 'delivered':
+      return 'Livre — pieces et facture disponibles'
+    case 'cancelled':
+      return 'Reservation annulee'
+  }
+}
+
+function paidAmountFor(row: ReservationRow): number {
+  // Reservation fee is paid as soon as the Stripe webhook flips status to
+  // 'reserved' (or any later state). Anything before that is unpaid.
+  if (row.status === 'pending_reservation_fee') return 0
+  return Number(row.reservation_fee)
+}
+
+function lineFromRow(row: ReservationItemRow): ReservationDraftLine {
+  const snapshot = (row.product_snapshot ?? {}) as Partial<
+    ReservationDraftLine['productSnapshot']
+  >
+  return {
+    productId: row.product_id,
+    sku: row.sku,
+    productName: row.product_name,
+    category: row.category,
+    variantId: row.variant_id,
+    variantName: row.variant_name,
+    quantity: row.quantity,
+    unitPriceHt: Number(row.unit_price_ht),
+    unitEcoContribution: Number(row.unit_eco_contribution),
+    subtotalHt: Number(row.subtotal_ht),
+    ecoContributionTotal: Number(row.eco_contribution_total),
+    cbmTotal: Number(row.cbm_total),
+    productSnapshot: {
+      dimensions: snapshot.dimensions ?? { l: 0, w: 0, h: 0 },
+      cbmPerUnit: snapshot.cbmPerUnit ?? Number(row.cbm_total) / row.quantity,
+      weightKg: snapshot.weightKg ?? 0,
+      retailPriceRef: snapshot.retailPriceRef ?? Number(row.unit_price_ht),
+      imageUrl: snapshot.imageUrl ?? '',
+    },
+  }
+}
+
+function totalsFromRow(
+  row: ReservationRow,
+  lines: ReadonlyArray<ReservationDraftLine>,
+): OrderTotals {
+  const subtotalHt = Number(row.subtotal_ht)
+  const totalTtc = Number(row.total_ttc)
+  const retailReference = lines.reduce(
+    (sum, line) =>
+      sum + line.productSnapshot.retailPriceRef * line.quantity,
+    0,
+  )
+  const savings = Math.max(0, retailReference - subtotalHt)
+  return {
+    subtotalHt,
+    ecoContributionTotal: Number(row.eco_contribution_total),
+    reservationFee: Number(row.reservation_fee),
+    payNow: Number(row.pay_now),
+    payAt80Percent: Number(row.pay_at_80_percent),
+    payBeforeShipping: Number(row.balance_amount),
+    totalHt: Number(row.total_ht),
+    vat: Number(row.vat_amount),
+    totalTtc,
+    retailReference,
+    savings,
+    savingsPercent: retailReference > 0 ? (savings / retailReference) * 100 : 0,
+  }
+}
+
+function draftFromRow(
+  row: ReservationRow,
+  items: ReadonlyArray<ReservationItemRow>,
+): ReservationDraft {
+  const lines = items.map(lineFromRow)
+  const contact = (row.contact_snapshot ?? {}) as ReservationDraft['contact']
+  const totals = totalsFromRow(row, lines)
+
+  return {
+    id: row.id,
+    reference: row.reference,
+    status: 'ready_for_payment',
+    containerReference: row.container_reference,
+    containerId: row.container_id,
+    siret: row.siret,
+    contact,
+    delivery: {
+      deliveryMode: row.delivery_mode,
+      deliveryNote: row.delivery_note ?? undefined,
+    },
+    cgvVersion: row.cgv_version_accepted,
+    cgvAcceptedAt: row.cgv_accepted_at,
+    lines,
+    totals,
+    payment: {
+      reservationFee: Number(row.reservation_fee),
+      payNow: Number(row.pay_now),
+      depositAmount: Number(row.deposit_amount),
+      payAt80Percent: Number(row.pay_at_80_percent),
+      balanceAmount: Number(row.balance_amount),
+    },
+    referral: {
+      code: row.referral_code,
+      status: row.referral_discount > 0 ? 'applied' : 'none',
+      discountAmount: Number(row.referral_discount),
+    },
+  }
+}
+
+export function accountReservationFromMyReservation(
+  reservation: MyReservation,
+): AccountReservation {
+  const status = reservation.row.status as AccountReservationStatus
+  return {
+    id: reservation.row.id,
+    status,
+    draft: draftFromRow(reservation.row, reservation.items),
+    paidAmount: paidAmountFor(reservation.row),
+    nextActionLabel: nextActionLabelFor(status),
+    updatedAt: reservation.row.updated_at,
+  }
 }
 
 export function accountReservationFromLocalRecord(
@@ -164,31 +204,35 @@ export function accountReservationFromLocalRecord(
 }
 
 export function mergeAccountReservations({
-  baseReservations = ACCOUNT_RESERVATIONS,
+  remoteReservations = [],
   localRecords,
 }: {
-  readonly baseReservations?: ReadonlyArray<AccountReservation>
+  readonly remoteReservations?: ReadonlyArray<AccountReservation>
   readonly localRecords: ReadonlyArray<LocalReservationRecord>
 }): ReadonlyArray<AccountReservation> {
-  const localReservations = localRecords.map(accountReservationFromLocalRecord)
-  const localReferences = new Set(
-    localReservations.map((reservation) => reservation.draft.reference),
-  )
+  // Remote (Supabase) wins over local snapshots when both exist for the same
+  // reservation id. Local records that don't match any remote row stay
+  // visible — they represent reservations made in this browser as anon.
+  const remoteIds = new Set(remoteReservations.map((r) => r.draft.id))
+  const localOnly = localRecords
+    .map(accountReservationFromLocalRecord)
+    .filter((reservation) => !remoteIds.has(reservation.draft.id))
 
-  return [
-    ...localReservations,
-    ...baseReservations.filter(
-      (reservation) => !localReferences.has(reservation.draft.reference),
-    ),
-  ]
+  return [...remoteReservations, ...localOnly]
+}
+
+export function getAccountReservationById(
+  id: string,
+  reservations: ReadonlyArray<AccountReservation>,
+): AccountReservation | null {
+  return reservations.find((reservation) => reservation.id === id) ?? null
 }
 
 export function calculateAccountReservationKpis(
   reservations: ReadonlyArray<AccountReservation>,
 ): AccountReservationKpis {
-  const activeReservations = reservations.filter(
-    (reservation) =>
-      reservation.status !== 'delivered' && reservation.status !== 'cancelled',
+  const activeReservations = reservations.filter((reservation) =>
+    ACTIVE_STATUSES.has(reservation.status),
   )
 
   return {

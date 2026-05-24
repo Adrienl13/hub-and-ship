@@ -102,9 +102,6 @@ export function Footer() {
                 </a>
               </li>
               <li className="text-[color:var(--sand)]/65">
-                +33 (0)4 91 00 00 00
-              </li>
-              <li className="text-[color:var(--sand)]/65">
                 Lun – Ven · 9h – 18h
               </li>
               <li>

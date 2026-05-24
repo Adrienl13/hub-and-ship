@@ -1,11 +1,12 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 
 import {
   LEGAL_PAGES,
   LegalLayout,
   type LegalSlug,
 } from '@/components/LegalLayout'
+import { useCatalog } from '@/hooks/useCatalog'
 import { getLegalDoc } from '@/lib/legal-content'
 import { useCart } from '@/stores/cart.store'
 
@@ -45,7 +46,12 @@ export const Route = createFileRoute('/legal/$slug')({
 
 function LegalDocPage() {
   const { slug } = Route.useParams()
-  const { items, totals } = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [reserveOpen, setReserveOpen] = useState(false)
 
   if (!isValidSlug(slug)) {
@@ -74,6 +80,7 @@ function LegalDocPage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>

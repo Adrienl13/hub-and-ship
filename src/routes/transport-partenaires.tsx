@@ -8,7 +8,7 @@ import {
   Ship,
   Truck,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -18,6 +18,7 @@ import { CARRIER_FAQ, CARRIERS, type Carrier } from '@/lib/carriers'
 import { listPublishedCarriers } from '@/lib/carrier-partners/repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/transport-partenaires')({
@@ -39,7 +40,12 @@ export const Route = createFileRoute('/transport-partenaires')({
 function TransportPartenairesPage() {
   const [reserveOpen, setReserveOpen] = useState(false)
   const [carriers, setCarriers] = useState<ReadonlyArray<Carrier>>(CARRIERS)
-  const cart = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const cart = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
 
   useEffect(() => {
     const config = getSupabasePublicConfig()
@@ -78,6 +84,7 @@ function TransportPartenairesPage() {
         onOpenChange={setReserveOpen}
         items={cart.items}
         totals={cart.totals}
+        container={currentContainer}
       />
     </div>
   )

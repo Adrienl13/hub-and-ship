@@ -93,7 +93,7 @@ function CatalogueLineItemComponent({
             {product.dimensions.l}x{product.dimensions.w}x{product.dimensions.h}{' '}
             cm
           </span>
-          <span>{product.cbmPerUnit.toFixed(2)} m3/u</span>
+          <span>{product.cbmPerUnit.toFixed(2)} m³/u</span>
         </div>
       </div>
 

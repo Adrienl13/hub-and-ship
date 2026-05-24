@@ -23,7 +23,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
             Le présent site, accessible à l'adresse{' '}
-            <Strong>https://hub.terrassea.fr</Strong> (ci-après le « Site »),
+            <Strong>https://container-club.fr</Strong> (ci-après le « Site »),
             est édité par :
           </P>
           <UL>
@@ -52,9 +52,6 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>EORI :</Strong> FR98826998100011
-            </LI>
-            <LI>
-              <Strong>Téléphone :</Strong> +33 (0)4 91 00 00 00
             </LI>
             <LI>
               <Strong>Email :</Strong> adrienlaniez1@gmail.com

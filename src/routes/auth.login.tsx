@@ -1,7 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowLeft, Mail, ShieldCheck } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
+import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
@@ -14,18 +15,39 @@ import {
 } from '@/lib/security/rate-limit'
 import { businessEmailSchema } from '@/lib/validation/schemas'
 
+function sanitizeReturnTo(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  if (!value.startsWith('/')) return undefined
+  if (value.startsWith('//')) return undefined
+  return value
+}
+
+const loginSearchSchema = z.object({
+  returnTo: z.string().optional(),
+})
+
 export const Route = createFileRoute('/auth/login')({
   component: LoginPage,
+  validateSearch: loginSearchSchema,
 })
 
 function LoginPage() {
   const auth = useAuth()
   const securityEvents = useSecurityEvents()
+  const { returnTo: rawReturnTo } = Route.useSearch()
+  const returnTo = sanitizeReturnTo(rawReturnTo)
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const parsedEmail = businessEmailSchema.safeParse(email)
   const emailError =
     email && !parsedEmail.success ? 'Email invalide' : undefined
+
+  // Already signed in? Bounce them to their destination — no need to send
+  // another magic link.
+  useEffect(() => {
+    if (auth.status !== 'authenticated') return
+    window.location.assign(returnTo ?? '/account/reservations')
+  }, [auth.status, returnTo])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -54,7 +76,9 @@ function LoginPage() {
     }
 
     setSubmitting(true)
-    const result = await auth.signInWithMagicLink(parsedEmail.data)
+    const result = await auth.signInWithMagicLink(parsedEmail.data, {
+      returnTo,
+    })
     setSubmitting(false)
 
     if (result.ok) {
@@ -74,13 +98,13 @@ function LoginPage() {
   return (
     <main className="min-h-screen bg-[color:var(--sand-soft)] text-foreground">
       <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-12">
-        <a
-          href="/"
+        <Link
+          to="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour au catalogue
-        </a>
+        </Link>
 
         <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6">
           <div className="mb-6">

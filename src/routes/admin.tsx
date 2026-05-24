@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   AlertTriangle,
   ArrowRight,
@@ -187,28 +187,28 @@ function AdminTopBar() {
   return (
     <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <a href="/" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">
             C
           </span>
           <span className="font-display text-base font-semibold tracking-tight">
             Container Club
           </span>
-        </a>
+        </Link>
         <nav className="flex items-center gap-3 text-sm">
-          <a
-            href="/stock-24h"
+          <Link
+            to="/stock-24h"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
             Stock 24h
-          </a>
+          </Link>
           <Button
             asChild
             size="sm"
             variant="outline"
             className="h-9 rounded-sm"
           >
-            <a href="/catalogue">Catalogue</a>
+            <Link to="/catalogue">Catalogue</Link>
           </Button>
         </nav>
       </div>

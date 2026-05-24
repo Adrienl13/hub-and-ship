@@ -10,6 +10,7 @@ export function toReservationInsertPayload(
   draft: ReservationDraft,
 ): ReservationInsertPayload {
   return {
+    id: draft.id,
     reference: draft.reference,
     container_reference: draft.containerReference,
     container_id: draft.containerId,

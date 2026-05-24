@@ -1,10 +1,11 @@
 import { ShieldCheck, Award, FileBadge } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { CURRENT_CONTAINER } from '@/lib/products'
+import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { AnimatedNumber } from '@/components/motion-helpers'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
 
-function formatDate(iso: string) {
+function formatDate(iso: string | null) {
+  if (!iso) return 'date à confirmer'
   return new Date(iso).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -17,11 +18,13 @@ export function Hero({
   seriesReached,
   totalSeries,
   professionalsEngaged,
+  container = CURRENT_CONTAINER,
 }: {
   fillPercent: number
   seriesReached: number
   totalSeries: number
   professionalsEngaged: number
+  container?: ContainerSummary
 }) {
   return (
     <section id="top" className="relative overflow-hidden">
@@ -38,15 +41,15 @@ export function Hero({
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--forest)]" />
           </span>
           <span className="font-medium text-foreground">
-            Container {CURRENT_CONTAINER.reference} ouvert
+            Container {container.reference} ouvert
           </span>
           <span className="text-foreground/60">·</span>
           <span className="text-foreground/70">
-            Destination {CURRENT_CONTAINER.port}
+            Destination {container.port}
           </span>
           <span className="text-foreground/60">·</span>
           <span className="text-foreground/70">
-            Clôture estimée {formatDate(CURRENT_CONTAINER.expectedCloseAt)}
+            Clôture estimée {formatDate(container.expectedCloseAt)}
           </span>
         </motion.div>
 
@@ -106,16 +109,16 @@ export function Hero({
                   Container en cours
                 </span>
                 <ContainerStatusBadge
-                  status={CURRENT_CONTAINER.status}
+                  status={container.status}
                   fillPercent={fillPercent}
-                  thresholdPercent={CURRENT_CONTAINER.thresholdPercent}
+                  thresholdPercent={container.thresholdPercent}
                 />
               </div>
               <div className="mt-3 font-display text-xl font-semibold tracking-tight">
-                {CURRENT_CONTAINER.reference}
+                {container.reference}
               </div>
               <div className="text-xs text-muted-foreground">
-                Destination {CURRENT_CONTAINER.port} · 20' High Cube
+                Destination {container.port} · 20' High Cube
               </div>
 
               {/* Progress */}
@@ -149,13 +152,13 @@ export function Hero({
                   />
                   <div
                     className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
-                    style={{ left: `${CURRENT_CONTAINER.thresholdPercent}%` }}
+                    style={{ left: `${container.thresholdPercent}%` }}
                   />
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
                   <span>
-                    Seuil départ {CURRENT_CONTAINER.thresholdPercent}%
+                    Seuil départ {container.thresholdPercent}%
                   </span>
                   <span>100%</span>
                 </div>

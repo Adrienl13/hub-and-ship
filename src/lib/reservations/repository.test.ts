@@ -12,6 +12,7 @@ const chair = PRODUCTS.find((product) => product.category === 'chair')!
 
 function createDraft() {
   const result = buildReservationDraft({
+    id: '00000000-0000-4000-8000-000000000abc',
     siret: '55208131701750',
     contact: {
       name: 'Adrien Laniez',
@@ -38,13 +39,10 @@ function createDraft() {
 }
 
 describe('createReservationInSupabase', () => {
-  it('inserts the reservation then its item snapshots', async () => {
-    const single = vi.fn().mockResolvedValue({
-      data: { id: 'reservation-id', reference: 'CC-2026-001-20260518-0001' },
-      error: null,
-    })
-    const select = vi.fn().mockReturnValue({ single })
-    const insertReservation = vi.fn().mockReturnValue({ select })
+  it('inserts the reservation then its item snapshots using the client-side id', async () => {
+    const insertReservation = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
     const insertItems = vi.fn().mockResolvedValue({ data: null, error: null })
     const client = {
       from: vi.fn((table: 'reservations' | 'reservation_items') =>
@@ -57,20 +55,20 @@ describe('createReservationInSupabase', () => {
     await expect(
       createReservationInSupabase({ client, draft: createDraft() }),
     ).resolves.toEqual({
-      id: 'reservation-id',
+      id: '00000000-0000-4000-8000-000000000abc',
       reference: 'CC-2026-001-20260518-0001',
     })
 
     expect(insertReservation).toHaveBeenCalledWith(
       expect.objectContaining({
+        id: '00000000-0000-4000-8000-000000000abc',
         reference: 'CC-2026-001-20260518-0001',
         status: 'pending_reservation_fee',
       }),
     )
-    expect(select).toHaveBeenCalledWith('id, reference')
     expect(insertItems).toHaveBeenCalledWith([
       expect.objectContaining({
-        reservation_id: 'reservation-id',
+        reservation_id: '00000000-0000-4000-8000-000000000abc',
         product_id: chair.id,
         quantity: 50,
       }),
@@ -80,13 +78,9 @@ describe('createReservationInSupabase', () => {
   it('throws a clear error when reservation insert fails', async () => {
     const client = {
       from: vi.fn(() => ({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'RLS denied insert' },
-            }),
-          }),
+        insert: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'RLS denied insert' },
         }),
       })),
     } as unknown as ReservationRepositoryClient
@@ -101,14 +95,9 @@ describe('createReservationInSupabase', () => {
       from: vi.fn((table: 'reservations' | 'reservation_items') =>
         table === 'reservations'
           ? {
-              insert: vi.fn().mockReturnValue({
-                select: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { id: 'reservation-id', reference: 'ref' },
-                    error: null,
-                  }),
-                }),
-              }),
+              insert: vi
+                .fn()
+                .mockResolvedValue({ data: null, error: null }),
             }
           : {
               insert: vi.fn().mockResolvedValue({

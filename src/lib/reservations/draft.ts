@@ -37,6 +37,7 @@ export interface ReservationDraftInput {
   readonly referralApplication?: ReferralApplication
   readonly now?: Date
   readonly sequence?: number
+  readonly id?: string
 }
 
 export interface ReservationDraftLine {
@@ -70,6 +71,7 @@ export interface ReservationPaymentSchedule {
 }
 
 export interface ReservationDraft {
+  readonly id: string
   readonly reference: string
   readonly status: ReservationDraftStatus
   readonly containerReference: string
@@ -128,6 +130,24 @@ export function createReservationReference({
   )
 
   return `${containerReference}-${datePart}-${sequencePart}`
+}
+
+export function createReservationId(): string {
+  // crypto.randomUUID is available in modern browsers and in Node 19+.
+  // Falls back to a v4-ish UUID built from Math.random for the rare
+  // legacy runtime (jsdom test envs without crypto, very old browsers).
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+
+  const bytes = new Uint8Array(16)
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Math.floor(Math.random() * 256)
+  }
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 export function buildReservationDraft(
@@ -191,6 +211,7 @@ export function buildReservationDraft(
   return {
     ok: true,
     draft: {
+      id: input.id ?? createReservationId(),
       reference: createReservationReference({
         containerReference: input.containerReference,
         now: input.now,

@@ -125,15 +125,36 @@ export const useCartStore = create<CartStoreState>()(
   ),
 )
 
-export function useCart() {
+export interface UseCartOptions {
+  /**
+   * Catalogue to compute cart items + totals against. Defaults to the mock
+   * `PRODUCTS` for backwards compatibility — callers that have a live DB
+   * catalogue (via `useCatalog()`) should pass it here so the displayed
+   * cart matches what the admin published.
+   */
+  readonly products?: Product[]
+  /** Container capacity for the fill bar. Defaults to the mock capacity. */
+  readonly capacityCbm?: number
+}
+
+export function useCart(options: UseCartOptions = {}) {
   const variantByProduct = useCartStore((state) => state.variantByProduct)
   const qtyByProduct = useCartStore((state) => state.qtyByProduct)
   const setQty = useCartStore((state) => state.setQty)
   const setVariant = useCartStore((state) => state.setVariant)
 
+  const products = options.products
+  const capacityCbm = options.capacityCbm
+
   const snapshot = useMemo(
-    () => createCartSnapshot({ qtyByProduct, variantByProduct }),
-    [qtyByProduct, variantByProduct],
+    () =>
+      createCartSnapshot({
+        qtyByProduct,
+        variantByProduct,
+        products,
+        capacityCbm,
+      }),
+    [qtyByProduct, variantByProduct, products, capacityCbm],
   )
 
   return {

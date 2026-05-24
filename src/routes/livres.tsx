@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
 import { DeliveredContainerCard } from '@/components/DeliveredContainerCard'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { useCatalog } from '@/hooks/useCatalog'
 import {
   computeStats,
   listPublishedDeliveredContainers,
@@ -36,7 +37,12 @@ const LazyReservationDialog = lazy(() =>
 )
 
 function LivresPage() {
-  const { items, totals } = useCart()
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
   const [containers, setContainers] = useState<
     ReadonlyArray<DeliveredContainersListItem>
   >([])
@@ -142,6 +148,7 @@ function LivresPage() {
             onOpenChange={setReserveOpen}
             items={items}
             totals={totals}
+            container={currentContainer}
           />
         )}
       </Suspense>
