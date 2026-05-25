@@ -10,6 +10,31 @@ Aucun changement en cours.
 
 ---
 
+## [1.6.0] — 2026-05-25
+
+### Déploiement production
+
+- **Hébergement Cloudflare Workers** — `@cloudflare/vite-plugin` ajouté à `vite.config.ts` (env `ssr`), `wrangler.jsonc` créé (`nodejs_compat`, `main: @tanstack/react-start/server-entry`), scripts `deploy` + `cf-typegen`. Worker `container-club` sur le compte `adrienlaniez1@gmail.com` (account `3eeab20f3ee5b419056b70f997568f62`). Déploiement via `bun run deploy`.
+- **Domaine `prosimport.com`** — domaine OVH, NS délégués à Cloudflare (`augustus.ns` + `chelsea.ns.cloudflare.com`). Custom domains `prosimport.com` + `www.prosimport.com` bindés au worker via `routes` (`custom_domain: true`). HTTPS auto (Google Trust). Les A-records parking OVH importés ont dû être supprimés (erreur 100117).
+- **Secrets worker** posés via `wrangler secret put` : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. `.env.production` ajouté (`VITE_APP_URL=https://prosimport.com` pour le callback auth).
+- **SEO** — domaine canonique basculé `container-club.fr` → `prosimport.com` (JSON-LD `__root.tsx`, `robots.txt`, `sitemap.xml`, mentions légales).
+
+### Corrigé
+
+- **Auth totalement non fonctionnelle en prod**, 3 bugs en cascade :
+  1. Compte admin seedé avec colonnes de token `NULL` dans `auth.users` → GoTrue 500 "Database error finding user" à chaque login. Fix : `NULL → ''`.
+  2. `/auth/callback` en spinner infini — les liens magiques (admin API) délivrent la session en hash `#access_token`, mais le client `@supabase/ssr` (PKCE) ne lit que `?code=`. Fix : `useAuth.ts` détecte les tokens du hash et appelle `setSession`.
+  3. RLS cassée site-wide (14 tables) — migration `harden_security_definer_functions` avait révoqué `EXECUTE` sur `current_user_role`/`current_company_id`/`is_admin` à `authenticated`, alors qu'elles sont appelées dans les policies RLS. Fix : migration `restore_rls_helper_execute` (re-grant). Cassait le lookup du rôle admin → utilisateur vu comme client.
+- **Modèle admin unifié** — `is_admin()` ne regardait que `professionals.is_admin` alors que l'`AdminGuard` utilise `users_profile.role`. Migration `align_is_admin_with_profile_role` : `is_admin()` vrai si admin via l'une **ou** l'autre source. Débloque l'édition catalogue pour les admins `users_profile.role`.
+
+### À faire (avant ouverture aux clients)
+
+- Stripe en mode **TEST** (`sk_test_`) → passer en live + créer le webhook endpoint prod `https://prosimport.com/api/stripe/webhook` et mettre à jour les secrets.
+- `RESEND_API_KEY` absent → emails transactionnels désactivés.
+- Configurer un **SMTP custom** dans Supabase (Resend) pour fiabiliser l'envoi des liens magiques (l'envoi par défaut Supabase est trop limité).
+
+---
+
 ## [1.5.0] — 2026-05-22
 
 ### Ajouté
