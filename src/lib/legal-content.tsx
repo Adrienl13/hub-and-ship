@@ -23,7 +23,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
             Le présent site, accessible à l'adresse{' '}
-            <Strong>https://container-club.fr</Strong> (ci-après le « Site »),
+            <Strong>https://prosimport.com</Strong> (ci-après le « Site »),
             est édité par :
           </P>
           <UL>

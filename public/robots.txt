@@ -7,4 +7,4 @@ Disallow: /admin
 Disallow: /api
 Disallow: /auth
 
-Sitemap: https://container-club.fr/sitemap.xml
+Sitemap: https://prosimport.com/sitemap.xml
