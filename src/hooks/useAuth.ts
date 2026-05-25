@@ -32,11 +32,34 @@ export function useAuth() {
 
     let mounted = true
 
-    void client.auth.getUser().then(({ data }) => {
+    const init = async () => {
+      // Implicit-flow magic links (e.g. links minted via the Supabase admin
+      // API) deliver the session as URL hash tokens. The PKCE browser client
+      // only auto-detects `?code=`, so adopt the hash session explicitly.
+      if (
+        typeof window !== 'undefined' &&
+        window.location.hash.includes('access_token')
+      ) {
+        const params = new URLSearchParams(window.location.hash.slice(1))
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+        if (access_token && refresh_token) {
+          await client.auth.setSession({ access_token, refresh_token })
+          window.history.replaceState(
+            null,
+            '',
+            window.location.pathname + window.location.search,
+          )
+        }
+      }
+
+      const { data } = await client.auth.getUser()
       if (!mounted) return
       setUser(data.user)
       setStatus(data.user ? 'authenticated' : 'anonymous')
-    })
+    }
+
+    void init()
 
     const {
       data: { subscription },
