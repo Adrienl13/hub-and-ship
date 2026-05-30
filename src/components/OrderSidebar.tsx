@@ -60,7 +60,7 @@ export function OrderSidebar({
               {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {container.port} · 20' High Cube
+              {container.port} · 20' Dry Van · 33 m³
             </div>
           </div>
           <Button
@@ -80,7 +80,7 @@ export function OrderSidebar({
             )}
           </Button>
         </div>
-        <div className="relative h-[320px] w-full bg-[color:var(--sand)]">
+        <div className="relative h-[360px] w-full bg-[color:var(--sand)] md:h-[420px]">
           <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
           <Suspense fallback={null}>
             <LazyContainerScene items={items} exploded={exploded} />

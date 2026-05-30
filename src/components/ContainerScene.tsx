@@ -7,12 +7,27 @@ import {
   Environment,
   Html,
 } from '@react-three/drei'
-import { useMemo, Suspense } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import type { CartItem } from '@/lib/order'
 import {
   CONTAINER_INNER_METERS,
   packContainerPackages,
 } from '@/lib/container/packing'
+
+/** Lightweight check: phones get a smaller GPU budget than laptops.
+ *  We rely on coarse pointer + narrow viewport rather than UA sniffing. */
+function useIsMobileDevice(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(pointer: coarse), (max-width: 768px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener?.('change', update)
+    return () => mq.removeEventListener?.('change', update)
+  }, [])
+  return isMobile
+}
 
 // 20' Dry Van intérieur ISO standard (≈ 33 m³ brut, ~28 m³ utile)
 const L = CONTAINER_INNER_METERS.length
@@ -73,6 +88,7 @@ export function ContainerScene({
   items: CartItem[]
   exploded?: boolean
 }) {
+  const isMobile = useIsMobileDevice()
   const { packages, slices, overflowUnits } = useMemo(
     () => packContainerPackages(items),
     [items],
@@ -91,8 +107,11 @@ export function ContainerScene({
 
   return (
     <Canvas
-      shadows
-      dpr={[1, 2]}
+      // On phones we cap the DPR at 1.5 (instead of 2) and disable
+      // shadows to keep the frame budget reasonable — they cost the most
+      // GPU on integrated chipsets and battery on prolonged sessions.
+      shadows={!isMobile}
+      dpr={isMobile ? [1, 1.5] : [1, 2]}
       camera={{ position: [8, 5.5, 7.5], fov: 35 }}
       style={{ background: 'transparent' }}
     >
@@ -184,7 +203,10 @@ export function ContainerScene({
         minDistance={6}
         maxDistance={16}
         maxPolarAngle={Math.PI / 2.05}
-        autoRotate
+        // No auto-rotation on touch devices — it fights against the
+        // user's swipe and drains battery on phones left idle on the
+        // page.
+        autoRotate={!isMobile}
         autoRotateSpeed={0.45}
       />
     </Canvas>

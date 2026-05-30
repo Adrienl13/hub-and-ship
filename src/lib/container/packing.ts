@@ -84,19 +84,20 @@ interface PackageDraft {
   readonly originalIndex: number
 }
 
-interface PackingRect {
+interface PlacedRect {
+  readonly x: number
   readonly y: number
   readonly z: number
-  readonly height: number
-  readonly width: number
+  readonly l: number
+  readonly h: number
+  readonly w: number
   readonly category: ProductCategory
 }
 
-interface PackingColumn {
-  readonly index: number
-  readonly xStart: number
-  readonly length: number
-  readonly rects: PackingRect[]
+interface ExtremePoint {
+  readonly x: number
+  readonly y: number
+  readonly z: number
 }
 
 interface SliceAccumulator {
@@ -262,19 +263,18 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
 function sortPackagesForPacking(
   drafts: ReadonlyArray<PackageDraft>,
 ): ReadonlyArray<PackageDraft> {
-  // Two-level sort:
-  //  1. Stackable bases first (table, bench). Once they sit on the floor
-  //     they offer flat surfaces for the rest of the load to rest on.
-  //     Chair stacks come next (they can take the floor OR sit on a
-  //     table/bench, but nothing can sit on them). Armchairs go last —
-  //     their curved tops support nothing, so we want to fit them into
-  //     leftover gaps rather than block prime floor space.
-  //  2. Within a tier, sort by volume desc with length/height as
-  //     tiebreakers so big items grab their slots before small ones.
-  // Without this ordering, volume-first alone places the tall chair
-  // stacks at the floor *before* any table arrives — and then the
-  // tables can no longer sit underneath, so the container looks half-
-  // empty with phantom "X units over capacity" badges.
+  // Three-tier sort tuned for "real container loading":
+  //   1. Chair stacks + benches first. They are tall/long and stable —
+  //      they belong on the floor as the load's base.
+  //   2. Tables next. They are short and flat, so they slide onto the
+  //      gap *above* a chair stack (chair 1.92 m + table 0.39 m fits
+  //      under the 2.40 m ceiling) — exactly what users expect to see
+  //      "stacked on top".
+  //   3. Armchairs last. Their armrests + curved seats can't support
+  //      anything, so we want them tucked into leftover gaps instead of
+  //      blocking prime floor real estate.
+  // Within a tier, volume-desc decides which big-and-stable item lands
+  // first — same effect as best-fit-decreasing.
   return [...drafts].sort((a, b) => {
     const tierDelta = packingTier(a.category) - packingTier(b.category)
     if (tierDelta !== 0) return tierDelta
@@ -294,125 +294,79 @@ function sortPackagesForPacking(
 }
 
 function packingTier(category: ProductCategory): number {
-  if (category === 'table' || category === 'bench') return 0
-  if (category === 'chair') return 1
+  if (category === 'chair' || category === 'bench') return 0
+  if (category === 'table') return 1
   return 2
 }
 
-function zRangesOverlap(
-  a: { readonly z: number; readonly width: number },
-  b: { readonly z: number; readonly width: number },
-): boolean {
-  return a.z < b.z + b.width - 0.001 && b.z < a.z + a.width - 0.001
+function intervalsOverlap(a0: number, a1: number, b0: number, b1: number): boolean {
+  return a0 < b1 - 0.001 && b0 < a1 - 0.001
 }
 
-function canUseVerticalCandidate({
-  column,
+function rectsOverlap(a: PlacedRect, b: PlacedRect): boolean {
+  return (
+    intervalsOverlap(a.x, a.x + a.l, b.x, b.x + b.l) &&
+    intervalsOverlap(a.y, a.y + a.h, b.y, b.y + b.h) &&
+    intervalsOverlap(a.z, a.z + a.w, b.z, b.z + b.w)
+  )
+}
+
+function tryPlaceAt({
   draft,
-  y,
-  z,
+  point,
+  placed,
 }: {
-  readonly column: PackingColumn
   readonly draft: PackageDraft
-  readonly y: number
-  readonly z: number
-}): boolean {
-  // Ground level is always fine — anything can sit on the container floor.
-  if (y <= 0.001) return true
-
-  // For anything above the floor, the candidate must be supported by at
-  // least one package whose top surface aligns with `y` (one GAP below).
-  const supports = column.rects.filter(
-    (rect) =>
-      Math.abs(rect.y + rect.height + GAP - y) <= 0.001 &&
-      zRangesOverlap(
-        { z, width: draft.size.width },
-        { z: rect.z, width: rect.width },
-      ),
-  )
-
-  if (supports.length === 0) return false
-
-  // Stacking realism: armchairs have armrests + a curved seat, so their
-  // top surface is unsafe to stack onto. Tables (flat tops), benches
-  // (long flat slats) and stacked chair pallets (rectangular crates of 10
-  // chairs flat-banded together) are all valid bases. Anything can sit
-  // on top — tables on tables, chair stacks on tables, benches on
-  // benches, etc.
-  return supports.every((rect) => rect.category !== 'armchair')
-}
-
-function tryPlaceInColumn(
-  column: PackingColumn,
-  draft: PackageDraft,
-): PackedPackage | null {
-  if (draft.size.length > column.length + 0.001) return null
-
-  const yEdges = new Set([0])
-  const zEdges = new Set([0])
-
-  for (const rect of column.rects) {
-    yEdges.add(round3(rect.y + rect.height + GAP))
-    zEdges.add(round3(rect.z + rect.width + GAP))
+  readonly point: ExtremePoint
+  readonly placed: ReadonlyArray<PlacedRect>
+}): PlacedRect | null {
+  const candidate: PlacedRect = {
+    x: point.x,
+    y: point.y,
+    z: point.z,
+    l: draft.size.length,
+    h: draft.size.height,
+    w: draft.size.width,
+    category: draft.category,
   }
 
-  const candidates = [...yEdges].flatMap((y) =>
-    [...zEdges].map((z) => ({ y, z })),
-  )
-
-  candidates.sort((a, b) => a.y - b.y || a.z - b.z)
-
-  for (const candidate of candidates) {
-    if (
-      candidate.z + draft.size.width > CONTAINER_INNER_METERS.width + 0.001 ||
-      candidate.y + draft.size.height > CONTAINER_INNER_METERS.height + 0.001
-    ) {
-      continue
-    }
-
-    if (
-      !canUseVerticalCandidate({
-        column,
-        draft,
-        y: candidate.y,
-        z: candidate.z,
-      })
-    ) {
-      continue
-    }
-
-    const overlaps = column.rects.some((rect) => {
-      const separated =
-        candidate.z + draft.size.width + GAP <= rect.z + 0.001 ||
-        rect.z + rect.width + GAP <= candidate.z + 0.001 ||
-        candidate.y + draft.size.height + GAP <= rect.y + 0.001 ||
-        rect.y + rect.height + GAP <= candidate.y + 0.001
-
-      return !separated
-    })
-
-    if (overlaps) continue
-
-    column.rects.push({
-      y: candidate.y,
-      z: candidate.z,
-      height: draft.size.height,
-      width: draft.size.width,
-      category: draft.category,
-    })
-
-    return toPackedPackage({
-      draft,
-      x: column.xStart + column.length / 2,
-      y:
-        -CONTAINER_INNER_METERS.height / 2 +
-        candidate.y +
-        draft.size.height / 2,
-      z: -CONTAINER_INNER_METERS.width / 2 + candidate.z + draft.size.width / 2,
-    })
+  if (
+    candidate.x + candidate.l > CONTAINER_INNER_METERS.length + 0.001 ||
+    candidate.y + candidate.h > CONTAINER_INNER_METERS.height + 0.001 ||
+    candidate.z + candidate.w > CONTAINER_INNER_METERS.width + 0.001
+  ) {
+    return null
   }
 
-  return null
+  for (const rect of placed) {
+    if (rectsOverlap(candidate, rect)) return null
+  }
+
+  // Off-floor candidates need a real flat surface to rest on. Armchairs
+  // have armrests + a curved seat — never use one as a base. Tables,
+  // benches and chair-pallets are all valid bases.
+  if (candidate.y > 0.001) {
+    const supports = placed.filter(
+      (rect) =>
+        Math.abs(rect.y + rect.h + GAP - candidate.y) <= 0.001 &&
+        intervalsOverlap(
+          candidate.x,
+          candidate.x + candidate.l,
+          rect.x,
+          rect.x + rect.l,
+        ) &&
+        intervalsOverlap(
+          candidate.z,
+          candidate.z + candidate.w,
+          rect.z,
+          rect.z + rect.w,
+        ),
+    )
+    if (supports.length === 0) return null
+    if (supports.some((rect) => rect.category === 'armchair')) return null
+  }
+
+  return candidate
 }
 
 function toPackedPackage({
@@ -446,46 +400,134 @@ function toPackedPackage({
   }
 }
 
+/**
+ * 3D bin packing — extreme-points heuristic.
+ *
+ * We maintain a small list of candidate corners (initially just the
+ * container origin). For each draft, sorted by volume descending, we try
+ * every candidate ordered by altitude ascending, then x, then z — so
+ * the floor fills before anything climbs. The first corner that fits
+ * (geometry, no overlap, supported by a non-armchair base when off the
+ * floor) wins. After placement we add three new candidates at the
+ * +x, +y, +z corners of the just-placed box.
+ *
+ * Why this replaces the old per-column packer:
+ *  - The old algorithm cut the container into vertical "columns" whose
+ *    length was frozen at the first draft inserted. A later draft just
+ *    slightly longer than the column was rejected even when there was
+ *    obviously room next door, producing phantom overflow at ~50% fill.
+ *  - Extreme points have no per-column geometry. Any draft that fits
+ *    anywhere goes anywhere — the container actually fills up.
+ */
 export function packContainerPackages(
   items: ReadonlyArray<CartItem>,
 ): PackedContainer {
-  const packages: PackedPackage[] = []
-  const columns: PackingColumn[] = []
   const { drafts, accumulators } = createPackageDrafts(items)
-  let nextXStart = -CONTAINER_INNER_METERS.length / 2
+  const packages: PackedPackage[] = []
+  const placed: PlacedRect[] = []
+  const points: ExtremePoint[] = [{ x: 0, y: 0, z: 0 }]
   let overflowUnits = 0
   let overflowPackages = 0
 
   for (const draft of sortPackagesForPacking(drafts)) {
-    let placed: PackedPackage | null = null
+    // Lowest first — floor fills before stacking — then bias toward the
+    // length-axis origin so loads visually start from the container door.
+    const sorted = [...points].sort(
+      (a, b) => a.y - b.y || a.x - b.x || a.z - b.z,
+    )
 
-    for (const column of columns) {
-      placed = tryPlaceInColumn(column, draft)
-      if (placed) break
-    }
-
-    if (!placed) {
-      const nextXEnd = nextXStart + draft.size.length
-      if (nextXEnd <= CONTAINER_INNER_METERS.length / 2 + 0.001) {
-        const column: PackingColumn = {
-          index: columns.length,
-          xStart: nextXStart,
-          length: draft.size.length,
-          rects: [],
-        }
-        columns.push(column)
-        nextXStart = nextXEnd + GAP
-        placed = tryPlaceInColumn(column, draft)
+    let placement: PlacedRect | null = null
+    let usedPoint: ExtremePoint | null = null
+    for (const point of sorted) {
+      const result = tryPlaceAt({ draft, point, placed })
+      if (result) {
+        placement = result
+        usedPoint = point
+        break
       }
     }
 
     const accumulator = accumulators[draft.sliceIndex]
 
-    if (placed && accumulator) {
-      accumulator.packedUnits += draft.units
-      accumulator.packageCount += 1
-      accumulator.xWeightedSum += placed.pos[0] * draft.units
-      packages.push(placed)
+    if (placement && usedPoint) {
+      placed.push(placement)
+
+      // Remove the corner we just consumed (avoid stale duplicates).
+      const idx = points.indexOf(usedPoint)
+      if (idx !== -1) points.splice(idx, 1)
+
+      // Drop any corner that's now inside the new package — it can no
+      // longer be reached.
+      for (let i = points.length - 1; i >= 0; i -= 1) {
+        const p = points[i]!
+        if (
+          p.x >= placement.x - 0.001 &&
+          p.x < placement.x + placement.l - 0.001 &&
+          p.y >= placement.y - 0.001 &&
+          p.y < placement.y + placement.h - 0.001 &&
+          p.z >= placement.z - 0.001 &&
+          p.z < placement.z + placement.w - 0.001
+        ) {
+          points.splice(i, 1)
+        }
+      }
+
+      // Three new candidate corners — to the right, above, and behind.
+      const candidates: ExtremePoint[] = [
+        {
+          x: round3(placement.x + placement.l + GAP),
+          y: placement.y,
+          z: placement.z,
+        },
+        {
+          x: placement.x,
+          y: round3(placement.y + placement.h + GAP),
+          z: placement.z,
+        },
+        {
+          x: placement.x,
+          y: placement.y,
+          z: round3(placement.z + placement.w + GAP),
+        },
+      ]
+      for (const p of candidates) {
+        if (
+          p.x < CONTAINER_INNER_METERS.length - 0.001 &&
+          p.y < CONTAINER_INNER_METERS.height - 0.001 &&
+          p.z < CONTAINER_INNER_METERS.width - 0.001 &&
+          !points.some(
+            (q) =>
+              Math.abs(q.x - p.x) < 0.001 &&
+              Math.abs(q.y - p.y) < 0.001 &&
+              Math.abs(q.z - p.z) < 0.001,
+          )
+        ) {
+          points.push(p)
+        }
+      }
+
+      const packedBox = toPackedPackage({
+        draft,
+        x:
+          -CONTAINER_INNER_METERS.length / 2 +
+          placement.x +
+          placement.l / 2,
+        y:
+          -CONTAINER_INNER_METERS.height / 2 +
+          placement.y +
+          placement.h / 2,
+        z:
+          -CONTAINER_INNER_METERS.width / 2 +
+          placement.z +
+          placement.w / 2,
+      })
+      packages.push(packedBox)
+
+      if (accumulator) {
+        accumulator.packedUnits += draft.units
+        accumulator.packageCount += 1
+        accumulator.xWeightedSum += packedBox.pos[0] * draft.units
+      }
     } else {
       overflowUnits += draft.units
       overflowPackages += 1
