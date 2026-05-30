@@ -162,7 +162,12 @@ describe('container visual packing', () => {
     expect(chairFirst.packages).toHaveLength(tableFirst.packages.length)
   })
 
-  it('allows tables above chair stacks but never places chairs above tables', () => {
+  it('stacks chair pallets on top of tables to reclaim vertical space', () => {
+    // With the tier-based sort, tables are placed first as stable bases,
+    // then the chair stacks layer on top — that's the realistic loading
+    // pattern (flat plywood crates of 10 chairs banded onto a table
+    // platform) and the only way the container reaches a useful fill
+    // ratio when the mix has both products.
     const packed = packContainerPackages([
       {
         product: table,
@@ -184,10 +189,11 @@ describe('container visual packing', () => {
 
     expect(tablePackage).toBeDefined()
     expect(chairPackages).toHaveLength(4)
-    expect(tablePackage?.pos[1]).toBeGreaterThan(
-      Math.max(...chairPackages.map((box) => box.pos[1])),
-    )
-    expect(chairPackages.every((box) => box.pos[1] < 0)).toBe(true)
+    // The table sits on the floor (negative Y, near container bottom),
+    // and at least one chair stack lands above it.
+    expect(tablePackage?.pos[1]).toBeLessThan(0)
+    const highestChair = Math.max(...chairPackages.map((box) => box.pos[1]))
+    expect(highestChair).toBeGreaterThan(tablePackage!.pos[1])
     expect(packed.overflowUnits).toBe(0)
   })
 })

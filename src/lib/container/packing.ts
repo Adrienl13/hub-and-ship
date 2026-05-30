@@ -262,14 +262,23 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
 function sortPackagesForPacking(
   drafts: ReadonlyArray<PackageDraft>,
 ): ReadonlyArray<PackageDraft> {
-  // Pure best-fit-decreasing: sort by volume desc, with size deltas as
-  // tiebreakers. We intentionally do NOT group by category any more —
-  // grouping made the visualisation look like 3 monolithic blocks (all
-  // chairs, then all tables, then all benches) instead of a realistically
-  // mixed load. Vertical stacking rules (chairs cannot support anything,
-  // tables only on tables/chairs) are still enforced by
-  // canUseVerticalCandidate so the physics stay sane.
+  // Two-level sort:
+  //  1. Stackable bases first (table, bench). Once they sit on the floor
+  //     they offer flat surfaces for the rest of the load to rest on.
+  //     Chair stacks come next (they can take the floor OR sit on a
+  //     table/bench, but nothing can sit on them). Armchairs go last —
+  //     their curved tops support nothing, so we want to fit them into
+  //     leftover gaps rather than block prime floor space.
+  //  2. Within a tier, sort by volume desc with length/height as
+  //     tiebreakers so big items grab their slots before small ones.
+  // Without this ordering, volume-first alone places the tall chair
+  // stacks at the floor *before* any table arrives — and then the
+  // tables can no longer sit underneath, so the container looks half-
+  // empty with phantom "X units over capacity" badges.
   return [...drafts].sort((a, b) => {
+    const tierDelta = packingTier(a.category) - packingTier(b.category)
+    if (tierDelta !== 0) return tierDelta
+
     const volA = a.size.length * a.size.height * a.size.width
     const volB = b.size.length * b.size.height * b.size.width
     if (Math.abs(volB - volA) > 0.001) return volB - volA
@@ -282,6 +291,12 @@ function sortPackagesForPacking(
 
     return a.originalIndex - b.originalIndex
   })
+}
+
+function packingTier(category: ProductCategory): number {
+  if (category === 'table' || category === 'bench') return 0
+  if (category === 'chair') return 1
+  return 2
 }
 
 function zRangesOverlap(
@@ -302,11 +317,11 @@ function canUseVerticalCandidate({
   readonly y: number
   readonly z: number
 }): boolean {
+  // Ground level is always fine — anything can sit on the container floor.
   if (y <= 0.001) return true
 
-  if (draft.category === 'chair') return false
-  if (draft.category !== 'table') return false
-
+  // For anything above the floor, the candidate must be supported by at
+  // least one package whose top surface aligns with `y` (one GAP below).
   const supports = column.rects.filter(
     (rect) =>
       Math.abs(rect.y + rect.height + GAP - y) <= 0.001 &&
@@ -318,9 +333,13 @@ function canUseVerticalCandidate({
 
   if (supports.length === 0) return false
 
-  return supports.every(
-    (rect) => rect.category === 'chair' || rect.category === 'table',
-  )
+  // Stacking realism: armchairs have armrests + a curved seat, so their
+  // top surface is unsafe to stack onto. Tables (flat tops), benches
+  // (long flat slats) and stacked chair pallets (rectangular crates of 10
+  // chairs flat-banded together) are all valid bases. Anything can sit
+  // on top — tables on tables, chair stacks on tables, benches on
+  // benches, etc.
+  return supports.every((rect) => rect.category !== 'armchair')
 }
 
 function tryPlaceInColumn(
