@@ -157,7 +157,7 @@ function ContainerClubPage() {
                 Catalogue
               </div>
               <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-                Choisissez vos modèles, couleur par couleur.
+                Choisissez vos modèles, design par design.
               </h2>
               <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
                 Chaque référence affiche son MOQ en temps réel : ajoutez votre
@@ -208,7 +208,7 @@ function ContainerClubPage() {
                       type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Rechercher SKU, modèle, couleur..."
+                      placeholder="Rechercher SKU, modèle, design..."
                       className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:w-64 sm:text-xs"
                     />
                   </label>
@@ -285,7 +285,7 @@ function ContainerClubPage() {
               <div className="mt-4 text-[11px] text-muted-foreground">
                 MOQ usine :{' '}
                 <strong className="text-foreground/80">
-                  50 unités par modèle ET par couleur
+                  50 unités par modèle ET par design
                 </strong>{' '}
                 pour les assises, 20 pour les tables.
               </div>
@@ -400,10 +400,6 @@ function Stock24hTeaser() {
                   loading="lazy"
                   decoding="async"
                   className="h-full w-full object-cover"
-                />
-                <span
-                  className="absolute inset-x-0 bottom-0 h-1.5"
-                  style={{ backgroundColor: line.variant.hex }}
                 />
               </span>
               <span className="min-w-0">

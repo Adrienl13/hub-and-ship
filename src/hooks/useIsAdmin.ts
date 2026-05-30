@@ -10,8 +10,14 @@ export interface UseIsAdminResult {
 }
 
 /**
- * Reads the current user's role from `public.users_profile`.
- * Returns `isAdmin = true` when role is `admin` or `super_admin`.
+ * Calls the `public.is_admin()` Postgres helper to decide whether the current
+ * user is admin. That helper is the same source of truth used by the RLS
+ * policies on containers / products / variants / seed commitments, and it
+ * accepts admin status from EITHER `users_profile.role IN ('admin',
+ * 'super_admin')` OR `professionals.is_admin = true`. Reading the role
+ * column directly here would diverge from RLS for users who are admin only
+ * via the `professionals` table (cf. migration
+ * 20260525093000_align_is_admin_with_profile_role.sql).
  *
  * Returns `isLoading=false, isAdmin=false` when Supabase is not configured
  * or the visitor is anonymous so AdminGuard can short-circuit quickly.
@@ -45,17 +51,15 @@ export function useIsAdmin(): UseIsAdminResult {
 
     let cancelled = false
     setIsLoading(true)
-    void client
-      .from('users_profile')
-      .select('role')
-      .eq('id', auth.user.id)
-      .maybeSingle<{ role: string | null }>()
-      .then(({ data }) => {
-        if (cancelled) return
-        const role = data?.role
-        setIsAdmin(role === 'admin' || role === 'super_admin')
-        setIsLoading(false)
-      })
+    void client.rpc('is_admin').then(({ data, error }) => {
+      if (cancelled) return
+      if (error) {
+        setIsAdmin(false)
+      } else {
+        setIsAdmin(data === true)
+      }
+      setIsLoading(false)
+    })
 
     return () => {
       cancelled = true

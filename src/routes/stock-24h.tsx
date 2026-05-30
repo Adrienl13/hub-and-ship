@@ -131,7 +131,7 @@ function Stock24hPage() {
                       type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Rechercher modèle, SKU, couleur..."
+                      placeholder="Rechercher modèle, SKU, design..."
                       className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     />
                   </label>
@@ -226,10 +226,6 @@ function StockRow({
           loading="lazy"
           decoding="async"
           className="h-full w-full object-cover"
-        />
-        <span
-          className="absolute inset-x-0 bottom-0 h-1.5"
-          style={{ backgroundColor: line.variant.hex }}
         />
       </button>
 

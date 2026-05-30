@@ -21,7 +21,7 @@ export const Route = createFileRoute('/faq')({
       {
         name: 'description',
         content:
-          'Foire aux questions Container Club : seuil 80 %, MOQ couleurs, échéancier de paiement, douane, livraison, garanties et SAV.',
+          'Foire aux questions Container Club : seuil 80 %, MOQ par design, échéancier de paiement, douane, livraison, garanties et SAV.',
       },
     ],
   }),

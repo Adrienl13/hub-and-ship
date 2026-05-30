@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
-import { VariantSelector } from '@/components/VariantSelector'
+import { DesignSelector } from '@/components/DesignSelector'
 import { Button } from '@/components/ui/button'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { formatEUR, getMoqStatus } from '@/lib/order'
@@ -55,10 +55,6 @@ function CatalogueLineItemComponent({
           decoding="async"
           className="h-full w-full object-cover"
         />
-        <span
-          className="absolute inset-x-0 bottom-0 h-1.5"
-          style={{ backgroundColor: variant?.hex }}
-        />
       </button>
 
       <div className="min-w-0">
@@ -97,7 +93,7 @@ function CatalogueLineItemComponent({
         </div>
       </div>
 
-      <VariantSelector
+      <DesignSelector
         variants={product.variants}
         selectedVariantId={variantId}
         onChange={onVariantChange}

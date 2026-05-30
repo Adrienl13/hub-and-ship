@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, Layers3 } from 'lucide-react'
 
-import { VariantSelector } from '@/components/VariantSelector'
+import { DesignSelector } from '@/components/DesignSelector'
 import type { Product } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
 
@@ -145,7 +145,7 @@ export function TableConfigurator({
         </div>
 
         {shapeId !== 'base-only' && (
-          <VariantSelector
+          <DesignSelector
             variants={product.variants}
             selectedVariantId={variantId}
             onChange={onVariantChange}

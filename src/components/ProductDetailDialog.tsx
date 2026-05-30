@@ -15,43 +15,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { CATEGORY_LABEL, type ColorVariant, type Product } from '@/lib/products'
+import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { getMoqStatus, formatEUR } from '@/lib/order'
 import { TableConfigurator } from '@/components/TableConfigurator'
 import { ProductGallery } from '@/components/ProductGallery'
 import { ProductDocumentsList } from '@/components/ProductDocumentsList'
 import { ProductReviews } from '@/components/ProductReviews'
 import { QuantityStepper } from '@/components/QuantityStepper'
+import { DesignSelector } from '@/components/DesignSelector'
 import { getQuantityRule } from '@/lib/quantity'
-
-function BigSwatch({
-  variant,
-  selected,
-  onClick,
-}: {
-  variant: ColorVariant
-  selected: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      title={variant.name}
-      className={`ring-foreground/15 group relative h-14 w-14 overflow-hidden rounded-sm ring-1 transition-all hover:scale-105 ${
-        selected ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card' : ''
-      }`}
-      style={{ background: variant.hex }}
-    >
-      {selected && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Check className="h-4 w-4 text-white drop-shadow" strokeWidth={2.5} />
-        </span>
-      )}
-    </button>
-  )
-}
 
 export function ProductDetailDialog({
   product,
@@ -116,7 +88,7 @@ export function ProductDetailDialog({
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Galerie */}
           <div className="space-y-2">
-            <ProductGallery product={product} />
+            <ProductGallery product={product} design={variant} />
 
             {/* Specs */}
             <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
@@ -193,19 +165,12 @@ export function ProductDetailDialog({
               />
             ) : (
               <div>
-                <div className="label-eyebrow mb-2 text-muted-foreground">
-                  Couleur · {variant.name}
-                </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {product.variants.map((v) => (
-                    <BigSwatch
-                      key={v.id}
-                      variant={v}
-                      selected={v.id === variantId}
-                      onClick={() => onVariantChange(v.id)}
-                    />
-                  ))}
-                </div>
+                <DesignSelector
+                  variants={product.variants}
+                  selectedVariantId={variantId}
+                  onChange={onVariantChange}
+                  size="lg"
+                />
                 <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
                   <span className="font-medium">MOQ {variant.name} :</span>{' '}
                   <span className="tabular-nums">

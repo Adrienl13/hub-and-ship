@@ -6,7 +6,7 @@ import { getQuantityRule } from '@/lib/quantity'
 import { Button } from '@/components/ui/button'
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
-import { VariantSelector } from '@/components/VariantSelector'
+import { DesignSelector } from '@/components/DesignSelector'
 
 function ProductRowComponent({
   product,
@@ -57,10 +57,6 @@ function ProductRowComponent({
             decoding="async"
             className="h-full w-full object-cover"
           />
-          <span
-            className="absolute inset-x-0 bottom-0 h-2"
-            style={{ backgroundColor: variant?.hex }}
-          />
         </button>
 
         {/* Body */}
@@ -103,7 +99,7 @@ function ProductRowComponent({
 
           {/* Variantes */}
           <div className="mt-3">
-            <VariantSelector
+            <DesignSelector
               variants={product.variants}
               selectedVariantId={variantId}
               onChange={onVariantChange}

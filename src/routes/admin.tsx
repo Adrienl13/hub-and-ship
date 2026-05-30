@@ -1,4 +1,5 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { z } from 'zod'
 import {
   AlertTriangle,
   ArrowRight,
@@ -18,6 +19,7 @@ import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
 import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
 import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
+import { AdminUsersTab } from '@/components/AdminUsersTab'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,6 +31,7 @@ import {
   type AdminReservationRow,
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -49,8 +52,26 @@ import type {
   StockRequestStatus,
 } from '@/lib/supabase/types'
 
+const ADMIN_TABS = [
+  'overview',
+  'stock-requests',
+  'reservations',
+  'products',
+  'containers',
+  'quality',
+  'carriers',
+  'users',
+] as const
+
+type AdminTab = (typeof ADMIN_TABS)[number]
+
+const adminSearchSchema = z.object({
+  tab: z.enum(ADMIN_TABS).optional(),
+})
+
 export const Route = createFileRoute('/admin')({
   component: AdminRoute,
+  validateSearch: adminSearchSchema,
 })
 
 function AdminRoute() {
@@ -60,15 +81,6 @@ function AdminRoute() {
     </AdminGuard>
   )
 }
-
-type AdminTab =
-  | 'overview'
-  | 'stock-requests'
-  | 'reservations'
-  | 'products'
-  | 'containers'
-  | 'quality'
-  | 'carriers'
 
 const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
   draft: 'Brouillon',
@@ -90,6 +102,15 @@ const STOCK_REQUEST_STATUS_LABEL_LOCAL: Record<StockRequestStatus, string> = {
   closed: 'Fermée',
 }
 
+// Stripe dashboard URLs differ between test and live modes. Detect from the
+// publishable key prefix (the only reliable client-side signal — payment
+// intent IDs themselves don't carry a test/live marker).
+function buildStripePaymentIntentUrl(paymentIntentId: string): string {
+  const pubKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? ''
+  const segment = pubKey.startsWith('pk_test_') ? '/test' : ''
+  return `https://dashboard.stripe.com${segment}/payments/${paymentIntentId}`
+}
+
 const CANCELLATION_REASONS = [
   { value: 'client_request', label: 'Demande client' },
   { value: 'minimum_not_reached', label: 'Minimum non atteint' },
@@ -99,7 +120,15 @@ const CANCELLATION_REASONS = [
 
 function AdminPage() {
   const auth = useAuth()
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview')
+  const navigate = useNavigate({ from: '/admin' })
+  const { tab } = Route.useSearch()
+  const activeTab: AdminTab = tab ?? 'overview'
+  const setActiveTab = (next: AdminTab) => {
+    void navigate({
+      search: next === 'overview' ? {} : { tab: next },
+      replace: true,
+    })
+  }
 
   const snapshot = useMemo(() => createAdminDashboardSnapshot(), [])
 
@@ -139,6 +168,7 @@ function AdminPage() {
               ['containers', 'Containers'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
+              ['users', 'Utilisateurs'],
             ] as const
           ).map(([id, label]) => {
             const active = activeTab === id
@@ -178,6 +208,7 @@ function AdminPage() {
         {activeTab === 'carriers' && (
           <AdminCarrierPartnersTab authStatus={auth.status} />
         )}
+        {activeTab === 'users' && <AdminUsersTab authStatus={auth.status} />}
       </section>
     </main>
   )
@@ -322,10 +353,15 @@ function StockRequestsAdminPanel({
 }: {
   readonly authStatus: string
 }) {
+  const auth = useAuth()
   const [rows, setRows] = useState<ReadonlyArray<StockRequestAdminRow>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<StockRequestStatus | 'all'>(
+    'all',
+  )
+  const [search, setSearch] = useState('')
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
@@ -368,6 +404,13 @@ function StockRequestsAdminPanel({
     ) as StockRequestAdminClient
     try {
       await updateStockRequestStatus(client, row.id, target)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'stock_request.status_change',
+        target: row.id,
+        previousValue: row.status,
+        nextValue: target,
+        extra: { company: row.companyName, sku: row.sku },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -397,6 +440,20 @@ function StockRequestsAdminPanel({
     }
   }
 
+  const filteredRows = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+    return rows.filter((row) => {
+      if (statusFilter !== 'all' && row.status !== statusFilter) return false
+      if (!needle) return true
+      return (
+        row.companyName.toLowerCase().includes(needle) ||
+        row.contactEmail.toLowerCase().includes(needle) ||
+        row.sku.toLowerCase().includes(needle) ||
+        row.productName.toLowerCase().includes(needle)
+      )
+    })
+  }, [rows, statusFilter, search])
+
   if (!isConfigured) {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
@@ -421,18 +478,46 @@ function StockRequestsAdminPanel({
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          placeholder="Rechercher société / email / SKU / produit"
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 max-w-xs text-xs"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as StockRequestStatus | 'all')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+        >
+          <option value="all">Tous statuts</option>
+          {(
+            ['new', 'contacted', 'reserved', 'converted', 'closed'] as const
+          ).map((s) => (
+            <option key={s} value={s}>
+              {STOCK_REQUEST_STATUS_LABEL_LOCAL[s]}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-muted-foreground">
+          {filteredRows.length} / {rows.length}
+        </span>
+      </div>
+
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         {loading ? (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             Chargement…
           </div>
-        ) : rows.length === 0 ? (
+        ) : filteredRows.length === 0 ? (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             Aucune demande stock.
           </div>
         ) : (
           <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-            {rows.map((row) => {
+            {filteredRows.map((row) => {
               const busy = busyId === row.id
               const buttons = STOCK_REQUEST_NEXT_BUTTONS(row.status)
               return (
@@ -563,6 +648,7 @@ function ReservationsAdminPanel({
 }: {
   readonly authStatus: string
 }) {
+  const auth = useAuth()
   const [rows, setRows] = useState<ReadonlyArray<AdminReservationRow>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -570,6 +656,10 @@ function ReservationsAdminPanel({
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [cancelReason, setCancelReason] =
     useState<(typeof CANCELLATION_REASONS)[number]['value']>('client_request')
+  const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>(
+    'all',
+  )
+  const [search, setSearch] = useState('')
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
@@ -601,6 +691,21 @@ function ReservationsAdminPanel({
     void refresh()
   }, [refresh])
 
+  const filteredRows = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+    return rows.filter((row) => {
+      if (statusFilter !== 'all' && row.status !== statusFilter) return false
+      if (!needle) return true
+      return (
+        row.reference.toLowerCase().includes(needle) ||
+        row.siret.toLowerCase().includes(needle) ||
+        (row.companyLegalName?.toLowerCase().includes(needle) ?? false) ||
+        (row.contactEmail?.toLowerCase().includes(needle) ?? false) ||
+        (row.contactName?.toLowerCase().includes(needle) ?? false)
+      )
+    })
+  }, [rows, statusFilter, search])
+
   async function changeStatus(
     row: AdminReservationRow,
     target: ReservationStatus,
@@ -619,6 +724,13 @@ function ReservationsAdminPanel({
     ) as AdminReservationsClient
     try {
       await updateReservationStatus(client, row.id, { status: target })
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'reservation.status_change',
+        target: row.id,
+        previousValue: row.status,
+        nextValue: target,
+        extra: { reference: row.reference },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -636,6 +748,14 @@ function ReservationsAdminPanel({
       await updateReservationStatus(client, row.id, {
         status: 'cancelled',
         cancellationReason: cancelReason,
+      })
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'reservation.cancel',
+        target: row.id,
+        previousValue: row.status,
+        nextValue: 'cancelled',
+        note: cancelReason,
+        extra: { reference: row.reference },
       })
       setCancellingId(null)
       await refresh()
@@ -690,18 +810,46 @@ function ReservationsAdminPanel({
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          placeholder="Rechercher référence / SIRET / société / email"
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 max-w-sm text-xs"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as ReservationStatus | 'all')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+        >
+          <option value="all">Tous statuts</option>
+          {(Object.keys(RESERVATION_STATUS_LABEL) as ReservationStatus[]).map(
+            (s) => (
+              <option key={s} value={s}>
+                {RESERVATION_STATUS_LABEL[s]}
+              </option>
+            ),
+          )}
+        </select>
+        <span className="text-xs text-muted-foreground">
+          {filteredRows.length} / {rows.length}
+        </span>
+      </div>
+
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         {loading ? (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             Chargement…
           </div>
-        ) : rows.length === 0 ? (
+        ) : filteredRows.length === 0 ? (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             Aucune réservation.
           </div>
         ) : (
           <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-            {rows.map((row) => {
+            {filteredRows.map((row) => {
               const busy = busyId === row.id
               const actions = RESERVATION_ACTIONS[row.status]
               const isCancelling = cancellingId === row.id
@@ -719,7 +867,9 @@ function ReservationsAdminPanel({
                     </div>
                     {row.stripePaymentIntentId && (
                       <a
-                        href={`https://dashboard.stripe.com/test/payments/${row.stripePaymentIntentId}`}
+                        href={buildStripePaymentIntentUrl(
+                          row.stripePaymentIntentId,
+                        )}
                         target="_blank"
                         rel="noreferrer"
                         className="mt-1 inline-flex items-center gap-1 text-xs text-[color:var(--ember)] hover:underline"

@@ -4,11 +4,13 @@
 
 export type ProductCategory = 'chair' | 'armchair' | 'table' | 'bench'
 
-export interface ColorVariant {
+export interface DesignVariant {
   id: string
   name: string
-  hex: string
+  /** Hero photo of this design (thumbnail in selector, default in gallery). */
   imageUrl?: string
+  /** Additional photos shown when this design is selected. */
+  galleryUrls?: string[]
   /** Unités déjà engagées par d'autres pros (simulé) */
   unitsCommitted: number
 }
@@ -31,7 +33,7 @@ export interface Product {
   ecoContribution: number
   mainImageUrl: string
   galleryUrls: string[]
-  variants: ColorVariant[]
+  variants: DesignVariant[]
   features: string[]
   fireRating?: 'M1' | 'M2'
 }
@@ -73,12 +75,12 @@ export const PRODUCTS: Product[] = [
     ],
     fireRating: 'M2',
     variants: [
-      { id: 'v1a', name: 'Noir charbon', hex: '#1f1f1f', unitsCommitted: 38 },
-      { id: 'v1b', name: 'Gris ardoise', hex: '#5e5e5e', unitsCommitted: 22 },
-      { id: 'v1c', name: 'Beige sable', hex: '#c9b88a', unitsCommitted: 52 },
-      { id: 'v1d', name: 'Brun expresso', hex: '#3d2817', unitsCommitted: 12 },
-      { id: 'v1e', name: 'Blanc craie', hex: '#e8e0d0', unitsCommitted: 0 },
-      { id: 'v1f', name: 'Vert olive', hex: '#5a6b3a', unitsCommitted: 8 },
+      { id: 'v1a', name: 'Noir charbon', unitsCommitted: 38 },
+      { id: 'v1b', name: 'Gris ardoise', unitsCommitted: 22 },
+      { id: 'v1c', name: 'Beige sable', unitsCommitted: 52 },
+      { id: 'v1d', name: 'Brun expresso', unitsCommitted: 12 },
+      { id: 'v1e', name: 'Blanc craie', unitsCommitted: 0 },
+      { id: 'v1f', name: 'Vert olive', unitsCommitted: 8 },
     ],
   },
   {
@@ -110,19 +112,16 @@ export const PRODUCTS: Product[] = [
       {
         id: 'v2a',
         name: 'Noir / coussin écru',
-        hex: '#1f1f1f',
         unitsCommitted: 28,
       },
       {
         id: 'v2b',
         name: 'Gris / coussin anthracite',
-        hex: '#5e5e5e',
         unitsCommitted: 18,
       },
       {
         id: 'v2c',
         name: 'Naturel / coussin lin',
-        hex: '#c9b88a',
         unitsCommitted: 50,
       },
     ],
@@ -153,15 +152,14 @@ export const PRODUCTS: Product[] = [
     ],
     fireRating: 'M1',
     variants: [
-      { id: 'v3a', name: 'Plateau Teck', hex: '#a87344', unitsCommitted: 14 },
-      { id: 'v3b', name: 'Plateau Ardoise', hex: '#3a3a3e', unitsCommitted: 8 },
+      { id: 'v3a', name: 'Plateau Teck', unitsCommitted: 14 },
+      { id: 'v3b', name: 'Plateau Ardoise', unitsCommitted: 8 },
       {
         id: 'v3c',
         name: 'Plateau Marbre blanc',
-        hex: '#e8e4dc',
         unitsCommitted: 22,
       },
-      { id: 'v3d', name: 'Plateau Béton', hex: '#8a8580', unitsCommitted: 6 },
+      { id: 'v3d', name: 'Plateau Béton', unitsCommitted: 6 },
     ],
   },
   {
@@ -190,20 +188,18 @@ export const PRODUCTS: Product[] = [
     ],
     fireRating: 'M2',
     variants: [
-      { id: 'v4a', name: 'Textilène Noir', hex: '#1f1f1f', unitsCommitted: 55 },
+      { id: 'v4a', name: 'Textilène Noir', unitsCommitted: 55 },
       {
         id: 'v4b',
         name: 'Textilène Anthracite',
-        hex: '#3a3a3e',
         unitsCommitted: 32,
       },
       {
         id: 'v4c',
         name: 'Textilène Taupe',
-        hex: '#9a8a7a',
         unitsCommitted: 18,
       },
-      { id: 'v4d', name: 'Textilène Écru', hex: '#d8cdb8', unitsCommitted: 8 },
+      { id: 'v4d', name: 'Textilène Écru', unitsCommitted: 8 },
     ],
   },
   {
@@ -230,8 +226,8 @@ export const PRODUCTS: Product[] = [
       'Pieds anti-glisse',
     ],
     variants: [
-      { id: 'v5a', name: 'Noir charbon', hex: '#1f1f1f', unitsCommitted: 22 },
-      { id: 'v5b', name: 'Beige sable', hex: '#c9b88a', unitsCommitted: 14 },
+      { id: 'v5a', name: 'Noir charbon', unitsCommitted: 22 },
+      { id: 'v5b', name: 'Beige sable', unitsCommitted: 14 },
     ],
   },
   {
@@ -259,14 +255,13 @@ export const PRODUCTS: Product[] = [
     ],
     fireRating: 'M1',
     variants: [
-      { id: 'v6a', name: 'Plateau Teck', hex: '#a87344', unitsCommitted: 18 },
+      { id: 'v6a', name: 'Plateau Teck', unitsCommitted: 18 },
       {
         id: 'v6b',
         name: 'Plateau Ardoise',
-        hex: '#3a3a3e',
         unitsCommitted: 12,
       },
-      { id: 'v6c', name: 'Plateau Béton', hex: '#8a8580', unitsCommitted: 4 },
+      { id: 'v6c', name: 'Plateau Béton', unitsCommitted: 4 },
     ],
   },
 ]
@@ -358,6 +353,6 @@ export const PAST_CONTAINERS = [
 export function findVariant(
   p: Product,
   variantId: string,
-): ColorVariant | undefined {
+): DesignVariant | undefined {
   return p.variants.find((v) => v.id === variantId)
 }

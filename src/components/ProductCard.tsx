@@ -3,7 +3,7 @@ import { Info } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
-import { VariantSelector } from '@/components/VariantSelector'
+import { DesignSelector } from '@/components/DesignSelector'
 import { Button } from '@/components/ui/button'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { formatEUR, getMoqStatus } from '@/lib/order'
@@ -56,10 +56,6 @@ function ProductCardComponent({
           decoding="async"
           className="h-full w-full object-cover"
         />
-        <span
-          className="absolute inset-x-0 bottom-0 h-2"
-          style={{ backgroundColor: variant?.hex }}
-        />
         <span className="bg-[color:var(--sand-soft)]/90 absolute left-3 top-3 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
           {CATEGORY_LABEL[product.category]}
         </span>
@@ -100,7 +96,7 @@ function ProductCardComponent({
           </div>
         </div>
 
-        <VariantSelector
+        <DesignSelector
           variants={product.variants}
           selectedVariantId={variantId}
           onChange={onVariantChange}

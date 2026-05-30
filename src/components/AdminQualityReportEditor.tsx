@@ -18,6 +18,10 @@ import {
   type QualityReportOrganization,
   type QualityReportType,
 } from '@/lib/quality-reports/types'
+import {
+  qualityHighlightsArraySchema,
+  validateJsonb,
+} from '@/lib/admin/jsonb-schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { Database, Json } from '@/lib/supabase/types'
@@ -269,6 +273,21 @@ export function AdminQualityReportEditor({
     event.preventDefault()
     setSaving(true)
     setError(null)
+
+    const cleanHighlights = state.highlights.filter(
+      (h) => h.label.trim() && h.value.trim(),
+    )
+    const highlightsCheck = validateJsonb(
+      qualityHighlightsArraySchema,
+      cleanHighlights,
+      'Highlights',
+    )
+    if (!highlightsCheck.ok) {
+      setError(highlightsCheck.message)
+      setSaving(false)
+      return
+    }
+
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
       setError('Supabase non configuré.')

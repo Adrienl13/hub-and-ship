@@ -15,6 +15,8 @@ import {
   type QualityReportsClient,
 } from '@/lib/quality-reports/repository'
 import type { QualityReportDetail } from '@/lib/quality-reports/types'
+import { useAuth } from '@/hooks/useAuth'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { AuthStatus } from '@/hooks/useAuth'
@@ -54,6 +56,7 @@ export function AdminQualityReportsTab({
   const [editing, setEditing] = useState<QualityReportDetail | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
 
@@ -100,6 +103,19 @@ export function AdminQualityReportsTab({
     if (updateError) {
       setError(updateError.message)
     } else {
+      const action =
+        payload.published_at === null
+          ? 'quality_report.unpublish'
+          : payload.published_at
+            ? 'quality_report.publish'
+            : payload.is_active === false
+              ? 'quality_report.deactivate'
+              : 'quality_report.update'
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action,
+        target: row.id,
+        extra: { reference: row.referenceNumber },
+      })
       await refresh()
     }
     setBusyId(null)
@@ -123,6 +139,11 @@ export function AdminQualityReportsTab({
     if (deleteError) {
       setError(deleteError.message)
     } else {
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'quality_report.delete',
+        target: row.id,
+        extra: { reference: row.referenceNumber, title: row.title },
+      })
       await refresh()
     }
     setBusyId(null)

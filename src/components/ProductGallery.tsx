@@ -2,26 +2,52 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Images, Maximize2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import type { Product } from '@/lib/products'
+import type { DesignVariant, Product } from '@/lib/products'
 
 const GALLERY_LABELS = ['Vue produit', 'Ambiance', 'Matière', 'Détail']
 
-function uniqueImages(urls: string[]): string[] {
-  return Array.from(new Set(urls.filter(Boolean)))
+function uniqueImages(urls: Array<string | null | undefined>): string[] {
+  return Array.from(
+    new Set(urls.filter((url): url is string => Boolean(url))),
+  )
 }
 
-export function ProductGallery({ product }: { product: Product }) {
+export function ProductGallery({
+  product,
+  design,
+}: {
+  product: Product
+  design?: DesignVariant | null
+}) {
+  // When a design is selected, surface its photos first so the client sees
+  // exactly what they are about to commit to. We still append the product
+  // hero + gallery as fallback so the picker never collapses to a single
+  // shot if the admin hasn't uploaded design-specific photos yet.
   const images = useMemo(
-    () => uniqueImages([product.mainImageUrl, ...product.galleryUrls]),
-    [product.galleryUrls, product.mainImageUrl],
+    () =>
+      uniqueImages([
+        design?.imageUrl,
+        ...(design?.galleryUrls ?? []),
+        product.mainImageUrl,
+        ...product.galleryUrls,
+      ]),
+    [
+      design?.imageUrl,
+      design?.galleryUrls,
+      product.galleryUrls,
+      product.mainImageUrl,
+    ],
   )
   const [selectedIndex, setSelectedIndex] = useState(0)
   const selectedImage = images[selectedIndex] ?? product.mainImageUrl
   const hasMultipleImages = images.length > 1
 
+  // Reset to the first photo whenever the product OR the chosen design
+  // changes — the user expects to see the design's hero, not whichever
+  // index they had landed on for the previous design.
   useEffect(() => {
     setSelectedIndex(0)
-  }, [product.id])
+  }, [product.id, design?.id])
 
   function goToPrevious() {
     if (!hasMultipleImages) return

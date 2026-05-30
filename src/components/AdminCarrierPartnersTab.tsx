@@ -18,6 +18,8 @@ import {
   type AdminCarrier,
   type CarrierPartnersClient,
 } from '@/lib/carrier-partners/repository'
+import { useAuth } from '@/hooks/useAuth'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { AuthStatus } from '@/hooks/useAuth'
@@ -36,6 +38,7 @@ export function AdminCarrierPartnersTab({
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
 
@@ -73,6 +76,11 @@ export function AdminCarrierPartnersTab({
     try {
       if (row.isActive) await deactivateCarrier(client, row.id)
       else await reactivateCarrier(client, row.id)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: row.isActive ? 'carrier.deactivate' : 'carrier.activate',
+        target: row.id,
+        extra: { slug: row.slug, name: row.name },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -90,6 +98,11 @@ export function AdminCarrierPartnersTab({
     const client = createSupabaseBrowserClient(config) as CarrierPartnersClient
     try {
       await deleteCarrier(client, row.id)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'carrier.delete',
+        target: row.id,
+        extra: { slug: row.slug, name: row.name },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')

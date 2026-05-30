@@ -39,8 +39,8 @@ export interface AdminProductVariant {
   readonly id: string
   readonly productId: string
   readonly name: string
-  readonly hex: string
   readonly imageUrl: string | null
+  readonly galleryUrls: ReadonlyArray<string>
   readonly sortOrder: number
 }
 
@@ -95,8 +95,8 @@ export function fromVariantRow(row: ProductVariantRow): AdminProductVariant {
     id: row.id,
     productId: row.product_id,
     name: row.name,
-    hex: row.hex,
     imageUrl: row.image_url,
+    galleryUrls: row.gallery_urls ?? [],
     sortOrder: row.sort_order,
   }
 }

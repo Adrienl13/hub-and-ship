@@ -11,6 +11,18 @@ const GAP = 0.04
 const CHAIR_STACK_UNITS = 10
 const CHAIR_STACKS_ACROSS_WIDTH = 4
 
+/** Deterministic HSL colour from a stable string (variant id) — used only
+ * for the container-packing visualisation so distinct designs render as
+ * distinct blocks. Not a brand colour; replaces the former `variant.hex`. */
+function colourFromId(id: string): string {
+  let h = 0
+  for (let i = 0; i < id.length; i++) {
+    h = (h * 31 + id.charCodeAt(i)) | 0
+  }
+  const hue = Math.abs(h) % 360
+  return `hsl(${hue}, 38%, 55%)`
+}
+
 export interface PackageSizeMeters {
   readonly length: number
   readonly height: number
@@ -208,7 +220,7 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
     const accumulator: SliceAccumulator = {
       productId: item.product.id,
       productName: item.product.name,
-      color: item.variant.hex,
+      color: colourFromId(item.variant.id),
       requestedUnits: item.quantity,
       packedUnits: 0,
       overflowUnits: 0,
@@ -222,7 +234,7 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
       drafts.push({
         size: spec.size,
         category: item.product.category,
-        color: item.variant.hex,
+        color: colourFromId(item.variant.id),
         productId: item.product.id,
         productName: item.product.name,
         units: Math.min(spec.unitsPerPackage, remainingUnits),

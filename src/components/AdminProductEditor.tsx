@@ -7,15 +7,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
-import type { Database, FireRatingDb } from '@/lib/supabase/types'
+import type { Database, FireRatingDb, Json } from '@/lib/supabase/types'
 import type { ProductCategory } from '@/lib/products'
 import {
-  deleteVariant,
   getProductWithVariants,
   listCommitmentsForProduct,
-  updateProduct,
-  upsertCommitment,
-  upsertVariant,
   type CatalogueAdminClient,
 } from '@/lib/catalogue-admin/repository'
 import type {
@@ -83,6 +79,41 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
   }
 }
 
+function emptyEditable(): EditableProduct {
+  return {
+    sku: '',
+    name: '',
+    description: '',
+    category: 'chair',
+    moq_units: '50',
+    base_price_ht: '0',
+    retail_price_ref: '0',
+    eco_contribution: '0',
+    dim_length_cm: '0',
+    dim_width_cm: '0',
+    dim_height_cm: '0',
+    cbm_per_unit: '0.05',
+    weight_kg: '0',
+    fire_rating: '',
+    main_image_url: '',
+    gallery_urls: [],
+    features: [],
+    is_active: true,
+    sort_order: '0',
+  }
+}
+
+// Derive a stable text id from the SKU (`CHA-CAN-001` → `cha-can-001`). The
+// `products.id` column is `text`, not uuid, so a slugged SKU keeps it
+// predictable and human-readable.
+function deriveProductId(sku: string): string {
+  return sku
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
 function parseNumber(value: string, fallback = 0): number {
   const n = Number(value.trim())
   return Number.isFinite(n) ? n : fallback
@@ -118,7 +149,8 @@ function buildVariantId(productId: string): string {
 }
 
 export interface AdminProductEditorProps {
-  readonly productId: string
+  /** Existing product id to edit, or `null` to create a new product. */
+  readonly productId: string | null
   readonly containers: ReadonlyArray<AdminContainerOption>
   readonly onSaved: () => void | Promise<void>
   readonly onCancel: () => void
@@ -130,18 +162,22 @@ export function AdminProductEditor({
   onSaved,
   onCancel,
 }: AdminProductEditorProps) {
+  const isCreating = productId === null
   const [detail, setDetail] = useState<AdminProductDetail | null>(null)
-  const [state, setState] = useState<EditableProduct | null>(null)
+  const [state, setState] = useState<EditableProduct | null>(
+    isCreating ? emptyEditable() : null,
+  )
   const [variants, setVariants] = useState<EditableVariant[]>([])
   const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([])
   const [commitments, setCommitments] = useState<AdminSeedCommitment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!isCreating)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
 
   useEffect(() => {
+    if (isCreating) return
     let cancelled = false
     async function load() {
       if (!config.isConfigured) {
@@ -152,8 +188,8 @@ export function AdminProductEditor({
       const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
       try {
         const [productDetail, commitmentRows] = await Promise.all([
-          getProductWithVariants(client, productId),
-          listCommitmentsForProduct(client, productId),
+          getProductWithVariants(client, productId!),
+          listCommitmentsForProduct(client, productId!),
         ])
         if (cancelled) return
         if (!productDetail) {
@@ -176,7 +212,7 @@ export function AdminProductEditor({
     return () => {
       cancelled = true
     }
-  }, [config, productId])
+  }, [config, productId, isCreating])
 
   function setField<K extends keyof EditableProduct>(
     key: K,
@@ -205,14 +241,19 @@ export function AdminProductEditor({
   }
 
   function addVariant(): void {
+    // In create mode the product id is only known after the SKU is filled
+    // (we derive it at submit time). Use the SKU-derived id as a stable
+    // prefix here so variant ids stay readable; fall back to "new" if the
+    // SKU is still empty.
+    const prefix = productId ?? (deriveProductId(state?.sku ?? '') || 'new')
     setVariants((prev) => [
       ...prev,
       {
-        id: buildVariantId(productId),
-        productId,
+        id: buildVariantId(prefix),
+        productId: prefix,
         name: '',
-        hex: '#888888',
         imageUrl: null,
+        galleryUrls: [],
         sortOrder: prev.length,
         _new: true,
       },
@@ -247,7 +288,8 @@ export function AdminProductEditor({
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
-    if (!state || !detail) return
+    if (!state) return
+    if (!isCreating && !detail) return
     setSaving(true)
     setError(null)
     if (!config.isConfigured) {
@@ -256,39 +298,60 @@ export function AdminProductEditor({
       return
     }
     const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
-    try {
-      await updateProduct(client, productId, toUpdatePayload(state))
 
-      for (const variantId of removedVariantIds) {
-        await deleteVariant(client, variantId)
-      }
-
-      for (const variant of variants) {
-        if (!variant.name.trim()) continue
-        await upsertVariant(client, {
-          id: variant.id,
-          product_id: productId,
-          name: variant.name.trim(),
-          hex: /^#[0-9a-fA-F]{6}$/.test(variant.hex) ? variant.hex : '#888888',
-          image_url: variant.imageUrl?.trim() || null,
-          sort_order: variant.sortOrder,
-        })
-      }
-
-      for (const commitment of commitments) {
-        await upsertCommitment(client, {
-          container_id: commitment.containerId,
-          variant_id: commitment.variantId,
-          units_committed: Math.max(0, Math.round(commitment.unitsCommitted)),
-        })
-      }
-
+    // Resolve the target product id up-front. In create mode the id is
+    // derived from the SKU (stable, human-readable). In edit mode we keep
+    // the existing id.
+    const targetProductId = isCreating
+      ? deriveProductId(state.sku)
+      : productId!
+    if (isCreating && !targetProductId) {
+      setError('Le SKU est requis pour créer un produit.')
       setSaving(false)
-      await onSaved()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
-      setSaving(false)
+      return
     }
+
+    const productPayload = toUpdatePayload(state)
+    const variantsPayload = variants
+      .filter((v) => v.name.trim())
+      .map((v) => ({
+        id: v.id,
+        name: v.name.trim(),
+        image_url: v.imageUrl?.trim() || null,
+        gallery_urls: v.galleryUrls.filter((url) => url.trim()),
+        sort_order: v.sortOrder,
+      }))
+    const commitmentsPayload = commitments.map((c) => ({
+      container_id: c.containerId,
+      variant_id: c.variantId,
+      units_committed: Math.max(0, Math.round(c.unitsCommitted)),
+    }))
+
+    // One transactional RPC instead of N sequential writes — avoids the
+    // partial-failure window where the product was saved but its variants
+    // (or commitments) were not.
+    const { error: rpcError } = await client.rpc(
+      'admin_save_product_full',
+      {
+        payload: {
+          id: targetProductId,
+          create: isCreating,
+          product: productPayload as unknown as Json,
+          variants: variantsPayload as unknown as Json,
+          removed_variant_ids: removedVariantIds,
+          commitments: commitmentsPayload as unknown as Json,
+        } as unknown as Json,
+      } as never,
+    )
+
+    if (rpcError) {
+      setError(rpcError.message)
+      setSaving(false)
+      return
+    }
+
+    setSaving(false)
+    await onSaved()
   }
 
   if (loading) {
@@ -297,7 +360,7 @@ export function AdminProductEditor({
     )
   }
 
-  if (!state || !detail) {
+  if (!state || (!isCreating && !detail)) {
     return (
       <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
         {error ?? 'Produit introuvable.'}
@@ -493,50 +556,56 @@ export function AdminProductEditor({
         </div>
       </Fieldset>
 
-      <Fieldset title="Variantes">
-        <div className="space-y-3">
+      <Fieldset title="Designs">
+        <p className="text-xs text-muted-foreground">
+          Un design = une déclinaison visuelle du produit. La photo principale
+          sert de vignette dans le sélecteur, la galerie alimente la visionneuse
+          publique quand le client choisit ce design.
+        </p>
+        <div className="space-y-4">
           {variants.map((variant, i) => (
             <div
               key={variant.id}
-              className="space-y-2 rounded-md border border-[color:var(--sand-deep)] bg-card p-3"
+              className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3"
             >
-              <div className="grid gap-2 md:grid-cols-[1fr_140px_100px_2fr_auto]">
-                <Input
-                  value={variant.name}
-                  placeholder="Nom (ex. Noir charbon)"
-                  onChange={(e) =>
-                    updateVariant(i, { ...variant, name: e.target.value })
-                  }
-                />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={variant.hex}
-                    onChange={(e) =>
-                      updateVariant(i, { ...variant, hex: e.target.value })
-                    }
-                    className="h-9 w-12 cursor-pointer rounded border border-input bg-transparent"
-                  />
+              <div className="grid gap-2 md:grid-cols-[1fr_100px_auto]">
+                <Field label="Nom du design">
                   <Input
-                    value={variant.hex}
+                    value={variant.name}
+                    placeholder="ex. Rotin tressé naturel"
                     onChange={(e) =>
-                      updateVariant(i, { ...variant, hex: e.target.value })
+                      updateVariant(i, { ...variant, name: e.target.value })
                     }
                   />
+                </Field>
+                <Field label="Ordre">
+                  <Input
+                    type="number"
+                    value={variant.sortOrder}
+                    onChange={(e) =>
+                      updateVariant(i, {
+                        ...variant,
+                        sortOrder: Number(e.target.value),
+                      })
+                    }
+                  />
+                </Field>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeVariant(i)}
+                    aria-label={`Supprimer le design ${variant.name || i + 1}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                <Input
-                  type="number"
-                  value={variant.sortOrder}
-                  onChange={(e) =>
-                    updateVariant(i, {
-                      ...variant,
-                      sortOrder: Number(e.target.value),
-                    })
-                  }
-                />
+              </div>
+              <Field label="Photo principale (vignette du sélecteur)">
                 <Input
                   value={variant.imageUrl ?? ''}
-                  placeholder="URL image (optionnel)"
+                  placeholder="https://…"
                   onChange={(e) =>
                     updateVariant(i, {
                       ...variant,
@@ -544,14 +613,17 @@ export function AdminProductEditor({
                     })
                   }
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => removeVariant(i)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+              </Field>
+              <div>
+                <Label className="text-xs text-muted-foreground">
+                  Galerie du design (URLs additionnelles)
+                </Label>
+                <RepeatableStringList
+                  values={[...variant.galleryUrls]}
+                  onChange={(next) =>
+                    updateVariant(i, { ...variant, galleryUrls: next })
+                  }
+                />
               </div>
             </div>
           ))}
@@ -563,7 +635,7 @@ export function AdminProductEditor({
             onClick={addVariant}
           >
             <Plus className="h-3.5 w-3.5" />
-            Ajouter variante
+            Ajouter un design
           </Button>
         </div>
       </Fieldset>

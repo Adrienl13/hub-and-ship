@@ -469,8 +469,8 @@ type ContainerInsert = {
   reference: string
   port: string
   capacity_cbm: number
-  threshold_percent: number
-  min_series_required: number
+  threshold_percent?: number
+  min_series_required?: number
   expected_close_at?: string | null
   status?: ContainerStatus
   delivered_at?: string | null
@@ -604,8 +604,8 @@ type ProductVariantRow = {
   id: string
   product_id: string
   name: string
-  hex: string
   image_url: string | null
+  gallery_urls: string[]
   sort_order: number
   created_at: string
 }
@@ -614,8 +614,8 @@ type ProductVariantInsert = {
   id: string
   product_id: string
   name: string
-  hex: string
   image_url?: string | null
+  gallery_urls?: string[]
   sort_order?: number
   created_at?: string
 }
@@ -756,6 +756,14 @@ export interface Database {
       current_user_role: {
         Args: Record<string, never>
         Returns: UserRole | null
+      }
+      is_admin: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      admin_save_product_full: {
+        Args: { payload: Json }
+        Returns: void
       }
     }
     Enums: {

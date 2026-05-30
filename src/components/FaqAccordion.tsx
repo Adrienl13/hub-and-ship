@@ -4,8 +4,8 @@ const FAQ = [
     a: "Si le seuil n'est pas atteint à la date de clôture estimée, Container Club peut prolonger la collecte de 2 semaines maximum. Si le seuil reste non atteint, le container est annulé et l'intégralité des frais (réservation + acompte) vous est remboursée sous 5 jours ouvrés.",
   },
   {
-    q: "Que se passe-t-il si ma couleur n'atteint pas le MOQ de 50 ?",
-    a: 'Vous avez 3 options communiquées dès la clôture : 1/ migrer votre commande vers une couleur confirmée du même produit, 2/ reporter automatiquement sur le container suivant (sans frais supplémentaires), 3/ être remboursé sur cette ligne uniquement.',
+    q: "Que se passe-t-il si mon design n'atteint pas le MOQ de 50 ?",
+    a: 'Vous avez 3 options communiquées dès la clôture : 1/ migrer votre commande vers un design confirmé du même produit, 2/ reporter automatiquement sur le container suivant (sans frais supplémentaires), 3/ être remboursé sur cette ligne uniquement.',
   },
   {
     q: 'Quand suis-je débité ? Et de combien à chaque étape ?',

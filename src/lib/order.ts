@@ -2,11 +2,11 @@
 // Container Club — logique métier (panier, MOQ, container)
 // ============================================================
 
-import type { ColorVariant, Product } from './products'
+import type { DesignVariant, Product } from './products'
 
 export interface CartItem {
   product: Product
-  variant: ColorVariant
+  variant: DesignVariant
   quantity: number
 }
 

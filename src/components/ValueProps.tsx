@@ -13,7 +13,7 @@ const VALUE_PROPS = [
     Icon: UsersRound,
     title: 'Groupé entre pros',
     description:
-      'Chaque réservation contribue au remplissage et aux MOQ couleur. Le départ se déclenche quand le seuil est atteint.',
+      'Chaque réservation contribue au remplissage et aux MOQ par design. Le départ se déclenche quand le seuil est atteint.',
   },
   {
     Icon: ShieldCheck,

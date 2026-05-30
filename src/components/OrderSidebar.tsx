@@ -136,10 +136,16 @@ export function OrderSidebar({
                   className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className="ring-foreground/15 h-3 w-3 shrink-0 rounded-full ring-1"
-                      style={{ background: item.variant.hex }}
-                    />
+                    {item.variant.imageUrl ? (
+                      <img
+                        src={item.variant.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm object-cover ring-1"
+                      />
+                    ) : (
+                      <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
+                    )}
                     <span className="truncate">
                       <span className="font-medium tabular-nums">
                         {item.quantity}×{' '}

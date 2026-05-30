@@ -46,11 +46,14 @@ function buildHTML(q: QuoteData): string {
     .map((item) => {
       const cbm = item.product.cbmPerUnit * item.quantity
       const lineTotal = item.product.basePriceHt * item.quantity
+      const thumbHtml = item.variant.imageUrl
+        ? `<img class="sw" src="${escapeHtml(item.variant.imageUrl)}" alt="" />`
+        : `<span class="sw"></span>`
       return `
         <tr>
           <td>
             <div class="prod">
-              <span class="sw" style="background:${item.variant.hex}"></span>
+              ${thumbHtml}
               <div>
                 <div class="name">${escapeHtml(item.product.name)}</div>
                 <div class="meta">
@@ -130,6 +133,7 @@ function buildHTML(q: QuoteData): string {
   .sw {
     width: 22px; height: 22px; border-radius: 3px;
     border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0;
+    object-fit: cover; background: #f5efe2;
   }
   .name { font-weight: 600; font-size: 11px; }
   .meta { font-size: 9px; color: #5a544a; margin-top: 1px; }

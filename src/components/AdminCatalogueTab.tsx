@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Pencil, Power, PowerOff } from 'lucide-react'
+import { Pencil, Plus, Power, PowerOff } from 'lucide-react'
 
 import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,8 @@ import type {
   AdminContainerOption,
   AdminProduct,
 } from '@/lib/catalogue-admin/types'
+import { useAuth } from '@/hooks/useAuth'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { AuthStatus } from '@/hooks/useAuth'
@@ -38,8 +40,10 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminProduct | null>(null)
+  const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
 
@@ -79,6 +83,11 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     try {
       if (row.isActive) await softDeleteProduct(client, row.id)
       else await reactivateProduct(client, row.id)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: row.isActive ? 'product.deactivate' : 'product.activate',
+        target: row.id,
+        extra: { sku: row.sku, name: row.name },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -108,6 +117,18 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           {error}
         </div>
       )}
+
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 gap-1.5 rounded-sm"
+          onClick={() => setCreating(true)}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Créer un produit
+        </Button>
+      </div>
 
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[1.4fr_100px_70px_90px_90px_70px_220px] md:gap-3">
@@ -203,24 +224,35 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       </div>
 
       <Dialog
-        open={editing !== null}
+        open={editing !== null || creating}
         onOpenChange={(open) => {
-          if (!open) setEditing(null)
+          if (!open) {
+            setEditing(null)
+            setCreating(false)
+          }
         }}
       >
         <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Éditer le produit {editing?.sku}</DialogTitle>
+            <DialogTitle>
+              {creating
+                ? 'Nouveau produit'
+                : `Éditer le produit ${editing?.sku ?? ''}`}
+            </DialogTitle>
           </DialogHeader>
-          {editing && (
+          {(editing || creating) && (
             <AdminProductEditor
-              productId={editing.id}
+              productId={creating ? null : editing!.id}
               containers={containers}
               onSaved={async () => {
                 setEditing(null)
+                setCreating(false)
                 await refresh()
               }}
-              onCancel={() => setEditing(null)}
+              onCancel={() => {
+                setEditing(null)
+                setCreating(false)
+              }}
             />
           )}
           <DialogFooter className="text-[11px] text-muted-foreground">

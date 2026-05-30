@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  certificationsArraySchema,
+  galleryArraySchema,
+  productBreakdownArraySchema,
+  timelineArraySchema,
+  validateJsonb,
+} from '@/lib/admin/jsonb-schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { Database, Json } from '@/lib/supabase/types'
@@ -17,6 +24,7 @@ import type {
 import type { ProductCategory } from '@/lib/products'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
+type ContainerInsert = Database['public']['Tables']['containers']['Insert']
 type ContainerUpdate = Database['public']['Tables']['containers']['Update']
 
 const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = [
@@ -28,6 +36,10 @@ const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = [
 const TIMELINE_STATUS_VALUES: ReadonlyArray<TimelineStatus> = ['done', 'delay']
 
 interface EditableState {
+  reference: string
+  port: string
+  capacity_cbm: string
+  status: ContainerStatusValue
   slug: string
   origin_port: string
   total_items: string
@@ -51,6 +63,21 @@ interface EditableState {
   gallery: GalleryItem[]
 }
 
+type ContainerStatusValue =
+  | 'open'
+  | 'locked'
+  | 'shipping'
+  | 'delivered'
+  | 'cancelled'
+
+const CONTAINER_STATUS_VALUES: ReadonlyArray<ContainerStatusValue> = [
+  'open',
+  'locked',
+  'shipping',
+  'delivered',
+  'cancelled',
+]
+
 function asJsonArray<T>(value: Json | null | undefined): T[] {
   if (Array.isArray(value)) return [...(value as unknown as T[])]
   return []
@@ -58,6 +85,10 @@ function asJsonArray<T>(value: Json | null | undefined): T[] {
 
 function fromRow(row: ContainerRow): EditableState {
   return {
+    reference: row.reference,
+    port: row.port,
+    capacity_cbm: row.capacity_cbm.toString(),
+    status: row.status,
     slug: row.slug ?? '',
     origin_port: row.origin_port ?? '',
     total_items: row.total_items?.toString() ?? '',
@@ -89,8 +120,42 @@ function parseNumberOrNull(value: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function emptyState(): EditableState {
+  return {
+    reference: '',
+    port: '',
+    capacity_cbm: '28',
+    status: 'open',
+    slug: '',
+    origin_port: '',
+    total_items: '',
+    professionals_served: '',
+    savings_total_eur: '',
+    savings_percent: '',
+    story: '',
+    photo_url: '',
+    planned_days: '',
+    actual_days: '',
+    delivered_at: '',
+    testimonial_quote: '',
+    testimonial_long_quote: '',
+    testimonial_author: '',
+    testimonial_role: '',
+    testimonial_location: '',
+    testimonial_rating: '',
+    certifications: [],
+    timeline: [],
+    product_breakdown: [],
+    gallery: [],
+  }
+}
+
 function toUpdate(state: EditableState): ContainerUpdate {
   return {
+    reference: state.reference.trim(),
+    port: state.port.trim(),
+    capacity_cbm: Math.max(0.1, Number(state.capacity_cbm) || 28),
+    status: state.status,
     slug: state.slug.trim() || null,
     origin_port: state.origin_port.trim() || null,
     total_items: parseNumberOrNull(state.total_items),
@@ -116,7 +181,8 @@ function toUpdate(state: EditableState): ContainerUpdate {
 }
 
 export interface AdminContainerEditorProps {
-  readonly container: ContainerRow
+  /** Existing container row to edit, or `null` to create a new one. */
+  readonly container: ContainerRow | null
   readonly onSaved: () => void | Promise<void>
   readonly onCancel: () => void
 }
@@ -126,7 +192,10 @@ export function AdminContainerEditor({
   onSaved,
   onCancel,
 }: AdminContainerEditorProps) {
-  const [state, setState] = useState<EditableState>(() => fromRow(container))
+  const isCreating = container === null
+  const [state, setState] = useState<EditableState>(() =>
+    container ? fromRow(container) : emptyState(),
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -141,6 +210,33 @@ export function AdminContainerEditor({
     event.preventDefault()
     setSaving(true)
     setError(null)
+
+    const certs = state.certifications.filter((c) => c.trim())
+    const validations = [
+      validateJsonb(certificationsArraySchema, certs, 'Certifications'),
+      validateJsonb(timelineArraySchema, state.timeline, 'Timeline'),
+      validateJsonb(
+        productBreakdownArraySchema,
+        state.product_breakdown,
+        'Produits livrés',
+      ),
+      validateJsonb(galleryArraySchema, state.gallery, 'Galerie'),
+    ]
+    const firstError = validations.find((v) => !v.ok)
+    if (firstError && !firstError.ok) {
+      setError(firstError.message)
+      setSaving(false)
+      return
+    }
+
+    if (!state.reference.trim() || !state.port.trim()) {
+      setError(
+        'Référence et port sont requis (champs NOT NULL côté schéma).',
+      )
+      setSaving(false)
+      return
+    }
+
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
       setError('Supabase non configuré.')
@@ -148,14 +244,54 @@ export function AdminContainerEditor({
       return
     }
     const client = createSupabaseBrowserClient(config)
-    const { error: updateError } = await client
-      .from('containers')
-      .update(toUpdate(state) as never)
-      .eq('id', container.id)
-    if (updateError) {
-      setError(updateError.message)
-      setSaving(false)
-      return
+    const payload = toUpdate(state)
+
+    if (isCreating) {
+      const insertPayload: ContainerInsert = {
+        reference: payload.reference!,
+        port: payload.port!,
+        capacity_cbm: payload.capacity_cbm!,
+        status: payload.status,
+        slug: payload.slug,
+        origin_port: payload.origin_port,
+        total_items: payload.total_items,
+        professionals_served: payload.professionals_served,
+        savings_total_eur: payload.savings_total_eur,
+        savings_percent: payload.savings_percent,
+        story: payload.story,
+        photo_url: payload.photo_url,
+        planned_days: payload.planned_days,
+        actual_days: payload.actual_days,
+        delivered_at: payload.delivered_at,
+        testimonial_quote: payload.testimonial_quote,
+        testimonial_long_quote: payload.testimonial_long_quote,
+        testimonial_author: payload.testimonial_author,
+        testimonial_role: payload.testimonial_role,
+        testimonial_location: payload.testimonial_location,
+        testimonial_rating: payload.testimonial_rating,
+        certifications: payload.certifications,
+        timeline: payload.timeline,
+        product_breakdown: payload.product_breakdown,
+        gallery: payload.gallery,
+      }
+      const { error: insertError } = await client
+        .from('containers')
+        .insert(insertPayload as never)
+      if (insertError) {
+        setError(insertError.message)
+        setSaving(false)
+        return
+      }
+    } else {
+      const { error: updateError } = await client
+        .from('containers')
+        .update(payload as never)
+        .eq('id', container!.id)
+      if (updateError) {
+        setError(updateError.message)
+        setSaving(false)
+        return
+      }
     }
     setSaving(false)
     await onSaved()
@@ -168,6 +304,50 @@ export function AdminContainerEditor({
           {error}
         </div>
       )}
+
+      <Fieldset title="Opérationnel">
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Référence (unique, requise)">
+            <Input
+              value={state.reference}
+              onChange={(e) => setField('reference', e.target.value)}
+              placeholder="CC-2026-002"
+              required
+            />
+          </Field>
+          <Field label="Port (requis)">
+            <Input
+              value={state.port}
+              onChange={(e) => setField('port', e.target.value)}
+              placeholder="Marseille-Fos"
+              required
+            />
+          </Field>
+          <Field label="Capacité m³">
+            <Input
+              type="number"
+              step="0.1"
+              value={state.capacity_cbm}
+              onChange={(e) => setField('capacity_cbm', e.target.value)}
+            />
+          </Field>
+          <Field label="Statut">
+            <select
+              value={state.status}
+              onChange={(e) =>
+                setField('status', e.target.value as ContainerStatusValue)
+              }
+              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+            >
+              {CONTAINER_STATUS_VALUES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      </Fieldset>
 
       <Fieldset title="Identification & métriques">
         <div className="grid gap-3 md:grid-cols-2">

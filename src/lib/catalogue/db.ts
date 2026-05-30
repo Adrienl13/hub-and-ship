@@ -5,7 +5,7 @@
 
 import type { Database } from '@/lib/supabase/types'
 import type {
-  ColorVariant,
+  DesignVariant,
   Product,
   ProductCategory,
 } from '@/lib/products'
@@ -101,19 +101,19 @@ interface CatalogueDbClient {
 function variantFromRow(
   row: VariantRow,
   unitsCommitted: number,
-): ColorVariant {
+): DesignVariant {
   return {
     id: row.id,
     name: row.name,
-    hex: row.hex,
     imageUrl: row.image_url ?? undefined,
+    galleryUrls: [...(row.gallery_urls ?? [])],
     unitsCommitted,
   }
 }
 
 function productFromRow(
   row: ProductRow,
-  variants: ReadonlyArray<ColorVariant>,
+  variants: ReadonlyArray<DesignVariant>,
 ): Product {
   return {
     id: row.id,
@@ -218,7 +218,7 @@ export async function fetchCatalogFromDb(
     committedByVariant.set(row.variant_id, row.units_committed)
   }
 
-  const variantsByProduct = new Map<string, ColorVariant[]>()
+  const variantsByProduct = new Map<string, DesignVariant[]>()
   for (const row of variantsResult.data ?? []) {
     const list = variantsByProduct.get(row.product_id) ?? []
     list.push(variantFromRow(row, committedByVariant.get(row.id) ?? 0))

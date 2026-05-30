@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, EyeOff, Pencil } from 'lucide-react'
+import { Eye, EyeOff, Pencil, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { AdminContainerEditor } from '@/components/AdminContainerEditor'
+import { useAuth } from '@/hooks/useAuth'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { Database } from '@/lib/supabase/types'
@@ -26,8 +28,10 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<ContainerRow | null>(null)
+  const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
 
@@ -74,6 +78,11 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
     if (updateError) {
       setError(updateError.message)
     } else {
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: row.published_at ? 'container.unpublish' : 'container.publish',
+        target: row.id,
+        extra: { reference: row.reference },
+      })
       await refresh()
     }
     setBusyId(null)
@@ -101,6 +110,18 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
           {error}
         </div>
       )}
+
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 gap-1.5 rounded-sm"
+          onClick={() => setCreating(true)}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Créer un container
+        </Button>
+      </div>
 
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[1fr_120px_120px_120px_220px] md:gap-3">
@@ -189,27 +210,38 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
       </div>
 
       <Dialog
-        open={editing !== null}
+        open={editing !== null || creating}
         onOpenChange={(open) => {
-          if (!open) setEditing(null)
+          if (!open) {
+            setEditing(null)
+            setCreating(false)
+          }
         }}
       >
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Éditer le container {editing?.reference}</DialogTitle>
+            <DialogTitle>
+              {creating
+                ? 'Nouveau container'
+                : `Éditer le container ${editing?.reference ?? ''}`}
+            </DialogTitle>
           </DialogHeader>
-          {editing && (
+          {(editing || creating) && (
             <AdminContainerEditor
-              container={editing}
+              container={creating ? null : editing}
               onSaved={async () => {
                 setEditing(null)
+                setCreating(false)
                 await refresh()
               }}
-              onCancel={() => setEditing(null)}
+              onCancel={() => {
+                setEditing(null)
+                setCreating(false)
+              }}
             />
           )}
           <DialogFooter className="text-[11px] text-muted-foreground">
-            L&apos;enregistrement passe par UPDATE Supabase. Les erreurs RLS
+            L&apos;enregistrement passe par UPSERT Supabase. Les erreurs RLS
             apparaissent ici.
           </DialogFooter>
         </DialogContent>

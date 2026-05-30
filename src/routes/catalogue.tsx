@@ -132,8 +132,8 @@ function CataloguePage() {
                 Vue compacte pour commander vite.
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                Pensée pour 100+ références : lignes denses, variantes
-                accessibles, quantité directe, recherche SKU/couleur et panier
+                Pensée pour 100+ références : lignes denses, designs
+                accessibles, quantité directe, recherche SKU/design et panier
                 toujours visible.
               </p>
             </div>
@@ -187,7 +187,7 @@ function CataloguePage() {
                       type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Rechercher SKU, modèle, couleur..."
+                      placeholder="Rechercher SKU, modèle, design..."
                       className="h-11 w-full min-w-0 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     />
                   </label>
