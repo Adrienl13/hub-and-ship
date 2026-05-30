@@ -1,10 +1,17 @@
 import type { CartItem } from '@/lib/order'
 import type { ProductCategory } from '@/lib/products'
 
+// ISO 20-foot "Dry Van" standard internal dimensions.
+//   length × width × height = 5.898 × 2.352 × 2.395  ≈  33.2 m³
+// This matches the commercial capacity quoted in the database
+// (`containers.capacity_cbm = 28 m³` ≈ 85% usable on 33 m³ gross).
+// If we later switch to a 20' High Cube (2.700 m height ≈ 37.5 m³) the
+// height should follow `containers.capacity_cbm` rather than being
+// hardcoded.
 export const CONTAINER_INNER_METERS = {
-  length: 5.9,
-  width: 2.34,
-  height: 2.69,
+  length: 5.898,
+  width: 2.352,
+  height: 2.395,
 } as const
 
 const GAP = 0.04
@@ -255,10 +262,17 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
 function sortPackagesForPacking(
   drafts: ReadonlyArray<PackageDraft>,
 ): ReadonlyArray<PackageDraft> {
+  // Pure best-fit-decreasing: sort by volume desc, with size deltas as
+  // tiebreakers. We intentionally do NOT group by category any more —
+  // grouping made the visualisation look like 3 monolithic blocks (all
+  // chairs, then all tables, then all benches) instead of a realistically
+  // mixed load. Vertical stacking rules (chairs cannot support anything,
+  // tables only on tables/chairs) are still enforced by
+  // canUseVerticalCandidate so the physics stay sane.
   return [...drafts].sort((a, b) => {
-    const supportDelta =
-      supportPriority(a.category) - supportPriority(b.category)
-    if (supportDelta !== 0) return supportDelta
+    const volA = a.size.length * a.size.height * a.size.width
+    const volB = b.size.length * b.size.height * b.size.width
+    if (Math.abs(volB - volA) > 0.001) return volB - volA
 
     const lengthDelta = b.size.length - a.size.length
     if (Math.abs(lengthDelta) > 0.001) return lengthDelta
@@ -266,17 +280,8 @@ function sortPackagesForPacking(
     const heightDelta = b.size.height - a.size.height
     if (Math.abs(heightDelta) > 0.001) return heightDelta
 
-    const widthDelta = b.size.width - a.size.width
-    if (Math.abs(widthDelta) > 0.001) return widthDelta
-
     return a.originalIndex - b.originalIndex
   })
-}
-
-function supportPriority(category: ProductCategory): number {
-  if (category === 'chair') return 0
-  if (category === 'table') return 1
-  return 2
 }
 
 function zRangesOverlap(
@@ -405,9 +410,12 @@ function toPackedPackage({
   return {
     pos: [round3(x), round3(y), round3(z)],
     size: [
-      round3(draft.size.length * 0.96),
-      round3(draft.size.height * 0.96),
-      round3(draft.size.width * 0.96),
+      // Slight 3% shrink prevents Z-fighting between adjacent packages
+      // while keeping the load looking dense (the old 4% shrink made the
+      // container appear half-empty even at 90% fill).
+      round3(draft.size.length * 0.97),
+      round3(draft.size.height * 0.97),
+      round3(draft.size.width * 0.97),
     ],
     color: draft.color,
     productId: draft.productId,

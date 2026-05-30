@@ -14,7 +14,7 @@ import {
   packContainerPackages,
 } from '@/lib/container/packing'
 
-// 20' High Cube intérieur utile (m)
+// 20' Dry Van intérieur ISO standard (≈ 33 m³ brut, ~28 m³ utile)
 const L = CONTAINER_INNER_METERS.length
 const W = CONTAINER_INNER_METERS.width
 const H = CONTAINER_INNER_METERS.height
