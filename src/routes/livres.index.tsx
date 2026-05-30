@@ -16,7 +16,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
 
-export const Route = createFileRoute('/livres')({
+export const Route = createFileRoute('/livres/')({
   component: LivresPage,
   head: () => ({
     meta: [

@@ -44,7 +44,7 @@ const DESCRIPTIONS: Record<LegalSlug, string> = {
     'Cas de remboursement intégral, sort des frais de réservation, délais, geste commercial en cas de retard.',
 }
 
-export const Route = createFileRoute('/legal')({
+export const Route = createFileRoute('/legal/')({
   component: LegalHub,
   head: () => ({
     meta: [

@@ -12,12 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransportPartenairesRouteImport } from './routes/transport-partenaires'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
-import { Route as LivresRouteImport } from './routes/livres'
-import { Route as LegalRouteImport } from './routes/legal'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LivresIndexRouteImport } from './routes/livres.index'
+import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -41,16 +41,6 @@ const QualiteRoute = QualiteRouteImport.update({
   path: '/qualite',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LivresRoute = LivresRouteImport.update({
-  id: '/livres',
-  path: '/livres',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LegalRoute = LegalRouteImport.update({
-  id: '/legal',
-  path: '/legal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
@@ -71,15 +61,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LivresIndexRoute = LivresIndexRouteImport.update({
+  id: '/livres/',
+  path: '/livres/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalIndexRoute = LegalIndexRouteImport.update({
+  id: '/legal/',
+  path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LivresSlugRoute = LivresSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => LivresRoute,
+  id: '/livres/$slug',
+  path: '/livres/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LegalSlugRoute = LegalSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => LegalRoute,
+  id: '/legal/$slug',
+  path: '/legal/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
@@ -113,8 +113,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
-  '/legal': typeof LegalRouteWithChildren
-  '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -123,6 +121,8 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/legal/': typeof LegalIndexRoute
+  '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -131,8 +131,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
-  '/legal': typeof LegalRouteWithChildren
-  '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -141,6 +139,8 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/legal': typeof LegalIndexRoute
+  '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -150,8 +150,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
-  '/legal': typeof LegalRouteWithChildren
-  '/livres': typeof LivresRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -160,6 +158,8 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/legal/': typeof LegalIndexRoute
+  '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
@@ -170,8 +170,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
-    | '/legal'
-    | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/transport-partenaires'
@@ -180,6 +178,8 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/legal/'
+    | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -188,8 +188,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
-    | '/legal'
-    | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/transport-partenaires'
@@ -198,6 +196,8 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/legal'
+    | '/livres'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   id:
@@ -206,8 +206,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
-    | '/legal'
-    | '/livres'
     | '/qualite'
     | '/stock-24h'
     | '/transport-partenaires'
@@ -216,6 +214,8 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/legal/'
+    | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
@@ -225,14 +225,16 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
   FaqRoute: typeof FaqRoute
-  LegalRoute: typeof LegalRouteWithChildren
-  LivresRoute: typeof LivresRouteWithChildren
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  LegalSlugRoute: typeof LegalSlugRoute
+  LivresSlugRoute: typeof LivresSlugRoute
+  LegalIndexRoute: typeof LegalIndexRoute
+  LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
@@ -257,20 +259,6 @@ declare module '@tanstack/react-router' {
       path: '/qualite'
       fullPath: '/qualite'
       preLoaderRoute: typeof QualiteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/livres': {
-      id: '/livres'
-      path: '/livres'
-      fullPath: '/livres'
-      preLoaderRoute: typeof LivresRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/legal': {
-      id: '/legal'
-      path: '/legal'
-      fullPath: '/legal'
-      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -301,19 +289,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/livres/': {
+      id: '/livres/'
+      path: '/livres'
+      fullPath: '/livres/'
+      preLoaderRoute: typeof LivresIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/': {
+      id: '/legal/'
+      path: '/legal'
+      fullPath: '/legal/'
+      preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/livres/$slug': {
       id: '/livres/$slug'
-      path: '/$slug'
+      path: '/livres/$slug'
       fullPath: '/livres/$slug'
       preLoaderRoute: typeof LivresSlugRouteImport
-      parentRoute: typeof LivresRoute
+      parentRoute: typeof rootRouteImport
     }
     '/legal/$slug': {
       id: '/legal/$slug'
-      path: '/$slug'
+      path: '/legal/$slug'
       fullPath: '/legal/$slug'
       preLoaderRoute: typeof LegalSlugRouteImport
-      parentRoute: typeof LegalRoute
+      parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
       id: '/auth/login'
@@ -353,27 +355,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface LegalRouteChildren {
-  LegalSlugRoute: typeof LegalSlugRoute
-}
-
-const LegalRouteChildren: LegalRouteChildren = {
-  LegalSlugRoute: LegalSlugRoute,
-}
-
-const LegalRouteWithChildren = LegalRoute._addFileChildren(LegalRouteChildren)
-
-interface LivresRouteChildren {
-  LivresSlugRoute: typeof LivresSlugRoute
-}
-
-const LivresRouteChildren: LivresRouteChildren = {
-  LivresSlugRoute: LivresSlugRoute,
-}
-
-const LivresRouteWithChildren =
-  LivresRoute._addFileChildren(LivresRouteChildren)
-
 interface AccountReservationsRouteChildren {
   AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
 }
@@ -390,25 +371,18 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
   FaqRoute: FaqRoute,
-  LegalRoute: LegalRouteWithChildren,
-  LivresRoute: LivresRouteWithChildren,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
+  LegalSlugRoute: LegalSlugRoute,
+  LivresSlugRoute: LivresSlugRoute,
+  LegalIndexRoute: LegalIndexRoute,
+  LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
