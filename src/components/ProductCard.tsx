@@ -101,6 +101,7 @@ function ProductCardComponent({
           selectedVariantId={variantId}
           onChange={onVariantChange}
           size="lg"
+          fallbackImageUrl={product.mainImageUrl}
         />
 
         <MoqProgressBar label={`MOQ ${variant?.name}`} status={moqStatus} />

@@ -98,6 +98,7 @@ function CatalogueLineItemComponent({
         selectedVariantId={variantId}
         onChange={onVariantChange}
         showLabel={false}
+        fallbackImageUrl={product.mainImageUrl}
       />
 
       <MoqProgressBar label={`MOQ ${product.moqUnits}`} status={moqStatus} />

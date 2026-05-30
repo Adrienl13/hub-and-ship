@@ -103,6 +103,7 @@ function ProductRowComponent({
               variants={product.variants}
               selectedVariantId={variantId}
               onChange={onVariantChange}
+              fallbackImageUrl={product.mainImageUrl}
             />
           </div>
 

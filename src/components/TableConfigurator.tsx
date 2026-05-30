@@ -150,6 +150,7 @@ export function TableConfigurator({
             selectedVariantId={variantId}
             onChange={onVariantChange}
             showLabel
+            fallbackImageUrl={product.mainImageUrl}
           />
         )}
 
