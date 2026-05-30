@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { ImageUploader } from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -372,10 +373,12 @@ export function AdminContainerEditor({
               onChange={(e) => setField('delivered_at', e.target.value)}
             />
           </Field>
-          <Field label="Photo URL (hero)">
-            <Input
+          <Field label="Photo hero">
+            <ImageUploader
               value={state.photo_url}
-              onChange={(e) => setField('photo_url', e.target.value)}
+              onChange={(url) => setField('photo_url', url)}
+              folder="containers"
+              hint="Affichée en bandeau sur /livres/{slug}."
             />
           </Field>
           <Field label="Articles livrés">
@@ -592,16 +595,16 @@ export function AdminContainerEditor({
           empty={() => ({ url: '', caption: '' })}
           onChange={(next) => setField('gallery', next)}
           render={(item, update) => (
-            <div className="grid gap-2 md:grid-cols-2">
-              <Input
+            <div className="space-y-2">
+              <ImageUploader
                 value={item.url}
-                onChange={(e) => update({ ...item, url: e.target.value })}
-                placeholder="URL"
+                onChange={(url) => update({ ...item, url })}
+                folder="containers"
               />
               <Input
                 value={item.caption}
                 onChange={(e) => update({ ...item, caption: e.target.value })}
-                placeholder="Légende"
+                placeholder="Légende affichée sous l'image"
               />
             </div>
           )}

@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  ImageGalleryUploader,
+  ImageUploader,
+} from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -530,19 +534,22 @@ export function AdminProductEditor({
       </Fieldset>
 
       <Fieldset title="Images & contenu">
-        <Field label="Image principale (URL)">
-          <Input
+        <Field label="Image principale">
+          <ImageUploader
             value={state.main_image_url}
-            onChange={(e) => setField('main_image_url', e.target.value)}
+            onChange={(url) => setField('main_image_url', url)}
+            folder="products"
+            hint="Photo hero affichée sur la card produit et le catalogue."
           />
         </Field>
-        <div>
+        <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">
-            Galerie (URLs)
+            Galerie produit
           </Label>
-          <RepeatableStringList
+          <ImageGalleryUploader
             values={state.gallery_urls}
             onChange={(next) => setField('gallery_urls', next)}
+            folder="products"
           />
         </div>
         <div>
@@ -603,26 +610,25 @@ export function AdminProductEditor({
                 </div>
               </div>
               <Field label="Photo principale (vignette du sélecteur)">
-                <Input
+                <ImageUploader
                   value={variant.imageUrl ?? ''}
-                  placeholder="https://…"
-                  onChange={(e) =>
-                    updateVariant(i, {
-                      ...variant,
-                      imageUrl: e.target.value || null,
-                    })
+                  onChange={(url) =>
+                    updateVariant(i, { ...variant, imageUrl: url || null })
                   }
+                  folder="designs"
+                  hint="Image affichée dans le sélecteur de design côté client."
                 />
               </Field>
-              <div>
+              <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">
-                  Galerie du design (URLs additionnelles)
+                  Galerie du design
                 </Label>
-                <RepeatableStringList
+                <ImageGalleryUploader
                   values={[...variant.galleryUrls]}
                   onChange={(next) =>
                     updateVariant(i, { ...variant, galleryUrls: next })
                   }
+                  folder="designs"
                 />
               </div>
             </div>
