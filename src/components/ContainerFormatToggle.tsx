@@ -1,17 +1,18 @@
-// Two-button switch that lets the client pick between the active 20'
-// (group-buy default) and a 40' GP for larger orders. The choice
-// flows through the cart store, so every consumer downstream — fill
-// bar, 3D scene, cost-per-cbm display, downstream reservation — sees
-// it instantly.
+// Two-button switch between the active 20' (group-buy default) and a
+// 40' High Cube for distributor-scale orders. We deliberately surface
+// VOLUME and the relative gain, not € prices — import freight rates
+// move too much to commit a number that would mislead the client.
 
 import { Container } from 'lucide-react'
 
 import {
-  CONTAINER_TRANSPORT_COST_EUR,
   CONTAINER_USABLE_CBM,
-  getCostPerCbm,
+  getVolumeUpgradeDelta,
 } from '@/lib/container/pricing'
 import type { ContainerType } from '@/lib/supabase/types'
+
+const SMALL_FORMAT: ContainerType = '20_hc'
+const LARGE_FORMAT: ContainerType = '40_hc'
 
 const OPTIONS: Array<{
   readonly type: ContainerType
@@ -19,12 +20,12 @@ const OPTIONS: Array<{
   readonly subtitle: string
 }> = [
   {
-    type: '20_hc',
+    type: SMALL_FORMAT,
     title: "20'",
     subtitle: 'groupage',
   },
   {
-    type: '40_gp',
+    type: LARGE_FORMAT,
     title: "40'",
     subtitle: 'distributeur',
   },
@@ -35,14 +36,11 @@ export interface ContainerFormatToggleProps {
   readonly onChange: (type: ContainerType) => void
 }
 
-function formatEuro(value: number): string {
-  return `${value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`
-}
-
 export function ContainerFormatToggle({
   value,
   onChange,
 }: ContainerFormatToggleProps) {
+  const upgrade = getVolumeUpgradeDelta(SMALL_FORMAT, LARGE_FORMAT)
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
@@ -53,8 +51,7 @@ export function ContainerFormatToggle({
         {OPTIONS.map((option) => {
           const active = option.type === value
           const usable = CONTAINER_USABLE_CBM[option.type]
-          const cost = CONTAINER_TRANSPORT_COST_EUR[option.type]
-          const ratePerCbm = Math.round(getCostPerCbm(option.type))
+          const isLarge = option.type === LARGE_FORMAT
           return (
             <button
               key={option.type}
@@ -82,7 +79,7 @@ export function ContainerFormatToggle({
                   active ? 'text-background/80' : 'text-foreground/65'
                 }`}
               >
-                {usable} m³ · {formatEuro(cost)} ({ratePerCbm} €/m³)
+                {usable} m³{isLarge ? ` · +${upgrade.gainPercent}%` : ''}
               </div>
             </button>
           )

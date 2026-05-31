@@ -20,18 +20,19 @@ import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
 import {
-  getCostPerCbm,
-  getTransportDelta,
+  CONTAINER_USABLE_CBM,
+  getRemainingCbm,
+  getVolumeUpgradeDelta,
 } from '@/lib/container/pricing'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
 import type { ContainerType } from '@/lib/supabase/types'
 
 const CONTAINER_TYPE_LABEL: Record<ContainerType, string> = {
-  '20_dv': "20' Dry Van · 33 m³",
-  '20_hc': "20' High Cube · 37 m³",
-  '40_gp': "40' General Purpose · 68 m³",
-  '40_hc': "40' High Cube · 76 m³",
+  '20_dv': "20' Dry Van",
+  '20_hc': "20' High Cube",
+  '40_gp': "40' General Purpose",
+  '40_hc': "40' High Cube",
 }
 import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
 import { AnimatedNumber } from '@/components/motion-helpers'
@@ -71,21 +72,14 @@ export function OrderSidebar({
   )
   const activeContainerType: ContainerType =
     preferredContainerType ?? container.containerType ?? '20_hc'
-  const ratePerCbm = Math.round(getCostPerCbm(activeContainerType))
-  // Cross-format saving when used cbm is significant enough to matter.
-  // Always compare against the other "natural" option:
-  //   - on a 20', show how much going 40' would save (or cost)
-  //   - on a 40', show what staying on 20' would have cost (positive
-  //     value = user is saving money by being on 40')
-  const alternativeType: ContainerType =
+  const isLargeFormat =
     activeContainerType === '40_gp' || activeContainerType === '40_hc'
-      ? '20_hc'
-      : '40_gp'
-  const transportDelta = getTransportDelta(
-    alternativeType,
-    activeContainerType,
-    usedCbm,
-  )
+  // Pre-compute the volume nudge the toggle will surface to a 20' user:
+  // "your cart is half-full → a 40' would give you +X m³ to play with".
+  const upgrade = isLargeFormat
+    ? null
+    : getVolumeUpgradeDelta(activeContainerType, '40_hc')
+  const remainingCbm = getRemainingCbm(activeContainerType, usedCbm)
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -97,8 +91,8 @@ export function OrderSidebar({
               {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {container.port} ·{' '}
-              {CONTAINER_TYPE_LABEL[activeContainerType]} · {ratePerCbm} €/m³
+              {container.port} · {CONTAINER_TYPE_LABEL[activeContainerType]} ·{' '}
+              {capacity.toFixed(0)} m³ utiles
             </div>
           </div>
           <Button
@@ -157,35 +151,32 @@ export function OrderSidebar({
               )
             }}
           />
+          {/* Volume nudge: on the 20', push the distributor toward a
+              40' by quoting the m³ they'd unlock; on the 40', remind
+              them how much room they still have to grow the order. */}
           {usedCbm > 1 && (
-            <div
-              className={`rounded-sm border px-2 py-1.5 text-[11px] leading-snug ${
-                transportDelta > 0
-                  ? 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5 text-[color:var(--forest)]'
-                  : transportDelta < 0
-                    ? 'border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 text-[color:var(--ember)]'
-                    : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/70'
-              }`}
-            >
-              {transportDelta > 0 ? (
+            <div className="rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 px-2 py-1.5 text-[11px] leading-snug text-foreground/80">
+              {isLargeFormat ? (
                 <>
-                  <strong>{transportDelta.toLocaleString('fr-FR')} €</strong> de
-                  transport économisés sur ces {usedCbm.toFixed(1)} m³ vs un{' '}
-                  {alternativeType === '40_gp' ? "40' GP" : "20' HC"}.
-                </>
-              ) : transportDelta < 0 ? (
-                <>
-                  Vous payez{' '}
-                  <strong>
-                    {Math.abs(transportDelta).toLocaleString('fr-FR')} €
+                  Encore{' '}
+                  <strong className="text-[color:var(--ember)]">
+                    {remainingCbm.toFixed(1)} m³ libres
                   </strong>{' '}
-                  de plus qu'avec un{' '}
-                  {alternativeType === '40_gp' ? "40' GP" : "20' HC"}. Switchez
-                  si vous comptez ajouter du volume.
+                  dans ce 40' — le coût rendu au m³ chute à mesure qu'il se
+                  remplit. Tarif sur devis.
                 </>
-              ) : (
-                <>Choisissez le format pour comparer le coût rendu.</>
-              )}
+              ) : upgrade && upgrade.extraCbm > 0 ? (
+                <>
+                  Un 40' offrirait{' '}
+                  <strong className="text-[color:var(--ember)]">
+                    +{upgrade.extraCbm} m³
+                  </strong>{' '}
+                  de place (×
+                  {(CONTAINER_USABLE_CBM['40_hc'] / capacity).toFixed(1)} le
+                  volume) pour ~20 % de transport en plus. Idéal pour les
+                  commandes distributeur.
+                </>
+              ) : null}
             </div>
           )}
           <SeriesProgressIndicator
