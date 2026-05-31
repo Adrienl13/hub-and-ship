@@ -29,7 +29,7 @@ function useIsMobileDevice(): boolean {
   return isMobile
 }
 
-// 20' Dry Van intérieur ISO standard (≈ 33 m³ brut, ~28 m³ utile)
+// 20' High Cube intérieur ISO (≈ 37 m³ brut, ~32 m³ utile)
 const L = CONTAINER_INNER_METERS.length
 const W = CONTAINER_INNER_METERS.width
 const H = CONTAINER_INNER_METERS.height

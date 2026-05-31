@@ -60,7 +60,7 @@ export function OrderSidebar({
               {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {container.port} · 20' Dry Van · 33 m³
+              {container.port} · 20' High Cube · 37 m³
             </div>
           </div>
           <Button

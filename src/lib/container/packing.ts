@@ -1,17 +1,18 @@
 import type { CartItem } from '@/lib/order'
 import type { ProductCategory } from '@/lib/products'
 
-// ISO 20-foot "Dry Van" standard internal dimensions.
-//   length × width × height = 5.898 × 2.352 × 2.395  ≈  33.2 m³
-// This matches the commercial capacity quoted in the database
-// (`containers.capacity_cbm = 28 m³` ≈ 85% usable on 33 m³ gross).
-// If we later switch to a 20' High Cube (2.700 m height ≈ 37.5 m³) the
-// height should follow `containers.capacity_cbm` rather than being
-// hardcoded.
+// ISO 20-foot "High Cube" standard internal dimensions.
+//   length × width × height = 5.898 × 2.352 × 2.700  ≈  37.5 m³
+// The extra 30 cm of ceiling vs a regular 20' DV unlocks a real second
+// stacking layer: a chair stack (1.92 m) plus two table layers
+// (2 × 0.39 m + gaps ≈ 0.86 m) finally fits without clipping.
+// The DB's `containers.capacity_cbm` (~28 m³ commercial usable) stays
+// the source of truth for the fill ratio; the shell here is just the
+// physical envelope the packer paves into.
 export const CONTAINER_INNER_METERS = {
   length: 5.898,
   width: 2.352,
-  height: 2.395,
+  height: 2.700,
 } as const
 
 const GAP = 0.04
@@ -315,18 +316,22 @@ function tryPlaceAt({
   draft,
   point,
   placed,
+  l,
+  w,
 }: {
   readonly draft: PackageDraft
   readonly point: ExtremePoint
   readonly placed: ReadonlyArray<PlacedRect>
+  readonly l: number
+  readonly w: number
 }): PlacedRect | null {
   const candidate: PlacedRect = {
     x: point.x,
     y: point.y,
     z: point.z,
-    l: draft.size.length,
+    l,
     h: draft.size.height,
-    w: draft.size.width,
+    w,
     category: draft.category,
   }
 
@@ -369,16 +374,55 @@ function tryPlaceAt({
   return candidate
 }
 
+/** Try the draft both in its natural orientation and rotated 90° around
+ *  the vertical axis (length ↔ width swap). Returns the first variant
+ *  that fits — natural orientation wins ties so visual identity stays
+ *  predictable when there's no need to rotate. */
+function tryPlaceAtWithRotation({
+  draft,
+  point,
+  placed,
+}: {
+  readonly draft: PackageDraft
+  readonly point: ExtremePoint
+  readonly placed: ReadonlyArray<PlacedRect>
+}): PlacedRect | null {
+  const natural = tryPlaceAt({
+    draft,
+    point,
+    placed,
+    l: draft.size.length,
+    w: draft.size.width,
+  })
+  if (natural) return natural
+  // Skip rotation when the footprint is already square — it would be a
+  // no-op and just costs us an overlap check.
+  if (Math.abs(draft.size.length - draft.size.width) < 0.001) return null
+  return tryPlaceAt({
+    draft,
+    point,
+    placed,
+    l: draft.size.width,
+    w: draft.size.length,
+  })
+}
+
 function toPackedPackage({
   draft,
   x,
   y,
   z,
+  l,
+  h,
+  w,
 }: {
   readonly draft: PackageDraft
   readonly x: number
   readonly y: number
   readonly z: number
+  readonly l: number
+  readonly h: number
+  readonly w: number
 }): PackedPackage {
   return {
     pos: [round3(x), round3(y), round3(z)],
@@ -386,9 +430,9 @@ function toPackedPackage({
       // Slight 3% shrink prevents Z-fighting between adjacent packages
       // while keeping the load looking dense (the old 4% shrink made the
       // container appear half-empty even at 90% fill).
-      round3(draft.size.length * 0.97),
-      round3(draft.size.height * 0.97),
-      round3(draft.size.width * 0.97),
+      round3(l * 0.97),
+      round3(h * 0.97),
+      round3(w * 0.97),
     ],
     color: draft.color,
     productId: draft.productId,
@@ -429,27 +473,32 @@ export function packContainerPackages(
   let overflowUnits = 0
   let overflowPackages = 0
 
-  for (const draft of sortPackagesForPacking(drafts)) {
+  const overflow: PackageDraft[] = []
+  const sorted = sortPackagesForPacking(drafts)
+
+  function attemptPlacement(draft: PackageDraft): {
+    placement: PlacedRect
+    usedPoint: ExtremePoint
+  } | null {
     // Lowest first — floor fills before stacking — then bias toward the
     // length-axis origin so loads visually start from the container door.
-    const sorted = [...points].sort(
+    const orderedPoints = [...points].sort(
       (a, b) => a.y - b.y || a.x - b.x || a.z - b.z,
     )
-
-    let placement: PlacedRect | null = null
-    let usedPoint: ExtremePoint | null = null
-    for (const point of sorted) {
-      const result = tryPlaceAt({ draft, point, placed })
-      if (result) {
-        placement = result
-        usedPoint = point
-        break
-      }
+    for (const point of orderedPoints) {
+      const result = tryPlaceAtWithRotation({ draft, point, placed })
+      if (result) return { placement: result, usedPoint: point }
     }
+    return null
+  }
+
+  for (const draft of sorted) {
+    const attempt = attemptPlacement(draft)
 
     const accumulator = accumulators[draft.sliceIndex]
 
-    if (placement && usedPoint) {
+    if (attempt) {
+      const { placement, usedPoint } = attempt
       placed.push(placement)
 
       // Remove the corner we just consumed (avoid stale duplicates).
@@ -508,6 +557,9 @@ export function packContainerPackages(
 
       const packedBox = toPackedPackage({
         draft,
+        l: placement.l,
+        h: placement.h,
+        w: placement.w,
         x:
           -CONTAINER_INNER_METERS.length / 2 +
           placement.x +
@@ -529,10 +581,102 @@ export function packContainerPackages(
         accumulator.xWeightedSum += packedBox.pos[0] * draft.units
       }
     } else {
-      overflowUnits += draft.units
-      overflowPackages += 1
-      if (accumulator) accumulator.overflowUnits += draft.units
+      // Hold the draft for a second pass — extreme points evolve as more
+      // packages drop, so a draft that didn't fit early might find a
+      // corner once the floor settles.
+      overflow.push(draft)
     }
+  }
+
+  // Second pass: retry the leftovers in the same loop. We keep iterating
+  // until a pass plants nothing new (no point in spinning forever).
+  let pendingOverflow = overflow
+  for (let attempt = 0; attempt < 2 && pendingOverflow.length > 0; attempt += 1) {
+    const stillOverflow: PackageDraft[] = []
+    for (const draft of pendingOverflow) {
+      const result = attemptPlacement(draft)
+      if (!result) {
+        stillOverflow.push(draft)
+        continue
+      }
+      const { placement, usedPoint } = result
+      placed.push(placement)
+      const idx = points.indexOf(usedPoint)
+      if (idx !== -1) points.splice(idx, 1)
+      for (let i = points.length - 1; i >= 0; i -= 1) {
+        const p = points[i]!
+        if (
+          p.x >= placement.x - 0.001 &&
+          p.x < placement.x + placement.l - 0.001 &&
+          p.y >= placement.y - 0.001 &&
+          p.y < placement.y + placement.h - 0.001 &&
+          p.z >= placement.z - 0.001 &&
+          p.z < placement.z + placement.w - 0.001
+        ) {
+          points.splice(i, 1)
+        }
+      }
+      const newCorners: ExtremePoint[] = [
+        {
+          x: round3(placement.x + placement.l + GAP),
+          y: placement.y,
+          z: placement.z,
+        },
+        {
+          x: placement.x,
+          y: round3(placement.y + placement.h + GAP),
+          z: placement.z,
+        },
+        {
+          x: placement.x,
+          y: placement.y,
+          z: round3(placement.z + placement.w + GAP),
+        },
+      ]
+      for (const p of newCorners) {
+        if (
+          p.x < CONTAINER_INNER_METERS.length - 0.001 &&
+          p.y < CONTAINER_INNER_METERS.height - 0.001 &&
+          p.z < CONTAINER_INNER_METERS.width - 0.001 &&
+          !points.some(
+            (q) =>
+              Math.abs(q.x - p.x) < 0.001 &&
+              Math.abs(q.y - p.y) < 0.001 &&
+              Math.abs(q.z - p.z) < 0.001,
+          )
+        ) {
+          points.push(p)
+        }
+      }
+      const packedBox = toPackedPackage({
+        draft,
+        l: placement.l,
+        h: placement.h,
+        w: placement.w,
+        x:
+          -CONTAINER_INNER_METERS.length / 2 + placement.x + placement.l / 2,
+        y:
+          -CONTAINER_INNER_METERS.height / 2 + placement.y + placement.h / 2,
+        z:
+          -CONTAINER_INNER_METERS.width / 2 + placement.z + placement.w / 2,
+      })
+      packages.push(packedBox)
+      const accumulator = accumulators[draft.sliceIndex]
+      if (accumulator) {
+        accumulator.packedUnits += draft.units
+        accumulator.packageCount += 1
+        accumulator.xWeightedSum += packedBox.pos[0] * draft.units
+      }
+    }
+    if (stillOverflow.length === pendingOverflow.length) break
+    pendingOverflow = stillOverflow
+  }
+
+  for (const draft of pendingOverflow) {
+    overflowUnits += draft.units
+    overflowPackages += 1
+    const accumulator = accumulators[draft.sliceIndex]
+    if (accumulator) accumulator.overflowUnits += draft.units
   }
 
   return {
