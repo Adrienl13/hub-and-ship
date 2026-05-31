@@ -1,30 +1,42 @@
 import type { CartItem } from '@/lib/order'
 import type { ProductCategory } from '@/lib/products'
+import type { ContainerType } from '@/lib/supabase/types'
 
-// ISO 20-foot "High Cube" standard internal dimensions.
+// ISO 20-foot "High Cube" standard internal dimensions, kept as the
+// default so existing callers (tests, legacy code paths) don't need to
+// know about the per-container type yet.
 //   length × width × height = 5.898 × 2.352 × 2.700  ≈  37.5 m³
-// The extra 30 cm of ceiling vs a regular 20' DV unlocks a real second
-// stacking layer: a chair stack (1.92 m) plus two table layers
-// (2 × 0.39 m + gaps ≈ 0.86 m) finally fits without clipping.
-// The DB's `containers.capacity_cbm` (~28 m³ commercial usable) stays
-// the source of truth for the fill ratio; the shell here is just the
-// physical envelope the packer paves into.
 export const CONTAINER_INNER_METERS = {
   length: 5.898,
   width: 2.352,
   height: 2.700,
 } as const
 
+/** ISO internal dimensions per container type. Used as the physical
+ *  envelope the packer paves into and as the shell the 3D viewer
+ *  renders. The DB's `containers.capacity_cbm` (commercial usable
+ *  volume) stays the source of truth for the fill-rate gauge. */
+export const CONTAINER_DIMENSIONS: Record<
+  ContainerType,
+  { length: number; width: number; height: number }
+> = {
+  '20_dv': { length: 5.898, width: 2.352, height: 2.395 },
+  '20_hc': { length: 5.898, width: 2.352, height: 2.700 },
+  '40_gp': { length: 12.032, width: 2.352, height: 2.395 },
+  '40_hc': { length: 12.032, width: 2.352, height: 2.700 },
+}
+
+export function getContainerInnerMeters(type: ContainerType | null | undefined): {
+  length: number
+  width: number
+  height: number
+} {
+  return CONTAINER_DIMENSIONS[type ?? '20_hc']
+}
+
 const GAP = 0.04
 const CHAIR_STACK_UNITS = 10
-// Real-world stackable chair footprint (cm → m): ~52 × 58 cm with the
-// stack of 10 reaching about 1.20 m tall (each chair adds ~12 cm on
-// top of the seated base). Sized this way, a 20' HC fits 4 stacks
-// across × 9 along its length = 36 stacks = 360 chairs — in line with
-// Container Club's 350–400 chairs/container target.
-const CHAIR_FOOTPRINT_LENGTH = 0.58
-const CHAIR_FOOTPRINT_WIDTH = 0.52
-const CHAIR_STACK_HEIGHT = 1.2
+const CHAIR_STACKS_ACROSS_WIDTH = 4
 
 // Tables ship disassembled in a flat package: a 70×70 cm bistro top
 // with its single-leg bundle measures ~72 × 17 × 74 cm (user-provided
@@ -147,29 +159,31 @@ function packageLengthFromCbm({
   return round3(clamp(cbm / (width * height), 0.35, 2.2))
 }
 
-export function getVisualPackageSpec(item: CartItem): PackageSpec {
+export function getVisualPackageSpec(
+  item: CartItem,
+  dims: { length: number; width: number; height: number } = CONTAINER_INNER_METERS,
+): PackageSpec {
   const { product } = item
   const unitCbm = Math.max(0.01, product.cbmPerUnit)
 
   if (product.category === 'chair') {
-    // A stack of 10 stackable chairs has the footprint of a single
-    // chair (assise + dossier) and rises ~1.2 m. Using the chair's own
-    // real dimensions — instead of a wider "crate" — lets us pack 4
-    // stacks across the width and 9 along the length of a 20' HC,
-    // which lines up with the 350–400 chairs/container industry norm.
+    const width = round3(
+      (dims.width / CHAIR_STACKS_ACROSS_WIDTH) * 0.94,
+    )
+    const height = round3(dims.height * 0.8)
+    const stackCbm = unitCbm * CHAIR_STACK_UNITS
+
     return {
       unitsPerPackage: CHAIR_STACK_UNITS,
       size: {
-        length: CHAIR_FOOTPRINT_LENGTH,
-        height: CHAIR_STACK_HEIGHT,
-        width: CHAIR_FOOTPRINT_WIDTH,
-      },
-      stackableLayers: Math.max(
-        1,
-        Math.floor(
-          CONTAINER_INNER_METERS.height / (CHAIR_STACK_HEIGHT + GAP),
+        length: Math.max(
+          0.8,
+          packageLengthFromCbm({ cbm: stackCbm, width, height }),
         ),
-      ),
+        height,
+        width,
+      },
+      stackableLayers: 1,
     }
   }
 
@@ -186,7 +200,7 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
       size: { length, height, width },
       stackableLayers: Math.max(
         1,
-        Math.floor(CONTAINER_INNER_METERS.height / (height + GAP)),
+        Math.floor(dims.height / (height + GAP)),
       ),
     }
   }
@@ -205,7 +219,7 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
       },
       stackableLayers: Math.max(
         1,
-        Math.floor(CONTAINER_INNER_METERS.height / (height + GAP)),
+        Math.floor(dims.height / (height + GAP)),
       ),
     }
   }
@@ -223,12 +237,15 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
     },
     stackableLayers: Math.max(
       1,
-      Math.floor(CONTAINER_INNER_METERS.height / (height + GAP)),
+      Math.floor(dims.height / (height + GAP)),
     ),
   }
 }
 
-function createPackageDrafts(items: ReadonlyArray<CartItem>): {
+function createPackageDrafts(
+  items: ReadonlyArray<CartItem>,
+  dims: { length: number; width: number; height: number },
+): {
   readonly drafts: ReadonlyArray<PackageDraft>
   readonly accumulators: SliceAccumulator[]
 } {
@@ -239,7 +256,7 @@ function createPackageDrafts(items: ReadonlyArray<CartItem>): {
   items.forEach((item, sliceIndex) => {
     if (item.quantity <= 0) return
 
-    const spec = getVisualPackageSpec(item)
+    const spec = getVisualPackageSpec(item, dims)
     const packageCount = Math.ceil(item.quantity / spec.unitsPerPackage)
     const accumulator: SliceAccumulator = {
       productId: item.product.id,
@@ -333,12 +350,14 @@ function tryPlaceAt({
   placed,
   l,
   w,
+  dims,
 }: {
   readonly draft: PackageDraft
   readonly point: ExtremePoint
   readonly placed: ReadonlyArray<PlacedRect>
   readonly l: number
   readonly w: number
+  readonly dims: { length: number; width: number; height: number }
 }): PlacedRect | null {
   const candidate: PlacedRect = {
     x: point.x,
@@ -351,9 +370,9 @@ function tryPlaceAt({
   }
 
   if (
-    candidate.x + candidate.l > CONTAINER_INNER_METERS.length + 0.001 ||
-    candidate.y + candidate.h > CONTAINER_INNER_METERS.height + 0.001 ||
-    candidate.z + candidate.w > CONTAINER_INNER_METERS.width + 0.001
+    candidate.x + candidate.l > dims.length + 0.001 ||
+    candidate.y + candidate.h > dims.height + 0.001 ||
+    candidate.z + candidate.w > dims.width + 0.001
   ) {
     return null
   }
@@ -397,10 +416,12 @@ function tryPlaceAtWithRotation({
   draft,
   point,
   placed,
+  dims,
 }: {
   readonly draft: PackageDraft
   readonly point: ExtremePoint
   readonly placed: ReadonlyArray<PlacedRect>
+  readonly dims: { length: number; width: number; height: number }
 }): PlacedRect | null {
   const natural = tryPlaceAt({
     draft,
@@ -408,10 +429,9 @@ function tryPlaceAtWithRotation({
     placed,
     l: draft.size.length,
     w: draft.size.width,
+    dims,
   })
   if (natural) return natural
-  // Skip rotation when the footprint is already square — it would be a
-  // no-op and just costs us an overlap check.
   if (Math.abs(draft.size.length - draft.size.width) < 0.001) return null
   return tryPlaceAt({
     draft,
@@ -419,6 +439,7 @@ function tryPlaceAtWithRotation({
     placed,
     l: draft.size.width,
     w: draft.size.length,
+    dims,
   })
 }
 
@@ -480,8 +501,10 @@ function toPackedPackage({
  */
 export function packContainerPackages(
   items: ReadonlyArray<CartItem>,
+  containerType?: ContainerType | null,
 ): PackedContainer {
-  const { drafts, accumulators } = createPackageDrafts(items)
+  const dims = getContainerInnerMeters(containerType)
+  const { drafts, accumulators } = createPackageDrafts(items, dims)
   const packages: PackedPackage[] = []
   const placed: PlacedRect[] = []
   const points: ExtremePoint[] = [{ x: 0, y: 0, z: 0 }]
@@ -501,7 +524,7 @@ export function packContainerPackages(
       (a, b) => a.y - b.y || a.x - b.x || a.z - b.z,
     )
     for (const point of orderedPoints) {
-      const result = tryPlaceAtWithRotation({ draft, point, placed })
+      const result = tryPlaceAtWithRotation({ draft, point, placed, dims })
       if (result) return { placement: result, usedPoint: point }
     }
     return null
@@ -556,9 +579,9 @@ export function packContainerPackages(
       ]
       for (const p of candidates) {
         if (
-          p.x < CONTAINER_INNER_METERS.length - 0.001 &&
-          p.y < CONTAINER_INNER_METERS.height - 0.001 &&
-          p.z < CONTAINER_INNER_METERS.width - 0.001 &&
+          p.x < dims.length - 0.001 &&
+          p.y < dims.height - 0.001 &&
+          p.z < dims.width - 0.001 &&
           !points.some(
             (q) =>
               Math.abs(q.x - p.x) < 0.001 &&
@@ -575,18 +598,9 @@ export function packContainerPackages(
         l: placement.l,
         h: placement.h,
         w: placement.w,
-        x:
-          -CONTAINER_INNER_METERS.length / 2 +
-          placement.x +
-          placement.l / 2,
-        y:
-          -CONTAINER_INNER_METERS.height / 2 +
-          placement.y +
-          placement.h / 2,
-        z:
-          -CONTAINER_INNER_METERS.width / 2 +
-          placement.z +
-          placement.w / 2,
+        x: -dims.length / 2 + placement.x + placement.l / 2,
+        y: -dims.height / 2 + placement.y + placement.h / 2,
+        z: -dims.width / 2 + placement.z + placement.w / 2,
       })
       packages.push(packedBox)
 
@@ -650,9 +664,9 @@ export function packContainerPackages(
       ]
       for (const p of newCorners) {
         if (
-          p.x < CONTAINER_INNER_METERS.length - 0.001 &&
-          p.y < CONTAINER_INNER_METERS.height - 0.001 &&
-          p.z < CONTAINER_INNER_METERS.width - 0.001 &&
+          p.x < dims.length - 0.001 &&
+          p.y < dims.height - 0.001 &&
+          p.z < dims.width - 0.001 &&
           !points.some(
             (q) =>
               Math.abs(q.x - p.x) < 0.001 &&
@@ -668,12 +682,9 @@ export function packContainerPackages(
         l: placement.l,
         h: placement.h,
         w: placement.w,
-        x:
-          -CONTAINER_INNER_METERS.length / 2 + placement.x + placement.l / 2,
-        y:
-          -CONTAINER_INNER_METERS.height / 2 + placement.y + placement.h / 2,
-        z:
-          -CONTAINER_INNER_METERS.width / 2 + placement.z + placement.w / 2,
+        x: -dims.length / 2 + placement.x + placement.l / 2,
+        y: -dims.height / 2 + placement.y + placement.h / 2,
+        z: -dims.width / 2 + placement.z + placement.w / 2,
       })
       packages.push(packedBox)
       const accumulator = accumulators[draft.sliceIndex]

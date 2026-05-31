@@ -34,6 +34,7 @@ export type ContainerStatus =
   | 'shipping'
   | 'delivered'
   | 'cancelled'
+export type ContainerType = '20_dv' | '20_hc' | '40_gp' | '40_hc'
 export type QualityReportOrganization =
   | 'sgs'
   | 'eurofins'
@@ -462,6 +463,7 @@ type ContainerRow = {
   testimonial_long_quote: string | null
   testimonial_role: string | null
   published_at: string | null
+  container_type: ContainerType
 }
 
 type ContainerInsert = {
@@ -500,6 +502,7 @@ type ContainerInsert = {
   testimonial_long_quote?: string | null
   testimonial_role?: string | null
   published_at?: string | null
+  container_type?: ContainerType
 }
 
 type ContainerUpdate = Partial<ContainerInsert>

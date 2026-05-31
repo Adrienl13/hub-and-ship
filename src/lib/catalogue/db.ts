@@ -28,6 +28,7 @@ export interface DbCurrentContainer {
   readonly seriesReached: number
   readonly totalSeries: number
   readonly professionalsEngaged: number
+  readonly containerType: '20_dv' | '20_hc' | '40_gp' | '40_hc'
 }
 
 export interface DbCatalog {
@@ -166,6 +167,7 @@ function containerFromRow(
     seriesReached,
     totalSeries: row.display_series_target,
     professionalsEngaged: row.display_pros_count,
+    containerType: row.container_type ?? '20_hc',
   }
 }
 

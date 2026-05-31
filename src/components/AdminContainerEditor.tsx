@@ -41,6 +41,7 @@ interface EditableState {
   port: string
   capacity_cbm: string
   status: ContainerStatusValue
+  container_type: ContainerTypeValue
   slug: string
   origin_port: string
   total_items: string
@@ -79,6 +80,15 @@ const CONTAINER_STATUS_VALUES: ReadonlyArray<ContainerStatusValue> = [
   'cancelled',
 ]
 
+type ContainerTypeValue = '20_dv' | '20_hc' | '40_gp' | '40_hc'
+
+const CONTAINER_TYPE_LABELS: Record<ContainerTypeValue, string> = {
+  '20_dv': "20' Dry Van (33 m³)",
+  '20_hc': "20' High Cube (37 m³)",
+  '40_gp': "40' General Purpose (68 m³)",
+  '40_hc': "40' High Cube (76 m³)",
+}
+
 function asJsonArray<T>(value: Json | null | undefined): T[] {
   if (Array.isArray(value)) return [...(value as unknown as T[])]
   return []
@@ -90,6 +100,7 @@ function fromRow(row: ContainerRow): EditableState {
     port: row.port,
     capacity_cbm: row.capacity_cbm.toString(),
     status: row.status,
+    container_type: row.container_type ?? '20_hc',
     slug: row.slug ?? '',
     origin_port: row.origin_port ?? '',
     total_items: row.total_items?.toString() ?? '',
@@ -127,6 +138,7 @@ function emptyState(): EditableState {
     port: '',
     capacity_cbm: '28',
     status: 'open',
+    container_type: '20_hc',
     slug: '',
     origin_port: '',
     total_items: '',
@@ -157,6 +169,7 @@ function toUpdate(state: EditableState): ContainerUpdate {
     port: state.port.trim(),
     capacity_cbm: Math.max(0.1, Number(state.capacity_cbm) || 28),
     status: state.status,
+    container_type: state.container_type,
     slug: state.slug.trim() || null,
     origin_port: state.origin_port.trim() || null,
     total_items: parseNumberOrNull(state.total_items),
@@ -253,6 +266,7 @@ export function AdminContainerEditor({
         port: payload.port!,
         capacity_cbm: payload.capacity_cbm!,
         status: payload.status,
+        container_type: payload.container_type,
         slug: payload.slug,
         origin_port: payload.origin_port,
         total_items: payload.total_items,
@@ -345,6 +359,26 @@ export function AdminContainerEditor({
                   {s}
                 </option>
               ))}
+            </select>
+          </Field>
+          <Field label="Type de container">
+            <select
+              value={state.container_type}
+              onChange={(e) =>
+                setField(
+                  'container_type',
+                  e.target.value as ContainerTypeValue,
+                )
+              }
+              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+            >
+              {(Object.keys(CONTAINER_TYPE_LABELS) as ContainerTypeValue[]).map(
+                (t) => (
+                  <option key={t} value={t}>
+                    {CONTAINER_TYPE_LABELS[t]}
+                  </option>
+                ),
+              )}
             </select>
           </Field>
         </div>

@@ -19,6 +19,14 @@ import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
+import type { ContainerType } from '@/lib/supabase/types'
+
+const CONTAINER_TYPE_LABEL: Record<ContainerType, string> = {
+  '20_dv': "20' Dry Van · 33 m³",
+  '20_hc': "20' High Cube · 37 m³",
+  '40_gp': "40' General Purpose · 68 m³",
+  '40_hc': "40' High Cube · 76 m³",
+}
 import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
 import { AnimatedNumber } from '@/components/motion-helpers'
 
@@ -60,7 +68,8 @@ export function OrderSidebar({
               {container.reference}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {container.port} · 20' High Cube · 37 m³
+              {container.port} ·{' '}
+              {CONTAINER_TYPE_LABEL[container.containerType ?? '20_hc']}
             </div>
           </div>
           <Button
@@ -83,7 +92,11 @@ export function OrderSidebar({
         <div className="relative h-[360px] w-full bg-[color:var(--sand)] md:h-[420px]">
           <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
           <Suspense fallback={null}>
-            <LazyContainerScene items={items} exploded={exploded} />
+            <LazyContainerScene
+              items={items}
+              exploded={exploded}
+              containerType={container.containerType}
+            />
           </Suspense>
         </div>
 

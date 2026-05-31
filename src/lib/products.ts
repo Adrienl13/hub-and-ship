@@ -278,6 +278,9 @@ export interface ContainerSummary {
   readonly seriesReached: number
   readonly totalSeries: number
   readonly professionalsEngaged: number
+  /** ISO container format (drives the 3D shell + sidebar label).
+   *  Falls back to '20_hc' when omitted by older callers. */
+  readonly containerType?: '20_dv' | '20_hc' | '40_gp' | '40_hc'
 }
 
 export const CURRENT_CONTAINER: ContainerSummary = {

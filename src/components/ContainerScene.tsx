@@ -10,9 +10,10 @@ import {
 import { useEffect, useMemo, useState, Suspense } from 'react'
 import type { CartItem } from '@/lib/order'
 import {
-  CONTAINER_INNER_METERS,
+  getContainerInnerMeters,
   packContainerPackages,
 } from '@/lib/container/packing'
+import type { ContainerType } from '@/lib/supabase/types'
 
 /** Lightweight check: phones get a smaller GPU budget than laptops.
  *  We rely on coarse pointer + narrow viewport rather than UA sniffing. */
@@ -29,12 +30,17 @@ function useIsMobileDevice(): boolean {
   return isMobile
 }
 
-// 20' High Cube intérieur ISO (≈ 37 m³ brut, ~32 m³ utile)
-const L = CONTAINER_INNER_METERS.length
-const W = CONTAINER_INNER_METERS.width
-const H = CONTAINER_INNER_METERS.height
-
-function ContainerShell({ opacity = 1 }: { opacity?: number }) {
+function ContainerShell({
+  opacity = 1,
+  L,
+  W,
+  H,
+}: {
+  opacity?: number
+  L: number
+  W: number
+  H: number
+}) {
   const wallColor = '#b8aea0'
   return (
     <group>
@@ -84,14 +90,23 @@ function LoadingMesh() {
 export function ContainerScene({
   items,
   exploded = false,
+  containerType,
 }: {
   items: CartItem[]
   exploded?: boolean
+  containerType?: ContainerType | null
 }) {
   const isMobile = useIsMobileDevice()
+  const dims = useMemo(
+    () => getContainerInnerMeters(containerType),
+    [containerType],
+  )
+  const L = dims.length
+  const W = dims.width
+  const H = dims.height
   const { packages, slices, overflowUnits } = useMemo(
-    () => packContainerPackages(items),
-    [items],
+    () => packContainerPackages(items, containerType),
+    [items, containerType],
   )
 
   const EXPLODE_GAP = 0.7
@@ -135,7 +150,7 @@ export function ContainerScene({
       </Suspense>
 
       <group position={[0, 0.25, 0]}>
-        <ContainerShell opacity={exploded ? 0.25 : 1} />
+        <ContainerShell opacity={exploded ? 0.25 : 1} L={L} W={W} H={H} />
         {packages.map((b, i) => {
           const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices)
           return (
