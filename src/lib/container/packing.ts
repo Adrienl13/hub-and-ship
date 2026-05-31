@@ -26,15 +26,13 @@ const CHAIR_FOOTPRINT_LENGTH = 0.58
 const CHAIR_FOOTPRINT_WIDTH = 0.52
 const CHAIR_STACK_HEIGHT = 1.2
 
-// Tables are visualised as pallets of 10 disassembled units (top + leg
-// bundle), echoing the chair-stack logistics. Each pallet keeps the
-// footprint of one assembled table (so the visual is recognizable) and
-// stands ~1 m to ~1.4 m tall depending on the table size. A 20' HC
-// then fits ~28 pallets = ~280 small tables — the upper bound of what
-// the geometry physically allows.
-const TABLE_PALETTE_UNITS = 10
-const TABLE_PALETTE_MIN_HEIGHT = 0.5
-const TABLE_PALETTE_MAX_HEIGHT = 1.4
+// Tables ship disassembled in a flat package: a 70×70 cm bistro top
+// with its single-leg bundle measures ~72 × 17 × 74 cm (user-provided
+// real-world dimensions). We render one package per table instead of
+// a "pallet of N" — the flat profile means 12 layers stack neatly
+// under the 2.7 m HC ceiling, and the visual stays an actual table
+// rather than an opaque crate.
+const TABLE_FLAT_HEIGHT = 0.17
 
 /** Deterministic HSL colour from a stable string (variant id) — used only
  * for the container-packing visualisation so distinct designs render as
@@ -176,28 +174,16 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
   }
 
   if (product.category === 'table') {
-    // Pallet of 10 disassembled tables: keeps the footprint of one
-    // assembled table (so the rendered crate stays visually a "table"),
-    // and grows in height to swallow the 10 × cbm aggregate. Same
-    // logistics metaphor as the chair stack.
-    const length = clamp(product.dimensions.l / 100, 0.8, 1.65)
-    const width = clamp(product.dimensions.w / 100, 0.68, 0.82)
-    const paletteCbm = unitCbm * TABLE_PALETTE_UNITS
-    const height = round3(
-      clamp(
-        paletteCbm / (length * width),
-        TABLE_PALETTE_MIN_HEIGHT,
-        TABLE_PALETTE_MAX_HEIGHT,
-      ),
-    )
-
+    // Flat disassembled package (real Container Club spec: a 70×70 cm
+    // bistro top with its leg bundle = 72 × 17 × 74 cm). Footprint
+    // tracks the product's own top dimensions; the height is the
+    // disassembled package height, not the assembled 73 cm.
+    const length = round3(product.dimensions.l / 100 + 0.02)
+    const width = round3(product.dimensions.w / 100 + 0.04)
+    const height = TABLE_FLAT_HEIGHT
     return {
-      unitsPerPackage: TABLE_PALETTE_UNITS,
-      size: {
-        length: round3(length),
-        height,
-        width: round3(width),
-      },
+      unitsPerPackage: 1,
+      size: { length, height, width },
       stackableLayers: Math.max(
         1,
         Math.floor(CONTAINER_INNER_METERS.height / (height + GAP)),
