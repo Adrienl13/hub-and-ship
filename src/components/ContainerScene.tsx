@@ -108,6 +108,10 @@ export function ContainerScene({
     () => packContainerPackages(items, containerType),
     [items, containerType],
   )
+  const renderPackages = useMemo(
+    () => [...packages].sort((a, b) => Number(b.reserved) - Number(a.reserved)),
+    [packages],
+  )
 
   const EXPLODE_GAP = 0.7
   const explodeOffset = (sliceIndex: number, total: number) => {
@@ -151,17 +155,17 @@ export function ContainerScene({
 
       <group position={[0, 0.25, 0]}>
         <ContainerShell opacity={exploded ? 0.25 : 1} L={L} W={W} H={H} />
-        {packages.map((b, i) => {
+        {renderPackages.map((b, i) => {
           const { dx, dy } = explodeOffset(b.sliceIndex, totalSlices)
           // Already-reserved volumes (other pros' commitments) render
           // as a muted "engaged" grey so the visitor can tell which
           // packages they're adding from those that are already
           // locked in. Mat + slightly transparent so they read as
           // "background" against the live cart.
-          const renderColor = b.reserved ? '#8b8278' : b.color
+          const renderColor = b.reserved ? '#b6aea3' : b.color
           return (
             <RoundedBox
-              key={i}
+              key={`${b.productId}:${b.sliceIndex}:${b.packageIndex}:${b.reserved ? 'reserved' : 'live'}:${i}`}
               args={b.size}
               radius={0.012}
               smoothness={2}
@@ -172,7 +176,7 @@ export function ContainerScene({
               <meshStandardMaterial
                 color={renderColor}
                 transparent={b.reserved}
-                opacity={b.reserved ? 0.75 : 1}
+                opacity={b.reserved ? 0.38 : 1}
                 roughness={b.reserved ? 0.92 : 0.78}
                 metalness={0.05}
               />
@@ -184,7 +188,7 @@ export function ContainerScene({
             const { dx } = explodeOffset(i, totalSlices)
             return (
               <Html
-                key={s.productId}
+                key={`${s.productId}:${s.color}:${i}`}
                 position={[s.centerX + dx, -H / 2 - 0.25, 0]}
                 center
                 distanceFactor={10}

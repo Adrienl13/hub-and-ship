@@ -24,6 +24,7 @@ import {
   getRemainingCbm,
   getVolumeUpgradeDelta,
 } from '@/lib/container/pricing'
+import { packContainerPackages } from '@/lib/container/packing'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
 import type { ContainerType } from '@/lib/supabase/types'
@@ -42,6 +43,57 @@ const LazyContainerScene = lazy(() =>
     default: module.ContainerScene,
   })),
 )
+
+const RESERVED_SCENE_MAX_SHARE = 0.3
+
+function getItemsCbm(items: ReadonlyArray<CartItem>): number {
+  return items.reduce(
+    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
+    0,
+  )
+}
+
+function limitReservedItemsForScene({
+  items,
+  liveItems,
+  maxCbm,
+  containerType,
+}: {
+  readonly items: ReadonlyArray<CartItem>
+  readonly liveItems: ReadonlyArray<CartItem>
+  readonly maxCbm: number
+  readonly containerType: ContainerType
+}): CartItem[] {
+  if (maxCbm <= 0) return []
+
+  for (let scale = 1; scale >= 0; scale -= 0.1) {
+    const limited: CartItem[] = []
+    let remainingCbm = maxCbm * scale
+
+    for (const item of items) {
+      const unitCbm = item.product.cbmPerUnit
+      if (unitCbm <= 0) continue
+
+      const quantity = Math.min(
+        item.quantity,
+        Math.floor(remainingCbm / unitCbm),
+      )
+      if (quantity <= 0) continue
+
+      limited.push({ ...item, quantity, reserved: true })
+      remainingCbm -= quantity * unitCbm
+    }
+
+    if (
+      packContainerPackages([...limited, ...liveItems], containerType)
+        .overflowUnits === 0
+    ) {
+      return limited
+    }
+  }
+
+  return []
+}
 
 export function OrderSidebar({
   items,
@@ -86,16 +138,6 @@ export function OrderSidebar({
     ? null
     : getVolumeUpgradeDelta(activeContainerType, '40_hc')
   const remainingCbm = getRemainingCbm(activeContainerType, usedCbm)
-  // Total volume already taken by other pros on this container — used
-  // for the "already reserved" badge under the fill bar.
-  const reservedCbm = useMemo(
-    () =>
-      reservedItems.reduce(
-        (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
-        0,
-      ),
-    [reservedItems],
-  )
   // De-duplicate against the visitor's cart so they don't see *their*
   // own load doubled when the variant they're picking already had
   // earlier commitments — the cart line stays the source of truth.
@@ -103,14 +145,32 @@ export function OrderSidebar({
     () => new Set(items.map((it) => it.variant.id)),
     [items],
   )
-  const sceneReserved = useMemo(
+  const rawSceneReserved = useMemo(
     () => reservedItems.filter((it) => !visitorVariantIds.has(it.variant.id)),
     [reservedItems, visitorVariantIds],
+  )
+  // The live cart must stay visually dominant. `unitsCommitted` is a
+  // catalogue-level MOQ signal, not a reliable physical manifest for
+  // the current container, so the 3D scene only shows a capped context
+  // load instead of letting historical commitments turn the view grey.
+  const sceneReserved = useMemo(
+    () =>
+      limitReservedItemsForScene({
+        items: rawSceneReserved,
+        liveItems: items,
+        maxCbm: Math.min(
+          Math.max(0, capacity - usedCbm),
+          capacity * RESERVED_SCENE_MAX_SHARE,
+        ),
+        containerType: activeContainerType,
+      }),
+    [activeContainerType, capacity, items, rawSceneReserved, usedCbm],
   )
   const sceneItems = useMemo<CartItem[]>(
     () => [...sceneReserved, ...items],
     [items, sceneReserved],
   )
+  const reservedCbm = useMemo(() => getItemsCbm(sceneReserved), [sceneReserved])
   const hasSceneItems = sceneItems.length > 0
 
   return (
@@ -171,6 +231,28 @@ export function OrderSidebar({
                 containerType={activeContainerType}
               />
             </Suspense>
+          )}
+          {hasSceneItems && (
+            <div className="shadow-paper absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-sm border border-black/10 bg-white/90 px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
+              {items.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="inline-block h-2.5 w-2.5 rounded-sm bg-[#55c7c3]"
+                  />
+                  Votre commande
+                </span>
+              )}
+              {sceneReserved.length > 0 && (
+                <span className="text-foreground/70 flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="inline-block h-2.5 w-2.5 rounded-sm bg-[#b6aea3]"
+                  />
+                  Déjà réservé
+                </span>
+              )}
+            </div>
           )}
         </div>
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -16,6 +16,7 @@ import type { ContainerType } from '@/lib/supabase/types'
 
 export type ProductVariantSelection = Record<string, string>
 export type ProductQuantitySelection = Record<string, number>
+export type ContainerPreferenceSource = 'manual' | 'auto'
 
 export interface CartSnapshot {
   items: CartItem[]
@@ -30,9 +31,13 @@ interface CartStoreState {
   /** User-chosen container format (null = use the active DB container).
    *  Persisted across reloads so distributors don't lose their pick. */
   preferredContainerType: ContainerType | null
+  containerPreferenceSource: ContainerPreferenceSource | null
   setQty: (productId: string, quantity: number) => void
   setVariant: (productId: string, variantId: string) => void
-  setPreferredContainerType: (type: ContainerType | null) => void
+  setPreferredContainerType: (
+    type: ContainerType | null,
+    source?: ContainerPreferenceSource,
+  ) => void
   resetCart: () => void
 }
 
@@ -93,6 +98,7 @@ export const useCartStore = create<CartStoreState>()(
       variantByProduct: createDefaultVariantByProduct(),
       qtyByProduct: createDefaultQtyByProduct(),
       preferredContainerType: null,
+      containerPreferenceSource: null,
       setQty: (productId, quantity) =>
         set((previous) => {
           const product = PRODUCTS.find((item) => item.id === productId)
@@ -115,13 +121,17 @@ export const useCartStore = create<CartStoreState>()(
             [productId]: variantId,
           },
         })),
-      setPreferredContainerType: (type) =>
-        set({ preferredContainerType: type }),
+      setPreferredContainerType: (type, source = 'manual') =>
+        set({
+          preferredContainerType: type,
+          containerPreferenceSource: type ? source : null,
+        }),
       resetCart: () =>
         set({
           variantByProduct: createDefaultVariantByProduct(),
           qtyByProduct: createDefaultQtyByProduct(),
           preferredContainerType: null,
+          containerPreferenceSource: null,
         }),
     }),
     {
@@ -131,6 +141,7 @@ export const useCartStore = create<CartStoreState>()(
         variantByProduct: state.variantByProduct,
         qtyByProduct: state.qtyByProduct,
         preferredContainerType: state.preferredContainerType,
+        containerPreferenceSource: state.containerPreferenceSource,
       }),
     },
   ),
@@ -154,6 +165,9 @@ export function useCart(options: UseCartOptions = {}) {
   const preferredContainerType = useCartStore(
     (state) => state.preferredContainerType,
   )
+  const containerPreferenceSource = useCartStore(
+    (state) => state.containerPreferenceSource,
+  )
   const setQty = useCartStore((state) => state.setQty)
   const setVariant = useCartStore((state) => state.setVariant)
   const setPreferredContainerType = useCartStore(
@@ -162,6 +176,7 @@ export function useCart(options: UseCartOptions = {}) {
 
   const products = options.products
   const capacityCbm = options.capacityCbm
+  const baseCapacityCbm = capacityCbm ?? CURRENT_CONTAINER.capacityCbm
 
   // If the user actively picked a container format (e.g. switched to a
   // 40' GP for a bigger order), its usable cbm overrides the active
@@ -169,7 +184,7 @@ export function useCart(options: UseCartOptions = {}) {
   // KPI see the same target volume.
   const effectiveCapacityCbm = preferredContainerType
     ? getContainerUsableCbm(preferredContainerType)
-    : capacityCbm
+    : baseCapacityCbm
 
   const snapshot = useMemo(
     () =>
@@ -182,11 +197,35 @@ export function useCart(options: UseCartOptions = {}) {
     [qtyByProduct, variantByProduct, products, effectiveCapacityCbm],
   )
 
+  useEffect(() => {
+    const usedCbm = snapshot.fill.usedCbm
+
+    if (usedCbm > baseCapacityCbm && preferredContainerType !== '40_hc') {
+      setPreferredContainerType('40_hc', 'auto')
+      return
+    }
+
+    if (
+      containerPreferenceSource === 'auto' &&
+      preferredContainerType === '40_hc' &&
+      usedCbm <= baseCapacityCbm
+    ) {
+      setPreferredContainerType(null, 'auto')
+    }
+  }, [
+    baseCapacityCbm,
+    containerPreferenceSource,
+    preferredContainerType,
+    setPreferredContainerType,
+    snapshot.fill.usedCbm,
+  ])
+
   return {
     ...snapshot,
     variantByProduct,
     qtyByProduct,
     preferredContainerType,
+    containerPreferenceSource,
     setQty,
     setVariant,
     setPreferredContainerType,
