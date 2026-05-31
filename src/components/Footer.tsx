@@ -2,7 +2,7 @@ export function Footer() {
   return (
     <footer className="border-t border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--sand)]">
       <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--sand)] font-display text-base font-semibold text-foreground">
@@ -16,6 +16,31 @@ export function Footer() {
               Le club d'achat groupé des pros de la terrasse. Mobilier outdoor
               direct usine, importation officielle France.
             </p>
+          </div>
+          <div>
+            <div className="label-eyebrow text-[color:var(--sand)]/55">
+              Guides pros
+            </div>
+            <ul className="mt-4 space-y-2 text-xs">
+              {(
+                [
+                  ['Chaises restaurant', '/catalogue/chaises-restaurant'],
+                  ['Tables restaurant', '/catalogue/tables-restaurant'],
+                  ['Stock terrasse 24h', '/stock-mobilier-terrasse-24h'],
+                  ['Catalogue complet', '/catalogue'],
+                  ['FAQ achat groupé', '/faq'],
+                ] as const
+              ).map(([label, href]) => (
+                <li key={href}>
+                  <a
+                    href={href}
+                    className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
           <div>
             <div className="label-eyebrow text-[color:var(--sand)]/55">

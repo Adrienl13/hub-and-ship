@@ -30,10 +30,9 @@ const baseInput: ReservationEmailInput = {
 
 describe('reservation email templates', () => {
   it('renders the user email with reference, totals, account URL', () => {
-    const { subject, html, text } = buildReservationCreatedEmailToUser(baseInput)
-    expect(subject).toBe(
-      'Réservation enregistrée — CC-2026-001-20260518-0001',
-    )
+    const { subject, html, text } =
+      buildReservationCreatedEmailToUser(baseInput)
+    expect(subject).toBe('Réservation enregistrée — CC-2026-001-20260518-0001')
     expect(html).toContain('CC-2026-001-20260518-0001')
     expect(html).toContain('Chaise Cannes Empilable')
     expect(html).toContain('https://container-club.fr/account/reservations/abc')
@@ -42,7 +41,8 @@ describe('reservation email templates', () => {
   })
 
   it('renders the admin email with contact + siret + financials', () => {
-    const { subject, html, text } = buildReservationCreatedEmailToAdmin(baseInput)
+    const { subject, html, text } =
+      buildReservationCreatedEmailToAdmin(baseInput)
     expect(subject).toContain('Hotel Demo')
     expect(html).toContain('55208131701750')
     expect(html).toContain('direction@hotel-demo.fr')

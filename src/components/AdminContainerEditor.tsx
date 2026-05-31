@@ -256,9 +256,7 @@ export function AdminContainerEditor({
     }
 
     if (!state.reference.trim() || !state.port.trim()) {
-      setError(
-        'Référence et port sont requis (champs NOT NULL côté schéma).',
-      )
+      setError('Référence et port sont requis (champs NOT NULL côté schéma).')
       setSaving(false)
       return
     }
@@ -378,10 +376,7 @@ export function AdminContainerEditor({
             <select
               value={state.container_type}
               onChange={(e) =>
-                setField(
-                  'container_type',
-                  e.target.value as ContainerTypeValue,
-                )
+                setField('container_type', e.target.value as ContainerTypeValue)
               }
               className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
             >
@@ -398,9 +393,7 @@ export function AdminContainerEditor({
             <Input
               type="date"
               value={state.expected_close_at}
-              onChange={(e) =>
-                setField('expected_close_at', e.target.value)
-              }
+              onChange={(e) => setField('expected_close_at', e.target.value)}
             />
           </Field>
         </div>

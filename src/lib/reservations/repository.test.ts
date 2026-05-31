@@ -95,9 +95,7 @@ describe('createReservationInSupabase', () => {
       from: vi.fn((table: 'reservations' | 'reservation_items') =>
         table === 'reservations'
           ? {
-              insert: vi
-                .fn()
-                .mockResolvedValue({ data: null, error: null }),
+              insert: vi.fn().mockResolvedValue({ data: null, error: null }),
             }
           : {
               insert: vi.fn().mockResolvedValue({

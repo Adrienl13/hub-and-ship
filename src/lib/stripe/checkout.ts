@@ -138,8 +138,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
         // Surface the requested ISO format so the ops team sees in the
         // Stripe Dashboard which payments belong to distributor-scale
         // 40' demand orders (vs a standard 20' group-buy).
-        requested_container_type:
-          reservation.requested_container_type ?? '',
+        requested_container_type: reservation.requested_container_type ?? '',
       },
       // Stripe substitutes {CHECKOUT_SESSION_ID} server-side; do not encode it.
       success_url: `${origin}/account/reservations/${reservation.id}?session_id={CHECKOUT_SESSION_ID}`,

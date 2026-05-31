@@ -4414,6 +4414,7 @@ Scénario : modifier le total côté client avant envoi à Stripe.
 Protections en place :
 
 - **Recalcul serveur systématique** dans `verify-siret` puis dans `create-payment-intent` :
+
   ```typescript
   // src/lib/server/pricing-server.ts
   export async function recalculateAndVerifyOrder(orderId: string) {
@@ -4440,6 +4441,7 @@ Protections en place :
     return recalculated
   }
   ```
+
 - Tous les montants envoyés à Stripe viennent du recalcul serveur, jamais du client
 
 **Fraude #4 : Card testing (cartes volées)**

@@ -20,6 +20,7 @@ import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
   STOCK_FILTERS,
+  AVAILABLE_STOCK,
   calculateStockKpis,
   filterAndSortStockLines,
   getAvailableStockLines,
@@ -30,8 +31,44 @@ import {
 } from '@/lib/stock'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
 import { formatEUR } from '@/lib/order'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  itemListJsonLd,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/stock-24h')({
+  head: () => {
+    const stockProducts = getAvailableStockLines(AVAILABLE_STOCK).map(
+      (line) => line.product,
+    )
+
+    return {
+      ...buildSeoHead({
+        title: 'Stock mobilier terrasse disponible sous 24h',
+        description:
+          'Lots de mobilier outdoor professionnel déjà disponibles en France : chaises, fauteuils et tables pour terrasse urgente, retrait Marseille-Fos sous 24h.',
+        path: '/stock-24h',
+        image: stockProducts[0]?.mainImageUrl,
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Stock 24h', path: '/stock-24h' },
+          ]),
+        ),
+        jsonLdScript(
+          itemListJsonLd({
+            name: 'Stock mobilier terrasse disponible sous 24h',
+            path: '/stock-24h',
+            products: stockProducts,
+          }),
+        ),
+      ],
+    }
+  },
   component: Stock24hPage,
 })
 

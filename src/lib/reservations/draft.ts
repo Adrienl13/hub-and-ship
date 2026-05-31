@@ -38,12 +38,7 @@ export interface ReservationDraftInput {
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string
-  readonly requestedContainerType?:
-    | '20_dv'
-    | '20_hc'
-    | '40_gp'
-    | '40_hc'
-    | null
+  readonly requestedContainerType?: '20_dv' | '20_hc' | '40_gp' | '40_hc' | null
 }
 
 export interface ReservationDraftLine {
@@ -99,12 +94,7 @@ export interface ReservationDraft {
    *  (via the sidebar toggle). `null` = accepted the active default
    *  (typically a 20' HC group-buy). Persisted on the reservation
    *  row so ops can spot distributor-scale demand orders. */
-  readonly requestedContainerType:
-    | '20_dv'
-    | '20_hc'
-    | '40_gp'
-    | '40_hc'
-    | null
+  readonly requestedContainerType: '20_dv' | '20_hc' | '40_gp' | '40_hc' | null
 }
 
 export interface ReservationDraftValidationIssue {

@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import {
-  ImageGalleryUploader,
-  ImageUploader,
-} from '@/components/ImageUploader'
+import { ImageGalleryUploader, ImageUploader } from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -306,9 +303,7 @@ export function AdminProductEditor({
     // Resolve the target product id up-front. In create mode the id is
     // derived from the SKU (stable, human-readable). In edit mode we keep
     // the existing id.
-    const targetProductId = isCreating
-      ? deriveProductId(state.sku)
-      : productId!
+    const targetProductId = isCreating ? deriveProductId(state.sku) : productId!
     if (isCreating && !targetProductId) {
       setError('Le SKU est requis pour créer un produit.')
       setSaving(false)
@@ -334,19 +329,16 @@ export function AdminProductEditor({
     // One transactional RPC instead of N sequential writes — avoids the
     // partial-failure window where the product was saved but its variants
     // (or commitments) were not.
-    const { error: rpcError } = await client.rpc(
-      'admin_save_product_full',
-      {
-        payload: {
-          id: targetProductId,
-          create: isCreating,
-          product: productPayload as unknown as Json,
-          variants: variantsPayload as unknown as Json,
-          removed_variant_ids: removedVariantIds,
-          commitments: commitmentsPayload as unknown as Json,
-        } as unknown as Json,
-      } as never,
-    )
+    const { error: rpcError } = await client.rpc('admin_save_product_full', {
+      payload: {
+        id: targetProductId,
+        create: isCreating,
+        product: productPayload as unknown as Json,
+        variants: variantsPayload as unknown as Json,
+        removed_variant_ids: removedVariantIds,
+        commitments: commitmentsPayload as unknown as Json,
+      } as unknown as Json,
+    } as never)
 
     if (rpcError) {
       setError(rpcError.message)

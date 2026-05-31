@@ -180,14 +180,16 @@ function EmptyReservations({ authStatus }: { authStatus: string }) {
   if (authStatus === 'authenticated') {
     return (
       <div className="space-y-3 p-8 text-center">
-        <div className="text-sm font-medium">Aucune réservation enregistrée.</div>
+        <div className="text-sm font-medium">
+          Aucune réservation enregistrée.
+        </div>
         <p className="mx-auto max-w-md text-xs leading-5 text-muted-foreground">
           Vos commandes container apparaîtront ici dès votre première
           réservation. Démarrez par le catalogue.
         </p>
         <Link
           to="/catalogue"
-          className="text-foreground/85 hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs underline underline-offset-4"
+          className="text-foreground/85 mt-2 inline-flex items-center gap-1 text-xs underline underline-offset-4 hover:text-foreground"
         >
           Voir le catalogue →
         </Link>
@@ -197,15 +199,17 @@ function EmptyReservations({ authStatus }: { authStatus: string }) {
 
   return (
     <div className="space-y-3 p-8 text-center">
-      <div className="text-sm font-medium">Connectez-vous pour retrouver vos réservations.</div>
+      <div className="text-sm font-medium">
+        Connectez-vous pour retrouver vos réservations.
+      </div>
       <p className="mx-auto max-w-md text-xs leading-5 text-muted-foreground">
-        Les réservations faites avec votre email professionnel sont
-        consultables après connexion. Les commandes anonymes restent
-        accessibles depuis ce navigateur via le lien envoyé par email.
+        Les réservations faites avec votre email professionnel sont consultables
+        après connexion. Les commandes anonymes restent accessibles depuis ce
+        navigateur via le lien envoyé par email.
       </p>
       <Link
         to="/auth/login"
-        className="bg-foreground text-background hover:bg-[color:var(--ink-soft)] mt-2 inline-flex h-9 items-center rounded-sm px-4 text-xs font-medium"
+        className="mt-2 inline-flex h-9 items-center rounded-sm bg-foreground px-4 text-xs font-medium text-background hover:bg-[color:var(--ink-soft)]"
       >
         Se connecter
       </Link>

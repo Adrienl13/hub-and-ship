@@ -66,7 +66,10 @@ async function uploadImage(
   file: File,
 ): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   if (!ACCEPT_MIME.includes(file.type)) {
-    return { ok: false, error: 'Format non supporté (jpg, png, webp, avif, gif).' }
+    return {
+      ok: false,
+      error: 'Format non supporté (jpg, png, webp, avif, gif).',
+    }
   }
   if (file.size > MAX_BYTES) {
     return {
@@ -295,7 +298,7 @@ export function ImageGalleryUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="ring-foreground/10 flex aspect-square items-center justify-center rounded-sm border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-xs text-muted-foreground transition-colors hover:bg-[color:var(--sand-deep)]/40 hover:text-foreground"
+          className="ring-foreground/10 hover:bg-[color:var(--sand-deep)]/40 flex aspect-square items-center justify-center rounded-sm border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <Plus className="h-4 w-4" />
         </button>

@@ -96,9 +96,7 @@ export interface ListReservationsClient {
         in: (
           column: 'reservation_id',
           values: ReadonlyArray<string>,
-        ) => AnyPromiseLike<
-          RepositoryResult<ReadonlyArray<ReservationItemRow>>
-        >
+        ) => AnyPromiseLike<RepositoryResult<ReadonlyArray<ReservationItemRow>>>
       }
     }
   }

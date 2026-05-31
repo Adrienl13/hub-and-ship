@@ -39,10 +39,16 @@ export interface SendEmailInput {
 
 export type SendEmailResult =
   | { readonly ok: true; readonly id: string }
-  | { readonly ok: false; readonly skipped: true; readonly reason: 'not_configured' }
+  | {
+      readonly ok: false
+      readonly skipped: true
+      readonly reason: 'not_configured'
+    }
   | { readonly ok: false; readonly skipped: false; readonly reason: string }
 
-export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
+export async function sendEmail(
+  input: SendEmailInput,
+): Promise<SendEmailResult> {
   const client = getResendClient()
   if (!client) {
     return { ok: false, skipped: true, reason: 'not_configured' }

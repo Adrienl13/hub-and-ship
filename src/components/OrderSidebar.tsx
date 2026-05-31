@@ -161,7 +161,7 @@ export function OrderSidebar({
             thresholdPercent={container.thresholdPercent}
           />
           {reservedCbm > 0.01 && (
-            <div className="flex items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1.5 text-[11px] text-foreground/70">
+            <div className="text-foreground/70 flex items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1.5 text-[11px]">
               <span className="flex items-center gap-1.5">
                 <span
                   aria-hidden
@@ -169,7 +169,7 @@ export function OrderSidebar({
                 />
                 Déjà réservé par d&apos;autres pros
               </span>
-              <span className="tabular-nums font-medium text-foreground">
+              <span className="font-medium tabular-nums text-foreground">
                 {reservedCbm.toFixed(1)} m³
               </span>
             </div>
@@ -188,7 +188,7 @@ export function OrderSidebar({
               40' by quoting the m³ they'd unlock; on the 40', remind
               them how much room they still have to grow the order. */}
           {usedCbm > 1 && (
-            <div className="rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 px-2 py-1.5 text-[11px] leading-snug text-foreground/80">
+            <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 text-foreground/80 rounded-sm border px-2 py-1.5 text-[11px] leading-snug">
               {isLargeFormat ? (
                 <>
                   Encore{' '}

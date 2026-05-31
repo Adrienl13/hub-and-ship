@@ -54,9 +54,6 @@ export function getVolumeUpgradeDelta(
 }
 
 /** Remaining cbm in the active container at a given used volume. */
-export function getRemainingCbm(
-  type: ContainerType,
-  usedCbm: number,
-): number {
+export function getRemainingCbm(type: ContainerType, usedCbm: number): number {
   return Math.max(0, CONTAINER_USABLE_CBM[type] - usedCbm)
 }

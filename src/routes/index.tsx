@@ -39,9 +39,26 @@ import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
+import { buildSeoHead, jsonLdScript, SITE_URL } from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/')({
+  head: () => ({
+    ...buildSeoHead({
+      title: 'Mobilier outdoor pro direct usine par container',
+      description:
+        'Container Club mutualise les commandes de mobilier outdoor pour restaurants, hôtels et campings : prix usine, container partagé, contrôle qualité et stock disponible.',
+      path: '/',
+    }),
+    scripts: [
+      jsonLdScript({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Container Club Terrassea',
+        url: SITE_URL,
+      }),
+    ],
+  }),
   component: ContainerClubPage,
 })
 

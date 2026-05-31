@@ -9,7 +9,7 @@ import type { ContainerType } from '@/lib/supabase/types'
 export const CONTAINER_INNER_METERS = {
   length: 5.898,
   width: 2.352,
-  height: 2.700,
+  height: 2.7,
 } as const
 
 /** ISO internal dimensions per container type. Used as the physical
@@ -21,12 +21,14 @@ export const CONTAINER_DIMENSIONS: Record<
   { length: number; width: number; height: number }
 > = {
   '20_dv': { length: 5.898, width: 2.352, height: 2.395 },
-  '20_hc': { length: 5.898, width: 2.352, height: 2.700 },
+  '20_hc': { length: 5.898, width: 2.352, height: 2.7 },
   '40_gp': { length: 12.032, width: 2.352, height: 2.395 },
-  '40_hc': { length: 12.032, width: 2.352, height: 2.700 },
+  '40_hc': { length: 12.032, width: 2.352, height: 2.7 },
 }
 
-export function getContainerInnerMeters(type: ContainerType | null | undefined): {
+export function getContainerInnerMeters(
+  type: ContainerType | null | undefined,
+): {
   length: number
   width: number
   height: number
@@ -163,15 +165,17 @@ function packageLengthFromCbm({
 
 export function getVisualPackageSpec(
   item: CartItem,
-  dims: { length: number; width: number; height: number } = CONTAINER_INNER_METERS,
+  dims: {
+    length: number
+    width: number
+    height: number
+  } = CONTAINER_INNER_METERS,
 ): PackageSpec {
   const { product } = item
   const unitCbm = Math.max(0.01, product.cbmPerUnit)
 
   if (product.category === 'chair') {
-    const width = round3(
-      (dims.width / CHAIR_STACKS_ACROSS_WIDTH) * 0.94,
-    )
+    const width = round3((dims.width / CHAIR_STACKS_ACROSS_WIDTH) * 0.94)
     const height = round3(dims.height * 0.8)
     const stackCbm = unitCbm * CHAIR_STACK_UNITS
 
@@ -200,10 +204,7 @@ export function getVisualPackageSpec(
     return {
       unitsPerPackage: 1,
       size: { length, height, width },
-      stackableLayers: Math.max(
-        1,
-        Math.floor(dims.height / (height + GAP)),
-      ),
+      stackableLayers: Math.max(1, Math.floor(dims.height / (height + GAP))),
     }
   }
 
@@ -219,10 +220,7 @@ export function getVisualPackageSpec(
         height,
         width: round3(width),
       },
-      stackableLayers: Math.max(
-        1,
-        Math.floor(dims.height / (height + GAP)),
-      ),
+      stackableLayers: Math.max(1, Math.floor(dims.height / (height + GAP))),
     }
   }
 
@@ -237,10 +235,7 @@ export function getVisualPackageSpec(
       height: round3(height),
       width: round3(width),
     },
-    stackableLayers: Math.max(
-      1,
-      Math.floor(dims.height / (height + GAP)),
-    ),
+    stackableLayers: Math.max(1, Math.floor(dims.height / (height + GAP))),
   }
 }
 
@@ -335,7 +330,12 @@ function packingTier(category: ProductCategory): number {
   return 2
 }
 
-function intervalsOverlap(a0: number, a1: number, b0: number, b1: number): boolean {
+function intervalsOverlap(
+  a0: number,
+  a1: number,
+  b0: number,
+  b1: number,
+): boolean {
   return a0 < b1 - 0.001 && b0 < a1 - 0.001
 }
 
@@ -533,10 +533,7 @@ export function packContainerPackages(
   } | null {
     const orderedPoints = [...points].sort(
       (a, b) =>
-        slabIndex(a.x) - slabIndex(b.x) ||
-        a.y - b.y ||
-        a.x - b.x ||
-        a.z - b.z,
+        slabIndex(a.x) - slabIndex(b.x) || a.y - b.y || a.x - b.x || a.z - b.z,
     )
     for (const point of orderedPoints) {
       const result = tryPlaceAtWithRotation({ draft, point, placed, dims })
@@ -635,7 +632,11 @@ export function packContainerPackages(
   // Second pass: retry the leftovers in the same loop. We keep iterating
   // until a pass plants nothing new (no point in spinning forever).
   let pendingOverflow = overflow
-  for (let attempt = 0; attempt < 2 && pendingOverflow.length > 0; attempt += 1) {
+  for (
+    let attempt = 0;
+    attempt < 2 && pendingOverflow.length > 0;
+    attempt += 1
+  ) {
     const stillOverflow: PackageDraft[] = []
     for (const draft of pendingOverflow) {
       const result = attemptPlacement(draft)

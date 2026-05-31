@@ -868,7 +868,7 @@ function ReservationsAdminPanel({
                       {row.requestedContainerType &&
                         row.requestedContainerType.startsWith('40_') && (
                           <span
-                            className="inline-flex items-center rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]"
+                            className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]"
                             title="L'acheteur a demandé un container 40' au lieu du 20' actif"
                           >
                             40&apos; demandé

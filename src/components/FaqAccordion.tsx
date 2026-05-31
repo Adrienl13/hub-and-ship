@@ -1,4 +1,4 @@
-const FAQ = [
+export const FAQ = [
   {
     q: "Que se passe-t-il si le container n'atteint pas 80% de remplissage ?",
     a: "Si le seuil n'est pas atteint à la date de clôture estimée, Container Club peut prolonger la collecte de 2 semaines maximum. Si le seuil reste non atteint, le container est annulé et l'intégralité des frais (réservation + acompte) vous est remboursée sous 5 jours ouvrés.",

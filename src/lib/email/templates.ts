@@ -75,9 +75,7 @@ RCS Paris 988 269 981 · SIRET 98826998100011 · TVA FR08988269981
 </html>`
 }
 
-function renderLines(
-  lines: ReservationEmailInput['lines'],
-): string {
+function renderLines(lines: ReservationEmailInput['lines']): string {
   if (lines.length === 0) return ''
   const rows = lines
     .map(
@@ -133,7 +131,11 @@ Container Club — Pros Import EURL
 60 Rue François Ier, 75008 Paris
 adrienlaniez1@gmail.com`
 
-  return { subject, html: shell({ title: 'Réservation enregistrée', preheader, body }), text }
+  return {
+    subject,
+    html: shell({ title: 'Réservation enregistrée', preheader, body }),
+    text,
+  }
 }
 
 export function buildReservationCreatedEmailToAdmin(
@@ -172,5 +174,9 @@ Total HT : ${formatEur(input.subtotalHt)}
 Total TTC : ${formatEur(input.totalTtc)}
 Frais à appeler : ${formatEur(input.payNow)}`
 
-  return { subject, html: shell({ title: 'Nouvelle réservation', preheader, body }), text }
+  return {
+    subject,
+    html: shell({ title: 'Nouvelle réservation', preheader, body }),
+    text,
+  }
 }

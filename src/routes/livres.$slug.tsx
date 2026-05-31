@@ -129,7 +129,6 @@ function LivreDetailPage() {
   )
 }
 
-
 function DeliveredContainerView({
   container,
 }: {

@@ -157,9 +157,7 @@ export function Hero({
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
-                  <span>
-                    Seuil départ {container.thresholdPercent}%
-                  </span>
+                  <span>Seuil départ {container.thresholdPercent}%</span>
                   <span>100%</span>
                 </div>
               </div>

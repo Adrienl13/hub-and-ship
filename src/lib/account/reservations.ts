@@ -116,8 +116,7 @@ function totalsFromRow(
   const subtotalHt = Number(row.subtotal_ht)
   const totalTtc = Number(row.total_ttc)
   const retailReference = lines.reduce(
-    (sum, line) =>
-      sum + line.productSnapshot.retailPriceRef * line.quantity,
+    (sum, line) => sum + line.productSnapshot.retailPriceRef * line.quantity,
     0,
   )
   const savings = Math.max(0, retailReference - subtotalHt)

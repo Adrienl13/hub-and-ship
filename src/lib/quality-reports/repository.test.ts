@@ -137,12 +137,10 @@ describe('generateSignedFileUrl', () => {
   it('returns null when supabase storage returns an error', async () => {
     const storage = {
       from: vi.fn().mockReturnValue({
-        createSignedUrl: vi
-          .fn()
-          .mockResolvedValue({
-            data: null,
-            error: { message: 'Bucket not found' },
-          }),
+        createSignedUrl: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Bucket not found' },
+        }),
       }),
     }
     const fakeClient = { storage } as unknown as SupabaseClient<Database>

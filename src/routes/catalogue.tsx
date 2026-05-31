@@ -27,12 +27,42 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
-import { type Product } from '@/lib/products'
+import { PRODUCTS, type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  itemListJsonLd,
+  jsonLdScript,
+} from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/catalogue')({
+  head: () => ({
+    ...buildSeoHead({
+      title: 'Catalogue mobilier outdoor professionnel',
+      description:
+        'Catalogue compact de mobilier outdoor CHR : chaises, fauteuils, tables et bancs à réserver par container groupé, avec MOQ, volumes CBM et designs.',
+      path: '/catalogue',
+      image: PRODUCTS[0]?.mainImageUrl,
+    }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Catalogue', path: '/catalogue' },
+        ]),
+      ),
+      jsonLdScript(
+        itemListJsonLd({
+          name: 'Catalogue mobilier outdoor professionnel',
+          path: '/catalogue',
+          products: PRODUCTS,
+        }),
+      ),
+    ],
+  }),
   component: CataloguePage,
 })
 
