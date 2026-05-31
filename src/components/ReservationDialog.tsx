@@ -50,6 +50,7 @@ import {
 import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
+import { useCartStore } from '@/stores/cart.store'
 import { checkEmailDomain } from '@/lib/validation/email'
 
 type ReservationStep = 1 | 2 | 3 | 4 | 5
@@ -129,6 +130,12 @@ export function ReservationDialog({
   })
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
+  // Pick up the buyer's container choice (from the sidebar toggle) so
+  // we can persist it on the reservation row. NULL when they kept the
+  // active default — only distributors carry a value here.
+  const requestedContainerType = useCartStore(
+    (state) => state.preferredContainerType,
+  )
   const [submitting, setSubmitting] = useState(false)
   const [createdReservation, setCreatedReservation] = useState<{
     readonly reference: string
@@ -224,6 +231,7 @@ export function ReservationDialog({
       containerReference: container.reference,
       containerId: container.id,
       referralApplication,
+      requestedContainerType,
     })
 
     if (!draftResult.ok) {

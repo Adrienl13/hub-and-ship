@@ -76,7 +76,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     const { data: reservation, error } = await supabase
       .from('reservations')
       .select(
-        'id, reference, reservation_fee, contact_snapshot, status, container_reference',
+        'id, reference, reservation_fee, contact_snapshot, status, container_reference, requested_container_type',
       )
       .eq('id', data.reservationId)
       .maybeSingle()
@@ -135,6 +135,11 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
         reservation_id: reservation.id,
         reference: reservation.reference,
         container_reference: reservation.container_reference,
+        // Surface the requested ISO format so the ops team sees in the
+        // Stripe Dashboard which payments belong to distributor-scale
+        // 40' demand orders (vs a standard 20' group-buy).
+        requested_container_type:
+          reservation.requested_container_type ?? '',
       },
       // Stripe substitutes {CHECKOUT_SESSION_ID} server-side; do not encode it.
       success_url: `${origin}/account/reservations/${reservation.id}?session_id={CHECKOUT_SESSION_ID}`,

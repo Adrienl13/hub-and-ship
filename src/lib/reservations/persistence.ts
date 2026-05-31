@@ -34,6 +34,7 @@ export function toReservationInsertPayload(
     status: 'pending_reservation_fee',
     cgv_version_accepted: draft.cgvVersion,
     cgv_accepted_at: draft.cgvAcceptedAt,
+    requested_container_type: draft.requestedContainerType ?? null,
   }
 }
 

@@ -290,6 +290,7 @@ type ReservationRow = {
   paid_reservation_fee_at: string | null
   created_at: string
   updated_at: string
+  requested_container_type: ContainerType | null
 }
 
 type ReservationInsert = {
@@ -331,6 +332,7 @@ type ReservationInsert = {
   paid_reservation_fee_at?: string | null
   created_at?: string
   updated_at?: string
+  requested_container_type?: ContainerType | null
 }
 
 type ReservationUpdate = Partial<ReservationInsert>

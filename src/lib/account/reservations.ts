@@ -173,6 +173,7 @@ function draftFromRow(
       status: row.referral_discount > 0 ? 'applied' : 'none',
       discountAmount: Number(row.referral_discount),
     },
+    requestedContainerType: row.requested_container_type ?? null,
   }
 }
 

@@ -4,7 +4,11 @@
 // super_admin profiles.
 
 import type { SupabaseBrowserClient } from '@/lib/supabase/client'
-import type { Database, ReservationStatus } from '@/lib/supabase/types'
+import type {
+  ContainerType,
+  Database,
+  ReservationStatus,
+} from '@/lib/supabase/types'
 
 export type AdminReservationsClient = SupabaseBrowserClient
 
@@ -34,6 +38,7 @@ export interface AdminReservationRow {
   readonly paidReservationFeeAt: string | null
   readonly createdAt: string
   readonly updatedAt: string
+  readonly requestedContainerType: ContainerType | null
 }
 
 interface ContactSnapshot {
@@ -79,6 +84,7 @@ function toAdminRow(row: ReservationRow): AdminReservationRow {
     paidReservationFeeAt: row.paid_reservation_fee_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    requestedContainerType: row.requested_container_type,
   }
 }
 

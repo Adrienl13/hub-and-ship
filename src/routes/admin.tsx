@@ -861,7 +861,20 @@ function ReservationsAdminPanel({
                   className="grid gap-3 px-4 py-4 text-sm md:grid-cols-[1.2fr_1fr_120px_120px] md:items-start md:gap-3"
                 >
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{row.reference}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="truncate font-medium">
+                        {row.reference}
+                      </div>
+                      {row.requestedContainerType &&
+                        row.requestedContainerType.startsWith('40_') && (
+                          <span
+                            className="inline-flex items-center rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]"
+                            title="L'acheteur a demandé un container 40' au lieu du 20' actif"
+                          >
+                            40&apos; demandé
+                          </span>
+                        )}
+                    </div>
                     <div className="mt-1 text-xs text-muted-foreground">
                       {row.containerReference} · SIRET {row.siret}
                     </div>

@@ -38,6 +38,12 @@ export interface ReservationDraftInput {
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string
+  readonly requestedContainerType?:
+    | '20_dv'
+    | '20_hc'
+    | '40_gp'
+    | '40_hc'
+    | null
 }
 
 export interface ReservationDraftLine {
@@ -89,6 +95,16 @@ export interface ReservationDraft {
     readonly status: ReferralApplication['status'] | 'none'
     readonly discountAmount: number
   }
+  /** ISO container format the buyer explicitly picked at checkout
+   *  (via the sidebar toggle). `null` = accepted the active default
+   *  (typically a 20' HC group-buy). Persisted on the reservation
+   *  row so ops can spot distributor-scale demand orders. */
+  readonly requestedContainerType:
+    | '20_dv'
+    | '20_hc'
+    | '40_gp'
+    | '40_hc'
+    | null
 }
 
 export interface ReservationDraftValidationIssue {
@@ -239,6 +255,7 @@ export function buildReservationDraft(
         status: input.referralApplication?.status ?? 'none',
         discountAmount: round2(referralDiscount),
       },
+      requestedContainerType: input.requestedContainerType ?? null,
     },
   }
 }
