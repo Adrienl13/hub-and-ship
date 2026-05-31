@@ -42,6 +42,7 @@ interface EditableState {
   capacity_cbm: string
   status: ContainerStatusValue
   container_type: ContainerTypeValue
+  expected_close_at: string
   slug: string
   origin_port: string
   total_items: string
@@ -101,6 +102,7 @@ function fromRow(row: ContainerRow): EditableState {
     capacity_cbm: row.capacity_cbm.toString(),
     status: row.status,
     container_type: row.container_type ?? '20_hc',
+    expected_close_at: row.expected_close_at ?? '',
     slug: row.slug ?? '',
     origin_port: row.origin_port ?? '',
     total_items: row.total_items?.toString() ?? '',
@@ -132,6 +134,14 @@ function parseNumberOrNull(value: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+/** ISO date string for today + 25 days (target: at least one container
+ *  shipped per month, with a small safety buffer for the close window). */
+function defaultExpectedCloseAt(): string {
+  const date = new Date()
+  date.setDate(date.getDate() + 25)
+  return date.toISOString().slice(0, 10)
+}
+
 function emptyState(): EditableState {
   return {
     reference: '',
@@ -139,6 +149,7 @@ function emptyState(): EditableState {
     capacity_cbm: '28',
     status: 'open',
     container_type: '20_hc',
+    expected_close_at: defaultExpectedCloseAt(),
     slug: '',
     origin_port: '',
     total_items: '',
@@ -170,6 +181,7 @@ function toUpdate(state: EditableState): ContainerUpdate {
     capacity_cbm: Math.max(0.1, Number(state.capacity_cbm) || 28),
     status: state.status,
     container_type: state.container_type,
+    expected_close_at: state.expected_close_at.trim() || null,
     slug: state.slug.trim() || null,
     origin_port: state.origin_port.trim() || null,
     total_items: parseNumberOrNull(state.total_items),
@@ -267,6 +279,7 @@ export function AdminContainerEditor({
         capacity_cbm: payload.capacity_cbm!,
         status: payload.status,
         container_type: payload.container_type,
+        expected_close_at: payload.expected_close_at,
         slug: payload.slug,
         origin_port: payload.origin_port,
         total_items: payload.total_items,
@@ -380,6 +393,15 @@ export function AdminContainerEditor({
                 ),
               )}
             </select>
+          </Field>
+          <Field label="Clôture estimée (par défaut J+25)">
+            <Input
+              type="date"
+              value={state.expected_close_at}
+              onChange={(e) =>
+                setField('expected_close_at', e.target.value)
+              }
+            />
           </Field>
         </div>
       </Fieldset>

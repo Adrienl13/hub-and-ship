@@ -45,6 +45,7 @@ const LazyContainerScene = lazy(() =>
 
 export function OrderSidebar({
   items,
+  reservedItems = [],
   totals,
   fillPercent,
   usedCbm,
@@ -54,6 +55,10 @@ export function OrderSidebar({
   container = CURRENT_CONTAINER,
 }: {
   items: CartItem[]
+  /** Loads already booked by other pros on this container. Rendered in
+   *  the 3D scene in a muted grey, ignored by the fill bar (which keeps
+   *  measuring only the live visitor's cart). */
+  reservedItems?: ReadonlyArray<CartItem>
   totals: OrderTotals
   fillPercent: number
   usedCbm: number
@@ -80,6 +85,20 @@ export function OrderSidebar({
     ? null
     : getVolumeUpgradeDelta(activeContainerType, '40_hc')
   const remainingCbm = getRemainingCbm(activeContainerType, usedCbm)
+  // Total volume already taken by other pros on this container — used
+  // for the "already reserved" badge under the fill bar.
+  const reservedCbm = reservedItems.reduce(
+    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
+    0,
+  )
+  // De-duplicate against the visitor's cart so they don't see *their*
+  // own load doubled when the variant they're picking already had
+  // earlier commitments — the cart line stays the source of truth.
+  const visitorVariantIds = new Set(items.map((it) => it.variant.id))
+  const sceneReserved = reservedItems.filter(
+    (it) => !visitorVariantIds.has(it.variant.id),
+  )
+  const sceneItems: CartItem[] = [...sceneReserved, ...items]
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -116,7 +135,7 @@ export function OrderSidebar({
           <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
           <Suspense fallback={null}>
             <LazyContainerScene
-              items={items}
+              items={sceneItems}
               exploded={exploded}
               containerType={activeContainerType}
             />
@@ -141,6 +160,20 @@ export function OrderSidebar({
             capacity={capacity}
             thresholdPercent={container.thresholdPercent}
           />
+          {reservedCbm > 0.01 && (
+            <div className="flex items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1.5 text-[11px] text-foreground/70">
+              <span className="flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className="inline-block h-2.5 w-2.5 rounded-sm bg-[#8b8278] opacity-75"
+                />
+                Déjà réservé par d&apos;autres pros
+              </span>
+              <span className="tabular-nums font-medium text-foreground">
+                {reservedCbm.toFixed(1)} m³
+              </span>
+            </div>
+          )}
           <ContainerFormatToggle
             value={activeContainerType}
             onChange={(type) => {

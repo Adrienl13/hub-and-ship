@@ -74,6 +74,7 @@ export interface PackedPackage {
   readonly packageIndex: number
   readonly sliceIndex: number
   readonly sliceCenterX: number
+  readonly reserved: boolean
 }
 
 export interface PackedSlice {
@@ -110,6 +111,7 @@ interface PackageDraft {
   readonly packageIndex: number
   readonly sliceIndex: number
   readonly originalIndex: number
+  readonly reserved: boolean
 }
 
 interface PlacedRect {
@@ -282,6 +284,7 @@ function createPackageDrafts(
         packageIndex,
         sliceIndex,
         originalIndex,
+        reserved: item.reserved === true,
       })
       originalIndex += 1
     }
@@ -477,6 +480,7 @@ function toPackedPackage({
     packageIndex: draft.packageIndex,
     sliceIndex: draft.sliceIndex,
     sliceCenterX: round3(x),
+    reserved: draft.reserved,
   }
 }
 

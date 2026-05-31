@@ -29,6 +29,7 @@ import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
 import { type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
+import { buildReservedLoadItems } from '@/lib/container/reserved-load'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/catalogue')({
@@ -49,6 +50,10 @@ const LazyReservationDialog = lazy(() =>
 function CataloguePage() {
   const { products, currentContainer } = useCatalog()
   const productsArray = useMemo(() => [...products], [products])
+  const reservedItems = useMemo(
+    () => buildReservedLoadItems(productsArray),
+    [productsArray],
+  )
   const {
     items,
     totals,
@@ -294,6 +299,7 @@ function CataloguePage() {
           <aside className="lg:col-span-3">
             <OrderSidebar
               items={items}
+              reservedItems={reservedItems}
               totals={totals}
               fillPercent={fill.percent}
               usedCbm={fill.usedCbm}

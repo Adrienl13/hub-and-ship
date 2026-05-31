@@ -8,6 +8,11 @@ export interface CartItem {
   product: Product
   variant: DesignVariant
   quantity: number
+  /** True when this load belongs to a pro who already reserved (read
+   *  from `product_variants.unitsCommitted`). Used by the 3D scene to
+   *  render those packages in a muted "engaged" colour so the live
+   *  visitor can tell their own load from the existing book. */
+  reserved?: boolean
 }
 
 export interface OrderTotals {

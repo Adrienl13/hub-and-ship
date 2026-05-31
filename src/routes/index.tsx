@@ -38,6 +38,7 @@ import {
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
 import { useCatalog } from '@/hooks/useCatalog'
+import { buildReservedLoadItems } from '@/lib/container/reserved-load'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/')({
@@ -62,6 +63,10 @@ function ContainerClubPage() {
   const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE
   const { products, currentContainer } = useCatalog()
   const productsArray = useMemo(() => [...products], [products])
+  const reservedItems = useMemo(
+    () => buildReservedLoadItems(productsArray),
+    [productsArray],
+  )
   const {
     items,
     totals,
@@ -295,6 +300,7 @@ function ContainerClubPage() {
             <aside className="lg:col-span-5">
               <OrderSidebar
                 items={items}
+                reservedItems={reservedItems}
                 totals={totals}
                 fillPercent={fill.percent}
                 usedCbm={fill.usedCbm}
