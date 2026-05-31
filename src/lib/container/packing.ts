@@ -17,7 +17,14 @@ export const CONTAINER_INNER_METERS = {
 
 const GAP = 0.04
 const CHAIR_STACK_UNITS = 10
-const CHAIR_STACKS_ACROSS_WIDTH = 4
+// Real-world stackable chair footprint (cm → m): ~52 × 58 cm with the
+// stack of 10 reaching about 1.20 m tall (each chair adds ~12 cm on
+// top of the seated base). Sized this way, a 20' HC fits 4 stacks
+// across × 9 along its length = 36 stacks = 360 chairs — in line with
+// Container Club's 350–400 chairs/container target.
+const CHAIR_FOOTPRINT_LENGTH = 0.58
+const CHAIR_FOOTPRINT_WIDTH = 0.52
+const CHAIR_STACK_HEIGHT = 1.2
 
 /** Deterministic HSL colour from a stable string (variant id) — used only
  * for the container-packing visualisation so distinct designs render as
@@ -137,23 +144,24 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
   const unitCbm = Math.max(0.01, product.cbmPerUnit)
 
   if (product.category === 'chair') {
-    const width = round3(
-      (CONTAINER_INNER_METERS.width / CHAIR_STACKS_ACROSS_WIDTH) * 0.94,
-    )
-    const height = round3(CONTAINER_INNER_METERS.height * 0.8)
-    const stackCbm = unitCbm * CHAIR_STACK_UNITS
-
+    // A stack of 10 stackable chairs has the footprint of a single
+    // chair (assise + dossier) and rises ~1.2 m. Using the chair's own
+    // real dimensions — instead of a wider "crate" — lets us pack 4
+    // stacks across the width and 9 along the length of a 20' HC,
+    // which lines up with the 350–400 chairs/container industry norm.
     return {
       unitsPerPackage: CHAIR_STACK_UNITS,
       size: {
-        length: Math.max(
-          0.8,
-          packageLengthFromCbm({ cbm: stackCbm, width, height }),
-        ),
-        height,
-        width,
+        length: CHAIR_FOOTPRINT_LENGTH,
+        height: CHAIR_STACK_HEIGHT,
+        width: CHAIR_FOOTPRINT_WIDTH,
       },
-      stackableLayers: 1,
+      stackableLayers: Math.max(
+        1,
+        Math.floor(
+          CONTAINER_INNER_METERS.height / (CHAIR_STACK_HEIGHT + GAP),
+        ),
+      ),
     }
   }
 
