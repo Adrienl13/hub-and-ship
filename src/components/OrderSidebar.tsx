@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Maximize2,
@@ -68,6 +68,7 @@ export function OrderSidebar({
   container?: ContainerSummary
 }) {
   const [exploded, setExploded] = useState(false)
+  const [interactiveSceneEnabled, setInteractiveSceneEnabled] = useState(false)
   const hasItems = items.length > 0
   const preferredContainerType = useCartStore(
     (state) => state.preferredContainerType,
@@ -87,18 +88,30 @@ export function OrderSidebar({
   const remainingCbm = getRemainingCbm(activeContainerType, usedCbm)
   // Total volume already taken by other pros on this container — used
   // for the "already reserved" badge under the fill bar.
-  const reservedCbm = reservedItems.reduce(
-    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
-    0,
+  const reservedCbm = useMemo(
+    () =>
+      reservedItems.reduce(
+        (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
+        0,
+      ),
+    [reservedItems],
   )
   // De-duplicate against the visitor's cart so they don't see *their*
   // own load doubled when the variant they're picking already had
   // earlier commitments — the cart line stays the source of truth.
-  const visitorVariantIds = new Set(items.map((it) => it.variant.id))
-  const sceneReserved = reservedItems.filter(
-    (it) => !visitorVariantIds.has(it.variant.id),
+  const visitorVariantIds = useMemo(
+    () => new Set(items.map((it) => it.variant.id)),
+    [items],
   )
-  const sceneItems: CartItem[] = [...sceneReserved, ...items]
+  const sceneReserved = useMemo(
+    () => reservedItems.filter((it) => !visitorVariantIds.has(it.variant.id)),
+    [reservedItems, visitorVariantIds],
+  )
+  const sceneItems = useMemo<CartItem[]>(
+    () => [...sceneReserved, ...items],
+    [items, sceneReserved],
+  )
+  const hasSceneItems = sceneItems.length > 0
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -115,12 +128,25 @@ export function OrderSidebar({
             </div>
           </div>
           <Button
-            variant={exploded ? 'default' : 'outline'}
+            variant={
+              interactiveSceneEnabled && exploded ? 'default' : 'outline'
+            }
             size="sm"
             className="h-7 gap-1 rounded-sm border-[color:var(--sand-deep)] px-2 text-[11px]"
-            onClick={() => setExploded((v) => !v)}
+            disabled={!hasSceneItems}
+            onClick={() => {
+              if (!interactiveSceneEnabled) {
+                setInteractiveSceneEnabled(true)
+                return
+              }
+              setExploded((v) => !v)
+            }}
           >
-            {exploded ? (
+            {!interactiveSceneEnabled ? (
+              <>
+                <Maximize2 className="h-3 w-3" /> Activer 3D
+              </>
+            ) : exploded ? (
               <>
                 <Minimize2 className="h-3 w-3" /> Regrouper
               </>
@@ -132,14 +158,20 @@ export function OrderSidebar({
           </Button>
         </div>
         <div className="relative h-[360px] w-full bg-[color:var(--sand)] md:h-[420px]">
-          <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
-          <Suspense fallback={null}>
-            <LazyContainerScene
-              items={sceneItems}
-              exploded={exploded}
-              containerType={activeContainerType}
-            />
-          </Suspense>
+          <ContainerScene3DFallback
+            items={sceneItems}
+            fillPercent={fillPercent}
+            containerType={activeContainerType}
+          />
+          {interactiveSceneEnabled && (
+            <Suspense fallback={null}>
+              <LazyContainerScene
+                items={sceneItems}
+                exploded={exploded}
+                containerType={activeContainerType}
+              />
+            </Suspense>
+          )}
         </div>
 
         {/* Stats */}
