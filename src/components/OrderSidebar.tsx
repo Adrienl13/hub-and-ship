@@ -14,6 +14,7 @@ import { ContainerFillBar } from '@/components/ContainerFillBar'
 import { ContainerScene3DFallback } from '@/components/ContainerScene3DFallback'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
+import { FortyFootUpgradeBanner } from '@/components/FortyFootUpgradeBanner'
 import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
@@ -118,6 +119,14 @@ export function OrderSidebar({
             capacity={capacity}
             thresholdPercent={container.thresholdPercent}
           />
+          {/* Surface the 40' GP path only when the cart is heading
+              toward the 20' ceiling AND the current container isn't
+              already a 40' format. */}
+          {usedCbm >= capacity * 0.7 &&
+            container.containerType !== '40_gp' &&
+            container.containerType !== '40_hc' && (
+              <FortyFootUpgradeBanner usedCbm={usedCbm} items={items} />
+            )}
           <SeriesProgressIndicator
             reached={container.seriesReached}
             total={container.totalSeries}
