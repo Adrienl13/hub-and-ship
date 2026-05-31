@@ -9,8 +9,10 @@ import {
   type CartItem,
   type OrderTotals,
 } from '@/lib/order'
+import { getContainerUsableCbm } from '@/lib/container/pricing'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
+import type { ContainerType } from '@/lib/supabase/types'
 
 export type ProductVariantSelection = Record<string, string>
 export type ProductQuantitySelection = Record<string, number>
@@ -25,8 +27,12 @@ export interface CartSnapshot {
 interface CartStoreState {
   variantByProduct: ProductVariantSelection
   qtyByProduct: ProductQuantitySelection
+  /** User-chosen container format (null = use the active DB container).
+   *  Persisted across reloads so distributors don't lose their pick. */
+  preferredContainerType: ContainerType | null
   setQty: (productId: string, quantity: number) => void
   setVariant: (productId: string, variantId: string) => void
+  setPreferredContainerType: (type: ContainerType | null) => void
   resetCart: () => void
 }
 
@@ -86,6 +92,7 @@ export const useCartStore = create<CartStoreState>()(
     (set) => ({
       variantByProduct: createDefaultVariantByProduct(),
       qtyByProduct: createDefaultQtyByProduct(),
+      preferredContainerType: null,
       setQty: (productId, quantity) =>
         set((previous) => {
           const product = PRODUCTS.find((item) => item.id === productId)
@@ -108,10 +115,13 @@ export const useCartStore = create<CartStoreState>()(
             [productId]: variantId,
           },
         })),
+      setPreferredContainerType: (type) =>
+        set({ preferredContainerType: type }),
       resetCart: () =>
         set({
           variantByProduct: createDefaultVariantByProduct(),
           qtyByProduct: createDefaultQtyByProduct(),
+          preferredContainerType: null,
         }),
     }),
     {
@@ -120,6 +130,7 @@ export const useCartStore = create<CartStoreState>()(
       partialize: (state) => ({
         variantByProduct: state.variantByProduct,
         qtyByProduct: state.qtyByProduct,
+        preferredContainerType: state.preferredContainerType,
       }),
     },
   ),
@@ -140,11 +151,25 @@ export interface UseCartOptions {
 export function useCart(options: UseCartOptions = {}) {
   const variantByProduct = useCartStore((state) => state.variantByProduct)
   const qtyByProduct = useCartStore((state) => state.qtyByProduct)
+  const preferredContainerType = useCartStore(
+    (state) => state.preferredContainerType,
+  )
   const setQty = useCartStore((state) => state.setQty)
   const setVariant = useCartStore((state) => state.setVariant)
+  const setPreferredContainerType = useCartStore(
+    (state) => state.setPreferredContainerType,
+  )
 
   const products = options.products
   const capacityCbm = options.capacityCbm
+
+  // If the user actively picked a container format (e.g. switched to a
+  // 40' GP for a bigger order), its usable cbm overrides the active
+  // DB container — so the fill bar, the 3D shell and every downstream
+  // KPI see the same target volume.
+  const effectiveCapacityCbm = preferredContainerType
+    ? getContainerUsableCbm(preferredContainerType)
+    : capacityCbm
 
   const snapshot = useMemo(
     () =>
@@ -152,16 +177,18 @@ export function useCart(options: UseCartOptions = {}) {
         qtyByProduct,
         variantByProduct,
         products,
-        capacityCbm,
+        capacityCbm: effectiveCapacityCbm,
       }),
-    [qtyByProduct, variantByProduct, products, capacityCbm],
+    [qtyByProduct, variantByProduct, products, effectiveCapacityCbm],
   )
 
   return {
     ...snapshot,
     variantByProduct,
     qtyByProduct,
+    preferredContainerType,
     setQty,
     setVariant,
+    setPreferredContainerType,
   }
 }

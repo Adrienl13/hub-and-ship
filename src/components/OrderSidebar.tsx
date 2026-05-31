@@ -11,15 +11,20 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { ContainerFillBar } from '@/components/ContainerFillBar'
+import { ContainerFormatToggle } from '@/components/ContainerFormatToggle'
 import { ContainerScene3DFallback } from '@/components/ContainerScene3DFallback'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
-import { FortyFootUpgradeBanner } from '@/components/FortyFootUpgradeBanner'
 import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
+import {
+  getCostPerCbm,
+  getTransportDelta,
+} from '@/lib/container/pricing'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
+import { useCartStore } from '@/stores/cart.store'
 import type { ContainerType } from '@/lib/supabase/types'
 
 const CONTAINER_TYPE_LABEL: Record<ContainerType, string> = {
@@ -58,6 +63,29 @@ export function OrderSidebar({
 }) {
   const [exploded, setExploded] = useState(false)
   const hasItems = items.length > 0
+  const preferredContainerType = useCartStore(
+    (state) => state.preferredContainerType,
+  )
+  const setPreferredContainerType = useCartStore(
+    (state) => state.setPreferredContainerType,
+  )
+  const activeContainerType: ContainerType =
+    preferredContainerType ?? container.containerType ?? '20_hc'
+  const ratePerCbm = Math.round(getCostPerCbm(activeContainerType))
+  // Cross-format saving when used cbm is significant enough to matter.
+  // Always compare against the other "natural" option:
+  //   - on a 20', show how much going 40' would save (or cost)
+  //   - on a 40', show what staying on 20' would have cost (positive
+  //     value = user is saving money by being on 40')
+  const alternativeType: ContainerType =
+    activeContainerType === '40_gp' || activeContainerType === '40_hc'
+      ? '20_hc'
+      : '40_gp'
+  const transportDelta = getTransportDelta(
+    alternativeType,
+    activeContainerType,
+    usedCbm,
+  )
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -70,7 +98,7 @@ export function OrderSidebar({
             </div>
             <div className="text-[11px] text-muted-foreground">
               {container.port} ·{' '}
-              {CONTAINER_TYPE_LABEL[container.containerType ?? '20_hc']}
+              {CONTAINER_TYPE_LABEL[activeContainerType]} · {ratePerCbm} €/m³
             </div>
           </div>
           <Button
@@ -96,7 +124,7 @@ export function OrderSidebar({
             <LazyContainerScene
               items={items}
               exploded={exploded}
-              containerType={container.containerType}
+              containerType={activeContainerType}
             />
           </Suspense>
         </div>
@@ -119,14 +147,47 @@ export function OrderSidebar({
             capacity={capacity}
             thresholdPercent={container.thresholdPercent}
           />
-          {/* Surface the 40' GP path only when the cart is heading
-              toward the 20' ceiling AND the current container isn't
-              already a 40' format. */}
-          {usedCbm >= capacity * 0.7 &&
-            container.containerType !== '40_gp' &&
-            container.containerType !== '40_hc' && (
-              <FortyFootUpgradeBanner usedCbm={usedCbm} items={items} />
-            )}
+          <ContainerFormatToggle
+            value={activeContainerType}
+            onChange={(type) => {
+              // Stop tracking the override when the user picks the
+              // DB-configured default — keeps the persisted state tidy.
+              setPreferredContainerType(
+                type === (container.containerType ?? '20_hc') ? null : type,
+              )
+            }}
+          />
+          {usedCbm > 1 && (
+            <div
+              className={`rounded-sm border px-2 py-1.5 text-[11px] leading-snug ${
+                transportDelta > 0
+                  ? 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5 text-[color:var(--forest)]'
+                  : transportDelta < 0
+                    ? 'border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 text-[color:var(--ember)]'
+                    : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground/70'
+              }`}
+            >
+              {transportDelta > 0 ? (
+                <>
+                  <strong>{transportDelta.toLocaleString('fr-FR')} €</strong> de
+                  transport économisés sur ces {usedCbm.toFixed(1)} m³ vs un{' '}
+                  {alternativeType === '40_gp' ? "40' GP" : "20' HC"}.
+                </>
+              ) : transportDelta < 0 ? (
+                <>
+                  Vous payez{' '}
+                  <strong>
+                    {Math.abs(transportDelta).toLocaleString('fr-FR')} €
+                  </strong>{' '}
+                  de plus qu'avec un{' '}
+                  {alternativeType === '40_gp' ? "40' GP" : "20' HC"}. Switchez
+                  si vous comptez ajouter du volume.
+                </>
+              ) : (
+                <>Choisissez le format pour comparer le coût rendu.</>
+              )}
+            </div>
+          )}
           <SeriesProgressIndicator
             reached={container.seriesReached}
             total={container.totalSeries}
