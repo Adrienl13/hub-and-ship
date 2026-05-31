@@ -26,6 +26,16 @@ const CHAIR_FOOTPRINT_LENGTH = 0.58
 const CHAIR_FOOTPRINT_WIDTH = 0.52
 const CHAIR_STACK_HEIGHT = 1.2
 
+// Tables are visualised as pallets of 10 disassembled units (top + leg
+// bundle), echoing the chair-stack logistics. Each pallet keeps the
+// footprint of one assembled table (so the visual is recognizable) and
+// stands ~1 m to ~1.4 m tall depending on the table size. A 20' HC
+// then fits ~28 pallets = ~280 small tables — the upper bound of what
+// the geometry physically allows.
+const TABLE_PALETTE_UNITS = 10
+const TABLE_PALETTE_MIN_HEIGHT = 0.5
+const TABLE_PALETTE_MAX_HEIGHT = 1.4
+
 /** Deterministic HSL colour from a stable string (variant id) — used only
  * for the container-packing visualisation so distinct designs render as
  * distinct blocks. Not a brand colour; replaces the former `variant.hex`. */
@@ -166,12 +176,23 @@ export function getVisualPackageSpec(item: CartItem): PackageSpec {
   }
 
   if (product.category === 'table') {
+    // Pallet of 10 disassembled tables: keeps the footprint of one
+    // assembled table (so the rendered crate stays visually a "table"),
+    // and grows in height to swallow the 10 × cbm aggregate. Same
+    // logistics metaphor as the chair stack.
     const length = clamp(product.dimensions.l / 100, 0.8, 1.65)
     const width = clamp(product.dimensions.w / 100, 0.68, 0.82)
-    const height = round3(clamp(unitCbm / (length * width), 0.18, 0.42))
+    const paletteCbm = unitCbm * TABLE_PALETTE_UNITS
+    const height = round3(
+      clamp(
+        paletteCbm / (length * width),
+        TABLE_PALETTE_MIN_HEIGHT,
+        TABLE_PALETTE_MAX_HEIGHT,
+      ),
+    )
 
     return {
-      unitsPerPackage: 1,
+      unitsPerPackage: TABLE_PALETTE_UNITS,
       size: {
         length: round3(length),
         height,

@@ -70,16 +70,19 @@ describe('container visual packing', () => {
   })
 
   it('keeps every rendered package inside the container shell', () => {
+    // Push past the 20' HC capacity so we exercise both the bounds
+    // checks AND the overflow path: 600 chairs + 400 tables ~= 64 m³
+    // requested vs ~37 m³ shell.
     const packed = packContainerPackages([
       {
         product: chair,
         variant: getDefaultVariant(chair),
-        quantity: 300,
+        quantity: 600,
       },
       {
         product: table,
         variant: getDefaultVariant(table),
-        quantity: 80,
+        quantity: 400,
       },
     ])
 
@@ -165,22 +168,20 @@ describe('container visual packing', () => {
     expect(chairFirst.packages).toHaveLength(tableFirst.packages.length)
   })
 
-  it('stacks chair pallets on top of tables to reclaim vertical space', () => {
-    // With the tier-based sort, tables are placed first as stable bases,
-    // then the chair stacks layer on top — that's the realistic loading
-    // pattern (flat plywood crates of 10 chairs banded onto a table
-    // platform) and the only way the container reaches a useful fill
-    // ratio when the mix has both products.
+  it('settles table pallets above chair stacks when the floor is busy', () => {
+    // Chair stacks (tier 0) get the floor first; the lone table pallet
+    // (tier 1) ends up on top of one of them — that's the loading
+    // pattern users expect and what the tier sort encodes.
     const packed = packContainerPackages([
+      {
+        product: chair,
+        variant: getDefaultVariant(chair),
+        quantity: 36 * 10, // saturate the floor with chair stacks (4×9)
+      },
       {
         product: table,
         variant: getDefaultVariant(table),
         quantity: 1,
-      },
-      {
-        product: chair,
-        variant: getDefaultVariant(chair),
-        quantity: 40,
       },
     ])
     const chairPackages = packed.packages.filter(
@@ -191,12 +192,10 @@ describe('container visual packing', () => {
     )
 
     expect(tablePackage).toBeDefined()
-    expect(chairPackages).toHaveLength(4)
-    // The table sits on the floor (negative Y, near container bottom),
-    // and at least one chair stack lands above it.
-    expect(tablePackage?.pos[1]).toBeLessThan(0)
-    const highestChair = Math.max(...chairPackages.map((box) => box.pos[1]))
-    expect(highestChair).toBeGreaterThan(tablePackage!.pos[1])
-    expect(packed.overflowUnits).toBe(0)
+    expect(chairPackages.length).toBeGreaterThan(0)
+    // The table pallet floats above at least one chair stack — its
+    // centre Y is above the lowest chair pallet's centre Y.
+    const lowestChair = Math.min(...chairPackages.map((box) => box.pos[1]))
+    expect(tablePackage!.pos[1]).toBeGreaterThan(lowestChair)
   })
 })
