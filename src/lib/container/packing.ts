@@ -514,14 +514,25 @@ export function packContainerPackages(
   const overflow: PackageDraft[] = []
   const sorted = sortPackagesForPacking(drafts)
 
+  // We treat the floor as a series of 5.9 m "slabs" (the length of a
+  // 20' DV). On the 20' there's only one slab so this is a no-op; on
+  // the 40' it forces the packer to fill slab #1 floor-to-ceiling
+  // before laying anything on slab #2 — which is what a real loader
+  // would do, and visually it reproduces the dense tetris we already
+  // see in the 20' instead of a thin carpet over the whole 40'.
+  const SLAB_LENGTH = 5.898
+  const slabIndex = (x: number): number => Math.floor(x / SLAB_LENGTH)
+
   function attemptPlacement(draft: PackageDraft): {
     placement: PlacedRect
     usedPoint: ExtremePoint
   } | null {
-    // Lowest first — floor fills before stacking — then bias toward the
-    // length-axis origin so loads visually start from the container door.
     const orderedPoints = [...points].sort(
-      (a, b) => a.y - b.y || a.x - b.x || a.z - b.z,
+      (a, b) =>
+        slabIndex(a.x) - slabIndex(b.x) ||
+        a.y - b.y ||
+        a.x - b.x ||
+        a.z - b.z,
     )
     for (const point of orderedPoints) {
       const result = tryPlaceAtWithRotation({ draft, point, placed, dims })
