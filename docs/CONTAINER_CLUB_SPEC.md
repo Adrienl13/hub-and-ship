@@ -3872,7 +3872,7 @@ officiel (Terrassea SAS, France), gère douane, TVA autoliquidée et SAV.
 - Norme feu M1/M2 (ERP hôtels/restaurants)
 - REACH (substances chimiques)
 - Adhésion Eco-mobilier (éco-contribution incluse)
-- Importateur EORI déclaré
+- Importateur déclaré
 
 ## Couverture géographique
 
@@ -5221,7 +5221,7 @@ One-click sur tous emails marketing (RGPD).
 ### Business
 
 - [ ] Adhésion Eco-mobilier finalisée
-- [ ] EORI vérifié actif
+- [ ] Identifiant importateur vérifié actif
 - [ ] Autoliquidation TVA validée avec expert-comptable
 - [ ] Commissionnaire en douane briefé
 - [ ] **5 transporteurs partenaires contactés** : tarifs récupérés, contacts dédiés, page `/transport-partenaires` complétée

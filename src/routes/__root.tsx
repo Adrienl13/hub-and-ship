@@ -34,11 +34,6 @@ const ORGANIZATION_JSON_LD = {
   identifier: [
     { '@type': 'PropertyValue', propertyID: 'SIRET', value: '98826998100011' },
     { '@type': 'PropertyValue', propertyID: 'SIREN', value: '988269981' },
-    {
-      '@type': 'PropertyValue',
-      propertyID: 'EORI',
-      value: 'FR98826998100011',
-    },
   ],
   areaServed: 'FR',
   sameAs: [],

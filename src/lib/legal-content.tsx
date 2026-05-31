@@ -51,9 +51,6 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>TVA intracommunautaire :</Strong> FR08988269981
             </LI>
             <LI>
-              <Strong>EORI :</Strong> FR98826998100011
-            </LI>
-            <LI>
               <Strong>Email :</Strong> adrienlaniez1@gmail.com
             </LI>
           </UL>

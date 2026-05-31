@@ -147,7 +147,7 @@ export function Footer() {
             © 2026 Pros Import EURL · RCS Paris 988 269 981 · SIRET
             98826998100011
           </span>
-          <span>EORI FR98826998100011 · TVA FR08988269981</span>
+          <span>TVA FR08988269981</span>
         </div>
       </div>
     </footer>

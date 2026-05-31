@@ -42,7 +42,7 @@ Aucun changement en cours.
 - **SEO public** :
   - `public/robots.txt` (allow `/`, disallow `/admin`, `/account`, `/api`, `/auth`)
   - `public/sitemap.xml` (14 URLs : home, catalogue, livres, qualite, stock-24h, faq, legal hub + 6 docs, transport-partenaires)
-  - **JSON-LD** `schema.org/Organization` inline dans `__root.tsx` avec l'identité réelle Pros Import EURL (legalName, founder Adrien Laniez, address 60 Rue François Ier 75008 Paris, SIRET, SIREN, EORI, VAT)
+  - **JSON-LD** `schema.org/Organization` inline dans `__root.tsx` avec l'identité réelle Pros Import EURL (legalName, founder Adrien Laniez, address 60 Rue François Ier 75008 Paris, SIRET, SIREN, VAT)
 - **`AdminGuard`** (`src/components/AdminGuard.tsx`) — wrappe `/admin` :
   - Spinner pendant la vérif role (`useIsAdmin` hook)
   - Écran "Espace administrateur" + lien `/auth/login` si anonyme
@@ -116,7 +116,7 @@ Aucun changement en cours.
 
 ### Modifié
 
-- **Identité légale réelle** : `Terrassea SAS` → `Pros Import EURL`, SIRET `98826998100011`, TVA `FR08988269981`, EORI `FR98826998100011`, RCS Paris `988 269 981`, siège `60 Rue François Ier, 75008 Paris`, gérant Adrien Laniez, contact `adrienlaniez1@gmail.com`. Tribunal de commerce passé à Paris dans les clauses contentieux. Capital social 500 €.
+- **Identité légale réelle** : `Terrassea SAS` → `Pros Import EURL`, SIRET `98826998100011`, TVA `FR08988269981`, RCS Paris `988 269 981`, siège `60 Rue François Ier, 75008 Paris`, gérant Adrien Laniez, contact `adrienlaniez1@gmail.com`. Tribunal de commerce passé à Paris dans les clauses contentieux. Capital social 500 €.
 - **Header** : nav `Containers livrés` pointe vers `/livres` (vraie page), nav `FAQ` vers `/faq`.
 - **Footer** : 4 placeholder `href="#"` remplacés par les vrais slugs légaux + ajout liens CGU, Cookies, "Tous les documents légaux →".
 - **`reservations` schema DB** : passage du schéma anon (cents, name/company) au schéma codex (reference, contact_snapshot jsonb, reservation_fee numeric EUR, status enum 9 valeurs). Ancien schéma droppé sans perte de données (0 lignes).

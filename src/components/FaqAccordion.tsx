@@ -13,7 +13,7 @@ export const FAQ = [
   },
   {
     q: "Qui s'occupe de la douane et de la TVA à l'import ?",
-    a: "Container Club (Pros Import EURL) est l'importateur officiel : numéro EORI FR, déclaration douanière, TVA autoliquidée, conformité produit (CE, REACH, classement feu). Vous recevez une facture HT française avec TVA 20% en sus, parfaitement déductible.",
+    a: "Container Club (Pros Import EURL) est l'importateur officiel : déclaration douanière, TVA autoliquidée, conformité produit (CE, REACH, classement feu). Vous recevez une facture HT française avec TVA 20% en sus, parfaitement déductible.",
   },
   {
     q: 'Comment se passe la livraison ? Combien ça coûte ?',
