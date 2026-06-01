@@ -105,4 +105,33 @@
   .shadow-paper {
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   }
+
+  /* Rich-text container used by the FAQ + legal pages.
+     Native `<p>` / `<ul>` / `<ol>` / `<li>` tags get their typographic
+     spacing back inside .legal-prose so the writer can author raw
+     HTML without sprinkling Tailwind classes everywhere. */
+  .legal-prose > p {
+    margin-top: 0.75rem;
+  }
+  .legal-prose > p:first-child {
+    margin-top: 0;
+  }
+  .legal-prose ul,
+  .legal-prose ol {
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .legal-prose ul {
+    list-style: disc;
+  }
+  .legal-prose ol {
+    list-style: decimal;
+  }
+  .legal-prose li::marker {
+    color: var(--muted-foreground);
+  }
 }
