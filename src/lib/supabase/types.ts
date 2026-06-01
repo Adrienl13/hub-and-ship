@@ -35,6 +35,7 @@ export type ContainerStatus =
   | 'delivered'
   | 'cancelled'
 export type ContainerType = '20_dv' | '20_hc' | '40_gp' | '40_hc'
+export type StockCondition = 'new' | 'opened_box' | 'showroom'
 export type QualityReportOrganization =
   | 'sgs'
   | 'eurofins'
@@ -376,6 +377,42 @@ type ReservationItemInsert = {
 }
 
 type ReservationItemUpdate = Partial<ReservationItemInsert>
+
+type StockLineRow = {
+  id: string
+  product_id: string
+  variant_id: string
+  available_units: number
+  reserved_units: number
+  stock_price_ht: number
+  location: string
+  ready_label: string
+  condition: StockCondition
+  priority: number
+  note: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+type StockLineInsert = {
+  id: string
+  product_id: string
+  variant_id: string
+  available_units?: number
+  reserved_units?: number
+  stock_price_ht: number
+  location: string
+  ready_label?: string
+  condition?: StockCondition
+  priority?: number
+  note?: string
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+type StockLineUpdate = Partial<StockLineInsert>
 
 type StockRequestRow = {
   id: string
@@ -721,6 +758,11 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      stock_lines: {
+        Row: StockLineRow
+        Insert: StockLineInsert
+        Update: StockLineUpdate
+      }
       containers: {
         Row: ContainerRow
         Insert: ContainerInsert
@@ -776,6 +818,7 @@ export interface Database {
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
+      stock_condition: StockCondition
       security_event_type: SecurityEventType
       container_status: ContainerStatus
       quality_report_organization: QualityReportOrganization

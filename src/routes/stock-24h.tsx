@@ -8,7 +8,7 @@ import {
   Phone,
   Search,
 } from 'lucide-react'
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
@@ -22,12 +22,12 @@ import {
   STOCK_FILTERS,
   calculateStockKpis,
   filterAndSortStockLines,
-  getAvailableStockLines,
   getStockCategoryCounts,
   type StockFilter,
   type StockLine,
   type StockSortKey,
 } from '@/lib/stock'
+import { useStockLines } from '@/hooks/useStockLines'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
 import { formatEUR } from '@/lib/order'
 
@@ -36,14 +36,22 @@ export const Route = createFileRoute('/stock-24h')({
 })
 
 function Stock24hPage() {
-  const lines = useMemo(() => getAvailableStockLines(), [])
+  const { lines } = useStockLines()
   const kpis = useMemo(() => calculateStockKpis(lines), [lines])
   const counts = useMemo(() => getStockCategoryCounts(lines), [lines])
   const [filter, setFilter] = useState<StockFilter>('all')
   const [sort, setSort] = useState<StockSortKey>('priority')
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
-  const [selectedLineId, setSelectedLineId] = useState(lines[0]?.id ?? '')
+  const [selectedLineId, setSelectedLineId] = useState('')
+
+  // When the DB stock list lands (or changes), promote the first line
+  // as the default selection if the user hasn't picked one yet.
+  useEffect(() => {
+    if (selectedLineId) return
+    const firstId = lines[0]?.id
+    if (firstId) setSelectedLineId(firstId)
+  }, [lines, selectedLineId])
 
   const filtered = useMemo(
     () =>

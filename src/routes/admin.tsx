@@ -19,6 +19,7 @@ import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
 import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
 import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
+import { AdminStockTab } from '@/components/AdminStockTab'
 import { AdminUsersTab } from '@/components/AdminUsersTab'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,6 +59,7 @@ const ADMIN_TABS = [
   'reservations',
   'products',
   'containers',
+  'stock',
   'quality',
   'carriers',
   'users',
@@ -166,6 +168,7 @@ function AdminPage() {
               ['reservations', 'Réservations'],
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
+              ['stock', 'Stock 24h'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
               ['users', 'Utilisateurs'],
@@ -202,6 +205,7 @@ function AdminPage() {
         {activeTab === 'containers' && (
           <AdminContainersTab authStatus={auth.status} />
         )}
+        {activeTab === 'stock' && <AdminStockTab authStatus={auth.status} />}
         {activeTab === 'quality' && (
           <AdminQualityReportsTab authStatus={auth.status} />
         )}
