@@ -45,6 +45,7 @@ function rowToLine(
     priority: row.priority,
     note: row.note,
     imageUrl: row.image_url ?? null,
+    imageUrls: row.image_urls ?? [],
   }
 }
 

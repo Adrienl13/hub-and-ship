@@ -369,6 +369,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
         {line.product.name}
       </h2>
+      <StockLotGallery line={line} />
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
         <PanelFact Icon={Clock3} text={line.readyLabel} />
         <PanelFact
@@ -488,6 +489,75 @@ function Badge({ children }: { readonly children: string }) {
     <span className="rounded-sm border border-[color:var(--sand-deep)] bg-card px-2.5 py-1 font-medium">
       {children}
     </span>
+  )
+}
+
+function StockLotGallery({ line }: { readonly line: StockLine }) {
+  // Build the visible photo list: hero (stock photo, then design hero,
+  // then product hero) + the admin-supplied gallery + the rest of the
+  // product gallery, then dedupe.
+  const hero =
+    line.imageUrl || line.variant.imageUrl || line.product.mainImageUrl
+  const sources = [
+    hero,
+    ...(line.imageUrls ?? []),
+    ...(line.variant.galleryUrls ?? []),
+    ...line.product.galleryUrls,
+  ].filter(Boolean) as string[]
+  const photos = Array.from(new Set(sources)).slice(0, 6)
+  const [active, setActive] = useState<string>(photos[0] ?? hero)
+
+  // Re-sync when the user switches stock line.
+  useEffect(() => {
+    setActive(photos[0] ?? hero)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [line.id])
+
+  if (!active) return null
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="ring-foreground/10 relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1">
+        <img
+          src={active}
+          alt={line.product.name}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+        {photos.length > 1 && (
+          <span className="absolute right-2 top-2 rounded-sm bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+            {photos.indexOf(active) + 1}/{photos.length}
+          </span>
+        )}
+      </div>
+      {photos.length > 1 && (
+        <div className="grid grid-cols-6 gap-1.5">
+          {photos.map((url) => {
+            const selected = url === active
+            return (
+              <button
+                key={url}
+                type="button"
+                onClick={() => setActive(url)}
+                aria-pressed={selected}
+                className={`relative aspect-square overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 transition ${
+                  selected
+                    ? 'ring-2 ring-foreground'
+                    : 'ring-foreground/10 hover:ring-foreground/40'
+                }`}
+              >
+                <img
+                  src={url}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

@@ -394,6 +394,7 @@ type StockLineRow = {
   created_at: string
   updated_at: string
   image_url: string | null
+  image_urls: string[]
 }
 
 type StockLineInsert = {
@@ -412,6 +413,7 @@ type StockLineInsert = {
   created_at?: string
   updated_at?: string
   image_url?: string | null
+  image_urls?: string[]
 }
 
 type StockLineUpdate = Partial<StockLineInsert>

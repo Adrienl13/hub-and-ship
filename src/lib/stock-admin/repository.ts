@@ -30,6 +30,7 @@ export interface AdminStockLineRow {
   readonly createdAt: string
   readonly updatedAt: string
   readonly imageUrl: string | null
+  readonly imageUrls: ReadonlyArray<string>
 }
 
 function toAdminRow(row: StockLineRow): AdminStockLineRow {
@@ -49,6 +50,7 @@ function toAdminRow(row: StockLineRow): AdminStockLineRow {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     imageUrl: row.image_url,
+    imageUrls: row.image_urls ?? [],
   }
 }
 

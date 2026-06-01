@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { ImageUploader } from '@/components/ImageUploader'
+import {
+  ImageGalleryUploader,
+  ImageUploader,
+} from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -47,6 +50,7 @@ interface EditableStockLine {
   note: string
   is_active: boolean
   image_url: string
+  image_urls: string[]
 }
 
 function fromRow(row: AdminStockLineRow): EditableStockLine {
@@ -64,6 +68,7 @@ function fromRow(row: AdminStockLineRow): EditableStockLine {
     note: row.note,
     is_active: row.isActive,
     image_url: row.imageUrl ?? '',
+    image_urls: [...row.imageUrls],
   }
 }
 
@@ -82,6 +87,7 @@ function empty(): EditableStockLine {
     note: '',
     is_active: true,
     image_url: '',
+    image_urls: [],
   }
 }
 
@@ -201,6 +207,7 @@ export function AdminStockEditor({
         note: state.note.trim(),
         is_active: state.is_active,
         image_url: state.image_url.trim() || null,
+        image_urls: state.image_urls.filter((url) => url.trim()),
       })
       await logAdminAction(client, auth.user?.id ?? null, {
         action: isCreating ? 'stock_line.create' : 'stock_line.update',
@@ -355,15 +362,29 @@ export function AdminStockEditor({
         </Field>
       </Fieldset>
 
-      <Fieldset title="Photo du lot">
-        <Field label="Photo réelle (optionnel — fallback sur la photo produit)">
+      <Fieldset title="Photos du lot">
+        <Field label="Photo principale (optionnelle — fallback sur la photo produit)">
           <ImageUploader
             value={state.image_url}
             onChange={(url) => setField('image_url', url)}
             folder="stock"
-            hint="Idéal pour 'Carton ouvert' ou 'Exposition' : montre l'état réel du lot."
+            hint="Vignette affichée dans la liste publique /stock-24h."
           />
         </Field>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">
+            Galerie additionnelle (5–6 photos max recommandé)
+          </Label>
+          <ImageGalleryUploader
+            values={state.image_urls}
+            onChange={(next) => setField('image_urls', next)}
+            folder="stock"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Affichées dans le panneau de droite à côté du formulaire de
+            demande, pour rassurer l&apos;acheteur sur l&apos;état réel du lot.
+          </p>
+        </div>
       </Fieldset>
 
       <div className="flex justify-end gap-2 border-t border-[color:var(--sand-deep)] pt-4">

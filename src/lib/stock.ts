@@ -24,6 +24,8 @@ export interface AvailableStockItem {
   /** Optional warehouse-side photo of the actual lot. Empty falls back
    *  to the product / design hero on the public page. */
   readonly imageUrl?: string | null
+  /** Additional lot photos (5–6 typical), shown in the details panel. */
+  readonly imageUrls?: ReadonlyArray<string>
 }
 
 export interface StockLine {
@@ -39,6 +41,7 @@ export interface StockLine {
   readonly priority: number
   readonly note: string
   readonly imageUrl?: string | null
+  readonly imageUrls?: ReadonlyArray<string>
 }
 
 export interface StockKpis {
