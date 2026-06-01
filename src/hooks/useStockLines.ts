@@ -44,6 +44,7 @@ function rowToLine(
     condition: row.condition as StockCondition,
     priority: row.priority,
     note: row.note,
+    imageUrl: row.image_url ?? null,
   }
 }
 

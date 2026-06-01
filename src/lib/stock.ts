@@ -21,6 +21,9 @@ export interface AvailableStockItem {
   readonly condition: StockCondition
   readonly priority: number
   readonly note: string
+  /** Optional warehouse-side photo of the actual lot. Empty falls back
+   *  to the product / design hero on the public page. */
+  readonly imageUrl?: string | null
 }
 
 export interface StockLine {
@@ -35,6 +38,7 @@ export interface StockLine {
   readonly condition: StockCondition
   readonly priority: number
   readonly note: string
+  readonly imageUrl?: string | null
 }
 
 export interface StockKpis {

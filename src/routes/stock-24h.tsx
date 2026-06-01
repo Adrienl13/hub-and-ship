@@ -229,7 +229,11 @@ function StockRow({
         aria-label={`Sélectionner ${line.product.name}`}
       >
         <img
-          src={line.product.mainImageUrl}
+          src={
+            line.imageUrl ||
+            line.variant.imageUrl ||
+            line.product.mainImageUrl
+          }
           alt={line.product.name}
           loading="lazy"
           decoding="async"

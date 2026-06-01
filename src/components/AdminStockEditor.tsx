@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ImageUploader } from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -45,6 +46,7 @@ interface EditableStockLine {
   priority: string
   note: string
   is_active: boolean
+  image_url: string
 }
 
 function fromRow(row: AdminStockLineRow): EditableStockLine {
@@ -61,6 +63,7 @@ function fromRow(row: AdminStockLineRow): EditableStockLine {
     priority: String(row.priority),
     note: row.note,
     is_active: row.isActive,
+    image_url: row.imageUrl ?? '',
   }
 }
 
@@ -78,6 +81,7 @@ function empty(): EditableStockLine {
     priority: '100',
     note: '',
     is_active: true,
+    image_url: '',
   }
 }
 
@@ -196,6 +200,7 @@ export function AdminStockEditor({
         priority: Math.round(parseNumber(state.priority, 100)),
         note: state.note.trim(),
         is_active: state.is_active,
+        image_url: state.image_url.trim() || null,
       })
       await logAdminAction(client, auth.user?.id ?? null, {
         action: isCreating ? 'stock_line.create' : 'stock_line.update',
@@ -346,6 +351,17 @@ export function AdminStockEditor({
             rows={2}
             value={state.note}
             onChange={(e) => setField('note', e.target.value)}
+          />
+        </Field>
+      </Fieldset>
+
+      <Fieldset title="Photo du lot">
+        <Field label="Photo réelle (optionnel — fallback sur la photo produit)">
+          <ImageUploader
+            value={state.image_url}
+            onChange={(url) => setField('image_url', url)}
+            folder="stock"
+            hint="Idéal pour 'Carton ouvert' ou 'Exposition' : montre l'état réel du lot."
           />
         </Field>
       </Fieldset>

@@ -29,6 +29,7 @@ export interface AdminStockLineRow {
   readonly isActive: boolean
   readonly createdAt: string
   readonly updatedAt: string
+  readonly imageUrl: string | null
 }
 
 function toAdminRow(row: StockLineRow): AdminStockLineRow {
@@ -47,6 +48,7 @@ function toAdminRow(row: StockLineRow): AdminStockLineRow {
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    imageUrl: row.image_url,
   }
 }
 

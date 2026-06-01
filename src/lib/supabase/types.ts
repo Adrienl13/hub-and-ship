@@ -393,6 +393,7 @@ type StockLineRow = {
   is_active: boolean
   created_at: string
   updated_at: string
+  image_url: string | null
 }
 
 type StockLineInsert = {
@@ -410,6 +411,7 @@ type StockLineInsert = {
   is_active?: boolean
   created_at?: string
   updated_at?: string
+  image_url?: string | null
 }
 
 type StockLineUpdate = Partial<StockLineInsert>
