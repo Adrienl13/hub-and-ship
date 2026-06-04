@@ -42,9 +42,10 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
             Authentification indisponible
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            La connexion Supabase n'est pas configurée localement. Définissez
-            VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans <code>.env</code>
-            puis redémarrez le serveur.
+            L'authentification administrateur n'est pas encore active sur cet
+            environnement. Pour la mise en service, définissez VITE_SUPABASE_URL
+            et VITE_SUPABASE_ANON_KEY dans <code>.env</code> puis redémarrez le
+            serveur.
           </p>
           <Link
             to="/"
