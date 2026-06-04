@@ -21,6 +21,27 @@ const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "form-action 'self' https://checkout.stripe.com",
 ].join('; ')
 
+function createRedirectResponse(location: string): Response {
+  return new Response(null, {
+    status: 308,
+    headers: {
+      Location: location,
+    },
+  })
+}
+
+export function getCanonicalRedirectLocation(
+  requestUrl: string,
+): string | null {
+  const url = new URL(requestUrl)
+  if (url.hostname !== WWW_HOST) {
+    return null
+  }
+
+  url.hostname = CANONICAL_HOST
+  return url.toString()
+}
+
 function applySecurityHeaders(headers: Headers): void {
   headers.set(
     'Strict-Transport-Security',
@@ -37,13 +58,12 @@ function applySecurityHeaders(headers: Headers): void {
 }
 
 const canonicalHostMiddleware = createMiddleware().server(async (ctx) => {
-  const url = new URL(ctx.request.url)
-  if (url.hostname !== WWW_HOST) {
+  const location = getCanonicalRedirectLocation(ctx.request.url)
+  if (!location) {
     return ctx.next()
   }
 
-  url.hostname = CANONICAL_HOST
-  const response = Response.redirect(url, 308)
+  const response = createRedirectResponse(location)
   applySecurityHeaders(response.headers)
   return response
 })
