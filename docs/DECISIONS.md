@@ -224,6 +224,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-015 — Audit dépendances compatible Bun (2026-06-04)
+
+**Statut** : Acceptée
+**Contexte** : Le projet utilise `bun.lock`, donc `npm audit` échoue sans `package-lock.json`. L'audit Bun a ensuite signalé des advisories via `vitest@2`, `supabase@1` et leurs dépendances transitives.
+**Décision** : Utiliser `bun audit --audit-level=moderate`, mettre à jour Vitest en v4 avec le plugin React dans `vitest.config.ts`, Supabase CLI en v2, Vite/TanStack Start en patch courant et Wrangler/Cloudflare Vite plugin en patch courant.
+**Alternatives** : Ajouter un `package-lock.json` juste pour `npm audit` aurait doublonné le lockfile ; ignorer les advisories aurait laissé un audit sécurité rouge.
+**Raison** : Garder un seul gestionnaire de dépendances cohérent et supprimer les vulnérabilités sans changer la stack applicative.
+**Conséquences** : Les futures commandes d'audit doivent passer par Bun ; les tests TSX Vitest dépendent explicitement du plugin React.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

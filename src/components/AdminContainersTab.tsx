@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -225,6 +226,10 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
                 ? 'Nouveau container'
                 : `Éditer le container ${editing?.reference ?? ''}`}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulaire administrateur pour créer ou modifier un container
+              livré, ses métriques publiques et sa publication.
+            </DialogDescription>
           </DialogHeader>
           {(editing || creating) && (
             <AdminContainerEditor

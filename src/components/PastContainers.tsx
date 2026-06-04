@@ -4,35 +4,12 @@ import { useEffect, useState } from 'react'
 import { DeliveredContainerCard } from '@/components/DeliveredContainerCard'
 import { Reveal, RevealStagger, RevealItem } from '@/components/motion-helpers'
 import {
+  listFallbackDeliveredContainers,
   listPublishedDeliveredContainers,
   type DeliveredContainersListItem,
 } from '@/lib/delivered-containers/repository'
-import { PAST_CONTAINERS } from '@/lib/products'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
-
-function toFallback(): ReadonlyArray<DeliveredContainersListItem> {
-  return PAST_CONTAINERS.map((c, index) => ({
-    id: `fallback-${index}`,
-    reference: c.reference,
-    slug: c.reference.toLowerCase(),
-    port: c.port,
-    deliveredAt: c.deliveredAt,
-    professionalsServed: c.professionalsServed,
-    totalItems: c.totalItems,
-    plannedDays: c.plannedDays,
-    actualDays: c.actualDays,
-    photoUrl: c.photoUrl,
-    savingsTotalEur: null,
-    savingsPercent: null,
-    testimonial: {
-      quote: c.testimonial.quote,
-      author: c.testimonial.author,
-      location: c.testimonial.location,
-      rating: c.testimonial.rating,
-    },
-  }))
-}
 
 export function PastContainers() {
   const [containers, setContainers] = useState<
@@ -45,7 +22,7 @@ export function PastContainers() {
     let cancelled = false
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      setContainers(toFallback().slice(0, 3))
+      setContainers(listFallbackDeliveredContainers().slice(0, 3))
       setHasResult(true)
       setLoading(false)
       return
@@ -60,7 +37,7 @@ export function PastContainers() {
       })
       .catch(() => {
         if (cancelled) return
-        setContainers(toFallback().slice(0, 3))
+        setContainers(listFallbackDeliveredContainers().slice(0, 3))
         setHasResult(true)
       })
       .finally(() => {

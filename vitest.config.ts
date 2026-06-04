@@ -1,11 +1,9 @@
 import { resolve } from 'node:path'
+import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
-  },
+  plugins: [viteReact()],
   test: {
     environment: 'jsdom',
     globals: true,

@@ -24,6 +24,7 @@ import { createCheckoutSession } from '@/lib/stripe/checkout'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -413,6 +414,11 @@ export function ReservationDialog({
             {step === 4 && 'Récapitulatif et paiement'}
             {step === 5 && 'Réservation préparée'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Formulaire de réservation en plusieurs étapes pour vérifier la
+            société, renseigner le contact, choisir la livraison et confirmer le
+            paiement.
+          </DialogDescription>
         </DialogHeader>
 
         {step < 5 && (

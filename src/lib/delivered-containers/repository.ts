@@ -5,6 +5,7 @@ import type {
   TimelineStep,
 } from './types'
 import type { SupabaseBrowserClient } from '@/lib/supabase/client'
+import { PAST_CONTAINERS } from '@/lib/products'
 import type { Database, Json } from '@/lib/supabase/types'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
@@ -68,6 +69,125 @@ function asArray<T>(value: Json | null | undefined): ReadonlyArray<T> {
     return value as ReadonlyArray<T>
   }
   return []
+}
+
+function fallbackSlug(reference: string, port?: string): string {
+  return [reference, port]
+    .filter(Boolean)
+    .join('-')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+export function listFallbackDeliveredContainers(): ReadonlyArray<DeliveredContainersListItem> {
+  return PAST_CONTAINERS.map((c, index) => ({
+    id: `fallback-${index}`,
+    reference: c.reference,
+    slug: fallbackSlug(c.reference),
+    port: c.port,
+    deliveredAt: c.deliveredAt,
+    professionalsServed: c.professionalsServed,
+    totalItems: c.totalItems,
+    plannedDays: c.plannedDays,
+    actualDays: c.actualDays,
+    photoUrl: c.photoUrl,
+    savingsTotalEur: null,
+    savingsPercent: null,
+    testimonial: {
+      quote: c.testimonial.quote,
+      author: c.testimonial.author,
+      location: c.testimonial.location,
+      rating: c.testimonial.rating,
+    },
+  }))
+}
+
+export function getFallbackDeliveredContainerBySlug(
+  slug: string,
+): DeliveredContainer | null {
+  const item = PAST_CONTAINERS.find(
+    (c) =>
+      fallbackSlug(c.reference) === slug ||
+      fallbackSlug(c.reference, c.port) === slug,
+  )
+  if (!item) return null
+
+  return {
+    id: `fallback-${fallbackSlug(item.reference)}`,
+    reference: item.reference,
+    slug: fallbackSlug(item.reference),
+    port: item.port,
+    originPort: 'Ningbo',
+    status: 'delivered',
+    deliveredAt: item.deliveredAt,
+    publishedAt: item.deliveredAt,
+    professionalsServed: item.professionalsServed,
+    totalItems: item.totalItems,
+    savingsTotalEur: null,
+    savingsPercent: null,
+    plannedDays: item.plannedDays,
+    actualDays: item.actualDays,
+    photoUrl: item.photoUrl,
+    story:
+      "Container témoin publié en mode démonstration locale. Les métriques détaillées seront remplacées par les données Supabase de production dès que l'intégration est configurée.",
+    certifications: [
+      'Contrôle qualité pré-expédition',
+      'Documents import vérifiés',
+    ],
+    timeline: [
+      {
+        date: item.deliveredAt,
+        label: 'Arrivée portuaire',
+        description:
+          'Container livré et réceptionné au port, avec suivi des délais réels.',
+        status: item.actualDays <= item.plannedDays ? 'done' : 'delay',
+      },
+      {
+        date: item.deliveredAt,
+        label: 'Réception client',
+        description:
+          'Les professionnels participants récupèrent ou organisent leur transport post-port.',
+        status: 'done',
+      },
+    ],
+    productBreakdown: [
+      {
+        category: 'chair',
+        units: Math.round(item.totalItems * 0.62),
+        modelLabel: 'Assises outdoor',
+      },
+      {
+        category: 'table',
+        units: Math.round(item.totalItems * 0.25),
+        modelLabel: 'Tables terrasse',
+      },
+      {
+        category: 'armchair',
+        units: Math.max(
+          0,
+          item.totalItems - Math.round(item.totalItems * 0.87),
+        ),
+        modelLabel: 'Fauteuils et compléments',
+      },
+    ],
+    gallery: [
+      {
+        url: item.photoUrl,
+        caption: `Container ${item.reference} livré à ${item.port}`,
+      },
+    ],
+    testimonial: {
+      quote: item.testimonial.quote,
+      longQuote: item.testimonial.quote,
+      author: item.testimonial.author,
+      role: 'Client professionnel',
+      location: item.testimonial.location,
+      rating: item.testimonial.rating,
+    },
+  }
 }
 
 function toListItem(row: ContainerRow): DeliveredContainersListItem {

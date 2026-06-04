@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { useCatalog } from '@/hooks/useCatalog'
 import {
   computeStats,
+  listFallbackDeliveredContainers,
   listPublishedDeliveredContainers,
   type DeliveredContainersListItem,
   type DeliveredContainersStats,
@@ -54,8 +55,8 @@ function LivresPage() {
     let cancelled = false
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      setContainers([])
-      setError('Supabase non configuré : impossible de charger les containers.')
+      setContainers(listFallbackDeliveredContainers())
+      setError(null)
       setLoading(false)
       return
     }
@@ -67,9 +68,10 @@ function LivresPage() {
         setContainers(data)
         setError(null)
       })
-      .catch((err: unknown) => {
+      .catch(() => {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        setContainers(listFallbackDeliveredContainers())
+        setError(null)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

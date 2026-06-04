@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -239,6 +240,10 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                 ? 'Nouveau produit'
                 : `Éditer le produit ${editing?.sku ?? ''}`}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulaire administrateur pour gérer la fiche produit, les
+              variantes et les engagements container.
+            </DialogDescription>
           </DialogHeader>
           {(editing || creating) && (
             <AdminProductEditor

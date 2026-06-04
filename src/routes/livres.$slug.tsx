@@ -5,6 +5,7 @@ import { CheckCircle2, Clock, Quote, Star } from 'lucide-react'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import {
+  getFallbackDeliveredContainerBySlug,
   getDeliveredContainerBySlug,
   type DeliveredContainer,
 } from '@/lib/delivered-containers/repository'
@@ -52,7 +53,15 @@ function LivreDetailPage() {
     let cancelled = false
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      setError('Supabase non configuré.')
+      const fallback = getFallbackDeliveredContainerBySlug(slug)
+      if (!fallback) {
+        setIsNotFound(true)
+      } else {
+        setContainer(fallback)
+        if (typeof document !== 'undefined') {
+          document.title = `${fallback.reference} — Container Club Terrassea`
+        }
+      }
       setLoading(false)
       return
     }
@@ -72,7 +81,13 @@ function LivreDetailPage() {
       })
       .catch((err: unknown) => {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        const fallback = getFallbackDeliveredContainerBySlug(slug)
+        if (fallback) {
+          setContainer(fallback)
+          setError(null)
+        } else {
+          setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

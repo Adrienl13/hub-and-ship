@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -262,6 +263,10 @@ export function AdminCarrierPartnersTab({
                 ? 'Nouveau transporteur'
                 : `Éditer ${editing?.name ?? ''}`}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulaire administrateur pour créer ou modifier un transporteur
+              recommandé.
+            </DialogDescription>
           </DialogHeader>
           <AdminCarrierPartnerEditor
             carrier={editing}

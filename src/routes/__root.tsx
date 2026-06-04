@@ -5,6 +5,7 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { Toaster } from '@/components/ui/sonner'
 import '@/styles/globals.css'
@@ -146,10 +147,19 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body>
+        <HydrationMarker />
         <Outlet />
         <Toaster />
         <Scripts />
       </body>
     </html>
   )
+}
+
+function HydrationMarker() {
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = 'true'
+  }, [])
+
+  return null
 }
