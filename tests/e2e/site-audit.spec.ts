@@ -86,6 +86,22 @@ test.describe('site audit parcours publics', () => {
       expect(response.status(), href).toBeLessThan(400)
     }
   })
+
+  test('document responses include baseline security headers', async ({
+    request,
+  }) => {
+    const response = await request.get('/')
+    const headers = response.headers()
+
+    expect(response.status()).toBeLessThan(400)
+    expect(headers['x-content-type-options']).toBe('nosniff')
+    expect(headers['x-frame-options']).toBe('DENY')
+    expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin')
+    expect(headers['permissions-policy']).toContain('camera=()')
+    expect(headers['content-security-policy-report-only']).toContain(
+      "default-src 'self'",
+    )
+  })
 })
 
 test.describe('site audit parcours client', () => {
