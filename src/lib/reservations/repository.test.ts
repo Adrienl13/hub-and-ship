@@ -39,12 +39,85 @@ function createDraft() {
 }
 
 describe('createReservationInSupabase', () => {
-  it('inserts the reservation then its item snapshots using the client-side id', async () => {
+  it('creates the reservation through the atomic Supabase RPC', async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        id: '00000000-0000-4000-8000-000000000abc',
+        reference: 'CC-2026-001-20260518-0001',
+      },
+      error: null,
+    })
     const insertReservation = vi
       .fn()
       .mockResolvedValue({ data: null, error: null })
     const insertItems = vi.fn().mockResolvedValue({ data: null, error: null })
     const client = {
+      from: vi.fn((table: 'reservations' | 'reservation_items') =>
+        table === 'reservations'
+          ? { insert: insertReservation }
+          : { insert: insertItems },
+      ),
+    } as unknown as ReservationRepositoryClient
+    client.rpc = rpc
+
+    await expect(
+      createReservationInSupabase({ client, draft: createDraft() }),
+    ).resolves.toEqual({
+      id: '00000000-0000-4000-8000-000000000abc',
+      reference: 'CC-2026-001-20260518-0001',
+    })
+
+    expect(rpc).toHaveBeenCalledWith(
+      'create_reservation_with_items',
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          reservation: expect.objectContaining({
+            id: '00000000-0000-4000-8000-000000000abc',
+            reference: 'CC-2026-001-20260518-0001',
+            status: 'pending_reservation_fee',
+          }),
+          items: [
+            expect.objectContaining({
+              reservation_id: '00000000-0000-4000-8000-000000000abc',
+              product_id: chair.id,
+              quantity: 50,
+            }),
+          ],
+        }),
+      }),
+    )
+    expect(insertReservation).not.toHaveBeenCalled()
+    expect(insertItems).not.toHaveBeenCalled()
+  })
+
+  it('throws a clear error when the RPC rejects the reservation', async () => {
+    const client = {
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'reservation payload mismatch', code: 'P0001' },
+      }),
+      from: vi.fn(),
+    } as unknown as ReservationRepositoryClient
+
+    await expect(
+      createReservationInSupabase({ client, draft: createDraft() }),
+    ).rejects.toThrow('reservation payload mismatch')
+  })
+
+  it('falls back to legacy inserts only when the RPC migration is missing', async () => {
+    const insertReservation = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
+    const insertItems = vi.fn().mockResolvedValue({ data: null, error: null })
+    const client = {
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: {
+          message:
+            'Could not find the function public.create_reservation_with_items',
+          code: 'PGRST202',
+        },
+      }),
       from: vi.fn((table: 'reservations' | 'reservation_items') =>
         table === 'reservations'
           ? { insert: insertReservation }
@@ -59,23 +132,11 @@ describe('createReservationInSupabase', () => {
       reference: 'CC-2026-001-20260518-0001',
     })
 
-    expect(insertReservation).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: '00000000-0000-4000-8000-000000000abc',
-        reference: 'CC-2026-001-20260518-0001',
-        status: 'pending_reservation_fee',
-      }),
-    )
-    expect(insertItems).toHaveBeenCalledWith([
-      expect.objectContaining({
-        reservation_id: '00000000-0000-4000-8000-000000000abc',
-        product_id: chair.id,
-        quantity: 50,
-      }),
-    ])
+    expect(insertReservation).toHaveBeenCalledOnce()
+    expect(insertItems).toHaveBeenCalledOnce()
   })
 
-  it('throws a clear error when reservation insert fails', async () => {
+  it('throws a clear error when legacy reservation insert fails', async () => {
     const client = {
       from: vi.fn(() => ({
         insert: vi.fn().mockResolvedValue({
@@ -90,7 +151,7 @@ describe('createReservationInSupabase', () => {
     ).rejects.toThrow('RLS denied insert')
   })
 
-  it('throws a clear error when item insert fails', async () => {
+  it('throws a clear error when legacy item insert fails', async () => {
     const client = {
       from: vi.fn((table: 'reservations' | 'reservation_items') =>
         table === 'reservations'

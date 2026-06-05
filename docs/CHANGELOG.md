@@ -12,6 +12,13 @@
 - **Performance build** : ajout d'une garde `scripts/check-bundle-budget.mjs` appelée par `npm run build` et `npm run deploy` pour plafonner le chunk lazy `ContainerScene` en brut et gzip.
 - **Devis imprimable** : le document reprend désormais le format container actif (`20'` ou `40'`) au lieu d'afficher un `20' High Cube` fixe, et l'UI signale les popups bloqués.
 - **Réservation** : l'écran de confirmation affiche un libellé propre `Confirmation` au lieu d'un compteur incohérent `Étape 5 / 4`.
+- **Réservations Supabase** : création atomique via RPC `create_reservation_with_items(payload)` avec fallback legacy si la migration n'est pas encore appliquée ; les policies d'insert anonyme direct sont fermées par la migration.
+
+### DB / Migrations à appliquer
+
+```
+20260605183000  create_reservation_with_items_rpc
+```
 
 ---
 

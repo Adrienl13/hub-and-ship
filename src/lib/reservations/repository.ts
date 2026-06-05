@@ -1,4 +1,4 @@
-import type { Database } from '@/lib/supabase/types'
+import type { Database, Json } from '@/lib/supabase/types'
 import type { ReservationDraft } from './draft'
 import {
   toReservationInsertPayload,
@@ -9,10 +9,19 @@ import {
 
 interface RepositoryResult<T> {
   readonly data: T | null
-  readonly error: { readonly message: string } | null
+  readonly error: {
+    readonly message: string
+    readonly code?: string
+    readonly details?: string | null
+    readonly hint?: string | null
+  } | null
 }
 
 export interface ReservationRepositoryClient {
+  rpc?: (
+    fn: 'create_reservation_with_items',
+    args: { readonly payload: Json },
+  ) => PromiseLike<RepositoryResult<Json>>
   from: {
     (table: 'reservations'): {
       insert: (
@@ -32,17 +41,65 @@ export interface CreateReservationResult {
   readonly reference: string
 }
 
-export async function createReservationInSupabase({
+function buildCreateReservationRpcPayload(draft: ReservationDraft): Json {
+  return {
+    reservation: toReservationInsertPayload(draft) as Json,
+    items: toReservationItemInsertPayloads({
+      draft,
+      reservationId: draft.id,
+    }) as Json,
+  }
+}
+
+function isJsonRecord(
+  value: Json | null,
+): value is { readonly [key: string]: Json | undefined } {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isCreateReservationResult(
+  value: Json | null,
+): value is { readonly id: string; readonly reference: string } {
+  return (
+    isJsonRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.reference === 'string'
+  )
+}
+
+function parseCreateReservationResult(
+  data: Json | null,
+): CreateReservationResult {
+  if (!isCreateReservationResult(data)) {
+    throw new Error('create_reservation_with_items returned invalid payload')
+  }
+
+  return {
+    id: data.id,
+    reference: data.reference,
+  }
+}
+
+function isMissingRpcError(error: RepositoryResult<Json>['error']): boolean {
+  if (!error) return false
+  const message = error.message.toLowerCase()
+  return (
+    error.code === 'PGRST202' ||
+    message.includes('could not find the function') ||
+    message.includes('function public.create_reservation_with_items')
+  )
+}
+
+async function createReservationWithLegacyInserts({
   client,
   draft,
 }: {
   readonly client: ReservationRepositoryClient
   readonly draft: ReservationDraft
 }): Promise<CreateReservationResult> {
-  // The reservations table is write-only for anon: no SELECT policy, so we
-  // cannot ".select()" the row back after insert. The id and reference are
-  // generated client-side (see draft.ts) and used to attach items in the
-  // second insert below.
+  // Legacy compatibility path for environments where the RPC migration has
+  // not landed yet. Once `create_reservation_with_items` exists, the normal
+  // path below writes reservation + items atomically.
   const reservationResult = await client
     .from('reservations')
     .insert(toReservationInsertPayload(draft))
@@ -63,6 +120,30 @@ export async function createReservationInSupabase({
   }
 
   return { id: draft.id, reference: draft.reference }
+}
+
+export async function createReservationInSupabase({
+  client,
+  draft,
+}: {
+  readonly client: ReservationRepositoryClient
+  readonly draft: ReservationDraft
+}): Promise<CreateReservationResult> {
+  if (client.rpc) {
+    const result = await client.rpc('create_reservation_with_items', {
+      payload: buildCreateReservationRpcPayload(draft),
+    })
+
+    if (!result.error) {
+      return parseCreateReservationResult(result.data)
+    }
+
+    if (!isMissingRpcError(result.error)) {
+      throw new Error(result.error.message)
+    }
+  }
+
+  return createReservationWithLegacyInserts({ client, draft })
 }
 
 // ---------------------------------------------------------------------------

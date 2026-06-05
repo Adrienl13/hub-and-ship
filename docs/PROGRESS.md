@@ -417,6 +417,8 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : scène 3D allégée en retirant `@react-three/drei`, interaction drag native conservée, chunk lazy contrôlé par budget build brut + gzip.
 - Phase : Phase 2 — Audit conversion devis
 - Tâches : devis imprimable aligné sur le format container actif 20'/40', fallback popup bloqué ajouté, confirmation réservation renommée proprement, test E2E devis 40' ajouté.
+- Phase : Phase 2 — Audit admin/Supabase
+- Tâches : création réservation rendue atomique via RPC Supabase `create_reservation_with_items`, fallback legacy limité au cas migration absente, migration ajoutée pour fermer les inserts anonymes directs sur `reservations` et `reservation_items`.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit

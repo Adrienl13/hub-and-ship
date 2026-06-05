@@ -235,6 +235,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-016 — Création réservation atomique via RPC Supabase (2026-06-05)
+
+**Statut** : Acceptée
+**Contexte** : Le tunnel public écrivait d'abord `reservations`, puis `reservation_items` depuis le navigateur. Une erreur sur le second insert pouvait laisser une réservation orpheline/incomplète visible en admin.
+**Décision** : Créer `public.create_reservation_with_items(payload jsonb)` en `SECURITY DEFINER`, appelée par le client pour insérer réservation + lignes dans une seule transaction. La migration supprime ensuite les policies d'insert anonyme direct.
+**Alternatives** : Garder deux inserts client avec cleanup manuel en cas d'erreur ; ajouter un endpoint serveur Cloudflare utilisant la service role.
+**Raison** : La RPC garde la logique au plus près de PostgreSQL/RLS, évite un endpoint applicatif supplémentaire et permet des validations serveur sur les totaux, le SIRET, le statut initial et l'appartenance des lignes.
+**Conséquences** : La migration DB doit être appliquée avant de considérer la surface RLS fermée. Le frontend conserve un fallback legacy uniquement pour survivre à un environnement où la RPC n'existe pas encore.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

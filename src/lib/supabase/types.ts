@@ -770,6 +770,10 @@ export interface Database {
         Args: { payload: Json }
         Returns: void
       }
+      create_reservation_with_items: {
+        Args: { payload: Json }
+        Returns: Json
+      }
     }
     Enums: {
       user_role: UserRole

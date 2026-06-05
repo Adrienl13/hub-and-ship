@@ -5,6 +5,7 @@ import { saveReservationDraftToLocalHistory } from '@/lib/reservations/local-his
 import {
   createReservationInSupabase,
   type CreateReservationResult,
+  type ReservationRepositoryClient,
 } from '@/lib/reservations/repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -51,7 +52,7 @@ export function useReservationCreation() {
 
       try {
         const reservation = await createReservationInSupabase({
-          client,
+          client: client as unknown as ReservationRepositoryClient,
           draft,
         })
 
