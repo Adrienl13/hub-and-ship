@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Pencil, Plus, Power, PowerOff } from 'lucide-react'
+import { PackagePlus, Pencil, Plus, Power, PowerOff } from 'lucide-react'
 
 import { AdminProductEditor } from '@/components/AdminProductEditor'
+import { AdminStockEditor } from '@/components/AdminStockEditor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,6 +27,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { useCatalogStore } from '@/stores/catalog.store'
 import type { AuthStatus } from '@/hooks/useAuth'
 
 export interface AdminCatalogueTabProps {
@@ -41,6 +43,9 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminProduct | null>(null)
   const [creating, setCreating] = useState(false)
+  const [stockForProduct, setStockForProduct] = useState<AdminProduct | null>(
+    null,
+  )
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const auth = useAuth()
@@ -65,6 +70,9 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
         setRows(products)
         setContainers(containerRows)
         setError(null)
+        // Propagate to the public-facing catalogue store so edits show up
+        // live in the same session (the store is otherwise load-once).
+        void useCatalogStore.getState().reload()
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
       }
@@ -197,6 +205,17 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                     </Button>
                     <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 rounded-sm"
+                      onClick={() => setStockForProduct(row)}
+                      title="Créer une ligne de stock 24h pour ce produit"
+                    >
+                      <PackagePlus className="h-3.5 w-3.5" />
+                      Stock
+                    </Button>
+                    <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       className="h-8 gap-1.5 rounded-sm"
@@ -258,6 +277,36 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           <DialogFooter className="text-[11px] text-muted-foreground">
             Les enregistrements passent par UPSERT Supabase. Les erreurs RLS
             apparaissent ici.
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={stockForProduct !== null}
+        onOpenChange={(open) => {
+          if (!open) setStockForProduct(null)
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Mettre au stock — {stockForProduct?.name ?? ''}
+            </DialogTitle>
+          </DialogHeader>
+          {stockForProduct && (
+            <AdminStockEditor
+              line={null}
+              products={rows}
+              containers={containers}
+              initialProductId={stockForProduct.id}
+              onProductCreated={refresh}
+              onSaved={() => setStockForProduct(null)}
+              onCancel={() => setStockForProduct(null)}
+            />
+          )}
+          <DialogFooter className="text-[11px] text-muted-foreground">
+            La fiche produit est réutilisée — vous ne saisissez que la
+            disponibilité, le prix stock et les photos du lot.
           </DialogFooter>
         </DialogContent>
       </Dialog>

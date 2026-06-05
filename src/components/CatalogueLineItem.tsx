@@ -39,13 +39,13 @@ function CatalogueLineItemComponent({
   return (
     <article
       data-catalogue-line-item
-      className="grid gap-3 border-b border-[color:var(--sand-deep)] bg-card px-3 py-3 text-sm transition-colors hover:bg-[color:var(--sand-soft)] md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:items-center md:gap-2"
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '104px' }}
+      className="grid gap-3 border-b border-[color:var(--sand-deep)] bg-card px-3 py-3 text-sm transition-colors hover:bg-[color:var(--sand-soft)] md:grid-cols-[112px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:items-center md:gap-2"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '200px' }}
     >
       <button
         type="button"
         onClick={onOpenDetails}
-        className="ring-foreground/10 relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 md:h-[52px] md:w-[52px]"
+        className="ring-foreground/10 group/img relative h-48 w-full overflow-hidden rounded-md bg-[color:var(--sand)] ring-1 md:h-28 md:w-28"
         aria-label={`Voir détails ${product.name}`}
       >
         <img
@@ -53,7 +53,7 @@ function CatalogueLineItemComponent({
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-105"
         />
       </button>
 

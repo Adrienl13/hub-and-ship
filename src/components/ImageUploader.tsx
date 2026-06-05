@@ -129,17 +129,21 @@ export function ImageUploader({
     setError(null)
     setUploading(true)
     const previous = value
-    const result = await uploadImage(folder, file)
-    if (!result.ok) {
-      setError(result.error)
+    try {
+      const result = await uploadImage(folder, file)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      onChange(result.url)
+      if (previous && previous !== result.url) {
+        void deleteByPublicUrl(previous)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'erreur inconnue')
+    } finally {
       setUploading(false)
-      return
     }
-    onChange(result.url)
-    if (previous && previous !== result.url) {
-      void deleteByPublicUrl(previous)
-    }
-    setUploading(false)
   }
 
   async function handleRemove(): Promise<void> {
@@ -237,21 +241,37 @@ export function ImageGalleryUploader({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleAdd(files: FileList): Promise<void> {
+  async function handleAdd(files: File[]): Promise<void> {
     setError(null)
     setUploading(true)
     const next = [...values]
-    for (const file of Array.from(files)) {
-      const result = await uploadImage(folder, file)
-      if (!result.ok) {
-        setError(result.error)
-        // Save what's already uploaded before bailing out.
-        break
+    const failures: string[] = []
+    try {
+      for (const file of files) {
+        try {
+          const result = await uploadImage(folder, file)
+          if (result.ok) {
+            next.push(result.url)
+          } else {
+            failures.push(`${file.name}: ${result.error}`)
+          }
+        } catch (err) {
+          failures.push(
+            `${file.name}: ${err instanceof Error ? err.message : 'erreur inconnue'}`,
+          )
+        }
       }
-      next.push(result.url)
+      if (next.length !== values.length) {
+        onChange(next)
+      }
+      if (failures.length > 0) {
+        setError(failures.join(' · '))
+      }
+    } finally {
+      // Never leave `uploading` stuck: an exception here would freeze the
+      // "+" button until the page is reloaded.
+      setUploading(false)
     }
-    onChange(next)
-    setUploading(false)
   }
 
   async function handleRemove(index: number): Promise<void> {
@@ -307,9 +327,14 @@ export function ImageGalleryUploader({
         multiple
         className="hidden"
         onChange={(e) => {
-          const files = e.target.files
+          // Snapshot the File objects into a plain array *before* resetting
+          // the input. `e.target.files` is a live FileList tied to the input,
+          // so clearing `value` first would empty it and handleAdd would
+          // receive zero files (cf. the single-file picker, which extracts
+          // the File up-front for the same reason).
+          const files = e.target.files ? Array.from(e.target.files) : []
           if (e.target) e.target.value = ''
-          if (files && files.length > 0) void handleAdd(files)
+          if (files.length > 0) void handleAdd(files)
         }}
       />
       {error && <p className="text-[11px] text-red-700">{error}</p>}

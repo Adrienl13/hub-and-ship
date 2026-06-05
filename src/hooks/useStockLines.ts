@@ -52,8 +52,11 @@ function rowToLine(
 export function useStockLines(): UseStockLinesResult {
   const { products } = useCatalog()
   const config = useMemo(() => getSupabasePublicConfig(), [])
-  const [dbLines, setDbLines] = useState<ReadonlyArray<StockLine> | null>(null)
+  const [rows, setRows] = useState<ReadonlyArray<StockLineRow> | null>(null)
   const [loading, setLoading] = useState(config.isConfigured)
+  // Bumped on tab focus so an admin edit shows up without a full browser
+  // reload (the fetch is otherwise a load-once snapshot).
+  const [refreshTick, setRefreshTick] = useState(0)
 
   useEffect(() => {
     if (!config.isConfigured) {
@@ -70,25 +73,41 @@ export function useStockLines(): UseStockLinesResult {
       .order('priority', { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return
-        if (error || !data) {
-          setDbLines(null)
-        } else {
-          const mapped = (data as ReadonlyArray<StockLineRow>)
-            .map((row) => rowToLine(row, products))
-            .filter((line): line is StockLine => line !== null)
-          setDbLines(mapped)
-        }
+        setRows(error || !data ? null : (data as ReadonlyArray<StockLineRow>))
         setLoading(false)
       })
     return () => {
       cancelled = true
     }
-  }, [config, products])
+  }, [config, refreshTick])
 
-  const fallback = useMemo(
-    () => getAvailableStockLines(AVAILABLE_STOCK),
-    [],
+  useEffect(() => {
+    function refetchIfVisible() {
+      if (document.visibilityState === 'visible') {
+        setRefreshTick((tick) => tick + 1)
+      }
+    }
+    window.addEventListener('focus', refetchIfVisible)
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    return () => {
+      window.removeEventListener('focus', refetchIfVisible)
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+    }
+  }, [])
+
+  // Map raw rows against the live catalogue. Kept separate from the network
+  // fetch so a product refresh only re-maps (cheap) instead of re-querying.
+  const dbLines = useMemo(
+    () =>
+      rows
+        ? rows
+            .map((row) => rowToLine(row, products))
+            .filter((line): line is StockLine => line !== null)
+        : null,
+    [rows, products],
   )
+
+  const fallback = useMemo(() => getAvailableStockLines(AVAILABLE_STOCK), [])
 
   if (dbLines && dbLines.length > 0) {
     return { lines: dbLines, source: 'db', loading: false }

@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Plus } from 'lucide-react'
 
+import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   ImageGalleryUploader,
   ImageUploader,
@@ -15,6 +23,7 @@ import {
   type CatalogueAdminClient,
 } from '@/lib/catalogue-admin/repository'
 import type {
+  AdminContainerOption,
   AdminProduct,
   AdminProductVariant,
 } from '@/lib/catalogue-admin/types'
@@ -105,6 +114,15 @@ function deriveStockId(productId: string, variantId: string): string {
 export interface AdminStockEditorProps {
   readonly line: AdminStockLineRow | null
   readonly products: ReadonlyArray<AdminProduct>
+  readonly containers: ReadonlyArray<AdminContainerOption>
+  /**
+   * Pre-select this catalogue product when creating a fresh line — used by
+   * the "Mettre au stock" shortcut so an existing product is dropped into
+   * stock without re-creating its sheet.
+   */
+  readonly initialProductId?: string
+  /** Reload the parent's product list (after creating a new product). */
+  readonly onProductCreated: () => void | Promise<void>
   readonly onSaved: () => void | Promise<void>
   readonly onCancel: () => void
 }
@@ -112,12 +130,15 @@ export interface AdminStockEditorProps {
 export function AdminStockEditor({
   line,
   products,
+  containers,
+  initialProductId,
+  onProductCreated,
   onSaved,
   onCancel,
 }: AdminStockEditorProps) {
   const isCreating = line === null
   const [state, setState] = useState<EditableStockLine>(() =>
-    line ? fromRow(line) : empty(),
+    line ? fromRow(line) : { ...empty(), product_id: initialProductId ?? '' },
   )
   const [variants, setVariants] = useState<ReadonlyArray<AdminProductVariant>>(
     [],
@@ -125,6 +146,7 @@ export function AdminStockEditor({
   const [variantsLoading, setVariantsLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [productCreatorOpen, setProductCreatorOpen] = useState(false)
 
   const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -222,6 +244,7 @@ export function AdminStockEditor({
   }
 
   return (
+    <>
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5">
       {error && (
         <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
@@ -248,6 +271,14 @@ export function AdminStockEditor({
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              onClick={() => setProductCreatorOpen(true)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-[color:var(--ember)] hover:underline"
+            >
+              <Plus className="h-3 w-3" />
+              Créer un nouveau produit
+            </button>
           </Field>
           <Field label="Design">
             <select
@@ -396,6 +427,33 @@ export function AdminStockEditor({
         </Button>
       </div>
     </form>
+
+      {/* Shortcut: create a brand-new catalogue product without leaving the
+          stock editor. On save we reload the product list and auto-select the
+          freshly created product so the admin can finish the stock line. */}
+      <Dialog open={productCreatorOpen} onOpenChange={setProductCreatorOpen}>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nouveau produit catalogue</DialogTitle>
+          </DialogHeader>
+          {productCreatorOpen && (
+            <AdminProductEditor
+              productId={null}
+              containers={containers}
+              onSaved={async (newProductId) => {
+                setProductCreatorOpen(false)
+                await onProductCreated()
+                if (newProductId) {
+                  setField('product_id', newProductId)
+                  setField('variant_id', '')
+                }
+              }}
+              onCancel={() => setProductCreatorOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

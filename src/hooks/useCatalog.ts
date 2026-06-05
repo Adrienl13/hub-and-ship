@@ -22,6 +22,25 @@ export function useCatalog() {
     void ensureLoaded()
   }, [ensureLoaded])
 
+  // Keep the catalogue fresh without a full browser reload: refetch whenever
+  // the tab regains focus / becomes visible. This is what makes an admin edit
+  // show up when switching back to the site tab — the store is otherwise a
+  // permanent in-session cache (it only loads once on first mount).
+  useEffect(() => {
+    function refetchIfVisible() {
+      const store = useCatalogStore.getState()
+      if (document.visibilityState !== 'visible') return
+      if (store.status === 'loading') return
+      void store.reload()
+    }
+    window.addEventListener('focus', refetchIfVisible)
+    document.addEventListener('visibilitychange', refetchIfVisible)
+    return () => {
+      window.removeEventListener('focus', refetchIfVisible)
+      document.removeEventListener('visibilitychange', refetchIfVisible)
+    }
+  }, [])
+
   return {
     status,
     source,

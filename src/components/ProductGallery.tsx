@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Images, Maximize2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -19,17 +19,16 @@ export function ProductGallery({
   product: Product
   design?: DesignVariant | null
 }) {
-  // When a design is selected, surface its photos first so the client sees
-  // exactly what they are about to commit to. We still append the product
-  // hero + gallery as fallback so the picker never collapses to a single
-  // shot if the admin hasn't uploaded design-specific photos yet.
+  // The product's MAIN hero photo comes first: opening a product must show
+  // exactly the photo on the card the user just clicked, not a design shot.
+  // Design photos and the rest of the galleries follow as additional views.
   const images = useMemo(
     () =>
       uniqueImages([
-        design?.imageUrl,
-        ...(design?.galleryUrls ?? []),
         product.mainImageUrl,
         ...product.galleryUrls,
+        design?.imageUrl,
+        ...(design?.galleryUrls ?? []),
       ]),
     [
       design?.imageUrl,
@@ -42,12 +41,31 @@ export function ProductGallery({
   const selectedImage = images[selectedIndex] ?? product.mainImageUrl
   const hasMultipleImages = images.length > 1
 
-  // Reset to the first photo whenever the product OR the chosen design
-  // changes — the user expects to see the design's hero, not whichever
-  // index they had landed on for the previous design.
+  // Opening (or switching) a product always lands on its main hero photo.
+  // Only an explicit design change jumps to that design's own photo — so the
+  // selector still previews the chosen colour without overriding the initial
+  // "show the main photo" expectation.
+  const baselineDesignRef = useRef(design?.id)
+  // Product change (or first open): land on the main hero, and treat the
+  // current design as the baseline so it is NOT counted as a design switch.
   useEffect(() => {
     setSelectedIndex(0)
-  }, [product.id, design?.id])
+    baselineDesignRef.current = design?.id
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
+
+  // Explicit design switch (same product): preview that design's own photo.
+  useEffect(() => {
+    if (design?.id === baselineDesignRef.current) return
+    baselineDesignRef.current = design?.id
+    if (!design?.imageUrl) {
+      setSelectedIndex(0)
+      return
+    }
+    const index = images.indexOf(design.imageUrl)
+    setSelectedIndex(index >= 0 ? index : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [design?.id])
 
   function goToPrevious() {
     if (!hasMultipleImages) return
@@ -67,7 +85,7 @@ export function ProductGallery({
         <img
           src={selectedImage}
           alt={`${product.name} — ${GALLERY_LABELS[selectedIndex] ?? 'vue produit'}`}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-3"
         />
 
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-black/45 to-transparent p-3 text-white">

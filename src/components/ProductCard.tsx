@@ -54,7 +54,7 @@ function ProductCardComponent({
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain p-3"
         />
         <span className="bg-[color:var(--sand-soft)]/90 absolute left-3 top-3 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
           {CATEGORY_LABEL[product.category]}

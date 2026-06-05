@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -156,7 +157,7 @@ export interface AdminProductEditorProps {
   /** Existing product id to edit, or `null` to create a new product. */
   readonly productId: string | null
   readonly containers: ReadonlyArray<AdminContainerOption>
-  readonly onSaved: () => void | Promise<void>
+  readonly onSaved: (productId?: string) => void | Promise<void>
   readonly onCancel: () => void
 }
 
@@ -325,11 +326,37 @@ export function AdminProductEditor({
         gallery_urls: v.galleryUrls.filter((url) => url.trim()),
         sort_order: v.sortOrder,
       }))
-    const commitmentsPayload = commitments.map((c) => ({
-      container_id: c.containerId,
-      variant_id: c.variantId,
-      units_committed: Math.max(0, Math.round(c.unitsCommitted)),
-    }))
+    // Only keep commitments whose design survives this save. A removed design
+    // is deleted by the RPC (cascading its commitments), so re-sending a
+    // commitment for it would violate container_seed_commitments' FK and abort
+    // the whole save.
+    const survivingVariantIds = new Set(variantsPayload.map((v) => v.id))
+    const commitmentsPayload = commitments
+      .filter((c) => survivingVariantIds.has(c.variantId))
+      .map((c) => ({
+        container_id: c.containerId,
+        variant_id: c.variantId,
+        units_committed: Math.max(0, Math.round(c.unitsCommitted)),
+      }))
+
+    // Guard: a product with no design is hidden from the public catalogue
+    // (db.ts filters variants.length > 0). Warn before saving such a product,
+    // and if the admin confirms, force it inactive so the state is explicit
+    // (never "actif mais introuvable"). A DB-side net enforces the same
+    // invariant for any other caller.
+    if (variantsPayload.length === 0) {
+      const confirmed = window.confirm(
+        "Ce produit n'a aucun design.\n\n" +
+          'Un produit sans design est masqué du catalogue public. ' +
+          'Voulez-vous quand même enregistrer ? Il sera automatiquement ' +
+          'marqué « Inactif ».',
+      )
+      if (!confirmed) {
+        setSaving(false)
+        return
+      }
+      productPayload.is_active = false
+    }
 
     // One transactional RPC instead of N sequential writes — avoids the
     // partial-failure window where the product was saved but its variants
@@ -350,12 +377,17 @@ export function AdminProductEditor({
 
     if (rpcError) {
       setError(rpcError.message)
+      // Surface it as a toast too: the inline banner sits at the top of a tall
+      // scrollable form, so a user who clicked "Enregistrer" at the bottom
+      // would otherwise see nothing happen.
+      toast.error('Enregistrement échoué', { description: rpcError.message })
       setSaving(false)
       return
     }
 
     setSaving(false)
-    await onSaved()
+    toast.success('Produit enregistré')
+    await onSaved(targetProductId)
   }
 
   if (loading) {

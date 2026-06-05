@@ -29,34 +29,22 @@ export interface CatalogState {
   readonly reload: () => Promise<void>
 }
 
-function pickCatalog(db: DbCatalog | null): {
-  source: CatalogSource
-  products: ReadonlyArray<Product>
-  currentContainer: DbCurrentContainer | typeof CURRENT_CONTAINER
-} {
-  if (db && db.currentContainer && db.products.length > 0) {
-    return {
-      source: 'db',
-      products: db.products,
-      currentContainer: db.currentContainer,
-    }
-  }
-  return {
-    source: 'fallback',
-    products: PRODUCTS,
-    currentContainer: CURRENT_CONTAINER,
-  }
-}
-
-const FALLBACK = pickCatalog(null)
+// The static mock (PRODUCTS) carries seed prices/names that drift from the
+// live DB. It must NEVER be shown to real visitors of a configured site — it
+// is only a local-dev convenience when Supabase isn't configured at all. On a
+// configured site we show real DB data, an empty list, or the last good data,
+// but never fake products.
+const INITIAL_CONFIGURED = getSupabasePublicConfig().isConfigured
 
 let inFlight: Promise<void> | null = null
 
 export const useCatalogStore = create<CatalogState>()((set, get) => ({
   status: 'idle',
-  source: FALLBACK.source,
-  products: FALLBACK.products,
-  currentContainer: FALLBACK.currentContainer,
+  source: INITIAL_CONFIGURED ? 'db' : 'fallback',
+  // Start empty when configured (real data arrives on first load) instead of
+  // flashing the mock products before the DB responds.
+  products: INITIAL_CONFIGURED ? [] : PRODUCTS,
+  currentContainer: CURRENT_CONTAINER,
   error: null,
   ensureLoaded: async () => {
     const current = get()
@@ -70,6 +58,7 @@ export const useCatalogStore = create<CatalogState>()((set, get) => ({
   reload: async () => {
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
+      // No Supabase at all (local dev): the static mock is the only data.
       set({
         status: 'ready',
         source: 'fallback',
@@ -84,27 +73,24 @@ export const useCatalogStore = create<CatalogState>()((set, get) => ({
     const promise = (async () => {
       try {
         const client = createSupabaseBrowserClient(config)
-        const db = await fetchCatalogFromDb(
+        const db: DbCatalog = await fetchCatalogFromDb(
           client as unknown as Parameters<typeof fetchCatalogFromDb>[0],
         )
-        const pick = pickCatalog(db)
+        // Real DB data wins — even an empty list. A missing open container
+        // falls back only for the capacity default, never for products.
         set({
           status: 'ready',
-          source: pick.source,
-          products: pick.products,
-          currentContainer: pick.currentContainer,
+          source: 'db',
+          products: db.products,
+          currentContainer: db.currentContainer ?? CURRENT_CONTAINER,
           error: null,
         })
       } catch (error) {
-        // On error, fall through to the mock so the UI keeps working —
-        // surfacing a broken catalogue would hurt more than degrading to
-        // the static one.
-        console.error('useCatalog: DB fetch failed, falling back', error)
+        // Keep the last good data instead of swapping to fake mock products
+        // (which would show stale seed prices to real customers).
+        console.error('useCatalog: DB fetch failed, keeping last good data', error)
         set({
-          status: 'ready',
-          source: 'fallback',
-          products: PRODUCTS,
-          currentContainer: CURRENT_CONTAINER,
+          status: 'error',
           error: error instanceof Error ? error.message : 'unknown_error',
         })
       } finally {

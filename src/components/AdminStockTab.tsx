@@ -13,8 +13,15 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useCatalog } from '@/hooks/useCatalog'
 import { logAdminAction } from '@/lib/admin/audit-log'
-import { listProducts } from '@/lib/catalogue-admin/repository'
-import type { AdminProduct } from '@/lib/catalogue-admin/types'
+import {
+  listAdminContainers,
+  listProducts,
+  type CatalogueAdminClient,
+} from '@/lib/catalogue-admin/repository'
+import type {
+  AdminContainerOption,
+  AdminProduct,
+} from '@/lib/catalogue-admin/types'
 import {
   deactivateStockLine,
   listAllStockLines,
@@ -39,6 +46,9 @@ export interface AdminStockTabProps {
 export function AdminStockTab({ authStatus }: AdminStockTabProps) {
   const [rows, setRows] = useState<ReadonlyArray<AdminStockLineRow>>([])
   const [products, setProducts] = useState<ReadonlyArray<AdminProduct>>([])
+  const [containers, setContainers] = useState<
+    ReadonlyArray<AdminContainerOption>
+  >([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminStockLineRow | null>(null)
@@ -61,12 +71,14 @@ export function AdminStockTab({ authStatus }: AdminStockTabProps) {
       setLoading(true)
       const client = createSupabaseBrowserClient(config) as StockAdminClient
       try {
-        const [stock, productList] = await Promise.all([
+        const [stock, productList, containerList] = await Promise.all([
           listAllStockLines(client),
           listProducts(client),
+          listAdminContainers(client as unknown as CatalogueAdminClient),
         ])
         setRows(stock)
         setProducts(productList)
+        setContainers(containerList)
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -261,6 +273,8 @@ export function AdminStockTab({ authStatus }: AdminStockTabProps) {
             <AdminStockEditor
               line={creating ? null : editing}
               products={products}
+              containers={containers}
+              onProductCreated={refresh}
               onSaved={async () => {
                 setEditing(null)
                 setCreating(false)

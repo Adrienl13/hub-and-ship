@@ -5,11 +5,13 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
-import { ArrowUpDown, Layers3, Search } from 'lucide-react'
+import { ArrowUpDown, LayoutGrid, Layers3, List, Search } from 'lucide-react'
 
 import { CatalogueLineItem } from '@/components/CatalogueLineItem'
+import { CatalogueGridCard } from '@/components/CatalogueGridCard'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
@@ -67,6 +69,7 @@ function CataloguePage() {
     products: productsArray,
     capacityCbm: currentContainer.capacityCbm,
   })
+  const [view, setView] = useState<'grid' | 'list'>('grid')
   const [filter, setFilter] = useState<CatalogueFilter>('all')
   const [sort, setSort] = useState<SortKey>('default')
   const [search, setSearch] = useState('')
@@ -101,6 +104,47 @@ function CataloguePage() {
   const detailProduct: Product | null = useMemo(
     () => productsArray.find((product) => product.id === detailId) ?? null,
     [detailId, productsArray],
+  )
+
+  // Chunk the grid into category sections to break the "flat wall of 50"
+  // decision fatigue. Only when browsing everything in the default order —
+  // an active filter or sort means the user wants one ordered stream.
+  const useSections = view === 'grid' && filter === 'all' && sort === 'default'
+  const sections = useMemo(
+    () =>
+      CATEGORY_FILTERS.filter((category) => category.id !== 'all')
+        .map((category) => ({
+          id: category.id,
+          label: category.label,
+          products: visibleProducts.filter((p) => p.category === category.id),
+        }))
+        .filter((section) => section.products.length > 0),
+    [visibleProducts],
+  )
+
+  // Smooth-scroll a category section to just below the sticky controls. We
+  // measure the controls height at runtime (it varies a lot between mobile
+  // and desktop) rather than hard-coding a CSS scroll-margin that would hide
+  // the section title behind the bar on one breakpoint or the other.
+  const controlsRef = useRef<HTMLDivElement>(null)
+  const scrollToCategory = (id: string) => {
+    const el = document.getElementById(`cat-${id}`)
+    if (!el) return
+    const HEADER = 64
+    const offset = HEADER + (controlsRef.current?.offsetHeight ?? 0) + 12
+    const y = el.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top: y, behavior: 'smooth' })
+  }
+
+  const renderGridCard = (product: Product) => (
+    <CatalogueGridCard
+      key={product.id}
+      product={product}
+      variantId={variantByProduct[product.id] ?? getDefaultVariant(product).id}
+      qty={qtyByProduct[product.id] ?? 0}
+      onQtyChange={(quantity) => setQty(product.id, quantity)}
+      onOpenDetails={() => setDetailId(product.id)}
+    />
   )
 
   useEffect(() => {
@@ -158,7 +202,10 @@ function CataloguePage() {
 
         <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-12">
           <div className="min-w-0 lg:col-span-9">
-            <div className="bg-background/95 sticky top-16 z-20 min-w-0 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur">
+            <div
+              ref={controlsRef}
+              className="bg-background/95 sticky top-16 z-20 min-w-0 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur"
+            >
               <div className="flex min-w-0 flex-col gap-3">
                 <div className="flex max-w-full gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
                   {CATEGORY_FILTERS.map((category) => {
@@ -232,33 +279,85 @@ function CataloguePage() {
                   </label>
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
-                  trouvée
-                  {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
-                  affichée
-                  {visibleProducts.length > 1 ? 's' : ''}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
+                    trouvée
+                    {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
+                    affichée
+                    {visibleProducts.length > 1 ? 's' : ''}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setView('grid')}
+                      aria-pressed={view === 'grid'}
+                      aria-label="Vue grille"
+                      className={`flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors ${
+                        view === 'grid'
+                          ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
+                          : 'text-foreground/70 hover:text-foreground'
+                      }`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Grille</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setView('list')}
+                      aria-pressed={view === 'list'}
+                      aria-label="Vue liste"
+                      className={`flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors ${
+                        view === 'list'
+                          ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
+                          : 'text-foreground/70 hover:text-foreground'
+                      }`}
+                    >
+                      <List className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Liste</span>
+                    </button>
+                  </div>
                 </div>
+
+                {useSections && sections.length > 1 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+                    <span className="shrink-0 text-muted-foreground">
+                      Aller à
+                    </span>
+                    {sections.map((section) => (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => scrollToCategory(section.id)}
+                        className="hover:border-foreground/40 shrink-0 rounded-sm border border-[color:var(--sand-deep)] bg-card px-2.5 py-1 font-medium text-foreground/80 transition-colors hover:text-foreground"
+                      >
+                        {section.label}
+                        <span className="ml-1 tabular-nums opacity-50">
+                          {section.products.length}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-              <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:gap-2">
-                <span />
-                <span>Produit</span>
-                <span>Variante</span>
-                <span>MOQ</span>
-                <span className="text-right">Prix HT</span>
-                <span>Quantité</span>
-                <span />
+            {filtered.length === 0 ? (
+              <div className="rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-16 text-center text-sm text-muted-foreground">
+                Aucun produit ne correspond à ces filtres.
               </div>
-
-              {filtered.length === 0 ? (
-                <div className="px-4 py-16 text-center text-sm text-muted-foreground">
-                  Aucun produit ne correspond à ces filtres.
+            ) : view === 'list' ? (
+              <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+                <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[112px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:gap-2">
+                  <span />
+                  <span>Produit</span>
+                  <span>Variante</span>
+                  <span>MOQ</span>
+                  <span className="text-right">Prix HT</span>
+                  <span>Quantité</span>
+                  <span />
                 </div>
-              ) : (
-                visibleProducts.map((product) => {
+                {visibleProducts.map((product) => {
                   const selectedVariantId =
                     variantByProduct[product.id] ??
                     getDefaultVariant(product).id
@@ -275,9 +374,35 @@ function CataloguePage() {
                       onOpenDetails={() => setDetailId(product.id)}
                     />
                   )
-                })
-              )}
-            </div>
+                })}
+              </div>
+            ) : useSections ? (
+              <div className="space-y-8">
+                {sections.map((section) => (
+                  <section
+                    key={section.id}
+                    id={`cat-${section.id}`}
+                    className="scroll-mt-24"
+                  >
+                    <div className="mb-3 flex items-baseline gap-2 border-b border-[color:var(--sand-deep)] pb-2">
+                      <h2 className="font-display text-lg font-semibold tracking-tight">
+                        {section.label}
+                      </h2>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {section.products.length}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {section.products.map(renderGridCard)}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleProducts.map(renderGridCard)}
+              </div>
+            )}
 
             {remainingProducts > 0 && (
               <div className="mt-5 text-center">

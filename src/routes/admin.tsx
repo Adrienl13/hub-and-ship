@@ -33,6 +33,7 @@ import {
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
 import { logAdminAction } from '@/lib/admin/audit-log'
+import { sendReservationCancelled } from '@/lib/email/reservation-cancelled'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -760,6 +761,13 @@ function ReservationsAdminPanel({
         nextValue: 'cancelled',
         note: cancelReason,
         extra: { reference: row.reference },
+      })
+      // Fire-and-forget client notification. The cancellation is already
+      // persisted; email failures shouldn't block the admin flow.
+      void sendReservationCancelled({
+        data: { reservationId: row.id },
+      }).catch((err) => {
+        console.error('sendReservationCancelled failed', err)
       })
       setCancellingId(null)
       await refresh()

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 
+import { sendStockRequestNotification } from '@/lib/email/stock-request-notification'
 import {
   saveStockRequestToLocalHistory,
   type StockRequestDraft,
@@ -53,6 +54,13 @@ export function useStockRequestCreation() {
       try {
         const request = await createStockRequestInSupabase({ client, draft })
         saveLocal()
+        // Fire-and-forget admin notification. The lead is already persisted —
+        // any email pipeline failure is logged server-side, not surfaced.
+        void sendStockRequestNotification({
+          data: { stockRequestId: request.id },
+        }).catch((error) => {
+          console.error('sendStockRequestNotification failed', error)
+        })
         return { ok: true, persisted: true, request }
       } catch (error) {
         return {
