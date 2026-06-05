@@ -6,7 +6,10 @@
 
 ## [Non publié]
 
-Aucun changement en cours.
+### Modifié
+
+- **Vue 3D container** : suppression de `@react-three/drei` au profit d'une scène R3F native plus légère, avec drag manuel, overlays HTML hors canvas et conservation du packing logistique existant.
+- **Performance build** : ajout d'une garde `scripts/check-bundle-budget.mjs` appelée par `npm run build` et `npm run deploy` pour plafonner le chunk lazy `ContainerScene` en brut et gzip.
 
 ---
 

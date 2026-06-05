@@ -413,6 +413,8 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : ProductGallery ajouté dans ProductDetailDialog avec sélection de visuels, navigation, compteur et état à compléter pour fournisseurs sans galerie.
 - Phase : Phase 2 — Règles quantité
 - Tâches : règle métier chaises centralisée : minimum 50 unités puis incrément par packs de 10 dans catalogue, accueil et fiche produit.
+- Phase : Phase 2 — Performance 3D
+- Tâches : scène 3D allégée en retirant `@react-three/drei`, interaction drag native conservée, chunk lazy contrôlé par budget build brut + gzip.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit
