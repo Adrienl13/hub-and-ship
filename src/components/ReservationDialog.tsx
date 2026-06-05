@@ -405,7 +405,7 @@ export function ReservationDialog({
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
         <DialogHeader>
           <div className="label-eyebrow text-[color:var(--ember)]">
-            Étape {step} / 4 - Réservation
+            {step < 5 ? `Étape ${step} / 4 - Réservation` : 'Confirmation'}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
             {step === 1 && 'Identification professionnelle'}

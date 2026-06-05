@@ -4,6 +4,8 @@
 
 import { CATEGORY_LABEL } from './products'
 import type { CartItem, OrderTotals } from './order'
+import { getContainerLabel } from './container/pricing'
+import type { ContainerType } from './supabase/types'
 
 export type QuoteData = {
   items: CartItem[]
@@ -13,6 +15,7 @@ export type QuoteData = {
   capacity: number
   containerRef: string
   port: string
+  containerType: ContainerType
   buyer?: { name?: string; company?: string; email?: string }
 }
 
@@ -29,9 +32,10 @@ function escapeHtml(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
 }
 
-function buildHTML(q: QuoteData): string {
+export function buildQuoteHTML(q: QuoteData): string {
   const today = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -210,7 +214,7 @@ function buildHTML(q: QuoteData): string {
       <div class="card">
         <h3>Container</h3>
         <div class="body">
-          <strong>${escapeHtml(q.containerRef)} — 20' High Cube</strong>
+          <strong>${escapeHtml(q.containerRef)} — ${escapeHtml(getContainerLabel(q.containerType))}</strong>
           Destination : ${escapeHtml(q.port)}<br/>
           Remplissage : ${q.fillPercent.toFixed(0)} % (${q.usedCbm.toFixed(2)} / ${q.capacity} m³)
         </div>
@@ -273,19 +277,16 @@ function buildHTML(q: QuoteData): string {
 </html>`
 }
 
-export function openQuotePDF(q: QuoteData) {
-  const html = buildHTML(q)
-  const win = window.open(
-    '',
-    '_blank',
-    'noopener,noreferrer,width=900,height=1000',
-  )
+export function openQuotePDF(q: QuoteData): boolean {
+  const html = buildQuoteHTML(q)
+  const win = window.open('', '_blank', 'width=900,height=1000')
   if (!win) {
     const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
-    window.open(url, '_blank')
-    return
+    return window.open(url, '_blank') !== null
   }
+  win.opener = null
   win.document.open()
   win.document.write(html)
   win.document.close()
+  return true
 }

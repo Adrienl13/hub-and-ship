@@ -10,6 +10,8 @@
 
 - **Vue 3D container** : suppression de `@react-three/drei` au profit d'une scène R3F native plus légère, avec drag manuel, overlays HTML hors canvas et conservation du packing logistique existant.
 - **Performance build** : ajout d'une garde `scripts/check-bundle-budget.mjs` appelée par `npm run build` et `npm run deploy` pour plafonner le chunk lazy `ContainerScene` en brut et gzip.
+- **Devis imprimable** : le document reprend désormais le format container actif (`20'` ou `40'`) au lieu d'afficher un `20' High Cube` fixe, et l'UI signale les popups bloqués.
+- **Réservation** : l'écran de confirmation affiche un libellé propre `Confirmation` au lieu d'un compteur incohérent `Étape 5 / 4`.
 
 ---
 

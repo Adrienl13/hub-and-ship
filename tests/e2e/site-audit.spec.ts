@@ -181,6 +181,33 @@ test.describe('site audit parcours client', () => {
       .toBe(true)
   })
 
+  test('quote document reflects the auto-upgraded 40 foot format', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'mobile-chrome',
+      'Desktop sidebar owns the printable quote action.',
+    )
+
+    await gotoHydrated(page, '/catalogue')
+    const chairRow = page
+      .locator('article')
+      .filter({ hasText: 'Chaise Cannes Empilable' })
+      .first()
+
+    await chairRow.getByLabel('Quantité').fill('400')
+    await expect(page.getByText('66 m³ utiles')).toBeVisible()
+
+    const popupPromise = page.waitForEvent('popup')
+    await page.getByRole('button', { name: 'Télécharger le devis PDF' }).click()
+    const quote = await popupPromise
+    await quote.waitForLoadState('domcontentloaded')
+
+    await expect(quote.getByText("CC-2026-001 — 40' High Cube")).toBeVisible()
+    await expect(quote.getByText('34.50 / 66 m³')).toBeVisible()
+    await quote.close()
+  })
+
   test('reservation can be completed and stored locally when integrations are unavailable', async ({
     page,
   }, testInfo) => {

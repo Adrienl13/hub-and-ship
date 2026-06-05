@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { ArrowUpDown, Layers3, Search } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { CatalogueLineItem } from '@/components/CatalogueLineItem'
 import { Footer } from '@/components/Footer'
@@ -89,6 +90,7 @@ function CataloguePage() {
     totals,
     fill,
     totalUnits,
+    preferredContainerType,
     variantByProduct,
     qtyByProduct,
     setQty,
@@ -138,7 +140,7 @@ function CataloguePage() {
   }, [deferredSearch, filter, pageSize, sort])
 
   const handlePdf = () => {
-    openQuotePDF({
+    const opened = openQuotePDF({
       items,
       totals,
       fillPercent: fill.percent,
@@ -146,7 +148,15 @@ function CataloguePage() {
       capacity: fill.capacity,
       containerRef: currentContainer.reference,
       port: currentContainer.port,
+      containerType:
+        preferredContainerType ?? currentContainer.containerType ?? '20_hc',
     })
+    if (!opened) {
+      toast.error('Devis bloqué par le navigateur', {
+        description:
+          'Autorisez les popups pour ouvrir le devis imprimable en PDF.',
+      })
+    }
   }
 
   return (
