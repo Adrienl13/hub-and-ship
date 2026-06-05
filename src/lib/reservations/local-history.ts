@@ -39,13 +39,11 @@ export function createLocalReservationRecord({
   readonly draft: ReservationDraft
   readonly persisted: boolean
 }): LocalReservationRecord {
-  const status = persisted ? 'reserved' : 'pending_reservation_fee'
-
   return {
-    id: `local-${draft.reference}`,
-    status,
+    id: draft.id,
+    status: 'pending_reservation_fee',
     draft,
-    paidAmount: persisted ? draft.payment.payNow : 0,
+    paidAmount: 0,
     nextActionLabel: persisted
       ? 'Reservation enregistree, paiement a finaliser'
       : 'Reservation locale prete a synchroniser',
@@ -90,7 +88,10 @@ export function saveReservationDraftToLocalHistory({
 }): LocalReservationRecord {
   const record = createLocalReservationRecord({ draft, persisted })
   const previous = readLocalReservationHistory(storage).filter(
-    (entry) => entry.id !== record.id,
+    (entry) =>
+      entry.id !== record.id &&
+      entry.draft.id !== draft.id &&
+      entry.draft.reference !== draft.reference,
   )
 
   writeLocalReservationHistory({

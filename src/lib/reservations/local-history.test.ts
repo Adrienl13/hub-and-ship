@@ -63,12 +63,13 @@ describe('local reservation history', () => {
       persisted: false,
     })
 
-    expect(record.id).toBe('local-CC-2026-001-20260518-0001')
+    expect(record.id).toBe(draft.id)
     expect(record.status).toBe('pending_reservation_fee')
+    expect(record.paidAmount).toBe(0)
     expect(readLocalReservationHistory(storage)).toHaveLength(1)
   })
 
-  it('deduplicates records by reference', () => {
+  it('deduplicates records by reference without marking payment as settled', () => {
     const storage = createMemoryStorage()
     const draft = createDraft()
 
@@ -77,7 +78,34 @@ describe('local reservation history', () => {
 
     const records = readLocalReservationHistory(storage)
     expect(records).toHaveLength(1)
-    expect(records[0]?.status).toBe('reserved')
+    expect(records[0]?.id).toBe(draft.id)
+    expect(records[0]?.status).toBe('pending_reservation_fee')
+    expect(records[0]?.paidAmount).toBe(0)
+  })
+
+  it('replaces legacy local-reference records for the same draft', () => {
+    const draft = createDraft()
+    const storage = createMemoryStorage(
+      JSON.stringify([
+        {
+          id: `local-${draft.reference}`,
+          status: 'pending_reservation_fee',
+          draft,
+          paidAmount: 0,
+          nextActionLabel: 'Legacy record',
+          updatedAt: draft.cgvAcceptedAt,
+        },
+      ]),
+    )
+
+    saveReservationDraftToLocalHistory({ storage, draft, persisted: true })
+
+    const records = readLocalReservationHistory(storage)
+    expect(records).toHaveLength(1)
+    expect(records[0]?.id).toBe(draft.id)
+    expect(records[0]?.nextActionLabel).toBe(
+      'Reservation enregistree, paiement a finaliser',
+    )
   })
 
   it('ignores malformed storage payloads', () => {

@@ -13,6 +13,8 @@
 - **Devis imprimable** : le document reprend désormais le format container actif (`20'` ou `40'`) au lieu d'afficher un `20' High Cube` fixe, et l'UI signale les popups bloqués.
 - **Réservation** : l'écran de confirmation affiche un libellé propre `Confirmation` au lieu d'un compteur incohérent `Étape 5 / 4`.
 - **Réservations Supabase** : création atomique via RPC `create_reservation_with_items(payload)` avec fallback legacy si la migration n'est pas encore appliquée ; les policies d'insert anonyme direct sont fermées par la migration.
+- **Retour paiement Stripe** : l'historique local garde l'UUID réel et reste en `pending_reservation_fee` tant que le webhook n'a pas confirmé le paiement ; la page compte distingue désormais paiement confirmé et synchronisation webhook en cours.
+- **Webhook Stripe** : les événements `expired` / `async_payment_failed` n'annulent plus une réservation si l'événement provient d'une ancienne session Checkout remplacée par une session plus récente.
 
 ### DB / Migrations à appliquer
 

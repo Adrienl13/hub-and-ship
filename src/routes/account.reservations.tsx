@@ -302,7 +302,7 @@ function ReservationRow({
       <div className="min-w-0">
         <Link
           to="/account/reservations/$reservationId"
-          params={{ reservationId: reservation.id }}
+          params={{ reservationId: reservation.draft.id }}
           className="font-medium hover:underline"
         >
           {reservation.draft.reference}
@@ -331,7 +331,7 @@ function ReservationRow({
       >
         <Link
           to="/account/reservations/$reservationId"
-          params={{ reservationId: reservation.id }}
+          params={{ reservationId: reservation.draft.id }}
           aria-label={`Ouvrir ${reservation.draft.reference}`}
         >
           <ArrowRight className="h-4 w-4" />

@@ -53,7 +53,15 @@ export const Route = createFileRoute('/account/reservations/$reservationId')({
 
 function AccountReservationDetailPage() {
   const { reservationId } = Route.useParams()
-  const { session_id: sessionId, canceled } = Route.useSearch()
+  const { session_id: routeSessionId, canceled: routeCanceled } =
+    Route.useSearch()
+  const runtimeSearch =
+    typeof window === 'undefined'
+      ? null
+      : new URLSearchParams(window.location.search)
+  const sessionId = routeSessionId ?? runtimeSearch?.get('session_id')
+  const canceled =
+    routeCanceled === true || runtimeSearch?.get('canceled') === 'true'
   const auth = useAuth()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
@@ -163,6 +171,13 @@ function AccountReservationDetailPage() {
     )
   }
 
+  const paymentConfirmedByStatus =
+    reservation.status !== 'pending_reservation_fee' &&
+    reservation.status !== 'cancelled'
+  const showPaymentConfirmed = Boolean(sessionId && paymentConfirmedByStatus)
+  const showPaymentSyncing = Boolean(sessionId && !paymentConfirmedByStatus)
+  const canRetryPayment = reservation.status === 'pending_reservation_fee'
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)]">
@@ -185,7 +200,7 @@ function AccountReservationDetailPage() {
         </div>
       </header>
 
-      {sessionId ? (
+      {showPaymentConfirmed ? (
         <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 border-b">
           <div className="mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm text-[color:var(--forest)]">
             <CheckCircle2 className="mt-0.5 h-4 w-4" />
@@ -200,7 +215,24 @@ function AccountReservationDetailPage() {
         </div>
       ) : null}
 
-      {canceled ? (
+      {showPaymentSyncing ? (
+        <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 border-b">
+          <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">
+            <CreditCard className="mt-0.5 h-4 w-4 text-[color:var(--ochre)]" />
+            <div>
+              <div className="font-medium">
+                Paiement en cours de confirmation
+              </div>
+              <div className="mt-0.5 text-xs leading-5">
+                Stripe nous a renvoyé sur cette réservation. Le statut peut
+                prendre quelques secondes à se synchroniser via le webhook.
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {canceled && canRetryPayment ? (
         <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 border-b">
           <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 text-[color:var(--ochre)]" />

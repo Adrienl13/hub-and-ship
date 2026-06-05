@@ -225,7 +225,11 @@ export function getAccountReservationById(
   id: string,
   reservations: ReadonlyArray<AccountReservation>,
 ): AccountReservation | null {
-  return reservations.find((reservation) => reservation.id === id) ?? null
+  return (
+    reservations.find(
+      (reservation) => reservation.id === id || reservation.draft.id === id,
+    ) ?? null
+  )
 }
 
 export function calculateAccountReservationKpis(

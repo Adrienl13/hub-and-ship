@@ -3,9 +3,9 @@
 // Requirements:
 //   - Raw request body (Stripe signs the unparsed bytes).
 //   - `stripe-signature` header for verification.
-//   - Idempotent updates: WHERE status='pending_reservation_fee' guarantees a
-//     retried `checkout.session.completed` does not overwrite a row already
-//     reserved/cancelled via another path.
+//   - Idempotent updates: status filters prevent retries from overwriting a
+//     settled row; expired/failed sessions also match the current
+//     stripe_checkout_session_id so an old session cannot cancel a newer one.
 //
 // We always return 200 to Stripe for events we recognise (or politely ignore),
 // preventing infinite retries. Non-200 responses are reserved for:
@@ -23,85 +23,11 @@ import {
   isStripeConfigured,
 } from '@/lib/stripe/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-
-async function markReservationReserved(
-  session: Stripe.Checkout.Session,
-): Promise<void> {
-  const reservationId = session.metadata?.reservation_id
-  if (!reservationId) {
-    console.warn(
-      'stripe webhook: checkout.session.completed without reservation_id metadata',
-      { sessionId: session.id },
-    )
-    return
-  }
-
-  const paymentIntentId =
-    typeof session.payment_intent === 'string'
-      ? session.payment_intent
-      : (session.payment_intent?.id ?? null)
-
-  const customerId =
-    typeof session.customer === 'string'
-      ? session.customer
-      : (session.customer?.id ?? null)
-
-  const nowIso = new Date().toISOString()
-
-  const { error } = await getSupabaseAdmin()
-    .from('reservations')
-    .update({
-      status: 'reserved',
-      stripe_payment_intent_id: paymentIntentId,
-      stripe_customer_id: customerId,
-      stripe_checkout_session_id: session.id,
-      paid_reservation_fee_at: nowIso,
-      reserved_at: nowIso,
-      updated_at: nowIso,
-    })
-    .eq('id', reservationId)
-    .eq('status', 'pending_reservation_fee')
-
-  if (error) {
-    console.error('stripe webhook: failed to mark reservation reserved', {
-      reservationId,
-      error,
-    })
-  }
-}
-
-async function markReservationCancelled(
-  session: Stripe.Checkout.Session,
-): Promise<void> {
-  const reservationId = session.metadata?.reservation_id
-  if (!reservationId) {
-    console.warn(
-      'stripe webhook: session expired/failed without reservation_id metadata',
-      { sessionId: session.id },
-    )
-    return
-  }
-
-  const nowIso = new Date().toISOString()
-
-  const { error } = await getSupabaseAdmin()
-    .from('reservations')
-    .update({
-      status: 'cancelled',
-      cancelled_at: nowIso,
-      cancellation_reason: 'stripe_payment_failed',
-      updated_at: nowIso,
-    })
-    .eq('id', reservationId)
-    .eq('status', 'pending_reservation_fee')
-
-  if (error) {
-    console.error('stripe webhook: failed to mark reservation cancelled', {
-      reservationId,
-      error,
-    })
-  }
-}
+import {
+  markReservationCancelled,
+  markReservationReserved,
+  type WebhookReservationClient,
+} from '@/lib/stripe/webhook-handlers'
 
 async function handleWebhook(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
@@ -143,12 +69,18 @@ async function handleWebhook(request: Request): Promise<Response> {
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      await markReservationReserved(event.data.object)
+      await markReservationReserved({
+        client: getSupabaseAdmin() as unknown as WebhookReservationClient,
+        session: event.data.object,
+      })
       break
     }
     case 'checkout.session.expired':
     case 'checkout.session.async_payment_failed': {
-      await markReservationCancelled(event.data.object)
+      await markReservationCancelled({
+        client: getSupabaseAdmin() as unknown as WebhookReservationClient,
+        session: event.data.object,
+      })
       break
     }
     default: {

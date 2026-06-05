@@ -246,9 +246,25 @@ test.describe('site audit parcours client', () => {
     await expect(
       page.getByRole('heading', { name: 'Mes réservations' }),
     ).toBeVisible()
+    const localReservation = page
+      .getByRole('link', { name: /CC-2026-001-/ })
+      .first()
+    await expect(localReservation).toBeVisible()
+    await localReservation.click()
     await expect(
-      page.getByRole('link', { name: /CC-2026-001-/ }).first(),
+      page.getByRole('heading', { name: /CC-2026-001-/ }),
     ).toBeVisible()
+    await expect(page.getByText('Frais reservation')).toBeVisible()
+    const returnUrl = new URL(page.url())
+    returnUrl.searchParams.set('session_id', 'cs_test_fake')
+    await page.goto(returnUrl.toString())
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('session_id'))
+      .toBe('cs_test_fake')
+    await expect(
+      page.getByText('Paiement en cours de confirmation'),
+    ).toBeVisible()
+    await expect(page.getByText('Paiement confirmé')).toHaveCount(0)
   })
 })
 
