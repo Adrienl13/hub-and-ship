@@ -105,10 +105,7 @@ async function markReservationCancelled(
 
 async function handleWebhook(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', {
-      status: 405,
-      headers: { Allow: 'POST' },
-    })
+    return methodNotAllowed()
   }
 
   if (!isStripeConfigured()) {
@@ -170,9 +167,17 @@ async function handleWebhook(request: Request): Promise<Response> {
   })
 }
 
+function methodNotAllowed(): Response {
+  return new Response('Method Not Allowed', {
+    status: 405,
+    headers: { Allow: 'POST' },
+  })
+}
+
 export const Route = createFileRoute('/api/stripe/webhook')({
   server: {
     handlers: {
+      GET: () => methodNotAllowed(),
       POST: async ({ request }) => handleWebhook(request),
     },
   },

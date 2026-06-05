@@ -14,6 +14,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { LEGAL_PAGES, type LegalSlug } from '@/components/LegalLayout'
 import { useCatalog } from '@/hooks/useCatalog'
+import { buildSeoHead } from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -47,14 +48,12 @@ const DESCRIPTIONS: Record<LegalSlug, string> = {
 export const Route = createFileRoute('/legal/')({
   component: LegalHub,
   head: () => ({
-    meta: [
-      { title: 'Documents légaux — Container Club' },
-      {
-        name: 'description',
-        content:
-          'Tous les documents légaux de Container Club : mentions légales, CGV, CGU, confidentialité, cookies, politique de remboursement.',
-      },
-    ],
+    ...buildSeoHead({
+      title: 'Documents légaux',
+      description:
+        'Tous les documents légaux de Container Club : mentions légales, CGV, CGU, confidentialité, cookies, politique de remboursement.',
+      path: '/legal',
+    }),
   }),
 })
 

@@ -16,18 +16,17 @@ import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
+import { buildSeoHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/livres/')({
   component: LivresPage,
   head: () => ({
-    meta: [
-      { title: 'Containers livrés — Container Club Terrassea' },
-      {
-        name: 'description',
-        content:
-          'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
-      },
-    ],
+    ...buildSeoHead({
+      title: 'Containers livrés',
+      description:
+        'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
+      path: '/livres',
+    }),
   }),
 })
 

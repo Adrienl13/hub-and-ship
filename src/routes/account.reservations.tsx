@@ -27,6 +27,12 @@ import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export const Route = createFileRoute('/account/reservations')({
   component: AccountReservationsPage,
+  head: () => ({
+    meta: [
+      { title: 'Mes réservations — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AccountReservationsPage() {

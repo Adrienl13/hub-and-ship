@@ -21,8 +21,8 @@ import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
-import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue.tables-restaurant'
-import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue.chaises-restaurant'
+import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
+import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
@@ -92,15 +92,15 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
 } as any)
 const CatalogueTablesRestaurantRoute =
   CatalogueTablesRestaurantRouteImport.update({
-    id: '/tables-restaurant',
-    path: '/tables-restaurant',
-    getParentRoute: () => CatalogueRoute,
+    id: '/catalogue_/tables-restaurant',
+    path: '/catalogue/tables-restaurant',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const CatalogueChaisesRestaurantRoute =
   CatalogueChaisesRestaurantRouteImport.update({
-    id: '/chaises-restaurant',
-    path: '/chaises-restaurant',
-    getParentRoute: () => CatalogueRoute,
+    id: '/catalogue_/chaises-restaurant',
+    path: '/catalogue/chaises-restaurant',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
@@ -132,7 +132,7 @@ const AccountReservationsReservationIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/catalogue': typeof CatalogueRouteWithChildren
+  '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
@@ -153,7 +153,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/catalogue': typeof CatalogueRouteWithChildren
+  '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
@@ -175,7 +175,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/catalogue': typeof CatalogueRouteWithChildren
+  '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
@@ -184,8 +184,8 @@ export interface FileRoutesById {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
-  '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
-  '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/legal/': typeof LegalIndexRoute
@@ -249,8 +249,8 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/auth/callback'
     | '/auth/login'
-    | '/catalogue/chaises-restaurant'
-    | '/catalogue/tables-restaurant'
+    | '/catalogue_/chaises-restaurant'
+    | '/catalogue_/tables-restaurant'
     | '/legal/$slug'
     | '/livres/$slug'
     | '/legal/'
@@ -262,7 +262,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  CatalogueRoute: typeof CatalogueRouteWithChildren
+  CatalogueRoute: typeof CatalogueRoute
   FaqRoute: typeof FaqRoute
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
@@ -271,6 +271,8 @@ export interface RootRouteChildren {
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
+  CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
   LegalIndexRoute: typeof LegalIndexRoute
@@ -364,19 +366,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/catalogue/tables-restaurant': {
-      id: '/catalogue/tables-restaurant'
-      path: '/tables-restaurant'
+    '/catalogue_/tables-restaurant': {
+      id: '/catalogue_/tables-restaurant'
+      path: '/catalogue/tables-restaurant'
       fullPath: '/catalogue/tables-restaurant'
       preLoaderRoute: typeof CatalogueTablesRestaurantRouteImport
-      parentRoute: typeof CatalogueRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/catalogue/chaises-restaurant': {
-      id: '/catalogue/chaises-restaurant'
-      path: '/chaises-restaurant'
+    '/catalogue_/chaises-restaurant': {
+      id: '/catalogue_/chaises-restaurant'
+      path: '/catalogue/chaises-restaurant'
       fullPath: '/catalogue/chaises-restaurant'
       preLoaderRoute: typeof CatalogueChaisesRestaurantRouteImport
-      parentRoute: typeof CatalogueRoute
+      parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
       id: '/auth/login'
@@ -416,20 +418,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface CatalogueRouteChildren {
-  CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
-  CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
-}
-
-const CatalogueRouteChildren: CatalogueRouteChildren = {
-  CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
-  CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
-}
-
-const CatalogueRouteWithChildren = CatalogueRoute._addFileChildren(
-  CatalogueRouteChildren,
-)
-
 interface AccountReservationsRouteChildren {
   AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
 }
@@ -444,7 +432,7 @@ const AccountReservationsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  CatalogueRoute: CatalogueRouteWithChildren,
+  CatalogueRoute: CatalogueRoute,
   FaqRoute: FaqRoute,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
@@ -453,6 +441,8 @@ const rootRouteChildren: RootRouteChildren = {
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
+  CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
+  CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
   LegalIndexRoute: LegalIndexRoute,

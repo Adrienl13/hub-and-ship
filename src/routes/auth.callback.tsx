@@ -22,6 +22,12 @@ const callbackSearchSchema = z.object({
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackPage,
   validateSearch: callbackSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'Validation connexion — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AuthCallbackPage() {

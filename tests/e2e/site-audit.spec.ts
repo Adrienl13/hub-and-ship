@@ -14,8 +14,14 @@ const PUBLIC_ROUTES: ReadonlyArray<{
     path: '/stock-mobilier-terrasse-24h',
     heading: 'Mobilier de terrasse disponible rapidement pour les pros.',
   },
-  { path: '/catalogue/chaises-restaurant', heading: /Vue compacte/ },
-  { path: '/catalogue/tables-restaurant', heading: /Vue compacte/ },
+  {
+    path: '/catalogue/chaises-restaurant',
+    heading: 'Chaises de terrasse professionnelles, commandées par container.',
+  },
+  {
+    path: '/catalogue/tables-restaurant',
+    heading: 'Tables outdoor professionnelles pour restaurants et brasseries.',
+  },
   { path: '/faq', heading: "Tout ce qu'il faut savoir avant de réserver." },
   { path: '/qualite', heading: "Inspecté avant d'être expédié." },
   { path: '/livres', heading: 'La preuve par container.' },
@@ -27,9 +33,13 @@ const PUBLIC_ROUTES: ReadonlyArray<{
   { path: '/legal', heading: 'Transparence légale & protection.' },
   { path: '/legal/mentions-legales', heading: 'Mentions légales' },
   { path: '/legal/cgv', heading: 'Conditions générales de vente' },
+  { path: '/legal/cgu', heading: 'Conditions générales d’utilisation' },
   { path: '/legal/confidentialite', heading: 'Politique de confidentialité' },
   { path: '/legal/cookies', heading: 'Politique cookies' },
+  { path: '/legal/remboursement', heading: 'Politique de remboursement' },
 ]
+
+const CANONICAL_ROUTES = PUBLIC_ROUTES.map((route) => route.path)
 
 async function gotoHydrated(page: Page, path: string) {
   const response = await page.goto(path)
@@ -101,6 +111,25 @@ test.describe('site audit parcours publics', () => {
     expect(headers['content-security-policy-report-only']).toContain(
       "default-src 'self'",
     )
+  })
+
+  test('public SEO pages expose a self canonical URL', async ({ page }) => {
+    for (const path of CANONICAL_ROUTES) {
+      await gotoHydrated(page, path)
+      const canonical = await page
+        .locator('link[rel="canonical"]')
+        .first()
+        .getAttribute('href')
+
+      expect(canonical, path).toBe(`https://prosimport.com${path}`)
+    }
+  })
+
+  test('stripe webhook rejects non-POST requests', async ({ request }) => {
+    const response = await request.get('/api/stripe/webhook')
+
+    expect(response.status()).toBe(405)
+    expect(response.headers().allow).toBe('POST')
   })
 })
 

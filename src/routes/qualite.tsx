@@ -23,18 +23,17 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
+import { buildSeoHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/qualite')({
   component: QualitePage,
   head: () => ({
-    meta: [
-      { title: 'Qualité & Tests — Container Club Terrassea' },
-      {
-        name: 'description',
-        content:
-          'Rapports indépendants SGS, Eurofins, TÜV. Chaque container est inspecté avant expédition : preuves publiques, rapports complets sur connexion.',
-      },
-    ],
+    ...buildSeoHead({
+      title: 'Qualité & Tests',
+      description:
+        'Rapports indépendants SGS, Eurofins, TÜV. Chaque container est inspecté avant expédition : preuves publiques, rapports complets sur connexion.',
+      path: '/qualite',
+    }),
   }),
 })
 

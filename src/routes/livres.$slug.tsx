@@ -11,6 +11,7 @@ import {
 } from '@/lib/delivered-containers/repository'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL } from '@/lib/products'
+import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
@@ -18,6 +19,28 @@ import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/livres/$slug')({
   component: LivreDetailPage,
+  head: ({ params }) => {
+    const container = getFallbackDeliveredContainerBySlug(params.slug)
+    if (!container) {
+      return {
+        meta: [
+          { title: 'Container livré — Container Club Terrassea' },
+          { name: 'robots', content: 'noindex,follow' },
+        ],
+      }
+    }
+
+    return {
+      ...buildSeoHead({
+        title: `${container.reference} livré à ${container.port}`,
+        description:
+          container.story ??
+          `Retour d'expérience du container ${container.reference} livré à ${container.port} : produits, délais, volumes et preuve opérationnelle.`,
+        path: `/livres/${params.slug}`,
+        image: container.photoUrl ?? container.gallery[0]?.url,
+      }),
+    }
+  },
 })
 
 const LazyReservationDialog = lazy(() =>

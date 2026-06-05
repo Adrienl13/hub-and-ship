@@ -29,7 +29,7 @@ const FAQ = [
   },
 ] as const
 
-export const Route = createFileRoute('/catalogue/chaises-restaurant')({
+export const Route = createFileRoute('/catalogue_/chaises-restaurant')({
   head: () => ({
     ...buildSeoHead({
       title: 'Chaises restaurant terrasse pro par container',

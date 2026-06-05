@@ -43,6 +43,12 @@ const reservationSearchSchema = z.object({
 export const Route = createFileRoute('/account/reservations/$reservationId')({
   component: AccountReservationDetailPage,
   validateSearch: reservationSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'Détail réservation — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AccountReservationDetailPage() {

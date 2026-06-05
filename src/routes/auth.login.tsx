@@ -29,6 +29,12 @@ const loginSearchSchema = z.object({
 export const Route = createFileRoute('/auth/login')({
   component: LoginPage,
   validateSearch: loginSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'Connexion — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function LoginPage() {

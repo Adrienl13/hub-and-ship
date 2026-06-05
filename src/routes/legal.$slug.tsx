@@ -8,6 +8,7 @@ import {
 } from '@/components/LegalLayout'
 import { useCatalog } from '@/hooks/useCatalog'
 import { getLegalDoc } from '@/lib/legal-content'
+import { buildSeoHead } from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -36,10 +37,11 @@ export const Route = createFileRoute('/legal/$slug')({
       return { meta: [{ title: 'Document légal — Container Club' }] }
     }
     return {
-      meta: [
-        { title: `${doc.title} — Container Club` },
-        { name: 'description', content: doc.metaDescription },
-      ],
+      ...buildSeoHead({
+        title: doc.title,
+        description: doc.metaDescription,
+        path: `/legal/${doc.slug}`,
+      }),
     }
   },
 })

@@ -97,6 +97,12 @@ const adminSearchSchema = z.object({
 export const Route = createFileRoute('/admin')({
   component: AdminRoute,
   validateSearch: adminSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'Administration — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AdminRoute() {

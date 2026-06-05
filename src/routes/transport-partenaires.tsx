@@ -20,19 +20,16 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
+import { buildSeoHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/transport-partenaires')({
   head: () => ({
-    meta: [
-      {
-        title: 'Transporteurs partenaires — Container Club Terrassea',
-      },
-      {
-        name: 'description',
-        content:
-          'Liste de transporteurs recommandés pour acheminer votre mobilier outdoor depuis Marseille-Fos ou Le Havre vers votre établissement. Aucune commission, contact direct, tarifs indicatifs.',
-      },
-    ],
+    ...buildSeoHead({
+      title: 'Transporteurs partenaires',
+      description:
+        'Liste de transporteurs recommandés pour acheminer votre mobilier outdoor depuis Marseille-Fos ou Le Havre vers votre établissement. Aucune commission, contact direct, tarifs indicatifs.',
+      path: '/transport-partenaires',
+    }),
   }),
   component: TransportPartenairesPage,
 })
