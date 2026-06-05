@@ -11,15 +11,10 @@ import {
   ShoppingCart,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-import { AdminCarrierPartnersTab } from '@/components/AdminCarrierPartnersTab'
-import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
-import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
-import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
-import { AdminUsersTab } from '@/components/AdminUsersTab'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -64,6 +59,36 @@ const ADMIN_TABS = [
 ] as const
 
 type AdminTab = (typeof ADMIN_TABS)[number]
+
+const LazyAdminCatalogueTab = lazy(() =>
+  import('@/components/AdminCatalogueTab').then((module) => ({
+    default: module.AdminCatalogueTab,
+  })),
+)
+
+const LazyAdminContainersTab = lazy(() =>
+  import('@/components/AdminContainersTab').then((module) => ({
+    default: module.AdminContainersTab,
+  })),
+)
+
+const LazyAdminQualityReportsTab = lazy(() =>
+  import('@/components/AdminQualityReportsTab').then((module) => ({
+    default: module.AdminQualityReportsTab,
+  })),
+)
+
+const LazyAdminCarrierPartnersTab = lazy(() =>
+  import('@/components/AdminCarrierPartnersTab').then((module) => ({
+    default: module.AdminCarrierPartnersTab,
+  })),
+)
+
+const LazyAdminUsersTab = lazy(() =>
+  import('@/components/AdminUsersTab').then((module) => ({
+    default: module.AdminUsersTab,
+  })),
+)
 
 const adminSearchSchema = z.object({
   tab: z.enum(ADMIN_TABS).optional(),
@@ -196,21 +221,33 @@ function AdminPage() {
         {activeTab === 'reservations' && (
           <ReservationsAdminPanel authStatus={auth.status} />
         )}
-        {activeTab === 'products' && (
-          <AdminCatalogueTab authStatus={auth.status} />
-        )}
-        {activeTab === 'containers' && (
-          <AdminContainersTab authStatus={auth.status} />
-        )}
-        {activeTab === 'quality' && (
-          <AdminQualityReportsTab authStatus={auth.status} />
-        )}
-        {activeTab === 'carriers' && (
-          <AdminCarrierPartnersTab authStatus={auth.status} />
-        )}
-        {activeTab === 'users' && <AdminUsersTab authStatus={auth.status} />}
+        <Suspense fallback={<AdminTabLoading />}>
+          {activeTab === 'products' && (
+            <LazyAdminCatalogueTab authStatus={auth.status} />
+          )}
+          {activeTab === 'containers' && (
+            <LazyAdminContainersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'quality' && (
+            <LazyAdminQualityReportsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'carriers' && (
+            <LazyAdminCarrierPartnersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'users' && (
+            <LazyAdminUsersTab authStatus={auth.status} />
+          )}
+        </Suspense>
       </section>
     </main>
+  )
+}
+
+function AdminTabLoading() {
+  return (
+    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6 text-sm text-muted-foreground">
+      Chargement de l'onglet...
+    </div>
   )
 }
 

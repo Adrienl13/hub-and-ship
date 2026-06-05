@@ -53,6 +53,16 @@ function getItemsCbm(items: ReadonlyArray<CartItem>): number {
   )
 }
 
+function InteractiveSceneLoading() {
+  return (
+    <div className="bg-[color:var(--sand)]/70 absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[1px]">
+      <div className="shadow-paper rounded-sm border border-black/10 bg-white/90 px-3 py-2 text-[11px] font-medium text-foreground">
+        Chargement de la vue 3D...
+      </div>
+    </div>
+  )
+}
+
 function limitReservedItemsForScene({
   items,
   liveItems,
@@ -224,7 +234,7 @@ export function OrderSidebar({
             containerType={activeContainerType}
           />
           {interactiveSceneEnabled && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<InteractiveSceneLoading />}>
               <LazyContainerScene
                 items={sceneItems}
                 exploded={exploded}
