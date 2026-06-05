@@ -46,7 +46,7 @@ function ProductCardComponent({
       <button
         type="button"
         onClick={onOpenDetails}
-        className="relative block aspect-[4/3] w-full overflow-hidden bg-[color:var(--sand)] text-left"
+        className="group/card relative block aspect-[4/5] w-full overflow-hidden bg-[color:var(--sand)] text-left"
         aria-label={`Voir détails ${product.name}`}
       >
         <img
@@ -54,7 +54,7 @@ function ProductCardComponent({
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-contain p-3"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
         />
         <span className="bg-[color:var(--sand-soft)]/90 absolute left-3 top-3 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
           {CATEGORY_LABEL[product.category]}

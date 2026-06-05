@@ -53,13 +53,13 @@ function CatalogueGridCardComponent({
         className="group/card block w-full text-left"
         aria-label={`Voir détails ${product.name}`}
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--sand)]">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-[color:var(--sand)]">
           <img
             src={product.mainImageUrl}
             alt={product.name}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-contain p-3 transition-transform duration-300 group-hover/card:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
           />
           <span className="bg-[color:var(--sand-soft)]/90 absolute left-2.5 top-2.5 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
             {CATEGORY_LABEL[product.category]}
