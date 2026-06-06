@@ -7,7 +7,13 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { ArrowUpDown, Search } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Handshake,
+  LockKeyhole,
+  Search,
+  Store,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Header } from '@/components/Header'
@@ -172,6 +178,7 @@ function ContainerClubPage() {
       />
 
       <ValueProps />
+      <PartnerPathway />
       <Stock24hTeaser />
       <HowItWorks />
       <ComparisonTable />
@@ -378,6 +385,71 @@ function ContainerClubPage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+function PartnerPathway() {
+  const lanes = [
+    {
+      Icon: Store,
+      title: "J'équipe mon établissement",
+      desc: 'Prix direct pro, MOQ clair, réservation container et stock 24h pour les besoins urgents.',
+      href: '/catalogue',
+      cta: 'Explorer les produits',
+    },
+    {
+      Icon: Handshake,
+      title: 'Je revends à mon réseau',
+      desc: 'Prix nets réservés, opportunités protégées et sélections co-brandées à construire avec les premiers partenaires.',
+      href: '/partenaires',
+      cta: 'Voir le programme',
+    },
+  ] as const
+
+  return (
+    <section className="border-t border-[color:var(--sand-deep)]">
+      <div className="mx-auto max-w-7xl px-6 py-14">
+        <div className="mb-7 flex max-w-3xl items-start gap-3">
+          <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]">
+            <LockKeyhole className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Deux parcours, une règle
+            </div>
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+              Acheter en direct ou revendre : le canal doit rester clair.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
+              Pros Import garde une offre directe pour les pros, tout en
+              construisant une protection partenaire pour que les revendeurs
+              puissent partager la plateforme sans perdre leur client.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {lanes.map(({ Icon, title, desc, href, cta }) => (
+            <Link
+              key={title}
+              to={href}
+              className="hover:border-[color:var(--foreground)]/35 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 transition-colors"
+            >
+              <Icon className="h-5 w-5 text-[color:var(--ember)]" />
+              <h3 className="mt-5 font-display text-xl font-semibold">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {desc}
+              </p>
+              <span className="mt-5 inline-flex text-sm font-medium text-foreground">
+                {cta} →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 

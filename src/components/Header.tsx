@@ -21,10 +21,11 @@ export function Header({ onReserve }: { onReserve: () => void }) {
         </a>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-5 md:flex">
           {[
             ['Catalogue', '/catalogue'],
             ['Stock 24h', '/stock-24h'],
+            ['Partenaires', '/partenaires'],
             ['Comment ça marche', '/#comment'],
             ['Containers livrés', '/livres'],
             ['Qualité & Tests', '/qualite'],

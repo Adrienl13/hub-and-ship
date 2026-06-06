@@ -27,6 +27,7 @@ export function Footer() {
                   ['Chaises restaurant', '/catalogue/chaises-restaurant'],
                   ['Tables restaurant', '/catalogue/tables-restaurant'],
                   ['Stock terrasse 24h', '/stock-mobilier-terrasse-24h'],
+                  ['Partenaires revendeurs', '/partenaires'],
                   ['Catalogue complet', '/catalogue'],
                   ['FAQ achat groupé', '/faq'],
                 ] as const

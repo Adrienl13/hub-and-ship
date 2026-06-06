@@ -15,6 +15,11 @@ const PUBLIC_ROUTES: ReadonlyArray<{
     heading: 'Mobilier de terrasse disponible rapidement pour les pros.',
   },
   {
+    path: '/partenaires',
+    heading:
+      "Votre client reste votre client. Pros Import devient votre back-office d'import.",
+  },
+  {
     path: '/catalogue/chaises-restaurant',
     heading: 'Chaises de terrasse professionnelles, commandées par container.',
   },
@@ -23,7 +28,10 @@ const PUBLIC_ROUTES: ReadonlyArray<{
     heading: 'Tables outdoor professionnelles pour restaurants et brasseries.',
   },
   { path: '/faq', heading: "Tout ce qu'il faut savoir avant de réserver." },
-  { path: '/qualite', heading: "Inspecté avant d'être expédié." },
+  {
+    path: '/qualite',
+    heading: "La qualité doit se voir avant d'être promise.",
+  },
   { path: '/livres', heading: 'La preuve par container.' },
   { path: '/livres/cc-2025-014', heading: 'CC-2025-014' },
   {
@@ -153,6 +161,51 @@ test.describe('site audit parcours publics', () => {
       page.locator('[data-catalog-item-mode="portrait-card"]').first(),
     ).toBeVisible()
     await expect(page.locator('[data-catalogue-line-item]')).toHaveCount(0)
+  })
+
+  test('partner positioning is visible from home and protects reseller trust', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/')
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Acheter en direct ou revendre : le canal doit rester clair.',
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: /Voir le programme/ }),
+    ).toHaveAttribute('href', '/partenaires')
+
+    await gotoHydrated(page, '/partenaires')
+    await expect(
+      page.getByText('Votre client reste votre client'),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Prix nets réservés' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Deal registration' }),
+    ).toBeVisible()
+  })
+
+  test('quality page keeps trust signals when report vault is empty', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/qualite')
+
+    await expect(
+      page.getByText('Carnet de preuves', { exact: true }),
+    ).toBeVisible()
+    await expect(page.getByText('4 contrôles')).toBeVisible()
+    await expect(
+      page.getByText('Coffre documentaire en cours de constitution.'),
+    ).toBeVisible()
+    await expect(
+      page.getByText(
+        'Supabase non configuré : impossible de charger les rapports.',
+      ),
+    ).toHaveCount(0)
   })
 })
 

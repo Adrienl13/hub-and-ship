@@ -13,6 +13,7 @@ import { Route as TransportPartenairesRouteImport } from './routes/transport-par
 import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
+import { Route as PartenairesRouteImport } from './routes/partenaires'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -49,6 +50,11 @@ const Stock24hRoute = Stock24hRouteImport.update({
 const QualiteRoute = QualiteRouteImport.update({
   id: '/qualite',
   path: '/qualite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartenairesRoute = PartenairesRouteImport.update({
+  id: '/partenaires',
+  path: '/partenaires',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
+  '/partenaires': typeof PartenairesRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
+  '/partenaires': typeof PartenairesRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
+  '/partenaires': typeof PartenairesRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
+    | '/partenaires'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
+    | '/partenaires'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalogue'
     | '/faq'
+    | '/partenaires'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -276,6 +288,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogueRoute: typeof CatalogueRoute
   FaqRoute: typeof FaqRoute
+  PartenairesRoute: typeof PartenairesRoute
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/qualite'
       fullPath: '/qualite'
       preLoaderRoute: typeof QualiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partenaires': {
+      id: '/partenaires'
+      path: '/partenaires'
+      fullPath: '/partenaires'
+      preLoaderRoute: typeof PartenairesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogueRoute: CatalogueRoute,
   FaqRoute: FaqRoute,
+  PartenairesRoute: PartenairesRoute,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,

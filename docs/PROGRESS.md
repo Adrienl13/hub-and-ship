@@ -465,6 +465,11 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : brief stratégique IA ajouté dans `docs/PLATFORM_STRATEGY.md`, cadrant le modèle Pros Import / Container Club comme centrale d'import digitale, la protection revendeur, le direct pro encadré, les chantiers prioritaires, les règles UX/catalogue/3D/qualité, les KPI, les risques et les sources marché.
 - Décision : D-018 actée dans `docs/DECISIONS.md` pour figer le modèle canal hybride revendeur protégé + direct pro encadré.
 - Notes : ce brief doit être lu par toute IA ou prestataire avant les prochains développements produit.
+- Phase : Phase 2 — Positionnement partenaires
+- Tâches : page `/partenaires` créée, promesse "Votre client reste votre client" posée, modèle apporteur/revendeur/direct pro expliqué, CTA beta partenaire ajouté, home enrichie avec deux entrées direct pro et réseau revendeur, header/footer/sitemap branchés.
+- Phase : Phase 2 — Confiance qualité
+- Tâches : `/qualite` refondue en carnet de preuves avec protocole qualité, traçabilité, accès PDF pro et coffre documentaire à venir ; l'état public n'affiche plus le message Supabase non configuré comme preuve principale.
+- Tests : typecheck, lint, Vitest, build et E2E ciblés `/partenaires` + `/qualite` desktop/mobile validés.
 
 ---
 

@@ -9,9 +9,13 @@
 ### Ajouté
 
 - **Brief stratégique IA** : ajout de `docs/PLATFORM_STRATEGY.md` pour cadrer la vision Pros Import / Container Club, le modèle revendeur protégé + direct pro encadré, les chantiers prioritaires, les règles UX, les risques, les KPI et les sources marché.
+- **Page `/partenaires`** : nouvelle entrée publique pour revendeurs CHR, agenceurs et apporteurs avec promesse "Votre client reste votre client", prix nets réservés, protection d'opportunité, modèle apporteur/revendeur/direct pro, FAQ canal et CTA beta partenaire.
 
 ### Modifié
 
+- **Home** : ajout d'un bloc dual "J'équipe mon établissement" / "Je revends à mon réseau" pour rendre le modèle direct pro + partenaire protégé compréhensible dès le premier parcours.
+- **Qualité** : refonte de `/qualite` en carnet de preuves public. La page affiche désormais le protocole qualité, la traçabilité et le coffre documentaire à venir avant les rapports DB, et ne montre plus un état Supabase vide comme signal principal.
+- **Navigation/SEO** : ajout de `/partenaires` au header, au footer, au sitemap et aux parcours E2E publics.
 - **Vue 3D container** : suppression de `@react-three/drei` au profit d'une scène R3F native plus légère, avec drag manuel, overlays HTML hors canvas et conservation du packing logistique existant.
 - **Performance build** : ajout d'une garde `scripts/check-bundle-budget.mjs` appelée par `npm run build` et `npm run deploy` pour plafonner le chunk lazy `ContainerScene` en brut et gzip.
 - **Devis imprimable** : le document reprend désormais le format container actif (`20'` ou `40'`) au lieu d'afficher un `20' High Cube` fixe, et l'UI signale les popups bloqués.
