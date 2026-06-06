@@ -10,11 +10,11 @@ import {
 import { ArrowUpDown, Layers3, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { CatalogueLineItem } from '@/components/CatalogueLineItem'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { OrderSidebar } from '@/components/OrderSidebar'
+import { ProductCard } from '@/components/ProductCard'
 import { Button } from '@/components/ui/button'
 import {
   CATEGORY_FILTERS,
@@ -44,7 +44,7 @@ export const Route = createFileRoute('/catalogue')({
     ...buildSeoHead({
       title: 'Catalogue mobilier outdoor professionnel',
       description:
-        'Catalogue compact de mobilier outdoor CHR : chaises, fauteuils, tables et bancs à réserver par container groupé, avec MOQ, volumes CBM et designs.',
+        'Catalogue visuel de mobilier outdoor CHR : cartes portrait plein cadre, chaises, fauteuils, tables et bancs à réserver par container groupé.',
       path: '/catalogue',
       image: PRODUCTS[0]?.mainImageUrl,
     }),
@@ -174,12 +174,12 @@ function CataloguePage() {
                 Catalogue complet
               </div>
               <h1 className="mt-2 font-display text-4xl tracking-tight md:text-5xl">
-                Vue compacte pour commander vite.
+                Cartes portrait plein cadre.
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                Pensée pour 100+ références : lignes denses, designs
-                accessibles, quantité directe, recherche SKU/design et panier
-                toujours visible.
+                Une vision produit plus nette pour choisir vite : photos plein
+                cadre, designs accessibles, quantité directe, recherche
+                SKU/design et panier toujours visible.
               </p>
             </div>
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-sm">
@@ -282,28 +282,18 @@ function CataloguePage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-              <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[52px_minmax(160px,1.3fr)_112px_118px_70px_144px_56px] md:gap-2">
-                <span />
-                <span>Produit</span>
-                <span>Variante</span>
-                <span>MOQ</span>
-                <span className="text-right">Prix HT</span>
-                <span>Quantité</span>
-                <span />
+            {filtered.length === 0 ? (
+              <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-16 text-center text-sm text-muted-foreground">
+                Aucun produit ne correspond à ces filtres.
               </div>
-
-              {filtered.length === 0 ? (
-                <div className="px-4 py-16 text-center text-sm text-muted-foreground">
-                  Aucun produit ne correspond à ces filtres.
-                </div>
-              ) : (
-                visibleProducts.map((product) => {
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {visibleProducts.map((product) => {
                   const selectedVariantId =
                     variantByProduct[product.id] ??
                     getDefaultVariant(product).id
                   return (
-                    <CatalogueLineItem
+                    <ProductCard
                       key={product.id}
                       product={product}
                       variantId={selectedVariantId}
@@ -315,9 +305,9 @@ function CataloguePage() {
                       onOpenDetails={() => setDetailId(product.id)}
                     />
                   )
-                })
-              )}
-            </div>
+                })}
+              </div>
+            )}
 
             {remainingProducts > 0 && (
               <div className="mt-5 text-center">

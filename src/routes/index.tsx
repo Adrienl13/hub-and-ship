@@ -16,7 +16,6 @@ import { ValueProps } from '@/components/ValueProps'
 import { HowItWorks } from '@/components/HowItWorks'
 import { ComparisonTable } from '@/components/ComparisonTable'
 import { ProductCard } from '@/components/ProductCard'
-import { ProductRow } from '@/components/ProductRow'
 import { OrderSidebar } from '@/components/OrderSidebar'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
 import { PastContainers } from '@/components/PastContainers'
@@ -273,7 +272,7 @@ function ContainerClubPage() {
                   Aucun produit dans cette catégorie pour ce container.
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {visibleProducts.map((product) => {
                     const selectedVariantId =
                       variantByProduct[product.id] ??
@@ -289,11 +288,7 @@ function ContainerClubPage() {
                       onOpenDetails: () => setDetailId(product.id),
                     }
 
-                    return isMobile ? (
-                      <ProductCard key={product.id} {...commonProps} />
-                    ) : (
-                      <ProductRow key={product.id} {...commonProps} />
-                    )
+                    return <ProductCard key={product.id} {...commonProps} />
                   })}
                 </div>
               )}

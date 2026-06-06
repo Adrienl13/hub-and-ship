@@ -423,6 +423,8 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : historique local aligné sur l'UUID de réservation, statut local maintenu en attente jusqu'au webhook Stripe, page retour paiement sécurisée contre les faux `session_id`, expiration Stripe limitée à la session Checkout active, E2E détail compte renforcé.
 - Phase : Phase 2 — Audit stock 24h
 - Tâches : endpoint serveur `/api/stock-requests` ajouté pour persister les leads urgents via service role quand le flux public Supabase échoue, payload reconstruit côté serveur depuis le lot disponible, fallback local explicité côté UI.
+- Phase : Phase 2 — Catalogue visuel
+- Tâches : `/catalogue` et la section catalogue home repassés en cartes portrait plein cadre, abandon de la table compacte côté client, E2E ajouté pour verrouiller ce rendu.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit

@@ -5,7 +5,7 @@ const PUBLIC_ROUTES: ReadonlyArray<{
   readonly heading: RegExp | string
 }> = [
   { path: '/', heading: /Mobilier outdoor pro/ },
-  { path: '/catalogue', heading: 'Vue compacte pour commander vite.' },
+  { path: '/catalogue', heading: 'Cartes portrait plein cadre.' },
   {
     path: '/stock-24h',
     heading: 'Une solution rapide quand le container est trop loin.',
@@ -130,6 +130,29 @@ test.describe('site audit parcours publics', () => {
 
     expect(response.status()).toBe(405)
     expect(response.headers().allow).toBe('POST')
+  })
+
+  test('catalogue renders portrait full-frame cards', async ({ page }) => {
+    await gotoHydrated(page, '/catalogue')
+
+    await expect(
+      page.locator('[data-catalog-item-mode="portrait-card"]').first(),
+    ).toBeVisible()
+    await expect(page.locator('[data-catalogue-line-item]')).toHaveCount(0)
+    await expect(
+      page.getByRole('heading', { name: 'Cartes portrait plein cadre.' }),
+    ).toBeVisible()
+  })
+
+  test('home catalogue preview uses portrait full-frame cards', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/')
+
+    await expect(
+      page.locator('[data-catalog-item-mode="portrait-card"]').first(),
+    ).toBeVisible()
+    await expect(page.locator('[data-catalogue-line-item]')).toHaveCount(0)
   })
 })
 
