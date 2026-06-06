@@ -10,12 +10,27 @@ import {
   Store,
   UsersRound,
 } from 'lucide-react'
-import { lazy, Suspense, useMemo, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useCatalog } from '@/hooks/useCatalog'
+import { PARTNER_KIND_LABEL, type PartnerKind } from '@/lib/partners/types'
+import {
+  buildPartnerSubmissionDraft,
+  savePartnerSubmissionToLocalHistory,
+  type PartnerSubmissionInput,
+} from '@/lib/partners/submission'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -88,6 +103,7 @@ function PartenairesPage() {
         <PartnerPromise />
         <PartnerOperatingModel />
         <PartnerTools />
+        <PartnerRequestSection />
         <PartnerFaq />
         <PartnerCta />
       </main>
@@ -132,7 +148,7 @@ function PartnerHero() {
               asChild
               className="min-h-11 rounded-sm bg-[color:var(--foreground)] px-5 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
             >
-              <a href="mailto:adrienlaniez1@gmail.com?subject=Demande%20partenaire%20Pros%20Import">
+              <a href="#demande-partenaire">
                 Devenir partenaire
                 <ArrowRight className="h-4 w-4" />
               </a>
@@ -351,6 +367,428 @@ function PartnerTools() {
   )
 }
 
+type PartnerRequestMode = 'application' | 'deal'
+
+interface PartnerFormState {
+  readonly mode: PartnerRequestMode
+  readonly partnerKind: PartnerKind
+  readonly companyName: string
+  readonly contactName: string
+  readonly contactEmail: string
+  readonly contactPhone: string
+  readonly siret: string
+  readonly website: string
+  readonly territory: string
+  readonly networkDescription: string
+  readonly expectedMonthlyVolume: string
+  readonly message: string
+  readonly clientCompanyName: string
+  readonly clientSiret: string
+  readonly clientEmail: string
+  readonly projectCity: string
+  readonly projectType: string
+  readonly expectedBudgetHt: string
+  readonly expectedPurchaseWindow: string
+  readonly productInterest: string
+}
+
+const INITIAL_PARTNER_FORM: PartnerFormState = {
+  mode: 'application',
+  partnerKind: 'reseller',
+  companyName: '',
+  contactName: '',
+  contactEmail: '',
+  contactPhone: '',
+  siret: '',
+  website: '',
+  territory: '',
+  networkDescription: '',
+  expectedMonthlyVolume: '',
+  message: '',
+  clientCompanyName: '',
+  clientSiret: '',
+  clientEmail: '',
+  projectCity: '',
+  projectType: '',
+  expectedBudgetHt: '',
+  expectedPurchaseWindow: '',
+  productInterest: '',
+}
+
+function toPartnerSubmissionInput(
+  form: PartnerFormState,
+): PartnerSubmissionInput {
+  const budget = Number.parseFloat(form.expectedBudgetHt.replace(',', '.'))
+  return {
+    mode: form.mode,
+    partnerKind: form.partnerKind,
+    companyName: form.companyName,
+    contactName: form.contactName,
+    contactEmail: form.contactEmail,
+    contactPhone: form.contactPhone,
+    siret: form.siret,
+    website: form.website,
+    territory: form.territory,
+    networkDescription: form.networkDescription,
+    expectedMonthlyVolume: form.expectedMonthlyVolume,
+    message: form.message,
+    clientCompanyName: form.clientCompanyName,
+    clientSiret: form.clientSiret,
+    clientEmail: form.clientEmail,
+    projectCity: form.projectCity,
+    projectType: form.projectType,
+    expectedBudgetHt: Number.isFinite(budget) ? budget : null,
+    expectedPurchaseWindow: form.expectedPurchaseWindow,
+    productInterest: form.productInterest,
+    protectionDays: 120,
+  }
+}
+
+function PartnerRequestSection() {
+  const [form, setForm] = useState<PartnerFormState>(INITIAL_PARTNER_FORM)
+  const [submitting, setSubmitting] = useState(false)
+  const [notice, setNotice] = useState<{
+    readonly kind: 'success' | 'warning' | 'error'
+    readonly message: string
+  } | null>(null)
+
+  function update<K extends keyof PartnerFormState>(
+    key: K,
+    value: PartnerFormState[K],
+  ) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSubmitting(true)
+    setNotice(null)
+
+    const input = toPartnerSubmissionInput(form)
+    const draftResult = buildPartnerSubmissionDraft(input)
+    if (!draftResult.ok) {
+      setNotice({ kind: 'error', message: draftResult.error })
+      setSubmitting(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/partner-requests', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      const body = (await response.json()) as
+        | { readonly ok: true }
+        | { readonly ok: false; readonly error?: string }
+
+      if (response.ok && body.ok) {
+        setNotice({
+          kind: 'success',
+          message:
+            form.mode === 'deal'
+              ? 'Opportunité transmise. Elle est prête à être qualifiée en admin.'
+              : 'Demande partenaire transmise. Elle est prête à être qualifiée en admin.',
+        })
+        setForm({ ...INITIAL_PARTNER_FORM, mode: form.mode })
+        return
+      }
+
+      throw new Error(body.ok ? 'Erreur inconnue' : body.error)
+    } catch {
+      savePartnerSubmissionToLocalHistory({
+        storage: window.localStorage,
+        draft: draftResult.draft,
+      })
+      setNotice({
+        kind: 'warning',
+        message:
+          'Serveur indisponible : demande sauvegardée localement sur cet appareil pour éviter de perdre le lead.',
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section
+      id="demande-partenaire"
+      className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
+    >
+      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 lg:grid-cols-[0.85fr_1.15fr]">
+        <div>
+          <div className="label-eyebrow text-[color:var(--ember)]">
+            Qualification partenaire
+          </div>
+          <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+            Capturer les bons partenaires et les bons deals dès maintenant.
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
+            Ce formulaire alimente le back-office : demande d'accès partenaire,
+            protection d'opportunité, SIRET client, zone et potentiel volume. Le
+            but est de ne plus perdre les signaux chauds dans des messages
+            éparpillés.
+          </p>
+          <div className="mt-6 rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-xs leading-5 text-muted-foreground">
+            Hypothèse actuelle : protection par défaut 120 jours après
+            qualification admin. Le prix net partenaire reste réservé aux
+            comptes validés.
+          </div>
+        </div>
+
+        <form
+          onSubmit={(event) => void handleSubmit(event)}
+          className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5"
+        >
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ['application', 'Demande partenaire'],
+                ['deal', 'Protéger une opportunité'],
+              ] as const
+            ).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => update('mode', mode)}
+                className={`min-h-11 rounded-sm border px-3 text-sm font-medium transition-colors ${
+                  form.mode === mode
+                    ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
+                    : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Société partenaire">
+              <Input
+                required
+                value={form.companyName}
+                onChange={(e) => update('companyName', e.target.value)}
+                placeholder="CHR Conseil"
+              />
+            </Field>
+            <Field label="Profil">
+              <select
+                value={form.partnerKind}
+                onChange={(e) =>
+                  update('partnerKind', e.target.value as PartnerKind)
+                }
+                className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                {(Object.keys(PARTNER_KIND_LABEL) as PartnerKind[]).map(
+                  (kind) => (
+                    <option key={kind} value={kind}>
+                      {PARTNER_KIND_LABEL[kind]}
+                    </option>
+                  ),
+                )}
+              </select>
+            </Field>
+            <Field label="Contact">
+              <Input
+                required
+                value={form.contactName}
+                onChange={(e) => update('contactName', e.target.value)}
+                placeholder="Nom complet"
+              />
+            </Field>
+            <Field label="Email pro">
+              <Input
+                required
+                type="email"
+                value={form.contactEmail}
+                onChange={(e) => update('contactEmail', e.target.value)}
+                placeholder="contact@revendeur.fr"
+              />
+            </Field>
+            <Field label="Téléphone">
+              <Input
+                required
+                value={form.contactPhone}
+                onChange={(e) => update('contactPhone', e.target.value)}
+                placeholder="+33 6 00 00 00 00"
+              />
+            </Field>
+            <Field label="SIRET partenaire">
+              <Input
+                value={form.siret}
+                onChange={(e) => update('siret', e.target.value)}
+                placeholder="Optionnel au premier contact"
+              />
+            </Field>
+            <Field label="Site web partenaire">
+              <Input
+                value={form.website}
+                onChange={(e) => update('website', e.target.value)}
+                placeholder="https://..."
+              />
+            </Field>
+            <Field label="Zone couverte">
+              <Input
+                value={form.territory}
+                onChange={(e) => update('territory', e.target.value)}
+                placeholder="Bretagne, PACA, France..."
+              />
+            </Field>
+            <Field label="Volume estimé">
+              <Input
+                value={form.expectedMonthlyVolume}
+                onChange={(e) =>
+                  update('expectedMonthlyVolume', e.target.value)
+                }
+                placeholder="Ex. 1 container / trimestre"
+              />
+            </Field>
+          </div>
+
+          {form.mode === 'deal' && (
+            <div className="mt-5 border-t border-[color:var(--sand-deep)] pt-5">
+              <div className="label-eyebrow text-muted-foreground">
+                Opportunité à protéger
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Société client">
+                  <Input
+                    required
+                    value={form.clientCompanyName}
+                    onChange={(e) =>
+                      update('clientCompanyName', e.target.value)
+                    }
+                    placeholder="Restaurant Atlantique"
+                  />
+                </Field>
+                <Field label="SIRET client">
+                  <Input
+                    value={form.clientSiret}
+                    onChange={(e) => update('clientSiret', e.target.value)}
+                    placeholder="SIRET ou email requis"
+                  />
+                </Field>
+                <Field label="Email client">
+                  <Input
+                    type="email"
+                    value={form.clientEmail}
+                    onChange={(e) => update('clientEmail', e.target.value)}
+                    placeholder="direction@client.fr"
+                  />
+                </Field>
+                <Field label="Ville projet">
+                  <Input
+                    value={form.projectCity}
+                    onChange={(e) => update('projectCity', e.target.value)}
+                    placeholder="Nantes"
+                  />
+                </Field>
+                <Field label="Type de projet">
+                  <Input
+                    required
+                    value={form.projectType}
+                    onChange={(e) => update('projectType', e.target.value)}
+                    placeholder="Terrasse 120 places"
+                  />
+                </Field>
+                <Field label="Budget HT estimé">
+                  <Input
+                    inputMode="decimal"
+                    value={form.expectedBudgetHt}
+                    onChange={(e) => update('expectedBudgetHt', e.target.value)}
+                    placeholder="18000"
+                  />
+                </Field>
+                <Field label="Fenêtre achat">
+                  <Input
+                    value={form.expectedPurchaseWindow}
+                    onChange={(e) =>
+                      update('expectedPurchaseWindow', e.target.value)
+                    }
+                    placeholder="Juillet, avant ouverture..."
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-1 gap-3">
+            <Field label="Réseau / produits recherchés">
+              <Textarea
+                rows={3}
+                value={
+                  form.mode === 'deal'
+                    ? form.productInterest
+                    : form.networkDescription
+                }
+                onChange={(e) =>
+                  form.mode === 'deal'
+                    ? update('productInterest', e.target.value)
+                    : update('networkDescription', e.target.value)
+                }
+                placeholder={
+                  form.mode === 'deal'
+                    ? 'Chaises empilables, tables compactes, coloris...'
+                    : 'Typologie de clients, zones, canaux de vente...'
+                }
+              />
+            </Field>
+            <Field label="Message">
+              <Textarea
+                rows={3}
+                value={form.message}
+                onChange={(e) => update('message', e.target.value)}
+                placeholder="Contexte, urgence, prochain échange souhaité..."
+              />
+            </Field>
+          </div>
+
+          {notice && (
+            <div
+              className={`mt-4 rounded-md border p-3 text-xs leading-5 ${
+                notice.kind === 'success'
+                  ? 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/10 text-[color:var(--forest)]'
+                  : notice.kind === 'warning'
+                    ? 'border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 text-foreground'
+                    : 'border-red-300 bg-red-50 text-red-900'
+              }`}
+            >
+              {notice.message}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="mt-5 min-h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+          >
+            {submitting
+              ? 'Envoi en cours...'
+              : form.mode === 'deal'
+                ? "Envoyer l'opportunité"
+                : 'Envoyer la demande partenaire'}
+          </Button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+function Field({
+  label,
+  children,
+}: {
+  readonly label: string
+  readonly children: ReactNode
+}) {
+  return (
+    <label className="space-y-1.5 text-xs font-medium text-foreground">
+      <span>{label}</span>
+      {children}
+    </label>
+  )
+}
+
 function PartnerFaq() {
   return (
     <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
@@ -394,7 +832,7 @@ function PartnerCta() {
           </p>
         </div>
         <a
-          href="mailto:adrienlaniez1@gmail.com?subject=Partenaire%20beta%20Pros%20Import"
+          href="#demande-partenaire"
           className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-sm bg-[color:var(--sand)] px-5 text-sm font-medium text-[color:var(--foreground)] transition-colors hover:bg-white"
         >
           Demander un accès partenaire

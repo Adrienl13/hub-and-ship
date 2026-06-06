@@ -63,10 +63,10 @@ Il faut donc une doctrine de canal claire.
 
 Pros Import vend à deux canaux :
 
-| Canal | Client | Prix | Logique | Protection |
-| --- | --- | --- | --- | --- |
+| Canal                | Client                                   | Prix                | Logique                                                | Protection                                             |
+| -------------------- | ---------------------------------------- | ------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
 | Partenaire revendeur | Revendeur, agenceur, apporteur structuré | Prix net partenaire | Pros Import marge moins, le partenaire marge librement | Deal registration + lien co-brandé + attribution SIRET |
-| Direct pro | Restaurant, hôtel, café, collectivité | Prix direct pro | Pros Import marge plus, service standardisé | Aucun conflit si prospect non protégé |
+| Direct pro           | Restaurant, hôtel, café, collectivité    | Prix direct pro     | Pros Import marge plus, service standardisé            | Aucun conflit si prospect non protégé                  |
 
 Le direct pro n'est pas l'ennemi du revendeur si le système protège la relation apportée.
 
@@ -249,41 +249,41 @@ Le message doit être : "la preuve arrive et le process est structuré", pas "il
 
 ### 7.1 Modules publics
 
-| Module | Rôle | Priorité |
-| --- | --- | --- |
-| Home | Positionnement dual direct pro + revendeur | Très haute |
-| Catalogue | Décision produit et ajout quantité | Très haute |
-| Stock 24h | Cash court terme et urgences | Très haute |
-| Revendeurs | Acquisition partenaires et réassurance canal | Très haute |
-| Qualité | Confiance, conformité, preuve | Très haute |
-| Transporteurs | Clarifier rendu port et options post-port | Haute |
-| Containers livrés | Preuve sociale et historique | Haute |
-| FAQ | Objections prix, délai, qualité, revendeur, livraison | Haute |
-| Pages SEO/GEO | Acquisition organique et réponses IA | Moyenne |
+| Module            | Rôle                                                  | Priorité   |
+| ----------------- | ----------------------------------------------------- | ---------- |
+| Home              | Positionnement dual direct pro + revendeur            | Très haute |
+| Catalogue         | Décision produit et ajout quantité                    | Très haute |
+| Stock 24h         | Cash court terme et urgences                          | Très haute |
+| Revendeurs        | Acquisition partenaires et réassurance canal          | Très haute |
+| Qualité           | Confiance, conformité, preuve                         | Très haute |
+| Transporteurs     | Clarifier rendu port et options post-port             | Haute      |
+| Containers livrés | Preuve sociale et historique                          | Haute      |
+| FAQ               | Objections prix, délai, qualité, revendeur, livraison | Haute      |
+| Pages SEO/GEO     | Acquisition organique et réponses IA                  | Moyenne    |
 
 ### 7.2 Modules partenaires
 
-| Module | Rôle |
-| --- | --- |
-| Espace partenaire | Accès prix nets, deals, devis, assets |
-| Deal registration | Protection client/projet |
-| Sélections co-brandées | Partage sans court-circuit |
-| Devis PDF co-brandé | Outil de vente partenaire |
-| Bibliothèque assets | Photos, fiches, arguments, dimensions |
-| Suivi commission/marge | Transparence partenaire |
+| Module                 | Rôle                                  |
+| ---------------------- | ------------------------------------- |
+| Espace partenaire      | Accès prix nets, deals, devis, assets |
+| Deal registration      | Protection client/projet              |
+| Sélections co-brandées | Partage sans court-circuit            |
+| Devis PDF co-brandé    | Outil de vente partenaire             |
+| Bibliothèque assets    | Photos, fiches, arguments, dimensions |
+| Suivi commission/marge | Transparence partenaire               |
 
 ### 7.3 Modules admin
 
-| Module | Rôle |
-| --- | --- |
-| Catalogue admin | Produits, variantes, images, prix, MOQ |
+| Module           | Rôle                                           |
+| ---------------- | ---------------------------------------------- |
+| Catalogue admin  | Produits, variantes, images, prix, MOQ         |
 | Containers admin | Capacité, statut, seuils, départ, format 20/40 |
-| Réservations | Conversion, paiement, statut, notes |
-| Stock 24h | Demandes urgentes et conversion |
-| Partenaires | Validation, droits, prix, deals |
-| Qualité | Rapports, certificats, contrôles, documents |
-| Pricing | Marges, remises, éco-contribution, frais |
-| Analytics | Funnel, panier, sources, conversion |
+| Réservations     | Conversion, paiement, statut, notes            |
+| Stock 24h        | Demandes urgentes et conversion                |
+| Partenaires      | Validation, droits, prix, deals                |
+| Qualité          | Rapports, certificats, contrôles, documents    |
+| Pricing          | Marges, remises, éco-contribution, frais       |
+| Analytics        | Funnel, panier, sources, conversion            |
 
 ## 8. Modèle économique
 
@@ -426,10 +426,10 @@ Aboutissant :
 
 DoD :
 
-- Route publique `/revendeurs` ou `/partenaires`.
-- Formulaire d'intérêt partenaire.
-- FAQ conflit de canal.
-- Texte clair : "Votre client reste votre client".
+- ✅ Route publique `/partenaires`.
+- ✅ Formulaire d'intérêt partenaire.
+- ✅ FAQ conflit de canal.
+- ✅ Texte clair : "Votre client reste votre client".
 
 ### C03 — Deal registration
 
@@ -443,10 +443,11 @@ Aboutissant :
 
 DoD :
 
-- Tables Supabase : `partners`, `partner_deals`, `partner_attributions`.
-- Protection par SIRET/email domaine/lien.
-- Statuts et expiration.
-- Admin peut valider, prolonger, refuser.
+- ✅ Tables Supabase initiales : `partner_applications`, `partner_deals`.
+- ✅ Statuts de deal : soumis, protégé, devis envoyé, réservé, gagné, perdu, expiré, refusé.
+- ✅ Admin peut qualifier les candidatures et changer le statut des deals.
+- 🔄 Protection par SIRET/email domaine/lien : SIRET/email client capturés, attribution automatique encore à construire.
+- 🔄 Expiration : `protection_days` et `protected_until` existent, automatisation d'expiration à ajouter.
 
 ### C04 — Sélections et devis co-brandés
 
@@ -772,17 +773,17 @@ Messages forts possibles :
 
 ## 16. Risques majeurs et parades
 
-| Risque | Impact | Parade |
-| --- | --- | --- |
-| Revendeurs ne partagent pas le site | Acquisition partenaire faible | Deal registration + co-branding + prix nets cachés |
-| Clients ne comprennent pas le délai container | Abandon | Process visuel + stock 24h + FAQ délais |
-| Site perçu comme peu fiable car prix bas | Méfiance qualité | Trust Ledger + documents + photos + contrôles |
-| Trop peu de stock immédiat | Conversion urgente faible | Présenter stock 24h comme solution séparée, pas comme catalogue complet |
-| Erreurs de packing 3D | Perte de confiance | Tests géométriques + fallback 2D + explication dépassement |
-| Conflit légal prix revente | Risque juridique | Prix conseillé non obligatoire, liberté revendeur |
-| Supabase/Auth incomplet | Admin et comptes inutilisables | Config publique anon key + tests prod |
-| Stripe/Emails non finalisés | Parcours cassé | Checklist lancement avant trafic payant |
-| Contenu trop générique | Pas de SEO/GEO | Guides précis basés sur vrais cas d'achat |
+| Risque                                        | Impact                         | Parade                                                                  |
+| --------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
+| Revendeurs ne partagent pas le site           | Acquisition partenaire faible  | Deal registration + co-branding + prix nets cachés                      |
+| Clients ne comprennent pas le délai container | Abandon                        | Process visuel + stock 24h + FAQ délais                                 |
+| Site perçu comme peu fiable car prix bas      | Méfiance qualité               | Trust Ledger + documents + photos + contrôles                           |
+| Trop peu de stock immédiat                    | Conversion urgente faible      | Présenter stock 24h comme solution séparée, pas comme catalogue complet |
+| Erreurs de packing 3D                         | Perte de confiance             | Tests géométriques + fallback 2D + explication dépassement              |
+| Conflit légal prix revente                    | Risque juridique               | Prix conseillé non obligatoire, liberté revendeur                       |
+| Supabase/Auth incomplet                       | Admin et comptes inutilisables | Config publique anon key + tests prod                                   |
+| Stripe/Emails non finalisés                   | Parcours cassé                 | Checklist lancement avant trafic payant                                 |
+| Contenu trop générique                        | Pas de SEO/GEO                 | Guides précis basés sur vrais cas d'achat                               |
 
 ## 17. Sources et observations marché
 

@@ -28,6 +28,29 @@ export type StockRequestStatus =
   | 'reserved'
   | 'converted'
   | 'closed'
+export type PartnerApplicationStatus =
+  | 'new'
+  | 'reviewing'
+  | 'qualified'
+  | 'approved'
+  | 'rejected'
+  | 'archived'
+export type PartnerKind =
+  | 'introducer'
+  | 'reseller'
+  | 'agency'
+  | 'installer'
+  | 'network'
+  | 'other'
+export type PartnerDealStatus =
+  | 'submitted'
+  | 'protected'
+  | 'quoted'
+  | 'reserved'
+  | 'won'
+  | 'lost'
+  | 'expired'
+  | 'rejected'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -429,6 +452,100 @@ type StockRequestInsert = {
 
 type StockRequestUpdate = Partial<StockRequestInsert>
 
+type PartnerApplicationRow = {
+  id: string
+  status: PartnerApplicationStatus
+  partner_kind: PartnerKind
+  company_name: string
+  contact_name: string
+  contact_email: string
+  contact_phone: string
+  siret: string | null
+  website: string | null
+  territory: string | null
+  network_description: string | null
+  expected_monthly_volume: string | null
+  message: string | null
+  source: string
+  internal_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+type PartnerApplicationInsert = {
+  id?: string
+  status?: PartnerApplicationStatus
+  partner_kind?: PartnerKind
+  company_name: string
+  contact_name: string
+  contact_email: string
+  contact_phone: string
+  siret?: string | null
+  website?: string | null
+  territory?: string | null
+  network_description?: string | null
+  expected_monthly_volume?: string | null
+  message?: string | null
+  source?: string
+  internal_note?: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type PartnerApplicationUpdate = Partial<PartnerApplicationInsert>
+
+type PartnerDealRow = {
+  id: string
+  application_id: string | null
+  status: PartnerDealStatus
+  partner_company_name: string
+  partner_contact_email: string
+  client_company_name: string
+  client_siret: string | null
+  client_email: string | null
+  project_city: string | null
+  project_type: string
+  expected_budget_ht: number | null
+  expected_purchase_window: string | null
+  product_interest: string | null
+  protection_days: number
+  protected_until: string | null
+  message: string | null
+  source: string
+  internal_note: string | null
+  created_at: string
+  updated_at: string
+}
+
+type PartnerDealInsert = {
+  id?: string
+  application_id?: string | null
+  status?: PartnerDealStatus
+  partner_company_name: string
+  partner_contact_email: string
+  client_company_name: string
+  client_siret?: string | null
+  client_email?: string | null
+  project_city?: string | null
+  project_type: string
+  expected_budget_ht?: number | null
+  expected_purchase_window?: string | null
+  product_interest?: string | null
+  protection_days?: number
+  protected_until?: string | null
+  message?: string | null
+  source?: string
+  internal_note?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type PartnerDealUpdate = Partial<PartnerDealInsert>
+
 type ContainerRow = {
   id: string
   reference: string
@@ -721,6 +838,16 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      partner_applications: {
+        Row: PartnerApplicationRow
+        Insert: PartnerApplicationInsert
+        Update: PartnerApplicationUpdate
+      }
+      partner_deals: {
+        Row: PartnerDealRow
+        Insert: PartnerDealInsert
+        Update: PartnerDealUpdate
+      }
       containers: {
         Row: ContainerRow
         Insert: ContainerInsert
@@ -780,6 +907,9 @@ export interface Database {
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
+      partner_application_status: PartnerApplicationStatus
+      partner_kind: PartnerKind
+      partner_deal_status: PartnerDealStatus
       security_event_type: SecurityEventType
       container_status: ContainerStatus
       quality_report_organization: QualityReportOrganization

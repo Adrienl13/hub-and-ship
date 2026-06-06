@@ -27,6 +27,7 @@ import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalog
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
+import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
@@ -124,6 +125,11 @@ const ApiStockRequestsRoute = ApiStockRequestsRouteImport.update({
   path: '/api/stock-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPartnerRequestsRoute = ApiPartnerRequestsRouteImport.update({
+  id: '/api/partner-requests',
+  path: '/api/partner-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountReservationsRoute = AccountReservationsRouteImport.update({
   id: '/account/reservations',
   path: '/account/reservations',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/reservations'
+    | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/reservations'
+    | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/reservations'
+    | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -294,6 +306,7 @@ export interface RootRouteChildren {
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
+  ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -434,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStockRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/partner-requests': {
+      id: '/api/partner-requests'
+      path: '/api/partner-requests'
+      fullPath: '/api/partner-requests'
+      preLoaderRoute: typeof ApiPartnerRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/reservations': {
       id: '/account/reservations'
       path: '/account/reservations'
@@ -480,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
+  ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,

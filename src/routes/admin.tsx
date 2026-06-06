@@ -7,6 +7,7 @@ import {
   ExternalLink,
   LayoutDashboard,
   PackageCheck,
+  Handshake,
   Ship,
   ShoppingCart,
   type LucideIcon,
@@ -55,6 +56,7 @@ const ADMIN_TABS = [
   'containers',
   'quality',
   'carriers',
+  'partners',
   'users',
 ] as const
 
@@ -87,6 +89,12 @@ const LazyAdminCarrierPartnersTab = lazy(() =>
 const LazyAdminUsersTab = lazy(() =>
   import('@/components/AdminUsersTab').then((module) => ({
     default: module.AdminUsersTab,
+  })),
+)
+
+const LazyAdminPartnersTab = lazy(() =>
+  import('@/components/AdminPartnersTab').then((module) => ({
+    default: module.AdminPartnersTab,
   })),
 )
 
@@ -199,6 +207,7 @@ function AdminPage() {
               ['containers', 'Containers'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
+              ['partners', 'Partenaires'],
               ['users', 'Utilisateurs'],
             ] as const
           ).map(([id, label]) => {
@@ -239,6 +248,9 @@ function AdminPage() {
           )}
           {activeTab === 'carriers' && (
             <LazyAdminCarrierPartnersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'partners' && (
+            <LazyAdminPartnersTab authStatus={auth.status} />
           )}
           {activeTab === 'users' && (
             <LazyAdminUsersTab authStatus={auth.status} />
@@ -323,7 +335,7 @@ function Overview({
   return (
     <div className="space-y-6">
       <AdminWarning />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <Kpi
           Icon={ShoppingCart}
           label="Réservations actives"
@@ -341,6 +353,12 @@ function Overview({
           label="Demandes stock (demo)"
           value={`${snapshot.kpis.newStockRequests}`}
           detail="À traiter"
+        />
+        <Kpi
+          Icon={Handshake}
+          label="Partenaires"
+          value="Beta"
+          detail="Candidatures + deals"
         />
         <Kpi
           Icon={Boxes}

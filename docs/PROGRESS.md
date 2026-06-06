@@ -6,13 +6,24 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 1.5 (SEO + Admin éditable + Transporteurs)
+**Phase actuelle** : Phase 2.7 (Canal partenaire + audit conversion)
 **Démarrage projet** : 2026-05-17
-**Dernière mise à jour** : 2026-05-22
+**Dernière mise à jour** : 2026-06-06
 **Cible launch beta** : Semaine 10+
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
-### Récap dernière session (2026-05-22, après v1.4.0)
+### Récap dernière session (2026-06-06, canal partenaire)
+
+Le chantier revendeur a quitté le stade éditorial pour devenir captable et pilotable :
+
+- ✅ **Page `/partenaires` opérationnelle** — positionnement revendeur protégé, deal registration, prix nets réservés, FAQ conflit de canal et formulaire intégré.
+- ✅ **Endpoint serveur `/api/partner-requests`** — intake same-origin avec service role Supabase, validation Zod et refus des origines externes navigateur.
+- ✅ **Supabase partenaires** — migration créée pour `partner_applications` + `partner_deals`, statuts, RLS admin-only, index de triage et protection 120 jours par défaut. Push distant à effectuer quand `SUPABASE_ACCESS_TOKEN` sera disponible.
+- ✅ **Fallback anti-perte de lead** — si la persistance serveur échoue, la demande est sauvegardée localement sur l'appareil au lieu de disparaître.
+- ✅ **Admin `Partenaires`** — onglet dédié pour filtrer candidatures/opportunités et changer les statuts.
+- ✅ **Tests** — API partenaire, builder de demande, migration sécurité et parcours public ajoutés.
+
+### Récap précédente importante (2026-05-22, après v1.4.0)
 
 Couverture des derniers angles morts du back-office et SEO public :
 
@@ -162,6 +173,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - ✅ Page `/catalogue` dense type order sheet
 - ✅ Page `/stock-24h` pour lots disponibles rapidement
 - ✅ Demandes stock 24h persistables (Supabase + fallback local admin)
+- ✅ Page `/partenaires` avec formulaire de demande + protection d'opportunité
 - ✅ Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
@@ -213,6 +225,18 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - ❌ Email confirmation envoyé
 - ❌ Génération devis PDF
 - ❌ Tests E2E Playwright parcours complet
+
+### 2.6 Canal partenaires
+
+- ✅ Page publique `/partenaires` orientée revendeurs/agenceurs/apporteurs
+- ✅ Formulaire demande partenaire et deal registration
+- ✅ API serveur `/api/partner-requests`
+- ✅ Migration Supabase `partner_applications` et `partner_deals`
+- ✅ RLS admin-only sur données prospects partenaires
+- ✅ Onglet admin `Partenaires`
+- 🔄 Protection par SIRET/email implémentée comme données de deal, attribution automatique future
+- ❌ Espace partenaire authentifié avec prix nets
+- ❌ Sélections et devis co-brandés
 
 ### 🎯 DoD Phase 2
 

@@ -140,6 +140,13 @@ test.describe('site audit parcours publics', () => {
     expect(response.headers().allow).toBe('POST')
   })
 
+  test('partner request API rejects non-POST requests', async ({ request }) => {
+    const response = await request.get('/api/partner-requests')
+
+    expect(response.status()).toBe(405)
+    expect(response.headers().allow).toBe('POST')
+  })
+
   test('catalogue renders portrait full-frame cards', async ({ page }) => {
     await gotoHydrated(page, '/catalogue')
 
@@ -187,6 +194,12 @@ test.describe('site audit parcours publics', () => {
     await expect(
       page.getByRole('heading', { name: 'Deal registration' }),
     ).toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: 'Capturer les bons partenaires et les bons deals dès maintenant.',
+      }),
+    ).toBeVisible()
+    await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0)
   })
 
   test('quality page keeps trust signals when report vault is empty', async ({

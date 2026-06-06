@@ -10,6 +10,7 @@
 
 - **Brief stratégique IA** : ajout de `docs/PLATFORM_STRATEGY.md` pour cadrer la vision Pros Import / Container Club, le modèle revendeur protégé + direct pro encadré, les chantiers prioritaires, les règles UX, les risques, les KPI et les sources marché.
 - **Page `/partenaires`** : nouvelle entrée publique pour revendeurs CHR, agenceurs et apporteurs avec promesse "Votre client reste votre client", prix nets réservés, protection d'opportunité, modèle apporteur/revendeur/direct pro, FAQ canal et CTA beta partenaire.
+- **Canal partenaires opérationnel** : ajout de `/api/partner-requests`, de la migration Supabase `partner_applications` / `partner_deals`, d'un formulaire public de demande/protection d'opportunité, d'un fallback local anti-perte de lead et d'un onglet admin `Partenaires` pour qualifier candidatures et deals.
 
 ### Modifié
 
@@ -26,11 +27,13 @@
 - **Stock 24h** : ajout d'un endpoint serveur same-origin `/api/stock-requests` qui reconstruit la demande depuis l'ID de lot et persiste via Supabase service role quand l'insert public navigateur n'est pas disponible ; le fallback local est désormais annoncé comme local à l'appareil.
 - **Catalogue visuel** : remplacement de la vue lignes compactes par des cartes portrait plein cadre sur `/catalogue` et dans la section catalogue de la home, avec image bord à bord, variantes, MOQ et quantité directe.
 - **Audit admin/Supabase** : l'accès admin indique maintenant précisément les variables publiques manquantes, le login bloque l'envoi de magic link tant que Supabase Auth est incomplet et le retour vers `/admin?...` est préservé après connexion.
+- **Admin** : l'overview intègre le signal partenaire beta et l'onglet `Partenaires` lit/filtre les candidatures et opportunités protégées avec transitions de statut.
 
 ### DB / Migrations à appliquer
 
 ```
 20260605183000  create_reservation_with_items_rpc
+20260606190000  partner_applications_and_deals
 ```
 
 ---

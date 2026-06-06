@@ -268,6 +268,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-019 — Intake partenaires via endpoint serveur admin-only (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Les demandes partenaires et opportunités protégées contiennent des prospects, SIRET client, emails, zones, volumes et signaux commerciaux. Un insert public navigateur serait plus simple, mais il rendrait la surface RLS plus sensible et mélangerait le canal partenaire avec les demandes stock publiques.
+**Décision** : Capturer les demandes via `/api/partner-requests`, endpoint same-origin qui valide le payload, persiste avec la service role Supabase et conserve les tables `partner_applications` / `partner_deals` en RLS admin-only.
+**Alternatives** : Ouvrir une policy `anon insert` sur `partner_applications` et `partner_deals` ; envoyer les demandes par email ; garder seulement une sauvegarde localStorage.
+**Raison** : Le canal partenaire doit protéger les données prospects et les règles commerciales dès le départ. L'endpoint serveur limite l'exposition, centralise la validation et prépare les futures règles d'attribution.
+**Conséquences** : Le worker doit avoir `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` configurés. En environnement incomplet, le formulaire conserve un fallback local annoncé comme mode dégradé.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)
