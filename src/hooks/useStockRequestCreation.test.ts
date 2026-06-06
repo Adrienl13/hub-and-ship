@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getAvailableStockLines } from '@/lib/stock'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
@@ -23,6 +23,23 @@ function createDraft() {
 }
 
 describe('useStockRequestCreation', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ ok: false }), {
+            status: 503,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ),
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('stores a non-persisted request locally until Supabase env keys are present', async () => {
     const { result } = renderHook(() => useStockRequestCreation())
 
@@ -36,6 +53,8 @@ describe('useStockRequestCreation', () => {
         localId: 'stock-stock-cannes-noir-20260518180000',
         status: 'new',
       },
+      fallbackReason:
+        'Supabase public non configuré et route serveur indisponible.',
     })
   })
 })

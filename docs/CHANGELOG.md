@@ -15,6 +15,7 @@
 - **Réservations Supabase** : création atomique via RPC `create_reservation_with_items(payload)` avec fallback legacy si la migration n'est pas encore appliquée ; les policies d'insert anonyme direct sont fermées par la migration.
 - **Retour paiement Stripe** : l'historique local garde l'UUID réel et reste en `pending_reservation_fee` tant que le webhook n'a pas confirmé le paiement ; la page compte distingue désormais paiement confirmé et synchronisation webhook en cours.
 - **Webhook Stripe** : les événements `expired` / `async_payment_failed` n'annulent plus une réservation si l'événement provient d'une ancienne session Checkout remplacée par une session plus récente.
+- **Stock 24h** : ajout d'un endpoint serveur same-origin `/api/stock-requests` qui reconstruit la demande depuis l'ID de lot et persiste via Supabase service role quand l'insert public navigateur n'est pas disponible ; le fallback local est désormais annoncé comme local à l'appareil.
 
 ### DB / Migrations à appliquer
 

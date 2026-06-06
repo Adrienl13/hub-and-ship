@@ -373,7 +373,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
     toast.success('Demande stock préparée', {
       description: creation.persisted
         ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`
-        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé dans l'admin local.`,
+        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé sur cet appareil, rappel manuel conseillé.`,
     })
     setForm({ company: '', email: '', phone: '', quantity: '' })
   }

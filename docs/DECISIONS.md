@@ -246,6 +246,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-017 — Filet serveur pour les demandes stock 24h (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Le stock 24h capte des demandes urgentes. Un échec de l'insert public Supabase navigateur (env anon absente, RLS en dérive, réseau client) ne doit pas transformer le lead en simple erreur silencieuse.
+**Décision** : Ajouter `/api/stock-requests`, un endpoint serveur same-origin qui accepte uniquement l'ID du lot + coordonnées client, reconstruit le draft depuis le catalogue stock local et persiste via la service role Supabase. Le hook public tente navigateur, endpoint serveur, puis sauvegarde locale sur l'appareil en dernier ressort.
+**Alternatives** : Garder uniquement l'insert navigateur ; envoyer toutes les demandes stock par email ; accepter un payload complet depuis le navigateur.
+**Raison** : La reconstruction côté serveur évite de faire confiance aux prix/snapshots envoyés par le client et réduit le risque de perdre une demande chaude pendant une dérive d'environnement.
+**Conséquences** : Le fallback local reste un mode dégradé non centralisé ; il doit être annoncé comme tel. La route serveur dépend de `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` côté worker.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

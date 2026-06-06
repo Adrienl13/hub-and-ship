@@ -421,6 +421,8 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : création réservation rendue atomique via RPC Supabase `create_reservation_with_items`, fallback legacy limité au cas migration absente, migration ajoutée pour fermer les inserts anonymes directs sur `reservations` et `reservation_items`.
 - Phase : Phase 2 — Audit Stripe/compte
 - Tâches : historique local aligné sur l'UUID de réservation, statut local maintenu en attente jusqu'au webhook Stripe, page retour paiement sécurisée contre les faux `session_id`, expiration Stripe limitée à la session Checkout active, E2E détail compte renforcé.
+- Phase : Phase 2 — Audit stock 24h
+- Tâches : endpoint serveur `/api/stock-requests` ajouté pour persister les leads urgents via service role quand le flux public Supabase échoue, payload reconstruit côté serveur depuis le lot disponible, fallback local explicité côté UI.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit
