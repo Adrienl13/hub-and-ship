@@ -312,6 +312,7 @@ type ReservationRow = {
   stripe_checkout_session_id: string | null
   paid_reservation_fee_at: string | null
   partner_deal_id: string | null
+  partner_application_id: string | null
   partner_attribution_reason: string | null
   partner_attribution_snapshot: Json
   created_at: string
@@ -357,6 +358,7 @@ type ReservationInsert = {
   stripe_checkout_session_id?: string | null
   paid_reservation_fee_at?: string | null
   partner_deal_id?: string | null
+  partner_application_id?: string | null
   partner_attribution_reason?: string | null
   partner_attribution_snapshot?: Json
   created_at?: string
@@ -468,6 +470,7 @@ type PartnerApplicationRow = {
   contact_phone: string
   siret: string | null
   website: string | null
+  partner_referral_slug: string | null
   territory: string | null
   network_description: string | null
   expected_monthly_volume: string | null
@@ -490,6 +493,7 @@ type PartnerApplicationInsert = {
   contact_phone: string
   siret?: string | null
   website?: string | null
+  partner_referral_slug?: string | null
   territory?: string | null
   network_description?: string | null
   expected_monthly_volume?: string | null
@@ -510,6 +514,7 @@ type PartnerDealRow = {
   status: PartnerDealStatus
   partner_company_name: string
   partner_contact_email: string
+  partner_referral_slug: string | null
   client_company_name: string
   client_siret: string | null
   client_email: string | null
@@ -533,6 +538,7 @@ type PartnerDealInsert = {
   status?: PartnerDealStatus
   partner_company_name: string
   partner_contact_email: string
+  partner_referral_slug?: string | null
   client_company_name: string
   client_siret?: string | null
   client_email?: string | null
@@ -920,6 +926,21 @@ export interface Database {
           reason: string
           matched_value: string
           protected_until: string
+        }>
+      }
+      find_partner_link_attribution: {
+        Args: {
+          p_partner_slug: string | null
+          p_now?: string
+        }
+        Returns: ReadonlyArray<{
+          partner_application_id: string | null
+          deal_id: string | null
+          partner_company_name: string
+          partner_contact_email: string
+          reason: string
+          matched_value: string
+          protected_until: string | null
         }>
       }
     }

@@ -1,5 +1,6 @@
 import type { CartItem, OrderTotals } from '@/lib/order'
 import { calculateOrder } from '@/lib/order'
+import type { PartnerLinkContext } from '@/lib/partners/link'
 import type { ReferralApplication } from '@/lib/pricing/referral'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 import {
@@ -35,6 +36,7 @@ export interface ReservationDraftInput {
   readonly containerReference: string
   readonly containerId?: string
   readonly referralApplication?: ReferralApplication
+  readonly partnerContext?: PartnerLinkContext | null
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string
@@ -90,6 +92,7 @@ export interface ReservationDraft {
     readonly status: ReferralApplication['status'] | 'none'
     readonly discountAmount: number
   }
+  readonly partnerContext: PartnerLinkContext | null
   /** ISO container format the buyer explicitly picked at checkout
    *  (via the sidebar toggle). `null` = accepted the active default
    *  (typically a 20' HC group-buy). Persisted on the reservation
@@ -245,6 +248,7 @@ export function buildReservationDraft(
         status: input.referralApplication?.status ?? 'none',
         discountAmount: round2(referralDiscount),
       },
+      partnerContext: input.partnerContext ?? null,
       requestedContainerType: input.requestedContainerType ?? null,
     },
   }

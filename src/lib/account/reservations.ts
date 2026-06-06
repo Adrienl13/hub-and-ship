@@ -1,4 +1,5 @@
 import type { OrderTotals } from '@/lib/order'
+import type { PartnerLinkContext } from '@/lib/partners/link'
 import type {
   ReservationDraft,
   ReservationDraftLine,
@@ -82,6 +83,38 @@ function paidAmountFor(row: ReservationRow): number {
   return Number(row.reservation_fee)
 }
 
+function readPartnerContextFromSnapshot(
+  snapshot: unknown,
+): PartnerLinkContext | null {
+  if (!snapshot || typeof snapshot !== 'object') return null
+  const obj = snapshot as Record<string, unknown>
+  const partner = obj.partner_context
+  if (!partner || typeof partner !== 'object') return null
+  const partnerObj = partner as Record<string, unknown>
+
+  if (
+    typeof partnerObj.slug !== 'string' ||
+    typeof partnerObj.display_name !== 'string' ||
+    typeof partnerObj.source_path !== 'string' ||
+    typeof partnerObj.captured_at !== 'string' ||
+    typeof partnerObj.expires_at !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    slug: partnerObj.slug,
+    displayName: partnerObj.display_name,
+    sourcePath: partnerObj.source_path,
+    selectionId:
+      typeof partnerObj.selection_id === 'string'
+        ? partnerObj.selection_id
+        : null,
+    capturedAt: partnerObj.captured_at,
+    expiresAt: partnerObj.expires_at,
+  }
+}
+
 function lineFromRow(row: ReservationItemRow): ReservationDraftLine {
   const snapshot = (row.product_snapshot ?? {}) as Partial<
     ReservationDraftLine['productSnapshot']
@@ -142,6 +175,7 @@ function draftFromRow(
 ): ReservationDraft {
   const lines = items.map(lineFromRow)
   const contact = (row.contact_snapshot ?? {}) as ReservationDraft['contact']
+  const partnerContext = readPartnerContextFromSnapshot(row.contact_snapshot)
   const totals = totalsFromRow(row, lines)
 
   return {
@@ -172,6 +206,7 @@ function draftFromRow(
       status: row.referral_discount > 0 ? 'applied' : 'none',
       discountAmount: Number(row.referral_discount),
     },
+    partnerContext,
     requestedContainerType: row.requested_container_type ?? null,
   }
 }

@@ -12,6 +12,7 @@
 - **Page `/partenaires`** : nouvelle entrée publique pour revendeurs CHR, agenceurs et apporteurs avec promesse "Votre client reste votre client", prix nets réservés, protection d'opportunité, modèle apporteur/revendeur/direct pro, FAQ canal et CTA beta partenaire.
 - **Canal partenaires opérationnel** : ajout de `/api/partner-requests`, de la migration Supabase `partner_applications` / `partner_deals`, d'un formulaire public de demande/protection d'opportunité, d'un fallback local anti-perte de lead et d'un onglet admin `Partenaires` pour qualifier candidatures et deals.
 - **Attribution partenaire automatique** : ajout d'une migration qui rattache les réservations aux opportunités protégées via SIRET, email exact ou domaine email professionnel, plus un affichage admin "Deal partenaire reconnu".
+- **Lien partenaire co-brandé** : ajout de `/p/{slug}`, capture locale 120 jours du contexte partenaire, propagation dans le snapshot de réservation, affichage admin du signal partenaire et migration d'attribution par lien sans exposition des prix nets.
 - **Passage de relais Claude Code** : ajout de `docs/HANDOFF_CLAUDE_CODE.md` avec priorités P0/P1/P2/P3, commandes de reprise, risques actifs et prompts pour continuer le chantier sans re-analyse longue.
 
 ### Modifié
@@ -37,6 +38,7 @@
 20260605183000  create_reservation_with_items_rpc
 20260606190000  partner_applications_and_deals
 20260606210000  partner_attribution_on_reservations
+20260607090000  partner_link_attribution
 ```
 
 ---

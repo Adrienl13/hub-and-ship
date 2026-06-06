@@ -20,6 +20,10 @@ const PUBLIC_ROUTES: ReadonlyArray<{
       "Votre client reste votre client. Pros Import devient votre back-office d'import.",
   },
   {
+    path: '/p/chr-conseil',
+    heading: 'CHR Conseil vous ouvre son accès Pros Import.',
+  },
+  {
     path: '/catalogue/chaises-restaurant',
     heading: 'Chaises de terrasse professionnelles, commandées par container.',
   },
@@ -200,6 +204,39 @@ test.describe('site audit parcours publics', () => {
       }),
     ).toBeVisible()
     await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0)
+  })
+
+  test('partner share link captures context without exposing net pricing', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/p/chr-conseil?selection=terrasse-80')
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'CHR Conseil vous ouvre son accès Pros Import.',
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Les prix nets partenaires restent privés.'),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Prix nets partenaires' }),
+    ).toHaveCount(0)
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const raw = window.localStorage.getItem(
+            'container-club-partner-link-context',
+          )
+          return raw
+            ? (JSON.parse(raw) as {
+                slug?: string
+                selectionId?: string | null
+              })
+            : null
+        }),
+      )
+      .toMatchObject({ slug: 'chr-conseil', selectionId: 'terrasse-80' })
   })
 
   test('quality page keeps trust signals when report vault is empty', async ({

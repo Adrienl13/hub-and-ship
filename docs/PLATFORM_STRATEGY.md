@@ -95,6 +95,14 @@ Fonctionnalités indispensables :
 - Attribution automatique si le client revient via lien, SIRET, email domaine ou projet déjà protégé.
 - Tableau de bord partenaire : deals protégés, volume en cours, prix nets, commissions éventuelles, documents et assets.
 
+Etat de mise en oeuvre au 2026-06-07 :
+
+- MVP public disponible : `/partenaires` pour recruter, `/p/{slug}` pour partager une page co-brandée.
+- Le contexte lien partenaire est capturé localement 120 jours et ajouté au snapshot de réservation.
+- L'admin peut voir un signal "Lien partenaire" ou "Deal partenaire reconnu" dans les réservations.
+- Les prix nets partenaires restent absents des pages publiques.
+- Reste à livrer : création de slugs depuis l'admin, espace partenaire authentifié, sélections persistées, devis PDF co-brandés, assets de vente et suivi de commission/marge.
+
 ## 4. Personas à servir
 
 ### 4.1 Revendeur CHR

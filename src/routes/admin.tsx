@@ -134,6 +134,7 @@ const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
 }
 
 const PARTNER_ATTRIBUTION_REASON_LABEL: Record<string, string> = {
+  partner_link: 'Lien partenaire',
   client_siret: 'SIRET',
   client_email: 'Email',
   client_email_domain: 'Domaine email',
@@ -774,7 +775,9 @@ function ReservationsAdminPanel({
           .includes(needle) ??
           false) ||
         (row.partnerAttributionPartnerEmail?.toLowerCase().includes(needle) ??
-          false)
+          false) ||
+        (row.partnerLinkSlug?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerLinkDisplayName?.toLowerCase().includes(needle) ?? false)
       )
     })
   }, [rows, statusFilter, search])
@@ -886,7 +889,7 @@ function ReservationsAdminPanel({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          placeholder="Rechercher référence / SIRET / société / email"
+          placeholder="Rechercher référence / SIRET / société / email / partenaire"
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 max-w-sm text-xs"
         />
@@ -928,6 +931,18 @@ function ReservationsAdminPanel({
               const isCancelling = cancellingId === row.id
               const readOnly =
                 row.status === 'delivered' || row.status === 'cancelled'
+              const hasPartnerSignal =
+                Boolean(row.partnerDealId) ||
+                Boolean(row.partnerApplicationId) ||
+                Boolean(row.partnerLinkSlug)
+              const partnerSignalLabel = row.partnerDealId
+                ? 'Deal partenaire reconnu'
+                : row.partnerApplicationId
+                  ? 'Partenaire reconnu'
+                  : 'Lien partenaire capté'
+              const partnerSignalName =
+                row.partnerAttributionPartnerCompany ??
+                row.partnerLinkDisplayName
               return (
                 <article
                   key={row.id}
@@ -951,22 +966,23 @@ function ReservationsAdminPanel({
                     <div className="mt-1 text-xs text-muted-foreground">
                       {row.containerReference} · SIRET {row.siret}
                     </div>
-                    {row.partnerDealId && (
+                    {hasPartnerSignal && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[color:var(--forest)]">
                         <Handshake className="h-3.5 w-3.5" />
                         <span className="font-medium">
-                          Deal partenaire reconnu
+                          {partnerSignalLabel}
                         </span>
-                        {row.partnerAttributionPartnerCompany && (
-                          <span>
-                            · {row.partnerAttributionPartnerCompany}
-                          </span>
-                        )}
+                        {partnerSignalName && <span>· {partnerSignalName}</span>}
                         {row.partnerAttributionReason && (
                           <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
                             {PARTNER_ATTRIBUTION_REASON_LABEL[
                               row.partnerAttributionReason
                             ] ?? row.partnerAttributionReason}
+                          </span>
+                        )}
+                        {!row.partnerAttributionReason && row.partnerLinkSlug && (
+                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
+                            {row.partnerLinkSlug}
                           </span>
                         )}
                       </div>

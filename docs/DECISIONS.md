@@ -286,7 +286,18 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 **Décision** : Enrichir `reservations` avec `partner_deal_id`, `partner_attribution_reason` et `partner_attribution_snapshot`, puis déclencher l'attribution en base avant insert/update SIRET/contact. Le matching priorise SIRET exact, email exact, puis domaine email professionnel, en excluant les domaines génériques pour le fallback domaine.
 **Alternatives** : Créer une table `partner_attributions` séparée ; effectuer le matching dans `/api/checkout` ; attendre l'espace partenaire avant de protéger les deals.
 **Raison** : Le trigger couvre toutes les voies d'écriture et garde la protection au plus près des données sensibles, sans exposer le partenaire dans l'UI publique.
-**Conséquences** : La migration `20260606210000_partner_attribution_on_reservations.sql` doit être appliquée en production avec les tables partenaires. Le matching par lien co-brandé reste un chantier séparé.
+**Conséquences** : La migration `20260606210000_partner_attribution_on_reservations.sql` doit être appliquée en production avec les tables partenaires. Le matching par lien co-brandé est traité dans D-021.
+
+---
+
+### D-021 — Lien partenaire public sans prix net exposé (2026-06-07)
+
+**Statut** : Acceptée
+**Contexte** : Un revendeur doit pouvoir partager Pros Import sans craindre que son client voie les prix nets partenaires ou contourne l'attribution. Le site public doit rester vendable en direct, mais un prospect apporte par lien doit laisser une trace exploitable en admin.
+**Décision** : Créer une route publique `/p/{slug}` co-brandée, capturer le contexte partenaire dans `localStorage` pendant 120 jours, l'inclure dans `contact_snapshot.partner_context` au moment de la réservation et ajouter une migration PostgreSQL qui rattache la réservation à un deal ou partenaire qualifié via `partner_referral_slug`.
+**Alternatives** : Attendre l'espace partenaire complet avant tout partage ; exposer un prix net partenaire dans une page cachee ; attribuer uniquement via query string sans persistance locale.
+**Raison** : Le MVP donne tout de suite un outil partageable et mesurable, tout en respectant la doctrine canal : prix publics côté client final, conditions nettes dans un futur espace authentifié.
+**Conséquences** : Les slugs partenaires doivent être créés/validés côté admin ou migration. La page `/p/{slug}` reste publique et ne remplace pas le futur dashboard partenaire, les devis PDF co-brandés et les sélections persistées.
 
 ---
 

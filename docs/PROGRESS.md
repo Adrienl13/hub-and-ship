@@ -6,13 +6,25 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 2.8 (Protection partenaire + attribution)
+**Phase actuelle** : Phase 2.9 (Liens partenaires co-brandés + attribution)
 **Démarrage projet** : 2026-05-17
-**Dernière mise à jour** : 2026-06-06
+**Dernière mise à jour** : 2026-06-07
 **Cible launch beta** : Semaine 10+
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
-### Récap dernière session (2026-06-06, canal partenaire)
+### Récap dernière session (2026-06-07, liens partenaires)
+
+Le chantier partenaire a maintenant un premier outil partageable :
+
+- ✅ **Page `/p/{slug}`** — page co-brandée publique, utile à un revendeur pour ouvrir un accès Pros Import à son client sans exposer ses prix nets.
+- ✅ **Capture d'attribution par lien** — `/p/{slug}`, `?partner=`, `?partner_slug=` et `?revendeur=` sont captés 120 jours dans le navigateur.
+- ✅ **Réservation enrichie** — le contexte partenaire est ajouté à `contact_snapshot.partner_context`, puis récupérable dans le compte et l'admin.
+- ✅ **Admin réservations** — badge interne "Lien partenaire capté", "Partenaire reconnu" ou "Deal partenaire reconnu" selon le niveau d'attribution.
+- ✅ **Migration Supabase prête** — `20260607090000_partner_link_attribution.sql` ajoute `partner_referral_slug`, `partner_application_id` et la fonction `find_partner_link_attribution`.
+- ✅ **Tests** — module lien partenaire, persistence réservation, migration sécurité et parcours E2E `/p/chr-conseil`.
+- 🚨 **Blocage restant** — appliquer les migrations Supabase partenaires en production dès que `SUPABASE_ACCESS_TOKEN` est disponible.
+
+### Récap précédente (2026-06-06, canal partenaire)
 
 Le chantier revendeur a quitté le stade éditorial pour devenir captable et pilotable :
 
@@ -236,9 +248,12 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - ✅ Migration Supabase `partner_applications` et `partner_deals`
 - ✅ RLS admin-only sur données prospects partenaires
 - ✅ Onglet admin `Partenaires`
-- 🔄 Protection par SIRET/email implémentée comme données de deal, attribution automatique future
+- ✅ Attribution automatique SIRET/email implémentée en migration PostgreSQL
+- ✅ Lien co-brandé MVP `/p/{slug}`
+- ✅ Capture contexte partenaire 120 jours et snapshot réservation
+- 🔄 Attribution par lien implémentée en migration, push Supabase distant encore bloqué par token
 - ❌ Espace partenaire authentifié avec prix nets
-- ❌ Sélections et devis co-brandés
+- 🔄 Sélections et devis co-brandés : MVP public sans persistance, dashboard et PDF à faire
 
 ### 🎯 DoD Phase 2
 
@@ -496,6 +511,13 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Phase : Phase 2 — Confiance qualité
 - Tâches : `/qualite` refondue en carnet de preuves avec protocole qualité, traçabilité, accès PDF pro et coffre documentaire à venir ; l'état public n'affiche plus le message Supabase non configuré comme preuve principale.
 - Tests : typecheck, lint, Vitest, build et E2E ciblés `/partenaires` + `/qualite` desktop/mobile validés.
+
+### Session du 2026-06-07 — liens partenaires co-brandés
+
+- Phase : Phase 2 — Protection partenaire + partage.
+- Tâches : route `/p/$partnerSlug` ajoutée, capture globale des liens partenaires, propagation du contexte dans les drafts et payloads de réservation, lecture compte/admin, badge admin enrichi, migration Supabase d'attribution par lien, tests unitaires/sécurité/E2E et docs de handoff mis à jour.
+- Décision : D-021 actée dans `docs/DECISIONS.md` pour figer le lien public co-brandé sans exposition des prix nets.
+- Reste : appliquer les migrations Supabase en production, créer/éditer les slugs dans l'admin, puis construire les sélections persistées et devis PDF co-brandés.
 
 ---
 

@@ -11,6 +11,7 @@ import {
   ArrowRight,
   BadgePercent,
   CreditCard,
+  Handshake,
   Lock,
   Mail,
   RefreshCcw,
@@ -48,6 +49,10 @@ import {
   applyReferralCode,
   type ReferralApplication,
 } from '@/lib/pricing/referral'
+import {
+  readPartnerLinkContext,
+  type PartnerLinkContext,
+} from '@/lib/partners/link'
 import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
@@ -131,6 +136,8 @@ export function ReservationDialog({
   })
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
+  const [partnerContext, setPartnerContext] =
+    useState<PartnerLinkContext | null>(null)
   // Pick up the buyer's container choice (from the sidebar toggle) so
   // we can persist it on the reservation row. NULL when they kept the
   // active default — only distributors carry a value here.
@@ -187,6 +194,7 @@ export function ReservationDialog({
     setSiretCheck({ status: 'idle' })
     setEmailWarningAccepted(false)
     setCgvAccepted(false)
+    setPartnerContext(null)
     setSubmitting(false)
     setCreatedReservation(null)
   }
@@ -212,6 +220,13 @@ export function ReservationDialog({
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return
+    setPartnerContext(
+      readPartnerLinkContext({ storage: window.localStorage }),
+    )
+  }, [open])
+
   const handlePay = async () => {
     const draftResult = buildReservationDraft({
       siret: form.siret,
@@ -232,6 +247,7 @@ export function ReservationDialog({
       containerReference: container.reference,
       containerId: container.id,
       referralApplication,
+      partnerContext,
       requestedContainerType,
     })
 
@@ -427,6 +443,7 @@ export function ReservationDialog({
             <SummaryCard
               totals={totals}
               referralApplication={referralApplication}
+              partnerContext={partnerContext}
             />
           </>
         )}
@@ -728,9 +745,11 @@ export function ReservationDialog({
 function SummaryCard({
   totals,
   referralApplication,
+  partnerContext,
 }: {
   totals: OrderTotals
   referralApplication: ReferralApplication
+  partnerContext: PartnerLinkContext | null
 }) {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
@@ -763,6 +782,17 @@ function SummaryCard({
               <span>Code parrainage</span>
               <span className="tabular-nums">
                 -{formatEUR(referralApplication.discountAmount)}
+              </span>
+            </div>
+          )}
+          {partnerContext && (
+            <div className="flex items-start justify-between gap-3 text-[color:var(--forest)]">
+              <span className="inline-flex items-center gap-1.5">
+                <Handshake className="h-3 w-3" />
+                Lien partenaire
+              </span>
+              <span className="text-right font-medium">
+                {partnerContext.displayName}
               </span>
             </div>
           )}

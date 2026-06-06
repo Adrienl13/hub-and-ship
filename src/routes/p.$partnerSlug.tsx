@@ -1,0 +1,246 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { lazy, Suspense, useMemo, useState } from 'react'
+import {
+  ArrowRight,
+  BadgeEuro,
+  FileText,
+  Handshake,
+  PackageCheck,
+  ShieldCheck,
+} from 'lucide-react'
+
+import { Footer } from '@/components/Footer'
+import { Header } from '@/components/Header'
+import { Button } from '@/components/ui/button'
+import { useCatalog } from '@/hooks/useCatalog'
+import {
+  buildPartnerSharePath,
+  normalizePartnerSlug,
+  partnerDisplayNameFromSlug,
+} from '@/lib/partners/link'
+import { formatEUR } from '@/lib/order'
+import { CATEGORY_LABEL, PRODUCTS } from '@/lib/products'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  jsonLdScript,
+} from '@/lib/seo'
+import { useCart } from '@/stores/cart.store'
+
+const LazyReservationDialog = lazy(() =>
+  import('@/components/ReservationDialog').then((module) => ({
+    default: module.ReservationDialog,
+  })),
+)
+
+export const Route = createFileRoute('/p/$partnerSlug')({
+  component: PartnerSharePage,
+  head: ({ params }) => {
+    const slug = normalizePartnerSlug(params.partnerSlug) ?? 'partenaire'
+    const partnerName = partnerDisplayNameFromSlug(slug)
+    return {
+      ...buildSeoHead({
+        title: `Sélection partenaire ${partnerName}`,
+        description:
+          'Sélection partenaire Pros Import : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
+        path: buildPartnerSharePath({ slug }),
+        image: PRODUCTS[0]?.mainImageUrl,
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Partenaires', path: '/partenaires' },
+            { name: partnerName, path: buildPartnerSharePath({ slug }) },
+          ]),
+        ),
+      ],
+    }
+  },
+})
+
+function PartnerSharePage() {
+  const { partnerSlug } = Route.useParams()
+  const normalizedSlug = normalizePartnerSlug(partnerSlug) ?? 'partenaire'
+  const partnerName = partnerDisplayNameFromSlug(normalizedSlug)
+  const { products, currentContainer } = useCatalog()
+  const productsArray = useMemo(() => [...products], [products])
+  const featuredProducts = productsArray.slice(0, 4)
+  const { items, totals } = useCart({
+    products: productsArray,
+    capacityCbm: currentContainer.capacityCbm,
+  })
+  const [reserveOpen, setReserveOpen] = useState(false)
+
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <Header onReserve={() => setReserveOpen(true)} />
+
+      <main>
+        <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch">
+            <div className="flex flex-col justify-center py-8">
+              <div className="label-eyebrow text-[color:var(--ember)]">
+                Sélection partenaire
+              </div>
+              <h1 className="mt-3 max-w-3xl font-display text-4xl tracking-tight sm:text-5xl">
+                {partnerName} vous ouvre son accès Pros Import.
+              </h1>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)]">
+                Vous consultez une page co-brandée : le projet reste rattaché au
+                partenaire, tandis que Pros Import opère l'import, la qualité et
+                le container. Les prix nets partenaires restent privés.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button
+                  asChild
+                  className="min-h-11 rounded-sm bg-[color:var(--foreground)] px-5 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+                >
+                  <a href={`/catalogue?partner=${normalizedSlug}`}>
+                    Voir le catalogue
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 rounded-sm border-[color:var(--foreground)] px-5"
+                  onClick={() => setReserveOpen(true)}
+                >
+                  Réserver avec ce lien
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid min-h-[420px] grid-cols-2 gap-2">
+              {featuredProducts.map((product, index) => (
+                <article
+                  key={product.id}
+                  className={`relative overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card ${
+                    index === 0 ? 'col-span-2' : ''
+                  }`}
+                >
+                  <img
+                    src={product.mainImageUrl}
+                    alt={product.name}
+                    className="h-full min-h-36 w-full object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
+                    <div className="text-xs uppercase tracking-[0.08em] opacity-80">
+                      {CATEGORY_LABEL[product.category]}
+                    </div>
+                    <div className="mt-1 font-display text-lg font-semibold">
+                      {product.name}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[color:var(--sand-deep)]">
+          <div className="mx-auto grid max-w-7xl gap-px bg-[color:var(--sand-deep)] px-6 py-12 md:grid-cols-4">
+            {[
+              {
+                Icon: ShieldCheck,
+                title: 'Projet protégé',
+                text: 'Le lien garde une trace interne pour rattacher le dossier au partenaire.',
+              },
+              {
+                Icon: BadgeEuro,
+                title: 'Prix publics clairs',
+                text: 'Le client voit les prix directs pros ; les prix nets partenaires ne sont jamais publics.',
+              },
+              {
+                Icon: PackageCheck,
+                title: 'Volume mutualisé',
+                text: 'La commande rejoint le container actif et bénéficie du modèle achat groupé.',
+              },
+              {
+                Icon: FileText,
+                title: 'Support de vente',
+                text: 'Cette page prépare les futures sélections et devis co-brandés.',
+              },
+            ].map(({ Icon, title, text }) => (
+              <article key={title} className="bg-background p-5">
+                <Icon className="h-5 w-5 text-[color:var(--ember)]" />
+                <h2 className="mt-4 font-display text-lg font-semibold">
+                  {title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {text}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto grid max-w-7xl gap-6 px-6 py-14 lg:grid-cols-[1fr_360px]">
+          <div>
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Sélection de départ
+            </div>
+            <h2 className="mt-2 font-display text-3xl tracking-tight">
+              Une base claire à partager, puis à affiner.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+              Les revendeurs peuvent envoyer cette page pour cadrer le projet,
+              puis transformer la sélection en devis personnalisé. Le panier
+              reste modifiable côté client.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+            <div className="flex items-center gap-2">
+              <Handshake className="h-4 w-4 text-[color:var(--forest)]" />
+              <div className="text-sm font-medium">Lien actif</div>
+            </div>
+            <div className="mt-4 space-y-3 text-xs text-muted-foreground">
+              <div className="flex justify-between gap-3">
+                <span>Partenaire</span>
+                <span className="text-right font-medium text-foreground">
+                  {partnerName}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>Container</span>
+                <span className="text-right font-medium text-foreground">
+                  {currentContainer.reference}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>Panier actuel</span>
+                <span className="text-right font-medium text-foreground">
+                  {formatEUR(totals.subtotalHt)}
+                </span>
+              </div>
+            </div>
+            <Button
+              type="button"
+              className="mt-5 h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]"
+              onClick={() => setReserveOpen(true)}
+            >
+              Réserver ma place
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+
+      <Suspense fallback={null}>
+        {reserveOpen && (
+          <LazyReservationDialog
+            open={reserveOpen}
+            onOpenChange={setReserveOpen}
+            items={items}
+            totals={totals}
+            container={currentContainer}
+          />
+        )}
+      </Suspense>
+    </div>
+  )
+}

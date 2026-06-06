@@ -20,6 +20,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
@@ -86,6 +87,11 @@ const LivresIndexRoute = LivresIndexRouteImport.update({
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PPartnerSlugRoute = PPartnerSlugRouteImport.update({
+  id: '/p/$partnerSlug',
+  path: '/p/$partnerSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LivresSlugRoute = LivresSlugRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/catalogue/tables-restaurant'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/catalogue/tables-restaurant'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/catalogue_/tables-restaurant'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
+  PPartnerSlugRoute: typeof PPartnerSlugRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal/'
       preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$partnerSlug': {
+      id: '/p/$partnerSlug'
+      path: '/p/$partnerSlug'
+      fullPath: '/p/$partnerSlug'
+      preLoaderRoute: typeof PPartnerSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/livres/$slug': {
@@ -508,6 +528,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
+  PPartnerSlugRoute: PPartnerSlugRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

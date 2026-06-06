@@ -1,6 +1,6 @@
 # Passage de relais Claude Code — chantiers prioritaires
 
-> Derniere mise a jour : 2026-06-06
+> Derniere mise a jour : 2026-06-07
 > Branche active : `codex/seo-geo-foundation`
 > Dernier commit fonctionnel : voir `git log --oneline -5`
 > Prod verifiee : `https://prosimport.com/partenaires?deploy=b46e252`
@@ -21,19 +21,23 @@ Regles non negociables :
 - Les donnees prospects partenaires doivent rester admin-only.
 - Ne pas remettre de numero EORI public dans le site.
 
-## Etat reel au 2026-06-06
+## Etat reel au 2026-06-07
 
 Fait et pousse sur GitHub :
 
 - Page publique `/partenaires` avec positionnement revendeur protege, FAQ conflit canal, formulaire demande partenaire et mode "proteger une opportunite".
+- Page publique `/p/{slug}` co-brandee pour qu'un revendeur puisse partager une entree Pros Import sans exposer ses prix nets.
+- Tracker global de lien partenaire : capture `/p/{slug}` et les query params `partner`, `partner_slug`, `revendeur` dans `localStorage` pendant 120 jours.
+- Reservation enrichie : le contexte partenaire est copie dans `contact_snapshot.partner_context` pour conserver la preuve d'origine.
 - API `/api/partner-requests` same-origin, validation Zod, refus origin externe, persistance service role quand Supabase est pret.
 - Migration creee : `supabase/migrations/20260606190000_partner_applications_and_deals.sql`.
 - Migration creee : `supabase/migrations/20260606210000_partner_attribution_on_reservations.sql`.
+- Migration creee : `supabase/migrations/20260607090000_partner_link_attribution.sql`.
 - Tables cible : `partner_applications`, `partner_deals`.
-- Reservations enrichies : `partner_deal_id`, `partner_attribution_reason`, `partner_attribution_snapshot`.
+- Reservations enrichies : `partner_deal_id`, `partner_application_id`, `partner_attribution_reason`, `partner_attribution_snapshot`.
 - RLS cible : admin-only pour lecture/ecriture directe ; le public passe par l'endpoint serveur.
 - Onglet admin `Partenaires` pour lire, filtrer et changer les statuts.
-- Onglet admin `Reservations` enrichi avec badge interne "Deal partenaire reconnu".
+- Onglet admin `Reservations` enrichi avec badge interne "Deal partenaire reconnu", "Partenaire reconnu" ou "Lien partenaire capte".
 - Fallback local : si l'API/persistance echoue, le lead est sauvegarde dans `localStorage`.
 - Tests ajoutes : builder partenaire, matching attribution, API, migrations securite, E2E partenaires/API.
 - Deploy Cloudflare effectue : version `fe56b3be-8185-43a4-88ef-d7b648c73ffd`.
@@ -49,8 +53,8 @@ npx playwright test tests/e2e/site-audit.spec.ts --grep "partner|partenaire|API"
 
 Point bloque important :
 
-- La migration Supabase partenaire n'a pas ete appliquee au projet distant, car la session Codex n'avait pas de `SUPABASE_ACCESS_TOKEN`.
-- Tant que les migrations partenaires ne sont pas appliquees, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB, et l'attribution automatique ne pourra pas s'executer en production.
+- Les migrations Supabase partenaires n'ont pas ete appliquees au projet distant, car la session Codex n'avait pas de `SUPABASE_ACCESS_TOKEN`.
+- Tant que les migrations partenaires ne sont pas appliquees, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB, l'attribution automatique SIRET/email ne pourra pas s'executer, et l'attribution par lien `/p/{slug}` restera seulement visible dans le snapshot local/client.
 
 ## Priorite P0 — Debloquer la prod data
 
@@ -82,7 +86,8 @@ where table_schema = 'public'
   and column_name in (
     'partner_deal_id',
     'partner_attribution_reason',
-    'partner_attribution_snapshot'
+    'partner_attribution_snapshot',
+    'partner_application_id'
   );
 ```
 
@@ -197,6 +202,17 @@ Pre-requis :
 
 Pourquoi : c'est ce qui donnera envie au revendeur de partager le site.
 
+Statut : MVP lien public implemente, selections persistantes encore a faire.
+
+Ce qui est implemente :
+
+- Route `/p/{slug}` avec hero co-brande, produits vitrines, CTA catalogue et reservation.
+- Capture 120 jours du contexte partenaire via `src/components/PartnerLinkTracker.tsx`.
+- Module pur `src/lib/partners/link.ts` + tests.
+- Snapshot reservation `contact_snapshot.partner_context`.
+- Migration `20260607090000_partner_link_attribution.sql` pour matcher un `partner_referral_slug` vers un deal ou une candidature partenaire.
+- Admin reservations affiche le signal lien/partenaire sans l'exposer au client.
+
 But :
 
 - Le revendeur cree une selection produit.
@@ -208,6 +224,13 @@ Ne pas faire :
 
 - Ne pas montrer le prix net partenaire au client final.
 - Ne pas forcer un prix de revente.
+
+Prochaines etapes :
+
+- Ajouter generation/edition de `partner_referral_slug` dans l'onglet admin `Partenaires`.
+- Creer une table future `partner_selections` quand les migrations distant sont debloquees.
+- Ajouter devis PDF co-brande : logo/nom partenaire public, prix public ou prix client, jamais prix net partenaire.
+- Ajouter un statut de protection visible dans le futur espace partenaire.
 
 ## Priorite P2 — Fiabiliser conversion et operationnel
 
@@ -351,7 +374,7 @@ Ajoute migration, types, logique metier, tests securite, tests unitaires et mise
 
 ```text
 Lis docs/HANDOFF_CLAUDE_CODE.md et docs/PLATFORM_STRATEGY.md sections C04/C05.
-Conçois puis implemente la premiere version des selections co-brandees revendeur.
+Reprends le MVP lien partenaire deja implemente via /p/{slug}, puis implemente la premiere version persistante des selections co-brandees revendeur.
 Le client final ne doit jamais voir le prix net partenaire.
 ```
 

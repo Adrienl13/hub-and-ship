@@ -6,6 +6,24 @@ export type ReservationInsertPayload =
 export type ReservationItemInsertPayload =
   Database['public']['Tables']['reservation_items']['Insert']
 
+function toContactSnapshot(draft: ReservationDraft): Json {
+  if (!draft.partnerContext) {
+    return draft.contact as unknown as Json
+  }
+
+  return {
+    ...draft.contact,
+    partner_context: {
+      slug: draft.partnerContext.slug,
+      display_name: draft.partnerContext.displayName,
+      source_path: draft.partnerContext.sourcePath,
+      selection_id: draft.partnerContext.selectionId,
+      captured_at: draft.partnerContext.capturedAt,
+      expires_at: draft.partnerContext.expiresAt,
+    },
+  } as Json
+}
+
 export function toReservationInsertPayload(
   draft: ReservationDraft,
 ): ReservationInsertPayload {
@@ -15,7 +33,7 @@ export function toReservationInsertPayload(
     container_reference: draft.containerReference,
     container_id: draft.containerId,
     siret: draft.siret,
-    contact_snapshot: draft.contact as unknown as Json,
+    contact_snapshot: toContactSnapshot(draft),
     delivery_mode: draft.delivery.deliveryMode,
     delivery_note: draft.delivery.deliveryNote ?? null,
     subtotal_ht: draft.totals.subtotalHt,

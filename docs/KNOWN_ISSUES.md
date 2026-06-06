@@ -29,10 +29,10 @@
 **Sévérité** : High
 **Découvert** : 2026-06-06
 **Contexte** : Canal partenaires `/partenaires` et endpoint `/api/partner-requests`
-**Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`. L'attribution automatique des réservations aux deals partenaires dépend aussi de `20260606210000_partner_attribution_on_reservations.sql`.
+**Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`. L'attribution automatique des réservations aux deals partenaires dépend de `20260606210000_partner_attribution_on_reservations.sql`. L'attribution par lien co-brandé dépend aussi de `20260607090000_partner_link_attribution.sql`.
 **Cause racine** : La session Codex ne disposait pas de `SUPABASE_ACCESS_TOKEN`, donc `npx supabase db push --linked --dry-run` a échoué avant connexion au projet.
 **Workaround** : Le formulaire sauvegarde la demande en localStorage si la persistance serveur échoue, afin de ne pas perdre le lead sur l'appareil courant. L'attribution partenaire reste inactive tant que la migration n'est pas appliquée.
-**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`, puis créer une réservation test qui matche un deal protégé et vérifier `/admin?tab=reservations`.
+**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`, puis créer une réservation test qui matche un deal protégé et vérifier `/admin?tab=reservations`. Tester aussi `/p/chr-conseil?selection=test`, réserver, puis vérifier que `partner_context` existe dans `contact_snapshot`.
 **Liens** : Voir `docs/HANDOFF_CLAUDE_CODE.md` section P0.
 
 ---

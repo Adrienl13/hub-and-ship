@@ -37,11 +37,14 @@ export interface AdminReservationRow {
   readonly stripePaymentIntentId: string | null
   readonly paidReservationFeeAt: string | null
   readonly partnerDealId: string | null
+  readonly partnerApplicationId: string | null
   readonly partnerAttributionReason: string | null
   readonly partnerAttributionPartnerCompany: string | null
   readonly partnerAttributionPartnerEmail: string | null
   readonly partnerAttributionMatchedValue: string | null
   readonly partnerAttributionProtectedUntil: string | null
+  readonly partnerLinkSlug: string | null
+  readonly partnerLinkDisplayName: string | null
   readonly createdAt: string
   readonly updatedAt: string
   readonly requestedContainerType: ContainerType | null
@@ -61,6 +64,11 @@ interface PartnerAttributionSnapshot {
   readonly protectedUntil?: string
 }
 
+interface PartnerLinkSnapshot {
+  readonly slug?: string
+  readonly displayName?: string
+}
+
 function extractContact(snapshot: unknown): ContactSnapshot {
   if (!snapshot || typeof snapshot !== 'object') return {}
   const obj = snapshot as Record<string, unknown>
@@ -69,6 +77,21 @@ function extractContact(snapshot: unknown): ContactSnapshot {
     company: typeof obj.company === 'string' ? obj.company : undefined,
     email: typeof obj.email === 'string' ? obj.email : undefined,
     phone: typeof obj.phone === 'string' ? obj.phone : undefined,
+  }
+}
+
+function extractPartnerLink(snapshot: unknown): PartnerLinkSnapshot {
+  if (!snapshot || typeof snapshot !== 'object') return {}
+  const obj = snapshot as Record<string, unknown>
+  const partnerContext = obj.partner_context
+  if (!partnerContext || typeof partnerContext !== 'object') return {}
+  const partnerObj = partnerContext as Record<string, unknown>
+  return {
+    slug: typeof partnerObj.slug === 'string' ? partnerObj.slug : undefined,
+    displayName:
+      typeof partnerObj.display_name === 'string'
+        ? partnerObj.display_name
+        : undefined,
   }
 }
 
@@ -97,6 +120,7 @@ function extractPartnerAttribution(
 
 function toAdminRow(row: ReservationRow): AdminReservationRow {
   const contact = extractContact(row.contact_snapshot)
+  const partnerLink = extractPartnerLink(row.contact_snapshot)
   const partnerAttribution = extractPartnerAttribution(
     row.partner_attribution_snapshot,
   )
@@ -122,6 +146,7 @@ function toAdminRow(row: ReservationRow): AdminReservationRow {
     stripePaymentIntentId: row.stripe_payment_intent_id,
     paidReservationFeeAt: row.paid_reservation_fee_at,
     partnerDealId: row.partner_deal_id,
+    partnerApplicationId: row.partner_application_id,
     partnerAttributionReason: row.partner_attribution_reason,
     partnerAttributionPartnerCompany:
       partnerAttribution.partnerCompanyName ?? null,
@@ -130,6 +155,8 @@ function toAdminRow(row: ReservationRow): AdminReservationRow {
     partnerAttributionMatchedValue: partnerAttribution.matchedValue ?? null,
     partnerAttributionProtectedUntil:
       partnerAttribution.protectedUntil ?? null,
+    partnerLinkSlug: partnerLink.slug ?? null,
+    partnerLinkDisplayName: partnerLink.displayName ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     requestedContainerType: row.requested_container_type,

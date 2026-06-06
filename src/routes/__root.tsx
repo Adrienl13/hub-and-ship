@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
+import { PartnerLinkTracker } from '@/components/PartnerLinkTracker'
 import { Toaster } from '@/components/ui/sonner'
 import '@/styles/globals.css'
 
@@ -148,6 +149,7 @@ function RootComponent() {
       </head>
       <body>
         <HydrationMarker />
+        <PartnerLinkTracker />
         <Outlet />
         <Toaster />
         <Scripts />
