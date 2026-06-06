@@ -22,6 +22,7 @@ Le chantier partenaire a maintenant un premier outil partageable :
 - ✅ **Admin réservations** — badge interne "Lien partenaire capté", "Partenaire reconnu" ou "Deal partenaire reconnu" selon le niveau d'attribution.
 - ✅ **Migration Supabase prête** — `20260607090000_partner_link_attribution.sql` ajoute `partner_referral_slug`, `partner_application_id` et la fonction `find_partner_link_attribution`.
 - ✅ **Tests** — module lien partenaire, persistence réservation, migration sécurité et parcours E2E `/p/chr-conseil`.
+- ✅ **Déploiement prod** — Cloudflare version `6b96d65d-b07d-45a5-b268-56dc60d1d3ce`, smoke test `https://prosimport.com/p/chr-conseil?deploy=09757d8` en HTTP 200.
 - 🚨 **Blocage restant** — appliquer les migrations Supabase partenaires en production dès que `SUPABASE_ACCESS_TOKEN` est disponible.
 
 ### Récap précédente (2026-06-06, canal partenaire)
@@ -515,7 +516,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 ### Session du 2026-06-07 — liens partenaires co-brandés
 
 - Phase : Phase 2 — Protection partenaire + partage.
-- Tâches : route `/p/$partnerSlug` ajoutée, capture globale des liens partenaires, propagation du contexte dans les drafts et payloads de réservation, lecture compte/admin, badge admin enrichi, migration Supabase d'attribution par lien, tests unitaires/sécurité/E2E et docs de handoff mis à jour.
+- Tâches : route `/p/$partnerSlug` ajoutée, capture globale des liens partenaires, propagation du contexte dans les drafts et payloads de réservation, lecture compte/admin, badge admin enrichi, migration Supabase d'attribution par lien, tests unitaires/sécurité/E2E, docs de handoff mis à jour et déploiement Cloudflare effectué.
 - Décision : D-021 actée dans `docs/DECISIONS.md` pour figer le lien public co-brandé sans exposition des prix nets.
 - Reste : appliquer les migrations Supabase en production, créer/éditer les slugs dans l'admin, puis construire les sélections persistées et devis PDF co-brandés.
 
