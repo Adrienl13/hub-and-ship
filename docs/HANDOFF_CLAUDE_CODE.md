@@ -3,7 +3,8 @@
 > Derniere mise a jour : 2026-06-06
 > Branche active : `codex/seo-geo-foundation`
 > Dernier commit fonctionnel : voir `git log --oneline -5`
-> Prod verifiee : `https://prosimport.com/partenaires?deploy=379adb3`
+> Prod verifiee : `https://prosimport.com/partenaires?deploy=b46e252`
+> Dernier deploy Cloudflare : `d2010af1-46b3-4e3c-94ce-7f0353fde8be`
 
 Ce document sert de point d'entree court pour reprendre le chantier avec Claude Code ou une autre IA. Lire aussi `docs/PLATFORM_STRATEGY.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md` et `docs/KNOWN_ISSUES.md`.
 
@@ -36,6 +37,7 @@ Fait et pousse sur GitHub :
 - Fallback local : si l'API/persistance echoue, le lead est sauvegarde dans `localStorage`.
 - Tests ajoutes : builder partenaire, matching attribution, API, migrations securite, E2E partenaires/API.
 - Deploy Cloudflare effectue : version `fe56b3be-8185-43a4-88ef-d7b648c73ffd`.
+- Deploy Cloudflare attribution effectue : version `d2010af1-46b3-4e3c-94ce-7f0353fde8be`.
 
 Validation passee :
 
