@@ -47,6 +47,7 @@ function LoginPage() {
   const parsedEmail = businessEmailSchema.safeParse(email)
   const emailError =
     email && !parsedEmail.success ? 'Email invalide' : undefined
+  const missingConfigLabel = auth.missingConfig.join(', ')
 
   // Already signed in? Bounce them to their destination — no need to send
   // another magic link.
@@ -128,9 +129,10 @@ function LoginPage() {
 
           {!auth.isConfigured && (
             <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 mb-5 rounded-md border p-3 text-xs leading-5">
-              Supabase Auth est prêt côté interface, mais les variables{' '}
-              {auth.missingConfig.join(', ')} doivent encore être renseignées
-              dans `.env.local`.
+              Supabase Auth est indisponible tant que les variables publiques{' '}
+              <code>{missingConfigLabel}</code> ne sont pas renseignées. En
+              local, ajoutez-les dans <code>.env.local</code> puis redémarrez ;
+              en production, ajoutez-les au build puis redéployez.
             </div>
           )}
 
@@ -149,11 +151,17 @@ function LoginPage() {
 
             <Button
               type="submit"
-              disabled={submitting || !parsedEmail.success}
+              disabled={
+                submitting || !parsedEmail.success || !auth.isConfigured
+              }
               className="h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
             >
               <Mail className="h-4 w-4" />
-              {submitting ? 'Envoi...' : 'Recevoir mon lien magique'}
+              {!auth.isConfigured
+                ? 'Configuration Supabase requise'
+                : submitting
+                  ? 'Envoi...'
+                  : 'Recevoir mon lien magique'}
             </Button>
           </form>
 

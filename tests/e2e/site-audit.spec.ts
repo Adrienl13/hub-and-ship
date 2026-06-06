@@ -324,7 +324,24 @@ test.describe('site audit stock et admin', () => {
     await expect(
       page.getByRole('heading', { name: 'Authentification indisponible' }),
     ).toBeVisible()
-    await expect(page.getByText('VITE_SUPABASE_URL')).toBeVisible()
+    await expect(page.getByText('Variables publiques manquantes')).toBeVisible()
     await expect(page.getByText('VITE_SUPABASE_ANON_KEY')).toBeVisible()
+    await expect(page.getByText('redéployez')).toBeVisible()
+  })
+
+  test('login blocks magic links when Supabase auth is unconfigured', async ({
+    page,
+  }) => {
+    await gotoHydrated(
+      page,
+      '/auth/login?returnTo=%2Fadmin%3Ftab%3Dreservations',
+    )
+
+    await page.getByLabel('Email professionnel').fill('admin@prosimport.com')
+
+    await expect(page.getByText('Supabase Auth est indisponible')).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Configuration Supabase requise' }),
+    ).toBeDisabled()
   })
 })

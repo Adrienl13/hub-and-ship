@@ -17,6 +17,7 @@
 - **Webhook Stripe** : les événements `expired` / `async_payment_failed` n'annulent plus une réservation si l'événement provient d'une ancienne session Checkout remplacée par une session plus récente.
 - **Stock 24h** : ajout d'un endpoint serveur same-origin `/api/stock-requests` qui reconstruit la demande depuis l'ID de lot et persiste via Supabase service role quand l'insert public navigateur n'est pas disponible ; le fallback local est désormais annoncé comme local à l'appareil.
 - **Catalogue visuel** : remplacement de la vue lignes compactes par des cartes portrait plein cadre sur `/catalogue` et dans la section catalogue de la home, avec image bord à bord, variantes, MOQ et quantité directe.
+- **Audit admin/Supabase** : l'accès admin indique maintenant précisément les variables publiques manquantes, le login bloque l'envoi de magic link tant que Supabase Auth est incomplet et le retour vers `/admin?...` est préservé après connexion.
 
 ### DB / Migrations à appliquer
 

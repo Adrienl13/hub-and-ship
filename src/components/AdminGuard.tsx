@@ -23,6 +23,10 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   const auth = useAuth()
   const { isAdmin, isLoading: isCheckingRole } = useIsAdmin()
   const noop = () => undefined
+  const returnTo =
+    typeof window === 'undefined'
+      ? '/admin'
+      : `${window.location.pathname}${window.location.search}`
 
   if (auth.status === 'loading' || isCheckingRole) {
     return (
@@ -43,9 +47,10 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
             L'authentification administrateur n'est pas encore active sur cet
-            environnement. Pour la mise en service, définissez VITE_SUPABASE_URL
-            et VITE_SUPABASE_ANON_KEY dans <code>.env</code> puis redémarrez le
-            serveur.
+            environnement. Variables publiques manquantes :{' '}
+            <code>{auth.missingConfig.join(', ')}</code>. En local,
+            renseignez-les dans <code>.env.local</code> puis redémarrez le
+            serveur ; en production, ajoutez-les au build et redéployez.
           </p>
           <Link
             to="/"
@@ -76,7 +81,9 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
             asChild
             className="hover:bg-foreground/90 mt-6 h-11 w-full rounded-sm bg-foreground text-background"
           >
-            <Link to="/auth/login">Se connecter</Link>
+            <Link to="/auth/login" search={{ returnTo }}>
+              Se connecter
+            </Link>
           </Button>
           <Link
             to="/"
