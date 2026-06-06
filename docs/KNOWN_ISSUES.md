@@ -23,7 +23,17 @@
 
 ## Issues actives
 
-Aucun bug connu pour le moment. Ce fichier sera alimenté au fur et à mesure du développement.
+### ISSUE-001 — Migration partenaires non appliquée en production
+
+**Statut** : Open
+**Sévérité** : High
+**Découvert** : 2026-06-06
+**Contexte** : Canal partenaires `/partenaires` et endpoint `/api/partner-requests`
+**Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`.
+**Cause racine** : La session Codex ne disposait pas de `SUPABASE_ACCESS_TOKEN`, donc `npx supabase db push --linked --dry-run` a échoué avant connexion au projet.
+**Workaround** : Le formulaire sauvegarde la demande en localStorage si la persistance serveur échoue, afin de ne pas perdre le lead sur l'appareil courant.
+**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, et tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`.
+**Liens** : Voir `docs/HANDOFF_CLAUDE_CODE.md` section P0.
 
 ---
 

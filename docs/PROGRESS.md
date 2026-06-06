@@ -22,6 +22,7 @@ Le chantier revendeur a quitté le stade éditorial pour devenir captable et pil
 - ✅ **Fallback anti-perte de lead** — si la persistance serveur échoue, la demande est sauvegardée localement sur l'appareil au lieu de disparaître.
 - ✅ **Admin `Partenaires`** — onglet dédié pour filtrer candidatures/opportunités et changer les statuts.
 - ✅ **Tests** — API partenaire, builder de demande, migration sécurité et parcours public ajoutés.
+- ✅ **Passage de relais** — `docs/HANDOFF_CLAUDE_CODE.md` créé avec chantiers P0/P1/P2/P3, commandes, risques et prompts de reprise.
 
 ### Récap précédente importante (2026-05-22, après v1.4.0)
 
@@ -501,6 +502,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 
 - Brief technique complet : `CONTAINER_CLUB_SPEC.md`
 - Brief stratégique IA : `PLATFORM_STRATEGY.md`
+- Passage de relais priorisé : `HANDOFF_CLAUDE_CODE.md`
 - Changelog versions spec : `CHANGELOG.md`
 - Décisions techniques : `DECISIONS.md`
 - Bugs connus : `KNOWN_ISSUES.md`
