@@ -257,6 +257,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-018 — Modèle canal hybride revendeur protégé + direct pro encadré (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : La plateforme doit vendre aux restaurateurs/hôtels en direct sans bloquer l'acquisition de revendeurs. Un revendeur ne partagera pas naturellement un site public s'il peut perdre son client final.
+**Décision** : Conserver un canal direct pro avec conditions et marge cible plus élevée, tout en créant un canal partenaire protégé avec prix net réservé, deal registration, attribution SIRET/email/lien et devis co-brandé. Le prix public conseillé peut exister mais ne doit jamais devenir un prix minimum imposé.
+**Alternatives** : Fermer le direct aux restaurants/hôtels aurait limité le cash court terme ; vendre tout publiquement au même prix aurait détruit la confiance des revendeurs.
+**Raison** : Le modèle gagnant est de devenir l'infrastructure d'import des revendeurs tout en gardant une capacité de conversion directe contrôlée.
+**Conséquences** : Les prochains chantiers doivent prioriser `/revendeurs`, la protection des deals, le pricing par rôle et les sélections co-brandées. Voir `docs/PLATFORM_STRATEGY.md`.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

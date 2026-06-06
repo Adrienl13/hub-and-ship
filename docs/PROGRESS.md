@@ -459,11 +459,19 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tests : typecheck, lint, Vitest, build et vérification navigateur local validés.
 - Notes : les composants Lovable utilisent encore des données mock et un flow réservation 2 étapes ; il faudra aligner avec le checkout V1.3 SIRET obligatoire en 4 étapes.
 
+### Session du 2026-06-06 — stratégie plateforme
+
+- Phase : Direction produit — Revendeurs, direct pro et différenciation.
+- Tâches : brief stratégique IA ajouté dans `docs/PLATFORM_STRATEGY.md`, cadrant le modèle Pros Import / Container Club comme centrale d'import digitale, la protection revendeur, le direct pro encadré, les chantiers prioritaires, les règles UX/catalogue/3D/qualité, les KPI, les risques et les sources marché.
+- Décision : D-018 actée dans `docs/DECISIONS.md` pour figer le modèle canal hybride revendeur protégé + direct pro encadré.
+- Notes : ce brief doit être lu par toute IA ou prestataire avant les prochains développements produit.
+
 ---
 
 ## 🔗 Liens rapides
 
 - Brief technique complet : `CONTAINER_CLUB_SPEC.md`
+- Brief stratégique IA : `PLATFORM_STRATEGY.md`
 - Changelog versions spec : `CHANGELOG.md`
 - Décisions techniques : `DECISIONS.md`
 - Bugs connus : `KNOWN_ISSUES.md`

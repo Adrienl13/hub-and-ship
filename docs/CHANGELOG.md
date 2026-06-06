@@ -6,6 +6,10 @@
 
 ## [Non publié]
 
+### Ajouté
+
+- **Brief stratégique IA** : ajout de `docs/PLATFORM_STRATEGY.md` pour cadrer la vision Pros Import / Container Club, le modèle revendeur protégé + direct pro encadré, les chantiers prioritaires, les règles UX, les risques, les KPI et les sources marché.
+
 ### Modifié
 
 - **Vue 3D container** : suppression de `@react-three/drei` au profit d'une scène R3F native plus légère, avec drag manuel, overlays HTML hors canvas et conservation du packing logistique existant.
