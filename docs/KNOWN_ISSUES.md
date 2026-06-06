@@ -23,16 +23,16 @@
 
 ## Issues actives
 
-### ISSUE-001 — Migration partenaires non appliquée en production
+### ISSUE-001 — Migrations partenaires non appliquées en production
 
 **Statut** : Open
 **Sévérité** : High
 **Découvert** : 2026-06-06
 **Contexte** : Canal partenaires `/partenaires` et endpoint `/api/partner-requests`
-**Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`.
+**Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`. L'attribution automatique des réservations aux deals partenaires dépend aussi de `20260606210000_partner_attribution_on_reservations.sql`.
 **Cause racine** : La session Codex ne disposait pas de `SUPABASE_ACCESS_TOKEN`, donc `npx supabase db push --linked --dry-run` a échoué avant connexion au projet.
-**Workaround** : Le formulaire sauvegarde la demande en localStorage si la persistance serveur échoue, afin de ne pas perdre le lead sur l'appareil courant.
-**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, et tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`.
+**Workaround** : Le formulaire sauvegarde la demande en localStorage si la persistance serveur échoue, afin de ne pas perdre le lead sur l'appareil courant. L'attribution partenaire reste inactive tant que la migration n'est pas appliquée.
+**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`, puis créer une réservation test qui matche un deal protégé et vérifier `/admin?tab=reservations`.
 **Liens** : Voir `docs/HANDOFF_CLAUDE_CODE.md` section P0.
 
 ---

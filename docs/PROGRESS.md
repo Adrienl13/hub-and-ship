@@ -6,7 +6,7 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 2.7 (Canal partenaire + audit conversion)
+**Phase actuelle** : Phase 2.8 (Protection partenaire + attribution)
 **Démarrage projet** : 2026-05-17
 **Dernière mise à jour** : 2026-06-06
 **Cible launch beta** : Semaine 10+
@@ -18,10 +18,11 @@ Le chantier revendeur a quitté le stade éditorial pour devenir captable et pil
 
 - ✅ **Page `/partenaires` opérationnelle** — positionnement revendeur protégé, deal registration, prix nets réservés, FAQ conflit de canal et formulaire intégré.
 - ✅ **Endpoint serveur `/api/partner-requests`** — intake same-origin avec service role Supabase, validation Zod et refus des origines externes navigateur.
-- ✅ **Supabase partenaires** — migration créée pour `partner_applications` + `partner_deals`, statuts, RLS admin-only, index de triage et protection 120 jours par défaut. Push distant à effectuer quand `SUPABASE_ACCESS_TOKEN` sera disponible.
+- ✅ **Supabase partenaires** — migrations créées pour `partner_applications` + `partner_deals`, statuts, RLS admin-only, index de triage, protection 120 jours et attribution automatique des réservations par SIRET/email. Push distant à effectuer quand `SUPABASE_ACCESS_TOKEN` sera disponible.
 - ✅ **Fallback anti-perte de lead** — si la persistance serveur échoue, la demande est sauvegardée localement sur l'appareil au lieu de disparaître.
 - ✅ **Admin `Partenaires`** — onglet dédié pour filtrer candidatures/opportunités et changer les statuts.
-- ✅ **Tests** — API partenaire, builder de demande, migration sécurité et parcours public ajoutés.
+- ✅ **Admin réservations enrichi** — badge interne "Deal partenaire reconnu" lorsque la réservation matche une opportunité protégée.
+- ✅ **Tests** — API partenaire, builder de demande, matching attribution, migrations sécurité et parcours public ajoutés.
 - ✅ **Passage de relais** — `docs/HANDOFF_CLAUDE_CODE.md` créé avec chantiers P0/P1/P2/P3, commandes, risques et prompts de reprise.
 
 ### Récap précédente importante (2026-05-22, après v1.4.0)

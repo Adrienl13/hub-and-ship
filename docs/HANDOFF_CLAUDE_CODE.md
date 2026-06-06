@@ -2,7 +2,7 @@
 
 > Derniere mise a jour : 2026-06-06
 > Branche active : `codex/seo-geo-foundation`
-> Dernier commit fonctionnel : `379adb3 feat(partners): capture reseller applications and deals`
+> Dernier commit fonctionnel : voir `git log --oneline -5`
 > Prod verifiee : `https://prosimport.com/partenaires?deploy=379adb3`
 
 Ce document sert de point d'entree court pour reprendre le chantier avec Claude Code ou une autre IA. Lire aussi `docs/PLATFORM_STRATEGY.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md` et `docs/KNOWN_ISSUES.md`.
@@ -27,11 +27,14 @@ Fait et pousse sur GitHub :
 - Page publique `/partenaires` avec positionnement revendeur protege, FAQ conflit canal, formulaire demande partenaire et mode "proteger une opportunite".
 - API `/api/partner-requests` same-origin, validation Zod, refus origin externe, persistance service role quand Supabase est pret.
 - Migration creee : `supabase/migrations/20260606190000_partner_applications_and_deals.sql`.
+- Migration creee : `supabase/migrations/20260606210000_partner_attribution_on_reservations.sql`.
 - Tables cible : `partner_applications`, `partner_deals`.
+- Reservations enrichies : `partner_deal_id`, `partner_attribution_reason`, `partner_attribution_snapshot`.
 - RLS cible : admin-only pour lecture/ecriture directe ; le public passe par l'endpoint serveur.
 - Onglet admin `Partenaires` pour lire, filtrer et changer les statuts.
+- Onglet admin `Reservations` enrichi avec badge interne "Deal partenaire reconnu".
 - Fallback local : si l'API/persistance echoue, le lead est sauvegarde dans `localStorage`.
-- Tests ajoutes : builder partenaire, API, migration securite, E2E partenaires/API.
+- Tests ajoutes : builder partenaire, matching attribution, API, migrations securite, E2E partenaires/API.
 - Deploy Cloudflare effectue : version `fe56b3be-8185-43a4-88ef-d7b648c73ffd`.
 
 Validation passee :
@@ -45,13 +48,13 @@ npx playwright test tests/e2e/site-audit.spec.ts --grep "partner|partenaire|API"
 Point bloque important :
 
 - La migration Supabase partenaire n'a pas ete appliquee au projet distant, car la session Codex n'avait pas de `SUPABASE_ACCESS_TOKEN`.
-- Tant que la migration n'est pas appliquee, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB.
+- Tant que les migrations partenaires ne sont pas appliquees, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB, et l'attribution automatique ne pourra pas s'executer en production.
 
 ## Priorite P0 — Debloquer la prod data
 
-### P0.1 Appliquer la migration Supabase partenaires
+### P0.1 Appliquer les migrations Supabase partenaires
 
-Pourquoi : sans cette migration, les leads partenaires ne remontent pas dans l'admin.
+Pourquoi : sans ces migrations, les leads partenaires ne remontent pas dans l'admin et les reservations ne sont pas attribuees automatiquement aux deals proteges.
 
 Commandes conseillees :
 
@@ -69,6 +72,16 @@ select table_name
 from information_schema.tables
 where table_schema = 'public'
   and table_name in ('partner_applications', 'partner_deals');
+
+select column_name
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'reservations'
+  and column_name in (
+    'partner_deal_id',
+    'partner_attribution_reason',
+    'partner_attribution_snapshot'
+  );
 ```
 
 Puis tester en prod :
@@ -127,6 +140,8 @@ Attendu : `201` avec `persisted: true`.
 
 ### P1.1 Attribution automatique SIRET/email
 
+Statut : implementation code + migration prete, push Supabase distant encore bloque par `SUPABASE_ACCESS_TOKEN`.
+
 Pourquoi : c'est le coeur de la confiance revendeur.
 
 But :
@@ -134,20 +149,31 @@ But :
 - Quand un client final arrive avec un SIRET/email deja protege, le systeme doit reconnaitre le deal.
 - L'UI publique ne doit pas afficher le partenaire sans controle, mais l'admin doit voir l'attribution.
 
-Chantier technique :
+Ce qui est implemente :
 
-- Ajouter une table `partner_attributions` ou enrichir `partner_deals`.
-- Ajouter une fonction serveur/RPC qui matche :
-  - `client_siret`
-  - domaine email client
-  - lien co-brande futur
-- Ajouter tests RLS + tests unitaires de matching.
+- Migration `20260606210000_partner_attribution_on_reservations.sql`.
+- Matching priorise : SIRET exact, email exact, domaine email professionnel.
+- Exclusion des domaines generiques pour le matching par domaine (`gmail.com`, `orange.fr`, `outlook.com`, etc.).
+- Trigger `reservations_set_partner_attribution` avant insert/update SIRET/contact.
+- Snapshot admin-only dans `reservations.partner_attribution_snapshot`.
+- Module pur `src/lib/partners/attribution.ts` + tests.
+- Admin reservations affiche "Deal partenaire reconnu".
+
+Reste a faire apres application Supabase :
+
+- Creer un deal test en statut `protected` avec `protected_until` futur.
+- Creer une reservation test avec le meme SIRET/email.
+- Verifier `/admin?tab=reservations` : badge deal partenaire.
+- Verifier que le public ne voit jamais le nom du partenaire dans le checkout.
 
 Fichiers de depart :
 
+- `src/lib/partners/attribution.ts`
+- `src/lib/partners/attribution.test.ts`
 - `src/lib/partners/repository.ts`
 - `src/lib/partners/submission.ts`
 - `supabase/migrations/20260606190000_partner_applications_and_deals.sql`
+- `supabase/migrations/20260606210000_partner_attribution_on_reservations.sql`
 
 ### P1.2 Espace partenaire authentifie
 

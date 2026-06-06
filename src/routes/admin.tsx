@@ -133,6 +133,12 @@ const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
   cancelled: 'Annulée',
 }
 
+const PARTNER_ATTRIBUTION_REASON_LABEL: Record<string, string> = {
+  client_siret: 'SIRET',
+  client_email: 'Email',
+  client_email_domain: 'Domaine email',
+}
+
 const STOCK_REQUEST_STATUS_LABEL_LOCAL: Record<StockRequestStatus, string> = {
   new: 'Nouveau',
   contacted: 'Contactée',
@@ -762,7 +768,13 @@ function ReservationsAdminPanel({
         row.siret.toLowerCase().includes(needle) ||
         (row.companyLegalName?.toLowerCase().includes(needle) ?? false) ||
         (row.contactEmail?.toLowerCase().includes(needle) ?? false) ||
-        (row.contactName?.toLowerCase().includes(needle) ?? false)
+        (row.contactName?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerAttributionPartnerCompany
+          ?.toLowerCase()
+          .includes(needle) ??
+          false) ||
+        (row.partnerAttributionPartnerEmail?.toLowerCase().includes(needle) ??
+          false)
       )
     })
   }, [rows, statusFilter, search])
@@ -939,6 +951,26 @@ function ReservationsAdminPanel({
                     <div className="mt-1 text-xs text-muted-foreground">
                       {row.containerReference} · SIRET {row.siret}
                     </div>
+                    {row.partnerDealId && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[color:var(--forest)]">
+                        <Handshake className="h-3.5 w-3.5" />
+                        <span className="font-medium">
+                          Deal partenaire reconnu
+                        </span>
+                        {row.partnerAttributionPartnerCompany && (
+                          <span>
+                            · {row.partnerAttributionPartnerCompany}
+                          </span>
+                        )}
+                        {row.partnerAttributionReason && (
+                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
+                            {PARTNER_ATTRIBUTION_REASON_LABEL[
+                              row.partnerAttributionReason
+                            ] ?? row.partnerAttributionReason}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {row.stripePaymentIntentId && (
                       <a
                         href={buildStripePaymentIntentUrl(

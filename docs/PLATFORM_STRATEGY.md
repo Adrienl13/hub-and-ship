@@ -446,7 +446,8 @@ DoD :
 - ✅ Tables Supabase initiales : `partner_applications`, `partner_deals`.
 - ✅ Statuts de deal : soumis, protégé, devis envoyé, réservé, gagné, perdu, expiré, refusé.
 - ✅ Admin peut qualifier les candidatures et changer le statut des deals.
-- 🔄 Protection par SIRET/email domaine/lien : SIRET/email client capturés, attribution automatique encore à construire.
+- ✅ Protection par SIRET/email domaine : attribution automatique prête en migration, à appliquer sur Supabase prod.
+- 🔄 Lien co-brandé : attribution par lien partenaire encore à construire.
 - 🔄 Expiration : `protection_days` et `protected_until` existent, automatisation d'expiration à ajouter.
 
 ### C04 — Sélections et devis co-brandés

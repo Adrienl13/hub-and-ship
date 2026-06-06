@@ -311,6 +311,9 @@ type ReservationRow = {
   stripe_customer_id: string | null
   stripe_checkout_session_id: string | null
   paid_reservation_fee_at: string | null
+  partner_deal_id: string | null
+  partner_attribution_reason: string | null
+  partner_attribution_snapshot: Json
   created_at: string
   updated_at: string
   requested_container_type: ContainerType | null
@@ -353,6 +356,9 @@ type ReservationInsert = {
   stripe_customer_id?: string | null
   stripe_checkout_session_id?: string | null
   paid_reservation_fee_at?: string | null
+  partner_deal_id?: string | null
+  partner_attribution_reason?: string | null
+  partner_attribution_snapshot?: Json
   created_at?: string
   updated_at?: string
   requested_container_type?: ContainerType | null
@@ -900,6 +906,21 @@ export interface Database {
       create_reservation_with_items: {
         Args: { payload: Json }
         Returns: Json
+      }
+      find_partner_protected_deal: {
+        Args: {
+          p_client_siret: string | null
+          p_client_email: string | null
+          p_now?: string
+        }
+        Returns: ReadonlyArray<{
+          deal_id: string
+          partner_company_name: string
+          partner_contact_email: string
+          reason: string
+          matched_value: string
+          protected_until: string
+        }>
       }
     }
     Enums: {

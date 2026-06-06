@@ -279,6 +279,17 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-020 — Attribution partenaire au niveau PostgreSQL (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Une réservation peut être créée via la RPC atomique, le fallback legacy, un futur back-office ou un futur lien co-brandé. Si l'attribution partenaire vivait seulement dans le navigateur, le revendeur resterait exposé au court-circuit.
+**Décision** : Enrichir `reservations` avec `partner_deal_id`, `partner_attribution_reason` et `partner_attribution_snapshot`, puis déclencher l'attribution en base avant insert/update SIRET/contact. Le matching priorise SIRET exact, email exact, puis domaine email professionnel, en excluant les domaines génériques pour le fallback domaine.
+**Alternatives** : Créer une table `partner_attributions` séparée ; effectuer le matching dans `/api/checkout` ; attendre l'espace partenaire avant de protéger les deals.
+**Raison** : Le trigger couvre toutes les voies d'écriture et garde la protection au plus près des données sensibles, sans exposer le partenaire dans l'UI publique.
+**Conséquences** : La migration `20260606210000_partner_attribution_on_reservations.sql` doit être appliquée en production avec les tables partenaires. Le matching par lien co-brandé reste un chantier séparé.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

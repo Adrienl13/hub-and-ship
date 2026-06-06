@@ -36,6 +36,12 @@ export interface AdminReservationRow {
   readonly adminNotes: string | null
   readonly stripePaymentIntentId: string | null
   readonly paidReservationFeeAt: string | null
+  readonly partnerDealId: string | null
+  readonly partnerAttributionReason: string | null
+  readonly partnerAttributionPartnerCompany: string | null
+  readonly partnerAttributionPartnerEmail: string | null
+  readonly partnerAttributionMatchedValue: string | null
+  readonly partnerAttributionProtectedUntil: string | null
   readonly createdAt: string
   readonly updatedAt: string
   readonly requestedContainerType: ContainerType | null
@@ -46,6 +52,13 @@ interface ContactSnapshot {
   readonly company?: string
   readonly email?: string
   readonly phone?: string
+}
+
+interface PartnerAttributionSnapshot {
+  readonly partnerCompanyName?: string
+  readonly partnerContactEmail?: string
+  readonly matchedValue?: string
+  readonly protectedUntil?: string
 }
 
 function extractContact(snapshot: unknown): ContactSnapshot {
@@ -59,8 +72,34 @@ function extractContact(snapshot: unknown): ContactSnapshot {
   }
 }
 
+function extractPartnerAttribution(
+  snapshot: unknown,
+): PartnerAttributionSnapshot {
+  if (!snapshot || typeof snapshot !== 'object') return {}
+  const obj = snapshot as Record<string, unknown>
+  return {
+    partnerCompanyName:
+      typeof obj.partner_company_name === 'string'
+        ? obj.partner_company_name
+        : undefined,
+    partnerContactEmail:
+      typeof obj.partner_contact_email === 'string'
+        ? obj.partner_contact_email
+        : undefined,
+    matchedValue:
+      typeof obj.matched_value === 'string' ? obj.matched_value : undefined,
+    protectedUntil:
+      typeof obj.protected_until === 'string'
+        ? obj.protected_until
+        : undefined,
+  }
+}
+
 function toAdminRow(row: ReservationRow): AdminReservationRow {
   const contact = extractContact(row.contact_snapshot)
+  const partnerAttribution = extractPartnerAttribution(
+    row.partner_attribution_snapshot,
+  )
   return {
     id: row.id,
     reference: row.reference,
@@ -82,6 +121,15 @@ function toAdminRow(row: ReservationRow): AdminReservationRow {
     adminNotes: row.admin_notes,
     stripePaymentIntentId: row.stripe_payment_intent_id,
     paidReservationFeeAt: row.paid_reservation_fee_at,
+    partnerDealId: row.partner_deal_id,
+    partnerAttributionReason: row.partner_attribution_reason,
+    partnerAttributionPartnerCompany:
+      partnerAttribution.partnerCompanyName ?? null,
+    partnerAttributionPartnerEmail:
+      partnerAttribution.partnerContactEmail ?? null,
+    partnerAttributionMatchedValue: partnerAttribution.matchedValue ?? null,
+    partnerAttributionProtectedUntil:
+      partnerAttribution.protectedUntil ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     requestedContainerType: row.requested_container_type,
