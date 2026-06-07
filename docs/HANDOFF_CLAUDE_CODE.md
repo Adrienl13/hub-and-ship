@@ -56,10 +56,12 @@ npx playwright test tests/e2e/site-audit.spec.ts --grep "partner|partenaire|API"
 npx playwright test tests/e2e/site-audit.spec.ts --grep "partner|partenaire|/p/"
 ```
 
-Point bloque important :
+Point bloque important — RESOLU le 2026-06-07 (Claude Code) :
 
-- Les migrations Supabase partenaires n'ont pas ete appliquees au projet distant, car la session Codex n'avait pas de `SUPABASE_ACCESS_TOKEN`.
-- Tant que les migrations partenaires ne sont pas appliquees, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB, l'attribution automatique SIRET/email ne pourra pas s'executer, et l'attribution par lien `/p/{slug}` restera seulement visible dans le snapshot local/client.
+- ~~Les migrations Supabase partenaires n'ont pas ete appliquees au projet distant.~~ **Appliquees** sur `mkfztwibolswqcggukeq` via le MCP Supabase (les 3 migrations partenaires + une migration de durcissement `20260607140000_harden_partner_attribution_function_grants.sql`). Voir `docs/KNOWN_ISSUES.md` ISSUE-001 et ISSUE-002.
+- Verifie en prod : `POST /api/partner-requests` et `POST /api/stock-requests` renvoient `201 persisted:true` ; attribution reservation (SIRET / email pro / lien co-brande) validee ; fonctions d'attribution revoquees pour anon/authenticated (admin/service-only).
+- Restent NON appliquees au distant (hors scope P0 partenaires, a traiter separement) : `20260605183000_create_reservation_with_items_rpc.sql` (bascule le checkout public sur un RPC et ferme les policies anon INSERT ; le front prod appelle deja le RPC avec fallback legacy, donc a appliquer apres verification du bundle deploye).
+- Divergence connue : l'historique de migration distant contient des migrations absentes du dossier local (`stock_lines*`, `admin_save_product_full_audit`, `stock_lines_cascade_on_delete`, `admin_save_product_full_zero_variant_guard`) — la branche locale a ete creee avant. A reconcilier lors d'un prochain `supabase db pull`.
 
 ## Reprise conseillee pour Claude Code
 

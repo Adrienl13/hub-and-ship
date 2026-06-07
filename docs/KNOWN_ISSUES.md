@@ -25,15 +25,30 @@
 
 ### ISSUE-001 — Migrations partenaires non appliquées en production
 
-**Statut** : Open
+**Statut** : Resolved
 **Sévérité** : High
 **Découvert** : 2026-06-06
+**Résolu** : 2026-06-07
 **Contexte** : Canal partenaires `/partenaires` et endpoint `/api/partner-requests`
 **Symptôme** : Le formulaire public est deployé, mais une vraie persistance centrale en DB dépend de la migration `20260606190000_partner_applications_and_deals.sql`. L'attribution automatique des réservations aux deals partenaires dépend de `20260606210000_partner_attribution_on_reservations.sql`. L'attribution par lien co-brandé dépend aussi de `20260607090000_partner_link_attribution.sql`.
 **Cause racine** : La session Codex ne disposait pas de `SUPABASE_ACCESS_TOKEN`, donc `npx supabase db push --linked --dry-run` a échoué avant connexion au projet.
-**Workaround** : Le formulaire sauvegarde la demande en localStorage si la persistance serveur échoue, afin de ne pas perdre le lead sur l'appareil courant. L'attribution partenaire reste inactive tant que la migration n'est pas appliquée.
-**Fix permanent** : Exporter `SUPABASE_ACCESS_TOKEN`, lier le projet `mkfztwibolswqcggukeq`, lancer `npx supabase db push --linked --dry-run`, puis `npx supabase db push --linked`, tester un submit depuis `/partenaires` jusqu'à `/admin?tab=partners`, puis créer une réservation test qui matche un deal protégé et vérifier `/admin?tab=reservations`. Tester aussi `/p/chr-conseil?selection=test`, réserver, puis vérifier que `partner_context` existe dans `contact_snapshot`.
+**Résolution (2026-06-07, Claude Code)** : Les 3 migrations partenaires ont été appliquées sur le projet `mkfztwibolswqcggukeq` via le MCP Supabase (`apply_migration`), versions réalignées sur les noms de fichiers locaux dans `supabase_migrations.schema_migrations`. Vérifié : tables `partner_applications`/`partner_deals`, colonnes `partner_*` sur `reservations`, trigger `reservations_set_partner_attribution`, fonctions de matching et RLS admin-only. Tests d'attribution (SIRET / email pro / lien co-brandé / domaine générique exclu) validés en transaction `rollback`. Smoke tests prod OK : `POST /api/partner-requests` → `201 persisted:true`, `POST /api/stock-requests` → `201 persisted:true` (lignes de test supprimées ensuite).
+**Note sécurité (voir ISSUE-002)** : le `revoke ... from public` des migrations était insuffisant sous Supabase ; une migration de durcissement `20260607140000_harden_partner_attribution_function_grants.sql` a été ajoutée.
 **Liens** : Voir `docs/HANDOFF_CLAUDE_CODE.md` section P0.
+
+---
+
+### ISSUE-002 — Fonctions d'attribution partenaire exposées en REST à anon/authenticated
+
+**Statut** : Resolved
+**Sévérité** : High
+**Découvert** : 2026-06-07
+**Résolu** : 2026-06-07
+**Contexte** : Fonctions `find_partner_protected_deal`, `find_partner_link_attribution`, `set_reservation_partner_attribution` créées par les migrations partenaires.
+**Symptôme** : `get_advisors` (security) signalait ces `SECURITY DEFINER` comme exécutables par `anon`/`authenticated` via `/rest/v1/rpc/...`. `find_partner_protected_deal(siret, email)` et `find_partner_link_attribution(slug)` renvoient `partner_company_name` + `partner_contact_email` : un appelant public pouvait sonder un SIRET/email/slug et révéler l'identité du partenaire et ses prospects protégés — violation de la règle "données prospects partenaires = admin-only".
+**Cause racine** : Les migrations faisaient `revoke execute ... from public`, mais Supabase accorde EXECUTE directement aux rôles `anon`/`authenticated`, que `from public` ne révoque pas.
+**Fix permanent** : Migration `20260607140000_harden_partner_attribution_function_grants.sql` — `revoke execute ... from anon, authenticated` sur les 3 fonctions. Le trigger reste fonctionnel (fonction `SECURITY DEFINER` exécutée avec les droits du owner, indépendamment du privilège EXECUTE de l'appelant) — vérifié par insert réel en transaction `rollback`. Seul `service_role` conserve EXECUTE. Ne PAS appliquer ce revoke aux helpers RLS `is_admin()`/`current_user_role()`/`current_company_id()` qui doivent rester exécutables.
+**Liens** : https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
 
 ---
 
