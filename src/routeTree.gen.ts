@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
@@ -95,6 +96,11 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
   path: '/legal/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnerSelectionsRoute = PartnerSelectionsRouteImport.update({
+  id: '/selections',
+  path: '/selections',
+  getParentRoute: () => PartnerRoute,
+} as any)
 const PPartnerSlugRoute = PPartnerSlugRouteImport.update({
   id: '/p/$partnerSlug',
   path: '/p/$partnerSlug',
@@ -165,7 +171,7 @@ export interface FileRoutesByFullPath {
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/partenaires': typeof PartenairesRoute
-  '/partner': typeof PartnerRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRoute
+  '/partner/selections': typeof PartnerSelectionsRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -191,7 +198,7 @@ export interface FileRoutesByTo {
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/partenaires': typeof PartenairesRoute
-  '/partner': typeof PartnerRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRoute
+  '/partner/selections': typeof PartnerSelectionsRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -218,7 +226,7 @@ export interface FileRoutesById {
   '/catalogue': typeof CatalogueRoute
   '/faq': typeof FaqRoute
   '/partenaires': typeof PartenairesRoute
-  '/partner': typeof PartnerRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRoute
+  '/partner/selections': typeof PartnerSelectionsRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
+    | '/partner/selections'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
+    | '/partner/selections'
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
+    | '/partner/selections'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -325,7 +337,7 @@ export interface RootRouteChildren {
   CatalogueRoute: typeof CatalogueRoute
   FaqRoute: typeof FaqRoute
   PartenairesRoute: typeof PartenairesRoute
-  PartnerRoute: typeof PartnerRoute
+  PartnerRoute: typeof PartnerRouteWithChildren
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
@@ -431,6 +443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partner/selections': {
+      id: '/partner/selections'
+      path: '/selections'
+      fullPath: '/partner/selections'
+      preLoaderRoute: typeof PartnerSelectionsRouteImport
+      parentRoute: typeof PartnerRoute
+    }
     '/p/$partnerSlug': {
       id: '/p/$partnerSlug'
       path: '/p/$partnerSlug'
@@ -518,6 +537,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PartnerRouteChildren {
+  PartnerSelectionsRoute: typeof PartnerSelectionsRoute
+}
+
+const PartnerRouteChildren: PartnerRouteChildren = {
+  PartnerSelectionsRoute: PartnerSelectionsRoute,
+}
+
+const PartnerRouteWithChildren =
+  PartnerRoute._addFileChildren(PartnerRouteChildren)
+
 interface AccountReservationsRouteChildren {
   AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
 }
@@ -535,7 +565,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogueRoute: CatalogueRoute,
   FaqRoute: FaqRoute,
   PartenairesRoute: PartenairesRoute,
-  PartnerRoute: PartnerRoute,
+  PartnerRoute: PartnerRouteWithChildren,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,

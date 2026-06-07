@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import {
   ArrowRight,
   BadgeEuro,
@@ -22,9 +22,18 @@ import {
   normalizePartnerSlug,
   partnerDisplayNameFromSlug,
 } from '@/lib/partners/link'
+import {
+  getPublicSelection,
+  selectionPublicTotalHt,
+  selectionTotalUnits,
+  type PartnerSelectionsClient,
+  type PublicSelection,
+} from '@/lib/partners/selections'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL, PRODUCTS } from '@/lib/products'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -35,6 +44,14 @@ const LazyReservationDialog = lazy(() =>
 
 export const Route = createFileRoute('/p/$partnerSlug')({
   component: PartnerSharePage,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { readonly selection?: string } => ({
+    selection:
+      typeof search.selection === 'string' && search.selection.trim() !== ''
+        ? search.selection
+        : undefined,
+  }),
   head: ({ params }) => {
     const slug = normalizePartnerSlug(params.partnerSlug) ?? 'partenaire'
     const partnerName = partnerDisplayNameFromSlug(slug)
@@ -61,6 +78,7 @@ export const Route = createFileRoute('/p/$partnerSlug')({
 
 function PartnerSharePage() {
   const { partnerSlug } = Route.useParams()
+  const { selection: selectionId } = Route.useSearch()
   const normalizedSlug = normalizePartnerSlug(partnerSlug) ?? 'partenaire'
   const partnerName = partnerDisplayNameFromSlug(normalizedSlug)
   const { products, currentContainer } = useCatalog()
@@ -71,6 +89,7 @@ function PartnerSharePage() {
     capacityCbm: currentContainer.capacityCbm,
   })
   const [reserveOpen, setReserveOpen] = useState(false)
+  const selection = usePublicSelection(selectionId)
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
@@ -138,6 +157,14 @@ function PartnerSharePage() {
             </RevealStagger>
           </div>
         </section>
+
+        {selection && (
+          <SelectionShowcase
+            selection={selection}
+            partnerName={partnerName}
+            onReserve={() => setReserveOpen(true)}
+          />
+        )}
 
         <section className="border-b border-[color:var(--sand-deep)]">
           <RevealStagger className="mx-auto grid max-w-7xl gap-px bg-[color:var(--sand-deep)] px-6 py-12 md:grid-cols-4">
@@ -309,5 +336,123 @@ function PartnerSharePage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+function usePublicSelection(
+  selectionId: string | undefined,
+): PublicSelection | null {
+  const [selection, setSelection] = useState<PublicSelection | null>(null)
+
+  useEffect(() => {
+    if (!selectionId) {
+      setSelection(null)
+      return
+    }
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as unknown as PartnerSelectionsClient
+        const data = await getPublicSelection(client, selectionId)
+        if (!cancelled) setSelection(data)
+      } catch {
+        if (!cancelled) setSelection(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [selectionId])
+
+  return selection
+}
+
+function SelectionShowcase({
+  selection,
+  partnerName,
+  onReserve,
+}: {
+  readonly selection: PublicSelection
+  readonly partnerName: string
+  readonly onReserve: () => void
+}) {
+  const totalHt = selectionPublicTotalHt(selection.items)
+  const totalUnits = selectionTotalUnits(selection.items)
+  const categoryLabels = CATEGORY_LABEL as Record<string, string>
+
+  return (
+    <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="label-eyebrow text-[color:var(--ember)]">
+          Sélection préparée par {partnerName}
+        </div>
+        <h2 className="mt-2 font-display text-3xl tracking-tight">
+          {selection.title}
+        </h2>
+        {selection.comment && (
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)]">
+            {selection.comment}
+          </p>
+        )}
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {selection.items.map((item) => (
+            <article
+              key={item.id}
+              className="flex gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3"
+            >
+              <img
+                src={item.snapshot.imageUrl}
+                alt={item.snapshot.name}
+                className="h-20 w-20 shrink-0 rounded-sm object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                  {categoryLabels[item.snapshot.category] ??
+                    item.snapshot.category}
+                </div>
+                <div className="font-display text-base font-semibold">
+                  {item.snapshot.name}
+                </div>
+                {item.variantName && (
+                  <div className="text-xs text-muted-foreground">
+                    {item.variantName}
+                  </div>
+                )}
+                <div className="mt-1.5 text-sm">
+                  <span className="font-semibold">×{item.quantity}</span>
+                  <span className="text-muted-foreground">
+                    {' · '}
+                    {formatEUR(item.snapshot.basePriceHt)} HT / unité
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card px-5 py-4">
+          <span className="text-sm text-muted-foreground">
+            {totalUnits} unité{totalUnits > 1 ? 's' : ''} · Total public{' '}
+            <strong className="text-foreground">{formatEUR(totalHt)} HT</strong>
+            <span className="block text-xs">
+              Prix directs pros. Les conditions partenaires restent privées.
+            </span>
+          </span>
+          <Button
+            type="button"
+            onClick={onReserve}
+            className="h-11 rounded-sm bg-[color:var(--foreground)] px-5 text-[color:var(--background)]"
+          >
+            Réserver cette sélection
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </section>
   )
 }

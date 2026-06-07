@@ -91,6 +91,19 @@ function PartnerDashboard() {
           privés ; cette page ne les expose jamais.
         </p>
 
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            asChild
+            size="sm"
+            className="h-9 rounded-sm bg-foreground px-3 text-xs text-background"
+          >
+            <a href="/partner/selections">Mes sélections co-brandées</a>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="h-9 px-3 text-xs">
+            <a href="/partenaires#proteger">Protéger une opportunité</a>
+          </Button>
+        </div>
+
         {state === 'loading' ? (
           <div className="mt-8 space-y-3">
             {[0, 1, 2].map((i) => (
