@@ -101,6 +101,65 @@ export async function claimPartnerAccess(
   return data ?? []
 }
 
+// ---------------------------------------------------------------------------
+// Self-service deal registration — a partner declares an opportunity from the
+// portal. Status is forced to 'submitted'; protection stays an admin decision
+// (enforced by the RLS WITH CHECK in 20260607200000_partner_self_service_deals).
+// ---------------------------------------------------------------------------
+
+export interface CreatePartnerDealInput {
+  readonly applicationId: string
+  readonly partnerCompanyName: string
+  readonly partnerContactEmail: string
+  readonly clientCompanyName: string
+  readonly clientSiret: string | null
+  readonly clientEmail: string | null
+  readonly projectType: string
+  readonly projectCity: string | null
+  readonly expectedBudgetHt: number | null
+  readonly expectedPurchaseWindow: string | null
+  readonly productInterest: string | null
+  readonly message: string | null
+}
+
+export interface PartnerDealInsertClient {
+  from: (table: 'partner_deals') => {
+    insert: (
+      payload: unknown,
+    ) => PromiseLike<{ readonly error: { readonly message: string } | null }>
+  }
+}
+
+/** Builds the insert payload, forcing the safe status and portal source. */
+export function partnerDealInsertPayload(input: CreatePartnerDealInput) {
+  return {
+    application_id: input.applicationId,
+    status: 'submitted' as const,
+    source: 'partner_portal',
+    partner_company_name: input.partnerCompanyName,
+    partner_contact_email: input.partnerContactEmail,
+    client_company_name: input.clientCompanyName,
+    client_siret: input.clientSiret,
+    client_email: input.clientEmail,
+    project_type: input.projectType,
+    project_city: input.projectCity,
+    expected_budget_ht: input.expectedBudgetHt,
+    expected_purchase_window: input.expectedPurchaseWindow,
+    product_interest: input.productInterest,
+    message: input.message,
+  }
+}
+
+export async function createPartnerDeal(
+  client: PartnerDealInsertClient,
+  input: CreatePartnerDealInput,
+): Promise<void> {
+  const { error } = await client
+    .from('partner_deals')
+    .insert(partnerDealInsertPayload(input))
+  if (error) throw new Error(error.message)
+}
+
 export async function loadPartnerWorkspace(
   client: PartnerPortalClient,
 ): Promise<PartnerWorkspace> {

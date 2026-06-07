@@ -1,14 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { ArrowRight, Copy, Link2, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Copy, Link2, Plus, ShieldCheck } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { PartnerGuard } from '@/components/PartnerGuard'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
+  createPartnerDeal,
   loadPartnerWorkspace,
+  type CreatePartnerDealInput,
+  type PartnerDealInsertClient,
   type PartnerPortalClient,
   type PartnerWorkspace,
 } from '@/lib/partners/portal'
@@ -50,29 +54,44 @@ function PartnerDashboard() {
   const [workspace, setWorkspace] = useState<PartnerWorkspace | null>(null)
   const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const client = createSupabaseBrowserClient(
-          config,
-        ) as unknown as PartnerPortalClient
-        const data = await loadPartnerWorkspace(client)
-        if (!cancelled) {
-          setWorkspace(data)
-          setState('loaded')
-        }
-      } catch {
-        if (!cancelled) setState('error')
-      }
-    })()
-    return () => {
-      cancelled = true
+  const load = useCallback(async () => {
+    try {
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as unknown as PartnerPortalClient
+      const data = await loadPartnerWorkspace(client)
+      setWorkspace(data)
+      setState('loaded')
+    } catch {
+      setState('error')
     }
   }, [config])
 
+  useEffect(() => {
+    void load()
+  }, [load])
+
   const application = workspace?.applications[0] ?? null
   const partnerName = application?.companyName ?? 'Partenaire'
+
+  async function createDeal(
+    fields: Omit<
+      CreatePartnerDealInput,
+      'applicationId' | 'partnerCompanyName' | 'partnerContactEmail'
+    >,
+  ): Promise<void> {
+    if (!application) throw new Error('Candidature partenaire introuvable')
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as unknown as PartnerDealInsertClient
+    await createPartnerDeal(client, {
+      applicationId: application.id,
+      partnerCompanyName: application.companyName,
+      partnerContactEmail: application.contactEmail,
+      ...fields,
+    })
+    await load()
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -99,9 +118,6 @@ function PartnerDashboard() {
           >
             <a href="/partner/selections">Mes sélections co-brandées</a>
           </Button>
-          <Button asChild size="sm" variant="outline" className="h-9 px-3 text-xs">
-            <a href="/partenaires#proteger">Protéger une opportunité</a>
-          </Button>
         </div>
 
         {state === 'loading' ? (
@@ -124,7 +140,7 @@ function PartnerDashboard() {
               slug={application?.referralSlug ?? null}
               partnerName={partnerName}
             />
-            <DealsCard deals={workspace.deals} />
+            <DealsCard deals={workspace.deals} onCreateDeal={createDeal} />
             <AttributedReservationsCard
               reservations={workspace.reservations}
             />
@@ -214,9 +230,18 @@ function ShareLinkCard({
 
 function DealsCard({
   deals,
+  onCreateDeal,
 }: {
   readonly deals: PartnerWorkspace['deals']
+  readonly onCreateDeal: (
+    fields: Omit<
+      CreatePartnerDealInput,
+      'applicationId' | 'partnerCompanyName' | 'partnerContactEmail'
+    >,
+  ) => Promise<void>
 }) {
+  const [formOpen, setFormOpen] = useState(false)
+
   return (
     <section className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
       <div className="flex items-center justify-between gap-2 border-b border-[color:var(--sand-deep)] px-5 py-3">
@@ -227,14 +252,27 @@ function DealsCard({
           </h2>
         </div>
         <Button
-          asChild
+          type="button"
           size="sm"
           variant="outline"
-          className="h-8 px-2 text-xs"
+          onClick={() => setFormOpen((open) => !open)}
+          className="h-8 gap-1 px-2 text-xs"
         >
-          <a href="/partenaires#proteger">Protéger une opportunité</a>
+          <Plus className="h-3.5 w-3.5" />
+          {formOpen ? 'Fermer' : 'Protéger une opportunité'}
         </Button>
       </div>
+
+      {formOpen && (
+        <DealForm
+          onSubmit={async (fields) => {
+            await onCreateDeal(fields)
+            setFormOpen(false)
+          }}
+          onCancel={() => setFormOpen(false)}
+        />
+      )}
+
       {deals.length === 0 ? (
         <p className="px-5 py-8 text-sm text-muted-foreground">
           Aucune opportunité protégée pour l'instant. Déclarez un projet client
@@ -269,6 +307,155 @@ function DealsCard({
         </ul>
       )}
     </section>
+  )
+}
+
+function DealForm({
+  onSubmit,
+  onCancel,
+}: {
+  readonly onSubmit: (
+    fields: Omit<
+      CreatePartnerDealInput,
+      'applicationId' | 'partnerCompanyName' | 'partnerContactEmail'
+    >,
+  ) => Promise<void>
+  readonly onCancel: () => void
+}) {
+  const [clientCompanyName, setClientCompanyName] = useState('')
+  const [projectType, setProjectType] = useState('')
+  const [projectCity, setProjectCity] = useState('')
+  const [clientSiret, setClientSiret] = useState('')
+  const [clientEmail, setClientEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  function nullable(value: string): string | null {
+    const trimmed = value.trim()
+    return trimmed === '' ? null : trimmed
+  }
+
+  async function submit(): Promise<void> {
+    if (clientCompanyName.trim() === '' || projectType.trim() === '') {
+      toast.error('Renseignez au moins le client et le type de projet.')
+      return
+    }
+    setBusy(true)
+    try {
+      await onSubmit({
+        clientCompanyName: clientCompanyName.trim(),
+        projectType: projectType.trim(),
+        projectCity: nullable(projectCity),
+        clientSiret: nullable(clientSiret),
+        clientEmail: nullable(clientEmail),
+        message: nullable(message),
+        expectedBudgetHt: null,
+        expectedPurchaseWindow: null,
+        productInterest: null,
+      })
+      toast.success('Opportunité soumise', {
+        description: 'Notre équipe la protégera après vérification.',
+      })
+    } catch (err) {
+      toast.error('Soumission impossible', {
+        description: err instanceof Error ? err.message : undefined,
+      })
+    }
+    setBusy(false)
+  }
+
+  return (
+    <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/30 px-5 py-4">
+      <p className="mb-3 text-xs text-muted-foreground">
+        Déclarez un projet client pour le rattacher à votre canal. La protection
+        (durée, statut) est validée ensuite par notre équipe.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Client (société) *">
+          <Input
+            value={clientCompanyName}
+            disabled={busy}
+            onChange={(e) => setClientCompanyName(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="Type de projet *">
+          <Input
+            value={projectType}
+            disabled={busy}
+            placeholder="Ex. terrasse restaurant, hôtel, camping"
+            onChange={(e) => setProjectType(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="Ville du projet">
+          <Input
+            value={projectCity}
+            disabled={busy}
+            onChange={(e) => setProjectCity(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="SIRET client">
+          <Input
+            value={clientSiret}
+            disabled={busy}
+            onChange={(e) => setClientSiret(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="Email client">
+          <Input
+            value={clientEmail}
+            disabled={busy}
+            onChange={(e) => setClientEmail(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+        <Field label="Note (optionnel)">
+          <Input
+            value={message}
+            disabled={busy}
+            onChange={(e) => setMessage(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={busy}
+          onClick={onCancel}
+          className="h-9 px-3 text-sm"
+        >
+          Annuler
+        </Button>
+        <Button
+          type="button"
+          disabled={busy}
+          onClick={() => void submit()}
+          className="h-9 rounded-sm bg-foreground px-3 text-sm text-background"
+        >
+          Soumettre l'opportunité
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  children,
+}: {
+  readonly label: string
+  readonly children: ReactNode
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
   )
 }
 
