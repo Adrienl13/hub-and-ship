@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  updatePartnerApplicationNote,
   updatePartnerApplicationSlug,
+  updatePartnerDealNote,
   updatePartnerDealSlug,
   type PartnerAdminRepositoryClient,
 } from './repository'
@@ -104,6 +106,37 @@ describe('partner referral slug updates', () => {
 
     await expect(
       updatePartnerApplicationSlug(client, 'app-1', 'chr-conseil'),
+    ).rejects.toThrow('RLS denied')
+  })
+})
+
+describe('partner internal notes', () => {
+  it('trims and stores an application note', async () => {
+    const { client, updates } = createAdminClient()
+
+    await updatePartnerApplicationNote(client, 'app-1', '  rappeler lundi  ')
+
+    expect(firstUpdate(updates)).toMatchObject({
+      table: 'partner_applications',
+      id: 'app-1',
+    })
+    expect(firstUpdate(updates).payload.internal_note).toBe('rappeler lundi')
+  })
+
+  it('clears the note when only whitespace is provided', async () => {
+    const { client, updates } = createAdminClient()
+
+    await updatePartnerDealNote(client, 'deal-1', '   ')
+
+    expect(firstUpdate(updates)).toMatchObject({ table: 'partner_deals' })
+    expect(firstUpdate(updates).payload.internal_note).toBeNull()
+  })
+
+  it('propagates Supabase errors on note updates', async () => {
+    const { client } = createAdminClient({ message: 'RLS denied' })
+
+    await expect(
+      updatePartnerApplicationNote(client, 'app-1', 'note'),
     ).rejects.toThrow('RLS denied')
   })
 })

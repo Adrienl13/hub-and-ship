@@ -280,6 +280,48 @@ export async function updatePartnerDealStatus(
 }
 
 // ---------------------------------------------------------------------------
+// Internal notes — free-text admin annotations, never exposed publicly.
+// ---------------------------------------------------------------------------
+
+function toNoteValue(rawNote: string | null): string | null {
+  if (rawNote === null) return null
+  const trimmed = rawNote.trim()
+  return trimmed === '' ? null : trimmed
+}
+
+export async function updatePartnerApplicationNote(
+  client: PartnerAdminRepositoryClient,
+  id: string,
+  rawNote: string | null,
+): Promise<void> {
+  const { error } = await client
+    .from('partner_applications')
+    .update({
+      internal_note: toNoteValue(rawNote),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+}
+
+export async function updatePartnerDealNote(
+  client: PartnerAdminRepositoryClient,
+  id: string,
+  rawNote: string | null,
+): Promise<void> {
+  const { error } = await client
+    .from('partner_deals')
+    .update({
+      internal_note: toNoteValue(rawNote),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------------
 // Referral slug management — powers the admin "shareable link" action. The
 // `/p/{slug}` page is fully static, so the slug only needs to be stored here so
 // that the reservation attribution trigger can match a buyer back to this
