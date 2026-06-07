@@ -56,6 +56,26 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://prosimport.com/guides</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/import-mobilier-chr-container</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/prix-chaises-restaurant-volume</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/container-20-pieds-vs-40-pieds-mobilier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://prosimport.com/legal</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

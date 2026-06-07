@@ -21,11 +21,13 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
 import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -98,6 +100,11 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
   path: '/legal/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/account/',
   path: '/account/',
@@ -121,6 +128,11 @@ const LivresSlugRoute = LivresSlugRouteImport.update({
 const LegalSlugRoute = LegalSlugRouteImport.update({
   id: '/legal/$slug',
   path: '/legal/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CatalogueTablesRestaurantRoute =
@@ -195,11 +207,13 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/account/': typeof AccountIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -224,11 +238,13 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/account': typeof AccountIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -254,11 +270,13 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/account/': typeof AccountIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -285,11 +303,13 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/account/'
+    | '/guides/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -314,11 +334,13 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/account'
+    | '/guides'
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
@@ -343,11 +365,13 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/catalogue_/chaises-restaurant'
     | '/catalogue_/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/account/'
+    | '/guides/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -373,10 +397,12 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
   CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
   PPartnerSlugRoute: typeof PPartnerSlugRouteWithChildren
   AccountIndexRoute: typeof AccountIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -468,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/': {
       id: '/account/'
       path: '/account'
@@ -501,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/legal/$slug'
       fullPath: '/legal/$slug'
       preLoaderRoute: typeof LegalSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/catalogue_/tables-restaurant': {
@@ -628,10 +668,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
   CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
   PPartnerSlugRoute: PPartnerSlugRouteWithChildren,
   AccountIndexRoute: AccountIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

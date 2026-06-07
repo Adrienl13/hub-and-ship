@@ -97,6 +97,61 @@ export function faqJsonLd(
   }
 }
 
+export function articleJsonLd({
+  title,
+  description,
+  path,
+  datePublished,
+  dateModified,
+}: {
+  readonly title: string
+  readonly description: string
+  readonly path: string
+  readonly datePublished: string
+  readonly dateModified?: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description,
+    mainEntityOfPage: absoluteUrl(path),
+    datePublished,
+    dateModified: dateModified ?? datePublished,
+    inLanguage: 'fr-FR',
+    author: { '@type': 'Organization', name: 'Pros Import' },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  }
+}
+
+export function linkListJsonLd({
+  name,
+  path,
+  items,
+}: {
+  readonly name: string
+  readonly path: string
+  readonly items: ReadonlyArray<{ readonly name: string; readonly path: string }>
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    url: absoluteUrl(path),
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: absoluteUrl(item.path),
+    })),
+  }
+}
+
 export function productJsonLd(product: Product) {
   return {
     '@context': 'https://schema.org',

@@ -24,11 +24,14 @@ export function Footer() {
             <ul className="mt-4 space-y-2 text-xs">
               {(
                 [
+                  [
+                    'Importer par container',
+                    '/guides/import-mobilier-chr-container',
+                  ],
                   ['Chaises restaurant', '/catalogue/chaises-restaurant'],
                   ['Tables restaurant', '/catalogue/tables-restaurant'],
                   ['Stock terrasse 24h', '/stock-mobilier-terrasse-24h'],
                   ['Partenaires revendeurs', '/partenaires'],
-                  ['Catalogue complet', '/catalogue'],
                   ['FAQ achat groupé', '/faq'],
                 ] as const
               ).map(([label, href]) => (
@@ -41,6 +44,14 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              <li className="pt-1">
+                <a
+                  href="/guides"
+                  className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
+                >
+                  Tous les guides →
+                </a>
+              </li>
             </ul>
           </div>
           <div>
