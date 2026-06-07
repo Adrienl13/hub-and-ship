@@ -270,7 +270,8 @@ Etat actuel :
 - Surfaces publiques existantes : `/partenaires` et `/p/{slug}`.
 - Attribution preparee via migrations `partner_applications`, `partner_deals`, `partner_referral_slug`, `partner_application_id`.
 - **Selections co-brandees persistantes livrees (2026-06-07)** : migration `20260607180000_partner_selections.sql` (`partner_selections` + `partner_selection_items`, RLS partenaire-CRUD-own / admin-all / public-read-published, snapshot produit = prix public uniquement). Route `/partner/selections` (creer depuis le catalogue, brouillon/publier, copier le lien, modifier, supprimer). Rendu public sur `/p/{slug}?selection={id}` (reutilise la capture lien + attribution existantes). Repo `src/lib/partners/selections.ts` + tests. Isolation anon (publiee vs brouillon) testee.
-- **Reste a faire** : variantes dans le builder de selection (MVP = niveau produit), creation/edition de deal depuis le portail (actuellement renvoie au formulaire public `/partenaires#proteger`), devis PDF co-brande, documents/assets, reporting, et test positif end-to-end au login d'un vrai partenaire approuve.
+- Variantes dans le builder de selection : **FAIT (2026-06-07)** — une entree par (produit, variante), quantites par design.
+- **Reste a faire** : creation/edition de deal depuis le portail (actuellement renvoie au formulaire public `/partenaires#proteger`), devis PDF co-brande, documents/assets, reporting, et test positif end-to-end au login d'un vrai partenaire approuve.
 
 Objectif :
 
