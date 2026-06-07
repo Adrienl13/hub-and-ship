@@ -3,14 +3,18 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import {
   ArrowRight,
   BadgeEuro,
+  CheckCircle2,
   FileText,
   Handshake,
+  Link2,
   PackageCheck,
   ShieldCheck,
+  UserCheck,
 } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { Reveal, RevealItem, RevealStagger } from '@/components/motion-helpers'
 import { Button } from '@/components/ui/button'
 import { useCatalog } from '@/hooks/useCatalog'
 import {
@@ -20,11 +24,7 @@ import {
 } from '@/lib/partners/link'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL, PRODUCTS } from '@/lib/products'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  jsonLdScript,
-} from '@/lib/seo'
+import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -79,7 +79,7 @@ function PartnerSharePage() {
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch">
-            <div className="flex flex-col justify-center py-8">
+            <Reveal className="flex flex-col justify-center py-8">
               <div className="label-eyebrow text-[color:var(--ember)]">
                 Sélection partenaire
               </div>
@@ -110,11 +110,11 @@ function PartnerSharePage() {
                   Réserver avec ce lien
                 </Button>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="grid min-h-[420px] grid-cols-2 gap-2">
+            <RevealStagger className="grid min-h-[420px] grid-cols-2 gap-2">
               {featuredProducts.map((product, index) => (
-                <article
+                <RevealItem
                   key={product.id}
                   className={`relative overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card ${
                     index === 0 ? 'col-span-2' : ''
@@ -133,14 +133,14 @@ function PartnerSharePage() {
                       {product.name}
                     </div>
                   </div>
-                </article>
+                </RevealItem>
               ))}
-            </div>
+            </RevealStagger>
           </div>
         </section>
 
         <section className="border-b border-[color:var(--sand-deep)]">
-          <div className="mx-auto grid max-w-7xl gap-px bg-[color:var(--sand-deep)] px-6 py-12 md:grid-cols-4">
+          <RevealStagger className="mx-auto grid max-w-7xl gap-px bg-[color:var(--sand-deep)] px-6 py-12 md:grid-cols-4">
             {[
               {
                 Icon: ShieldCheck,
@@ -163,7 +163,7 @@ function PartnerSharePage() {
                 text: 'Cette page prépare les futures sélections et devis co-brandés.',
               },
             ].map(({ Icon, title, text }) => (
-              <article key={title} className="bg-background p-5">
+              <RevealItem key={title} className="bg-background p-5">
                 <Icon className="h-5 w-5 text-[color:var(--ember)]" />
                 <h2 className="mt-4 font-display text-lg font-semibold">
                   {title}
@@ -171,13 +171,80 @@ function PartnerSharePage() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {text}
                 </p>
-              </article>
+              </RevealItem>
             ))}
+          </RevealStagger>
+        </section>
+
+        <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--background)]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
+            <Reveal>
+              <div className="label-eyebrow text-[color:var(--ember-soft)]">
+                Attribution en coulisses
+              </div>
+              <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+                Le lien travaille pour le partenaire, sans changer le parcours
+                client.
+              </h2>
+              <p className="text-[color:var(--sand)]/75 mt-4 max-w-xl text-sm leading-7">
+                Cette page explique le bon équilibre : le client voit un accès
+                simple et public, tandis que le signal partenaire reste
+                exploitable côté admin pour protéger la relation.
+              </p>
+            </Reveal>
+
+            <RevealStagger className="grid gap-3 sm:grid-cols-4">
+              {[
+                {
+                  Icon: Link2,
+                  step: '01',
+                  title: 'Lien capté',
+                  text: `${normalizedSlug} reste mémorisé 120 jours sur le navigateur.`,
+                },
+                {
+                  Icon: UserCheck,
+                  step: '02',
+                  title: 'Projet reconnu',
+                  text: 'La réservation conserve le contexte partenaire dans son snapshot.',
+                },
+                {
+                  Icon: ShieldCheck,
+                  step: '03',
+                  title: 'Deal protégé',
+                  text: 'Supabase peut rattacher le dossier au deal ou partenaire validé.',
+                },
+                {
+                  Icon: CheckCircle2,
+                  step: '04',
+                  title: 'Prix nets privés',
+                  text: 'Le client final ne voit jamais les conditions nettes revendeur.',
+                },
+              ].map(({ Icon, step, title, text }) => (
+                <RevealItem
+                  key={step}
+                  className="border-[color:var(--sand)]/15 bg-[color:var(--sand)]/[0.06] relative overflow-hidden rounded-md border p-4"
+                >
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--ember-soft)] to-transparent" />
+                  <div className="flex items-center justify-between gap-2">
+                    <Icon className="h-4 w-4 text-[color:var(--ember-soft)]" />
+                    <span className="text-[color:var(--sand)]/25 font-display text-2xl">
+                      {step}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-display text-lg font-semibold">
+                    {title}
+                  </h3>
+                  <p className="text-[color:var(--sand)]/70 mt-2 text-xs leading-5">
+                    {text}
+                  </p>
+                </RevealItem>
+              ))}
+            </RevealStagger>
           </div>
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-6 px-6 py-14 lg:grid-cols-[1fr_360px]">
-          <div>
+          <Reveal>
             <div className="label-eyebrow text-[color:var(--ember)]">
               Sélection de départ
             </div>
@@ -189,9 +256,9 @@ function PartnerSharePage() {
               puis transformer la sélection en devis personnalisé. Le panier
               reste modifiable côté client.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+          <Reveal className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
             <div className="flex items-center gap-2">
               <Handshake className="h-4 w-4 text-[color:var(--forest)]" />
               <div className="text-sm font-medium">Lien actif</div>
@@ -224,7 +291,7 @@ function PartnerSharePage() {
               Réserver ma place
               <ArrowRight className="h-4 w-4" />
             </Button>
-          </div>
+          </Reveal>
         </section>
       </main>
 

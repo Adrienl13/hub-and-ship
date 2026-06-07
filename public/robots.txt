@@ -8,3 +8,4 @@ Disallow: /api
 Disallow: /auth
 
 Sitemap: https://prosimport.com/sitemap.xml
+LLM-Summary: https://prosimport.com/llms.txt

@@ -17,8 +17,10 @@
 Le chantier partenaire a maintenant un premier outil partageable :
 
 - ✅ **Page `/p/{slug}`** — page co-brandée publique, utile à un revendeur pour ouvrir un accès Pros Import à son client sans exposer ses prix nets.
+- ✅ **Page partenaire plus dynamique** — bloc animé "Attribution en coulisses" pour expliquer le lien capté, le projet reconnu, le deal protégé et les prix nets privés.
 - ✅ **Capture d'attribution par lien** — `/p/{slug}`, `?partner=`, `?partner_slug=` et `?revendeur=` sont captés 120 jours dans le navigateur.
 - ✅ **Réservation enrichie** — le contexte partenaire est ajouté à `contact_snapshot.partner_context`, puis récupérable dans le compte et l'admin.
+- ✅ **Fondation visibilité IA** — `public/llms.txt` ajouté et déclaré dans `robots.txt`, avec test sécurité dédié.
 - ✅ **Admin réservations** — badge interne "Lien partenaire capté", "Partenaire reconnu" ou "Deal partenaire reconnu" selon le niveau d'attribution.
 - ✅ **Migration Supabase prête** — `20260607090000_partner_link_attribution.sql` ajoute `partner_referral_slug`, `partner_application_id` et la fonction `find_partner_link_attribution`.
 - ✅ **Tests** — module lien partenaire, persistence réservation, migration sécurité et parcours E2E `/p/chr-conseil`.

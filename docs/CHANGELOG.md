@@ -13,10 +13,12 @@
 - **Canal partenaires opérationnel** : ajout de `/api/partner-requests`, de la migration Supabase `partner_applications` / `partner_deals`, d'un formulaire public de demande/protection d'opportunité, d'un fallback local anti-perte de lead et d'un onglet admin `Partenaires` pour qualifier candidatures et deals.
 - **Attribution partenaire automatique** : ajout d'une migration qui rattache les réservations aux opportunités protégées via SIRET, email exact ou domaine email professionnel, plus un affichage admin "Deal partenaire reconnu".
 - **Lien partenaire co-brandé** : ajout de `/p/{slug}`, capture locale 120 jours du contexte partenaire, propagation dans le snapshot de réservation, affichage admin du signal partenaire et migration d'attribution par lien sans exposition des prix nets.
+- **Fondation visibilité IA** : ajout de `public/llms.txt`, lien depuis `robots.txt` et test de sécurité pour garder les informations sensibles hors du résumé public destiné aux moteurs génératifs.
 - **Passage de relais Claude Code** : ajout de `docs/HANDOFF_CLAUDE_CODE.md` avec priorités P0/P1/P2/P3, commandes de reprise, risques actifs et prompts pour continuer le chantier sans re-analyse longue.
 
 ### Modifié
 
+- **Page `/p/{slug}`** : ajout d'un bloc animé "Attribution en coulisses" pour rendre le lien partenaire plus compréhensible et plus vivant sans exposer les prix nets.
 - **Home** : ajout d'un bloc dual "J'équipe mon établissement" / "Je revends à mon réseau" pour rendre le modèle direct pro + partenaire protégé compréhensible dès le premier parcours.
 - **Qualité** : refonte de `/qualite` en carnet de preuves public. La page affiche désormais le protocole qualité, la traçabilité et le coffre documentaire à venir avant les rapports DB, et ne montre plus un état Supabase vide comme signal principal.
 - **Navigation/SEO** : ajout de `/partenaires` au header, au footer, au sitemap et aux parcours E2E publics.

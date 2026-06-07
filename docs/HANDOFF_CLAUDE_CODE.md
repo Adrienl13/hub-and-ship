@@ -27,8 +27,10 @@ Fait et pousse sur GitHub :
 
 - Page publique `/partenaires` avec positionnement revendeur protege, FAQ conflit canal, formulaire demande partenaire et mode "proteger une opportunite".
 - Page publique `/p/{slug}` co-brandee pour qu'un revendeur puisse partager une entree Pros Import sans exposer ses prix nets.
+- Page `/p/{slug}` enrichie avec un bloc dynamique "Attribution en coulisses" pour expliquer le lien capte, le projet reconnu, le deal protege et les prix nets prives.
 - Tracker global de lien partenaire : capture `/p/{slug}` et les query params `partner`, `partner_slug`, `revendeur` dans `localStorage` pendant 120 jours.
 - Reservation enrichie : le contexte partenaire est copie dans `contact_snapshot.partner_context` pour conserver la preuve d'origine.
+- Fondation IA livree : `public/llms.txt` + declaration dans `robots.txt`, sans prix nets partenaires, marges internes ni EORI.
 - API `/api/partner-requests` same-origin, validation Zod, refus origin externe, persistance service role quand Supabase est pret.
 - Migration creee : `supabase/migrations/20260606190000_partner_applications_and_deals.sql`.
 - Migration creee : `supabase/migrations/20260606210000_partner_attribution_on_reservations.sql`.
@@ -332,7 +334,7 @@ Objectif :
 
 Chantiers techniques :
 
-- Ajouter `public/llms.txt` avec resume clair, pages importantes, proposition de valeur, contacts publics, limites, liens vers catalogue/partenaires/qualite.
+- `public/llms.txt` existe deja avec resume clair, pages importantes, proposition de valeur, contacts publics, limites, liens vers catalogue/partenaires/qualite. Le maintenir a jour quand de nouvelles pages strategiques sont creees.
 - Verifier `robots.txt` et `sitemap.xml`; passer a un sitemap dynamique si les pages guides/produits deviennent nombreuses.
 - Ajouter JSON-LD par type de page : `Organization`, `WebSite`, `BreadcrumbList`, `FAQPage`, `Product`, `Offer`, `ItemList`, `Article`, `HowTo` quand pertinent.
 - Ajouter canonical + meta description specifique sur toutes les routes publiques.

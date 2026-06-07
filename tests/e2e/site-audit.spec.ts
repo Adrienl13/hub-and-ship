@@ -219,6 +219,8 @@ test.describe('site audit parcours publics', () => {
     await expect(
       page.getByText('Les prix nets partenaires restent privés.'),
     ).toBeVisible()
+    await expect(page.getByText('Attribution en coulisses')).toBeVisible()
+    await expect(page.getByText('Lien capté')).toBeVisible()
     await expect(
       page.getByRole('heading', { name: 'Prix nets partenaires' }),
     ).toHaveCount(0)
