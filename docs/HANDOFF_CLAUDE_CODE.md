@@ -266,9 +266,10 @@ DoD client :
 
 Etat actuel :
 
-- Pas encore de portail authentifie.
+- **MVP portail authentifie livre (2026-06-07)** : route `/partner` (noindex + robots Disallow), garde `PartnerGuard`, auto-liaison securisee via `claim_partner_access()` (un user ne peut reclamer qu'une candidature `qualified/approved` dont le `contact_email` == son email verifie JWT). Table `partner_users`, helpers `is_partner()` / `current_partner_application_ids()`, RLS scoping (le partenaire ne lit QUE sa candidature, ses deals, ses reservations attribuees ; isolation negative testee). Migration `20260607160000_partner_portal_access.sql`. Dashboard : lien co-brande `/p/{slug}` + copie, deals proteges, reservations attribuees. Lien header gated `useIsPartner`.
 - Surfaces publiques existantes : `/partenaires` et `/p/{slug}`.
 - Attribution preparee via migrations `partner_applications`, `partner_deals`, `partner_referral_slug`, `partner_application_id`.
+- **Reste a faire** : creation/edition de deal depuis le portail (actuellement renvoie au formulaire public `/partenaires#proteger`), selections co-brandees persistantes (`partner_selections`), devis PDF co-brande, documents/assets, reporting, et test positif end-to-end au login d'un vrai partenaire approuve.
 
 Objectif :
 

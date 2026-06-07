@@ -6,6 +6,7 @@ Disallow: /account
 Disallow: /admin
 Disallow: /api
 Disallow: /auth
+Disallow: /partner
 
 Sitemap: https://prosimport.com/sitemap.xml
 LLM-Summary: https://prosimport.com/llms.txt
