@@ -52,6 +52,20 @@
 
 ---
 
+### ISSUE-003 — JSON-LD `scripts` non émis en SSR sur `/livres`
+
+**Statut** : Open
+**Sévérité** : Low
+**Découvert** : 2026-06-07
+**Contexte** : Ajout de `BreadcrumbList` JSON-LD via `head().scripts` sur `/livres` (`src/routes/livres.index.tsx`).
+**Symptôme** : Le titre et la meta description SSR de `/livres` sont bien présents, mais le bloc `scripts` (JSON-LD) n'apparaît pas dans le HTML servi (`grep BreadcrumbList` = 0). Même comportement sur la route canonique `/livres/`.
+**Contre-exemple** : Le **même pattern** (`...buildSeoHead(...)`, `scripts: [jsonLdScript(breadcrumbJsonLd(...))]`) émet correctement le JSON-LD sur `/qualite` (leaf), `/guides` (index) et les guides leaf. Le Worker génère chaque réponse à neuf (pas de `cf-cache-status`), et la nouvelle version est déployée (le breadcrumb `/qualite` est live). Donc ce n'est ni un cache, ni le code.
+**Hypothèse** : Quirk de fusion `head` de TanStack Start spécifique à cette route index `/livres/` (même famille que la meta `robots` `noindex` parfois ignorée — cf. mitigation via `robots.txt`).
+**Workaround** : Aucun impact bloquant (breadcrumb mineur). Le code reste en place ; il s'activera si le quirk est résolu ou la route restructurée.
+**Piste de fix** : Comparer la config de route `/livres/` (présence du sibling `livres.$slug.tsx`) vs `/guides/` ; tester une route leaf `/containers-livres` ou déplacer le JSON-LD dans le composant (`<script type="application/ld+json">`) au lieu de `head().scripts`.
+
+---
+
 ## Issues anticipées (à surveiller)
 
 Liste des points connus pour être problématiques, à anticiper.
