@@ -207,6 +207,113 @@ export const GUIDES: ReadonlyArray<Guide> = [
       { label: 'Containers livrés', href: '/livres' },
     ],
   },
+  {
+    slug: 'moq-chaises-restaurant',
+    title: 'MOQ des chaises de restaurant : ce qu’il faut savoir',
+    metaDescription:
+      "MOQ (quantité minimale de commande) des chaises de restaurant : à quoi ça sert, pourquoi ça existe et comment l’achat groupé réduit la contrainte.",
+    answer:
+      "Le MOQ (Minimum Order Quantity) est la quantité minimale à commander pour une référence afin d’obtenir un prix volume. Sur les chaises de restaurant importées, il évite des coûts unitaires élevés sur de petites séries. L’achat groupé par container permet d’atteindre ce minimum en mutualisant plusieurs commandes, sans avoir à commander seul des dizaines ou centaines d’unités.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: 'Pourquoi un MOQ existe',
+        paragraphs: [
+          "Produire et expédier en petite quantité coûte cher par unité : réglages de production, contrôle, manutention et transport se répartissent mal. Le MOQ fixe un seuil à partir duquel le prix volume devient possible.",
+          "Sur le catalogue, chaque chaise affiche son MOQ : c’est l’information clé pour cadrer un projet et estimer le bon volume.",
+        ],
+      },
+      {
+        heading: 'Comment l’achat groupé réduit la contrainte',
+        paragraphs: [
+          "Le frein du MOQ est qu’un établissement seul n’a pas toujours besoin du minimum complet. Container Club agrège les commandes : plusieurs acheteurs atteignent ensemble le palier, chacun pour sa propre quantité.",
+        ],
+        bullets: [
+          'Vous commandez la quantité utile à votre projet.',
+          'Le palier MOQ est atteint collectivement sur le container.',
+          'Le prix volume s’applique sans surstock de votre côté.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: 'Quel est le MOQ d’une chaise de restaurant ?',
+        a: "Il varie selon le modèle et figure sur chaque fiche du catalogue. L’achat groupé permet de l’atteindre sans commander seul tout le minimum.",
+      },
+      {
+        q: 'Puis-je commander sous le MOQ ?',
+        a: "Le prix volume suppose d’atteindre le MOQ, mais via la mutualisation du container vous n’avez à financer que votre part réelle.",
+      },
+    ],
+    related: [
+      { label: 'Chaises de restaurant', href: '/catalogue/chaises-restaurant' },
+      {
+        label: 'Prix des chaises en volume',
+        href: '/guides/prix-chaises-restaurant-volume',
+      },
+      {
+        label: 'Importer par container',
+        href: '/guides/import-mobilier-chr-container',
+      },
+    ],
+  },
+  {
+    slug: 'prix-net-revendeur-mobilier-chr',
+    title: 'Prix net revendeur de mobilier CHR : comment ça fonctionne',
+    metaDescription:
+      "Prix net revendeur de mobilier CHR : principe de protection du revendeur, prix nets privés, marge libre et accès partenaire chez Pros Import.",
+    answer:
+      "Un revendeur de mobilier CHR accède à des conditions nettes via un programme partenaire, sans que ces prix nets soient jamais publics. Pros Import protège le revendeur (attribution par lien, SIRET ou email pro), lui laisse fixer librement sa marge, et opère l’import, la qualité et la logistique en back-office. Le client final ne voit que les prix publics.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: 'Le principe : protéger le revendeur',
+        paragraphs: [
+          "Le risque d’un revendeur qui partage une source d’import est de perdre son client. Le programme partenaire répond à cela : le projet apporté reste rattaché au revendeur via un lien co-brandé, le SIRET ou l’email professionnel du client.",
+          "Les prix nets partenaires et les marges ne sont jamais exposés publiquement. Le revendeur garde la main sur son prix de revente.",
+        ],
+      },
+      {
+        heading: 'Ce que voit le client final',
+        paragraphs: [
+          "Le client final voit uniquement les prix publics directs pros. Les conditions nettes du revendeur restent privées, dans un espace partenaire authentifié.",
+        ],
+        bullets: [
+          'Prix nets partenaires : privés, jamais publics.',
+          'Marge de revente : libre, fixée par le revendeur.',
+          'Attribution : lien co-brandé, SIRET ou email pro.',
+        ],
+      },
+      {
+        heading: 'Comment en bénéficier',
+        paragraphs: [
+          "L’accès se fait via la page Partenaires : demande de partenariat, puis protection des opportunités et accès à un espace dédié. C’est là que se gèrent les deals protégés et les sélections co-brandées.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: 'Les prix nets revendeurs sont-ils publics ?',
+        a: "Non. Les prix nets partenaires et les marges ne sont jamais affichés publiquement ; ils restent dans l’espace partenaire authentifié.",
+      },
+      {
+        q: 'Le revendeur garde-t-il la liberté de son prix ?',
+        a: "Oui. Pros Import n’impose pas de prix de revente : le revendeur fixe librement sa marge.",
+      },
+      {
+        q: 'Comment un client apporté est-il protégé ?',
+        a: "Par l’attribution : lien co-brandé capté, SIRET ou email professionnel reconnu, et enregistrement du deal protégé côté admin.",
+      },
+    ],
+    related: [
+      { label: 'Programme partenaires', href: '/partenaires' },
+      {
+        label: 'Importer par container',
+        href: '/guides/import-mobilier-chr-container',
+      },
+      { label: 'Catalogue', href: '/catalogue' },
+    ],
+  },
 ]
 
 export const GUIDE_SLUGS = GUIDES.map((g) => g.slug)

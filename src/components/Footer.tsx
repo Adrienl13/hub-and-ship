@@ -132,6 +132,22 @@ export function Footer() {
             <ul className="mt-4 space-y-2 text-xs">
               <li>
                 <a
+                  href="/a-propos"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  À propos de Pros Import
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/contact"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Contact
+                </a>
+              </li>
+              <li>
+                <a
                   href="mailto:adrienlaniez1@gmail.com"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >

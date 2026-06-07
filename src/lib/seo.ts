@@ -97,6 +97,28 @@ export function faqJsonLd(
   }
 }
 
+export function organizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Pros Import',
+    legalName: 'Pros Import EURL',
+    alternateName: SITE_NAME,
+    url: SITE_URL,
+    email: 'adrienlaniez1@gmail.com',
+    description:
+      "Partenaire d'import français de mobilier outdoor CHR par container (achat groupé), pour restaurants, hôtels, campings et revendeurs.",
+    areaServed: 'FR',
+    sameAs: ['https://terrassea.com'],
+    vatID: 'FR08988269981',
+    identifier: {
+      '@type': 'PropertyValue',
+      name: 'SIRET',
+      value: '98826998100011',
+    },
+  }
+}
+
 export function articleJsonLd({
   title,
   description,
