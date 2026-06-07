@@ -629,14 +629,19 @@ A faire :
 
 ### P3.1 Guides SEO/AEO/GEO/LLMO
 
-Pages prioritaires :
+**Fondation livree (2026-06-07)** : systeme de guides data-driven dans `src/lib/guides/content.ts`, route `/guides` (index) + `/guides/$slug`, answer block 40-80 mots, sections, FAQ, maillage interne, JSON-LD Article + FAQPage + BreadcrumbList (verifies en SSR), ajout au `sitemap.xml`, `llms.txt` et footer. Helpers `articleJsonLd` / `linkListJsonLd`. Pour ajouter un guide : une entree dans `GUIDES`.
 
-- `/guides/import-mobilier-chr-container`
-- `/guides/prix-chaises-restaurant-volume`
+Guides livres :
+
+- `/guides/import-mobilier-chr-container` ✅
+- `/guides/prix-chaises-restaurant-volume` ✅
+- `/guides/container-20-pieds-vs-40-pieds-mobilier` ✅
+
+Guides restants a rediger (ajouter dans `GUIDES`) :
+
 - `/guides/prix-net-revendeur-mobilier-chr`
 - `/guides/moq-chaises-restaurant`
-- `/guides/container-20-pieds-vs-40-pieds-mobilier`
-- `/import-mobilier-terrasse-container`
+- `/guides/stock-mobilier-terrasse-24h`
 
 Regles :
 
