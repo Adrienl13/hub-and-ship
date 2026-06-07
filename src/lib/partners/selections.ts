@@ -140,6 +140,25 @@ export function selectionTotalUnits(
   return items.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+/** Eco-contribution total (public). */
+export function selectionEcoTotal(
+  items: ReadonlyArray<{
+    readonly quantity: number
+    readonly snapshot: SelectionItemSnapshot
+  }>,
+): number {
+  return items.reduce(
+    (sum, item) => sum + item.snapshot.ecoContribution * item.quantity,
+    0,
+  )
+}
+
+/** Deterministic human-readable quote reference derived from the selection id. */
+export function quoteReference(selectionId: string): string {
+  const compact = selectionId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)
+  return `PI-${compact.toUpperCase()}`
+}
+
 // ---------------------------------------------------------------------------
 // Row mapping
 // ---------------------------------------------------------------------------

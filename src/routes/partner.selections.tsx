@@ -361,6 +361,22 @@ function SelectionsManager() {
                   >
                     Copier le lien
                   </Button>
+                  {summary.status === 'published' && appContext?.slug && (
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2 text-xs"
+                    >
+                      <a
+                        href={`/p/${appContext.slug}/devis?selection=${summary.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Devis
+                      </a>
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"

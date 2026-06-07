@@ -162,6 +162,7 @@ function PartnerSharePage() {
           <SelectionShowcase
             selection={selection}
             partnerName={partnerName}
+            slug={normalizedSlug}
             onReserve={() => setReserveOpen(true)}
           />
         )}
@@ -374,10 +375,12 @@ function usePublicSelection(
 function SelectionShowcase({
   selection,
   partnerName,
+  slug,
   onReserve,
 }: {
   readonly selection: PublicSelection
   readonly partnerName: string
+  readonly slug: string
   readonly onReserve: () => void
 }) {
   const totalHt = selectionPublicTotalHt(selection.items)
@@ -443,14 +446,29 @@ function SelectionShowcase({
               Prix directs pros. Les conditions partenaires restent privées.
             </span>
           </span>
-          <Button
-            type="button"
-            onClick={onReserve}
-            className="h-11 rounded-sm bg-[color:var(--foreground)] px-5 text-[color:var(--background)]"
-          >
-            Réserver cette sélection
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              asChild
+              variant="outline"
+              className="h-11 rounded-sm px-5"
+            >
+              <a
+                href={`/p/${slug}/devis?selection=${selection.id}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Télécharger le devis
+              </a>
+            </Button>
+            <Button
+              type="button"
+              onClick={onReserve}
+              className="h-11 rounded-sm bg-[color:var(--foreground)] px-5 text-[color:var(--background)]"
+            >
+              Réserver cette sélection
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </section>

@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   buildSelectionItemInput,
   catalogSelectionEntries,
+  quoteReference,
+  selectionEcoTotal,
   selectionEntryKey,
   selectionPublicTotalHt,
   selectionTotalUnits,
@@ -88,5 +90,17 @@ describe('selection totals', () => {
 
   it('sums the units', () => {
     expect(selectionTotalUnits(items)).toBe(15)
+  })
+
+  it('sums the eco contribution', () => {
+    expect(selectionEcoTotal(items)).toBe(1.5 * 15)
+  })
+})
+
+describe('quoteReference', () => {
+  it('derives a stable PI- reference from the selection id', () => {
+    expect(quoteReference('22222222-aaaa-0000-0000-000000000002')).toBe(
+      'PI-22222222',
+    )
   })
 })
