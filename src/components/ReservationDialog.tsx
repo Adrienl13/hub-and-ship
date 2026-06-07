@@ -166,6 +166,7 @@ export function ReservationDialog({
   })
 
   const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
+  const hasReservableItems = items.length > 0 && totals.subtotalHt > 0
   const referralApplication = useMemo(
     () =>
       applyReferralCode({
@@ -222,9 +223,7 @@ export function ReservationDialog({
 
   useEffect(() => {
     if (!open || typeof window === 'undefined') return
-    setPartnerContext(
-      readPartnerLinkContext({ storage: window.localStorage }),
-    )
+    setPartnerContext(readPartnerLinkContext({ storage: window.localStorage }))
   }, [open])
 
   const handlePay = async () => {
@@ -421,14 +420,21 @@ export function ReservationDialog({
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
         <DialogHeader>
           <div className="label-eyebrow text-[color:var(--ember)]">
-            {step < 5 ? `Étape ${step} / 4 - Réservation` : 'Confirmation'}
+            {!hasReservableItems
+              ? 'Commande à composer'
+              : step < 5
+                ? `Étape ${step} / 4 - Réservation`
+                : 'Confirmation'}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {step === 1 && 'Identification professionnelle'}
-            {step === 2 && 'Coordonnées de contact'}
-            {step === 3 && 'Mode de livraison'}
-            {step === 4 && 'Récapitulatif et paiement'}
-            {step === 5 && 'Réservation préparée'}
+            {!hasReservableItems && 'Composez votre commande avant de réserver'}
+            {hasReservableItems &&
+              step === 1 &&
+              'Identification professionnelle'}
+            {hasReservableItems && step === 2 && 'Coordonnées de contact'}
+            {hasReservableItems && step === 3 && 'Mode de livraison'}
+            {hasReservableItems && step === 4 && 'Récapitulatif et paiement'}
+            {hasReservableItems && step === 5 && 'Réservation préparée'}
           </DialogTitle>
           <DialogDescription className="sr-only">
             Formulaire de réservation en plusieurs étapes pour vérifier la
@@ -437,7 +443,9 @@ export function ReservationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {step < 5 && (
+        {!hasReservableItems && <EmptyReservationState />}
+
+        {hasReservableItems && step < 5 && (
           <>
             <StepIndicator step={step} />
             <SummaryCard
@@ -448,7 +456,7 @@ export function ReservationDialog({
           </>
         )}
 
-        {step === 1 && (
+        {hasReservableItems && step === 1 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -478,7 +486,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 2 && (
+        {hasReservableItems && step === 2 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -536,7 +544,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 3 && (
+        {hasReservableItems && step === 3 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -585,7 +593,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 4 && (
+        {hasReservableItems && step === 4 && (
           <div className="space-y-4">
             <ReferralCodePanel
               value={form.referralCode}
@@ -676,7 +684,7 @@ export function ReservationDialog({
           </div>
         )}
 
-        {step === 5 && createdReservation && (
+        {hasReservableItems && step === 5 && createdReservation && (
           <div className="space-y-4">
             <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">
@@ -739,6 +747,40 @@ export function ReservationDialog({
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function EmptyReservationState() {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+        <div className="text-sm font-medium">Aucun produit sélectionné</div>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Le tunnel de réservation se déclenche après une vraie sélection :
+          choisissez vos produits dans le catalogue, ou utilisez le stock 24h si
+          votre besoin est urgent.
+        </p>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button
+          asChild
+          className="h-11 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+        >
+          <Link to="/catalogue">
+            Ouvrir le catalogue
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 rounded-sm border-[color:var(--sand-deep)]"
+        >
+          <Link to="/stock-24h">Voir le stock 24h</Link>
+        </Button>
+      </div>
+    </div>
   )
 }
 

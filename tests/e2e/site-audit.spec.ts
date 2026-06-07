@@ -81,31 +81,49 @@ test.describe('site audit parcours publics', () => {
     })
   }
 
-  test('home internal links and anchors resolve', async ({ page, request }) => {
-    await gotoHydrated(page, '/')
+  test('public internal links and anchors resolve', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(60_000)
 
-    const hrefs = await page
-      .locator('a[href]')
-      .evaluateAll((nodes) =>
-        Array.from(
-          new Set(
-            nodes
-              .map((node) => node.getAttribute('href'))
-              .filter((href): href is string =>
-                Boolean(href?.startsWith('/') || href?.startsWith('#')),
-              ),
+    for (const route of PUBLIC_ROUTES) {
+      await gotoHydrated(page, route.path)
+      const routeUrl = new URL(route.path, page.url())
+
+      const hrefs = await page
+        .locator('a[href]')
+        .evaluateAll((nodes) =>
+          Array.from(
+            new Set(
+              nodes
+                .map((node) => node.getAttribute('href'))
+                .filter((href): href is string =>
+                  Boolean(href?.startsWith('/') || href?.startsWith('#')),
+                ),
+            ),
           ),
-        ),
-      )
+        )
 
-    for (const href of hrefs) {
-      if (href.startsWith('#')) {
-        await expect(page.locator(`[id="${href.slice(1)}"]`)).toHaveCount(1)
-        continue
+      for (const href of hrefs) {
+        const target = new URL(href, routeUrl)
+        const targetPath = `${target.pathname}${target.search}`
+
+        const response = await request.get(targetPath)
+        expect(response.status(), `${route.path} -> ${href}`).toBeLessThan(400)
+
+        if (target.hash) {
+          await gotoHydrated(page, targetPath)
+          const id = decodeURIComponent(target.hash.slice(1))
+          await expect
+            .poll(() =>
+              page.evaluate((anchorId) => {
+                return Boolean(document.getElementById(anchorId))
+              }, id),
+            )
+            .toBe(true)
+        }
       }
-
-      const response = await request.get(href)
-      expect(response.status(), href).toBeLessThan(400)
     }
   })
 
@@ -239,6 +257,45 @@ test.describe('site audit parcours publics', () => {
         }),
       )
       .toMatchObject({ slug: 'chr-conseil', selectionId: 'terrasse-80' })
+  })
+
+  test('global reserve CTA has a logical empty-cart destination', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/')
+    await page.evaluate(() => {
+      window.localStorage.setItem(
+        'container-club-cart',
+        JSON.stringify({
+          state: {
+            variantByProduct: {},
+            qtyByProduct: {},
+            preferredContainerType: null,
+            containerPreferenceSource: null,
+          },
+          version: 0,
+        }),
+      )
+    })
+    await gotoHydrated(page, '/faq')
+
+    await page.getByRole('button', { name: 'Réserver' }).click()
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Composez votre commande avant de réserver',
+      }),
+    ).toBeVisible()
+    await expect(page.getByText('Aucun produit sélectionné')).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: /Ouvrir le catalogue/ }),
+    ).toHaveAttribute('href', '/catalogue')
+    await expect(
+      page.getByRole('link', { name: 'Voir le stock 24h' }),
+    ).toHaveAttribute('href', '/stock-24h')
+    await expect(
+      page.getByRole('heading', { name: 'Identification professionnelle' }),
+    ).toHaveCount(0)
   })
 
   test('quality page keeps trust signals when report vault is empty', async ({
@@ -432,6 +489,10 @@ test.describe('site audit stock et admin', () => {
     await expect(page.getByText('Variables publiques manquantes')).toBeVisible()
     await expect(page.getByText('VITE_SUPABASE_ANON_KEY')).toBeVisible()
     await expect(page.getByText('redéployez')).toBeVisible()
+    await expect(page.getByRole('link', { name: /Réserver/ })).toHaveAttribute(
+      'href',
+      '/catalogue',
+    )
   })
 
   test('login blocks magic links when Supabase auth is unconfigured', async ({

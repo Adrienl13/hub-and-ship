@@ -22,7 +22,6 @@ interface AdminGuardProps {
 export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   const auth = useAuth()
   const { isAdmin, isLoading: isCheckingRole } = useIsAdmin()
-  const noop = () => undefined
   const returnTo =
     typeof window === 'undefined'
       ? '/admin'
@@ -39,7 +38,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (auth.status === 'unconfigured') {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
@@ -67,7 +66,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (auth.status !== 'authenticated') {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
@@ -100,7 +99,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-[color:var(--ember)]" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
