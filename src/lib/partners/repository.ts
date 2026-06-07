@@ -7,6 +7,7 @@ import type {
   PartnerDealStatus,
 } from '@/lib/partners/types'
 import type { PartnerSubmissionDraft } from '@/lib/partners/submission'
+import { normalizePartnerSlug } from '@/lib/partners/link'
 
 interface RepositoryResult<T> {
   readonly data: T | null
@@ -89,6 +90,7 @@ export interface PartnerApplicationAdminRow {
   readonly expectedMonthlyVolume: string | null
   readonly message: string | null
   readonly internalNote: string | null
+  readonly partnerReferralSlug: string | null
   readonly createdAt: string
   readonly updatedAt: string
 }
@@ -111,6 +113,7 @@ export interface PartnerDealAdminRow {
   readonly protectedUntil: string | null
   readonly message: string | null
   readonly internalNote: string | null
+  readonly partnerReferralSlug: string | null
   readonly createdAt: string
   readonly updatedAt: string
 }
@@ -132,6 +135,7 @@ function toApplicationAdminRow(
     expectedMonthlyVolume: row.expected_monthly_volume,
     message: row.message,
     internalNote: row.internal_note,
+    partnerReferralSlug: row.partner_referral_slug,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -157,6 +161,7 @@ function toDealAdminRow(row: PartnerDealRow): PartnerDealAdminRow {
     protectedUntil: row.protected_until,
     message: row.message,
     internalNote: row.internal_note,
+    partnerReferralSlug: row.partner_referral_slug,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -272,4 +277,64 @@ export async function updatePartnerDealStatus(
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------------
+// Referral slug management — powers the admin "shareable link" action. The
+// `/p/{slug}` page is fully static, so the slug only needs to be stored here so
+// that the reservation attribution trigger can match a buyer back to this
+// partner. An empty value clears the slug; anything else must normalize to a
+// valid slug (matching the DB `normalize_partner_slug` CHECK constraint).
+// ---------------------------------------------------------------------------
+
+function toSlugUpdateValue(rawSlug: string | null): string | null {
+  if (rawSlug === null) return null
+  const trimmed = rawSlug.trim()
+  if (trimmed === '') return null
+
+  const normalized = normalizePartnerSlug(trimmed)
+  if (!normalized) {
+    throw new Error(
+      'Slug invalide : utilisez lettres, chiffres et tirets (ex. chr-conseil).',
+    )
+  }
+  return normalized
+}
+
+export async function updatePartnerApplicationSlug(
+  client: PartnerAdminRepositoryClient,
+  id: string,
+  rawSlug: string | null,
+): Promise<string | null> {
+  const slug = toSlugUpdateValue(rawSlug)
+
+  const { error } = await client
+    .from('partner_applications')
+    .update({
+      partner_referral_slug: slug,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+  return slug
+}
+
+export async function updatePartnerDealSlug(
+  client: PartnerAdminRepositoryClient,
+  id: string,
+  rawSlug: string | null,
+): Promise<string | null> {
+  const slug = toSlugUpdateValue(rawSlug)
+
+  const { error } = await client
+    .from('partner_deals')
+    .update({
+      partner_referral_slug: slug,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+  return slug
 }
