@@ -631,17 +631,15 @@ A faire :
 
 **Fondation livree (2026-06-07)** : systeme de guides data-driven dans `src/lib/guides/content.ts`, route `/guides` (index) + `/guides/$slug`, answer block 40-80 mots, sections, FAQ, maillage interne, JSON-LD Article + FAQPage + BreadcrumbList (verifies en SSR), ajout au `sitemap.xml`, `llms.txt` et footer. Helpers `articleJsonLd` / `linkListJsonLd`. Pour ajouter un guide : une entree dans `GUIDES`.
 
-Guides livres :
+Guides livres (5) :
 
 - `/guides/import-mobilier-chr-container` ✅
 - `/guides/prix-chaises-restaurant-volume` ✅
 - `/guides/container-20-pieds-vs-40-pieds-mobilier` ✅
+- `/guides/moq-chaises-restaurant` ✅
+- `/guides/prix-net-revendeur-mobilier-chr` ✅
 
-Guides restants a rediger (ajouter dans `GUIDES`) :
-
-- `/guides/prix-net-revendeur-mobilier-chr`
-- `/guides/moq-chaises-restaurant`
-- `/guides/stock-mobilier-terrasse-24h`
+Pages entite livrees : `/a-propos` et `/contact` (indexables, JSON-LD `Organization` + `BreadcrumbList`, ajoutees au footer/sitemap/llms.txt). `/guides/stock-mobilier-terrasse-24h` volontairement non cree (la landing `/stock-mobilier-terrasse-24h` couvre deja ce mot-cle). Pour ajouter un guide : une entree dans `GUIDES`.
 
 Regles :
 
