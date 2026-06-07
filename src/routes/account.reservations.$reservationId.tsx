@@ -9,7 +9,9 @@ import {
   CreditCard,
   Download,
   FileText,
+  LifeBuoy,
   PackageCheck,
+  Plus,
   ShieldCheck,
   Ship,
 } from 'lucide-react'
@@ -31,6 +33,15 @@ import {
   reservationTimelineSteps,
   type TimelineStep,
 } from '@/lib/account/timeline'
+import {
+  CLAIM_CATEGORY_LABEL,
+  CLAIM_STATUS_LABEL,
+  createReservationClaim,
+  listClaimsForReservation,
+  type ReservationClaim,
+  type ReservationClaimCategory,
+  type ReservationClaimsClient,
+} from '@/lib/account/claims'
 import { formatEUR } from '@/lib/order'
 import {
   readLocalReservationHistory,
@@ -356,6 +367,11 @@ function AccountReservationDetailPage() {
               </div>
             </div>
           </div>
+
+          <ClaimsSection
+            reservationId={reservation.draft.id}
+            authStatus={auth.status}
+          />
         </div>
       </section>
     </main>
@@ -528,6 +544,222 @@ function DocumentsCard({
       >
         Demander un document
       </a>
+    </div>
+  )
+}
+
+const CLAIM_CATEGORIES: ReadonlyArray<ReservationClaimCategory> = [
+  'damaged',
+  'missing',
+  'wrong_item',
+  'delay',
+  'other',
+]
+
+function ClaimsSection({
+  reservationId,
+  authStatus,
+}: {
+  readonly reservationId: string
+  readonly authStatus: string
+}) {
+  const [claims, setClaims] = useState<ReadonlyArray<ReservationClaim>>([])
+  const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>(
+    'loading',
+  )
+  const [formOpen, setFormOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [category, setCategory] = useState<ReservationClaimCategory>('damaged')
+  const [quantity, setQuantity] = useState('')
+  const [message, setMessage] = useState('')
+
+  const isAuthenticated = authStatus === 'authenticated'
+
+  function client(): ReservationClaimsClient {
+    return createSupabaseBrowserClient(
+      getSupabasePublicConfig(),
+    ) as unknown as ReservationClaimsClient
+  }
+
+  async function refresh(): Promise<void> {
+    try {
+      const list = await listClaimsForReservation(client(), reservationId)
+      setClaims(list)
+      setLoadState('loaded')
+    } catch {
+      setLoadState('error')
+    }
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoadState('loaded')
+      return
+    }
+    void refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, reservationId])
+
+  async function submit(): Promise<void> {
+    setBusy(true)
+    try {
+      await createReservationClaim(client(), {
+        reservationId,
+        category,
+        quantity: quantity.trim() === '' ? null : Number(quantity),
+        message,
+      })
+      toast.success('Réclamation envoyée', {
+        description: 'Notre équipe revient vers vous rapidement.',
+      })
+      setFormOpen(false)
+      setMessage('')
+      setQuantity('')
+      setCategory('damaged')
+      await refresh()
+    } catch (err) {
+      toast.error('Envoi impossible', {
+        description: err instanceof Error ? err.message : undefined,
+      })
+    }
+    setBusy(false)
+  }
+
+  return (
+    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+      <div className="flex items-center justify-between gap-2 border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-3 text-sm font-medium">
+        <span className="flex items-center gap-2">
+          <LifeBuoy className="h-4 w-4" />
+          Service après-vente
+        </span>
+        {isAuthenticated && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setFormOpen((open) => !open)}
+            className="h-8 gap-1 px-2 text-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {formOpen ? 'Fermer' : 'Signaler un problème'}
+          </Button>
+        )}
+      </div>
+
+      {!isAuthenticated ? (
+        <div className="px-4 py-6 text-sm text-muted-foreground">
+          Connectez-vous pour ouvrir une réclamation rattachée à cette
+          réservation.{' '}
+          <Link
+            to="/auth/login"
+            search={{ returnTo: `/account/reservations/${reservationId}` }}
+            className="text-foreground underline"
+          >
+            Se connecter
+          </Link>
+        </div>
+      ) : (
+        <>
+          {formOpen && (
+            <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/30 px-4 py-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Type de problème
+                  </span>
+                  <select
+                    value={category}
+                    disabled={busy}
+                    onChange={(e) =>
+                      setCategory(e.target.value as ReservationClaimCategory)
+                    }
+                    className="mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-sm"
+                  >
+                    {CLAIM_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {CLAIM_CATEGORY_LABEL[c]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Quantité concernée (optionnel)
+                  </span>
+                  <input
+                    value={quantity}
+                    disabled={busy}
+                    inputMode="numeric"
+                    onChange={(e) =>
+                      setQuantity(e.target.value.replace(/[^0-9]/g, ''))
+                    }
+                    className="mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-sm"
+                  />
+                </label>
+              </div>
+              <label className="mt-3 block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Description
+                </span>
+                <textarea
+                  value={message}
+                  disabled={busy}
+                  rows={3}
+                  placeholder="Décrivez le problème (état, références, photos disponibles…)"
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm"
+                />
+              </label>
+              <div className="mt-3 flex justify-end">
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void submit()}
+                  className="h-9 rounded-sm bg-foreground px-3 text-sm text-background"
+                >
+                  Envoyer la réclamation
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {loadState === 'loading' ? (
+            <div className="px-4 py-6 text-sm text-muted-foreground">
+              Chargement…
+            </div>
+          ) : claims.length === 0 ? (
+            <div className="px-4 py-6 text-sm text-muted-foreground">
+              Aucune réclamation sur cette réservation. En cas de souci à la
+              réception, signalez-le ici.
+            </div>
+          ) : (
+            <ul className="divide-[color:var(--sand-deep)]/70 divide-y">
+              {claims.map((claim) => (
+                <li key={claim.id} className="px-4 py-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">
+                      {CLAIM_CATEGORY_LABEL[claim.category]}
+                      {claim.quantity ? ` · ${claim.quantity} unité(s)` : ''}
+                    </span>
+                    <span className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 inline-flex h-7 items-center rounded-sm border px-2 text-[11px] font-medium">
+                      {CLAIM_STATUS_LABEL[claim.status]}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {claim.message}
+                  </p>
+                  {claim.adminResponse && (
+                    <p className="mt-2 rounded-sm bg-[color:var(--sand-soft)]/60 px-2 py-1.5 text-xs leading-5">
+                      <span className="font-medium">Réponse Pros Import : </span>
+                      {claim.adminResponse}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   )
 }
