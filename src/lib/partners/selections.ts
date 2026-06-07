@@ -81,6 +81,49 @@ export function buildSelectionItemInput(
   }
 }
 
+/** Stable key for a (product, variant) pair used by the selection builder. */
+export function selectionEntryKey(
+  productId: string,
+  variantId: string | null,
+): string {
+  return `${productId}__${variantId ?? ''}`
+}
+
+export interface CatalogSelectionEntry {
+  readonly key: string
+  readonly product: Product
+  readonly variant: DesignVariant | null
+}
+
+/**
+ * Flattens the catalogue into one entry per (product, variant). Products with
+ * no variants yield a single variant-less entry. Each entry has a stable key so
+ * the builder can track quantities per design.
+ */
+export function catalogSelectionEntries(
+  products: ReadonlyArray<Product>,
+): ReadonlyArray<CatalogSelectionEntry> {
+  const entries: CatalogSelectionEntry[] = []
+  for (const product of products) {
+    if (product.variants && product.variants.length > 0) {
+      for (const variant of product.variants) {
+        entries.push({
+          key: selectionEntryKey(product.id, variant.id),
+          product,
+          variant,
+        })
+      }
+    } else {
+      entries.push({
+        key: selectionEntryKey(product.id, null),
+        product,
+        variant: null,
+      })
+    }
+  }
+  return entries
+}
+
 /** Public price total (direct pro price). Never reflects net partner pricing. */
 export function selectionPublicTotalHt(
   items: ReadonlyArray<{ readonly quantity: number; readonly snapshot: SelectionItemSnapshot }>,

@@ -15,21 +15,24 @@ import {
 } from '@/lib/partners/portal'
 import {
   buildSelectionItemInput,
+  catalogSelectionEntries,
   createSelection,
   deleteSelection,
   getSelectionDetail,
   listMySelections,
   replaceSelectionItems,
+  selectionEntryKey,
   selectionPublicTotalHt,
   selectionTotalUnits,
   setSelectionStatus,
   updateSelectionMeta,
+  type CatalogSelectionEntry,
   type PartnerSelectionsClient,
   type PartnerSelectionSummary,
   type SelectionItemInput,
 } from '@/lib/partners/selections'
 import { buildPartnerSharePath } from '@/lib/partners/link'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { CATEGORY_LABEL } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -78,7 +81,10 @@ const EMPTY_DRAFT: DraftState = {
 function SelectionsManager() {
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const { products } = useCatalog()
-  const productsArray = useMemo(() => [...products], [products])
+  const entries = useMemo(
+    () => catalogSelectionEntries([...products]),
+    [products],
+  )
 
   const [appContext, setAppContext] = useState<AppContext | null>(null)
   const [selections, setSelections] = useState<
@@ -134,7 +140,10 @@ function SelectionsManager() {
       if (!detail) throw new Error('Sélection introuvable')
       const quantities = new Map<string, number>()
       for (const item of detail.items) {
-        quantities.set(item.productId, item.quantity)
+        quantities.set(
+          selectionEntryKey(item.productId, item.variantId),
+          item.quantity,
+        )
       }
       setDraft({
         id: detail.id,
@@ -152,9 +161,11 @@ function SelectionsManager() {
 
   function draftItems(state: DraftState): SelectionItemInput[] {
     const items: SelectionItemInput[] = []
-    for (const product of productsArray) {
-      const qty = state.quantities.get(product.id) ?? 0
-      if (qty > 0) items.push(buildSelectionItemInput(product, null, qty))
+    for (const entry of entries) {
+      const qty = state.quantities.get(entry.key) ?? 0
+      if (qty > 0) {
+        items.push(buildSelectionItemInput(entry.product, entry.variant, qty))
+      }
     }
     return items
   }
@@ -296,7 +307,7 @@ function SelectionsManager() {
         {draft ? (
           <SelectionBuilder
             draft={draft}
-            products={productsArray}
+            entries={entries}
             busy={busy}
             onChange={setDraft}
             onCancel={() => setDraft(null)}
@@ -394,47 +405,40 @@ function SelectionsManager() {
 
 function SelectionBuilder({
   draft,
-  products,
+  entries,
   busy,
   onChange,
   onCancel,
   onSave,
 }: {
   readonly draft: DraftState
-  readonly products: ReadonlyArray<Product>
+  readonly entries: ReadonlyArray<CatalogSelectionEntry>
   readonly busy: boolean
   readonly onChange: (next: DraftState) => void
   readonly onCancel: () => void
   readonly onSave: (publish: boolean) => void
 }) {
-  function setQty(productId: string, qty: number): void {
+  function setQty(key: string, qty: number): void {
     const quantities = new Map(draft.quantities)
-    if (qty <= 0) quantities.delete(productId)
-    else quantities.set(productId, qty)
+    if (qty <= 0) quantities.delete(key)
+    else quantities.set(key, qty)
     onChange({ ...draft, quantities })
   }
 
-  const selectedItems = products
-    .filter((p) => (draft.quantities.get(p.id) ?? 0) > 0)
-    .map((p) => ({
-      quantity: draft.quantities.get(p.id) ?? 0,
-      snapshot: {
-        basePriceHt: p.basePriceHt,
-      },
-    }))
-  const totalHt = selectionPublicTotalHt(
-    selectedItems.map((i) => ({
-      quantity: i.quantity,
+  const selectedItems = entries
+    .filter((entry) => (draft.quantities.get(entry.key) ?? 0) > 0)
+    .map((entry) => ({
+      quantity: draft.quantities.get(entry.key) ?? 0,
       snapshot: {
         name: '',
         category: '',
         sku: '',
         imageUrl: '',
         ecoContribution: 0,
-        basePriceHt: i.snapshot.basePriceHt,
+        basePriceHt: entry.product.basePriceHt,
       },
-    })),
-  )
+    }))
+  const totalHt = selectionPublicTotalHt(selectedItems)
   const totalUnits = selectionTotalUnits(selectedItems)
 
   return (
@@ -467,11 +471,13 @@ function SelectionBuilder({
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => {
-          const qty = draft.quantities.get(product.id) ?? 0
+        {entries.map((entry) => {
+          const qty = draft.quantities.get(entry.key) ?? 0
+          const imageUrl =
+            entry.variant?.imageUrl ?? entry.product.mainImageUrl
           return (
             <div
-              key={product.id}
+              key={entry.key}
               className={`flex gap-3 rounded-md border p-2.5 ${
                 qty > 0
                   ? 'border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.05]'
@@ -479,17 +485,22 @@ function SelectionBuilder({
               }`}
             >
               <img
-                src={product.mainImageUrl}
-                alt={product.name}
+                src={imageUrl}
+                alt={entry.product.name}
                 className="h-16 w-16 shrink-0 rounded-sm object-cover"
               />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">
-                  {product.name}
+                  {entry.product.name}
                 </div>
+                {entry.variant && (
+                  <div className="truncate text-[11px] font-medium text-[color:var(--ember)]">
+                    {entry.variant.name}
+                  </div>
+                )}
                 <div className="text-[11px] text-muted-foreground">
-                  {CATEGORY_LABEL[product.category]} ·{' '}
-                  {formatEUR(product.basePriceHt)} HT
+                  {CATEGORY_LABEL[entry.product.category]} ·{' '}
+                  {formatEUR(entry.product.basePriceHt)} HT
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <Button
@@ -497,7 +508,7 @@ function SelectionBuilder({
                     size="sm"
                     variant="outline"
                     disabled={busy || qty === 0}
-                    onClick={() => setQty(product.id, qty - 1)}
+                    onClick={() => setQty(entry.key, qty - 1)}
                     className="h-7 w-7 p-0"
                     aria-label="Retirer"
                   >
@@ -511,7 +522,7 @@ function SelectionBuilder({
                     size="sm"
                     variant="outline"
                     disabled={busy}
-                    onClick={() => setQty(product.id, qty + 1)}
+                    onClick={() => setQty(entry.key, qty + 1)}
                     className="h-7 w-7 p-0"
                     aria-label="Ajouter"
                   >

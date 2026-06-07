@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildSelectionItemInput,
+  catalogSelectionEntries,
+  selectionEntryKey,
   selectionPublicTotalHt,
   selectionTotalUnits,
 } from './selections'
@@ -49,6 +51,28 @@ describe('buildSelectionItemInput', () => {
     expect(item.variantId).toBeNull()
     expect(item.snapshot.imageUrl).toBe('https://img/p1.jpg')
     expect(item.quantity).toBe(1)
+  })
+})
+
+describe('catalogSelectionEntries', () => {
+  it('yields one entry per variant with stable keys', () => {
+    const withVariants = {
+      ...product,
+      variants: [variant, { id: 'v-blanc', name: 'Blanc' }],
+    } as unknown as Product
+    const entries = catalogSelectionEntries([withVariants])
+    expect(entries).toHaveLength(2)
+    expect(entries[0]?.key).toBe(selectionEntryKey('p1', 'v-noir'))
+    expect(entries[1]?.key).toBe(selectionEntryKey('p1', 'v-blanc'))
+    expect(entries[0]?.variant?.id).toBe('v-noir')
+  })
+
+  it('yields a single variant-less entry when a product has no variants', () => {
+    const noVariants = { ...product, variants: [] } as unknown as Product
+    const entries = catalogSelectionEntries([noVariants])
+    expect(entries).toHaveLength(1)
+    expect(entries[0]?.key).toBe(selectionEntryKey('p1', null))
+    expect(entries[0]?.variant).toBeNull()
   })
 })
 
