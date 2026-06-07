@@ -905,6 +905,18 @@ export interface Database {
         Args: Record<string, never>
         Returns: boolean
       }
+      is_partner: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      current_partner_application_ids: {
+        Args: Record<string, never>
+        Returns: string[]
+      }
+      claim_partner_access: {
+        Args: Record<string, never>
+        Returns: string[]
+      }
       admin_save_product_full: {
         Args: { payload: Json }
         Returns: void

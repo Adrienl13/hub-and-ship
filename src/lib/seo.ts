@@ -8,6 +8,7 @@ export interface SeoInput {
   readonly description: string
   readonly path: string
   readonly image?: string
+  readonly noindex?: boolean
 }
 
 export function absoluteUrl(path: string): string {
@@ -15,7 +16,13 @@ export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
 }
 
-export function buildSeoHead({ title, description, path, image }: SeoInput) {
+export function buildSeoHead({
+  title,
+  description,
+  path,
+  image,
+  noindex,
+}: SeoInput) {
   const url = absoluteUrl(path)
   const fullTitle = title.includes(SITE_NAME)
     ? title
@@ -26,6 +33,9 @@ export function buildSeoHead({ title, description, path, image }: SeoInput) {
     meta: [
       { title: fullTitle },
       { name: 'description', content: description },
+      ...(noindex
+        ? [{ name: 'robots', content: 'noindex, nofollow' }]
+        : []),
       { property: 'og:title', content: fullTitle },
       { property: 'og:description', content: description },
       { property: 'og:type', content: 'website' },

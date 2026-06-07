@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, ShieldCheck, User } from 'lucide-react'
+import { ArrowRight, Handshake, ShieldCheck, User } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { useIsPartner } from '@/hooks/useIsPartner'
 
 export function Header({ onReserve }: { onReserve?: () => void }) {
   const { isAdmin } = useIsAdmin()
+  const { isPartner } = useIsPartner()
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 h-16 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
@@ -52,6 +54,19 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
               <Link to="/admin">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Admin
+              </Link>
+            </Button>
+          )}
+          {isPartner && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] md:inline-flex"
+            >
+              <Link to="/partner">
+                <Handshake className="h-3.5 w-3.5" />
+                Espace partenaire
               </Link>
             </Button>
           )}
