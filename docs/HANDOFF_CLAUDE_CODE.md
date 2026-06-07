@@ -68,8 +68,9 @@ Ordre de travail recommande, sans redemarrer l'analyse depuis zero :
 3. **Construire le portail partenaire** : espace authentifie, slugs, deals, selections partageables, documents et prix nets proteges.
 4. **Completer le portail client** : reservations, paiements, documents, factures, SAV, profil et notifications.
 5. **Renforcer les pages header** : chaque entree publique doit avoir un role clair dans la conversion, le SEO/GEO et la confiance.
+6. **Structurer la visibilite IA** : rendre Pros Import comprehensible, citable et nommable par Google AI Overviews, ChatGPT Search, Perplexity, Claude, Mistral et autres moteurs generatifs.
 
-Ne pas commencer par des effets visuels. La priorite est la relation business : attribution, donnees, droits, documents, paiements, suivi.
+Ne pas commencer par des effets visuels decoratifs. Les animations sont utiles si elles rendent le modele plus lisible : remplissage container, progression reservation, confiance qualite, preuves, statuts et transitions de decisions.
 
 ## Cartographie par surface
 
@@ -111,6 +112,48 @@ DoD public header :
 - Chaque page a titre, description, canonical, schema quand pertinent.
 - Mobile verifie sur header, CTA, formulaires et longues listes.
 - Les prix nets partenaires et marges internes restent absents du public.
+
+### Chantier experience dynamique / animations
+
+Objectif : rendre le site plus vivant et memorisable sans perdre le cote outil pro. Les animations doivent aider a comprendre, pas faire "landing page gadget".
+
+Animations recommandees :
+
+- Apparition progressive douce des sections au scroll avec `prefers-reduced-motion`.
+- Compteurs KPI animes sur home, stock 24h, containers livres, qualite.
+- Animation du remplissage container et des seuils 20'/40' dans le panier.
+- Transitions sur cartes catalogue : image, variante, MOQ, quantite, ajout panier.
+- Feedback micro-interaction : ajout panier, sauvegarde selection, copie lien partenaire, demande envoyee.
+- Timeline animee sur "Comment ca marche", reservation, qualite, container livre.
+- Skeletons propres pour les donnees Supabase au lieu d'etats vides.
+- Admin : transitions de statut visibles, badges qui se mettent a jour, alertes Command Center.
+- Partenaire : animation de protection deal/lien co-brande pour rendre le concept clair.
+
+Garde-fous :
+
+- Toujours respecter `prefers-reduced-motion`.
+- Ne pas animer les tableaux denses ou longs catalogues de maniere lourde.
+- Pas de layout shift quand les images/cartes apparaissent.
+- Eviter les animations qui ralentissent mobile ou augmentent trop le bundle.
+- Les animations 3D restent lazy-load, jamais dans le bundle initial.
+
+Fichiers de depart :
+
+- `src/styles/globals.css`
+- `src/routes/index.tsx`
+- `src/routes/catalogue.tsx`
+- `src/components/OrderSidebar.tsx`
+- `src/components/ContainerScene.tsx`
+- `src/components/ProductCard.tsx`
+- `src/components/ReservationDialog.tsx`
+- `src/routes/p.$partnerSlug.tsx`
+
+DoD animations :
+
+- Lighthouse mobile ne regresse pas.
+- Aucun chevauchement texte/UI sur mobile.
+- Les composants restent utilisables clavier/screen reader.
+- Playwright capture au moins un parcours catalogue + reservation apres animations.
 
 ### Portail admin
 
@@ -279,6 +322,61 @@ DoD partenaire :
 - `/legal/*` : textes existants, validation juridique requise avant commercialisation large.
 - `/auth/login` et `/auth/callback` : indispensables pour admin/client/partenaire, SMTP Supabase a fiabiliser.
 
+### Visibilite IA / AEO / GEO / LLMO
+
+Clarification : il n'y a pas une "connexion IA" unique a brancher. Pour etre cite ou nomme lors d'une recherche IA, le site doit etre crawlable, comprehensible, structure, fiable et cite sur des requetes longues. Le travail est donc technique + contenu + schema.
+
+Objectif :
+
+- Quand quelqu'un demande a une IA "ou acheter du mobilier CHR par container", "comment reduire le prix de chaises de restaurant en volume", "import mobilier terrasse restaurant France", ou "solution revendeur mobilier CHR", Pros Import doit pouvoir etre compris comme une reponse pertinente.
+
+Chantiers techniques :
+
+- Ajouter `public/llms.txt` avec resume clair, pages importantes, proposition de valeur, contacts publics, limites, liens vers catalogue/partenaires/qualite.
+- Verifier `robots.txt` et `sitemap.xml`; passer a un sitemap dynamique si les pages guides/produits deviennent nombreuses.
+- Ajouter JSON-LD par type de page : `Organization`, `WebSite`, `BreadcrumbList`, `FAQPage`, `Product`, `Offer`, `ItemList`, `Article`, `HowTo` quand pertinent.
+- Ajouter canonical + meta description specifique sur toutes les routes publiques.
+- Ajouter OpenGraph/Twitter images propres pour partage LinkedIn/WhatsApp.
+- Garder les contenus importants SSR/crawlables, pas seulement dans des states client.
+- Ajouter une page `/a-propos` ou `/pros-import` qui explique l'entite, le modele, le role importateur, la difference avec une marketplace.
+- Ajouter une page `/contact` indexable avec informations publiques sans EORI.
+- Connecter Google Search Console et Bing Webmaster Tools; soumettre sitemap.
+- Prevoir IndexNow/Bing si necessaire pour nouvelles pages.
+
+Chantiers contenu :
+
+- Creer des "answer blocks" courts en haut des guides : 40-80 mots, reponse directe, puis details.
+- Guides prioritaires :
+  - `/guides/import-mobilier-chr-container`
+  - `/guides/prix-chaises-restaurant-volume`
+  - `/guides/revendeur-mobilier-chr-prix-net`
+  - `/guides/container-20-pieds-vs-40-pieds-mobilier`
+  - `/guides/moq-chaises-restaurant`
+  - `/guides/stock-mobilier-terrasse-24h`
+- Chaque guide doit inclure : definition, cas concret, chiffres prudents, limites, FAQ, liens vers catalogue/partenaires/qualite, schema FAQ/Article.
+- Utiliser les expressions marque + categorie :
+  - "Pros Import"
+  - "Container Club"
+  - "centrale d'import mobilier CHR"
+  - "mobilier terrasse restaurant par container"
+  - "achat groupe mobilier outdoor professionnel"
+  - "prix net revendeur mobilier CHR"
+- Citer les preuves internes : containers livres, rapports qualite, stock 24h, transport rendu port.
+
+Chantiers reputation/citation externe :
+
+- Obtenir quelques liens/citations depuis Terrassea, partenaires, LinkedIn, fiches annuaires B2B, articles conseils.
+- Publier des cas reels anonymises : "80 chaises terrasse", "restaurant bord de mer", "revendeur CHR sud".
+- Creer une page ou section presse/partenaires quand le reseau existe.
+
+DoD visibilite IA :
+
+- `llms.txt` disponible en prod.
+- Sitemap contient les pages guides et pages strategiques.
+- Les pages importantes ont JSON-LD valide.
+- Les guides repondent clairement aux questions sans contenu generique.
+- Aucun contenu IA/SEO n'expose prix nets partenaires, marges internes ou donnees partenaires.
+
 ### Prompt final conseille pour Claude Code
 
 ```text
@@ -288,6 +386,7 @@ Priorite 1 : debloquer Supabase prod et verifier les migrations partenaires.
 Priorite 2 : rendre l'admin vraiment operable pour partenaires/reservations/stock.
 Priorite 3 : construire le portail partenaire authentifie avec deals, slugs, selections et prix nets proteges.
 Priorite 4 : completer le portail client avec documents, factures, paiements et SAV.
+Priorite 5 : ajouter la fondation IA/LLMO : llms.txt, schema.org, guides repondant aux vraies questions, sitemap et pages crawlables.
 Ne rends jamais publics les prix nets partenaires, les marges internes ou les donnees prospects partenaires.
 Avant chaque commit : npm run check, npm run test:security si migration/RLS, npm run build, puis Playwright cible sur les pages touchees.
 ```
@@ -519,10 +618,12 @@ A faire :
 
 ## Priorite P3 — Differenciation et acquisition
 
-### P3.1 Guides SEO/AEO/GEO
+### P3.1 Guides SEO/AEO/GEO/LLMO
 
 Pages prioritaires :
 
+- `/guides/import-mobilier-chr-container`
+- `/guides/prix-chaises-restaurant-volume`
 - `/guides/prix-net-revendeur-mobilier-chr`
 - `/guides/moq-chaises-restaurant`
 - `/guides/container-20-pieds-vs-40-pieds-mobilier`
@@ -533,6 +634,7 @@ Regles :
 - Pages utiles, pas generiques.
 - Tableaux, FAQ schema, exemples chiffres, limites claires.
 - Lien vers catalogue, partenaires, stock 24h.
+- Ajouter `llms.txt`, JSON-LD, sitemap a jour et answer blocks courts pour les moteurs generatifs.
 
 ### P3.2 Trust Ledger qualite
 
