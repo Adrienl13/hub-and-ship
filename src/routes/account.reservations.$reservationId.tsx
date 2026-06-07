@@ -4,9 +4,13 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  Circle,
+  Clock,
   CreditCard,
+  Download,
   FileText,
   PackageCheck,
+  ShieldCheck,
   Ship,
 } from 'lucide-react'
 import { useServerFn } from '@tanstack/react-start'
@@ -22,6 +26,11 @@ import {
   mergeAccountReservations,
   type AccountReservation,
 } from '@/lib/account/reservations'
+import {
+  isReservationCancelled,
+  reservationTimelineSteps,
+  type TimelineStep,
+} from '@/lib/account/timeline'
 import { formatEUR } from '@/lib/order'
 import {
   readLocalReservationHistory,
@@ -293,16 +302,16 @@ function AccountReservationDetailPage() {
               value={formatEUR(reservation.draft.payment.payNow)}
               detail={`${formatEUR(reservation.paidAmount)} déjà réglé`}
             />
-            <InfoBlock
-              icon={<FileText className="h-4 w-4" />}
-              label="Documents"
-              value="Facture à venir"
-              detail="Fiche technique et conformité à rattacher après auth"
+            <DocumentsCard
+              feePaid={paymentConfirmedByStatus}
+              delivered={reservation.status === 'delivered'}
             />
           </div>
         </aside>
 
-        <div className="lg:col-span-8">
+        <div className="space-y-6 lg:col-span-8">
+          <ReservationTimeline status={reservation.status} />
+
           <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
             <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-medium">
@@ -374,6 +383,151 @@ function InfoBlock({
       <div className="mt-1 text-xs leading-5 text-muted-foreground">
         {detail}
       </div>
+    </div>
+  )
+}
+
+function ReservationTimeline({
+  status,
+}: {
+  readonly status: AccountReservation['status']
+}) {
+  const steps = reservationTimelineSteps(status)
+  const cancelled = isReservationCancelled(status)
+
+  return (
+    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+      <div className="flex items-center gap-2 border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-3 text-sm font-medium">
+        <Clock className="h-4 w-4" />
+        Suivi de la réservation
+      </div>
+      {cancelled ? (
+        <div className="text-destructive flex items-center gap-2 px-4 py-6 text-sm">
+          <AlertTriangle className="h-4 w-4" />
+          Cette réservation a été annulée.
+        </div>
+      ) : (
+        <ol className="px-4 py-4">
+          {steps.map((step, index) => (
+            <TimelineRow
+              key={step.key}
+              step={step}
+              last={index === steps.length - 1}
+            />
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
+
+function TimelineRow({
+  step,
+  last,
+}: {
+  readonly step: TimelineStep
+  readonly last: boolean
+}) {
+  const Icon =
+    step.state === 'done'
+      ? CheckCircle2
+      : step.state === 'current'
+        ? Clock
+        : Circle
+  const iconColor =
+    step.state === 'done'
+      ? 'text-[color:var(--forest)]'
+      : step.state === 'current'
+        ? 'text-[color:var(--ember)]'
+        : 'text-muted-foreground'
+
+  return (
+    <li className="flex gap-3">
+      <div className="flex flex-col items-center">
+        <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
+        {!last && (
+          <span
+            className={`w-px flex-1 ${
+              step.state === 'done'
+                ? 'bg-[color:var(--forest)]/40'
+                : 'bg-[color:var(--sand-deep)]'
+            }`}
+          />
+        )}
+      </div>
+      <div className={last ? '' : 'pb-5'}>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span
+            className={step.state === 'upcoming' ? 'text-muted-foreground' : ''}
+          >
+            {step.label}
+          </span>
+          {step.state === 'current' && (
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]">
+              En cours
+            </span>
+          )}
+        </div>
+        <div className="mt-0.5 text-xs leading-5 text-muted-foreground">
+          {step.description}
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function DocumentsCard({
+  feePaid,
+  delivered,
+}: {
+  readonly feePaid: boolean
+  readonly delivered: boolean
+}) {
+  return (
+    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <FileText className="h-4 w-4" />
+        <span className="label-eyebrow">Documents</span>
+      </div>
+      <ul className="mt-3 space-y-2">
+        <li>
+          <a
+            href="/legal/cgv"
+            className="inline-flex items-center gap-2 text-sm hover:underline"
+          >
+            <FileText className="h-3.5 w-3.5 text-[color:var(--ember)]" />
+            Conditions générales de vente
+          </a>
+        </li>
+        <li>
+          <a
+            href="/qualite"
+            className="inline-flex items-center gap-2 text-sm hover:underline"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--ember)]" />
+            Preuves qualité &amp; tests
+          </a>
+        </li>
+        <li className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+          <Download className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          Facture :{' '}
+          {feePaid
+            ? 'envoyée par email après confirmation du paiement.'
+            : 'émise après le règlement des frais de réservation.'}
+        </li>
+        {delivered && (
+          <li className="text-xs leading-5 text-muted-foreground">
+            Documents de livraison disponibles — contactez-nous pour les
+            recevoir.
+          </li>
+        )}
+      </ul>
+      <a
+        href="mailto:adrienlaniez1@gmail.com"
+        className="mt-3 inline-block text-xs text-foreground underline"
+      >
+        Demander un document
+      </a>
     </div>
   )
 }
