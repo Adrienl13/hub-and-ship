@@ -42,6 +42,7 @@ import {
   type StockRequestAdminRow,
 } from '@/lib/stock-requests/admin-repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { AdminCommandCenter } from '@/components/AdminCommandCenter'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type {
   ReservationStatus,
@@ -236,7 +237,12 @@ function AdminPage() {
           })}
         </div>
 
-        {activeTab === 'overview' && <Overview snapshot={snapshot} />}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <AdminCommandCenter onNavigate={setActiveTab} />
+            <Overview snapshot={snapshot} />
+          </div>
+        )}
         {activeTab === 'stock-requests' && (
           <StockRequestsAdminPanel authStatus={auth.status} />
         )}
@@ -727,6 +733,15 @@ function ReservationsAdminPanel({
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>(
     'all',
   )
+  const [partnerFilter, setPartnerFilter] = useState<
+    'all' | 'partner' | 'direct'
+  >('all')
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>(
+    'all',
+  )
+  const [containerFilter, setContainerFilter] = useState<'all' | '20' | '40'>(
+    'all',
+  )
   const [search, setSearch] = useState('')
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -763,6 +778,24 @@ function ReservationsAdminPanel({
     const needle = search.trim().toLowerCase()
     return rows.filter((row) => {
       if (statusFilter !== 'all' && row.status !== statusFilter) return false
+
+      const hasPartner =
+        Boolean(row.partnerDealId) ||
+        Boolean(row.partnerApplicationId) ||
+        Boolean(row.partnerLinkSlug)
+      if (partnerFilter === 'partner' && !hasPartner) return false
+      if (partnerFilter === 'direct' && hasPartner) return false
+
+      const isPaid = row.paidReservationFeeAt !== null
+      if (paymentFilter === 'paid' && !isPaid) return false
+      if (paymentFilter === 'unpaid' && isPaid) return false
+
+      if (containerFilter !== 'all') {
+        const ct = row.requestedContainerType
+        if (containerFilter === '20' && !ct?.startsWith('20_')) return false
+        if (containerFilter === '40' && !ct?.startsWith('40_')) return false
+      }
+
       if (!needle) return true
       return (
         row.reference.toLowerCase().includes(needle) ||
@@ -780,7 +813,14 @@ function ReservationsAdminPanel({
         (row.partnerLinkDisplayName?.toLowerCase().includes(needle) ?? false)
       )
     })
-  }, [rows, statusFilter, search])
+  }, [
+    rows,
+    statusFilter,
+    partnerFilter,
+    paymentFilter,
+    containerFilter,
+    search,
+  ])
 
   async function changeStatus(
     row: AdminReservationRow,
@@ -909,6 +949,63 @@ function ReservationsAdminPanel({
             ),
           )}
         </select>
+        <select
+          value={partnerFilter}
+          onChange={(e) =>
+            setPartnerFilter(e.target.value as 'all' | 'partner' | 'direct')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par origine partenaire"
+        >
+          <option value="all">Toutes origines</option>
+          <option value="partner">Partenaire reconnu</option>
+          <option value="direct">Direct (sans partenaire)</option>
+        </select>
+        <select
+          value={paymentFilter}
+          onChange={(e) =>
+            setPaymentFilter(e.target.value as 'all' | 'paid' | 'unpaid')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par paiement"
+        >
+          <option value="all">Tous paiements</option>
+          <option value="paid">Frais payés</option>
+          <option value="unpaid">Frais en attente</option>
+        </select>
+        <select
+          value={containerFilter}
+          onChange={(e) =>
+            setContainerFilter(e.target.value as 'all' | '20' | '40')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par type de container demandé"
+        >
+          <option value="all">Tous containers</option>
+          <option value="20">20&apos; demandé</option>
+          <option value="40">40&apos; demandé</option>
+        </select>
+        {(statusFilter !== 'all' ||
+          partnerFilter !== 'all' ||
+          paymentFilter !== 'all' ||
+          containerFilter !== 'all' ||
+          search.trim() !== '') && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setStatusFilter('all')
+              setPartnerFilter('all')
+              setPaymentFilter('all')
+              setContainerFilter('all')
+              setSearch('')
+            }}
+            className="h-9 px-2 text-xs"
+          >
+            Réinitialiser
+          </Button>
+        )}
         <span className="text-xs text-muted-foreground">
           {filteredRows.length} / {rows.length}
         </span>
