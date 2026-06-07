@@ -31,7 +31,11 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
-import { buildSeoHead } from '@/lib/seo'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/qualite')({
   component: QualitePage,
@@ -42,6 +46,14 @@ export const Route = createFileRoute('/qualite')({
         'Rapports indépendants SGS, Eurofins, TÜV. Chaque container est inspecté avant expédition : preuves publiques, rapports complets sur connexion.',
       path: '/qualite',
     }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Qualité & Tests', path: '/qualite' },
+        ]),
+      ),
+    ],
   }),
 })
 

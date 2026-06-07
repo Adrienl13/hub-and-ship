@@ -16,7 +16,11 @@ import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
-import { buildSeoHead } from '@/lib/seo'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/livres/')({
   component: LivresPage,
@@ -27,6 +31,14 @@ export const Route = createFileRoute('/livres/')({
         'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
       path: '/livres',
     }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Containers livrés', path: '/livres' },
+        ]),
+      ),
+    ],
   }),
 })
 
