@@ -193,7 +193,7 @@ Chantier admin le plus impactant apres Supabase :
 
 1. ~~Ajouter dans `AdminPartnersTab` l'edition du slug public partenaire.~~ **FAIT (2026-06-07)** — editeur "Lien partageable" sur chaque carte candidature/deal (slug normalise + valide cote DB).
 2. ~~Ajouter une action "Creer lien partageable" qui produit `/p/{slug}`.~~ **FAIT (2026-06-07)** — apercu de l'URL absolue + copie presse-papier + indicateur d'attribution active/en attente. Repo : `updatePartnerApplicationSlug` / `updatePartnerDealSlug` (+ tests).
-3. Ajouter une vue detail partenaire : candidatures, deals, reservations attribuees, statut, notes. **(reste a faire ; notes internes editables incluses)**
+3. ~~Ajouter une vue detail partenaire : candidatures, deals, reservations attribuees, statut, notes.~~ **FAIT (2026-06-07)** — notes internes editables (candidatures + deals), expansion "Detail" par candidature montrant les deals lies et les reservations attribuees (chargees a la demande via `listAllReservations`). Repo : `updatePartnerApplicationNote` / `updatePartnerDealNote` (+ tests).
 4. Ajouter dans `ReservationsAdminPanel` des filtres rapides : partenaire, paiement, container, 40' demande, statut.
 5. Ajouter un "Command Center" en haut de `/admin` avec les 5 urgences du jour.
 
