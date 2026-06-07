@@ -59,6 +59,239 @@ Point bloque important :
 - Les migrations Supabase partenaires n'ont pas ete appliquees au projet distant, car la session Codex n'avait pas de `SUPABASE_ACCESS_TOKEN`.
 - Tant que les migrations partenaires ne sont pas appliquees, le formulaire prod tombera en mode degrade local au lieu de centraliser le lead en DB, l'attribution automatique SIRET/email ne pourra pas s'executer, et l'attribution par lien `/p/{slug}` restera seulement visible dans le snapshot local/client.
 
+## Reprise conseillee pour Claude Code
+
+Ordre de travail recommande, sans redemarrer l'analyse depuis zero :
+
+1. **Debloquer Supabase prod** : appliquer les migrations partenaires, verifier les secrets Worker, tester `/api/partner-requests`, `/admin?tab=partners`, `/admin?tab=reservations`.
+2. **Rendre l'admin operable** : ajouter les actions qui permettent a Adrien de piloter les leads, reservations, partenaires et contenus sans toucher au code.
+3. **Construire le portail partenaire** : espace authentifie, slugs, deals, selections partageables, documents et prix nets proteges.
+4. **Completer le portail client** : reservations, paiements, documents, factures, SAV, profil et notifications.
+5. **Renforcer les pages header** : chaque entree publique doit avoir un role clair dans la conversion, le SEO/GEO et la confiance.
+
+Ne pas commencer par des effets visuels. La priorite est la relation business : attribution, donnees, droits, documents, paiements, suivi.
+
+## Cartographie par surface
+
+### Surface publique / Header
+
+Source principale : `src/components/Header.tsx`.
+
+Entrees actuelles :
+
+- Logo `Container Club` -> `/#top`
+- `Catalogue` -> `/catalogue`
+- `Stock 24h` -> `/stock-24h`
+- `Partenaires` -> `/partenaires`
+- `Comment ça marche` -> `/#comment`
+- `Containers livrés` -> `/livres`
+- `Qualité & Tests` -> `/qualite`
+- `FAQ` -> `/faq`
+- Bouton `Mon compte` -> `/account/reservations`
+- Bouton admin visible aux admins -> `/admin`
+- CTA global `Réserver`
+
+Chantiers par entree :
+
+| Entree            | Etat                                               | Priorite | Chantiers a faire                                                                                                                                                                                        |
+| ----------------- | -------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Catalogue         | Fonctionnel, cartes portrait, panier, 3D lazy      | P1       | Brancher donnees Supabase live, mode comparaison dense desktop, filtres avances dimensions/matiere/empilable/MOQ/stock, sauvegarde selection, import/export catalogue admin, vrais visuels et documents. |
+| Stock 24h         | Fonctionnel avec endpoint serveur + fallback local | P1       | Gerer le stock depuis l'admin, decrementer/reserver les lots, notifier Adrien, convertir une demande stock en reservation/devis, afficher delais et quantites fiables.                                   |
+| Partenaires       | Fonctionnel public + intake API                    | P0/P1    | Appliquer migrations, creer slugs, relier comptes partenaires, dashboard partenaire, deal registration complet, selections/devis co-brandes, prix nets proteges.                                         |
+| Comment ça marche | Ancre home seulement                               | P2       | Creer route SEO `/comment-ca-marche`, expliquer achat groupé, paiement, transport rendu port, 20'/40', risques, calendrier, difference stock 24h vs container.                                           |
+| Containers livrés | Pages publiques et admin existants                 | P2       | Relier aux vraies donnees, photos, timeline, documents qualite, chiffres de remplissage, retours client, preuve sociale exportable.                                                                      |
+| Qualité & Tests   | Carnet de preuves public, upload admin             | P1       | Publier vrais PDF SGS/Eurofins, relier rapports aux produits/categories, signed URLs auth, rappels admin documents manquants, schema SEO FAQ/Article.                                                    |
+| FAQ               | Page publique simple                               | P2       | FAQ recherchable, categories direct/partenaire/transport/paiement/qualite, JSON-LD FAQPage, liens vers pages utiles.                                                                                     |
+| Mon compte        | Reservations liste/detail                          | P1       | Dashboard client, factures, documents, paiements, SAV, parrainage, profil/RGPD, actions sur reservation.                                                                                                 |
+| Admin             | Dashboard + onglets                                | P1       | Command center, exports, filtres, audit log visible, actions batch, droits/roles, 2FA admin.                                                                                                             |
+
+DoD public header :
+
+- Aucun lien mort ou ancre fragile.
+- Chaque page a titre, description, canonical, schema quand pertinent.
+- Mobile verifie sur header, CTA, formulaires et longues listes.
+- Les prix nets partenaires et marges internes restent absents du public.
+
+### Portail admin
+
+Route : `/admin`, fichier principal `src/routes/admin.tsx`.
+
+Onglets actuels :
+
+- `overview`
+- `stock-requests`
+- `reservations`
+- `products`
+- `containers`
+- `quality`
+- `carriers`
+- `partners`
+- `users`
+
+Etat et chantiers :
+
+| Onglet admin   | Etat actuel                                                       | Priorite | A faire                                                                                                                                                            |
+| -------------- | ----------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Vue generale   | KPIs + snapshot partiellement demo                                | P1       | Command Center reel : leads non traites, paiements en attente, deals a qualifier, documents manquants, container proche 80%, alerts Supabase/Stripe/stock.         |
+| Demandes stock | DB-backed + transitions + fallback demo                           | P1       | Attribution responsable, relance, conversion en devis/reservation, export CSV, recherche avancee, historique contact, suppression RGPD.                            |
+| Reservations   | DB live, transitions statut, notes, lien Stripe, badge partenaire | P0/P1    | Verifier prod apres migrations, ajouter vue detail admin, actions paiement/remboursement, timeline audit, documents/factures, filtre partenaire, export comptable. |
+| Catalogue      | CRUD produits/variants/commitments                                | P1       | Images multiples, documents produit, prix par role, marges non publiques, import CSV, validation MOQ/increment, preview public, gestion stock 24h liee.            |
+| Containers     | CRUD containers livres/actifs                                     | P1       | Distinguer container actif vs historique, seuils 20/40, depart estime, participants, reservations rattachees, remplissage live, cloture/archivage.                 |
+| Qualite        | CRUD rapports + upload PDF                                        | P1       | Relier rapports a produits/containers, statut documents requis, expiration/validite, preview public, acces client auth, alertes documents manquants.               |
+| Transporteurs  | CRUD carrier_partners                                             | P2       | Zones, tarifs indicatifs, contacts, delais, statut actif, demande client -> transporteur, comparatif par region.                                                   |
+| Partenaires    | Lecture/filtre/status candidatures et deals                       | P0/P1    | Creer/editer `partner_referral_slug`, lier user au partenaire, notes internes, pipeline deal, protection 120/180j, attribution test, export, timeline.             |
+| Utilisateurs   | Onglet lazy existant                                              | P1       | Gestion roles, invitation admin/partenaire, relation `partner_users`, suspension, magic link, 2FA admin, audit des changements.                                    |
+
+Chantier admin le plus impactant apres Supabase :
+
+1. Ajouter dans `AdminPartnersTab` l'edition du slug public partenaire.
+2. Ajouter une action "Creer lien partageable" qui produit `/p/{slug}`.
+3. Ajouter une vue detail partenaire : candidatures, deals, reservations attribuees, statut, notes.
+4. Ajouter dans `ReservationsAdminPanel` des filtres rapides : partenaire, paiement, container, 40' demande, statut.
+5. Ajouter un "Command Center" en haut de `/admin` avec les 5 urgences du jour.
+
+Fichiers de depart :
+
+- `src/routes/admin.tsx`
+- `src/components/AdminPartnersTab.tsx`
+- `src/components/AdminCatalogueTab.tsx`
+- `src/components/AdminContainersTab.tsx`
+- `src/components/AdminQualityReportsTab.tsx`
+- `src/components/AdminCarrierPartnersTab.tsx`
+- `src/components/AdminUsersTab.tsx`
+- `src/lib/admin/dashboard.ts`
+- `src/lib/partners/repository.ts`
+- `src/lib/account/admin-reservations.repository.ts`
+- `src/lib/supabase/types.ts`
+
+DoD admin :
+
+- Un admin peut traiter une demande partenaire, proteger un deal, voir l'attribution reservation et exporter le suivi.
+- Aucune action admin ne depend d'un fallback local pour la prod.
+- Les erreurs Supabase/Stripe sont affichees clairement et testees.
+- Les actions sensibles sont tracees via `logAdminAction`.
+
+### Portail client
+
+Routes actuelles :
+
+- `/account/reservations`
+- `/account/reservations/$reservationId`
+
+Etat actuel :
+
+- Liste reservations locale + Supabase quand disponible.
+- Detail reservation avec lignes, totaux, statut, paiement.
+- Retour Stripe gere via `session_id`.
+- Pas encore de dashboard client complet.
+
+Chantiers prioritaires :
+
+| Module client        | Priorite | A faire                                                                                                                  |
+| -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Dashboard `/account` | P1       | Vue d'ensemble : prochaine action, reservations actives, paiements dus, documents, contact support.                      |
+| Reservations         | P1       | Timeline claire, statut paiement/webhook, messages de retard, documents associes, relance paiement, annulation encadree. |
+| Factures/devis       | P1       | Generer PDF devis/facture/acompte/solde, telechargement, historique, numerotation propre.                                |
+| Documents            | P1       | Rapports qualite, fiches techniques, CGV, documents container avec acces auth.                                           |
+| Profil societe       | P2       | SIRET, contacts facturation/logistique, adresses, emails, preference transport.                                          |
+| SAV / Claims         | P2       | Formulaire incident, photos, quantite, reservation liee, statut traitement.                                              |
+| Parrainage / avis    | P3       | Credits, invitations, avis verifies post-livraison, emails de relance.                                                   |
+| Mobile account nav   | P2       | Navigation compacte reservations/documents/profil/aide.                                                                  |
+
+Fichiers de depart :
+
+- `src/routes/account.reservations.tsx`
+- `src/routes/account.reservations.$reservationId.tsx`
+- `src/lib/account/reservations.ts`
+- `src/lib/reservations/repository.ts`
+- `src/lib/reservations/local-history.ts`
+- `src/lib/stripe/checkout.ts`
+- `src/lib/email/reservation-confirmation.ts`
+
+DoD client :
+
+- Le client comprend toujours "ce que je dois faire maintenant".
+- Aucune reservation payee ne reste seulement locale.
+- Les documents critiques sont telechargeables.
+- Le tunnel fonctionne si Stripe est indisponible, sans faire croire que le paiement est confirme.
+
+### Portail partenaire
+
+Etat actuel :
+
+- Pas encore de portail authentifie.
+- Surfaces publiques existantes : `/partenaires` et `/p/{slug}`.
+- Attribution preparee via migrations `partner_applications`, `partner_deals`, `partner_referral_slug`, `partner_application_id`.
+
+Objectif :
+
+Creer un espace ou le revendeur peut utiliser Pros Import comme back-office d'import sans exposer ses marges ni perdre ses clients.
+
+Routes recommandees :
+
+- `/partner` ou `/partenaire/dashboard`
+- `/partner/deals`
+- `/partner/selections`
+- `/partner/documents`
+- `/partner/pricing`
+- `/partner/settings`
+
+Tables/migrations probables :
+
+- `partner_users` : lien user Supabase -> partenaire valide.
+- `partner_selections` : selection produits, quantites, variantes, mode prix public/client.
+- `partner_selection_items`.
+- `partner_assets` : logos, documents, photos partageables.
+- Eventuellement `partner_commissions` si modele apporteur.
+
+Chantiers prioritaires :
+
+| Module partenaire   | Priorite | A faire                                                                                 |
+| ------------------- | -------- | --------------------------------------------------------------------------------------- |
+| Acces/RLS           | P0/P1    | Role partenaire, liaison user, policies pour voir uniquement ses donnees, admin bypass. |
+| Dashboard           | P1       | Deals proteges, reservations attribuees, volume, prochaine action, liens rapides.       |
+| Deal registration   | P1       | Soumettre/editer un prospect, statut, duree protection, preuves, historique.            |
+| Liens co-brandes    | P1       | Generer slug, selection partageable, statut de capture, QR/link copy.                   |
+| Selections          | P1       | Creer selection depuis catalogue, quantites, variantes, commentaire, page partageable.  |
+| Prix nets           | P1       | Affichage uniquement authentifie partenaire valide, jamais public ni client final.      |
+| Devis PDF co-brande | P1       | Logo/nom partenaire, produits, conditions, prix public/client, contact partenaire.      |
+| Documents/assets    | P2       | Photos, fiches techniques, arguments, certificats, garanties.                           |
+| Reporting           | P2       | Reservations attribuees, conversion, volume, commission/apporteur si applicable.        |
+
+Regles non negociables portail partenaire :
+
+- Le partenaire ne voit jamais les deals d'un autre partenaire.
+- Le client final ne voit jamais le prix net partenaire.
+- Le partenaire garde sa liberte de prix de revente.
+- Les pages publiques co-brandees doivent rassurer sans promettre une exclusivite commerciale illimitee.
+
+DoD partenaire :
+
+- Un partenaire approuve peut se connecter, creer un deal, partager un lien, voir une reservation attribuee.
+- Un client final venant du lien peut reserver sans voir de prix net.
+- L'admin voit tout et peut corriger une attribution.
+
+### Pages publiques hors header mais importantes
+
+- `/catalogue/chaises-restaurant` et `/catalogue/tables-restaurant` : pages SEO category, a enrichir avec FAQ, schema, vrais contenus, liens catalogue filtres.
+- `/stock-mobilier-terrasse-24h` : landing SEO stock urgent, a relier aux lots reels.
+- `/transport-partenaires` : deja creee, a alimenter avec donnees et demandes transport.
+- `/legal/*` : textes existants, validation juridique requise avant commercialisation large.
+- `/auth/login` et `/auth/callback` : indispensables pour admin/client/partenaire, SMTP Supabase a fiabiliser.
+
+### Prompt final conseille pour Claude Code
+
+```text
+Lis d'abord docs/HANDOFF_CLAUDE_CODE.md, docs/PLATFORM_STRATEGY.md, docs/KNOWN_ISSUES.md et docs/PROGRESS.md.
+Objectif : reprendre Pros Import / Container Club sans changer la strategie.
+Priorite 1 : debloquer Supabase prod et verifier les migrations partenaires.
+Priorite 2 : rendre l'admin vraiment operable pour partenaires/reservations/stock.
+Priorite 3 : construire le portail partenaire authentifie avec deals, slugs, selections et prix nets proteges.
+Priorite 4 : completer le portail client avec documents, factures, paiements et SAV.
+Ne rends jamais publics les prix nets partenaires, les marges internes ou les donnees prospects partenaires.
+Avant chaque commit : npm run check, npm run test:security si migration/RLS, npm run build, puis Playwright cible sur les pages touchees.
+```
+
 ## Priorite P0 — Debloquer la prod data
 
 ### P0.1 Appliquer les migrations Supabase partenaires
