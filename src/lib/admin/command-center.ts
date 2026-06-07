@@ -29,6 +29,7 @@ export interface CommandCenterCounts {
   readonly partnerApplicationsToReview: number
   readonly partnerDealsToQualify: number
   readonly reservationsPendingPayment: number
+  readonly openClaims: number
 }
 
 async function runCount(
@@ -52,6 +53,7 @@ export async function loadCommandCenterCounts(
     partnerApplicationsToReview,
     partnerDealsToQualify,
     reservationsPendingPayment,
+    openClaims,
   ] = await Promise.all([
     runCount(
       countHead(client, 'stock_requests').eq('status', 'new'),
@@ -72,6 +74,10 @@ export async function loadCommandCenterCounts(
       countHead(client, 'reservations').eq('status', 'pending_reservation_fee'),
       'reservations',
     ),
+    runCount(
+      countHead(client, 'reservation_claims').eq('status', 'open'),
+      'reservation_claims',
+    ),
   ])
 
   return {
@@ -79,6 +85,7 @@ export async function loadCommandCenterCounts(
     partnerApplicationsToReview,
     partnerDealsToQualify,
     reservationsPendingPayment,
+    openClaims,
   }
 }
 
@@ -87,6 +94,7 @@ export function totalUrgencies(counts: CommandCenterCounts): number {
     counts.newStockRequests +
     counts.partnerApplicationsToReview +
     counts.partnerDealsToQualify +
-    counts.reservationsPendingPayment
+    counts.reservationsPendingPayment +
+    counts.openClaims
   )
 }

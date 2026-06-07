@@ -48,6 +48,7 @@ describe('command center counts', () => {
       partner_applications: 2,
       partner_deals: 1,
       reservations: 4,
+      reservation_claims: 2,
     })
 
     const counts = await loadCommandCenterCounts(client)
@@ -57,8 +58,9 @@ describe('command center counts', () => {
       partnerApplicationsToReview: 2,
       partnerDealsToQualify: 1,
       reservationsPendingPayment: 4,
+      openClaims: 2,
     })
-    expect(totalUrgencies(counts)).toBe(10)
+    expect(totalUrgencies(counts)).toBe(12)
 
     // Applications are filtered with an IN over new/reviewing.
     const appQuery = log.find((q) => q.table === 'partner_applications')

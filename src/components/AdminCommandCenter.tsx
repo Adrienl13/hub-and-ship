@@ -10,7 +10,11 @@ import {
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
-export type CommandCenterTab = 'stock-requests' | 'partners' | 'reservations'
+export type CommandCenterTab =
+  | 'stock-requests'
+  | 'partners'
+  | 'reservations'
+  | 'claims'
 
 interface UrgencyCard {
   readonly key: string
@@ -48,6 +52,14 @@ function buildCards(counts: CommandCenterCounts): ReadonlyArray<UrgencyCard> {
       hint: 'Frais de réservation non encore réglés.',
       cta: 'Ouvrir les réservations',
       tab: 'reservations',
+    },
+    {
+      key: 'claims',
+      count: counts.openClaims,
+      title: 'Réclamations SAV ouvertes',
+      hint: 'Demandes client en attente de traitement.',
+      cta: 'Ouvrir le SAV',
+      tab: 'claims',
     },
   ]
 }
