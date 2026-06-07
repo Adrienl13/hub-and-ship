@@ -236,7 +236,7 @@ Chantiers prioritaires :
 
 | Module client        | Priorite | A faire                                                                                                                  |
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Dashboard `/account` | P1       | Vue d'ensemble : prochaine action, reservations actives, paiements dus, documents, contact support.                      |
+| Dashboard `/account` | ~~P1~~ **FAIT 2026-06-07** | Livre : carte prochaine action (paiement du d'abord), KPIs, paiements en attente, reservations recentes, documents/aide. Hook `useAccountReservations` (Supabase RLS + historique local) partage avec la liste ; helpers `src/lib/account/dashboard.ts` + tests. Header "Mon compte" -> `/account`. Reste : factures/documents reels, timeline detail, SAV. |
 | Reservations         | P1       | Timeline claire, statut paiement/webhook, messages de retard, documents associes, relance paiement, annulation encadree. |
 | Factures/devis       | P1       | Generer PDF devis/facture/acompte/solde, telechargement, historique, numerotation propre.                                |
 | Documents            | P1       | Rapports qualite, fiches techniques, CGV, documents container avec acces auth.                                           |
