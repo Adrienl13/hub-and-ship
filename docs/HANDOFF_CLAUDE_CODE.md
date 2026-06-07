@@ -272,7 +272,8 @@ Etat actuel :
 - **Selections co-brandees persistantes livrees (2026-06-07)** : migration `20260607180000_partner_selections.sql` (`partner_selections` + `partner_selection_items`, RLS partenaire-CRUD-own / admin-all / public-read-published, snapshot produit = prix public uniquement). Route `/partner/selections` (creer depuis le catalogue, brouillon/publier, copier le lien, modifier, supprimer). Rendu public sur `/p/{slug}?selection={id}` (reutilise la capture lien + attribution existantes). Repo `src/lib/partners/selections.ts` + tests. Isolation anon (publiee vs brouillon) testee.
 - Variantes dans le builder de selection : **FAIT (2026-06-07)** — une entree par (produit, variante), quantites par design.
 - Creation de deal depuis le portail : **FAIT (2026-06-07)** — formulaire `/partner` (RLS INSERT partenaire limitee a sa candidature + statut `submitted` ; la protection reste admin-only). Migration `20260607200000_partner_self_service_deals.sql`.
-- **Reste a faire** : edition de deal depuis le portail, devis PDF co-brande, documents/assets, reporting, et test positif end-to-end au login d'un vrai partenaire approuve.
+- Devis co-brande : **FAIT (2026-06-07)** — vue imprimable `/p/{slug}/devis?selection={id}` (A4 print-to-PDF navigateur, zero dependance) : identite partenaire, ref devis, lignes (qte/PU HT/total), HT/eco/TVA/TTC, conditions. Boutons "Devis" (cartes selections publiees) + "Telecharger le devis" (page publique). Prix publics uniquement.
+- **Reste a faire** : edition de deal depuis le portail, documents/assets partageables, reporting attribution, et test positif end-to-end au login d'un vrai partenaire approuve.
 
 Objectif :
 
