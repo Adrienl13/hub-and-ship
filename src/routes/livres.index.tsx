@@ -16,11 +16,8 @@ import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  jsonLdScript,
-} from '@/lib/seo'
+import { breadcrumbJsonLd, buildSeoHead } from '@/lib/seo'
+import { JsonLd } from '@/components/JsonLd'
 
 export const Route = createFileRoute('/livres/')({
   component: LivresPage,
@@ -31,16 +28,15 @@ export const Route = createFileRoute('/livres/')({
         'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
       path: '/livres',
     }),
-    scripts: [
-      jsonLdScript(
-        breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Containers livrés', path: '/livres' },
-        ]),
-      ),
-    ],
   }),
 })
+
+// Breadcrumb JSON-LD rendered inline (see ISSUE-003: head().scripts is not
+// reliably emitted in SSR for this index route).
+const LIVRES_BREADCRUMB = breadcrumbJsonLd([
+  { name: 'Accueil', path: '/' },
+  { name: 'Containers livrés', path: '/livres' },
+])
 
 const LazyReservationDialog = lazy(() =>
   import('@/components/ReservationDialog').then((module) => ({
@@ -97,6 +93,7 @@ function LivresPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <JsonLd data={LIVRES_BREADCRUMB} />
       <Header onReserve={() => setReserveOpen(true)} />
 
       <main>
