@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
@@ -95,6 +96,11 @@ const LivresIndexRoute = LivresIndexRouteImport.update({
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/account/',
+  path: '/account/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerSelectionsRoute = PartnerSelectionsRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/account/': typeof AccountIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/account': typeof AccountIndexRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/account/': typeof AccountIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/account/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/account'
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/account/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
   PPartnerSlugRoute: typeof PPartnerSlugRouteWithChildren
+  AccountIndexRoute: typeof AccountIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal/'
       preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/account'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner/selections': {
@@ -611,6 +631,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
   PPartnerSlugRoute: PPartnerSlugRouteWithChildren,
+  AccountIndexRoute: AccountIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

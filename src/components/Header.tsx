@@ -76,7 +76,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             size="sm"
             className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <Link to="/account/reservations">
+            <Link to="/account">
               <User className="h-3.5 w-3.5" />
               Mon compte
             </Link>
