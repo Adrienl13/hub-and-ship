@@ -5,6 +5,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -33,6 +34,10 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
+import {
+  decodeCartSelection,
+  encodeCartSelection,
+} from '@/lib/catalogue/share-cart'
 import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
@@ -157,6 +162,49 @@ function CataloguePage() {
       else if (next.size < 4) next.add(id)
       return next
     })
+  }
+
+  // Reconstruct the cart from a shared ?panier= link, once products are loaded.
+  const sharedApplied = useRef(false)
+  useEffect(() => {
+    if (sharedApplied.current || productsArray.length === 0) return
+    sharedApplied.current = true
+    const entries = decodeCartSelection(
+      new URLSearchParams(window.location.search).get('panier'),
+    )
+    if (entries.length === 0) return
+    for (const entry of entries) {
+      const product = productsArray.find((p) => p.id === entry.productId)
+      if (!product) continue
+      if (product.variants.some((v) => v.id === entry.variantId)) {
+        setVariant(entry.productId, entry.variantId)
+      }
+      setQty(entry.productId, entry.qty)
+    }
+    toast.success('Sélection chargée depuis le lien partagé.')
+  }, [productsArray, setQty, setVariant])
+
+  async function shareSelection(): Promise<void> {
+    const entries = productsArray
+      .filter((p) => (qtyByProduct[p.id] ?? 0) > 0)
+      .map((p) => ({
+        productId: p.id,
+        variantId: variantByProduct[p.id] ?? getDefaultVariant(p).id,
+        qty: qtyByProduct[p.id] ?? 0,
+      }))
+    if (entries.length === 0) {
+      toast.message('Ajoutez des produits avant de partager.')
+      return
+    }
+    const url = `${window.location.origin}/catalogue?panier=${encodeCartSelection(
+      entries,
+    )}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Lien de votre sélection copié', { description: url })
+    } catch {
+      toast.error('Copie impossible', { description: url })
+    }
   }
 
   useEffect(() => {
@@ -360,12 +408,23 @@ function CataloguePage() {
                   )}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
-                  trouvée
-                  {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
-                  affichée
-                  {visibleProducts.length > 1 ? 's' : ''}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
+                    trouvée
+                    {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
+                    affichée
+                    {visibleProducts.length > 1 ? 's' : ''}
+                  </span>
+                  {totalUnits > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void shareSelection()}
+                      className="underline hover:text-foreground"
+                    >
+                      Partager ma sélection
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
