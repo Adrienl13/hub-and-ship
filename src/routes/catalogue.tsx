@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from 'react'
 import { ArrowUpDown, Layers3, Search } from 'lucide-react'
 import { toast } from 'sonner'
@@ -18,10 +19,13 @@ import { ProductCard } from '@/components/ProductCard'
 import { Button } from '@/components/ui/button'
 import {
   CATEGORY_FILTERS,
+  EMPTY_ADVANCED_FILTERS,
   PAGE_SIZE_OPTIONS,
   filterAndSortProducts,
   getCategoryCounts,
   getDefaultVariant,
+  hasActiveAdvancedFilters,
+  type CatalogueAdvancedFilters,
   type CatalogueFilter,
   type PageSizeOption,
   type SortKey,
@@ -102,6 +106,9 @@ function CataloguePage() {
   const [filter, setFilter] = useState<CatalogueFilter>('all')
   const [sort, setSort] = useState<SortKey>('default')
   const [search, setSearch] = useState('')
+  const [advanced, setAdvanced] = useState<CatalogueAdvancedFilters>(
+    EMPTY_ADVANCED_FILTERS,
+  )
   const deferredSearch = useDeferredValue(search)
   const [pageSize, setPageSize] = useState<PageSizeOption>(30)
   const [visibleCount, setVisibleCount] = useState<number>(pageSize)
@@ -119,8 +126,9 @@ function CataloguePage() {
         filter,
         search: deferredSearch,
         sort,
+        advanced,
       }),
-    [deferredSearch, filter, sort, productsArray],
+    [deferredSearch, filter, sort, advanced, productsArray],
   )
   const visibleProducts = useMemo(
     () => filtered.slice(0, visibleCount),
@@ -137,7 +145,7 @@ function CataloguePage() {
 
   useEffect(() => {
     setVisibleCount(pageSize)
-  }, [deferredSearch, filter, pageSize, sort])
+  }, [deferredSearch, filter, pageSize, sort, advanced])
 
   const handlePdf = () => {
     const opened = openQuotePDF({
@@ -272,6 +280,70 @@ function CataloguePage() {
                   </label>
                 </div>
 
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Filtres :</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={advanced.maxPrice ?? ''}
+                    placeholder="Prix max HT"
+                    onChange={(e) =>
+                      setAdvanced((a) => ({
+                        ...a,
+                        maxPrice:
+                          e.target.value === '' ? null : Number(e.target.value),
+                      }))
+                    }
+                    className="h-9 w-28 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    aria-label="Prix maximum HT"
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={advanced.maxMoq ?? ''}
+                    placeholder="MOQ max"
+                    onChange={(e) =>
+                      setAdvanced((a) => ({
+                        ...a,
+                        maxMoq:
+                          e.target.value === '' ? null : Number(e.target.value),
+                      }))
+                    }
+                    className="h-9 w-24 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    aria-label="MOQ maximum"
+                  />
+                  <FilterToggle
+                    active={advanced.fireM1Only}
+                    onClick={() =>
+                      setAdvanced((a) => ({ ...a, fireM1Only: !a.fireM1Only }))
+                    }
+                  >
+                    Classé feu M1
+                  </FilterToggle>
+                  <FilterToggle
+                    active={advanced.stackableOnly}
+                    onClick={() =>
+                      setAdvanced((a) => ({
+                        ...a,
+                        stackableOnly: !a.stackableOnly,
+                      }))
+                    }
+                  >
+                    Empilable
+                  </FilterToggle>
+                  {hasActiveAdvancedFilters(advanced) && (
+                    <button
+                      type="button"
+                      onClick={() => setAdvanced(EMPTY_ADVANCED_FILTERS)}
+                      className="text-muted-foreground underline hover:text-foreground"
+                    >
+                      Réinitialiser
+                    </button>
+                  )}
+                </div>
+
                 <div className="text-xs text-muted-foreground">
                   {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
                   trouvée
@@ -381,5 +453,30 @@ function CataloguePage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+function FilterToggle({
+  active,
+  onClick,
+  children,
+}: {
+  readonly active: boolean
+  readonly onClick: () => void
+  readonly children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`inline-flex h-9 items-center rounded-sm border px-3 text-xs font-medium transition-colors ${
+        active
+          ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
+          : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground hover:border-foreground/40'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
