@@ -40,6 +40,7 @@ import { Route as AccountReservationsRouteImport } from './routes/account.reserv
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
+import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
 
 const TransportPartenairesRoute = TransportPartenairesRouteImport.update({
   id: '/transport-partenaires',
@@ -200,6 +201,12 @@ const AccountReservationsReservationIdRoute =
     path: '/$reservationId',
     getParentRoute: () => AccountReservationsRoute,
   } as any)
+const AccountReservationsReservationIdDocumentRoute =
+  AccountReservationsReservationIdDocumentRouteImport.update({
+    id: '/document',
+    path: '/document',
+    getParentRoute: () => AccountReservationsReservationIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -230,9 +237,10 @@ export interface FileRoutesByFullPath {
   '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -263,9 +271,10 @@ export interface FileRoutesByTo {
   '/guides': typeof GuidesIndexRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -297,9 +306,10 @@ export interface FileRoutesById {
   '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
   id:
     | '__root__'
     | '/'
@@ -401,6 +413,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -653,6 +666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReservationsReservationIdRouteImport
       parentRoute: typeof AccountReservationsRoute
     }
+    '/account/reservations/$reservationId/document': {
+      id: '/account/reservations/$reservationId/document'
+      path: '/document'
+      fullPath: '/account/reservations/$reservationId/document'
+      preLoaderRoute: typeof AccountReservationsReservationIdDocumentRouteImport
+      parentRoute: typeof AccountReservationsReservationIdRoute
+    }
   }
 }
 
@@ -667,12 +687,28 @@ const PartnerRouteChildren: PartnerRouteChildren = {
 const PartnerRouteWithChildren =
   PartnerRoute._addFileChildren(PartnerRouteChildren)
 
+interface AccountReservationsReservationIdRouteChildren {
+  AccountReservationsReservationIdDocumentRoute: typeof AccountReservationsReservationIdDocumentRoute
+}
+
+const AccountReservationsReservationIdRouteChildren: AccountReservationsReservationIdRouteChildren =
+  {
+    AccountReservationsReservationIdDocumentRoute:
+      AccountReservationsReservationIdDocumentRoute,
+  }
+
+const AccountReservationsReservationIdRouteWithChildren =
+  AccountReservationsReservationIdRoute._addFileChildren(
+    AccountReservationsReservationIdRouteChildren,
+  )
+
 interface AccountReservationsRouteChildren {
-  AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
+  AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRouteWithChildren
 }
 
 const AccountReservationsRouteChildren: AccountReservationsRouteChildren = {
-  AccountReservationsReservationIdRoute: AccountReservationsReservationIdRoute,
+  AccountReservationsReservationIdRoute:
+    AccountReservationsReservationIdRouteWithChildren,
 }
 
 const AccountReservationsRouteWithChildren =

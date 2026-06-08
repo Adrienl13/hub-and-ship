@@ -314,6 +314,7 @@ function AccountReservationDetailPage() {
               detail={`${formatEUR(reservation.paidAmount)} déjà réglé`}
             />
             <DocumentsCard
+              reservationId={reservation.draft.id}
               feePaid={paymentConfirmedByStatus}
               delivered={reservation.status === 'delivered'}
             />
@@ -493,9 +494,11 @@ function TimelineRow({
 }
 
 function DocumentsCard({
+  reservationId,
   feePaid,
   delivered,
 }: {
+  readonly reservationId: string
   readonly feePaid: boolean
   readonly delivered: boolean
 }) {
@@ -506,6 +509,16 @@ function DocumentsCard({
         <span className="label-eyebrow">Documents</span>
       </div>
       <ul className="mt-3 space-y-2">
+        <li>
+          <Link
+            to="/account/reservations/$reservationId/document"
+            params={{ reservationId }}
+            className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
+          >
+            <Download className="h-3.5 w-3.5 text-[color:var(--ember)]" />
+            Récapitulatif de réservation (PDF)
+          </Link>
+        </li>
         <li>
           <a
             href="/legal/cgv"
