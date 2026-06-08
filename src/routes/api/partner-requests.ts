@@ -14,6 +14,8 @@ import {
   createPartnerSubmissionInSupabase,
   type PartnerSubmissionRepositoryClient,
 } from '@/lib/partners/repository'
+import { PARTNER_KIND_LABEL } from '@/lib/partners/types'
+import { notifyPartnerRequest } from '@/lib/email/notify-leads'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 function jsonResponse(body: unknown, init: ResponseInit): Response {
@@ -91,6 +93,26 @@ export async function handleCreatePartnerRequest(
       client: persistenceClient,
       draft: draftResult.draft,
     })
+
+    // Fire notifications, but never let an email failure break lead capture.
+    try {
+      const app = draftResult.draft.application
+      await notifyPartnerRequest({
+        isDeal: draftResult.draft.mode === 'deal',
+        companyName: app.company_name,
+        contactName: app.contact_name,
+        contactEmail: app.contact_email,
+        contactPhone: app.contact_phone,
+        partnerKindLabel: PARTNER_KIND_LABEL[app.partner_kind ?? 'reseller'],
+        territory: app.territory ?? null,
+        expectedMonthlyVolume: app.expected_monthly_volume ?? null,
+        message: app.message ?? null,
+        clientCompanyName: draftResult.draft.deal?.client_company_name ?? null,
+        projectType: draftResult.draft.deal?.project_type ?? null,
+      })
+    } catch (notifyError) {
+      console.error('partner request api: notification failed', notifyError)
+    }
 
     return jsonResponse(
       {

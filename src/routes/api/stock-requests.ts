@@ -14,6 +14,7 @@ import {
   createStockRequestInSupabase,
   type StockRequestRepositoryClient,
 } from '@/lib/stock-requests.repository'
+import { notifyStockRequest } from '@/lib/email/notify-leads'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 const stockRequestApiSchema = z.object({
@@ -145,6 +146,23 @@ export async function handleCreateStockRequest(
       client: persistenceClient,
       draft: draftResult.draft,
     })
+
+    // Fire notifications, but never let an email failure break lead capture.
+    try {
+      const d = draftResult.draft
+      await notifyStockRequest({
+        companyName: d.companyName,
+        contactEmail: d.contactEmail,
+        contactPhone: d.contactPhone,
+        productName: d.productName,
+        requestedQuantity: d.requestedQuantity,
+        estimatedTotalHt: d.estimatedTotalHt,
+        customerNote: d.customerNote ?? null,
+      })
+    } catch (notifyError) {
+      console.error('stock request api: notification failed', notifyError)
+    }
+
     return jsonResponse(
       {
         ok: true,

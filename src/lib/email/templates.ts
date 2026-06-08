@@ -180,3 +180,152 @@ Frais à appeler : ${formatEur(input.payNow)}`
     text,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Partner channel notifications
+// ---------------------------------------------------------------------------
+
+function detailRow(label: string, value: string): string {
+  return `<tr><td style="padding:4px 0;font-size:13px;color:#666;">${escape(label)}</td><td style="padding:4px 0;font-size:13px;text-align:right;font-weight:600;">${escape(value)}</td></tr>`
+}
+
+export interface PartnerRequestEmailInput {
+  readonly isDeal: boolean
+  readonly companyName: string
+  readonly contactName: string
+  readonly contactEmail: string
+  readonly contactPhone: string
+  readonly partnerKindLabel: string
+  readonly territory: string | null
+  readonly expectedMonthlyVolume: string | null
+  readonly message: string | null
+  readonly clientCompanyName: string | null
+  readonly projectType: string | null
+  readonly adminUrl: string
+}
+
+export function buildPartnerRequestAdminEmail(input: PartnerRequestEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const kind = input.isDeal ? 'Opportunité partenaire' : 'Candidature partenaire'
+  const subject = `${kind} — ${input.companyName}`
+  const preheader = `${input.companyName} · ${input.contactEmail}`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle ${escape(kind.toLowerCase())} reçue.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${detailRow('Société', input.companyName)}
+${detailRow('Type', input.partnerKindLabel)}
+${detailRow('Contact', `${input.contactName} · ${input.contactPhone}`)}
+${detailRow('Email', input.contactEmail)}
+${input.territory ? detailRow('Territoire', input.territory) : ''}
+${input.expectedMonthlyVolume ? detailRow('Volume estimé', input.expectedMonthlyVolume) : ''}
+${input.clientCompanyName ? detailRow('Client protégé', input.clientCompanyName) : ''}
+${input.projectType ? detailRow('Projet', input.projectType) : ''}
+</table>
+${input.message ? `<p style="font-size:13px;line-height:1.6;margin:16px 0 0;color:#444;">${escape(input.message)}</p>` : ''}
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.adminUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Ouvrir dans l'admin</a>
+</p>`
+  const text = `Nouvelle ${kind.toLowerCase()} reçue.
+
+Société : ${input.companyName}
+Type : ${input.partnerKindLabel}
+Contact : ${input.contactName} · ${input.contactPhone}
+Email : ${input.contactEmail}
+${input.territory ? `Territoire : ${input.territory}\n` : ''}${input.expectedMonthlyVolume ? `Volume estimé : ${input.expectedMonthlyVolume}\n` : ''}${input.clientCompanyName ? `Client protégé : ${input.clientCompanyName}\n` : ''}${input.projectType ? `Projet : ${input.projectType}\n` : ''}${input.message ? `\n${input.message}\n` : ''}
+Admin : ${input.adminUrl}`
+  return { subject, html: shell({ title: kind, preheader, body }), text }
+}
+
+export function buildPartnerRequestConfirmationEmail(
+  input: PartnerRequestEmailInput,
+): { subject: string; html: string; text: string } {
+  const subject = 'Votre demande partenaire est bien reçue'
+  const preheader = 'Pros Import revient vers vous rapidement.'
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre demande pour <strong>${escape(input.companyName)}</strong>. Notre équipe l'étudie et revient vers vous sous 48 h ouvrées.</p>
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">Pros Import protège les revendeurs : prix nets privés, marge libre, attribution de vos clients. Vous pourrez bientôt accéder à votre espace partenaire.</p>`
+  const text = `Bonjour ${input.contactName},
+
+Nous avons bien reçu votre demande pour ${input.companyName}. Notre équipe revient vers vous sous 48 h ouvrées.
+
+Pros Import — Container Club
+adrienlaniez1@gmail.com`
+  return {
+    subject,
+    html: shell({ title: 'Demande reçue', preheader, body }),
+    text,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stock 24h notifications
+// ---------------------------------------------------------------------------
+
+export interface StockRequestEmailInput {
+  readonly companyName: string
+  readonly contactEmail: string
+  readonly contactPhone: string
+  readonly productName: string
+  readonly requestedQuantity: number
+  readonly estimatedTotalHt: number
+  readonly customerNote: string | null
+  readonly adminUrl: string
+}
+
+export function buildStockRequestAdminEmail(input: StockRequestEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const subject = `Lead stock 24h — ${input.productName} ×${input.requestedQuantity}`
+  const preheader = `${input.companyName} · ${input.contactEmail}`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle demande de stock disponible reçue.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${detailRow('Produit', input.productName)}
+${detailRow('Quantité', `${input.requestedQuantity} unités`)}
+${detailRow('Estimation HT', formatEur(input.estimatedTotalHt))}
+${detailRow('Société', input.companyName)}
+${detailRow('Contact', `${input.contactEmail} · ${input.contactPhone}`)}
+</table>
+${input.customerNote ? `<p style="font-size:13px;line-height:1.6;margin:16px 0 0;color:#444;">${escape(input.customerNote)}</p>` : ''}
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.adminUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Ouvrir dans l'admin</a>
+</p>`
+  const text = `Nouvelle demande de stock 24h.
+
+Produit : ${input.productName}
+Quantité : ${input.requestedQuantity} unités
+Estimation HT : ${formatEur(input.estimatedTotalHt)}
+Société : ${input.companyName}
+Contact : ${input.contactEmail} · ${input.contactPhone}
+${input.customerNote ? `\n${input.customerNote}\n` : ''}
+Admin : ${input.adminUrl}`
+  return {
+    subject,
+    html: shell({ title: 'Lead stock 24h', preheader, body }),
+    text,
+  }
+}
+
+export function buildStockRequestConfirmationEmail(
+  input: StockRequestEmailInput,
+): { subject: string; html: string; text: string } {
+  const subject = 'Votre demande de stock est bien reçue'
+  const preheader = 'Nous vérifions la disponibilité et revenons vers vous.'
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre demande pour <strong>${escape(input.productName)}</strong> (${input.requestedQuantity} unités). Nous vérifions la disponibilité réelle et revenons vers vous rapidement, en général sous 24 h.</p>
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">Le stock disponible part vite : nous vous confirmons les quantités et le délai d'enlèvement.</p>`
+  const text = `Bonjour,
+
+Nous avons bien reçu votre demande pour ${input.productName} (${input.requestedQuantity} unités). Nous revenons vers vous sous 24 h.
+
+Container Club — Pros Import EURL
+adrienlaniez1@gmail.com`
+  return {
+    subject,
+    html: shell({ title: 'Demande reçue', preheader, body }),
+    text,
+  }
+}
