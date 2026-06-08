@@ -247,6 +247,44 @@ ${input.customerEmail ? `Client : ${input.customerEmail}\n` : ''}${input.amountP
 }
 
 // ---------------------------------------------------------------------------
+// Invoice issued
+// ---------------------------------------------------------------------------
+
+export interface InvoiceEmailInput {
+  readonly number: string
+  readonly reference: string
+  readonly totalTtc: number
+  readonly invoiceUrl: string
+}
+
+export function buildInvoiceEmailToUser(input: InvoiceEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const subject = `Votre facture ${input.number}`
+  const preheader = `Facture ${input.number} pour la réservation ${input.reference}.`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre facture <strong>${escape(input.number)}</strong> pour la réservation ${escape(input.reference)} est disponible. Montant TTC : <strong>${formatEur(input.totalTtc)}</strong>.</p>
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.invoiceUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Voir / télécharger la facture</a>
+</p>`
+  const text = `Bonjour,
+
+Votre facture ${input.number} pour la réservation ${input.reference} est disponible.
+Montant TTC : ${formatEur(input.totalTtc)}
+
+Voir / télécharger : ${input.invoiceUrl}
+
+Container Club — Pros Import EURL`
+  return {
+    subject,
+    html: shell({ title: 'Facture disponible', preheader, body }),
+    text,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Partner channel notifications
 // ---------------------------------------------------------------------------
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildInvoiceEmailToUser,
   buildPartnerRequestAdminEmail,
   buildPartnerRequestConfirmationEmail,
   buildPaymentConfirmedAdminEmail,
@@ -91,6 +92,20 @@ describe('payment confirmed emails', () => {
     expect(email.subject).toMatch(/Paiement reçu/)
     expect(email.html).toContain('CONT-20HC-A')
     expect(email.html).toContain('buyer@resto.fr')
+  })
+})
+
+describe('invoice email', () => {
+  it('carries the invoice number, total and a link', () => {
+    const email = buildInvoiceEmailToUser({
+      number: 'FAC-000001',
+      reference: 'CC-1',
+      totalTtc: 1200,
+      invoiceUrl: 'https://prosimport.com/account/reservations/r1/facture/i1',
+    })
+    expect(email.subject).toContain('FAC-000001')
+    expect(email.html).toMatch(/1\s*200/) // EUR uses a narrow no-break space
+    expect(email.html).toContain('/facture/i1')
   })
 })
 

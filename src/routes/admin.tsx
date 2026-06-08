@@ -27,6 +27,7 @@ import {
   type AdminReservationRow,
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
+import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 
 import { logAdminAction } from '@/lib/admin/audit-log'
@@ -35,6 +36,7 @@ import {
   issueInvoice,
   type InvoicesClient,
 } from '@/lib/account/invoices'
+import { sendInvoiceEmail } from '@/lib/email/invoice-email'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -766,6 +768,7 @@ function ReservationsAdminPanel({
   readonly authStatus: string
 }) {
   const auth = useAuth()
+  const sendInvoice = useServerFn(sendInvoiceEmail)
   const [rows, setRows] = useState<ReadonlyArray<AdminReservationRow>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -961,6 +964,12 @@ function ReservationsAdminPanel({
     ) as unknown as InvoicesClient
     try {
       const invoice = await issueInvoice(client, row.id)
+      // Email the invoice to the client (no-op when Resend is not configured).
+      try {
+        await sendInvoice({ data: { invoiceId: invoice.id } })
+      } catch (mailErr) {
+        console.error('admin: invoice email failed', mailErr)
+      }
       toast.success(`Facture ${invoice.number} émise`)
     } catch (err) {
       toast.error('Émission impossible', {
