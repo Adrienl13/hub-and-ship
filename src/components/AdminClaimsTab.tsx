@@ -14,6 +14,7 @@ import {
   type AdminClaimRow,
   type AdminClaimsClient,
 } from '@/lib/account/admin-claims.repository'
+import { downloadCsv, toCsv } from '@/lib/admin/csv'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -80,6 +81,20 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
   }, [claims, statusFilter, search])
 
   const openCount = claims.filter((c) => c.status === 'open').length
+
+  function exportCsv(): void {
+    const csv = toCsv(filtered, [
+      { header: 'Date', value: (c) => c.createdAt.slice(0, 10) },
+      { header: 'Réservation', value: (c) => c.reservationReference ?? '' },
+      { header: 'SIRET', value: (c) => c.reservationSiret ?? '' },
+      { header: 'Catégorie', value: (c) => CLAIM_CATEGORY_LABEL[c.category] },
+      { header: 'Statut', value: (c) => CLAIM_STATUS_LABEL[c.status] },
+      { header: 'Quantité', value: (c) => c.quantity ?? '' },
+      { header: 'Message', value: (c) => c.message },
+      { header: 'Réponse', value: (c) => c.adminResponse ?? '' },
+    ])
+    downloadCsv(`sav-${new Date().toISOString().slice(0, 10)}.csv`, csv)
+  }
 
   async function changeStatus(
     row: AdminClaimRow,
@@ -158,6 +173,16 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
             </option>
           ))}
         </select>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filtered.length === 0}
+          onClick={exportCsv}
+          className="h-9 px-2 text-xs"
+        >
+          Exporter CSV
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filtered.length} / {claims.length} · {openCount} ouverte(s)
         </span>

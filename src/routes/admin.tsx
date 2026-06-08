@@ -28,6 +28,7 @@ import {
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
 import { logAdminAction } from '@/lib/admin/audit-log'
+import { downloadCsv, toCsv } from '@/lib/admin/csv'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -586,6 +587,31 @@ function StockRequestsAdminPanel({
             </option>
           ))}
         </select>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredRows.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `stock-leads-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredRows, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Produit', value: (r) => r.productName },
+                { header: 'Quantité', value: (r) => r.requestedQuantity },
+                { header: 'Estimation HT', value: (r) => r.estimatedTotalHt },
+                { header: 'Société', value: (r) => r.companyName },
+                { header: 'Email', value: (r) => r.contactEmail },
+                { header: 'Téléphone', value: (r) => r.contactPhone },
+                { header: 'Statut', value: (r) => r.status },
+                { header: 'Note', value: (r) => r.customerNote ?? '' },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Exporter CSV
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filteredRows.length} / {rows.length}
         </span>
@@ -1017,6 +1043,43 @@ function ReservationsAdminPanel({
             Réinitialiser
           </Button>
         )}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredRows.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `reservations-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredRows, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Référence', value: (r) => r.reference },
+                { header: 'Container', value: (r) => r.containerReference },
+                { header: 'Société', value: (r) => r.companyLegalName ?? '' },
+                { header: 'SIRET', value: (r) => r.siret },
+                { header: 'Email', value: (r) => r.contactEmail ?? '' },
+                { header: 'Statut', value: (r) => RESERVATION_STATUS_LABEL[r.status] },
+                { header: 'Total HT', value: (r) => r.totalHt },
+                { header: 'Frais réservation', value: (r) => r.reservationFee },
+                {
+                  header: 'Frais payés',
+                  value: (r) => (r.paidReservationFeeAt ? 'oui' : 'non'),
+                },
+                {
+                  header: 'Partenaire',
+                  value: (r) => r.partnerAttributionPartnerCompany ?? '',
+                },
+                {
+                  header: 'Attribution',
+                  value: (r) => r.partnerAttributionReason ?? '',
+                },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Exporter CSV
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filteredRows.length} / {rows.length}
         </span>

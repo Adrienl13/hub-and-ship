@@ -22,6 +22,7 @@ import {
 } from '@/lib/account/admin-reservations.repository'
 import { ACCOUNT_RESERVATION_STATUS_LABEL } from '@/lib/account/reservations'
 import { buildPartnerSharePath, normalizePartnerSlug } from '@/lib/partners/link'
+import { downloadCsv, toCsv } from '@/lib/admin/csv'
 import {
   PARTNER_APPLICATION_STATUS_LABEL,
   PARTNER_DEAL_STATUS_LABEL,
@@ -315,6 +316,73 @@ export function AdminPartnersTab({
           onChange={(event) => setSearch(event.target.value)}
           className="h-9 max-w-sm text-xs"
         />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredApplications.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `partenaires-candidatures-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredApplications, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Société', value: (r) => r.companyName },
+                {
+                  header: 'Type',
+                  value: (r) => PARTNER_KIND_LABEL[r.partnerKind],
+                },
+                { header: 'Contact', value: (r) => r.contactName },
+                { header: 'Email', value: (r) => r.contactEmail },
+                { header: 'Téléphone', value: (r) => r.contactPhone },
+                { header: 'SIRET', value: (r) => r.siret ?? '' },
+                { header: 'Territoire', value: (r) => r.territory ?? '' },
+                { header: 'Volume', value: (r) => r.expectedMonthlyVolume ?? '' },
+                {
+                  header: 'Statut',
+                  value: (r) => PARTNER_APPLICATION_STATUS_LABEL[r.status],
+                },
+                { header: 'Slug', value: (r) => r.partnerReferralSlug ?? '' },
+                { header: 'Note interne', value: (r) => r.internalNote ?? '' },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Export candidatures
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredDeals.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `partenaires-deals-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredDeals, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Partenaire', value: (r) => r.partnerCompanyName },
+                { header: 'Email partenaire', value: (r) => r.partnerContactEmail },
+                { header: 'Client', value: (r) => r.clientCompanyName },
+                { header: 'SIRET client', value: (r) => r.clientSiret ?? '' },
+                { header: 'Email client', value: (r) => r.clientEmail ?? '' },
+                { header: 'Projet', value: (r) => r.projectType },
+                { header: 'Ville', value: (r) => r.projectCity ?? '' },
+                {
+                  header: 'Budget HT',
+                  value: (r) => r.expectedBudgetHt ?? '',
+                },
+                {
+                  header: 'Statut',
+                  value: (r) => PARTNER_DEAL_STATUS_LABEL[r.status],
+                },
+                { header: 'Protégé jusqu’au', value: (r) => r.protectedUntil ?? '' },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Export deals
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filteredApplications.length} candidatures · {filteredDeals.length}{' '}
           opportunités
