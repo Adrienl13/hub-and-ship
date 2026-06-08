@@ -17,6 +17,10 @@ import {
   type PartnerWorkspace,
 } from '@/lib/partners/portal'
 import { buildPartnerSharePath } from '@/lib/partners/link'
+import {
+  computePartnerReport,
+  dealsByStatus,
+} from '@/lib/partners/reporting'
 import { PARTNER_DEAL_STATUS_LABEL } from '@/lib/partners/types'
 import { ACCOUNT_RESERVATION_STATUS_LABEL } from '@/lib/account/reservations'
 import { formatEUR } from '@/lib/order'
@@ -136,6 +140,10 @@ function PartnerDashboard() {
           </div>
         ) : workspace ? (
           <div className="mt-8 space-y-6">
+            <ReportingCard
+              deals={workspace.deals}
+              reservations={workspace.reservations}
+            />
             <ShareLinkCard
               slug={application?.referralSlug ?? null}
               partnerName={partnerName}
@@ -150,6 +158,59 @@ function PartnerDashboard() {
 
       <Footer />
     </div>
+  )
+}
+
+function ReportingCard({
+  deals,
+  reservations,
+}: {
+  readonly deals: PartnerWorkspace['deals']
+  readonly reservations: PartnerWorkspace['reservations']
+}) {
+  const report = computePartnerReport(deals, reservations)
+  const byStatus = dealsByStatus(deals)
+  const kpis: ReadonlyArray<{ label: string; value: string }> = [
+    { label: 'Deals protégés', value: `${report.protectedDeals}` },
+    { label: 'Deals gagnés', value: `${report.wonDeals}` },
+    {
+      label: 'Réservations attribuées',
+      value: `${report.attributedReservations}`,
+    },
+    { label: 'CA attribué HT', value: formatEUR(report.attributedTotalHt) },
+  ]
+
+  return (
+    <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+      <h2 className="font-display text-lg font-semibold">Reporting</h2>
+      <div className="mt-3 grid gap-2 sm:grid-cols-4">
+        {kpis.map((kpi) => (
+          <div
+            key={kpi.label}
+            className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/40 p-3"
+          >
+            <div className="label-eyebrow text-muted-foreground">
+              {kpi.label}
+            </div>
+            <div className="mt-1 font-display text-xl font-semibold tabular-nums">
+              {kpi.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      {byStatus.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {byStatus.map((entry) => (
+            <span
+              key={entry.status}
+              className="border-[color:var(--sand-deep)] inline-flex items-center rounded-sm border bg-background px-2 py-0.5 text-[11px] text-muted-foreground"
+            >
+              {PARTNER_DEAL_STATUS_LABEL[entry.status]} · {entry.count}
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
