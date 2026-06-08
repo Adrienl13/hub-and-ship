@@ -273,7 +273,8 @@ Etat actuel :
 - Variantes dans le builder de selection : **FAIT (2026-06-07)** — une entree par (produit, variante), quantites par design.
 - Creation de deal depuis le portail : **FAIT (2026-06-07)** — formulaire `/partner` (RLS INSERT partenaire limitee a sa candidature + statut `submitted` ; la protection reste admin-only). Migration `20260607200000_partner_self_service_deals.sql`.
 - Devis co-brande : **FAIT (2026-06-07)** — vue imprimable `/p/{slug}/devis?selection={id}` (A4 print-to-PDF navigateur, zero dependance) : identite partenaire, ref devis, lignes (qte/PU HT/total), HT/eco/TVA/TTC, conditions. Boutons "Devis" (cartes selections publiees) + "Telecharger le devis" (page publique). Prix publics uniquement.
-- **Reste a faire** : edition de deal depuis le portail, documents/assets partageables, reporting attribution, et test positif end-to-end au login d'un vrai partenaire approuve.
+- Reporting attribution : **FAIT (2026-06-08)** — KPIs sur le dashboard partenaire (deals proteges/gagnes, reservations attribuees, CA attribue HT, repartition par statut). `src/lib/partners/reporting.ts`.
+- **Reste a faire** : edition de deal depuis le portail, documents/assets partageables, et test positif end-to-end au login d'un vrai partenaire approuve.
 
 Objectif :
 
