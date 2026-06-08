@@ -182,6 +182,71 @@ Frais à appeler : ${formatEur(input.payNow)}`
 }
 
 // ---------------------------------------------------------------------------
+// Payment confirmed (Stripe webhook)
+// ---------------------------------------------------------------------------
+
+export interface PaymentConfirmedEmailInput {
+  readonly reference: string
+  readonly containerReference: string
+  readonly customerEmail: string | null
+  readonly amountPaid: number | null
+  readonly accountUrl: string
+}
+
+export function buildPaymentConfirmedEmailToUser(
+  input: PaymentConfirmedEmailInput,
+): { subject: string; html: string; text: string } {
+  const subject = `Paiement confirmé — ${input.reference}`
+  const preheader = `Votre place sur le container ${input.containerReference} est verrouillée.`
+  const amountLine = input.amountPaid
+    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Montant réglé : <strong>${formatEur(input.amountPaid)}</strong>.</p>`
+    : ''
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous confirmons la réception de votre paiement pour la réservation <strong>${escape(input.reference)}</strong> (container ${escape(input.containerReference)}). Votre place est désormais <strong>verrouillée</strong>.</p>
+${amountLine}
+<p style="font-size:13px;line-height:1.6;margin:0 0 16px;color:#666;">Les prochaines étapes (acompte, production, transport) apparaissent dans votre espace au fur et à mesure.</p>
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.accountUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Voir ma réservation</a>
+</p>`
+  const text = `Bonjour,
+
+Nous confirmons la réception de votre paiement pour la réservation ${input.reference} (container ${input.containerReference}). Votre place est verrouillée.
+${input.amountPaid ? `Montant réglé : ${formatEur(input.amountPaid)}\n` : ''}
+Voir votre réservation : ${input.accountUrl}
+
+Container Club — Pros Import EURL`
+  return {
+    subject,
+    html: shell({ title: 'Paiement confirmé', preheader, body }),
+    text,
+  }
+}
+
+export function buildPaymentConfirmedAdminEmail(
+  input: PaymentConfirmedEmailInput,
+): { subject: string; html: string; text: string } {
+  const subject = `Paiement reçu — ${input.reference}`
+  const preheader = `Container ${input.containerReference}`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Frais de réservation payés.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${detailRow('Référence', input.reference)}
+${detailRow('Container', input.containerReference)}
+${input.customerEmail ? detailRow('Client', input.customerEmail) : ''}
+${input.amountPaid ? detailRow('Montant', formatEur(input.amountPaid)) : ''}
+</table>`
+  const text = `Frais de réservation payés.
+
+Référence : ${input.reference}
+Container : ${input.containerReference}
+${input.customerEmail ? `Client : ${input.customerEmail}\n` : ''}${input.amountPaid ? `Montant : ${formatEur(input.amountPaid)}\n` : ''}`
+  return {
+    subject,
+    html: shell({ title: 'Paiement reçu', preheader, body }),
+    text,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Partner channel notifications
 // ---------------------------------------------------------------------------
 

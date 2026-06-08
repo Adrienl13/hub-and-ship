@@ -11,9 +11,12 @@ import {
 import {
   buildPartnerRequestAdminEmail,
   buildPartnerRequestConfirmationEmail,
+  buildPaymentConfirmedAdminEmail,
+  buildPaymentConfirmedEmailToUser,
   buildStockRequestAdminEmail,
   buildStockRequestConfirmationEmail,
   type PartnerRequestEmailInput,
+  type PaymentConfirmedEmailInput,
   type StockRequestEmailInput,
 } from '@/lib/email/templates'
 
@@ -43,6 +46,33 @@ export async function notifyPartnerRequest(
       subject: confirmation.subject,
       html: confirmation.html,
       text: confirmation.text,
+    })
+  }
+}
+
+export async function notifyPaymentConfirmed(
+  input: Omit<PaymentConfirmedEmailInput, 'accountUrl'>,
+): Promise<void> {
+  const full: PaymentConfirmedEmailInput = {
+    ...input,
+    accountUrl: `${SITE_URL}/account/reservations`,
+  }
+
+  const admin = buildPaymentConfirmedAdminEmail(full)
+  await sendEmail({
+    to: getAdminNotificationEmail(),
+    subject: admin.subject,
+    html: admin.html,
+    text: admin.text,
+  })
+
+  if (input.customerEmail) {
+    const user = buildPaymentConfirmedEmailToUser(full)
+    await sendEmail({
+      to: input.customerEmail,
+      subject: user.subject,
+      html: user.html,
+      text: user.text,
     })
   }
 }

@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest'
 import {
   buildPartnerRequestAdminEmail,
   buildPartnerRequestConfirmationEmail,
+  buildPaymentConfirmedAdminEmail,
+  buildPaymentConfirmedEmailToUser,
   buildStockRequestAdminEmail,
   buildStockRequestConfirmationEmail,
   type PartnerRequestEmailInput,
+  type PaymentConfirmedEmailInput,
   type StockRequestEmailInput,
 } from './templates'
 
@@ -64,6 +67,30 @@ describe('partner request emails', () => {
     })
     expect(email.html).not.toContain('<script>alert(1)</script>')
     expect(email.html).toContain('&lt;script&gt;')
+  })
+})
+
+const payment: PaymentConfirmedEmailInput = {
+  reference: 'CC-2026-001',
+  containerReference: 'CONT-20HC-A',
+  customerEmail: 'buyer@resto.fr',
+  amountPaid: 240,
+  accountUrl: 'https://prosimport.com/account/reservations',
+}
+
+describe('payment confirmed emails', () => {
+  it('user email confirms the locked reservation with the amount', () => {
+    const email = buildPaymentConfirmedEmailToUser(payment)
+    expect(email.subject).toContain('CC-2026-001')
+    expect(email.html).toContain('verrouillée')
+    expect(email.html).toContain('240')
+  })
+
+  it('admin email carries reference, container and client', () => {
+    const email = buildPaymentConfirmedAdminEmail(payment)
+    expect(email.subject).toMatch(/Paiement reçu/)
+    expect(email.html).toContain('CONT-20HC-A')
+    expect(email.html).toContain('buyer@resto.fr')
   })
 })
 

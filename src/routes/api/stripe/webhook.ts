@@ -22,6 +22,7 @@ import {
   getStripeWebhookSecret,
   isStripeConfigured,
 } from '@/lib/stripe/server'
+import { notifyPaymentConfirmed } from '@/lib/email/notify-leads'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import {
   markReservationCancelled,
@@ -69,10 +70,25 @@ async function handleWebhook(request: Request): Promise<Response> {
 
   switch (event.type) {
     case 'checkout.session.completed': {
+      const session = event.data.object
       await markReservationReserved({
         client: getSupabaseAdmin() as unknown as WebhookReservationClient,
-        session: event.data.object,
+        session,
       })
+      // Notify (no-op when RESEND_API_KEY is absent); never fail the webhook.
+      try {
+        await notifyPaymentConfirmed({
+          reference: session.metadata?.reference ?? 'réservation',
+          containerReference: session.metadata?.container_reference ?? '',
+          customerEmail: session.customer_details?.email ?? null,
+          amountPaid:
+            typeof session.amount_total === 'number'
+              ? session.amount_total / 100
+              : null,
+        })
+      } catch (notifyError) {
+        console.error('stripe webhook: payment email failed', notifyError)
+      }
       break
     }
     case 'checkout.session.expired':
