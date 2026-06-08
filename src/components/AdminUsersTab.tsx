@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Shield, ShieldOff } from 'lucide-react'
+import { Handshake, Shield, ShieldOff, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/useAuth'
 import { logAdminAction } from '@/lib/admin/audit-log'
+import {
+  linkUserToPartner,
+  listLinkableApplications,
+  listPartnerLinks,
+  unlinkUserFromPartner,
+  type LinkableApplication,
+  type PartnerLink,
+  type PartnerLinksClient,
+} from '@/lib/admin/partner-links.repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { AuthStatus } from '@/hooks/useAuth'
@@ -57,6 +66,12 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
+  const [partnerLinks, setPartnerLinks] = useState<
+    ReadonlyMap<string, PartnerLink>
+  >(new Map())
+  const [linkableApps, setLinkableApps] = useState<
+    ReadonlyArray<LinkableApplication>
+  >([])
 
   const auth = useAuth()
   const currentUserId = auth.user?.id ?? null
@@ -85,6 +100,20 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
         setError(null)
         setRows(((data ?? []) as ReadonlyArray<UserRow>).map(toRow))
       }
+
+      // Partner links are best-effort: never block the user list on them.
+      try {
+        const linkClient = client as unknown as PartnerLinksClient
+        const [links, apps] = await Promise.all([
+          listPartnerLinks(linkClient),
+          listLinkableApplications(linkClient),
+        ])
+        setPartnerLinks(new Map(links.map((l) => [l.userId, l])))
+        setLinkableApps(apps)
+      } catch {
+        /* ignore */
+      }
+
       setLoading(false)
     }
   }, [config, isConfigured])
@@ -121,6 +150,59 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
         extra: { email: row.email },
       })
       await refresh()
+    }
+    setBusyId(null)
+  }
+
+  async function linkPartner(
+    row: AdminUserRow,
+    applicationId: string,
+  ): Promise<void> {
+    if (!isConfigured || !applicationId) return
+    setBusyId(row.id)
+    const browser = createSupabaseBrowserClient(config)
+    try {
+      await linkUserToPartner(
+        browser as unknown as PartnerLinksClient,
+        row.id,
+        applicationId,
+      )
+      await logAdminAction(browser, currentUserId, {
+        action: 'partner_user.link',
+        target: row.id,
+        nextValue: applicationId,
+        extra: { email: row.email },
+      })
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
+  async function unlinkPartner(
+    row: AdminUserRow,
+    link: PartnerLink,
+  ): Promise<void> {
+    if (!isConfigured) return
+    if (!window.confirm(`Délier ${row.email} de ${link.companyName} ?`)) return
+    setBusyId(row.id)
+    const browser = createSupabaseBrowserClient(config)
+    try {
+      await unlinkUserFromPartner(
+        browser as unknown as PartnerLinksClient,
+        row.id,
+        link.applicationId,
+      )
+      await logAdminAction(browser, currentUserId, {
+        action: 'partner_user.unlink',
+        target: row.id,
+        previousValue: link.applicationId,
+        extra: { email: row.email },
+      })
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
     }
     setBusyId(null)
   }
@@ -209,6 +291,7 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
                 .join(' ')
               const busy = busyId === row.id
               const isSelf = currentUserId === row.id
+              const link = partnerLinks.get(row.id)
               return (
                 <article
                   key={row.id}
@@ -220,6 +303,40 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
                       <div className="mt-1 truncate text-xs text-muted-foreground">
                         {fullName}
                       </div>
+                    )}
+                    {link ? (
+                      <div className="mt-1 flex items-center gap-1.5 text-xs">
+                        <Handshake className="h-3 w-3 text-[color:var(--forest)]" />
+                        <span className="truncate text-[color:var(--forest)]">
+                          {link.companyName}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void unlinkPartner(row, link)}
+                          className="text-muted-foreground hover:text-red-700"
+                          aria-label="Délier le partenaire"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      linkableApps.length > 0 && (
+                        <select
+                          value=""
+                          disabled={busy}
+                          onChange={(e) => void linkPartner(row, e.target.value)}
+                          className="mt-1 h-7 max-w-[180px] rounded-sm border border-input bg-transparent px-1 text-[11px] text-muted-foreground"
+                          aria-label="Lier à un partenaire"
+                        >
+                          <option value="">Lier à un partenaire…</option>
+                          {linkableApps.map((app) => (
+                            <option key={app.id} value={app.id}>
+                              {app.companyName}
+                            </option>
+                          ))}
+                        </select>
+                      )
                     )}
                   </div>
                   <span className="text-xs text-muted-foreground">
