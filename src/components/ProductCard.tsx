@@ -16,6 +16,8 @@ function ProductCardComponent({
   onQtyChange,
   onVariantChange,
   onOpenDetails,
+  compareSelected,
+  onToggleCompare,
 }: {
   product: Product
   variantId: string
@@ -23,6 +25,8 @@ function ProductCardComponent({
   onQtyChange: (value: number) => void
   onVariantChange: (id: string) => void
   onOpenDetails?: () => void
+  compareSelected?: boolean
+  onToggleCompare?: () => void
 }) {
   const variant = useMemo(
     () =>
@@ -57,6 +61,28 @@ function ProductCardComponent({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </button>
+
+      {onToggleCompare && (
+        <button
+          type="button"
+          onClick={onToggleCompare}
+          aria-pressed={compareSelected}
+          className={`absolute left-3 top-3 z-20 inline-flex h-7 items-center gap-1.5 rounded-sm border px-2 text-[11px] font-medium backdrop-blur ${
+            compareSelected
+              ? 'border-[color:var(--ember)] bg-[color:var(--ember)] text-white'
+              : 'border-white/60 bg-black/40 text-white hover:bg-black/55'
+          }`}
+        >
+          <span
+            className={`inline-block h-3 w-3 rounded-[2px] border ${
+              compareSelected
+                ? 'border-white bg-white'
+                : 'border-white/80 bg-transparent'
+            }`}
+          />
+          Comparer
+        </button>
+      )}
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-black/35 via-black/5 to-black/70" />
 

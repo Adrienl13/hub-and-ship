@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ArrowUpDown, Layers3, Search } from 'lucide-react'
+import { ArrowUpDown, Layers3, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
@@ -25,6 +25,7 @@ import {
   getCategoryCounts,
   getDefaultVariant,
   hasActiveAdvancedFilters,
+  isStackable,
   type CatalogueAdvancedFilters,
   type CatalogueFilter,
   type PageSizeOption,
@@ -32,7 +33,7 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
-import { PRODUCTS, type Product } from '@/lib/products'
+import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
 import {
@@ -109,6 +110,8 @@ function CataloguePage() {
   const [advanced, setAdvanced] = useState<CatalogueAdvancedFilters>(
     EMPTY_ADVANCED_FILTERS,
   )
+  const [compareIds, setCompareIds] = useState<ReadonlySet<string>>(new Set())
+  const [compareOpen, setCompareOpen] = useState(false)
   const deferredSearch = useDeferredValue(search)
   const [pageSize, setPageSize] = useState<PageSizeOption>(30)
   const [visibleCount, setVisibleCount] = useState<number>(pageSize)
@@ -142,6 +145,19 @@ function CataloguePage() {
     () => productsArray.find((product) => product.id === detailId) ?? null,
     [detailId, productsArray],
   )
+  const compareProducts = useMemo(
+    () => productsArray.filter((product) => compareIds.has(product.id)),
+    [productsArray, compareIds],
+  )
+
+  function toggleCompare(id: string): void {
+    setCompareIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else if (next.size < 4) next.add(id)
+      return next
+    })
+  }
 
   useEffect(() => {
     setVisibleCount(pageSize)
@@ -375,6 +391,8 @@ function CataloguePage() {
                         setVariant(product.id, variantId)
                       }
                       onOpenDetails={() => setDetailId(product.id)}
+                      compareSelected={compareIds.has(product.id)}
+                      onToggleCompare={() => toggleCompare(product.id)}
                     />
                   )
                 })}
@@ -423,6 +441,41 @@ function CataloguePage() {
         onReserve={() => setReserveOpen(true)}
         container={currentContainer}
       />
+
+      {compareIds.size > 0 && (
+        <div className="fixed inset-x-0 bottom-4 z-30 hidden justify-center px-4 lg:flex">
+          <div className="shadow-paper flex items-center gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-2">
+            <span className="text-sm font-medium">
+              {compareIds.size} produit{compareIds.size > 1 ? 's' : ''} à
+              comparer
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              disabled={compareIds.size < 2}
+              onClick={() => setCompareOpen(true)}
+              className="h-8 rounded-sm bg-foreground px-3 text-xs text-background"
+            >
+              Comparer
+            </Button>
+            <button
+              type="button"
+              onClick={() => setCompareIds(new Set())}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Effacer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {compareOpen && (
+        <CatalogueComparison
+          products={compareProducts}
+          onClose={() => setCompareOpen(false)}
+          onRemove={toggleCompare}
+        />
+      )}
 
       <Suspense fallback={null}>
         {detailProduct && (
@@ -478,5 +531,113 @@ function FilterToggle({
     >
       {children}
     </button>
+  )
+}
+
+function CatalogueComparison({
+  products,
+  onClose,
+  onRemove,
+}: {
+  readonly products: ReadonlyArray<Product>
+  readonly onClose: () => void
+  readonly onRemove: (id: string) => void
+}) {
+  const rows: ReadonlyArray<{ label: string; value: (p: Product) => string }> =
+    [
+      { label: 'Catégorie', value: (p) => CATEGORY_LABEL[p.category] },
+      { label: 'Prix direct pro HT', value: (p) => `${formatEUR(p.basePriceHt)}` },
+      { label: 'Prix retail réf.', value: (p) => formatEUR(p.retailPriceRef) },
+      {
+        label: 'Économie',
+        value: (p) =>
+          `${Math.round((1 - p.basePriceHt / p.retailPriceRef) * 100)}%`,
+      },
+      { label: 'MOQ', value: (p) => `${p.moqUnits} u.` },
+      {
+        label: 'Dimensions',
+        value: (p) => `${p.dimensions.l}×${p.dimensions.w}×${p.dimensions.h} cm`,
+      },
+      { label: 'Volume', value: (p) => `${p.cbmPerUnit.toFixed(2)} m³` },
+      { label: 'Poids', value: (p) => `${p.weightKg} kg` },
+      { label: 'Classé feu', value: (p) => p.fireRating ?? '—' },
+      { label: 'Empilable', value: (p) => (isStackable(p) ? 'Oui' : '—') },
+      { label: 'SKU', value: (p) => p.sku },
+    ]
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[88vh] w-full max-w-4xl overflow-auto rounded-md border border-[color:var(--sand-deep)] bg-background p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold">Comparateur</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Fermer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="w-32 py-2 text-left text-[11px] uppercase tracking-wide text-muted-foreground" />
+                {products.map((p) => (
+                  <th
+                    key={p.id}
+                    className="min-w-[160px] border-b border-[color:var(--sand-deep)] p-2 text-left align-top"
+                  >
+                    <div className="flex items-start gap-2">
+                      <img
+                        src={p.mainImageUrl}
+                        alt={p.name}
+                        className="h-12 w-12 shrink-0 rounded-sm object-cover"
+                      />
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">
+                          {p.name}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onRemove(p.id)}
+                          className="text-[11px] text-muted-foreground underline hover:text-red-700"
+                        >
+                          Retirer
+                        </button>
+                      </div>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} className="border-b border-[color:var(--sand-deep)]/60">
+                  <td className="py-2 pr-3 text-xs font-medium text-muted-foreground">
+                    {row.label}
+                  </td>
+                  {products.map((p) => (
+                    <td key={p.id} className="py-2 pr-3 tabular-nums">
+                      {row.value(p)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   )
 }
