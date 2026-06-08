@@ -187,7 +187,7 @@ Etat et chantiers :
 | Qualite        | CRUD rapports + upload PDF                                        | P1       | Relier rapports a produits/containers, statut documents requis, expiration/validite, preview public, acces client auth, alertes documents manquants.               |
 | Transporteurs  | CRUD carrier_partners                                             | P2       | Zones, tarifs indicatifs, contacts, delais, statut actif, demande client -> transporteur, comparatif par region.                                                   |
 | Partenaires    | Lecture/filtre/status candidatures et deals                       | P0/P1    | Creer/editer `partner_referral_slug`, lier user au partenaire, notes internes, pipeline deal, protection 120/180j, attribution test, export, timeline.             |
-| Utilisateurs   | Onglet lazy existant                                              | P1       | Gestion roles, invitation admin/partenaire, relation `partner_users`, suspension, magic link, 2FA admin, audit des changements.                                    |
+| Utilisateurs   | **Liste + roles + liens partenaires** | P1 | **FAIT** : liste users, filtres, promotion/retrogradation role (audit log), **gestion `partner_users`** (lier/delier un user a une candidature qualified/approved, audit log) — `src/lib/admin/partner-links.repository.ts`. Reste : invitation par magic link, suspension, 2FA admin. |
 
 Chantier admin le plus impactant apres Supabase :
 
