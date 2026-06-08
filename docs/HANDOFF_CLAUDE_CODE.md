@@ -580,21 +580,17 @@ Prochaines etapes :
 
 ### P2.1 Emails transactionnels Resend
 
-Pourquoi : aujourd'hui les confirmations et relances ne sont pas suffisamment fiables.
+Infra : `src/lib/email/server.ts` (`sendEmail` no-op gracieux si `RESEND_API_KEY` absent, jamais d'exception), `src/lib/email/templates.ts`, `src/lib/email/notify-leads.ts`.
+
+**ACTIVATION** : poser les secrets Worker `RESEND_API_KEY` et `RESEND_FROM` (domaine verifie Resend) — `wrangler secret put RESEND_API_KEY`. Tant qu'ils sont absents, tous les envois no-op proprement (les leads sont quand meme persistes).
 
 Priorite emails :
 
-1. Demande partenaire recue.
-2. Opportunite partenaire soumise.
-3. Reservation recue.
-4. Paiement en attente/webhook confirme.
-5. Demande stock 24h recue.
-
-Fichiers de depart :
-
-- `src/lib/email/templates.ts`
-- `src/lib/resend` si existant, sinon creer module service.
-- Endpoints `/api/partner-requests`, `/api/stock-requests`, reservation flow.
+1. ~~Demande partenaire recue~~ **FAIT** : admin + confirmation au demandeur (`notifyPartnerRequest`, cable dans `/api/partner-requests`).
+2. ~~Opportunite partenaire soumise~~ **FAIT** : meme flux (mode deal).
+3. ~~Reservation recue~~ **DEJA EN PLACE** : `src/lib/email/reservation-confirmation.ts` (user + admin), declenche depuis `ReservationDialog`.
+4. Paiement webhook confirme : **reste a faire** — point d'insertion `src/lib/stripe/webhook-handlers.ts` (`markReservationReserved`, apres update).
+5. ~~Demande stock 24h recue~~ **FAIT** : admin + confirmation (`notifyStockRequest`, cable dans `/api/stock-requests`).
 
 ### P2.2 Admin Command Center
 
