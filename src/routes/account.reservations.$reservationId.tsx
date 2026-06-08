@@ -42,6 +42,11 @@ import {
   type ReservationClaimCategory,
   type ReservationClaimsClient,
 } from '@/lib/account/claims'
+import {
+  listInvoicesForReservation,
+  type Invoice,
+  type InvoicesClient,
+} from '@/lib/account/invoices'
 import { formatEUR } from '@/lib/order'
 import {
   readLocalReservationHistory,
@@ -502,6 +507,28 @@ function DocumentsCard({
   readonly feePaid: boolean
   readonly delivered: boolean
 }) {
+  const [invoices, setInvoices] = useState<ReadonlyArray<Invoice>>([])
+
+  useEffect(() => {
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as unknown as InvoicesClient
+        const list = await listInvoicesForReservation(client, reservationId)
+        if (!cancelled) setInvoices(list)
+      } catch {
+        /* invoices are optional — ignore read errors */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [reservationId])
+
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -509,6 +536,18 @@ function DocumentsCard({
         <span className="label-eyebrow">Documents</span>
       </div>
       <ul className="mt-3 space-y-2">
+        {invoices.map((invoice) => (
+          <li key={invoice.id}>
+            <Link
+              to="/account/reservations/$reservationId/facture/$invoiceId"
+              params={{ reservationId, invoiceId: invoice.id }}
+              className="inline-flex items-center gap-2 text-sm font-medium hover:underline"
+            >
+              <Download className="h-3.5 w-3.5 text-[color:var(--forest)]" />
+              Facture {invoice.number}
+            </Link>
+          </li>
+        ))}
         <li>
           <Link
             to="/account/reservations/$reservationId/document"
@@ -537,13 +576,15 @@ function DocumentsCard({
             Preuves qualité &amp; tests
           </a>
         </li>
-        <li className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-          <Download className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Facture :{' '}
-          {feePaid
-            ? 'envoyée par email après confirmation du paiement.'
-            : 'émise après le règlement des frais de réservation.'}
-        </li>
+        {invoices.length === 0 && (
+          <li className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+            <Download className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            Facture :{' '}
+            {feePaid
+              ? 'émise par notre équipe après confirmation du paiement.'
+              : 'émise après le règlement des frais de réservation.'}
+          </li>
+        )}
         {delivered && (
           <li className="text-xs leading-5 text-muted-foreground">
             Documents de livraison disponibles — contactez-nous pour les

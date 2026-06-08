@@ -41,6 +41,7 @@ import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.d
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
+import { Route as AccountReservationsReservationIdFactureInvoiceIdRouteImport } from './routes/account.reservations.$reservationId.facture.$invoiceId'
 
 const TransportPartenairesRoute = TransportPartenairesRouteImport.update({
   id: '/transport-partenaires',
@@ -207,6 +208,12 @@ const AccountReservationsReservationIdDocumentRoute =
     path: '/document',
     getParentRoute: () => AccountReservationsReservationIdRoute,
   } as any)
+const AccountReservationsReservationIdFactureInvoiceIdRoute =
+  AccountReservationsReservationIdFactureInvoiceIdRouteImport.update({
+    id: '/facture/$invoiceId',
+    path: '/facture/$invoiceId',
+    getParentRoute: () => AccountReservationsReservationIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -275,6 +283,7 @@ export interface FileRoutesByTo {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -310,6 +319,7 @@ export interface FileRoutesById {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   id:
     | '__root__'
     | '/'
@@ -414,6 +426,7 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -673,6 +686,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReservationsReservationIdDocumentRouteImport
       parentRoute: typeof AccountReservationsReservationIdRoute
     }
+    '/account/reservations/$reservationId/facture/$invoiceId': {
+      id: '/account/reservations/$reservationId/facture/$invoiceId'
+      path: '/facture/$invoiceId'
+      fullPath: '/account/reservations/$reservationId/facture/$invoiceId'
+      preLoaderRoute: typeof AccountReservationsReservationIdFactureInvoiceIdRouteImport
+      parentRoute: typeof AccountReservationsReservationIdRoute
+    }
   }
 }
 
@@ -689,12 +709,15 @@ const PartnerRouteWithChildren =
 
 interface AccountReservationsReservationIdRouteChildren {
   AccountReservationsReservationIdDocumentRoute: typeof AccountReservationsReservationIdDocumentRoute
+  AccountReservationsReservationIdFactureInvoiceIdRoute: typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 
 const AccountReservationsReservationIdRouteChildren: AccountReservationsReservationIdRouteChildren =
   {
     AccountReservationsReservationIdDocumentRoute:
       AccountReservationsReservationIdDocumentRoute,
+    AccountReservationsReservationIdFactureInvoiceIdRoute:
+      AccountReservationsReservationIdFactureInvoiceIdRoute,
   }
 
 const AccountReservationsReservationIdRouteWithChildren =

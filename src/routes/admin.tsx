@@ -27,8 +27,14 @@ import {
   type AdminReservationRow,
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
+import { toast } from 'sonner'
+
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { downloadCsv, toCsv } from '@/lib/admin/csv'
+import {
+  issueInvoice,
+  type InvoicesClient,
+} from '@/lib/account/invoices'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -940,6 +946,30 @@ function ReservationsAdminPanel({
     }
   }
 
+  async function issueInvoiceFor(row: AdminReservationRow): Promise<void> {
+    if (!isConfigured) return
+    if (
+      !window.confirm(
+        `Émettre une facture définitive pour ${row.reference} ? La numérotation est continue et non annulable.`,
+      )
+    ) {
+      return
+    }
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as unknown as InvoicesClient
+    try {
+      const invoice = await issueInvoice(client, row.id)
+      toast.success(`Facture ${invoice.number} émise`)
+    } catch (err) {
+      toast.error('Émission impossible', {
+        description: err instanceof Error ? err.message : undefined,
+      })
+    }
+    setBusyId(null)
+  }
+
   if (!isConfigured) {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
@@ -1208,6 +1238,19 @@ function ReservationsAdminPanel({
                           {a.label}
                         </Button>
                       ))}
+                    {row.status !== 'pending_reservation_fee' &&
+                      row.status !== 'cancelled' && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={busy}
+                          onClick={() => void issueInvoiceFor(row)}
+                          className="h-7 rounded-sm px-2 text-[11px]"
+                        >
+                          Facturer
+                        </Button>
+                      )}
                     <Button
                       asChild
                       variant="outline"
