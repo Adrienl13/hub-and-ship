@@ -589,7 +589,7 @@ Priorite emails :
 1. ~~Demande partenaire recue~~ **FAIT** : admin + confirmation au demandeur (`notifyPartnerRequest`, cable dans `/api/partner-requests`).
 2. ~~Opportunite partenaire soumise~~ **FAIT** : meme flux (mode deal).
 3. ~~Reservation recue~~ **DEJA EN PLACE** : `src/lib/email/reservation-confirmation.ts` (user + admin), declenche depuis `ReservationDialog`.
-4. Paiement webhook confirme : **reste a faire** — point d'insertion `src/lib/stripe/webhook-handlers.ts` (`markReservationReserved`, apres update).
+4. ~~Paiement webhook confirme~~ **FAIT** : `notifyPaymentConfirmed` (user + admin), declenche dans `/api/stripe/webhook` sur `checkout.session.completed`, construit depuis la session Stripe.
 5. ~~Demande stock 24h recue~~ **FAIT** : admin + confirmation (`notifyStockRequest`, cable dans `/api/stock-requests`).
 
 ### P2.2 Admin Command Center
