@@ -213,7 +213,7 @@ Fichiers de depart :
 
 DoD admin :
 
-- Un admin peut traiter une demande partenaire, proteger un deal, voir l'attribution reservation et exporter le suivi.
+- Un admin peut traiter une demande partenaire, proteger un deal, voir l'attribution reservation et exporter le suivi. **Export CSV livre (2026-06-07)** sur Reservations, Stock, Partenaires (candidatures + deals) et SAV — respecte les filtres courants (`src/lib/admin/csv.ts`).
 - Aucune action admin ne depend d'un fallback local pour la prod.
 - Les erreurs Supabase/Stripe sont affichees clairement et testees.
 - Les actions sensibles sont tracees via `logAdminAction`.
