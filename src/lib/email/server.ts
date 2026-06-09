@@ -96,22 +96,31 @@ export async function sendEmail(
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '')
-      return {
-        ok: false,
-        skipped: false,
-        reason: `brevo_${response.status}: ${detail.slice(0, 300)}`,
-      }
+      const reason = `brevo_${response.status}: ${detail.slice(0, 300)}`
+      console.error('sendEmail: Brevo rejected', {
+        to: input.to,
+        subject: input.subject,
+        reason,
+      })
+      return { ok: false, skipped: false, reason }
     }
 
     const data = (await response.json().catch(() => ({}))) as {
       messageId?: string
     }
+    console.info('sendEmail: sent', {
+      to: input.to,
+      subject: input.subject,
+      id: data.messageId ?? 'unknown',
+    })
     return { ok: true, id: data.messageId ?? 'unknown' }
   } catch (error) {
-    return {
-      ok: false,
-      skipped: false,
-      reason: error instanceof Error ? error.message : 'unknown_error',
-    }
+    const reason = error instanceof Error ? error.message : 'unknown_error'
+    console.error('sendEmail: transport error', {
+      to: input.to,
+      subject: input.subject,
+      reason,
+    })
+    return { ok: false, skipped: false, reason }
   }
 }
