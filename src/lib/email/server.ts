@@ -1,32 +1,50 @@
-// Resend wrapper. Server-only — never import from the browser bundle. The
-// API key is read from process.env, never from `import.meta.env`, so it is
-// not exposed to the client.
+// Brevo (ex-Sendinblue) transactional email wrapper. Server-only. Brevo exposes
+// an HTTP API, which works on Cloudflare Workers (unlike SMTP). The API key is
+// read from process.env, never from import.meta.env, so it is not exposed to
+// the client. When BREVO_API_KEY is absent every send is a graceful no-op
+// (skipped) rather than an error.
 
-import { Resend } from 'resend'
-
-const FALLBACK_FROM = 'Container Club <onboarding@resend.dev>'
-
-let cachedClient: Resend | null = null
+const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email'
+const FALLBACK_SENDER_NAME = 'Container Club'
+const FALLBACK_SENDER_EMAIL = 'contact@terrassea.com'
 
 export function isEmailConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY)
+  return Boolean(process.env.BREVO_API_KEY)
 }
 
+interface Sender {
+  readonly name: string
+  readonly email: string
+}
+
+/** Parses `BREVO_FROM` ("Name <email>" or "email") into a Brevo sender. */
+export function getSender(): Sender {
+  const raw = process.env.BREVO_FROM?.trim()
+  if (raw) {
+    const match = raw.match(/^\s*(.*?)\s*<([^>]+)>\s*$/)
+    if (match) {
+      const email = match[2]!.trim()
+      if (email) {
+        return { name: match[1]?.trim() || FALLBACK_SENDER_NAME, email }
+      }
+    }
+    if (raw.includes('@')) {
+      return { name: FALLBACK_SENDER_NAME, email: raw }
+    }
+  }
+  return { name: FALLBACK_SENDER_NAME, email: FALLBACK_SENDER_EMAIL }
+}
+
+/** Display string of the configured sender (kept for compatibility). */
 export function getEmailFrom(): string {
-  return process.env.RESEND_FROM?.trim() || FALLBACK_FROM
+  const sender = getSender()
+  return `${sender.name} <${sender.email}>`
 }
 
 export function getAdminNotificationEmail(): string {
   return (
     process.env.ADMIN_NOTIFICATION_EMAIL?.trim() || 'adrienlaniez1@gmail.com'
   )
-}
-
-function getResendClient(): Resend | null {
-  if (!isEmailConfigured()) return null
-  if (cachedClient) return cachedClient
-  cachedClient = new Resend(process.env.RESEND_API_KEY!)
-  return cachedClient
 }
 
 export interface SendEmailInput {
@@ -49,30 +67,46 @@ export type SendEmailResult =
 export async function sendEmail(
   input: SendEmailInput,
 ): Promise<SendEmailResult> {
-  const client = getResendClient()
-  if (!client) {
+  const apiKey = process.env.BREVO_API_KEY
+  if (!apiKey) {
     return { ok: false, skipped: true, reason: 'not_configured' }
   }
 
+  const recipients = (
+    Array.isArray(input.to) ? input.to : [input.to as string]
+  ).map((email) => ({ email }))
+
   try {
-    const result = await client.emails.send({
-      from: getEmailFrom(),
-      to: Array.isArray(input.to) ? [...input.to] : [input.to as string],
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-      replyTo: input.replyTo,
+    const response = await fetch(BREVO_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        sender: getSender(),
+        to: recipients,
+        subject: input.subject,
+        htmlContent: input.html,
+        textContent: input.text,
+        ...(input.replyTo ? { replyTo: { email: input.replyTo } } : {}),
+      }),
     })
 
-    if (result.error) {
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
       return {
         ok: false,
         skipped: false,
-        reason: result.error.message ?? 'resend_error',
+        reason: `brevo_${response.status}: ${detail.slice(0, 300)}`,
       }
     }
 
-    return { ok: true, id: result.data?.id ?? 'unknown' }
+    const data = (await response.json().catch(() => ({}))) as {
+      messageId?: string
+    }
+    return { ok: true, id: data.messageId ?? 'unknown' }
   } catch (error) {
     return {
       ok: false,

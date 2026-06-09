@@ -3,7 +3,7 @@
 // browser never sees the raw row; this also bypasses the write-only RLS
 // posture of `reservations` for anon visitors.
 //
-// Honest non-configured state: when RESEND_API_KEY is missing the function
+// Honest non-configured state: when email is not configured the function
 // returns `{ ok: true, skipped: true }` rather than throwing — the client UX
 // already promises that we recontact within 24 h, so a missing email
 // pipeline is a degraded mode, not a failure.

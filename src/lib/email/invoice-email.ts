@@ -1,7 +1,7 @@
 // Server function that emails an issued invoice to the client. Loads the
 // invoice via the SERVICE ROLE client (so it works regardless of the caller's
 // RLS) and sends only to the buyer recorded on the invoice snapshot. No-op
-// (skipped) when RESEND_API_KEY is absent — never throws.
+// (skipped) when email is not configured — never throws.
 
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'

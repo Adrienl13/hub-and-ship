@@ -75,7 +75,7 @@ async function handleWebhook(request: Request): Promise<Response> {
         client: getSupabaseAdmin() as unknown as WebhookReservationClient,
         session,
       })
-      // Notify (no-op when RESEND_API_KEY is absent); never fail the webhook.
+      // Notify (no-op when email is not configured); never fail the webhook.
       try {
         await notifyPaymentConfirmed({
           reference: session.metadata?.reference ?? 'réservation',

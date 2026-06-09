@@ -1,6 +1,6 @@
 // Server-only lead notifications. Fires an admin notification + a requester
 // confirmation when a partner request or a stock 24h lead is captured. Uses the
-// shared sendEmail() which no-ops gracefully when RESEND_API_KEY is absent, so
+// shared sendEmail() which no-ops gracefully when email is not configured, so
 // these are safe to call from the intake endpoints without ever failing the
 // lead-capture response.
 
