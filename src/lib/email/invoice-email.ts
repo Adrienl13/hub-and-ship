@@ -8,7 +8,11 @@ import { getRequest } from '@tanstack/react-start/server'
 import { z } from 'zod'
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import { isEmailConfigured, sendEmail } from './server'
+import {
+  getAdminNotificationEmail,
+  isEmailConfigured,
+  sendEmail,
+} from './server'
 import { buildInvoiceEmailToUser } from './templates'
 
 const inputSchema = z.object({
@@ -92,6 +96,7 @@ export const sendInvoiceEmail = createServerFn({ method: 'POST' })
       subject: message.subject,
       html: message.html,
       text: message.text,
+      replyTo: getAdminNotificationEmail(),
     })
 
     if (!result.ok) {

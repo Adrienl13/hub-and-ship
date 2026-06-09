@@ -46,6 +46,7 @@ export async function notifyPartnerRequest(
       subject: confirmation.subject,
       html: confirmation.html,
       text: confirmation.text,
+      replyTo: getAdminNotificationEmail(),
     })
   }
 }
@@ -73,6 +74,7 @@ export async function notifyPaymentConfirmed(
       subject: user.subject,
       html: user.html,
       text: user.text,
+      replyTo: getAdminNotificationEmail(),
     })
   }
 }
@@ -101,6 +103,7 @@ export async function notifyStockRequest(
       subject: confirmation.subject,
       html: confirmation.html,
       text: confirmation.text,
+      replyTo: getAdminNotificationEmail(),
     })
   }
 }
