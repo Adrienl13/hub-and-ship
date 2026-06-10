@@ -60,22 +60,21 @@ export function HowItWorks() {
         {/* Timeline horizontale desktop, verticale mobile */}
         <RevealStagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
           {STEPS.map((s) => (
-            <RevealItem
-              key={s.n}
-              className="group relative overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--ember)]/40 hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]"
-            >
-              <span className="absolute -right-1 top-1 select-none font-display text-5xl font-bold text-[color:var(--sand-deep)]/40 transition-colors duration-300 group-hover:text-[color:var(--ember)]/20">
-                {s.n}
-              </span>
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--ember)]/10 text-[color:var(--ember)] transition-transform duration-300 group-hover:scale-110">
-                <s.Icon className="h-5 w-5" />
+            <RevealItem key={s.n}>
+              <div className="group relative h-full overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--ember)]/40 hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
+                <span className="absolute -right-1 top-1 select-none font-display text-5xl font-bold text-[color:var(--sand-deep)]/40 transition-colors duration-300 group-hover:text-[color:var(--ember)]/20">
+                  {s.n}
+                </span>
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--ember)]/10 text-[color:var(--ember)] transition-transform duration-300 group-hover:scale-110">
+                  <s.Icon className="h-5 w-5" />
+                </div>
+                <h3 className="relative mt-4 font-display text-base font-semibold tracking-tight">
+                  {s.title}
+                </h3>
+                <p className="relative mt-2 text-xs leading-relaxed text-[color:var(--ink-soft)]">
+                  {s.desc}
+                </p>
               </div>
-              <h3 className="relative mt-4 font-display text-base font-semibold tracking-tight">
-                {s.title}
-              </h3>
-              <p className="relative mt-2 text-xs leading-relaxed text-[color:var(--ink-soft)]">
-                {s.desc}
-              </p>
             </RevealItem>
           ))}
         </RevealStagger>

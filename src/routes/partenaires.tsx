@@ -19,8 +19,11 @@ import {
   type ReactNode,
 } from 'react'
 
+import { motion } from 'framer-motion'
+
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -212,21 +215,56 @@ function PartnerPromise() {
   return (
     <section className="border-b border-[color:var(--sand-deep)]">
       <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid grid-cols-1 gap-px bg-[color:var(--sand-deep)] md:grid-cols-3">
-          {items.map(({ Icon, title, desc }) => (
-            <article key={title} className="bg-background p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]">
-                <Icon className="h-4 w-4" />
+        <RevealStagger className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {items.map(({ Icon, title, desc }, i) => (
+            <RevealItem key={title}>
+              <div className="group h-full rounded-md border border-[color:var(--sand-deep)] bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[color:var(--ember)]/40 hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
+                <motion.div
+                  className="flex h-12 w-12 items-center justify-center rounded-md bg-[length:200%_auto] text-white shadow-sm"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(90deg, var(--ember), #efb15a 45%, var(--ember))',
+                  }}
+                  animate={{
+                    y: [0, -9, 0],
+                    scale: [1, 1.08, 1],
+                    backgroundPosition: ['0% 50%', '200% 50%'],
+                  }}
+                  transition={{
+                    y: {
+                      duration: 2.4,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: i * 0.3,
+                    },
+                    scale: {
+                      duration: 2.4,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: i * 0.3,
+                    },
+                    backgroundPosition: {
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    },
+                  }}
+                >
+                  <Icon
+                    className="h-5 w-5 transition-transform duration-500 group-hover:rotate-[12deg]"
+                    strokeWidth={1.8}
+                  />
+                </motion.div>
+                <h2 className="mt-6 font-display text-lg font-semibold">
+                  {title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
+                  {desc}
+                </p>
               </div>
-              <h2 className="mt-6 font-display text-lg font-semibold">
-                {title}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
-                {desc}
-              </p>
-            </article>
+            </RevealItem>
           ))}
-        </div>
+        </RevealStagger>
       </div>
     </section>
   )
