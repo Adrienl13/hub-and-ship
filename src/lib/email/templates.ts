@@ -2,6 +2,15 @@
 // react-email or JSX renderers into the server bundle. Tables + inline CSS
 // for broad client compatibility (Gmail, Outlook, Apple Mail).
 
+// Branded contact surface (the sending domain is authenticated in Brevo and
+// receives via Cloudflare Email Routing). Single source of truth for footers
+// and text signatures so we never leak a personal address.
+const CONTACT_EMAIL = 'contact@prosimport.com'
+const SITE_URL = 'https://prosimport.com'
+const SITE_LABEL = 'prosimport.com'
+const TEXT_SIGNATURE = `Container Club — Pros Import EURL
+${SITE_LABEL} · ${CONTACT_EMAIL}`
+
 export interface ReservationEmailInput {
   readonly reference: string
   readonly contactName: string
@@ -65,7 +74,8 @@ function shell({
 ${body}
 </td></tr>
 <tr><td style="padding:16px 32px;border-top:1px solid #e3d8c4;font-size:11px;color:#666;line-height:1.5;">
-Container Club — édité par Pros Import EURL · 60 Rue François Ier, 75008 Paris · adrienlaniez1@gmail.com<br>
+Container Club — édité par Pros Import EURL · 60 Rue François Ier, 75008 Paris<br>
+<a href="${SITE_URL}" style="color:#c25e2a;text-decoration:none;">${SITE_LABEL}</a> · <a href="mailto:${CONTACT_EMAIL}" style="color:#666;text-decoration:none;">${CONTACT_EMAIL}</a><br>
 RCS Paris 988 269 981 · SIRET 98826998100011 · TVA FR08988269981
 </td></tr>
 </table>
@@ -127,9 +137,8 @@ Total TTC : ${formatEur(input.totalTtc)}
 
 Voir votre réservation : ${input.accountUrl}
 
-Container Club — Pros Import EURL
-60 Rue François Ier, 75008 Paris
-adrienlaniez1@gmail.com`
+${TEXT_SIGNATURE}
+60 Rue François Ier, 75008 Paris`
 
   return {
     subject,
@@ -214,7 +223,7 @@ Nous confirmons la réception de votre paiement pour la réservation ${input.ref
 ${input.amountPaid ? `Montant réglé : ${formatEur(input.amountPaid)}\n` : ''}
 Voir votre réservation : ${input.accountUrl}
 
-Container Club — Pros Import EURL`
+${TEXT_SIGNATURE}`
   return {
     subject,
     html: shell({ title: 'Paiement confirmé', preheader, body }),
@@ -268,7 +277,8 @@ export function buildInvoiceEmailToUser(input: InvoiceEmailInput): {
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre facture <strong>${escape(input.number)}</strong> pour la réservation ${escape(input.reference)} est disponible. Montant TTC : <strong>${formatEur(input.totalTtc)}</strong>.</p>
 <p style="margin:24px 0 0;text-align:center;">
 <a href="${escape(input.invoiceUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Voir / télécharger la facture</a>
-</p>`
+</p>
+<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Une question sur cette facture ? Répondez simplement à cet email.</p>`
   const text = `Bonjour,
 
 Votre facture ${input.number} pour la réservation ${input.reference} est disponible.
@@ -276,7 +286,9 @@ Montant TTC : ${formatEur(input.totalTtc)}
 
 Voir / télécharger : ${input.invoiceUrl}
 
-Container Club — Pros Import EURL`
+Une question sur cette facture ? Répondez simplement à cet email.
+
+${TEXT_SIGNATURE}`
   return {
     subject,
     html: shell({ title: 'Facture disponible', preheader, body }),
@@ -353,8 +365,7 @@ export function buildPartnerRequestConfirmationEmail(
 
 Nous avons bien reçu votre demande pour ${input.companyName}. Notre équipe revient vers vous sous 48 h ouvrées.
 
-Pros Import — Container Club
-adrienlaniez1@gmail.com`
+${TEXT_SIGNATURE}`
   return {
     subject,
     html: shell({ title: 'Demande reçue', preheader, body }),
@@ -424,8 +435,7 @@ export function buildStockRequestConfirmationEmail(
 
 Nous avons bien reçu votre demande pour ${input.productName} (${input.requestedQuantity} unités). Nous revenons vers vous sous 24 h.
 
-Container Club — Pros Import EURL
-adrienlaniez1@gmail.com`
+${TEXT_SIGNATURE}`
   return {
     subject,
     html: shell({ title: 'Demande reçue', preheader, body }),
