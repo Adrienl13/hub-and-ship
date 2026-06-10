@@ -434,7 +434,7 @@ function CataloguePage() {
                 Aucun produit ne correspond à ces filtres.
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
                 {visibleProducts.map((product) => {
                   const selectedVariantId =
                     variantByProduct[product.id] ??

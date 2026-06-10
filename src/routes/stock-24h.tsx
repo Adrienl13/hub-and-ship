@@ -210,7 +210,7 @@ function Stock24hPage() {
                 Aucun lot disponible ne correspond à cette recherche.
               </div>
             ) : (
-              <RevealStagger className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <RevealStagger className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
                 {filtered.map((line) => (
                   <RevealItem key={line.id}>
                     <StockCard
@@ -248,65 +248,59 @@ function StockCard({
 }) {
   return (
     <article
-      className={`shadow-paper group relative isolate flex min-h-[420px] flex-col justify-end overflow-hidden rounded-md border bg-[color:var(--ink)] transition-shadow ${
+      className={`shadow-paper group flex flex-col overflow-hidden rounded-md border bg-card transition-shadow ${
         selected
           ? 'border-[color:var(--ember)] ring-2 ring-[color:var(--ember)]/40'
           : 'border-[color:var(--sand-deep)]'
       }`}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '420px' }}
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="absolute inset-0 z-0 block overflow-hidden bg-[color:var(--sand)] text-left"
-        aria-label={`Sélectionner ${line.product.name}`}
-      >
-        <img
-          src={line.product.mainImageUrl}
-          alt={line.product.name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-        />
-        <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-      </button>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onSelect}
+          className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
+          aria-label={`Sélectionner ${line.product.name}`}
+        >
+          <img
+            src={line.product.mainImageUrl}
+            alt={line.product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        </button>
 
-      <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2">
-        <span className="inline-flex items-center rounded-sm border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/90 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+        <span className="absolute left-2 top-2 inline-flex items-center rounded-sm bg-[color:var(--forest)] px-2 py-0.5 text-[11px] font-medium text-white shadow-sm">
           {STOCK_CONDITION_LABEL[line.condition]}
         </span>
-        <span className="inline-flex items-center rounded-sm bg-white/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[color:var(--ink)] backdrop-blur">
+        <span className="absolute right-2 top-2 inline-flex items-center rounded-sm bg-white/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[color:var(--ink)] shadow-sm backdrop-blur">
           {line.availableUnits} libre{line.availableUnits > 1 ? 's' : ''}
         </span>
       </div>
 
-      <div className="relative z-10 p-4 text-white">
-        <div className="text-[10px] uppercase tracking-[0.08em] text-white/70">
+      <div className="flex flex-1 flex-col p-2.5 text-foreground">
+        <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
           {CATEGORY_LABEL[line.product.category]} · {line.location}
         </div>
-        <h3 className="mt-1 font-display text-lg font-semibold leading-tight tracking-tight">
+        <h3 className="mt-1 line-clamp-2 font-display text-sm font-semibold leading-tight tracking-tight">
           {line.product.name}
         </h3>
-        <div className="mt-1 text-xs text-white/70">
-          {line.variant.name} · {line.product.sku}
-        </div>
-        <div className="mt-3 flex items-end justify-between gap-2">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">
           <div>
-            <div className="font-display text-xl font-semibold tabular-nums">
+            <div className="font-display text-base font-semibold tabular-nums">
               {formatEUR(line.stockPriceHt)}
             </div>
-            <div className="text-[10px] text-white/60">
-              HT / unité · {line.readyLabel}
-            </div>
+            <div className="text-[10px] text-muted-foreground">{line.readyLabel}</div>
           </div>
           <Button
             type="button"
             size="sm"
             onClick={onSelect}
-            className={`h-9 shrink-0 rounded-sm ${
+            className={`h-8 shrink-0 rounded-sm px-2.5 text-xs ${
               selected
                 ? 'bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember)]/90'
-                : 'bg-white text-[color:var(--ink)] hover:bg-white/90'
+                : 'bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]'
             }`}
           >
             Demander
