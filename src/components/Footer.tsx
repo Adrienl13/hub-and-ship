@@ -148,10 +148,10 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:adrienlaniez1@gmail.com"
+                  href="mailto:contact@prosimport.com"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
-                  adrienlaniez1@gmail.com
+                  contact@prosimport.com
                 </a>
               </li>
               <li className="text-[color:var(--sand)]/65">
