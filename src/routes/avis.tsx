@@ -1,36 +1,90 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { BadgeCheck, Building2, ExternalLink, Loader2, Star } from 'lucide-react'
+import { BadgeCheck, Building2, ExternalLink, Star } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
-import { buildSeoHead, organizationJsonLd } from '@/lib/seo'
+import { buildSeoHead, jsonLdScript, organizationJsonLd } from '@/lib/seo'
 import {
   aggregateReviews,
-  fetchPublishedReviews,
+  reviewFromRow,
   type ProductReview,
-  type ReviewsReadClient,
+  type ProductReviewRow,
 } from '@/lib/reviews/reviews'
 
 // Paste your Google Business "write a review" link here once the profile is
 // created (e.g. https://g.page/r/XXXX/review). Empty hides the Google CTA.
 const GOOGLE_REVIEW_URL = ''
 
-// NOTE: rendered client-side (no route loader) on purpose — a loader here
-// triggers the known TanStack SSR-shell issue. Reviews are fetched on mount and
-// the JSON-LD is injected client-side (Googlebot executes JS).
+// A route loader fetches published reviews server-side so they land in the SSR
+// payload (readable by AI crawlers that don't run JS) and the JSON-LD is emitted
+// server-side from real data.
+async function loadPublishedReviews(): Promise<ReadonlyArray<ProductReview>> {
+  const config = getSupabasePublicConfig()
+  if (!config.isConfigured) return []
+  try {
+    const res = await fetch(
+      `${config.url}/rest/v1/product_reviews?status=eq.published&order=published_at.desc&select=*`,
+      {
+        headers: {
+          apikey: config.anonKey,
+          Authorization: `Bearer ${config.anonKey}`,
+        },
+      },
+    )
+    if (!res.ok) return []
+    const rows = (await res.json()) as ProductReviewRow[]
+    return rows.map(reviewFromRow)
+  } catch {
+    return []
+  }
+}
+
 export const Route = createFileRoute('/avis')({
   component: ReviewsPage,
-  head: () =>
-    buildSeoHead({
+  loader: async () => ({ reviews: await loadPublishedReviews() }),
+  head: ({ loaderData }) => {
+    const reviews = loaderData?.reviews ?? []
+    const stats = aggregateReviews(reviews)
+    const base = buildSeoHead({
       title: 'Avis clients vérifiés',
       description:
         'Les avis de professionnels (restaurants, hôtels, campings) ayant commandé leur mobilier outdoor via Container Club — achat vérifié.',
       path: '/avis',
-    }),
+    })
+    if (stats.count === 0) return base
+    return {
+      ...base,
+      scripts: [
+        jsonLdScript({
+          ...organizationJsonLd(),
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: stats.average,
+            reviewCount: stats.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: reviews.slice(0, 25).map((r) => ({
+            '@type': 'Review',
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: r.rating,
+              bestRating: 5,
+            },
+            author: {
+              '@type': 'Organization',
+              name: r.companyName ?? r.authorName,
+            },
+            name: r.title ?? undefined,
+            reviewBody: r.body,
+            datePublished: r.publishedAt ?? undefined,
+          })),
+        }),
+      ],
+    }
+  },
 })
 
 function Stars({ rating, size = 'h-4 w-4' }: { rating: number; size?: string }) {
@@ -51,74 +105,7 @@ function Stars({ rating, size = 'h-4 w-4' }: { rating: number; size?: string }) 
 }
 
 function ReviewsPage() {
-  const [reviews, setReviews] = useState<ReadonlyArray<ProductReview>>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const config = getSupabasePublicConfig()
-    if (!config.isConfigured) {
-      setLoading(false)
-      return
-    }
-    let cancelled = false
-    void (async () => {
-      try {
-        const client = createSupabaseBrowserClient(
-          config,
-        ) as unknown as ReviewsReadClient
-        const list = await fetchPublishedReviews(client)
-        if (!cancelled) setReviews(list)
-      } catch {
-        // non-blocking
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Inject Review/AggregateRating JSON-LD for Google + AI once reviews load.
-  useEffect(() => {
-    const id = 'avis-jsonld'
-    document.getElementById(id)?.remove()
-    if (reviews.length === 0) return
-    const stats = aggregateReviews(reviews)
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.id = id
-    script.text = JSON.stringify({
-      ...organizationJsonLd(),
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: stats.average,
-        reviewCount: stats.count,
-        bestRating: 5,
-        worstRating: 1,
-      },
-      review: reviews.slice(0, 25).map((r) => ({
-        '@type': 'Review',
-        reviewRating: {
-          '@type': 'Rating',
-          ratingValue: r.rating,
-          bestRating: 5,
-        },
-        author: {
-          '@type': 'Organization',
-          name: r.companyName ?? r.authorName,
-        },
-        name: r.title ?? undefined,
-        reviewBody: r.body,
-        datePublished: r.publishedAt ?? undefined,
-      })),
-    })
-    document.head.appendChild(script)
-    return () => {
-      document.getElementById(id)?.remove()
-    }
-  }, [reviews])
-
+  const { reviews } = Route.useLoaderData()
   const stats = aggregateReviews(reviews)
 
   return (
@@ -150,11 +137,6 @@ function ReviewsPage() {
                   {stats.count} avis vérifié{stats.count > 1 ? 's' : ''}
                 </div>
               </div>
-            </div>
-          ) : loading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Chargement des avis…
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">

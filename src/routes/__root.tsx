@@ -19,7 +19,7 @@ const ORGANIZATION_JSON_LD = {
   description:
     "Club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
   url: 'https://prosimport.com',
-  email: 'adrienlaniez1@gmail.com',
+  email: 'contact@prosimport.com',
   founder: {
     '@type': 'Person',
     name: 'Adrien Laniez',
