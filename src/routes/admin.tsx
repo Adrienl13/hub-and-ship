@@ -68,6 +68,7 @@ const ADMIN_TABS = [
   'carriers',
   'partners',
   'claims',
+  'reviews',
   'users',
 ] as const
 
@@ -112,6 +113,12 @@ const LazyAdminClaimsTab = lazy(() =>
 const LazyAdminPartnersTab = lazy(() =>
   import('@/components/AdminPartnersTab').then((module) => ({
     default: module.AdminPartnersTab,
+  })),
+)
+
+const LazyAdminReviewsTab = lazy(() =>
+  import('@/components/AdminReviewsTab').then((module) => ({
+    default: module.AdminReviewsTab,
   })),
 )
 
@@ -233,6 +240,7 @@ function AdminPage() {
               ['carriers', 'Transporteurs'],
               ['partners', 'Partenaires'],
               ['claims', 'SAV'],
+              ['reviews', 'Avis'],
               ['users', 'Utilisateurs'],
             ] as const
           ).map(([id, label]) => {
@@ -284,6 +292,9 @@ function AdminPage() {
           )}
           {activeTab === 'claims' && (
             <LazyAdminClaimsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'reviews' && (
+            <LazyAdminReviewsTab authStatus={auth.status} />
           )}
           {activeTab === 'users' && (
             <LazyAdminUsersTab authStatus={auth.status} />

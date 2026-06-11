@@ -18,6 +18,7 @@ import { Route as PartenairesRouteImport } from './routes/partenaires'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as AvisRouteImport } from './routes/avis'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
@@ -38,6 +39,7 @@ import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-request
 import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
+import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
@@ -88,6 +90,11 @@ const ContactRoute = ContactRouteImport.update({
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvisRoute = AvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -192,6 +199,11 @@ const AccountParametresRoute = AccountParametresRouteImport.update({
   path: '/account/parametres',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountAvisRoute = AccountAvisRouteImport.update({
+  id: '/account/avis',
+  path: '/account/avis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PPartnerSlugDevisRoute = PPartnerSlugDevisRouteImport.update({
   id: '/devis',
   path: '/devis',
@@ -225,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
@@ -234,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
@@ -261,6 +275,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
@@ -270,6 +285,7 @@ export interface FileRoutesByTo {
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
@@ -298,6 +314,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
@@ -307,6 +324,7 @@ export interface FileRoutesById {
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
@@ -336,6 +354,7 @@ export interface FileRouteTypes {
     | '/'
     | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
     | '/contact'
     | '/faq'
@@ -345,6 +364,7 @@ export interface FileRouteTypes {
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
     | '/account/parametres'
     | '/account/reservations'
     | '/api/partner-requests'
@@ -372,6 +392,7 @@ export interface FileRouteTypes {
     | '/'
     | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
     | '/contact'
     | '/faq'
@@ -381,6 +402,7 @@ export interface FileRouteTypes {
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
     | '/account/parametres'
     | '/account/reservations'
     | '/api/partner-requests'
@@ -408,6 +430,7 @@ export interface FileRouteTypes {
     | '/'
     | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
     | '/contact'
     | '/faq'
@@ -417,6 +440,7 @@ export interface FileRouteTypes {
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
     | '/account/parametres'
     | '/account/reservations'
     | '/api/partner-requests'
@@ -445,6 +469,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AProposRoute: typeof AProposRoute
   AdminRoute: typeof AdminRoute
+  AvisRoute: typeof AvisRoute
   CatalogueRoute: typeof CatalogueRoute
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
@@ -454,6 +479,7 @@ export interface RootRouteChildren {
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
+  AccountAvisRoute: typeof AccountAvisRoute
   AccountParametresRoute: typeof AccountParametresRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
@@ -536,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogue'
       fullPath: '/catalogue'
       preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/avis': {
+      id: '/avis'
+      path: '/avis'
+      fullPath: '/avis'
+      preLoaderRoute: typeof AvisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -678,6 +711,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountParametresRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/avis': {
+      id: '/account/avis'
+      path: '/account/avis'
+      fullPath: '/account/avis'
+      preLoaderRoute: typeof AccountAvisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$partnerSlug/devis': {
       id: '/p/$partnerSlug/devis'
       path: '/devis'
@@ -773,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
   AdminRoute: AdminRoute,
+  AvisRoute: AvisRoute,
   CatalogueRoute: CatalogueRoute,
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
@@ -782,6 +823,7 @@ const rootRouteChildren: RootRouteChildren = {
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
+  AccountAvisRoute: AccountAvisRoute,
   AccountParametresRoute: AccountParametresRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,

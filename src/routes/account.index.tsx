@@ -7,6 +7,7 @@ import {
   Loader2,
   Settings,
   Ship,
+  Star,
   Truck,
 } from 'lucide-react'
 
@@ -60,13 +61,22 @@ function AccountDashboard() {
         </p>
 
         {authStatus === 'authenticated' && (
-          <Link
-            to="/account/parametres"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <Settings className="h-3.5 w-3.5" />
-            Paramètres du compte
-          </Link>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            <Link
+              to="/account/parametres"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Paramètres du compte
+            </Link>
+            <Link
+              to="/account/avis"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Star className="h-3.5 w-3.5" />
+              Donner mon avis
+            </Link>
+          </div>
         )}
 
         {authStatus !== 'authenticated' && (

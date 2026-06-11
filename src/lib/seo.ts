@@ -105,7 +105,7 @@ export function organizationJsonLd() {
     legalName: 'Pros Import EURL',
     alternateName: SITE_NAME,
     url: SITE_URL,
-    email: 'adrienlaniez1@gmail.com',
+    email: 'contact@prosimport.com',
     description:
       "Partenaire d'import français de mobilier outdoor CHR par container (achat groupé), pour restaurants, hôtels, campings et revendeurs.",
     areaServed: 'FR',

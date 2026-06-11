@@ -30,6 +30,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             ['Partenaires', '/partenaires'],
             ['Comment ça marche', '/#comment'],
             ['Containers livrés', '/livres'],
+            ['Avis', '/avis'],
             ['Qualité & Tests', '/qualite'],
             ['FAQ', '/faq'],
           ].map(([label, href]) => (
