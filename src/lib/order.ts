@@ -52,7 +52,15 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
   const reservationFee = calculateReservationFee(subtotalHt)
   const deposit30 = subtotalHt * 0.3
   const payAt80Percent = Math.max(0, deposit30 - reservationFee)
-  const payBeforeShipping = subtotalHt * 0.7
+  // Solde = reste à payer après les frais de réservation déjà encaissés et
+  // l'acompte appelé à 80%. On ne fige PAS le solde à 70% : sinon, quand les
+  // frais plancher (150€) dépassent l'acompte de 30% sur une petite commande,
+  // le total encaissé (frais + 0 + 70%) dépasserait 100% du sous-total. En
+  // dérivant le solde, frais + acompte + solde == sous-total HT, toujours.
+  const payBeforeShipping = Math.max(
+    0,
+    subtotalHt - reservationFee - payAt80Percent,
+  )
   const retailReference = items.reduce(
     (sum, item) => sum + item.product.retailPriceRef * item.quantity,
     0,
