@@ -1,10 +1,11 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Loader2, LogOut } from 'lucide-react'
+import { Download, Loader2, LogOut, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { MfaEnrollment } from '@/components/MfaEnrollment'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,12 @@ import {
   type AccountProfile,
   type ProfileClient,
 } from '@/lib/account/profile'
+import {
+  deleteMyAccount,
+  downloadJson,
+  exportMyAccountData,
+  type RgpdClient,
+} from '@/lib/account/rgpd'
 
 export const Route = createFileRoute('/account/parametres')({
   component: AccountSettings,
@@ -43,6 +50,9 @@ function AccountSettings() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (status !== 'authenticated' || !user) return
@@ -104,6 +114,54 @@ function AccountSettings() {
     }
   }
 
+  async function handleExport(): Promise<void> {
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    setExporting(true)
+    try {
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as unknown as RgpdClient
+      const data = await exportMyAccountData(client)
+      downloadJson(data, 'mes-donnees-prosimport.json')
+      toast.success('Export téléchargé.')
+    } catch (err) {
+      toast.error(
+        'Export indisponible : ' +
+          (err instanceof Error ? err.message : 'erreur inconnue'),
+      )
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleDelete(): Promise<void> {
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    setDeleting(true)
+    try {
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as unknown as RgpdClient
+      await deleteMyAccount(client)
+      // Drop any local checkout history for this device too.
+      try {
+        window.localStorage.clear()
+      } catch {
+        // ignore
+      }
+      await signOut()
+      toast.success('Votre compte a été supprimé.')
+      await navigate({ to: '/' })
+    } catch (err) {
+      toast.error(
+        'Suppression impossible : ' +
+          (err instanceof Error ? err.message : 'erreur inconnue'),
+      )
+      setDeleting(false)
+    }
+  }
+
   async function handleSignOut(): Promise<void> {
     setSigningOut(true)
     try {
@@ -157,7 +215,8 @@ function AccountSettings() {
             Chargement de votre profil…
           </div>
         ) : (
-          <form onSubmit={(e) => void handleSave(e)} className="mt-6 space-y-6">
+          <div className="mt-6 space-y-6">
+            <form onSubmit={(e) => void handleSave(e)} className="space-y-6">
             <section className="space-y-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">
@@ -241,7 +300,77 @@ function AccountSettings() {
                 {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
               </Button>
             </section>
-          </form>
+            </form>
+
+            <MfaEnrollment />
+
+            <section className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+              <h2 className="font-display text-sm font-semibold">
+                Mes données (RGPD)
+              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Téléchargez l'ensemble de vos données personnelles au format
+                  JSON.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={exporting}
+                  onClick={() => void handleExport()}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {exporting ? 'Préparation…' : 'Exporter mes données'}
+                </Button>
+              </div>
+            </section>
+
+            <section className="space-y-3 rounded-md border border-red-300 bg-red-50 p-5">
+              <h2 className="font-display text-sm font-semibold text-red-900">
+                Supprimer mon compte
+              </h2>
+              <p className="text-sm text-red-900/80">
+                Suppression définitive de votre identité et anonymisation de vos
+                données. Les factures déjà émises sont conservées (obligation
+                légale comptable). Cette action est irréversible.
+              </p>
+              {confirmDelete ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-red-900">
+                    Confirmer la suppression définitive ?
+                  </span>
+                  <Button
+                    type="button"
+                    className="gap-1.5 bg-red-600 text-white hover:bg-red-700"
+                    disabled={deleting}
+                    onClick={() => void handleDelete()}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {deleting ? 'Suppression…' : 'Oui, supprimer'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={deleting}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-1.5 border-red-300 text-red-900 hover:bg-red-100"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Supprimer mon compte
+                </Button>
+              )}
+            </section>
+          </div>
         )}
       </main>
 
