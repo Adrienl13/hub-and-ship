@@ -10,7 +10,11 @@ import {
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
-import { listMyReservationsFromSupabase } from '@/lib/reservations/repository'
+import {
+  claimMyReservationsInSupabase,
+  listMyReservationsFromSupabase,
+  type ClaimReservationsClient,
+} from '@/lib/reservations/repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -57,6 +61,16 @@ export function useAccountReservations(): UseAccountReservationsResult {
     void (async () => {
       try {
         const client = createSupabaseBrowserClient(config)
+        // Best-effort: adopt anonymous reservations made with this email so
+        // they show up under RLS (cross-device recovery). A failure here must
+        // not prevent listing whatever is already linked.
+        try {
+          await claimMyReservationsInSupabase(
+            client as unknown as ClaimReservationsClient,
+          )
+        } catch {
+          // ignore — listing below still runs
+        }
         const list = await listMyReservationsFromSupabase(
           client as unknown as Parameters<
             typeof listMyReservationsFromSupabase

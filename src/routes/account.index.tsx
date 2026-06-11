@@ -5,6 +5,7 @@ import {
   FileText,
   LifeBuoy,
   Loader2,
+  Settings,
   Ship,
   Truck,
 } from 'lucide-react'
@@ -57,6 +58,16 @@ function AccountDashboard() {
           Vos réservations container, paiements à venir et documents, au même
           endroit.
         </p>
+
+        {authStatus === 'authenticated' && (
+          <Link
+            to="/account/parametres"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Paramètres du compte
+          </Link>
+        )}
 
         {authStatus !== 'authenticated' && (
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 p-4 text-sm">
@@ -288,7 +299,7 @@ function ResourcesCard() {
       <p className="mt-3 text-xs text-muted-foreground">
         Une question sur une réservation, un document ou une facture ?{' '}
         <a
-          href="mailto:adrienlaniez1@gmail.com"
+          href="mailto:contact@prosimport.com"
           className="text-foreground underline"
         >
           Contacter notre équipe

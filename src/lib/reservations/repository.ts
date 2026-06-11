@@ -147,6 +147,28 @@ export async function createReservationInSupabase({
 }
 
 // ---------------------------------------------------------------------------
+// Account recovery — adopt anonymous reservations made with the signed-in
+// user's email so they become visible under RLS (cross-device). Best-effort:
+// callers ignore failures and still attempt the list.
+// ---------------------------------------------------------------------------
+
+export interface ClaimReservationsClient {
+  rpc: (
+    fn: 'claim_my_reservations',
+  ) => PromiseLike<RepositoryResult<number | null>>
+}
+
+export async function claimMyReservationsInSupabase(
+  client: ClaimReservationsClient,
+): Promise<number> {
+  const result = await client.rpc('claim_my_reservations')
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+  return typeof result.data === 'number' ? result.data : 0
+}
+
+// ---------------------------------------------------------------------------
 // Authenticated reads — used by /account/reservations to list the signed-in
 // user's reservations. RLS filters to user_id = auth.uid() or company match.
 // ---------------------------------------------------------------------------

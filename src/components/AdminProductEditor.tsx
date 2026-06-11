@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { ImageGalleryUploader, ImageUploader } from '@/components/ImageUploader'
@@ -320,11 +321,19 @@ export function AdminProductEditor({
         gallery_urls: v.galleryUrls.filter((url) => url.trim()),
         sort_order: v.sortOrder,
       }))
-    const commitmentsPayload = commitments.map((c) => ({
-      container_id: c.containerId,
-      variant_id: c.variantId,
-      units_committed: Math.max(0, Math.round(c.unitsCommitted)),
-    }))
+    // Only keep commitments tied to a design that is actually being saved.
+    // Designs that were removed (CASCADE-deleted by the RPC) or left unnamed
+    // (filtered out of variantsPayload) must NOT carry commitments, otherwise
+    // the RPC re-inserts a commitment referencing a now-deleted variant_id and
+    // the whole save fails on the FK — silently, mid-screen.
+    const savedVariantIds = new Set(variantsPayload.map((v) => v.id))
+    const commitmentsPayload = commitments
+      .filter((c) => savedVariantIds.has(c.variantId))
+      .map((c) => ({
+        container_id: c.containerId,
+        variant_id: c.variantId,
+        units_committed: Math.max(0, Math.round(c.unitsCommitted)),
+      }))
 
     // One transactional RPC instead of N sequential writes — avoids the
     // partial-failure window where the product was saved but its variants
@@ -342,11 +351,15 @@ export function AdminProductEditor({
 
     if (rpcError) {
       setError(rpcError.message)
+      // The error banner sits at the top of a long form; surface a toast too
+      // so a save failure is visible even when scrolled to Designs/commitments.
+      toast.error(`Échec de l'enregistrement : ${rpcError.message}`)
       setSaving(false)
       return
     }
 
     setSaving(false)
+    toast.success('Produit enregistré.')
     await onSaved()
   }
 
