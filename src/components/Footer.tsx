@@ -1,7 +1,22 @@
+import { ContainerNotifyForm } from '@/components/ContainerNotifyForm'
+
 export function Footer() {
   return (
     <footer className="border-t border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--sand)]">
       <div className="mx-auto max-w-7xl px-6 py-14">
+        <div className="mb-10 flex flex-col gap-4 border-b border-[color:var(--sand)]/15 pb-10 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-md">
+            <div className="font-display text-lg font-semibold tracking-tight">
+              Ne ratez pas le prochain départ.
+            </div>
+            <p className="text-[color:var(--sand)]/60 mt-1 text-xs leading-relaxed">
+              Les containers partent quand le seuil est atteint. Laissez votre
+              email pour être prévenu en priorité à la prochaine ouverture.
+            </p>
+          </div>
+          <ContainerNotifyForm source="footer" />
+        </div>
+
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2.5">

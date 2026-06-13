@@ -27,6 +27,7 @@ export const AnalyticsEvent = {
   ReviewSubmit: 'review_submit',
   ShareSelection: 'share_selection',
   QuotePdf: 'quote_pdf',
+  NotifySignup: 'notify_signup',
 } as const
 
 export type AnalyticsEventName =

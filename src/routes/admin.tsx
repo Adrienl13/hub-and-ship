@@ -70,6 +70,7 @@ const ADMIN_TABS = [
   'claims',
   'reviews',
   'referrals',
+  'leads',
   'users',
 ] as const
 
@@ -126,6 +127,12 @@ const LazyAdminReviewsTab = lazy(() =>
 const LazyAdminReferralsTab = lazy(() =>
   import('@/components/AdminReferralsTab').then((module) => ({
     default: module.AdminReferralsTab,
+  })),
+)
+
+const LazyAdminLeadsTab = lazy(() =>
+  import('@/components/AdminLeadsTab').then((module) => ({
+    default: module.AdminLeadsTab,
   })),
 )
 
@@ -249,6 +256,7 @@ function AdminPage() {
               ['claims', 'SAV'],
               ['reviews', 'Avis'],
               ['referrals', 'Parrainage'],
+              ['leads', 'Prospects'],
               ['users', 'Utilisateurs'],
             ] as const
           ).map(([id, label]) => {
@@ -306,6 +314,9 @@ function AdminPage() {
           )}
           {activeTab === 'referrals' && (
             <LazyAdminReferralsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'leads' && (
+            <LazyAdminLeadsTab authStatus={auth.status} />
           )}
           {activeTab === 'users' && (
             <LazyAdminUsersTab authStatus={auth.status} />
