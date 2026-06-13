@@ -22,6 +22,7 @@ import { Link } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { sendReservationConfirmation } from '@/lib/email/reservation-confirmation'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import {
   Dialog,
   DialogContent,
@@ -271,6 +272,10 @@ export function ReservationDialog({
       return
     }
 
+    track(AnalyticsEvent.ReservationSubmit, {
+      persisted: creation.persisted,
+    })
+
     // Persist a lightweight confirmation snapshot the success page can use
     // to render an immediate recap before the webhook completes.
     if (creation.persisted && typeof window !== 'undefined') {
@@ -328,6 +333,7 @@ export function ReservationDialog({
           // Redirect to the hosted Stripe Checkout page. The dialog stays
           // mounted; on cancel/return the user lands on
           // /account/reservations/<id>?session_id=… or ?canceled=true.
+          track(AnalyticsEvent.CheckoutRedirect)
           window.location.assign(checkout.url)
           return
         }

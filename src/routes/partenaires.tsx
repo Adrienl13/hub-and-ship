@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useCatalog } from '@/hooks/useCatalog'
 import { PARTNER_KIND_LABEL, type PartnerKind } from '@/lib/partners/types'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import {
   buildPartnerSubmissionDraft,
   savePartnerSubmissionToLocalHistory,
@@ -521,6 +522,7 @@ function PartnerRequestSection() {
         | { readonly ok: false; readonly error?: string }
 
       if (response.ok && body.ok) {
+        track(AnalyticsEvent.PartnerRequest, { mode: form.mode })
         setNotice({
           kind: 'success',
           message:

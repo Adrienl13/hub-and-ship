@@ -17,6 +17,7 @@ import {
   submitProductReview,
   type ReviewSubmitClient,
 } from '@/lib/reviews/reviews'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 
 export const Route = createFileRoute('/account/avis')({
   component: AccountReviews,
@@ -162,6 +163,7 @@ function ReviewCard({
         companyName: company,
       })
       toast.success('Merci ! Votre avis sera publié après validation.')
+      track(AnalyticsEvent.ReviewSubmit, { product: product.productId })
       onDone()
     } catch (err) {
       toast.error(

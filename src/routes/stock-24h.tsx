@@ -31,6 +31,7 @@ import {
   type StockSortKey,
 } from '@/lib/stock'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
 import {
   breadcrumbJsonLd,
@@ -362,6 +363,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       return
     }
 
+    track(AnalyticsEvent.StockRequest, { persisted: creation.persisted })
     toast.success('Demande stock préparée', {
       description: creation.persisted
         ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`

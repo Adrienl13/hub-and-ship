@@ -41,6 +41,29 @@ const ORGANIZATION_JSON_LD = {
   sameAs: [],
 }
 
+// Privacy-friendly analytics, only loaded when a Plausible domain is configured.
+const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN as
+  | string
+  | undefined
+const PLAUSIBLE_SRC =
+  (import.meta.env.VITE_PLAUSIBLE_SRC as string | undefined) ??
+  'https://plausible.io/js/script.tagged-events.js'
+
+const ANALYTICS_SCRIPTS = PLAUSIBLE_DOMAIN
+  ? [
+      // Queue stub so custom events fire even before the script finishes loading.
+      {
+        children:
+          'window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}',
+      },
+      {
+        src: PLAUSIBLE_SRC,
+        defer: true,
+        'data-domain': PLAUSIBLE_DOMAIN,
+      },
+    ]
+  : []
+
 function NotFoundComponent() {
   return (
     <html lang="fr">
@@ -136,6 +159,7 @@ export const Route = createRootRoute({
         type: 'application/ld+json',
         children: JSON.stringify(ORGANIZATION_JSON_LD),
       },
+      ...ANALYTICS_SCRIPTS,
     ],
   }),
   component: RootComponent,

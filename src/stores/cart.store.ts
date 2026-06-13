@@ -13,6 +13,7 @@ import { getContainerUsableCbm } from '@/lib/container/pricing'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 import type { ContainerType } from '@/lib/supabase/types'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 
 export type ProductVariantSelection = Record<string, string>
 export type ProductQuantitySelection = Record<string, number>
@@ -104,13 +105,19 @@ export const useCartStore = create<CartStoreState>()(
           const product = PRODUCTS.find((item) => item.id === productId)
           if (!product) return previous
 
+          const nextQty = sanitizeOrderQuantity(
+            quantity,
+            getQuantityRule(product),
+          )
+          const prevQty = previous.qtyByProduct[productId] ?? 0
+          if (prevQty === 0 && nextQty > 0) {
+            track(AnalyticsEvent.AddToCart, { product: productId })
+          }
+
           return {
             qtyByProduct: {
               ...previous.qtyByProduct,
-              [productId]: sanitizeOrderQuantity(
-                quantity,
-                getQuantityRule(product),
-              ),
+              [productId]: nextQty,
             },
           }
         }),

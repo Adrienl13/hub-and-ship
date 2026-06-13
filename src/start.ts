@@ -15,8 +15,8 @@ const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "img-src 'self' https: data: blob:",
   "font-src 'self' https://fonts.gstatic.com data:",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://plausible.io",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://plausible.io",
   'frame-src https://js.stripe.com https://checkout.stripe.com',
   "form-action 'self' https://checkout.stripe.com",
 ].join('; ')

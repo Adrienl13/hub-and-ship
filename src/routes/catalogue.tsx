@@ -38,6 +38,7 @@ import {
   decodeCartSelection,
   encodeCartSelection,
 } from '@/lib/catalogue/share-cart'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
@@ -202,6 +203,7 @@ function CataloguePage() {
     try {
       await navigator.clipboard.writeText(url)
       toast.success('Lien de votre sélection copié', { description: url })
+      track(AnalyticsEvent.ShareSelection, { items: entries.length })
     } catch {
       toast.error('Copie impossible', { description: url })
     }
@@ -212,6 +214,7 @@ function CataloguePage() {
   }, [deferredSearch, filter, pageSize, sort, advanced])
 
   const handlePdf = () => {
+    track(AnalyticsEvent.QuotePdf, { items: items.length })
     const opened = openQuotePDF({
       items,
       totals,
@@ -236,7 +239,12 @@ function CataloguePage() {
       id="top"
       className="min-h-screen overflow-x-hidden bg-background text-foreground"
     >
-      <Header onReserve={() => setReserveOpen(true)} />
+      <Header
+        onReserve={() => {
+          track(AnalyticsEvent.ReserveOpen)
+          setReserveOpen(true)
+        }}
+      />
 
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
