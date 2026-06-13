@@ -3,6 +3,7 @@ import { motion, type Variants } from 'framer-motion'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { AnimatedNumber } from '@/components/motion-helpers'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
+import { CountdownBadge } from '@/components/CountdownBadge'
 
 const LINE_VARIANTS: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -82,6 +83,11 @@ export function Hero({
           <span className="text-foreground/70">
             Clôture estimée {formatDate(container.expectedCloseAt)}
           </span>
+          <CountdownBadge
+            target={container.expectedCloseAt}
+            withIcon={false}
+            className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/15 ml-1 inline-flex animate-pulse items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold text-[color:var(--ember)]"
+          />
         </motion.div>
 
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">

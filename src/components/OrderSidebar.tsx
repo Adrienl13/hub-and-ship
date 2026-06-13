@@ -14,6 +14,7 @@ import { ContainerFillBar } from '@/components/ContainerFillBar'
 import { ContainerFormatToggle } from '@/components/ContainerFormatToggle'
 import { ContainerScene3DFallback } from '@/components/ContainerScene3DFallback'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
+import { CountdownBadge } from '@/components/CountdownBadge'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
 import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
@@ -196,6 +197,10 @@ export function OrderSidebar({
               {container.port} · {CONTAINER_TYPE_LABEL[activeContainerType]} ·{' '}
               {capacity.toFixed(0)} m³ utiles
             </div>
+            <CountdownBadge
+              target={container.expectedCloseAt}
+              className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 mt-1.5 inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--ember)]"
+            />
           </div>
           <Button
             variant={
