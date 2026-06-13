@@ -12,11 +12,21 @@ export interface MyReferralSummary {
   readonly code: string
   readonly totalUses: number
   readonly pendingReward: number
+  readonly referredDiscount: number
+  readonly referrerReward: number
 }
 
 export interface ReferralPreviewResult {
   readonly status: ReferralApplicationStatus
   readonly referrerLabel?: string
+  readonly discount?: number
+}
+
+export interface ReferralSettings {
+  readonly referredDiscount: number
+  readonly referrerReward: number
+  readonly isActive: boolean
+  readonly maxUsesPerCode: number
 }
 
 export interface ReferralRedemption {
@@ -42,9 +52,19 @@ export interface ReferralPreviewClient {
 }
 
 export interface ReferralAdminClient {
-  rpc: (
-    fn: 'admin_list_referral_redemptions',
-  ) => PromiseLike<RpcResult<unknown>>
+  rpc: {
+    (fn: 'admin_list_referral_redemptions'): PromiseLike<RpcResult<unknown>>
+    (fn: 'get_referral_settings'): PromiseLike<RpcResult<unknown>>
+    (
+      fn: 'update_referral_settings',
+      args: {
+        p_referred_discount: number
+        p_referrer_reward: number
+        p_is_active: boolean
+        p_max_uses_per_code: number
+      },
+    ): PromiseLike<RpcResult<unknown>>
+  }
   from: (table: 'referral_redemptions') => {
     update: (values: { reward_status: 'pending' | 'honored' | 'cancelled' }) => {
       eq: (
@@ -70,6 +90,10 @@ export async function getOrCreateMyReferralCode(
     totalUses: typeof row.total_uses === 'number' ? row.total_uses : 0,
     pendingReward:
       typeof row.pending_reward === 'number' ? row.pending_reward : 0,
+    referredDiscount:
+      typeof row.referred_discount === 'number' ? row.referred_discount : 100,
+    referrerReward:
+      typeof row.referrer_reward === 'number' ? row.referrer_reward : 100,
   }
 }
 
@@ -90,7 +114,43 @@ export async function previewReferralCode(
     status: (row.status as ReferralApplicationStatus) ?? 'unknown',
     referrerLabel:
       typeof row.referrer_label === 'string' ? row.referrer_label : undefined,
+    discount: typeof row.discount === 'number' ? row.discount : undefined,
   }
+}
+
+function settingsFromRow(value: unknown): ReferralSettings {
+  const row = asRecord(value)
+  return {
+    referredDiscount:
+      typeof row.referred_discount === 'number' ? row.referred_discount : 100,
+    referrerReward:
+      typeof row.referrer_reward === 'number' ? row.referrer_reward : 100,
+    isActive: row.is_active !== false,
+    maxUsesPerCode:
+      typeof row.max_uses_per_code === 'number' ? row.max_uses_per_code : 100,
+  }
+}
+
+export async function getReferralSettings(
+  client: ReferralAdminClient,
+): Promise<ReferralSettings> {
+  const { data, error } = await client.rpc('get_referral_settings')
+  if (error) throw new Error(error.message)
+  return settingsFromRow(data)
+}
+
+export async function updateReferralSettings(
+  client: ReferralAdminClient,
+  settings: ReferralSettings,
+): Promise<ReferralSettings> {
+  const { data, error } = await client.rpc('update_referral_settings', {
+    p_referred_discount: settings.referredDiscount,
+    p_referrer_reward: settings.referrerReward,
+    p_is_active: settings.isActive,
+    p_max_uses_per_code: settings.maxUsesPerCode,
+  })
+  if (error) throw new Error(error.message)
+  return settingsFromRow(data)
 }
 
 function redemptionFromRow(value: unknown): ReferralRedemption {

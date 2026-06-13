@@ -3,15 +3,20 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { AuthStatus } from '@/hooks/useAuth'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { formatEUR } from '@/lib/order'
 import {
   adminListReferralRedemptions,
+  getReferralSettings,
   setRedemptionStatus,
+  updateReferralSettings,
   type ReferralAdminClient,
   type ReferralRedemption,
+  type ReferralSettings,
 } from '@/lib/referrals/repository'
 
 const STATUS_LABEL: Record<ReferralRedemption['rewardStatus'], string> = {
@@ -24,6 +29,8 @@ export function AdminReferralsTab({ authStatus }: { authStatus: AuthStatus }) {
   const [rows, setRows] = useState<ReadonlyArray<ReferralRedemption>>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [settings, setSettings] = useState<ReferralSettings | null>(null)
+  const [savingSettings, setSavingSettings] = useState(false)
 
   const refresh = useCallback(async () => {
     const config = getSupabasePublicConfig()
@@ -36,7 +43,12 @@ export function AdminReferralsTab({ authStatus }: { authStatus: AuthStatus }) {
       const client = createSupabaseBrowserClient(
         config,
       ) as unknown as ReferralAdminClient
-      setRows(await adminListReferralRedemptions(client))
+      const [list, current] = await Promise.all([
+        adminListReferralRedemptions(client),
+        getReferralSettings(client),
+      ])
+      setRows(list)
+      setSettings(current)
     } catch (err) {
       toast.error(
         'Lecture des parrainages impossible : ' +
@@ -46,6 +58,28 @@ export function AdminReferralsTab({ authStatus }: { authStatus: AuthStatus }) {
       setLoading(false)
     }
   }, [])
+
+  async function saveSettings(): Promise<void> {
+    if (!settings) return
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    setSavingSettings(true)
+    try {
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as unknown as ReferralAdminClient
+      const saved = await updateReferralSettings(client, settings)
+      setSettings(saved)
+      toast.success('Réglages du parrainage enregistrés.')
+    } catch (err) {
+      toast.error(
+        'Enregistrement impossible : ' +
+          (err instanceof Error ? err.message : 'erreur'),
+      )
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   useEffect(() => {
     if (authStatus === 'authenticated') void refresh()
@@ -90,6 +124,90 @@ export function AdminReferralsTab({ authStatus }: { authStatus: AuthStatus }) {
 
   return (
     <div className="space-y-4">
+      {settings && (
+        <section className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+          <h2 className="font-display text-sm font-semibold">
+            Réglages du programme
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Remise filleul (€)
+              </Label>
+              <Input
+                type="number"
+                min={0}
+                step="1"
+                value={settings.referredDiscount}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    referredDiscount: Math.max(0, Number(e.target.value)),
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Gain parrain (€)
+              </Label>
+              <Input
+                type="number"
+                min={0}
+                step="1"
+                value={settings.referrerReward}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    referrerReward: Math.max(0, Number(e.target.value)),
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Utilisations max / code
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                step="1"
+                value={settings.maxUsesPerCode}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    maxUsesPerCode: Math.max(1, Number(e.target.value)),
+                  })
+                }
+              />
+            </div>
+            <label className="flex items-end gap-2 pb-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settings.isActive}
+                onChange={(e) =>
+                  setSettings({ ...settings, isActive: e.target.checked })
+                }
+              />
+              <span>
+                {settings.isActive
+                  ? 'Programme actif'
+                  : 'Programme désactivé'}
+              </span>
+            </label>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              disabled={savingSettings}
+              onClick={() => void saveSettings()}
+            >
+              {savingSettings ? 'Enregistrement…' : 'Enregistrer les réglages'}
+            </Button>
+          </div>
+        </section>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold">
           Parrainages{' '}

@@ -86,9 +86,14 @@ function ReferralPage() {
         </h1>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">
           Partagez votre code : votre filleul gagne{' '}
-          <strong className="text-foreground">100 €</strong> sur ses frais de
-          réservation, et vous gagnez{' '}
-          <strong className="text-foreground">100 €</strong> à valoir.{' '}
+          <strong className="text-foreground">
+            {formatEUR(summary?.referredDiscount ?? 100)}
+          </strong>{' '}
+          sur ses frais de réservation, et vous gagnez{' '}
+          <strong className="text-foreground">
+            {formatEUR(summary?.referrerReward ?? 100)}
+          </strong>{' '}
+          à valoir.{' '}
           <Link
             to="/account"
             className="text-foreground underline underline-offset-4"

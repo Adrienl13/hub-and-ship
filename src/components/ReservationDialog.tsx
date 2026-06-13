@@ -239,7 +239,10 @@ export function ReservationDialog({
             form.siret,
           )
           if (cancelled) return
-          const discount = result.status === 'applied' ? Math.min(100, fee) : 0
+          const discount =
+            result.status === 'applied'
+              ? Math.min(result.discount ?? 100, fee)
+              : 0
           setReferralApplication({
             status: result.status,
             code: normalizeReferralCode(raw),
