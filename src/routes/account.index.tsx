@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CreditCard,
   FileText,
+  Gift,
   LifeBuoy,
   Loader2,
   Settings,
@@ -75,6 +76,13 @@ function AccountDashboard() {
             >
               <Star className="h-3.5 w-3.5" />
               Donner mon avis
+            </Link>
+            <Link
+              to="/account/parrainage"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Gift className="h-3.5 w-3.5" />
+              Parrainage
             </Link>
           </div>
         )}

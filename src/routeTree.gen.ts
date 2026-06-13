@@ -38,6 +38,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
 import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
+import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
@@ -194,6 +195,11 @@ const AccountReservationsRoute = AccountReservationsRouteImport.update({
   path: '/account/reservations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountParrainageRoute = AccountParrainageRouteImport.update({
+  id: '/account/parrainage',
+  path: '/account/parrainage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountParametresRoute = AccountParametresRouteImport.update({
   id: '/account/parametres',
   path: '/account/parametres',
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
   '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/transport-partenaires'
     | '/account/avis'
     | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
     | '/api/partner-requests'
     | '/api/stock-requests'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/transport-partenaires'
     | '/account/avis'
     | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
     | '/api/partner-requests'
     | '/api/stock-requests'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/transport-partenaires'
     | '/account/avis'
     | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
     | '/api/partner-requests'
     | '/api/stock-requests'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountAvisRoute: typeof AccountAvisRoute
   AccountParametresRoute: typeof AccountParametresRoute
+  AccountParrainageRoute: typeof AccountParrainageRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
@@ -704,6 +717,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReservationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/parrainage': {
+      id: '/account/parrainage'
+      path: '/account/parrainage'
+      fullPath: '/account/parrainage'
+      preLoaderRoute: typeof AccountParrainageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/parametres': {
       id: '/account/parametres'
       path: '/account/parametres'
@@ -825,6 +845,7 @@ const rootRouteChildren: RootRouteChildren = {
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountAvisRoute: AccountAvisRoute,
   AccountParametresRoute: AccountParametresRoute,
+  AccountParrainageRoute: AccountParrainageRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,

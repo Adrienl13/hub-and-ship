@@ -35,7 +35,9 @@ create unique index if not exists uq_product_reviews_one_per_user_product
 
 -- Stamp published_at when a review is first published.
 create or replace function public.set_review_published_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   if new.status = 'published' and new.status is distinct from old.status then
     new.published_at := now();

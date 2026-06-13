@@ -47,14 +47,20 @@ import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
 import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
 import {
-  applyReferralCode,
+  normalizeReferralCode,
   type ReferralApplication,
+  type ReferralApplicationStatus,
 } from '@/lib/pricing/referral'
 import {
   readPartnerLinkContext,
   type PartnerLinkContext,
 } from '@/lib/partners/link'
-import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
+import {
+  previewReferralCode,
+  type ReferralPreviewClient,
+} from '@/lib/referrals/repository'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
@@ -118,6 +124,30 @@ const DELIVERY_OPTIONS: ReadonlyArray<{
   },
 ] as const
 
+function referralMessage(
+  status: ReferralApplicationStatus,
+  referrerLabel?: string,
+): string {
+  switch (status) {
+    case 'applied':
+      return referrerLabel
+        ? `${referrerLabel} vous parraine : remise appliquée sur les frais de réservation.`
+        : 'Code parrainage appliqué : remise sur les frais de réservation.'
+    case 'unknown':
+      return 'Code parrainage introuvable.'
+    case 'inactive':
+      return 'Ce code parrainage est désactivé.'
+    case 'expired':
+      return 'Ce code parrainage a expiré.'
+    case 'exhausted':
+      return "Ce code a atteint sa limite d'utilisations."
+    case 'self_referral':
+      return 'Le parrainage ne peut pas être utilisé par la société parrainée.'
+    default:
+      return ''
+  }
+}
+
 export function ReservationDialog({
   open,
   onOpenChange,
@@ -168,17 +198,73 @@ export function ReservationDialog({
 
   const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
   const hasReservableItems = items.length > 0 && totals.subtotalHt > 0
-  const referralApplication = useMemo(
-    () =>
-      applyReferralCode({
-        codeInput: form.referralCode,
-        reservationFee: totals.reservationFee,
-        codes: MOCK_REFERRAL_CODES,
-        referredSiret: form.siret,
-        referredEmail: form.email,
-      }),
-    [form.email, form.referralCode, form.siret, totals.reservationFee],
-  )
+  // Referral validation is now server-authoritative: we preview the code via a
+  // SECURITY DEFINER RPC (real code, active, not exhausted, not self-referral)
+  // and the discount is re-checked + applied at reservation creation.
+  const [referralApplication, setReferralApplication] =
+    useState<ReferralApplication>({
+      status: 'none',
+      code: '',
+      discountAmount: 0,
+      payNow: totals.reservationFee,
+      message: '',
+    })
+
+  useEffect(() => {
+    const fee = Math.max(0, totals.reservationFee)
+    const raw = form.referralCode.trim()
+    if (!raw) {
+      setReferralApplication({
+        status: 'none',
+        code: '',
+        discountAmount: 0,
+        payNow: fee,
+        message: '',
+      })
+      return
+    }
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    let cancelled = false
+    const handle = setTimeout(() => {
+      void (async () => {
+        try {
+          const client = createSupabaseBrowserClient(
+            config,
+          ) as unknown as ReferralPreviewClient
+          const result = await previewReferralCode(
+            client,
+            raw,
+            form.email,
+            form.siret,
+          )
+          if (cancelled) return
+          const discount = result.status === 'applied' ? Math.min(100, fee) : 0
+          setReferralApplication({
+            status: result.status,
+            code: normalizeReferralCode(raw),
+            referrerLabel: result.referrerLabel,
+            discountAmount: discount,
+            payNow: Math.round((fee - discount) * 100) / 100,
+            message: referralMessage(result.status, result.referrerLabel),
+          })
+        } catch {
+          if (!cancelled)
+            setReferralApplication({
+              status: 'none',
+              code: normalizeReferralCode(raw),
+              discountAmount: 0,
+              payNow: fee,
+              message: '',
+            })
+        }
+      })()
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(handle)
+    }
+  }, [form.referralCode, form.email, form.siret, totals.reservationFee])
   const checkoutPayNow = referralApplication.payNow
   const contactValid =
     form.name.trim().length > 1 &&
