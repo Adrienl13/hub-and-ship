@@ -412,6 +412,9 @@ export function OrderSidebar({
             className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs"
           >
             <AnimRow label="Sous-total HT" value={totals.subtotalHt} />
+            <AnimRow label="TVA 20%" value={totals.vat} muted />
+            <AnimRow label="Total TTC" value={totals.totalTtc} bold />
+            <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
             <AnimRow
               label="Frais réservation (3%)"
               value={totals.reservationFee}
