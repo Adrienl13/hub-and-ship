@@ -1,7 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { ArrowRight, Copy, Link2, Plus, ShieldCheck } from 'lucide-react'
+import {
+  ArrowRight,
+  BadgeEuro,
+  Copy,
+  Handshake,
+  Link2,
+  Plus,
+  ShieldCheck,
+  ShoppingBag,
+  Trophy,
+} from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -17,10 +27,7 @@ import {
   type PartnerWorkspace,
 } from '@/lib/partners/portal'
 import { buildPartnerSharePath } from '@/lib/partners/link'
-import {
-  computePartnerReport,
-  dealsByStatus,
-} from '@/lib/partners/reporting'
+import { computePartnerReport } from '@/lib/partners/reporting'
 import { PARTNER_DEAL_STATUS_LABEL } from '@/lib/partners/types'
 import { ACCOUNT_RESERVATION_STATUS_LABEL } from '@/lib/account/reservations'
 import { formatEUR } from '@/lib/order'
@@ -77,6 +84,13 @@ function PartnerDashboard() {
 
   const application = workspace?.applications[0] ?? null
   const partnerName = application?.companyName ?? 'Partenaire'
+  const report = useMemo(
+    () =>
+      workspace
+        ? computePartnerReport(workspace.deals, workspace.reservations)
+        : null,
+    [workspace],
+  )
 
   async function createDeal(
     fields: Omit<
@@ -101,28 +115,8 @@ function PartnerDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="label-eyebrow text-[color:var(--ember)]">
-          Espace partenaire
-        </div>
-        <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-          {partnerName}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-          Vos deals protégés, votre lien co-brandé et les réservations
-          attribuées à votre canal. Les prix nets partenaires et marges restent
-          privés ; cette page ne les expose jamais.
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            asChild
-            size="sm"
-            className="h-9 rounded-sm bg-foreground px-3 text-xs text-background"
-          >
-            <a href="/partner/selections">Mes sélections co-brandées</a>
-          </Button>
-        </div>
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <PartnerHero partnerName={partnerName} report={report} />
 
         {state === 'loading' ? (
           <div className="mt-8 space-y-3">
@@ -139,11 +133,7 @@ function PartnerDashboard() {
             Réessayez dans un instant.
           </div>
         ) : workspace ? (
-          <div className="mt-8 space-y-6">
-            <ReportingCard
-              deals={workspace.deals}
-              reservations={workspace.reservations}
-            />
+          <div className="mt-6 space-y-6">
             <ShareLinkCard
               slug={application?.referralSlug ?? null}
               partnerName={partnerName}
@@ -161,56 +151,114 @@ function PartnerDashboard() {
   )
 }
 
-function ReportingCard({
-  deals,
-  reservations,
+function PartnerHero({
+  partnerName,
+  report,
 }: {
-  readonly deals: PartnerWorkspace['deals']
-  readonly reservations: PartnerWorkspace['reservations']
+  readonly partnerName: string
+  readonly report: ReturnType<typeof computePartnerReport> | null
 }) {
-  const report = computePartnerReport(deals, reservations)
-  const byStatus = dealsByStatus(deals)
-  const kpis: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'Deals protégés', value: `${report.protectedDeals}` },
-    { label: 'Deals gagnés', value: `${report.wonDeals}` },
-    {
-      label: 'Réservations attribuées',
-      value: `${report.attributedReservations}`,
-    },
-    { label: 'CA attribué HT', value: formatEUR(report.attributedTotalHt) },
-  ]
-
   return (
-    <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
-      <h2 className="font-display text-lg font-semibold">Reporting</h2>
-      <div className="mt-3 grid gap-2 sm:grid-cols-4">
-        {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/40 p-3"
-          >
-            <div className="label-eyebrow text-muted-foreground">
-              {kpi.label}
-            </div>
-            <div className="mt-1 font-display text-xl font-semibold tabular-nums">
-              {kpi.value}
-            </div>
-          </div>
-        ))}
-      </div>
-      {byStatus.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {byStatus.map((entry) => (
-            <span
-              key={entry.status}
-              className="border-[color:var(--sand-deep)] inline-flex items-center rounded-sm border bg-background px-2 py-0.5 text-[11px] text-muted-foreground"
-            >
-              {PARTNER_DEAL_STATUS_LABEL[entry.status]} · {entry.count}
+    <section className="relative overflow-hidden rounded-lg border border-[color:var(--sand-deep)]">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-br from-[color:var(--forest)]/15 via-[color:var(--sand-soft)] to-[color:var(--ember)]/10"
+      />
+      <div className="relative p-6 sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--forest)]">
+              <Handshake className="h-3.5 w-3.5" />
+              Espace partenaire
             </span>
-          ))}
+            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              {partnerName}
+            </h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              Pilotez les ventes que vous apportez, protégez vos opportunités et
+              partagez votre lien co-brandé. Vos prix nets et marges restent
+              privés.
+            </p>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            className="h-9 gap-1.5 rounded-sm bg-foreground px-3 text-xs text-background"
+          >
+            <a href="/partner/selections">
+              Mes sélections co-brandées
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </Button>
         </div>
-      )}
+
+        {report && (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <PartnerStat
+              icon={<BadgeEuro className="h-4 w-4" />}
+              label="CA apporté HT"
+              value={formatEUR(report.attributedTotalHt)}
+              highlight
+            />
+            <PartnerStat
+              icon={<ShoppingBag className="h-4 w-4" />}
+              label="Ventes attribuées"
+              value={`${report.attributedReservations}`}
+            />
+            <PartnerStat
+              icon={<Trophy className="h-4 w-4" />}
+              label="Deals gagnés"
+              value={`${report.wonDeals}`}
+            />
+            <PartnerStat
+              icon={<ShieldCheck className="h-4 w-4" />}
+              label="Deals protégés"
+              value={`${report.protectedDeals}`}
+            />
+          </div>
+        )}
+      </div>
     </section>
+  )
+}
+
+function PartnerStat({
+  icon,
+  label,
+  value,
+  highlight = false,
+}: {
+  readonly icon: ReactNode
+  readonly label: string
+  readonly value: string
+  readonly highlight?: boolean
+}) {
+  return (
+    <div
+      className={`rounded-md border bg-card/80 p-3 backdrop-blur ${
+        highlight
+          ? 'border-[color:var(--ember)]/40'
+          : 'border-[color:var(--sand-deep)]'
+      }`}
+    >
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <span
+          className={
+            highlight
+              ? 'text-[color:var(--ember)]'
+              : 'text-[color:var(--forest)]'
+          }
+        >
+          {icon}
+        </span>
+        <span className="text-[11px] font-medium uppercase tracking-[0.06em]">
+          {label}
+        </span>
+      </div>
+      <div className="mt-1.5 font-display text-2xl font-semibold tabular-nums">
+        {value}
+      </div>
+    </div>
   )
 }
 

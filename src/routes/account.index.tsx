@@ -5,6 +5,7 @@ import {
   FileText,
   Gift,
   Heart,
+  LayoutDashboard,
   LifeBuoy,
   Loader2,
   Settings,
@@ -52,18 +53,27 @@ function AccountDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="label-eyebrow text-[color:var(--ember)]">Mon espace</div>
-        <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-          Tableau de bord
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
-          Vos réservations container, paiements à venir et documents, au même
-          endroit.
-        </p>
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <section className="relative overflow-hidden rounded-lg border border-[color:var(--sand-deep)]">
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-br from-[color:var(--ember)]/12 via-[color:var(--sand-soft)] to-[color:var(--ochre)]/10"
+          />
+          <div className="relative p-6 sm:p-8">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ember)]">
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              Mon espace
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              Tableau de bord
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Vos réservations container, paiements à venir et documents, au même
+              endroit.
+            </p>
 
-        {authStatus === 'authenticated' && (
-          <div className="mt-3 flex flex-wrap items-center gap-4">
+            {authStatus === 'authenticated' && (
+              <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
               to="/account/parametres"
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -92,8 +102,11 @@ function AccountDashboard() {
               <Heart className="h-3.5 w-3.5" />
               Mes favoris
             </Link>
+              </div>
+            )}
           </div>
-        )}
+        </section>
+
 
         {authStatus !== 'authenticated' && (
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 p-4 text-sm">
