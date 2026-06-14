@@ -72,6 +72,15 @@ const securityHeadersMiddleware = createMiddleware().server(
   async ({ next }) => {
     const result = await next()
     applySecurityHeaders(result.response.headers)
+    // HTML documents must always revalidate so a new deploy is picked up
+    // immediately (hashed JS/CSS keep their own long-lived cache).
+    const contentType = result.response.headers.get('content-type') ?? ''
+    if (contentType.includes('text/html')) {
+      result.response.headers.set(
+        'Cache-Control',
+        'no-cache, must-revalidate',
+      )
+    }
     return result
   },
 )
