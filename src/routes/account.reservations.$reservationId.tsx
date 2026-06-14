@@ -54,6 +54,7 @@ import {
 } from '@/lib/reservations/local-history'
 import { listMyReservationsFromSupabase } from '@/lib/reservations/repository'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
+import { getReservationQuoteUrl } from '@/lib/reservations/quote-access'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -508,6 +509,8 @@ function DocumentsCard({
   readonly delivered: boolean
 }) {
   const [invoices, setInvoices] = useState<ReadonlyArray<Invoice>>([])
+  const getQuoteUrl = useServerFn(getReservationQuoteUrl)
+  const [loadingQuote, setLoadingQuote] = useState(false)
 
   useEffect(() => {
     const config = getSupabasePublicConfig()
@@ -529,6 +532,26 @@ function DocumentsCard({
     }
   }, [reservationId])
 
+  async function openQuote(): Promise<void> {
+    setLoadingQuote(true)
+    try {
+      const result = await getQuoteUrl({ data: { reservationId } })
+      if (result.ok) {
+        window.open(result.url, '_blank', 'noopener')
+      } else if (result.reason === 'no_file') {
+        toast.message('Devis pas encore disponible', {
+          description: 'Votre devis officiel sera ajouté ici par notre équipe.',
+        })
+      } else {
+        toast.error('Devis indisponible pour le moment.')
+      }
+    } catch {
+      toast.error('Devis indisponible pour le moment.')
+    } finally {
+      setLoadingQuote(false)
+    }
+  }
+
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -548,6 +571,17 @@ function DocumentsCard({
             </Link>
           </li>
         ))}
+        <li>
+          <button
+            type="button"
+            onClick={() => void openQuote()}
+            disabled={loadingQuote}
+            className="inline-flex items-center gap-2 text-sm font-medium hover:underline disabled:opacity-60"
+          >
+            <Download className="h-3.5 w-3.5 text-[color:var(--forest)]" />
+            {loadingQuote ? 'Ouverture…' : 'Devis officiel (PDF)'}
+          </button>
+        </li>
         <li>
           <Link
             to="/account/reservations/$reservationId/document"

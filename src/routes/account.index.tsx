@@ -394,11 +394,14 @@ function EmptyState({ authenticated }: { readonly authenticated: boolean }) {
 
 function Kpi({ label, value }: { readonly label: string; readonly value: string }) {
   return (
-    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+    <Link
+      to="/account/reservations"
+      className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[color:var(--ember)]/40 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.25)]"
+    >
       <div className="label-eyebrow text-muted-foreground">{label}</div>
       <div className="mt-2 font-display text-2xl font-semibold tabular-nums">
         {value}
       </div>
-    </div>
+    </Link>
   )
 }

@@ -16,6 +16,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { AdminGuard } from '@/components/AdminGuard'
+import { AdminReservationQuoteUpload } from '@/components/AdminReservationQuoteUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -1293,6 +1294,7 @@ function ReservationsAdminPanel({
                           Facturer
                         </Button>
                       )}
+                    <AdminReservationQuoteUpload reservationId={row.id} />
                     <Button
                       asChild
                       variant="outline"

@@ -235,6 +235,7 @@ function PartnerHero({
                 label="CA apporté HT"
                 value={report.attributedTotalHt}
                 format={(n) => formatEUR(n)}
+                targetId="partner-attributed"
                 highlight
               />
             </RevealItem>
@@ -243,6 +244,7 @@ function PartnerHero({
                 icon={<ShoppingBag className="h-4 w-4" />}
                 label="Ventes attribuées"
                 value={report.attributedReservations}
+                targetId="partner-attributed"
               />
             </RevealItem>
             <RevealItem>
@@ -250,6 +252,7 @@ function PartnerHero({
                 icon={<Trophy className="h-4 w-4" />}
                 label="Deals gagnés"
                 value={report.wonDeals}
+                targetId="partner-deals"
               />
             </RevealItem>
             <RevealItem>
@@ -257,6 +260,7 @@ function PartnerHero({
                 icon={<ShieldCheck className="h-4 w-4" />}
                 label="Deals protégés"
                 value={report.protectedDeals}
+                targetId="partner-deals"
               />
             </RevealItem>
           </RevealStagger>
@@ -271,17 +275,27 @@ function PartnerStat({
   label,
   value,
   format,
+  targetId,
   highlight = false,
 }: {
   readonly icon: ReactNode
   readonly label: string
   readonly value: number
   readonly format?: (n: number) => string
+  readonly targetId?: string
   readonly highlight?: boolean
 }) {
+  const goToTarget = () => {
+    if (!targetId) return
+    document
+      .getElementById(targetId)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   return (
-    <div
-      className={`group h-full rounded-md border bg-card/80 p-3 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.3)] ${
+    <button
+      type="button"
+      onClick={goToTarget}
+      className={`group h-full w-full rounded-md border bg-card/80 p-3 text-left backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.3)] ${
         highlight
           ? 'border-[color:var(--ember)]/50'
           : 'border-[color:var(--sand-deep)]'
@@ -304,7 +318,7 @@ function PartnerStat({
       <div className="mt-1.5 font-display text-2xl font-semibold tabular-nums">
         <AnimatedNumber value={value} format={format} />
       </div>
-    </div>
+    </button>
   )
 }
 
@@ -398,7 +412,10 @@ function DealsCard({
   const [formOpen, setFormOpen] = useState(false)
 
   return (
-    <section className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+    <section
+      id="partner-deals"
+      className="scroll-mt-24 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+    >
       <div className="flex items-center justify-between gap-2 border-b border-[color:var(--sand-deep)] px-5 py-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-[color:var(--forest)]" />
@@ -620,7 +637,10 @@ function AttributedReservationsCard({
   readonly reservations: PartnerWorkspace['reservations']
 }) {
   return (
-    <section className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+    <section
+      id="partner-attributed"
+      className="scroll-mt-24 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+    >
       <div className="border-b border-[color:var(--sand-deep)] px-5 py-3">
         <h2 className="font-display text-lg font-semibold">
           Réservations attribuées ({reservations.length})
