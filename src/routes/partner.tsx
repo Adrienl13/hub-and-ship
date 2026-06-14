@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+
+import {
+  AnimatedNumber,
+  RevealItem,
+  RevealStagger,
+} from '@/components/motion-helpers'
 import {
   ArrowRight,
   BadgeEuro,
@@ -159,19 +166,47 @@ function PartnerHero({
   readonly report: ReturnType<typeof computePartnerReport> | null
 }) {
   return (
-    <section className="relative overflow-hidden rounded-lg border border-[color:var(--sand-deep)]">
+    <section className="relative overflow-hidden rounded-xl border border-[color:var(--forest)]/30 shadow-paper">
+      {/* Base gradient — assumed (franc) */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-br from-[color:var(--forest)]/15 via-[color:var(--sand-soft)] to-[color:var(--ember)]/10"
+        className="absolute inset-0 bg-gradient-to-br from-[color:var(--forest)]/40 via-[color:var(--sand-soft)] to-[color:var(--ember)]/35"
       />
+      {/* Aura animée */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <motion.div
+          className="absolute -left-16 -top-24 h-60 w-60 rounded-full bg-[color:var(--forest)]/35 blur-3xl"
+          animate={{ x: [0, 45, 0], y: [0, 22, 0], scale: [1, 1.18, 1] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute right-[-6%] top-1/3 h-72 w-72 rounded-full bg-[color:var(--ember)]/25 blur-3xl"
+          animate={{ x: [0, -45, 0], y: [0, -18, 0], scale: [1, 1.22, 1] }}
+          transition={{ duration: 21, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-[-20%] left-1/3 h-52 w-52 rounded-full bg-[color:var(--ochre)]/25 blur-3xl"
+          animate={{ x: [0, -25, 0], y: [0, -30, 0], scale: [1, 1.12, 1] }}
+          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+
       <div className="relative p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+          className="flex flex-wrap items-start justify-between gap-4"
+        >
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--forest)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--forest)] shadow-sm backdrop-blur">
               <Handshake className="h-3.5 w-3.5" />
               Espace partenaire
             </span>
-            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-[2.6rem] sm:leading-[1.05]">
               {partnerName}
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
@@ -183,39 +218,48 @@ function PartnerHero({
           <Button
             asChild
             size="sm"
-            className="h-9 gap-1.5 rounded-sm bg-foreground px-3 text-xs text-background"
+            className="h-9 gap-1.5 rounded-sm bg-[color:var(--forest)] px-3 text-xs text-[color:var(--sand)] hover:opacity-90"
           >
             <a href="/partner/selections">
               Mes sélections co-brandées
               <ArrowRight className="h-3.5 w-3.5" />
             </a>
           </Button>
-        </div>
+        </motion.div>
 
         {report && (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <PartnerStat
-              icon={<BadgeEuro className="h-4 w-4" />}
-              label="CA apporté HT"
-              value={formatEUR(report.attributedTotalHt)}
-              highlight
-            />
-            <PartnerStat
-              icon={<ShoppingBag className="h-4 w-4" />}
-              label="Ventes attribuées"
-              value={`${report.attributedReservations}`}
-            />
-            <PartnerStat
-              icon={<Trophy className="h-4 w-4" />}
-              label="Deals gagnés"
-              value={`${report.wonDeals}`}
-            />
-            <PartnerStat
-              icon={<ShieldCheck className="h-4 w-4" />}
-              label="Deals protégés"
-              value={`${report.protectedDeals}`}
-            />
-          </div>
+          <RevealStagger className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <RevealItem>
+              <PartnerStat
+                icon={<BadgeEuro className="h-4 w-4" />}
+                label="CA apporté HT"
+                value={report.attributedTotalHt}
+                format={(n) => formatEUR(n)}
+                highlight
+              />
+            </RevealItem>
+            <RevealItem>
+              <PartnerStat
+                icon={<ShoppingBag className="h-4 w-4" />}
+                label="Ventes attribuées"
+                value={report.attributedReservations}
+              />
+            </RevealItem>
+            <RevealItem>
+              <PartnerStat
+                icon={<Trophy className="h-4 w-4" />}
+                label="Deals gagnés"
+                value={report.wonDeals}
+              />
+            </RevealItem>
+            <RevealItem>
+              <PartnerStat
+                icon={<ShieldCheck className="h-4 w-4" />}
+                label="Deals protégés"
+                value={report.protectedDeals}
+              />
+            </RevealItem>
+          </RevealStagger>
         )}
       </div>
     </section>
@@ -226,28 +270,30 @@ function PartnerStat({
   icon,
   label,
   value,
+  format,
   highlight = false,
 }: {
   readonly icon: ReactNode
   readonly label: string
-  readonly value: string
+  readonly value: number
+  readonly format?: (n: number) => string
   readonly highlight?: boolean
 }) {
   return (
     <div
-      className={`rounded-md border bg-card/80 p-3 backdrop-blur ${
+      className={`group h-full rounded-md border bg-card/80 p-3 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.3)] ${
         highlight
-          ? 'border-[color:var(--ember)]/40'
+          ? 'border-[color:var(--ember)]/50'
           : 'border-[color:var(--sand-deep)]'
       }`}
     >
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <span
-          className={
+          className={`transition-transform duration-300 group-hover:scale-110 ${
             highlight
               ? 'text-[color:var(--ember)]'
               : 'text-[color:var(--forest)]'
-          }
+          }`}
         >
           {icon}
         </span>
@@ -256,7 +302,7 @@ function PartnerStat({
         </span>
       </div>
       <div className="mt-1.5 font-display text-2xl font-semibold tabular-nums">
-        {value}
+        <AnimatedNumber value={value} format={format} />
       </div>
     </div>
   )

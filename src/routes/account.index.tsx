@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { motion } from 'framer-motion'
 import {
   ArrowRight,
   CreditCard,
@@ -54,12 +55,32 @@ function AccountDashboard() {
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <section className="relative overflow-hidden rounded-lg border border-[color:var(--sand-deep)]">
+        <section className="shadow-paper relative overflow-hidden rounded-xl border border-[color:var(--ember)]/30">
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-br from-[color:var(--ember)]/12 via-[color:var(--sand-soft)] to-[color:var(--ochre)]/10"
+            className="absolute inset-0 bg-gradient-to-br from-[color:var(--ember)]/35 via-[color:var(--sand-soft)] to-[color:var(--ochre)]/30"
           />
-          <div className="relative p-6 sm:p-8">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+          >
+            <motion.div
+              className="absolute -left-12 -top-20 h-52 w-52 rounded-full bg-[color:var(--ember)]/30 blur-3xl"
+              animate={{ x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.18, 1] }}
+              transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute right-[-5%] top-1/4 h-60 w-60 rounded-full bg-[color:var(--ochre)]/25 blur-3xl"
+              animate={{ x: [0, -40, 0], y: [0, -15, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            className="relative p-6 sm:p-8"
+          >
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ember)]">
               <LayoutDashboard className="h-3.5 w-3.5" />
               Mon espace
@@ -104,7 +125,7 @@ function AccountDashboard() {
             </Link>
               </div>
             )}
-          </div>
+          </motion.div>
         </section>
 
 
