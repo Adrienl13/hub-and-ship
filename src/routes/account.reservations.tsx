@@ -166,19 +166,63 @@ function AccountReservationsPage() {
             ) : reservations.length === 0 ? (
               <EmptyReservations authStatus={auth.status} />
             ) : (
-              <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-                {reservations.map((reservation) => (
-                  <ReservationRow
-                    key={reservation.id}
-                    reservation={reservation}
-                  />
-                ))}
-              </div>
+              <ReservationGroups reservations={reservations} />
             )}
           </div>
         </div>
       </section>
     </main>
+  )
+}
+
+function ReservationGroups({
+  reservations,
+}: {
+  readonly reservations: ReadonlyArray<AccountReservation>
+}) {
+  const active = reservations.filter(
+    (r) => r.status !== 'delivered' && r.status !== 'cancelled',
+  )
+  const history = reservations.filter(
+    (r) => r.status === 'delivered' || r.status === 'cancelled',
+  )
+
+  return (
+    <div>
+      {active.length > 0 && (
+        <ReservationGroup title="En cours" count={active.length} reservations={active} />
+      )}
+      {history.length > 0 && (
+        <ReservationGroup
+          title="Historique"
+          count={history.length}
+          reservations={history}
+        />
+      )}
+    </div>
+  )
+}
+
+function ReservationGroup({
+  title,
+  count,
+  reservations,
+}: {
+  readonly title: string
+  readonly count: number
+  readonly reservations: ReadonlyArray<AccountReservation>
+}) {
+  return (
+    <div>
+      <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {title} ({count})
+      </div>
+      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
+        {reservations.map((reservation) => (
+          <ReservationRow key={reservation.id} reservation={reservation} />
+        ))}
+      </div>
+    </div>
   )
 }
 

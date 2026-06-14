@@ -40,6 +40,7 @@ import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-req
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
 import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
+import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
@@ -205,6 +206,11 @@ const AccountParametresRoute = AccountParametresRouteImport.update({
   path: '/account/parametres',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountFavorisRoute = AccountFavorisRouteImport.update({
+  id: '/account/favoris',
+  path: '/account/favoris',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountAvisRoute = AccountAvisRouteImport.update({
   id: '/account/avis',
   path: '/account/avis',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -492,6 +504,7 @@ export interface RootRouteChildren {
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountAvisRoute: typeof AccountAvisRoute
+  AccountFavorisRoute: typeof AccountFavorisRoute
   AccountParametresRoute: typeof AccountParametresRoute
   AccountParrainageRoute: typeof AccountParrainageRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
@@ -731,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountParametresRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/favoris': {
+      id: '/account/favoris'
+      path: '/account/favoris'
+      fullPath: '/account/favoris'
+      preLoaderRoute: typeof AccountFavorisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/avis': {
       id: '/account/avis'
       path: '/account/avis'
@@ -844,6 +864,7 @@ const rootRouteChildren: RootRouteChildren = {
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountAvisRoute: AccountAvisRoute,
+  AccountFavorisRoute: AccountFavorisRoute,
   AccountParametresRoute: AccountParametresRoute,
   AccountParrainageRoute: AccountParrainageRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,

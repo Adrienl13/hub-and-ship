@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { Info } from 'lucide-react'
+import { Heart, Info } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
@@ -17,6 +17,8 @@ function ProductCardComponent({
   onOpenDetails,
   compareSelected,
   onToggleCompare,
+  isFavorite,
+  onToggleFavorite,
 }: {
   product: Product
   variantId: string
@@ -26,6 +28,8 @@ function ProductCardComponent({
   onOpenDetails?: () => void
   compareSelected?: boolean
   onToggleCompare?: () => void
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
 }) {
   const variant = useMemo(
     () =>
@@ -66,6 +70,26 @@ function ProductCardComponent({
         <span className="pointer-events-none absolute left-2 top-2 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--ink)] shadow-sm backdrop-blur">
           {CATEGORY_LABEL[product.category]}
         </span>
+
+        {onToggleFavorite && (
+          <button
+            type="button"
+            onClick={onToggleFavorite}
+            aria-pressed={isFavorite}
+            aria-label={
+              isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'
+            }
+            className="absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 backdrop-blur transition-colors hover:bg-white"
+          >
+            <Heart
+              className={`h-4 w-4 ${
+                isFavorite
+                  ? 'fill-[color:var(--ember)] text-[color:var(--ember)]'
+                  : 'text-[color:var(--ink)]/60'
+              }`}
+            />
+          </button>
+        )}
 
         {onToggleCompare && (
           <button

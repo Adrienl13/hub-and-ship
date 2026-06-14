@@ -4,6 +4,7 @@ import {
   CreditCard,
   FileText,
   Gift,
+  Heart,
   LifeBuoy,
   Loader2,
   Settings,
@@ -83,6 +84,13 @@ function AccountDashboard() {
             >
               <Gift className="h-3.5 w-3.5" />
               Parrainage
+            </Link>
+            <Link
+              to="/account/favoris"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Heart className="h-3.5 w-3.5" />
+              Mes favoris
             </Link>
           </div>
         )}

@@ -41,6 +41,7 @@ import {
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
 import { useCatalog } from '@/hooks/useCatalog'
+import { useFavorites } from '@/hooks/useFavorites'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
 import {
   breadcrumbJsonLd,
@@ -91,6 +92,7 @@ const LazyReservationDialog = lazy(() =>
 
 function CataloguePage() {
   const { products, currentContainer } = useCatalog()
+  const favorites = useFavorites()
   const productsArray = useMemo(() => [...products], [products])
   const reservedItems = useMemo(
     () => buildReservedLoadItems(productsArray),
@@ -460,6 +462,8 @@ function CataloguePage() {
                       onOpenDetails={() => setDetailId(product.id)}
                       compareSelected={compareIds.has(product.id)}
                       onToggleCompare={() => toggleCompare(product.id)}
+                      isFavorite={favorites.isFavorite(product.id)}
+                      onToggleFavorite={() => favorites.toggle(product.id)}
                     />
                   )
                 })}
