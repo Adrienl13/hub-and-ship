@@ -47,7 +47,6 @@ function LoginPage() {
   const parsedEmail = businessEmailSchema.safeParse(email)
   const emailError =
     email && !parsedEmail.success ? 'Email invalide' : undefined
-  const missingConfigLabel = auth.missingConfig.join(', ')
 
   // Already signed in? Bounce them to their destination — no need to send
   // another magic link.
@@ -96,7 +95,9 @@ function LoginPage() {
           remaining: rateLimit.remaining,
         },
       })
-      toast.success('Lien magique envoyé', { description: result.message })
+      toast.success('Lien de connexion envoyé', {
+        description: 'Vérifiez votre boîte email (et vos spams).',
+      })
     } else {
       toast.error('Connexion indisponible', { description: result.message })
     }
@@ -116,23 +117,25 @@ function LoginPage() {
         <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6">
           <div className="mb-6">
             <div className="label-eyebrow text-[color:var(--ember)]">
-              Espace professionnel
+              Votre espace pro
             </div>
             <h1 className="mt-2 font-display text-3xl tracking-tight">
-              Connexion par lien magique.
+              Connexion sécurisée.
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Entrez votre email professionnel. Aucun mot de passe à mémoriser,
-              Supabase Auth enverra un lien de connexion sécurisé.
+              Entrez votre email : nous vous envoyons un lien de connexion. Aucun
+              mot de passe à créer ni à retenir.
             </p>
           </div>
 
           {!auth.isConfigured && (
             <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 mb-5 rounded-md border p-3 text-xs leading-5">
-              Supabase Auth est indisponible tant que les variables publiques{' '}
-              <code>{missingConfigLabel}</code> ne sont pas renseignées. En
-              local, ajoutez-les dans <code>.env.local</code> puis redémarrez ;
-              en production, ajoutez-les au build puis redéployez.
+              La connexion est momentanément indisponible. Merci de réessayer
+              dans quelques minutes, ou écrivez-nous à{' '}
+              <a className="underline" href="mailto:contact@prosimport.com">
+                contact@prosimport.com
+              </a>
+              .
             </div>
           )}
 
@@ -158,17 +161,27 @@ function LoginPage() {
             >
               <Mail className="h-4 w-4" />
               {!auth.isConfigured
-                ? 'Configuration Supabase requise'
+                ? 'Connexion momentanément indisponible'
                 : submitting
-                  ? 'Envoi...'
-                  : 'Recevoir mon lien magique'}
+                  ? 'Envoi…'
+                  : 'Recevoir mon lien de connexion'}
             </Button>
           </form>
 
-          <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-            Les accès admin demanderont une 2FA TOTP dans une phase suivante.
-          </div>
+          <ul className="mt-6 space-y-2 border-t border-[color:var(--sand-deep)] pt-5 text-xs text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--forest)]" />
+              Connexion chiffrée, sans mot de passe à gérer.
+            </li>
+            <li className="flex items-start gap-2">
+              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--forest)]" />
+              Le lien arrive par email (pensez à vérifier vos spams).
+            </li>
+            <li className="flex items-start gap-2">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--forest)]" />
+              Vos réservations, paiements et factures réunis au même endroit.
+            </li>
+          </ul>
         </section>
       </div>
     </main>
