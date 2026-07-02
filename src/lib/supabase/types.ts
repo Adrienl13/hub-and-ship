@@ -28,6 +28,17 @@ export type StockRequestStatus =
   | 'reserved'
   | 'converted'
   | 'closed'
+export type PartnerTargetStatus =
+  | 'apporteur'
+  | 'revendeur'
+  | 'grand_compte'
+  | 'distributeur'
+  | 'nsp'
+export type PartnerApplicationStatus =
+  | 'new'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -486,6 +497,52 @@ type StockRequestInsert = {
 
 type StockRequestUpdate = Partial<StockRequestInsert>
 
+type PartnerApplicationRow = {
+  id: string
+  company_name: string
+  siret: string
+  siret_verified: boolean
+  contact_name: string
+  email: string
+  phone: string | null
+  activity_profile: string
+  target_status: PartnerTargetStatus
+  zone: string | null
+  estimated_volume: string | null
+  message: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
+  status: PartnerApplicationStatus
+  admin_notes: string | null
+  created_at: string
+}
+
+type PartnerApplicationInsert = {
+  id?: string
+  company_name: string
+  siret: string
+  siret_verified?: boolean
+  contact_name: string
+  email: string
+  phone?: string | null
+  activity_profile: string
+  target_status: PartnerTargetStatus
+  zone?: string | null
+  estimated_volume?: string | null
+  message?: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
+  status?: PartnerApplicationStatus
+  admin_notes?: string | null
+  created_at?: string
+}
+
+type PartnerApplicationUpdate = Partial<PartnerApplicationInsert>
+
 type ContainerRow = {
   id: string
   reference: string
@@ -778,6 +835,11 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      partner_applications: {
+        Row: PartnerApplicationRow
+        Insert: PartnerApplicationInsert
+        Update: PartnerApplicationUpdate
+      }
       stock_lines: {
         Row: StockLineRow
         Insert: StockLineInsert
@@ -838,6 +900,8 @@ export interface Database {
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
+      partner_target_status: PartnerTargetStatus
+      partner_application_status: PartnerApplicationStatus
       stock_condition: StockCondition
       security_event_type: SecurityEventType
       container_status: ContainerStatus

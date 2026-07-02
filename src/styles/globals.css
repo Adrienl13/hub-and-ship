@@ -32,9 +32,17 @@
     --ink: #1a1a1c;
     --ink-soft: #5a544a;
     --ember: #b85c1f;
+    --ember-hover: #9d4d18;
     --ember-soft: #f4e3d1;
     --forest: #3a5a3a;
+    --forest-bg: #e8eee0;
     --ochre: #9a7b2a;
+    --muted: #8a8276;
+    --border-strong: #c9bfac;
+    --paper: #ffffff;
+    --stamp: #8a3a2a;
+    --stamp-bg: #f0d8cc;
+    --info: #3a4f6a;
 
     --color-bg-base: #f4ede1;
     --color-bg-alt: #faf6ee;
@@ -100,6 +108,13 @@
     font-weight: 500;
     letter-spacing: 0.085em;
     text-transform: uppercase;
+  }
+
+  /* JetBrains Mono — used for plates, labels and manifest-style codes
+     (partner program page, admin plates). Loaded via Google Fonts in
+     __root.tsx. */
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
   }
 
   .shadow-paper {

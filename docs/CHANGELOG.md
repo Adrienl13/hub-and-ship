@@ -6,6 +6,44 @@
 
 ## [Non publié]
 
+### Ajouté — LOT 3 : Page publique /partenaires + candidatures
+
+- **Page publique `/partenaires`** (`src/routes/partenaires.tsx` + composants
+  `src/components/partenaires/*`) : implémentation fidèle de `partenaires-mockup.html`
+  — hero + 4 stats, sélecteur de profil interactif (chips → recommandation +
+  pré-remplissage du formulaire + surbrillance des cartes), 4 cartes de statut
+  (AP-08 apporteur, RV-AG revendeur, GC-CA grand compte, DX-PAYS distributeur),
+  bloc « Réseaux & tournées » brasseurs, tableau comparatif, process 4 étapes,
+  formulaire de candidature, panneau de confiance, FAQ. Réutilise `Header`/`Footer`,
+  tokens `--sand`/`--ink`/`--ember`, et **JetBrains Mono** (ajoutée aux fonts +
+  utilitaire `.mono`) pour les plaques/labels.
+- **Migration `partner_applications`** (`20260702110000`) : enums
+  `partner_target_status` + `partner_application_status`, table complète (+ colonnes
+  d'attribution LOT 2), RLS insert anonyme `with check(true)` + gestion admin
+  (`current_user_role()`), index de triage + `partner_ref`. `types.ts` étendu
+  (Row/Insert/Update + enums enregistrés).
+- **Domaine + server function** :
+  - `src/lib/partner-applications.ts` — schéma Zod (SIRET 14 chiffres + clé de
+    contrôle Luhn, email, champs requis), `buildPartnerApplicationDraft`,
+    `toPartnerApplicationInsertPayload` (`siret_verified=false` : vérification
+    INSEE déférée à l'admin car l'edge function `verify-siret` exige une session).
+  - `partner-applications.repository.ts` — insert anonyme (write-only, id généré
+    client, attribution fusionnée), `usePartnerApplicationCreation` hook.
+  - `sendPartnerApplicationNotification` (server fn) — re-fetch service-role +
+    2 emails Resend (notification admin + accusé candidat « réponse sous 48h »),
+    pattern skipped-when-not-configured.
+- **Événement Plausible** `partner_application_submitted` déclenché à la soumission.
+- **Admin — onglet « Partenaires »** (`AdminPartnerApplicationsTab` +
+  `src/lib/partner-applications/admin-repository.ts`) : liste, filtres statut/profil
+  + recherche, transitions `new → in_review → approved/rejected` (+ rouvrir),
+  `admin_notes` save-on-blur, affichage de l'attribution UTM. Enregistré dans
+  `admin.tsx`.
+- **Nav & SEO** : lien « Devenir partenaire » (Header + Footer), `/partenaires`
+  ajouté au `sitemap.xml`.
+- **Tests** : `partner-applications.test.ts`, `.repository.test.ts`,
+  `partner-application-templates.test.ts`, migration test sécurité. `npm run check`
+  vert (typecheck, lint `--max-warnings=0`, 176 tests) + build Vite OK.
+
 ### Ajouté — LOT 2 : Analytics + attribution UTM
 
 - **Plausible analytics** branché dans `src/routes/__root.tsx` (script `defer`

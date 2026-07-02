@@ -377,6 +377,27 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-02 — LOT 3 (Page /partenaires + candidatures)
+
+- Phase : Réseau partenaires — LOT 3 (page publique + candidatures + admin)
+- Tâches : page `/partenaires` fidèle à `partenaires-mockup.html` (hero + stats,
+  sélecteur de profil interactif avec recommandation/pré-remplissage, 4 cartes de
+  statut, bloc brasseurs, comparatif, process, formulaire, FAQ) découpée en
+  `src/components/partenaires/*`. Migration `partner_applications` (enums + table +
+  attribution + RLS anon-insert/admin) + `types.ts`. Domaine
+  `src/lib/partner-applications.ts` (Zod SIRET Luhn, builder, mapper,
+  `siret_verified=false` déféré admin), repository anon + hook, server fn
+  `sendPartnerApplicationNotification` (2 emails Resend admin + accusé 48h),
+  événement `partner_application_submitted`. Onglet admin « Partenaires »
+  (liste/filtres/transitions new→in_review→approved/rejected + admin_notes +
+  attribution). JetBrains Mono ajoutée (fonts + `.mono`). Liens Header/Footer +
+  sitemap.
+- Tests : builder, repository, templates email, migration sécurité.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 176 tests) + build OK.
+- Note : branche empilée sur LOT 2 (attribution). SIRET INSEE non vérifié à la
+  soumission anonyme (edge function `verify-siret` exige une session) → l'admin
+  vérifie ; `partner_application_submitted` déjà présent dans l'union LOT 2.
+
 ### Session du 2026-07-02 — LOT 2 (Analytics + attribution UTM)
 
 - Phase : Réseau partenaires — LOT 2 (mesure des liens/QR partenaires)
