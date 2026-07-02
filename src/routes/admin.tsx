@@ -16,6 +16,7 @@ import type { ReactNode } from 'react'
 
 import { AdminCarrierPartnersTab } from '@/components/AdminCarrierPartnersTab'
 import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
+import { AdminCompaniesTab } from '@/components/AdminCompaniesTab'
 import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
 import { AdminPartnerApplicationsTab } from '@/components/AdminPartnerApplicationsTab'
@@ -60,6 +61,7 @@ const ADMIN_TABS = [
   'stock-requests',
   'reservations',
   'partner-applications',
+  'companies',
   'products',
   'containers',
   'stock',
@@ -170,6 +172,7 @@ function AdminPage() {
               ['stock-requests', 'Demandes stock'],
               ['reservations', 'Réservations'],
               ['partner-applications', 'Partenaires'],
+              ['companies', 'Comptes'],
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
               ['stock', 'Stock 24h'],
@@ -205,6 +208,9 @@ function AdminPage() {
         )}
         {activeTab === 'partner-applications' && (
           <AdminPartnerApplicationsTab authStatus={auth.status} />
+        )}
+        {activeTab === 'companies' && (
+          <AdminCompaniesTab authStatus={auth.status} />
         )}
         {activeTab === 'products' && (
           <AdminCatalogueTab authStatus={auth.status} />

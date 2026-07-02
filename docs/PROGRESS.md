@@ -392,8 +392,9 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
   hors direct. `types.ts` étendu.
 - Tests : `channel.test.ts` (12), `channel-golden-rule.test.ts` (2), migration sécurité (7).
   `npm run check` vert (typecheck, lint `--max-warnings=0`, 198 tests) + build OK.
-- Note : branche consolidée (LOT 1+2+3+4). UI admin d'attribution du canal déférée
-  (Phase 5 Companies) — canal posé via admin/SQL, trigger garantit admin-only.
+- Onglet admin « Comptes » (`AdminCompaniesTab`) : liste sociétés + bascule du canal
+  en un clic (journalisée), RLS + trigger admin-only.
+- Note : branche consolidée (LOT 1+2+3+4).
 
 ### Session du 2026-07-02 — LOT 3 (Page /partenaires + candidatures)
 

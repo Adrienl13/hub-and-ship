@@ -32,6 +32,10 @@
 - **UI** : hook `useChannel` (RPC `current_channel`), badge discret « Tarif <canal> actif »
   dans le `Header` si canal ≠ direct, et masquage des remises volume (`TieredPricingViz`)
   pour les canaux non-direct.
+- **Admin — onglet « Comptes »** (`AdminCompaniesTab` + `src/lib/companies/admin-repository.ts`) :
+  liste des sociétés, filtre par canal + recherche, bascule du canal en un clic
+  (`direct/revendeur/distributeur/grand_compte`) — action journalisée
+  (`logAdminAction`), RLS + trigger garantissant l'admin-only côté serveur.
 - **Types** : `SalesChannel`, colonnes `companies.channel`, tables `channel_coefficients`
   / `channel_price_overrides`, RPC `get_catalogue_prices`/`current_channel` enregistrés.
 
@@ -44,9 +48,8 @@
                                   get_catalogue_prices() + current_channel())
 ```
 
-**Déféré (hors périmètre foundation)** : l'UI admin d'attribution du canal (onglet
-Companies, Phase 5) — le canal se pose pour l'instant via admin/SQL, le trigger garantit
-que seul un admin peut le changer.
+Le canal s'attribue désormais depuis l'onglet admin « Comptes » (ou en SQL) ; le trigger
+garantit que seul un admin peut le changer.
 
 ### Ajouté — LOT 3 : Page publique /partenaires + candidatures
 
