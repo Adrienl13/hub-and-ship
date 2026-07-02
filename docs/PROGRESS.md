@@ -195,7 +195,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - 🔄 MobileStickyCart Lovable intégré
 - 🔄 OrderSummary Lovable intégré
 - 🔄 PricingBreakdown Lovable intégré
-- 🔄 TieredPricingViz (remises quantité client 2/6/10%)
+- 🔄 TieredPricingViz (remises quantité client — grille v2 : 100u→6% / 150u→10%)
 - ✅ DeliveryInfoBox (home + rappel compact panier)
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
@@ -376,6 +376,13 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
+
+### Session du 2026-07-02 — LOT 1 (paliers remise directe)
+
+- Phase : Réseau partenaires — LOT 1 (alignement grille remise v2)
+- Tâches : `CUSTOMER_QUANTITY_DISCOUNT_TIERS` remplacé par la grille officielle v2 (100u→6% / 150u→10%), abandon des anciens paliers 50u→2% / 150u→6% / 300u→10%. Tests `customer-discounts.test.ts` réécrits sur les bornes v2 (99→0%, 100→6%, 149→6%, 150→10%, palier max sans next tier). `TieredPricingViz` passé en `grid-cols-2` (2 paliers) — le composant lit déjà la constante donc l'affichage panier suit la grille v2.
+- Vérification base : la remise quantité client est purement informative (`TieredPricingViz`), jamais appliquée aux totaux ni persistée (seules `referral_discount`/`loyalty_discount` existent). Aucune réservation n'a donc pu « bénéficier » de l'ancien palier 50u→2% ⇒ rien à honorer rétroactivement.
+- Tests : `npm run check` vert (typecheck 0 erreur, lint `--max-warnings=0`, 135 tests Vitest).
 
 ### Session du 2026-05-17
 
