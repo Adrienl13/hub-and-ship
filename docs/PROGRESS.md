@@ -377,6 +377,23 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-02 — LOT 2 (Analytics + attribution UTM)
+
+- Phase : Réseau partenaires — LOT 2 (mesure des liens/QR partenaires)
+- Tâches : Plausible branché dans `__root.tsx` (domaine via `VITE_PLAUSIBLE_DOMAIN`,
+  RGPD-friendly). Helper `src/lib/analytics/plausible.ts` (`trackEvent`) + 5 événements
+  custom câblés (`reservation_started`, `reservation_paid`, `stock_request_submitted`,
+  `quote_pdf_opened` ; `partner_application_submitted` prêt pour LOT 3). Capture
+  first-touch `utm_*`/`ref` dans `src/lib/analytics/attribution.ts` (localStorage
+  `cc_attribution`, TTL 90 j, first-touch wins). Colonnes `utm_source/utm_medium/
+  utm_campaign/partner_ref` (nullable) ajoutées à `reservations` + `stock_requests`
+  (migration `20260702100000_attribution_columns`), fusionnées sur les inserts via
+  les hooks de création. `src/lib/supabase/types.ts` étendu.
+- Tests : `attribution.test.ts` (18), passthrough repository, migration test sécurité.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 158 tests) + build Vite OK.
+- Note : `partner_applications` (LOT 3) recevra les mêmes 4 colonnes + l'événement
+  `partner_application_submitted`.
+
 ### Session du 2026-05-17
 
 - Phase : Session 0 — Initialisation projet

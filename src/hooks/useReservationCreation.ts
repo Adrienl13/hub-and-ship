@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 
+import { getAttributionFields } from '@/lib/analytics/attribution'
 import type { ReservationDraft } from '@/lib/reservations/draft'
 import { saveReservationDraftToLocalHistory } from '@/lib/reservations/local-history'
 import {
@@ -53,6 +54,7 @@ export function useReservationCreation() {
         const reservation = await createReservationInSupabase({
           client,
           draft,
+          attribution: getAttributionFields(Date.now()),
         })
 
         saveLocalHistory(true)

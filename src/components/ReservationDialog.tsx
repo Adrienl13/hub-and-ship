@@ -39,6 +39,7 @@ import {
   type SiretInputState,
 } from '@/components/security/SiretInput'
 import { ValidatedInput } from '@/components/security/ValidatedInput'
+import { trackEvent } from '@/lib/analytics/plausible'
 import { useReservationCreation } from '@/hooks/useReservationCreation'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
@@ -192,6 +193,8 @@ export function ReservationDialog({
 
   useEffect(() => {
     if (!open || typeof window === 'undefined') return
+
+    trackEvent('reservation_started')
 
     const params = new URLSearchParams(window.location.search)
     const refFromUrl = params.get('ref')

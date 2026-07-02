@@ -2,6 +2,7 @@
 // Container Club — devis PDF (print-to-PDF)
 // ============================================================
 
+import { trackEvent } from './analytics/plausible'
 import { CATEGORY_LABEL } from './products'
 import type { CartItem, OrderTotals } from './order'
 
@@ -274,6 +275,10 @@ function buildHTML(q: QuoteData): string {
 }
 
 export function openQuotePDF(q: QuoteData) {
+  trackEvent('quote_pdf_opened', {
+    container: q.containerRef,
+    items: q.items.length,
+  })
   const html = buildHTML(q)
   const win = window.open(
     '',

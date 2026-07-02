@@ -6,7 +6,43 @@
 
 ## [Non publié]
 
-Aucun changement en cours.
+### Ajouté — LOT 2 : Analytics + attribution UTM
+
+- **Plausible analytics** branché dans `src/routes/__root.tsx` (script `defer`
+  + snippet d'init de la queue `plausible()`), domaine via `VITE_PLAUSIBLE_DOMAIN`
+  et host via `VITE_PLAUSIBLE_API_HOST`. Chargé uniquement si un domaine est
+  configuré. RGPD-friendly, pas de bandeau cookies.
+- **Événements custom** (`src/lib/analytics/plausible.ts`, `trackEvent`) câblés :
+  - `reservation_started` — ouverture du `ReservationDialog`
+  - `reservation_paid` — retour Stripe `?session_id=` sur la page réservation
+  - `stock_request_submitted` — demande stock 24h enregistrée
+  - `quote_pdf_opened` — centralisé dans `openQuotePDF` (couvre home + catalogue)
+  - `partner_application_submitted` — type prêt, câblage en LOT 3 (formulaire à venir)
+- **Attribution first-touch** (`src/lib/analytics/attribution.ts`) : capture
+  `utm_source / utm_medium / utm_campaign / ref` depuis le querystring au premier
+  chargement, persistée en `localStorage` (`cc_attribution`, TTL 90 j). First-touch
+  wins — jamais écrasée. Capture déclenchée dans un `useEffect` racine.
+- **Écriture en base** : les 4 champs d'attribution sont fusionnés sur le payload
+  d'insert des `reservations` et `stock_requests` (via les hooks de création →
+  repositories). `partner_applications` (LOT 3) recevra les mêmes colonnes.
+- **Convention de lien partenaire** :
+  `https://<domaine>/?ref=<CODE>&utm_source=partner&utm_medium=qr&utm_campaign=corner_depot`.
+
+### DB / Migrations
+
+```
+20260702100000  attribution_columns  (utm_source/utm_medium/utm_campaign/partner_ref
+                                       nullable sur reservations + stock_requests,
+                                       + index partiels partner_ref)
+```
+
+### Tests
+
+- `src/lib/analytics/attribution.test.ts` (18 tests : parsing, TTL, first-touch,
+  localStorage), passthrough attribution dans `repository.test.ts`, et
+  `tests/security/attribution-columns-migration.test.ts`.
+- `npm run check` vert : typecheck 0 erreur, lint `--max-warnings=0`, 158 tests
+  Vitest, build Vite OK.
 
 ---
 

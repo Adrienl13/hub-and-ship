@@ -292,6 +292,10 @@ type ReservationRow = {
   created_at: string
   updated_at: string
   requested_container_type: ContainerType | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
 }
 
 type ReservationInsert = {
@@ -334,6 +338,10 @@ type ReservationInsert = {
   created_at?: string
   updated_at?: string
   requested_container_type?: ContainerType | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
 }
 
 type ReservationUpdate = Partial<ReservationInsert>
@@ -439,6 +447,10 @@ type StockRequestRow = {
   internal_note: string | null
   product_snapshot: Json
   source: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
   created_at: string
   updated_at: string
 }
@@ -464,6 +476,10 @@ type StockRequestInsert = {
   internal_note?: string | null
   product_snapshot: Json
   source?: string
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
   created_at?: string
   updated_at?: string
 }

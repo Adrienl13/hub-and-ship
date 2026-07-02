@@ -18,6 +18,7 @@ import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
+import { trackEvent } from '@/lib/analytics/plausible'
 import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
@@ -479,6 +480,10 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       return
     }
 
+    trackEvent('stock_request_submitted', {
+      sku: line.product.sku,
+      persisted: creation.persisted,
+    })
     toast.success('Demande stock préparée', {
       description: creation.persisted
         ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 
+import { getAttributionFields } from '@/lib/analytics/attribution'
 import { sendStockRequestNotification } from '@/lib/email/stock-request-notification'
 import {
   saveStockRequestToLocalHistory,
@@ -52,7 +53,11 @@ export function useStockRequestCreation() {
       }
 
       try {
-        const request = await createStockRequestInSupabase({ client, draft })
+        const request = await createStockRequestInSupabase({
+          client,
+          draft,
+          attribution: getAttributionFields(Date.now()),
+        })
         saveLocal()
         // Fire-and-forget admin notification. The lead is already persisted —
         // any email pipeline failure is logged server-side, not surfaced.

@@ -75,6 +75,62 @@ describe('createReservationInSupabase', () => {
     ])
   })
 
+  it('merges first-touch attribution onto the reservation payload', async () => {
+    const insertReservation = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
+    const insertItems = vi.fn().mockResolvedValue({ data: null, error: null })
+    const client = {
+      from: vi.fn((table: 'reservations' | 'reservation_items') =>
+        table === 'reservations'
+          ? { insert: insertReservation }
+          : { insert: insertItems },
+      ),
+    } as unknown as ReservationRepositoryClient
+
+    await createReservationInSupabase({
+      client,
+      draft: createDraft(),
+      attribution: {
+        utm_source: 'partner',
+        utm_medium: 'qr',
+        utm_campaign: 'corner_depot',
+        partner_ref: 'DBP-13',
+      },
+    })
+
+    expect(insertReservation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        utm_source: 'partner',
+        utm_medium: 'qr',
+        utm_campaign: 'corner_depot',
+        partner_ref: 'DBP-13',
+      }),
+    )
+  })
+
+  it('defaults attribution to null columns when none is provided', async () => {
+    const insertReservation = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: null })
+    const client = {
+      from: vi.fn((table: 'reservations' | 'reservation_items') =>
+        table === 'reservations'
+          ? { insert: insertReservation }
+          : { insert: vi.fn().mockResolvedValue({ data: null, error: null }) },
+      ),
+    } as unknown as ReservationRepositoryClient
+
+    await createReservationInSupabase({ client, draft: createDraft() })
+
+    expect(insertReservation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        utm_source: null,
+        partner_ref: null,
+      }),
+    )
+  })
+
   it('throws a clear error when reservation insert fails', async () => {
     const client = {
       from: vi.fn(() => ({
