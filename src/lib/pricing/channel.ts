@@ -1,3 +1,4 @@
+import type { SalesChannel } from '@/lib/supabase/types'
 import { CUSTOMER_QUANTITY_DISCOUNT_TIERS } from './customer-discounts'
 
 /**
@@ -10,11 +11,7 @@ import { CUSTOMER_QUANTITY_DISCOUNT_TIERS } from './customer-discounts'
  * the client for display, and the permanent "golden rule" guard.
  */
 
-export type SalesChannel =
-  | 'direct'
-  | 'revendeur'
-  | 'distributeur'
-  | 'grand_compte'
+export type { SalesChannel }
 
 export const SALES_CHANNELS: ReadonlyArray<SalesChannel> = [
   'direct',

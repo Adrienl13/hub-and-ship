@@ -6,6 +6,48 @@
 
 ## [Non publié]
 
+### Ajouté — LOT 4 : Architecture canal (pricing multi-canal)
+
+- **Canaux de vente** : enum `sales_channel` (`direct/revendeur/distributeur/grand_compte`).
+  `companies.channel` (+ `channel_set_by`/`channel_set_at`) — **admin uniquement**
+  via trigger `enforce_company_channel_admin_only` (décision #2, jamais self-service ;
+  auto-horodatage qui/quand).
+- **Résolution de prix côté serveur** (décision #4) : RPC `get_catalogue_prices()`
+  security definer — lit le canal du compte authentifié (anon = direct) et retourne
+  **uniquement** les prix résolus de ce canal. Ordre strict : `channel_price_overrides`
+  → `base_price_ht × coefficient(channel)` → `base`. `grand_compte` = prix direct avec
+  palier max (−10 %) d'office. `channel_coefficients` et `channel_price_overrides` n'ont
+  **aucune policy SELECT publique** — seul le RPC (security definer) les lit.
+- **Règle d'or (décision #1, bloquante en CI)** : le pire prix direct
+  `base × (1 − 10 %)` reste **strictement supérieur** à tout prix revendeur/distributeur.
+  Test permanent sur tous les produits (`channel-golden-rule.test.ts`) + garde-fou DB
+  (trigger `enforce_override_golden_rule` refuse un override revendeur trop haut) +
+  `MAX_DIRECT_DISCOUNT_PERCENT` dérivé de la grille v2 pour éviter toute dérive.
+- **Logique pure** `src/lib/pricing/channel.ts` : coefficients (direct 1.0000, revendeur
+  0.7368, distributeur 0.6737, grand_compte 1.0000), `resolveChannelUnitPrice`,
+  `violatesGoldenRule`, gating `channelAllowsVolumeDiscounts/LossLeaders` (direct only).
+- **Propagation prix** : le RPC alimente `productFromRow` (`catalogue/db.ts`) — le prix
+  résolu remplace `base_price_ht`, donc catalogue, panier, PDF devis, réservation et frais
+  Stripe utilisent le prix du canal sans autre changement (anon/direct → prix inchangé).
+- **UI** : hook `useChannel` (RPC `current_channel`), badge discret « Tarif <canal> actif »
+  dans le `Header` si canal ≠ direct, et masquage des remises volume (`TieredPricingViz`)
+  pour les canaux non-direct.
+- **Types** : `SalesChannel`, colonnes `companies.channel`, tables `channel_coefficients`
+  / `channel_price_overrides`, RPC `get_catalogue_prices`/`current_channel` enregistrés.
+
+### DB / Migrations
+
+```
+20260702120000  sales_channels  (enum sales_channel ; companies.channel + trigger admin ;
+                                  channel_coefficients seed ; channel_price_overrides +
+                                  golden-rule trigger ; RLS admin-only ; RPC
+                                  get_catalogue_prices() + current_channel())
+```
+
+**Déféré (hors périmètre foundation)** : l'UI admin d'attribution du canal (onglet
+Companies, Phase 5) — le canal se pose pour l'instant via admin/SQL, le trigger garantit
+que seul un admin peut le changer.
+
 ### Ajouté — LOT 3 : Page publique /partenaires + candidatures
 
 - **Page publique `/partenaires`** (`src/routes/partenaires.tsx` + composants

@@ -377,6 +377,24 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-02 — LOT 4 (Architecture canal / pricing multi-canal)
+
+- Phase : Réseau partenaires — LOT 4 (fondation pricing multi-canal)
+- Tâches : enum `sales_channel` + `companies.channel` (admin-only via trigger). Tables
+  `channel_coefficients` (seed direct 1.0 / revendeur 0.7368 / distributeur 0.6737 /
+  grand_compte 1.0) et `channel_price_overrides` (RLS admin, aucune SELECT publique). RPC
+  `get_catalogue_prices()` security definer (résolution override→base×coeff→base ;
+  grand_compte = −10 % d'office ; anon=direct) + `current_channel()`. Logique pure
+  `src/lib/pricing/channel.ts`. **Règle d'or** : test permanent sur tous les produits +
+  trigger DB `enforce_override_golden_rule`. Overlay du prix résolu dans
+  `productFromRow` (catalogue/db.ts) → catalogue/panier/PDF/réservation/Stripe suivent.
+  Hook `useChannel`, badge Header « Tarif <canal> actif », masquage remises volume
+  hors direct. `types.ts` étendu.
+- Tests : `channel.test.ts` (12), `channel-golden-rule.test.ts` (2), migration sécurité (7).
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 198 tests) + build OK.
+- Note : branche consolidée (LOT 1+2+3+4). UI admin d'attribution du canal déférée
+  (Phase 5 Companies) — canal posé via admin/SQL, trigger garantit admin-only.
+
 ### Session du 2026-07-02 — LOT 3 (Page /partenaires + candidatures)
 
 - Phase : Réseau partenaires — LOT 3 (page publique + candidatures + admin)

@@ -97,6 +97,13 @@ interface CatalogueDbClient {
       }
     }
   }
+  rpc: (fn: 'get_catalogue_prices') => PromiseLike<{
+    data: ReadonlyArray<{
+      product_id: string
+      unit_price_ht: number
+    }> | null
+    error: { message: string } | null
+  }>
 }
 
 function variantFromRow(
@@ -115,6 +122,7 @@ function variantFromRow(
 function productFromRow(
   row: ProductRow,
   variants: ReadonlyArray<DesignVariant>,
+  resolvedPriceHt?: number,
 ): Product {
   return {
     id: row.id,
@@ -130,7 +138,10 @@ function productFromRow(
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,
-    basePriceHt: Number(row.base_price_ht),
+    // LOT 4: the channel-resolved price (from get_catalogue_prices RPC) replaces
+    // the raw base_price_ht so every downstream render + the order math use the
+    // caller's channel price. Anon / direct → resolved == base (no change).
+    basePriceHt: resolvedPriceHt ?? Number(row.base_price_ht),
     retailPriceRef: Number(row.retail_price_ref),
     ecoContribution: Number(row.eco_contribution),
     mainImageUrl: row.main_image_url,
@@ -177,27 +188,39 @@ export async function fetchCatalogFromDb(
   // Run the three independent queries in parallel; the commitments query
   // can only start once we know which container is open, so it is awaited
   // separately below.
-  const [productsResult, variantsResult, containerResult] = await Promise.all([
-    client
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true }),
-    client
-      .from('product_variants')
-      .select('*')
-      .order('sort_order', { ascending: true }),
-    client
-      .from('containers')
-      .select('*')
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(1),
-  ])
+  const [productsResult, variantsResult, containerResult, pricesResult] =
+    await Promise.all([
+      client
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true }),
+      client
+        .from('product_variants')
+        .select('*')
+        .order('sort_order', { ascending: true }),
+      client
+        .from('containers')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(1),
+      // LOT 4: resolve the caller's channel prices server-side. On error we
+      // fall back to the raw base_price_ht (direct grid) rather than break the
+      // catalogue.
+      client.rpc('get_catalogue_prices'),
+    ])
 
   if (productsResult.error) throw new Error(productsResult.error.message)
   if (variantsResult.error) throw new Error(variantsResult.error.message)
   if (containerResult.error) throw new Error(containerResult.error.message)
+
+  const resolvedPriceByProduct = new Map<string, number>()
+  if (!pricesResult.error) {
+    for (const row of pricesResult.data ?? []) {
+      resolvedPriceByProduct.set(row.product_id, Number(row.unit_price_ht))
+    }
+  }
 
   const containerRow = containerResult.data?.[0] ?? null
 
@@ -229,7 +252,11 @@ export async function fetchCatalogFromDb(
 
   const products: Product[] = (productsResult.data ?? [])
     .map((row) =>
-      productFromRow(row, variantsByProduct.get(row.id) ?? []),
+      productFromRow(
+        row,
+        variantsByProduct.get(row.id) ?? [],
+        resolvedPriceByProduct.get(row.id),
+      ),
     )
     .filter((product) => product.variants.length > 0)
 

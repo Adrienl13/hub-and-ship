@@ -39,6 +39,11 @@ export type PartnerApplicationStatus =
   | 'in_review'
   | 'approved'
   | 'rejected'
+export type SalesChannel =
+  | 'direct'
+  | 'revendeur'
+  | 'distributeur'
+  | 'grand_compte'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -126,6 +131,9 @@ type CompanyRow = {
   total_containers_completed: number
   total_lifetime_value: number
   preferred_locale: string
+  channel: SalesChannel
+  channel_set_by: string | null
+  channel_set_at: string | null
   created_at: string
   updated_at: string
 }
@@ -163,11 +171,38 @@ type CompanyInsert = {
   total_containers_completed?: number
   total_lifetime_value?: number
   preferred_locale?: string
+  channel?: SalesChannel
+  channel_set_by?: string | null
+  channel_set_at?: string | null
   created_at?: string
   updated_at?: string
 }
 
 type CompanyUpdate = Partial<CompanyInsert>
+
+type ChannelCoefficientRow = {
+  channel: SalesChannel
+  coefficient: number
+}
+type ChannelCoefficientInsert = {
+  channel: SalesChannel
+  coefficient: number
+}
+type ChannelCoefficientUpdate = Partial<ChannelCoefficientInsert>
+
+type ChannelPriceOverrideRow = {
+  id: string
+  product_id: string
+  channel: SalesChannel
+  unit_price_ht: number
+}
+type ChannelPriceOverrideInsert = {
+  id?: string
+  product_id: string
+  channel: SalesChannel
+  unit_price_ht: number
+}
+type ChannelPriceOverrideUpdate = Partial<ChannelPriceOverrideInsert>
 
 type UserProfileRow = {
   id: string
@@ -875,6 +910,16 @@ export interface Database {
         Insert: CarrierPartnerInsert
         Update: CarrierPartnerUpdate
       }
+      channel_coefficients: {
+        Row: ChannelCoefficientRow
+        Insert: ChannelCoefficientInsert
+        Update: ChannelCoefficientUpdate
+      }
+      channel_price_overrides: {
+        Row: ChannelPriceOverrideRow
+        Insert: ChannelPriceOverrideInsert
+        Update: ChannelPriceOverrideUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -894,6 +939,17 @@ export interface Database {
         Args: { payload: Json }
         Returns: void
       }
+      get_catalogue_prices: {
+        Args: Record<string, never>
+        Returns: ReadonlyArray<{
+          product_id: string
+          unit_price_ht: number
+        }>
+      }
+      current_channel: {
+        Args: Record<string, never>
+        Returns: SalesChannel
+      }
     }
     Enums: {
       user_role: UserRole
@@ -902,6 +958,7 @@ export interface Database {
       stock_request_status: StockRequestStatus
       partner_target_status: PartnerTargetStatus
       partner_application_status: PartnerApplicationStatus
+      sales_channel: SalesChannel
       stock_condition: StockCondition
       security_event_type: SecurityEventType
       container_status: ContainerStatus
