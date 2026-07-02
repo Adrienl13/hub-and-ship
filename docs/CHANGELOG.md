@@ -82,6 +82,13 @@
 - `npm run check` vert : typecheck 0 erreur, lint `--max-warnings=0`, 158 tests
   Vitest, build Vite OK.
 
+### Corrigé — LOT 1 : Alignement des paliers de remise directe (grille v2)
+
+- **`CUSTOMER_QUANTITY_DISCOUNT_TIERS`** (`src/lib/pricing/customer-discounts.ts`) passe de `50u→2% / 150u→6% / 300u→10%` à `100u→6% / 150u→10%`. Le code contredisait la grille v2 ; c'est désormais aligné.
+  - Tests `customer-discounts.test.ts` réécrits sur les bornes v2 : 99→0 %, 100→6 %, 149→6 %, 150→10 %, + palier max sans next tier.
+  - `TieredPricingViz` passé en `grid-cols-2` (2 paliers au lieu de 3). Le composant lit la constante, donc l'affichage du panier reflète automatiquement la grille v2 ; aucune autre mention des anciens paliers dans l'UI.
+  - Vérification base : la remise quantité client est purement informative (affichage `TieredPricingViz`) et n'est jamais appliquée aux totaux ni persistée. Aucune réservation existante n'a bénéficié de l'ancien palier 50u→2 %, donc rien à honorer/recalculer rétroactivement.
+
 ---
 
 ## [1.6.0] — 2026-05-25
