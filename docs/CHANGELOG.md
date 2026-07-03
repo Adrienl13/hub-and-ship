@@ -20,6 +20,12 @@
   `anon_reservation_insert` (0523). Aucun objet perdu, aucun impact prod (la
   suppression ne touche que les applies from-scratch). Débloque le check Supabase
   Preview sur la PR.
+- `rattrapage_schema.sql` (0520, également « recovered ») : `is_admin()` (fonction
+  `language sql`, validée à la création) était définie **avant** la table
+  `professionals` qu'elle interroge → `ERROR 42P01` sur apply propre. Déplacée
+  juste après la création de `professionals` (avant les policies qui l'utilisent).
+  Après ce correctif, toutes les fonctions SQL / vues référencent des tables déjà
+  créées.
 
 ### Ajouté — LOT 6 : Espace partenaire connecté v1
 

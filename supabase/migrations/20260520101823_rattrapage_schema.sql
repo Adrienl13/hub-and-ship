@@ -38,11 +38,6 @@ begin
 end;
 $$;
 
-create or replace function public.is_admin()
-returns boolean language sql stable security definer set search_path to 'public' as $$
-  select coalesce((select is_admin from public.professionals where id = auth.uid()), false);
-$$;
-
 create or replace function public.handle_new_professional()
 returns trigger language plpgsql security definer set search_path to 'public' as $$
 begin
@@ -81,6 +76,14 @@ create table if not exists public.professionals (
 );
 create index if not exists professionals_email_idx on public.professionals (email);
 create index if not exists professionals_is_admin_idx on public.professionals (is_admin) where is_admin;
+
+-- Defined AFTER public.professionals exists: is_admin() is a language-sql
+-- function whose body is validated at CREATE time, and the RLS policies below
+-- reference it. (align_is_admin_with_profile_role refines it later.)
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path to 'public' as $$
+  select coalesce((select is_admin from public.professionals where id = auth.uid()), false);
+$$;
 
 create table if not exists public.products (
   id                text                       not null,
