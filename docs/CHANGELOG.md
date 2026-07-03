@@ -6,6 +6,21 @@
 
 ## [Non publié]
 
+### Corrigé — Historique de migrations (dette pré-existante)
+
+- Suppression de deux migrations back-datées **redondantes et cassées** ajoutées
+  le 2026-06-05 (« recovered … drifted out of the repo ») :
+  `20260519190000_initial_schema.sql` et `20260519190001_rls_policies.sql`.
+  Elles décrivaient l'ancien schéma `reservations` (colonnes `email`/`name`/
+  `*_cents`) déjà **supplanté** par `reservation_foundation.sql` (0518, schéma
+  codex `siret`/`contact_snapshot`) : leurs `create table` étaient des no-op, mais
+  leur index `reservations(lower(email))` et leurs policies sur colonnes mortes
+  **faisaient échouer tout apply propre** (Supabase Preview / `db reset` / nouveaux
+  environnements). RLS et policy anon-insert réelles proviennent de 0518 +
+  `anon_reservation_insert` (0523). Aucun objet perdu, aucun impact prod (la
+  suppression ne touche que les applies from-scratch). Débloque le check Supabase
+  Preview sur la PR.
+
 ### Ajouté — LOT 6 : Espace partenaire connecté v1
 
 - **Route `/partenaire`** (`src/routes/partenaire.tsx`) protégée par un guard
