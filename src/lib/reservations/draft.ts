@@ -34,7 +34,6 @@ export interface ReservationDraftInput {
   readonly items: ReadonlyArray<CartItem>
   readonly containerReference: string
   readonly containerId?: string
-  readonly referralApplication?: ReferralApplication
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string
@@ -214,14 +213,12 @@ export function buildReservationDraft(
   }
 
   const totals = calculateOrder([...input.items])
-  const referralDiscount =
-    input.referralApplication?.status === 'applied'
-      ? input.referralApplication.discountAmount
-      : 0
-  const payNow =
-    input.referralApplication?.status === 'applied'
-      ? input.referralApplication.payNow
-      : totals.reservationFee
+  // LOT 5: the apporteur program replaced the B2C referral credit — the benefit
+  // is an 8% commission to the referrer (commission_ledger), not a discount to
+  // the referred client. The checkout code is captured for attribution only; it
+  // no longer reduces pay-now. (referral.ts is kept read-only for past rows.)
+  const referralDiscount = 0
+  const payNow = totals.reservationFee
   const depositAmount = round2(totals.subtotalHt * 0.3)
 
   return {
@@ -252,7 +249,7 @@ export function buildReservationDraft(
       },
       referral: {
         code: parsedCheckout.data.referralCode ?? null,
-        status: input.referralApplication?.status ?? 'none',
+        status: 'none',
         discountAmount: round2(referralDiscount),
       },
       requestedContainerType: input.requestedContainerType ?? null,

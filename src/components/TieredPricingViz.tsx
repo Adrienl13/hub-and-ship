@@ -46,7 +46,7 @@ export function TieredPricingViz({ items }: { items: CartItem[] }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-2 gap-1.5">
         {CUSTOMER_QUANTITY_DISCOUNT_TIERS.map((tier) => {
           const active = tier === discountStatus.activeTier
           const reached = totalUnits >= tier.minUnits

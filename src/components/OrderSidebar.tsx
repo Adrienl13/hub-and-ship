@@ -19,6 +19,8 @@ import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
 import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
+import { useChannel } from '@/hooks/useChannel'
+import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
 import {
   CONTAINER_USABLE_CBM,
   getRemainingCbm,
@@ -68,7 +70,11 @@ export function OrderSidebar({
   container?: ContainerSummary
 }) {
   const [exploded, setExploded] = useState(false)
+  const { channel } = useChannel()
   const hasItems = items.length > 0
+  // Volume discounts (and loss leaders) are direct-channel only; resellers get
+  // their coefficient price + RFA instead (decision #5 by extension).
+  const showVolumeDiscounts = hasItems && channelAllowsVolumeDiscounts(channel)
   const preferredContainerType = useCartStore(
     (state) => state.preferredContainerType,
   )
@@ -323,7 +329,7 @@ export function OrderSidebar({
         )}
       </div>
 
-      {hasItems && <TieredPricingViz items={items} />}
+      {showVolumeDiscounts && <TieredPricingViz items={items} />}
       <DeliveryInfoBox compact />
 
       {/* Actions */}

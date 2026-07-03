@@ -15,6 +15,7 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { trackEvent } from '@/lib/analytics/plausible'
 import {
   ACCOUNT_RESERVATION_STATUS_LABEL,
   accountReservationFromMyReservation,
@@ -69,6 +70,14 @@ function AccountReservationDetailPage() {
     setLocalRecords(readLocalReservationHistory(window.localStorage))
     setLocalLoaded(true)
   }, [])
+
+  // Stripe redirects back here with ?session_id=... once the reservation fee is
+  // paid. Fire the funnel-completion event once per successful return.
+  useEffect(() => {
+    if (sessionId) {
+      trackEvent('reservation_paid', { reservation: reservationId })
+    }
+  }, [sessionId, reservationId])
 
   useEffect(() => {
     if (auth.status === 'loading') {

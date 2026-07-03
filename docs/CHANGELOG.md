@@ -6,7 +6,212 @@
 
 ## [Non publié]
 
-Aucun changement en cours.
+### Corrigé — Historique de migrations (dette pré-existante)
+
+- Suppression de deux migrations back-datées **redondantes et cassées** ajoutées
+  le 2026-06-05 (« recovered … drifted out of the repo ») :
+  `20260519190000_initial_schema.sql` et `20260519190001_rls_policies.sql`.
+  Elles décrivaient l'ancien schéma `reservations` (colonnes `email`/`name`/
+  `*_cents`) déjà **supplanté** par `reservation_foundation.sql` (0518, schéma
+  codex `siret`/`contact_snapshot`) : leurs `create table` étaient des no-op, mais
+  leur index `reservations(lower(email))` et leurs policies sur colonnes mortes
+  **faisaient échouer tout apply propre** (Supabase Preview / `db reset` / nouveaux
+  environnements). RLS et policy anon-insert réelles proviennent de 0518 +
+  `anon_reservation_insert` (0523). Aucun objet perdu, aucun impact prod (la
+  suppression ne touche que les applies from-scratch). Débloque le check Supabase
+  Preview sur la PR.
+- `rattrapage_schema.sql` (0520, également « recovered ») : `is_admin()` (fonction
+  `language sql`, validée à la création) était définie **avant** la table
+  `professionals` qu'elle interroge → `ERROR 42P01` sur apply propre. Déplacée
+  juste après la création de `professionals` (avant les policies qui l'utilisent).
+  Après ce correctif, toutes les fonctions SQL / vues référencent des tables déjà
+  créées.
+
+### Ajouté — LOT 6 : Espace partenaire connecté v1
+
+- **Route `/partenaire`** (`src/routes/partenaire.tsx`) protégée par un guard
+  4 états (loading / unconfigured / anonymous / not_partner / ready, pattern
+  `AdminGuard`). Accès = authentifié **et** (canal ≠ direct **ou** détenteur d'un
+  `partner_code`). `noindex`.
+- **Migration self-read** (`20260702140000`) : policies RLS `select` scopant un
+  partenaire à SES propres `partner_codes` + `commission_ledger` (via
+  `current_company_id()`). Lecture seule ; un partenaire ne voit jamais les
+  données d'un autre. Admin conserve l'accès complet.
+- **Vue Apporteur** (priorité brasseurs) : son code + lien taggé (convention
+  LOT 2) + **QR généré côté client** (`qrcode-generator`, SVG self-contained,
+  bouton « Télécharger mon QR pour tournées »), compteurs (réservations
+  attribuées, CA encaissé attribué, commissions), tableau des commissions
+  accrued/payable/paid. `src/lib/partner-space/{qr,repository}.ts`.
+- **Vue Revendeur** : grille tarifaire résolue via la RPC `get_catalogue_prices`
+  (LOT 4, jamais exposée aux autres canaux), bouton Imprimer/PDF, jauge RFA
+  (3% / 5%), lien historique commandes.
+- **Vue Grand compte / Distributeur** : récapitulatif des conditions +
+  « Contactez votre référent » (v1 minimale, complet en V2).
+- **Nav** : lien « Espace partenaire » au Footer.
+- **Tests** : `partner-space/qr.test.ts`, `partner-space/repository.test.ts`
+  (compteurs + reversal), migration self-read. `npm run check` vert (231 tests) + build OK.
+
+### Ajouté — LOT 5 : Ledger apporteur d'affaires (remplace le parrainage B2C)
+
+- **Programme réel** : 8% de commission sur le CA encaissé (HT) par client
+  apporté, pendant 12 mois à compter du first-touch. Fini le crédit fixe
+  200€/100€.
+- **Migration `commission_ledger`** (`20260702130000`) : table `partner_codes`
+  (code unique imprimable QR, `company_id`, `active`) ; colonnes
+  `companies.referred_by_partner_id` + `referred_at` (first-touch, verrouillé à
+  la 1re réservation) ; table `commission_ledger` (`base_amount_ht`, `rate` 8.00,
+  `amount`, `status` accrued/payable/paid, `phase` accrual/reversal,
+  **unique(reservation_id, phase)** pour l'idempotence). RLS admin. `types.ts` étendu.
+- **Logique commission** (`src/lib/pricing/commission.ts`) : `COMMISSION_RATE_PERCENT`
+  (8), fenêtre 12 mois (`isWithinCommissionWindow`, borne stricte),
+  `computeCommissionAmount`, `buildCommissionAccrual` (null hors fenêtre),
+  `buildCommissionReversal` (écriture négative, jamais de suppression).
+- **Accrual serveur** (`src/lib/commission/ledger-server.ts`,
+  `accrueReservationCommission`) : déclenché à l'encaissement complet (action
+  admin — pas de flux Stripe solde automatique à ce jour), service-role,
+  idempotent (upsert `onConflict reservation_id,phase`). Résout l'apporteur via
+  le `partner_ref` first-touch (LOT 2) → `partner_codes`, verrouille le
+  first-touch `referred_at` de la société, écrit uniquement pour un statut payé
+  (`isAccruableStatus` exclut draft/pending/cancelled) et dans la fenêtre 12 mois.
+- **Retrait du parrainage B2C du checkout** : `referral.ts` conservé en lecture
+  (réservations passées) mais la remise fixe ne s'applique plus — `payNow` = frais
+  de réservation complets ; le champ code du checkout est désormais un « Code
+  apporteur » capturé pour l'attribution (aucun impact prix pour le client).
+- **Admin — onglet « Commissions »** (`AdminCommissionsTab` +
+  `src/lib/commission/admin-repository.ts`) : vue par apporteur (accrued/payable/paid),
+  transitions en lot accrued→payable→payé, **export CSV mensuel**, et déclencheur
+  d'accrual « encaissement complet » par UUID de réservation.
+- **Tests** : `commission.test.ts`, `commission/accrual.test.ts`,
+  `commission/admin-repository.test.ts`, migration test sécurité, + `draft.test.ts`
+  mis à jour (plus de remise parrainage). `npm run check` vert (222 tests) + build OK.
+
+### Ajouté — LOT 4 : Architecture canal (pricing multi-canal)
+
+- **Canaux de vente** : enum `sales_channel` (`direct/revendeur/distributeur/grand_compte`).
+  `companies.channel` (+ `channel_set_by`/`channel_set_at`) — **admin uniquement**
+  via trigger `enforce_company_channel_admin_only` (décision #2, jamais self-service ;
+  auto-horodatage qui/quand).
+- **Résolution de prix côté serveur** (décision #4) : RPC `get_catalogue_prices()`
+  security definer — lit le canal du compte authentifié (anon = direct) et retourne
+  **uniquement** les prix résolus de ce canal. Ordre strict : `channel_price_overrides`
+  → `base_price_ht × coefficient(channel)` → `base`. `grand_compte` = prix direct avec
+  palier max (−10 %) d'office. `channel_coefficients` et `channel_price_overrides` n'ont
+  **aucune policy SELECT publique** — seul le RPC (security definer) les lit.
+- **Règle d'or (décision #1, bloquante en CI)** : le pire prix direct
+  `base × (1 − 10 %)` reste **strictement supérieur** à tout prix revendeur/distributeur.
+  Test permanent sur tous les produits (`channel-golden-rule.test.ts`) + garde-fou DB
+  (trigger `enforce_override_golden_rule` refuse un override revendeur trop haut) +
+  `MAX_DIRECT_DISCOUNT_PERCENT` dérivé de la grille v2 pour éviter toute dérive.
+- **Logique pure** `src/lib/pricing/channel.ts` : coefficients (direct 1.0000, revendeur
+  0.7368, distributeur 0.6737, grand_compte 1.0000), `resolveChannelUnitPrice`,
+  `violatesGoldenRule`, gating `channelAllowsVolumeDiscounts/LossLeaders` (direct only).
+- **Propagation prix** : le RPC alimente `productFromRow` (`catalogue/db.ts`) — le prix
+  résolu remplace `base_price_ht`, donc catalogue, panier, PDF devis, réservation et frais
+  Stripe utilisent le prix du canal sans autre changement (anon/direct → prix inchangé).
+- **UI** : hook `useChannel` (RPC `current_channel`), badge discret « Tarif <canal> actif »
+  dans le `Header` si canal ≠ direct, et masquage des remises volume (`TieredPricingViz`)
+  pour les canaux non-direct.
+- **Admin — onglet « Comptes »** (`AdminCompaniesTab` + `src/lib/companies/admin-repository.ts`) :
+  liste des sociétés, filtre par canal + recherche, bascule du canal en un clic
+  (`direct/revendeur/distributeur/grand_compte`) — action journalisée
+  (`logAdminAction`), RLS + trigger garantissant l'admin-only côté serveur.
+- **Types** : `SalesChannel`, colonnes `companies.channel`, tables `channel_coefficients`
+  / `channel_price_overrides`, RPC `get_catalogue_prices`/`current_channel` enregistrés.
+
+### DB / Migrations
+
+```
+20260702120000  sales_channels  (enum sales_channel ; companies.channel + trigger admin ;
+                                  channel_coefficients seed ; channel_price_overrides +
+                                  golden-rule trigger ; RLS admin-only ; RPC
+                                  get_catalogue_prices() + current_channel())
+```
+
+Le canal s'attribue désormais depuis l'onglet admin « Comptes » (ou en SQL) ; le trigger
+garantit que seul un admin peut le changer.
+
+### Ajouté — LOT 3 : Page publique /partenaires + candidatures
+
+- **Page publique `/partenaires`** (`src/routes/partenaires.tsx` + composants
+  `src/components/partenaires/*`) : implémentation fidèle de `partenaires-mockup.html`
+  — hero + 4 stats, sélecteur de profil interactif (chips → recommandation +
+  pré-remplissage du formulaire + surbrillance des cartes), 4 cartes de statut
+  (AP-08 apporteur, RV-AG revendeur, GC-CA grand compte, DX-PAYS distributeur),
+  bloc « Réseaux & tournées » brasseurs, tableau comparatif, process 4 étapes,
+  formulaire de candidature, panneau de confiance, FAQ. Réutilise `Header`/`Footer`,
+  tokens `--sand`/`--ink`/`--ember`, et **JetBrains Mono** (ajoutée aux fonts +
+  utilitaire `.mono`) pour les plaques/labels.
+- **Migration `partner_applications`** (`20260702110000`) : enums
+  `partner_target_status` + `partner_application_status`, table complète (+ colonnes
+  d'attribution LOT 2), RLS insert anonyme `with check(true)` + gestion admin
+  (`current_user_role()`), index de triage + `partner_ref`. `types.ts` étendu
+  (Row/Insert/Update + enums enregistrés).
+- **Domaine + server function** :
+  - `src/lib/partner-applications.ts` — schéma Zod (SIRET 14 chiffres + clé de
+    contrôle Luhn, email, champs requis), `buildPartnerApplicationDraft`,
+    `toPartnerApplicationInsertPayload` (`siret_verified=false` : vérification
+    INSEE déférée à l'admin car l'edge function `verify-siret` exige une session).
+  - `partner-applications.repository.ts` — insert anonyme (write-only, id généré
+    client, attribution fusionnée), `usePartnerApplicationCreation` hook.
+  - `sendPartnerApplicationNotification` (server fn) — re-fetch service-role +
+    2 emails Resend (notification admin + accusé candidat « réponse sous 48h »),
+    pattern skipped-when-not-configured.
+- **Événement Plausible** `partner_application_submitted` déclenché à la soumission.
+- **Admin — onglet « Partenaires »** (`AdminPartnerApplicationsTab` +
+  `src/lib/partner-applications/admin-repository.ts`) : liste, filtres statut/profil
+  + recherche, transitions `new → in_review → approved/rejected` (+ rouvrir),
+  `admin_notes` save-on-blur, affichage de l'attribution UTM. Enregistré dans
+  `admin.tsx`.
+- **Nav & SEO** : lien « Devenir partenaire » (Header + Footer), `/partenaires`
+  ajouté au `sitemap.xml`.
+- **Tests** : `partner-applications.test.ts`, `.repository.test.ts`,
+  `partner-application-templates.test.ts`, migration test sécurité. `npm run check`
+  vert (typecheck, lint `--max-warnings=0`, 176 tests) + build Vite OK.
+
+### Ajouté — LOT 2 : Analytics + attribution UTM
+
+- **Plausible analytics** branché dans `src/routes/__root.tsx` (script `defer`
+  + snippet d'init de la queue `plausible()`), domaine via `VITE_PLAUSIBLE_DOMAIN`
+  et host via `VITE_PLAUSIBLE_API_HOST`. Chargé uniquement si un domaine est
+  configuré. RGPD-friendly, pas de bandeau cookies.
+- **Événements custom** (`src/lib/analytics/plausible.ts`, `trackEvent`) câblés :
+  - `reservation_started` — ouverture du `ReservationDialog`
+  - `reservation_paid` — retour Stripe `?session_id=` sur la page réservation
+  - `stock_request_submitted` — demande stock 24h enregistrée
+  - `quote_pdf_opened` — centralisé dans `openQuotePDF` (couvre home + catalogue)
+  - `partner_application_submitted` — type prêt, câblage en LOT 3 (formulaire à venir)
+- **Attribution first-touch** (`src/lib/analytics/attribution.ts`) : capture
+  `utm_source / utm_medium / utm_campaign / ref` depuis le querystring au premier
+  chargement, persistée en `localStorage` (`cc_attribution`, TTL 90 j). First-touch
+  wins — jamais écrasée. Capture déclenchée dans un `useEffect` racine.
+- **Écriture en base** : les 4 champs d'attribution sont fusionnés sur le payload
+  d'insert des `reservations` et `stock_requests` (via les hooks de création →
+  repositories). `partner_applications` (LOT 3) recevra les mêmes colonnes.
+- **Convention de lien partenaire** :
+  `https://<domaine>/?ref=<CODE>&utm_source=partner&utm_medium=qr&utm_campaign=corner_depot`.
+
+### DB / Migrations
+
+```
+20260702100000  attribution_columns  (utm_source/utm_medium/utm_campaign/partner_ref
+                                       nullable sur reservations + stock_requests,
+                                       + index partiels partner_ref)
+```
+
+### Tests
+
+- `src/lib/analytics/attribution.test.ts` (18 tests : parsing, TTL, first-touch,
+  localStorage), passthrough attribution dans `repository.test.ts`, et
+  `tests/security/attribution-columns-migration.test.ts`.
+- `npm run check` vert : typecheck 0 erreur, lint `--max-warnings=0`, 158 tests
+  Vitest, build Vite OK.
+
+### Corrigé — LOT 1 : Alignement des paliers de remise directe (grille v2)
+
+- **`CUSTOMER_QUANTITY_DISCOUNT_TIERS`** (`src/lib/pricing/customer-discounts.ts`) passe de `50u→2% / 150u→6% / 300u→10%` à `100u→6% / 150u→10%`. Le code contredisait la grille v2 ; c'est désormais aligné.
+  - Tests `customer-discounts.test.ts` réécrits sur les bornes v2 : 99→0 %, 100→6 %, 149→6 %, 150→10 %, + palier max sans next tier.
+  - `TieredPricingViz` passé en `grid-cols-2` (2 paliers au lieu de 3). Le composant lit la constante, donc l'affichage du panier reflète automatiquement la grille v2 ; aucune autre mention des anciens paliers dans l'UI.
+  - Vérification base : la remise quantité client est purement informative (affichage `TieredPricingViz`) et n'est jamais appliquée aux totaux ni persistée. Aucune réservation existante n'a bénéficié de l'ancien palier 50u→2 %, donc rien à honorer/recalculer rétroactivement.
 
 ---
 

@@ -58,6 +58,22 @@ export function Footer() {
             <ul className="mt-4 space-y-2 text-xs">
               <li>
                 <a
+                  href="/partenaires"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Devenir partenaire
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/partenaire"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Espace partenaire
+                </a>
+              </li>
+              <li>
+                <a
                   href="/transport-partenaires"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >

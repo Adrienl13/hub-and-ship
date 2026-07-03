@@ -5,7 +5,9 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
+import { captureFirstTouchAttribution } from '@/lib/analytics/attribution'
 import { Toaster } from '@/components/ui/sonner'
 import '@/styles/globals.css'
 
@@ -42,6 +44,32 @@ const ORGANIZATION_JSON_LD = {
   ],
   areaServed: 'FR',
   sameAs: [],
+}
+
+const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN ?? ''
+const PLAUSIBLE_API_HOST =
+  import.meta.env.VITE_PLAUSIBLE_API_HOST ?? 'https://plausible.io'
+
+/**
+ * Plausible analytics scripts, only emitted when a domain is configured.
+ * `script.js` auto-tracks pageviews; our custom events go through the inline
+ * snippet below, which defines the `plausible()` queue so events triggered
+ * before the script loads are buffered. RGPD-friendly (no cookies), so no
+ * consent banner needed.
+ */
+function plausibleScripts(): Array<Record<string, string | boolean>> {
+  if (!PLAUSIBLE_DOMAIN) return []
+  return [
+    {
+      defer: true,
+      'data-domain': PLAUSIBLE_DOMAIN,
+      src: `${PLAUSIBLE_API_HOST}/js/script.js`,
+    },
+    {
+      children:
+        'window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}',
+    },
+  ]
 }
 
 function NotFoundComponent() {
@@ -131,7 +159,7 @@ export const Route = createRootRoute({
       },
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap',
       },
     ],
     scripts: [
@@ -139,12 +167,18 @@ export const Route = createRootRoute({
         type: 'application/ld+json',
         children: JSON.stringify(ORGANIZATION_JSON_LD),
       },
+      ...plausibleScripts(),
     ],
   }),
   component: RootComponent,
 })
 
 function RootComponent() {
+  // First-touch attribution: persist utm_* / ref from the landing URL once.
+  useEffect(() => {
+    captureFirstTouchAttribution(window.location.search, Date.now())
+  }, [])
+
   return (
     <html lang="fr">
       <head>

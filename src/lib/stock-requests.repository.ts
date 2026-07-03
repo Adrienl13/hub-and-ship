@@ -1,3 +1,7 @@
+import {
+  EMPTY_ATTRIBUTION,
+  type AttributionFields,
+} from '@/lib/analytics/attribution'
 import type {
   StockRequestDraft,
   StockRequestInsertPayload,
@@ -33,13 +37,15 @@ export interface CreateStockRequestResult {
 export async function createStockRequestInSupabase({
   client,
   draft,
+  attribution = EMPTY_ATTRIBUTION,
 }: {
   readonly client: StockRequestRepositoryClient
   readonly draft: StockRequestDraft
+  readonly attribution?: AttributionFields
 }): Promise<CreateStockRequestResult> {
   const result = await client
     .from('stock_requests')
-    .insert(toStockRequestInsertPayload(draft))
+    .insert({ ...toStockRequestInsertPayload(draft), ...attribution })
     .select('id, status')
     .single()
 

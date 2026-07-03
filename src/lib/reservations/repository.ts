@@ -1,3 +1,7 @@
+import {
+  EMPTY_ATTRIBUTION,
+  type AttributionFields,
+} from '@/lib/analytics/attribution'
 import type { Database } from '@/lib/supabase/types'
 import type { ReservationDraft } from './draft'
 import {
@@ -35,17 +39,20 @@ export interface CreateReservationResult {
 export async function createReservationInSupabase({
   client,
   draft,
+  attribution = EMPTY_ATTRIBUTION,
 }: {
   readonly client: ReservationRepositoryClient
   readonly draft: ReservationDraft
+  readonly attribution?: AttributionFields
 }): Promise<CreateReservationResult> {
   // The reservations table is write-only for anon: no SELECT policy, so we
   // cannot ".select()" the row back after insert. The id and reference are
   // generated client-side (see draft.ts) and used to attach items in the
-  // second insert below.
+  // second insert below. First-touch attribution (utm_* / partner_ref) is
+  // merged onto the row so we can trace it back to the channel.
   const reservationResult = await client
     .from('reservations')
-    .insert(toReservationInsertPayload(draft))
+    .insert({ ...toReservationInsertPayload(draft), ...attribution })
 
   if (reservationResult.error) {
     throw new Error(reservationResult.error.message)

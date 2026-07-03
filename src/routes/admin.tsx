@@ -16,8 +16,11 @@ import type { ReactNode } from 'react'
 
 import { AdminCarrierPartnersTab } from '@/components/AdminCarrierPartnersTab'
 import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
+import { AdminCommissionsTab } from '@/components/AdminCommissionsTab'
+import { AdminCompaniesTab } from '@/components/AdminCompaniesTab'
 import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
+import { AdminPartnerApplicationsTab } from '@/components/AdminPartnerApplicationsTab'
 import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
 import { AdminStockTab } from '@/components/AdminStockTab'
 import { AdminUsersTab } from '@/components/AdminUsersTab'
@@ -58,6 +61,9 @@ const ADMIN_TABS = [
   'overview',
   'stock-requests',
   'reservations',
+  'partner-applications',
+  'companies',
+  'commissions',
   'products',
   'containers',
   'stock',
@@ -167,6 +173,9 @@ function AdminPage() {
               ['overview', 'Vue générale'],
               ['stock-requests', 'Demandes stock'],
               ['reservations', 'Réservations'],
+              ['partner-applications', 'Partenaires'],
+              ['companies', 'Comptes'],
+              ['commissions', 'Commissions'],
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
               ['stock', 'Stock 24h'],
@@ -199,6 +208,15 @@ function AdminPage() {
         )}
         {activeTab === 'reservations' && (
           <ReservationsAdminPanel authStatus={auth.status} />
+        )}
+        {activeTab === 'partner-applications' && (
+          <AdminPartnerApplicationsTab authStatus={auth.status} />
+        )}
+        {activeTab === 'companies' && (
+          <AdminCompaniesTab authStatus={auth.status} />
+        )}
+        {activeTab === 'commissions' && (
+          <AdminCommissionsTab authStatus={auth.status} />
         )}
         {activeTab === 'products' && (
           <AdminCatalogueTab authStatus={auth.status} />

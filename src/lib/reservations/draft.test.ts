@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { getDefaultVariant } from '@/lib/catalogue'
 import { PRODUCTS } from '@/lib/products'
-import type { ReferralApplication } from '@/lib/pricing/referral'
 import { buildReservationDraft, createReservationReference } from './draft'
 
 const chair = PRODUCTS.find((product) => product.category === 'chair')!
@@ -77,20 +76,10 @@ describe('reservation draft builder', () => {
     })
   })
 
-  it('applies referral discount to pay-now amount without changing order totals', () => {
-    const referralApplication: ReferralApplication = {
-      status: 'applied',
-      code: 'CONTAINER-DEMO',
-      referrerLabel: 'Pierre - Hotel Demo',
-      discountAmount: 100,
-      payNow: 90.2,
-      message: 'Remise appliquee',
-    }
-
+  it('captures the checkout code for attribution without discounting pay-now (LOT 5 apporteur model)', () => {
     const result = buildReservationDraft({
       ...baseInput,
-      referralCode: referralApplication.code,
-      referralApplication,
+      referralCode: 'DBP-13',
       items: [
         {
           product: chair,
@@ -108,11 +97,13 @@ describe('reservation draft builder', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    expect(result.draft.payment.payNow).toBe(90.2)
+    // The apporteur benefit is an 8% commission to the referrer, not a discount
+    // to the referred client — pay-now stays the full reservation fee.
+    expect(result.draft.payment.payNow).toBe(result.draft.payment.reservationFee)
     expect(result.draft.referral).toMatchObject({
-      code: 'CONTAINER-DEMO',
-      status: 'applied',
-      discountAmount: 100,
+      code: 'DBP-13',
+      status: 'none',
+      discountAmount: 0,
     })
     expect(result.draft.totals.subtotalHt).toBe(6340)
   })

@@ -28,6 +28,24 @@ export type StockRequestStatus =
   | 'reserved'
   | 'converted'
   | 'closed'
+export type PartnerTargetStatus =
+  | 'apporteur'
+  | 'revendeur'
+  | 'grand_compte'
+  | 'distributeur'
+  | 'nsp'
+export type PartnerApplicationStatus =
+  | 'new'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
+export type CommissionStatus = 'accrued' | 'payable' | 'paid'
+export type CommissionPhase = 'accrual' | 'reversal'
+export type SalesChannel =
+  | 'direct'
+  | 'revendeur'
+  | 'distributeur'
+  | 'grand_compte'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -115,6 +133,11 @@ type CompanyRow = {
   total_containers_completed: number
   total_lifetime_value: number
   preferred_locale: string
+  channel: SalesChannel
+  channel_set_by: string | null
+  channel_set_at: string | null
+  referred_by_partner_id: string | null
+  referred_at: string | null
   created_at: string
   updated_at: string
 }
@@ -152,11 +175,86 @@ type CompanyInsert = {
   total_containers_completed?: number
   total_lifetime_value?: number
   preferred_locale?: string
+  channel?: SalesChannel
+  channel_set_by?: string | null
+  channel_set_at?: string | null
+  referred_by_partner_id?: string | null
+  referred_at?: string | null
   created_at?: string
   updated_at?: string
 }
 
 type CompanyUpdate = Partial<CompanyInsert>
+
+type PartnerCodeRow = {
+  id: string
+  code: string
+  company_id: string
+  active: boolean
+  created_at: string
+}
+
+type PartnerCodeInsert = {
+  id?: string
+  code: string
+  company_id: string
+  active?: boolean
+  created_at?: string
+}
+
+type PartnerCodeUpdate = Partial<PartnerCodeInsert>
+
+type CommissionLedgerRow = {
+  id: string
+  partner_code_id: string
+  reservation_id: string
+  base_amount_ht: number
+  rate: number
+  amount: number
+  status: CommissionStatus
+  phase: CommissionPhase
+  accrued_at: string
+  paid_at: string | null
+}
+
+type CommissionLedgerInsert = {
+  id?: string
+  partner_code_id: string
+  reservation_id: string
+  base_amount_ht: number
+  rate?: number
+  amount: number
+  status?: CommissionStatus
+  phase?: CommissionPhase
+  accrued_at?: string
+  paid_at?: string | null
+}
+
+type CommissionLedgerUpdate = Partial<CommissionLedgerInsert>
+
+type ChannelCoefficientRow = {
+  channel: SalesChannel
+  coefficient: number
+}
+type ChannelCoefficientInsert = {
+  channel: SalesChannel
+  coefficient: number
+}
+type ChannelCoefficientUpdate = Partial<ChannelCoefficientInsert>
+
+type ChannelPriceOverrideRow = {
+  id: string
+  product_id: string
+  channel: SalesChannel
+  unit_price_ht: number
+}
+type ChannelPriceOverrideInsert = {
+  id?: string
+  product_id: string
+  channel: SalesChannel
+  unit_price_ht: number
+}
+type ChannelPriceOverrideUpdate = Partial<ChannelPriceOverrideInsert>
 
 type UserProfileRow = {
   id: string
@@ -292,6 +390,10 @@ type ReservationRow = {
   created_at: string
   updated_at: string
   requested_container_type: ContainerType | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
 }
 
 type ReservationInsert = {
@@ -334,6 +436,10 @@ type ReservationInsert = {
   created_at?: string
   updated_at?: string
   requested_container_type?: ContainerType | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
 }
 
 type ReservationUpdate = Partial<ReservationInsert>
@@ -439,6 +545,10 @@ type StockRequestRow = {
   internal_note: string | null
   product_snapshot: Json
   source: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
   created_at: string
   updated_at: string
 }
@@ -464,11 +574,61 @@ type StockRequestInsert = {
   internal_note?: string | null
   product_snapshot: Json
   source?: string
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
   created_at?: string
   updated_at?: string
 }
 
 type StockRequestUpdate = Partial<StockRequestInsert>
+
+type PartnerApplicationRow = {
+  id: string
+  company_name: string
+  siret: string
+  siret_verified: boolean
+  contact_name: string
+  email: string
+  phone: string | null
+  activity_profile: string
+  target_status: PartnerTargetStatus
+  zone: string | null
+  estimated_volume: string | null
+  message: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
+  status: PartnerApplicationStatus
+  admin_notes: string | null
+  created_at: string
+}
+
+type PartnerApplicationInsert = {
+  id?: string
+  company_name: string
+  siret: string
+  siret_verified?: boolean
+  contact_name: string
+  email: string
+  phone?: string | null
+  activity_profile: string
+  target_status: PartnerTargetStatus
+  zone?: string | null
+  estimated_volume?: string | null
+  message?: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
+  status?: PartnerApplicationStatus
+  admin_notes?: string | null
+  created_at?: string
+}
+
+type PartnerApplicationUpdate = Partial<PartnerApplicationInsert>
 
 type ContainerRow = {
   id: string
@@ -752,6 +912,16 @@ export interface Database {
         Insert: ReservationInsert
         Update: ReservationUpdate
       }
+      partner_codes: {
+        Row: PartnerCodeRow
+        Insert: PartnerCodeInsert
+        Update: PartnerCodeUpdate
+      }
+      commission_ledger: {
+        Row: CommissionLedgerRow
+        Insert: CommissionLedgerInsert
+        Update: CommissionLedgerUpdate
+      }
       reservation_items: {
         Row: ReservationItemRow
         Insert: ReservationItemInsert
@@ -761,6 +931,11 @@ export interface Database {
         Row: StockRequestRow
         Insert: StockRequestInsert
         Update: StockRequestUpdate
+      }
+      partner_applications: {
+        Row: PartnerApplicationRow
+        Insert: PartnerApplicationInsert
+        Update: PartnerApplicationUpdate
       }
       stock_lines: {
         Row: StockLineRow
@@ -797,6 +972,16 @@ export interface Database {
         Insert: CarrierPartnerInsert
         Update: CarrierPartnerUpdate
       }
+      channel_coefficients: {
+        Row: ChannelCoefficientRow
+        Insert: ChannelCoefficientInsert
+        Update: ChannelCoefficientUpdate
+      }
+      channel_price_overrides: {
+        Row: ChannelPriceOverrideRow
+        Insert: ChannelPriceOverrideInsert
+        Update: ChannelPriceOverrideUpdate
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -816,12 +1001,26 @@ export interface Database {
         Args: { payload: Json }
         Returns: void
       }
+      get_catalogue_prices: {
+        Args: Record<string, never>
+        Returns: ReadonlyArray<{
+          product_id: string
+          unit_price_ht: number
+        }>
+      }
+      current_channel: {
+        Args: Record<string, never>
+        Returns: SalesChannel
+      }
     }
     Enums: {
       user_role: UserRole
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
+      partner_target_status: PartnerTargetStatus
+      partner_application_status: PartnerApplicationStatus
+      sales_channel: SalesChannel
       stock_condition: StockCondition
       security_event_type: SecurityEventType
       container_status: ContainerStatus

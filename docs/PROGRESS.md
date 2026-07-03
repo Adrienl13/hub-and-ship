@@ -195,7 +195,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - 🔄 MobileStickyCart Lovable intégré
 - 🔄 OrderSummary Lovable intégré
 - 🔄 PricingBreakdown Lovable intégré
-- 🔄 TieredPricingViz (remises quantité client 2/6/10%)
+- 🔄 TieredPricingViz (remises quantité client — grille v2 : 100u→6% / 150u→10%)
 - ✅ DeliveryInfoBox (home + rappel compact panier)
 - 🔄 Store Zustand `cart.store.ts` (panier partagé home/catalogue)
 
@@ -376,6 +376,100 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
+
+### Session du 2026-07-02 — LOT 6 (Espace partenaire connecté v1)
+
+- Phase : Réseau partenaires — LOT 6 (espace connecté /partenaire)
+- Tâches : route `/partenaire` + guard 4 états (`usePartnerSpace`). Migration
+  self-read RLS (partner lit ses propres partner_codes + commission_ledger via
+  current_company_id()). Vue Apporteur (code + lien + QR téléchargeable via
+  qrcode-generator, compteurs, tableau commissions). Vue Revendeur (grille via
+  RPC get_catalogue_prices, jauge RFA, impression). Vue GC/Distributeur (récap +
+  contact référent). Lien Footer. `src/lib/partner-space/{qr,repository}.ts`.
+- Tests : qr, repository (compteurs/reversal), migration self-read.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 231 tests) + build OK.
+- Dépendance ajoutée : `qrcode-generator` (+ types) — zéro dépendance, QR SVG
+  self-contained (pas de CDN).
+
+### Session du 2026-07-02 — LOT 5 (Ledger apporteur d'affaires)
+
+- Phase : Réseau partenaires — LOT 5 (commissions apporteur, remplace parrainage B2C)
+- Tâches : migration `commission_ledger` (partner_codes, companies.referred_by_partner_id/
+  referred_at first-touch, commission_ledger avec status/phase + unique(reservation_id,phase)).
+  Logique `commission.ts` (8%, fenêtre 12 mois stricte, accrual/reversal). Accrual serveur
+  `accrueReservationCommission` (service-role, idempotent upsert, résout l'apporteur via
+  partner_ref→partner_codes, verrouille referred_at, statut payé + fenêtre). Retrait de la
+  remise parrainage du checkout (referral.ts en lecture seule ; payNow = frais complets ;
+  champ « Code apporteur » pour attribution). Onglet admin « Commissions » (vue par apporteur
+  accrued/payable/paid, transitions en lot, export CSV, déclencheur d'accrual par UUID).
+- Tests : commission, accrual, admin-repository (CSV/summary), migration sécurité, draft mis à jour.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 222 tests) + build OK.
+- Note : pas de flux Stripe « solde/encaissement complet » automatique dans le repo → l'accrual
+  est déclenché par l'action admin (à brancher sur `payment_intent.succeeded` quand le flux solde existera).
+
+### Session du 2026-07-02 — LOT 4 (Architecture canal / pricing multi-canal)
+
+- Phase : Réseau partenaires — LOT 4 (fondation pricing multi-canal)
+- Tâches : enum `sales_channel` + `companies.channel` (admin-only via trigger). Tables
+  `channel_coefficients` (seed direct 1.0 / revendeur 0.7368 / distributeur 0.6737 /
+  grand_compte 1.0) et `channel_price_overrides` (RLS admin, aucune SELECT publique). RPC
+  `get_catalogue_prices()` security definer (résolution override→base×coeff→base ;
+  grand_compte = −10 % d'office ; anon=direct) + `current_channel()`. Logique pure
+  `src/lib/pricing/channel.ts`. **Règle d'or** : test permanent sur tous les produits +
+  trigger DB `enforce_override_golden_rule`. Overlay du prix résolu dans
+  `productFromRow` (catalogue/db.ts) → catalogue/panier/PDF/réservation/Stripe suivent.
+  Hook `useChannel`, badge Header « Tarif <canal> actif », masquage remises volume
+  hors direct. `types.ts` étendu.
+- Tests : `channel.test.ts` (12), `channel-golden-rule.test.ts` (2), migration sécurité (7).
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 198 tests) + build OK.
+- Onglet admin « Comptes » (`AdminCompaniesTab`) : liste sociétés + bascule du canal
+  en un clic (journalisée), RLS + trigger admin-only.
+- Note : branche consolidée (LOT 1+2+3+4).
+
+### Session du 2026-07-02 — LOT 3 (Page /partenaires + candidatures)
+
+- Phase : Réseau partenaires — LOT 3 (page publique + candidatures + admin)
+- Tâches : page `/partenaires` fidèle à `partenaires-mockup.html` (hero + stats,
+  sélecteur de profil interactif avec recommandation/pré-remplissage, 4 cartes de
+  statut, bloc brasseurs, comparatif, process, formulaire, FAQ) découpée en
+  `src/components/partenaires/*`. Migration `partner_applications` (enums + table +
+  attribution + RLS anon-insert/admin) + `types.ts`. Domaine
+  `src/lib/partner-applications.ts` (Zod SIRET Luhn, builder, mapper,
+  `siret_verified=false` déféré admin), repository anon + hook, server fn
+  `sendPartnerApplicationNotification` (2 emails Resend admin + accusé 48h),
+  événement `partner_application_submitted`. Onglet admin « Partenaires »
+  (liste/filtres/transitions new→in_review→approved/rejected + admin_notes +
+  attribution). JetBrains Mono ajoutée (fonts + `.mono`). Liens Header/Footer +
+  sitemap.
+- Tests : builder, repository, templates email, migration sécurité.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 176 tests) + build OK.
+- Note : branche empilée sur LOT 2 (attribution). SIRET INSEE non vérifié à la
+  soumission anonyme (edge function `verify-siret` exige une session) → l'admin
+  vérifie ; `partner_application_submitted` déjà présent dans l'union LOT 2.
+
+### Session du 2026-07-02 — LOT 2 (Analytics + attribution UTM)
+
+- Phase : Réseau partenaires — LOT 2 (mesure des liens/QR partenaires)
+- Tâches : Plausible branché dans `__root.tsx` (domaine via `VITE_PLAUSIBLE_DOMAIN`,
+  RGPD-friendly). Helper `src/lib/analytics/plausible.ts` (`trackEvent`) + 5 événements
+  custom câblés (`reservation_started`, `reservation_paid`, `stock_request_submitted`,
+  `quote_pdf_opened` ; `partner_application_submitted` prêt pour LOT 3). Capture
+  first-touch `utm_*`/`ref` dans `src/lib/analytics/attribution.ts` (localStorage
+  `cc_attribution`, TTL 90 j, first-touch wins). Colonnes `utm_source/utm_medium/
+  utm_campaign/partner_ref` (nullable) ajoutées à `reservations` + `stock_requests`
+  (migration `20260702100000_attribution_columns`), fusionnées sur les inserts via
+  les hooks de création. `src/lib/supabase/types.ts` étendu.
+- Tests : `attribution.test.ts` (18), passthrough repository, migration test sécurité.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 158 tests) + build Vite OK.
+- Note : `partner_applications` (LOT 3) recevra les mêmes 4 colonnes + l'événement
+  `partner_application_submitted`.
+
+### Session du 2026-07-02 — LOT 1 (paliers remise directe)
+
+- Phase : Réseau partenaires — LOT 1 (alignement grille remise v2)
+- Tâches : `CUSTOMER_QUANTITY_DISCOUNT_TIERS` remplacé par la grille officielle v2 (100u→6% / 150u→10%), abandon des anciens paliers 50u→2% / 150u→6% / 300u→10%. Tests `customer-discounts.test.ts` réécrits sur les bornes v2 (99→0%, 100→6%, 149→6%, 150→10%, palier max sans next tier). `TieredPricingViz` passé en `grid-cols-2` (2 paliers) — le composant lit déjà la constante donc l'affichage panier suit la grille v2.
+- Vérification base : la remise quantité client est purement informative (`TieredPricingViz`), jamais appliquée aux totaux ni persistée (seules `referral_discount`/`loyalty_discount` existent). Aucune réservation n'a donc pu « bénéficier » de l'ancien palier 50u→2% ⇒ rien à honorer rétroactivement.
+- Tests : `npm run check` vert (typecheck 0 erreur, lint `--max-warnings=0`, 135 tests Vitest).
 
 ### Session du 2026-05-17
 
