@@ -52,9 +52,10 @@ const PLAUSIBLE_API_HOST =
 
 /**
  * Plausible analytics scripts, only emitted when a domain is configured.
- * `script.manual.js` lets us fire pageviews/custom events ourselves; the inline
- * snippet defines the `plausible()` queue so events triggered before the script
- * loads are buffered. RGPD-friendly (no cookies), so no consent banner needed.
+ * `script.js` auto-tracks pageviews; our custom events go through the inline
+ * snippet below, which defines the `plausible()` queue so events triggered
+ * before the script loads are buffered. RGPD-friendly (no cookies), so no
+ * consent banner needed.
  */
 function plausibleScripts(): Array<Record<string, string | boolean>> {
   if (!PLAUSIBLE_DOMAIN) return []

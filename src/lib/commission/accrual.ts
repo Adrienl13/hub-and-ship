@@ -19,6 +19,22 @@ export function isAccruableStatus(status: ReservationStatus): boolean {
   return !NON_ACCRUABLE_STATUSES.has(status)
 }
 
+/**
+ * Resolve a partner_code id from a reservation's first-touch `partner_ref`,
+ * case-insensitively. `partner_ref` is captured from `?ref=` un-normalized, so
+ * `dbp-13` must still match the code `DBP-13` — otherwise commissions would
+ * silently never accrue.
+ */
+export function matchPartnerCodeId(
+  codes: ReadonlyArray<{ readonly id: string; readonly code: string }>,
+  partnerRef: string | null | undefined,
+): string | null {
+  if (!partnerRef) return null
+  const ref = partnerRef.trim().toLowerCase()
+  if (ref.length === 0) return null
+  return codes.find((c) => c.code.trim().toLowerCase() === ref)?.id ?? null
+}
+
 export interface ReservationAccrualInput {
   readonly reservationId: string
   readonly status: ReservationStatus

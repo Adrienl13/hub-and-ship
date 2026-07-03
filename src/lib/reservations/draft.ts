@@ -34,7 +34,6 @@ export interface ReservationDraftInput {
   readonly items: ReadonlyArray<CartItem>
   readonly containerReference: string
   readonly containerId?: string
-  readonly referralApplication?: ReferralApplication
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string

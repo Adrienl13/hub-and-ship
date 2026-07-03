@@ -81,10 +81,16 @@ function CodeCard({ code }: { readonly code: string }) {
 
   const copy = () => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return
-    void navigator.clipboard.writeText(link).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
+    void navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      })
+      .catch(() => {
+        // Clipboard blocked (insecure context / denied) — no-op, the link is
+        // still visible for manual copy.
+      })
   }
 
   return (

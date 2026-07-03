@@ -16,6 +16,7 @@ export type PartnerSpaceStatus =
   | 'unconfigured'
   | 'anonymous'
   | 'not_partner'
+  | 'error'
   | 'ready'
 
 export interface UsePartnerSpaceResult {
@@ -77,6 +78,10 @@ export function usePartnerSpace(): UsePartnerSpaceResult {
     if (auth.status === 'loading' || channelLoading || dataLoading)
       return 'loading'
     if (auth.status !== 'authenticated') return 'anonymous'
+    // A load failure must not masquerade as "not a partner": an apporteur on
+    // the direct channel would otherwise be silently demoted when their codes
+    // failed to load. Surface the error instead.
+    if (error !== null) return 'error'
     const isPartner = channel !== 'direct' || data.codes.length > 0
     return isPartner ? 'ready' : 'not_partner'
   })()

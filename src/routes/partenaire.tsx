@@ -73,22 +73,37 @@ function PartenairePage() {
     )
   }
 
+  if (space.status === 'error') {
+    return (
+      <GuardShell
+        onReserve={onReserve}
+        title="Espace momentanément indisponible"
+        cta={
+          <Button onClick={space.reload} className="mt-6 h-11 w-full rounded-sm">
+            Réessayer
+          </Button>
+        }
+      >
+        {space.error ??
+          'Impossible de charger votre espace partenaire pour le moment.'}
+      </GuardShell>
+    )
+  }
+
+  const showApporteur = space.data.codes.length > 0
+  const showRevendeur = space.channel === 'revendeur'
+  const showReferent =
+    space.channel === 'grand_compte' || space.channel === 'distributeur'
+
   return (
     <div className="min-h-screen bg-[color:var(--sand)] text-foreground">
       <Header onReserve={onReserve} />
-      <main className="mx-auto max-w-4xl px-6 py-12">
-        {space.error && (
-          <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
-            {space.error}
-          </div>
-        )}
-        {space.data.codes.length > 0 ? (
-          <ApporteurDashboard data={space.data} />
-        ) : space.channel === 'revendeur' ? (
-          <RevendeurDashboard />
-        ) : (
-          <ReferentRecap channel={space.channel} />
-        )}
+      <main className="mx-auto max-w-4xl space-y-12 px-6 py-12">
+        {/* Additive: a partner can be both an apporteur (holds a code) and a
+            revendeur/grand compte (channel) — show every applicable view. */}
+        {showApporteur && <ApporteurDashboard data={space.data} />}
+        {showRevendeur && <RevendeurDashboard />}
+        {showReferent && <ReferentRecap channel={space.channel} />}
       </main>
       <Footer />
     </div>

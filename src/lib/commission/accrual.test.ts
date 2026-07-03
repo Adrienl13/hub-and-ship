@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { isAccruableStatus, resolveReservationAccrual } from './accrual'
+import {
+  isAccruableStatus,
+  matchPartnerCodeId,
+  resolveReservationAccrual,
+} from './accrual'
 
 const REFERRED = '2026-01-15T10:00:00.000Z'
 
@@ -24,6 +28,26 @@ describe('isAccruableStatus', () => {
     expect(isAccruableStatus('deposit_paid')).toBe(true)
     expect(isAccruableStatus('delivered')).toBe(true)
     expect(isAccruableStatus('reserved')).toBe(true)
+  })
+})
+
+describe('matchPartnerCodeId (case-insensitive)', () => {
+  const codes = [
+    { id: 'pc-1', code: 'DBP-13' },
+    { id: 'pc-2', code: 'XYZ-1' },
+  ]
+
+  it('matches regardless of case / surrounding spaces', () => {
+    expect(matchPartnerCodeId(codes, 'DBP-13')).toBe('pc-1')
+    expect(matchPartnerCodeId(codes, 'dbp-13')).toBe('pc-1')
+    expect(matchPartnerCodeId(codes, '  Dbp-13 ')).toBe('pc-1')
+  })
+
+  it('returns null for an unknown, empty, or missing ref', () => {
+    expect(matchPartnerCodeId(codes, 'nope')).toBeNull()
+    expect(matchPartnerCodeId(codes, '')).toBeNull()
+    expect(matchPartnerCodeId(codes, null)).toBeNull()
+    expect(matchPartnerCodeId([], 'DBP-13')).toBeNull()
   })
 })
 

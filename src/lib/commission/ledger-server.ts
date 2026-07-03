@@ -11,6 +11,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
 import {
+  matchPartnerCodeId,
   resolveReservationAccrual,
   type AccrualSkipReason,
 } from '@/lib/commission/accrual'
@@ -45,15 +46,16 @@ export const accrueReservationCommission = createServerFn({ method: 'POST' })
     if (!reservation) return { ok: true, accrued: false, reason: 'not_found' }
 
     // Resolve the referring partner from the reservation's first-touch code.
+    // Case-insensitive: partner_ref is captured from `?ref=` un-normalized, so
+    // `?ref=dbp-13` must still match the code `DBP-13` — otherwise commissions
+    // would silently never accrue. partner_codes is tiny, so match in JS.
     let partnerCodeId: string | null = null
     if (reservation.partner_ref) {
-      const { data: code } = await supabase
+      const { data: codes } = await supabase
         .from('partner_codes')
-        .select('id')
-        .eq('code', reservation.partner_ref)
+        .select('id, code')
         .eq('active', true)
-        .maybeSingle()
-      partnerCodeId = code?.id ?? null
+      partnerCodeId = matchPartnerCodeId(codes ?? [], reservation.partner_ref)
     }
 
     // First-touch lock: stamp the client's referral once, never overwrite.

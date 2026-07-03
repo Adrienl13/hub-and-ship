@@ -47,6 +47,10 @@ export function RevendeurDashboard() {
           unitPriceHt: Number(row.unit_price_ht),
         }))
         setPrices(rows)
+      } catch {
+        // Degrade gracefully to the empty-state message; a partner never sees
+        // a raw error for a read-only grid.
+        if (!cancelled) setPrices([])
       } finally {
         if (!cancelled) setLoading(false)
       }
