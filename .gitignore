@@ -77,3 +77,6 @@ supabase/.temp/
 *.backup
 *.tmp
 *.temp
+
+# Project uses bun.lock — keep npm's lockfile out
+package-lock.json
