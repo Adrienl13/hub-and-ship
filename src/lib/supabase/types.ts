@@ -39,6 +39,8 @@ export type PartnerApplicationStatus =
   | 'in_review'
   | 'approved'
   | 'rejected'
+export type CommissionStatus = 'accrued' | 'payable' | 'paid'
+export type CommissionPhase = 'accrual' | 'reversal'
 export type SalesChannel =
   | 'direct'
   | 'revendeur'
@@ -134,6 +136,8 @@ type CompanyRow = {
   channel: SalesChannel
   channel_set_by: string | null
   channel_set_at: string | null
+  referred_by_partner_id: string | null
+  referred_at: string | null
   created_at: string
   updated_at: string
 }
@@ -174,11 +178,59 @@ type CompanyInsert = {
   channel?: SalesChannel
   channel_set_by?: string | null
   channel_set_at?: string | null
+  referred_by_partner_id?: string | null
+  referred_at?: string | null
   created_at?: string
   updated_at?: string
 }
 
 type CompanyUpdate = Partial<CompanyInsert>
+
+type PartnerCodeRow = {
+  id: string
+  code: string
+  company_id: string
+  active: boolean
+  created_at: string
+}
+
+type PartnerCodeInsert = {
+  id?: string
+  code: string
+  company_id: string
+  active?: boolean
+  created_at?: string
+}
+
+type PartnerCodeUpdate = Partial<PartnerCodeInsert>
+
+type CommissionLedgerRow = {
+  id: string
+  partner_code_id: string
+  reservation_id: string
+  base_amount_ht: number
+  rate: number
+  amount: number
+  status: CommissionStatus
+  phase: CommissionPhase
+  accrued_at: string
+  paid_at: string | null
+}
+
+type CommissionLedgerInsert = {
+  id?: string
+  partner_code_id: string
+  reservation_id: string
+  base_amount_ht: number
+  rate?: number
+  amount: number
+  status?: CommissionStatus
+  phase?: CommissionPhase
+  accrued_at?: string
+  paid_at?: string | null
+}
+
+type CommissionLedgerUpdate = Partial<CommissionLedgerInsert>
 
 type ChannelCoefficientRow = {
   channel: SalesChannel
@@ -859,6 +911,16 @@ export interface Database {
         Row: ReservationRow
         Insert: ReservationInsert
         Update: ReservationUpdate
+      }
+      partner_codes: {
+        Row: PartnerCodeRow
+        Insert: PartnerCodeInsert
+        Update: PartnerCodeUpdate
+      }
+      commission_ledger: {
+        Row: CommissionLedgerRow
+        Insert: CommissionLedgerInsert
+        Update: CommissionLedgerUpdate
       }
       reservation_items: {
         Row: ReservationItemRow

@@ -44,11 +44,6 @@ import { useReservationCreation } from '@/hooks/useReservationCreation'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
 import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
-import {
-  applyReferralCode,
-  type ReferralApplication,
-} from '@/lib/pricing/referral'
-import { MOCK_REFERRAL_CODES } from '@/lib/referrals'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
@@ -159,18 +154,9 @@ export function ReservationDialog({
   })
 
   const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
-  const referralApplication = useMemo(
-    () =>
-      applyReferralCode({
-        codeInput: form.referralCode,
-        reservationFee: totals.reservationFee,
-        codes: MOCK_REFERRAL_CODES,
-        referredSiret: form.siret,
-        referredEmail: form.email,
-      }),
-    [form.email, form.referralCode, form.siret, totals.reservationFee],
-  )
-  const checkoutPayNow = referralApplication.payNow
+  // LOT 5: the checkout code is an apporteur partner code (attribution for the
+  // 8% commission), not a B2C discount — pay-now is the full reservation fee.
+  const checkoutPayNow = totals.reservationFee
   const contactValid =
     form.name.trim().length > 1 &&
     form.company.trim().length > 1 &&
@@ -233,7 +219,6 @@ export function ReservationDialog({
       items,
       containerReference: container.reference,
       containerId: container.id,
-      referralApplication,
       requestedContainerType,
     })
 
@@ -421,10 +406,7 @@ export function ReservationDialog({
         {step < 5 && (
           <>
             <StepIndicator step={step} />
-            <SummaryCard
-              totals={totals}
-              referralApplication={referralApplication}
-            />
+            <SummaryCard totals={totals} payNow={checkoutPayNow} />
           </>
         )}
 
@@ -569,7 +551,6 @@ export function ReservationDialog({
           <div className="space-y-4">
             <ReferralCodePanel
               value={form.referralCode}
-              application={referralApplication}
               onChange={(value) => setForm({ ...form, referralCode: value })}
             />
 
@@ -724,10 +705,10 @@ export function ReservationDialog({
 
 function SummaryCard({
   totals,
-  referralApplication,
+  payNow,
 }: {
   totals: OrderTotals
-  referralApplication: ReferralApplication
+  payNow: number
 }) {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
@@ -755,21 +736,13 @@ function SummaryCard({
               {formatEUR(totals.reservationFee)}
             </span>
           </div>
-          {referralApplication.status === 'applied' && (
-            <div className="flex justify-between text-[color:var(--forest)]">
-              <span>Code parrainage</span>
-              <span className="tabular-nums">
-                -{formatEUR(referralApplication.discountAmount)}
-              </span>
-            </div>
-          )}
         </div>
         <div className="flex items-baseline justify-between">
           <span className="text-foreground/80 text-xs">
             À payer aujourd'hui
           </span>
           <span className="font-display text-2xl font-semibold tabular-nums">
-            {formatEUR(referralApplication.payNow)}
+            {formatEUR(payNow)}
           </span>
         </div>
         <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
@@ -793,24 +766,16 @@ function SummaryCard({
 
 function ReferralCodePanel({
   value,
-  application,
   onChange,
 }: {
   value: string
-  application: ReferralApplication
   onChange: (value: string) => void
 }) {
-  const applied = application.status === 'applied'
-  const hasFeedback = application.status !== 'none'
-  const feedbackTone = applied
-    ? 'border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 text-[color:var(--forest)]'
-    : 'border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80'
-
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
         <BadgePercent className="h-4 w-4" />
-        <span className="text-sm font-medium">Code parrainage</span>
+        <span className="text-sm font-medium">Code apporteur</span>
         <span className="ml-auto text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
           Optionnel
         </span>
@@ -818,7 +783,7 @@ function ReferralCodePanel({
       <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input
           value={value}
-          placeholder="CONTAINER-PIERRE-X7K9-2026"
+          placeholder="DBP-13"
           onChange={(event) => onChange(event.target.value)}
           className="h-10 rounded-none border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] font-mono text-xs uppercase focus-visible:border-foreground focus-visible:ring-0"
         />
@@ -832,26 +797,10 @@ function ReferralCodePanel({
           Effacer
         </Button>
       </div>
-      {hasFeedback ? (
-        <div
-          className={`mt-3 rounded-sm border px-3 py-2 text-xs ${feedbackTone}`}
-        >
-          <div className="font-medium">
-            {applied ? 'Parrainage appliqué' : 'Code non appliqué'}
-          </div>
-          <div className="mt-1 leading-5">
-            {application.message}
-            {applied && application.referrerLabel
-              ? ` ${application.referrerLabel} recevra son credit apres validation de la reservation.`
-              : ''}
-          </div>
-        </div>
-      ) : (
-        <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-          Le filleul reçoit jusqu'à 100€ de réduction sur les frais de
-          réservation.
-        </p>
-      )}
+      <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+        Un partenaire vous a orienté vers Container Club ? Renseignez son code —
+        il lui permet de suivre l&apos;apport, sans impact sur votre prix.
+      </p>
     </div>
   )
 }

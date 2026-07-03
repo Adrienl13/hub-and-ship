@@ -6,6 +6,40 @@
 
 ## [Non publié]
 
+### Ajouté — LOT 5 : Ledger apporteur d'affaires (remplace le parrainage B2C)
+
+- **Programme réel** : 8% de commission sur le CA encaissé (HT) par client
+  apporté, pendant 12 mois à compter du first-touch. Fini le crédit fixe
+  200€/100€.
+- **Migration `commission_ledger`** (`20260702130000`) : table `partner_codes`
+  (code unique imprimable QR, `company_id`, `active`) ; colonnes
+  `companies.referred_by_partner_id` + `referred_at` (first-touch, verrouillé à
+  la 1re réservation) ; table `commission_ledger` (`base_amount_ht`, `rate` 8.00,
+  `amount`, `status` accrued/payable/paid, `phase` accrual/reversal,
+  **unique(reservation_id, phase)** pour l'idempotence). RLS admin. `types.ts` étendu.
+- **Logique commission** (`src/lib/pricing/commission.ts`) : `COMMISSION_RATE_PERCENT`
+  (8), fenêtre 12 mois (`isWithinCommissionWindow`, borne stricte),
+  `computeCommissionAmount`, `buildCommissionAccrual` (null hors fenêtre),
+  `buildCommissionReversal` (écriture négative, jamais de suppression).
+- **Accrual serveur** (`src/lib/commission/ledger-server.ts`,
+  `accrueReservationCommission`) : déclenché à l'encaissement complet (action
+  admin — pas de flux Stripe solde automatique à ce jour), service-role,
+  idempotent (upsert `onConflict reservation_id,phase`). Résout l'apporteur via
+  le `partner_ref` first-touch (LOT 2) → `partner_codes`, verrouille le
+  first-touch `referred_at` de la société, écrit uniquement pour un statut payé
+  (`isAccruableStatus` exclut draft/pending/cancelled) et dans la fenêtre 12 mois.
+- **Retrait du parrainage B2C du checkout** : `referral.ts` conservé en lecture
+  (réservations passées) mais la remise fixe ne s'applique plus — `payNow` = frais
+  de réservation complets ; le champ code du checkout est désormais un « Code
+  apporteur » capturé pour l'attribution (aucun impact prix pour le client).
+- **Admin — onglet « Commissions »** (`AdminCommissionsTab` +
+  `src/lib/commission/admin-repository.ts`) : vue par apporteur (accrued/payable/paid),
+  transitions en lot accrued→payable→payé, **export CSV mensuel**, et déclencheur
+  d'accrual « encaissement complet » par UUID de réservation.
+- **Tests** : `commission.test.ts`, `commission/accrual.test.ts`,
+  `commission/admin-repository.test.ts`, migration test sécurité, + `draft.test.ts`
+  mis à jour (plus de remise parrainage). `npm run check` vert (222 tests) + build OK.
+
 ### Ajouté — LOT 4 : Architecture canal (pricing multi-canal)
 
 - **Canaux de vente** : enum `sales_channel` (`direct/revendeur/distributeur/grand_compte`).

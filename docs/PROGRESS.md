@@ -377,6 +377,22 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-02 — LOT 5 (Ledger apporteur d'affaires)
+
+- Phase : Réseau partenaires — LOT 5 (commissions apporteur, remplace parrainage B2C)
+- Tâches : migration `commission_ledger` (partner_codes, companies.referred_by_partner_id/
+  referred_at first-touch, commission_ledger avec status/phase + unique(reservation_id,phase)).
+  Logique `commission.ts` (8%, fenêtre 12 mois stricte, accrual/reversal). Accrual serveur
+  `accrueReservationCommission` (service-role, idempotent upsert, résout l'apporteur via
+  partner_ref→partner_codes, verrouille referred_at, statut payé + fenêtre). Retrait de la
+  remise parrainage du checkout (referral.ts en lecture seule ; payNow = frais complets ;
+  champ « Code apporteur » pour attribution). Onglet admin « Commissions » (vue par apporteur
+  accrued/payable/paid, transitions en lot, export CSV, déclencheur d'accrual par UUID).
+- Tests : commission, accrual, admin-repository (CSV/summary), migration sécurité, draft mis à jour.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 222 tests) + build OK.
+- Note : pas de flux Stripe « solde/encaissement complet » automatique dans le repo → l'accrual
+  est déclenché par l'action admin (à brancher sur `payment_intent.succeeded` quand le flux solde existera).
+
 ### Session du 2026-07-02 — LOT 4 (Architecture canal / pricing multi-canal)
 
 - Phase : Réseau partenaires — LOT 4 (fondation pricing multi-canal)

@@ -1,0 +1,74 @@
+import { describe, expect, it } from 'vitest'
+
+import { isAccruableStatus, resolveReservationAccrual } from './accrual'
+
+const REFERRED = '2026-01-15T10:00:00.000Z'
+
+const base = {
+  reservationId: 'res-1',
+  status: 'delivered' as const,
+  baseAmountHt: 4450,
+  partnerCodeId: 'pc-1',
+  reservationAt: '2026-06-01T00:00:00Z',
+  companyReferredAt: REFERRED,
+}
+
+describe('isAccruableStatus', () => {
+  it('excludes draft, pending fee and cancelled (no CA collected)', () => {
+    expect(isAccruableStatus('draft')).toBe(false)
+    expect(isAccruableStatus('pending_reservation_fee')).toBe(false)
+    expect(isAccruableStatus('cancelled')).toBe(false)
+  })
+
+  it('allows paid/downstream statuses', () => {
+    expect(isAccruableStatus('deposit_paid')).toBe(true)
+    expect(isAccruableStatus('delivered')).toBe(true)
+    expect(isAccruableStatus('reserved')).toBe(true)
+  })
+})
+
+describe('resolveReservationAccrual', () => {
+  it('accrues 8% for an eligible paid reservation with a partner code', () => {
+    const result = resolveReservationAccrual(base)
+    expect(result.accrued).toBe(true)
+    if (!result.accrued) return
+    expect(result.payload).toMatchObject({
+      reservation_id: 'res-1',
+      partner_code_id: 'pc-1',
+      base_amount_ht: 4450,
+      amount: 356,
+      phase: 'accrual',
+      status: 'accrued',
+    })
+  })
+
+  it('does not accrue on a not-yet-paid status', () => {
+    expect(
+      resolveReservationAccrual({ ...base, status: 'pending_reservation_fee' }),
+    ).toEqual({ accrued: false, reason: 'status_not_paid' })
+  })
+
+  it('does not accrue without a partner code (no referrer)', () => {
+    expect(
+      resolveReservationAccrual({ ...base, partnerCodeId: null }),
+    ).toEqual({ accrued: false, reason: 'no_partner_code' })
+  })
+
+  it('does not accrue after the 12-month window', () => {
+    expect(
+      resolveReservationAccrual({
+        ...base,
+        reservationAt: '2027-03-01T00:00:00Z',
+      }),
+    ).toEqual({ accrued: false, reason: 'outside_window' })
+  })
+
+  it('treats a null company referred_at as first-touch (opens the window now)', () => {
+    const result = resolveReservationAccrual({
+      ...base,
+      companyReferredAt: null,
+      reservationAt: '2026-06-01T00:00:00Z',
+    })
+    expect(result.accrued).toBe(true)
+  })
+})
