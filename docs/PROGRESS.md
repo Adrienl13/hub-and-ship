@@ -377,6 +377,20 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-02 — LOT 6 (Espace partenaire connecté v1)
+
+- Phase : Réseau partenaires — LOT 6 (espace connecté /partenaire)
+- Tâches : route `/partenaire` + guard 4 états (`usePartnerSpace`). Migration
+  self-read RLS (partner lit ses propres partner_codes + commission_ledger via
+  current_company_id()). Vue Apporteur (code + lien + QR téléchargeable via
+  qrcode-generator, compteurs, tableau commissions). Vue Revendeur (grille via
+  RPC get_catalogue_prices, jauge RFA, impression). Vue GC/Distributeur (récap +
+  contact référent). Lien Footer. `src/lib/partner-space/{qr,repository}.ts`.
+- Tests : qr, repository (compteurs/reversal), migration self-read.
+  `npm run check` vert (typecheck, lint `--max-warnings=0`, 231 tests) + build OK.
+- Dépendance ajoutée : `qrcode-generator` (+ types) — zéro dépendance, QR SVG
+  self-contained (pas de CDN).
+
 ### Session du 2026-07-02 — LOT 5 (Ledger apporteur d'affaires)
 
 - Phase : Réseau partenaires — LOT 5 (commissions apporteur, remplace parrainage B2C)

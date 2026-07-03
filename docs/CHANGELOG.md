@@ -6,6 +6,30 @@
 
 ## [Non publié]
 
+### Ajouté — LOT 6 : Espace partenaire connecté v1
+
+- **Route `/partenaire`** (`src/routes/partenaire.tsx`) protégée par un guard
+  4 états (loading / unconfigured / anonymous / not_partner / ready, pattern
+  `AdminGuard`). Accès = authentifié **et** (canal ≠ direct **ou** détenteur d'un
+  `partner_code`). `noindex`.
+- **Migration self-read** (`20260702140000`) : policies RLS `select` scopant un
+  partenaire à SES propres `partner_codes` + `commission_ledger` (via
+  `current_company_id()`). Lecture seule ; un partenaire ne voit jamais les
+  données d'un autre. Admin conserve l'accès complet.
+- **Vue Apporteur** (priorité brasseurs) : son code + lien taggé (convention
+  LOT 2) + **QR généré côté client** (`qrcode-generator`, SVG self-contained,
+  bouton « Télécharger mon QR pour tournées »), compteurs (réservations
+  attribuées, CA encaissé attribué, commissions), tableau des commissions
+  accrued/payable/paid. `src/lib/partner-space/{qr,repository}.ts`.
+- **Vue Revendeur** : grille tarifaire résolue via la RPC `get_catalogue_prices`
+  (LOT 4, jamais exposée aux autres canaux), bouton Imprimer/PDF, jauge RFA
+  (3% / 5%), lien historique commandes.
+- **Vue Grand compte / Distributeur** : récapitulatif des conditions +
+  « Contactez votre référent » (v1 minimale, complet en V2).
+- **Nav** : lien « Espace partenaire » au Footer.
+- **Tests** : `partner-space/qr.test.ts`, `partner-space/repository.test.ts`
+  (compteurs + reversal), migration self-read. `npm run check` vert (231 tests) + build OK.
+
 ### Ajouté — LOT 5 : Ledger apporteur d'affaires (remplace le parrainage B2C)
 
 - **Programme réel** : 8% de commission sur le CA encaissé (HT) par client

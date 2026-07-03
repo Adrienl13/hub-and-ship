@@ -66,6 +66,14 @@ export function Footer() {
               </li>
               <li>
                 <a
+                  href="/partenaire"
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Espace partenaire
+                </a>
+              </li>
+              <li>
+                <a
                   href="/transport-partenaires"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
