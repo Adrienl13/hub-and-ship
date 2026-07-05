@@ -13,6 +13,7 @@ import { Route as TransportPartenairesRouteImport } from './routes/transport-par
 import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
+import { Route as PrixRouteImport } from './routes/prix'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartenairesRouteImport } from './routes/partenaires'
 import { Route as PartenaireRouteImport } from './routes/partenaire'
@@ -68,6 +69,11 @@ const Stock24hRoute = Stock24hRouteImport.update({
 const QualiteRoute = QualiteRouteImport.update({
   id: '/qualite',
   path: '/qualite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrixRoute = PrixRouteImport.update({
+  id: '/prix',
+  path: '/prix',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerRoute = PartnerRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -303,6 +310,7 @@ export interface FileRoutesByTo {
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
+  '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/partenaire'
     | '/partenaires'
     | '/partner'
+    | '/prix'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/partenaire'
     | '/partenaires'
     | '/partner'
+    | '/prix'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/partenaire'
     | '/partenaires'
     | '/partner'
+    | '/prix'
     | '/qualite'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -512,6 +524,7 @@ export interface RootRouteChildren {
   PartenaireRoute: typeof PartenaireRoute
   PartenairesRoute: typeof PartenairesRoute
   PartnerRoute: typeof PartnerRouteWithChildren
+  PrixRoute: typeof PrixRoute
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/qualite'
       fullPath: '/qualite'
       preLoaderRoute: typeof QualiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prix': {
+      id: '/prix'
+      path: '/prix'
+      fullPath: '/prix'
+      preLoaderRoute: typeof PrixRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -880,6 +900,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartenaireRoute: PartenaireRoute,
   PartenairesRoute: PartenairesRoute,
   PartnerRoute: PartnerRouteWithChildren,
+  PrixRoute: PrixRoute,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,

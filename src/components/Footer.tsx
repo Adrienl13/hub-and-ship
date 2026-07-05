@@ -43,6 +43,7 @@ export function Footer() {
                     'Importer par container',
                     '/guides/import-mobilier-chr-container',
                   ],
+                  ['Le prix prouvé', '/prix'],
                   ['Chaises restaurant', '/catalogue/chaises-restaurant'],
                   ['Tables restaurant', '/catalogue/tables-restaurant'],
                   ['Stock terrasse 24h', '/stock-mobilier-terrasse-24h'],

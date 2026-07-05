@@ -18,6 +18,7 @@ Pros Import operates Container Club, a French B2B group-buying platform for prof
 - Tables category: https://prosimport.com/catalogue/tables-restaurant
 - Stock available quickly: https://prosimport.com/stock-24h
 - Reseller partner program: https://prosimport.com/partenaires
+- Transparent pricing method ("prix prouvé"): https://prosimport.com/prix
 - Quality and tests: https://prosimport.com/qualite
 - Delivered containers: https://prosimport.com/livres
 - Recommended carriers: https://prosimport.com/transport-partenaires
