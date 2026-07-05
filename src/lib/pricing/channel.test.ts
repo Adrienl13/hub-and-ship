@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHANNEL_COEFFICIENTS,
+  CHANNEL_MARGIN_RATES,
   MAX_DIRECT_DISCOUNT_PERCENT,
   WORST_DIRECT_PRICE_FACTOR,
   channelAllowsVolumeDiscounts,
+  channelCoefficientFromMargins,
   resolveChannelUnitPrice,
   violatesGoldenRule,
   worstDirectUnitPrice,
@@ -20,6 +22,34 @@ describe('channel pricing constants', () => {
     expect(CHANNEL_COEFFICIENTS.revendeur).toBeLessThan(WORST_DIRECT_PRICE_FACTOR)
     expect(CHANNEL_COEFFICIENTS.distributeur).toBeLessThan(
       CHANNEL_COEFFICIENTS.revendeur,
+    )
+  })
+
+  it('keeps the static coefficients coherent with the pricing_parameters margins', () => {
+    // Same formula as get_catalogue_prices(): (1 + margin) / (1 + direct).
+    expect(
+      channelCoefficientFromMargins(
+        CHANNEL_MARGIN_RATES.direct,
+        CHANNEL_MARGIN_RATES.revendeur,
+      ),
+    ).toBe(CHANNEL_COEFFICIENTS.revendeur)
+    expect(
+      channelCoefficientFromMargins(
+        CHANNEL_MARGIN_RATES.direct,
+        CHANNEL_MARGIN_RATES.distributeur,
+      ),
+    ).toBe(CHANNEL_COEFFICIENTS.distributeur)
+  })
+
+  it('reproduces the pricing_parameters control values (SKU témoin ZF2000C)', () => {
+    // Control row: landed ~33.78 → direct 64.18, reseller 47.29, distrib 43.23.
+    // The stored landed cost is itself rounded, so compare within one cent.
+    const landed = 33.78
+    expect(landed * (1 + CHANNEL_MARGIN_RATES.direct)).toBeCloseTo(64.18, 1)
+    expect(landed * (1 + CHANNEL_MARGIN_RATES.revendeur)).toBeCloseTo(47.29, 1)
+    expect(landed * (1 + CHANNEL_MARGIN_RATES.distributeur)).toBeCloseTo(
+      43.23,
+      1,
     )
   })
 })

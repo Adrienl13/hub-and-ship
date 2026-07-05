@@ -38,24 +38,30 @@ export const accrueReservationCommission = createServerFn({ method: 'POST' })
 
     const { data: reservation, error: resErr } = await supabase
       .from('reservations')
-      .select('id, company_id, total_ht, partner_ref, status, created_at')
+      .select(
+        'id, company_id, total_ht, partner_ref, referral_code, status, created_at',
+      )
       .eq('id', data.reservationId)
       .maybeSingle()
 
     if (resErr) return { ok: false, error: resErr.message }
     if (!reservation) return { ok: true, accrued: false, reason: 'not_found' }
 
-    // Resolve the referring partner from the reservation's first-touch code.
-    // Case-insensitive: partner_ref is captured from `?ref=` un-normalized, so
-    // `?ref=dbp-13` must still match the code `DBP-13` — otherwise commissions
-    // would silently never accrue. partner_codes is tiny, so match in JS.
+    // Resolve the referring partner from the reservation's first-touch code
+    // (`?ref=` capture), falling back to the "Code apporteur" typed at checkout
+    // (stored in referral_code since the B2C referral program was retired).
+    // Case-insensitive: `?ref=dbp-13` must still match the code `DBP-13` —
+    // otherwise commissions would silently never accrue. partner_codes is
+    // tiny, so match in JS.
     let partnerCodeId: string | null = null
-    if (reservation.partner_ref) {
+    if (reservation.partner_ref || reservation.referral_code) {
       const { data: codes } = await supabase
         .from('partner_codes')
         .select('id, code')
         .eq('active', true)
-      partnerCodeId = matchPartnerCodeId(codes ?? [], reservation.partner_ref)
+      partnerCodeId =
+        matchPartnerCodeId(codes ?? [], reservation.partner_ref) ??
+        matchPartnerCodeId(codes ?? [], reservation.referral_code)
     }
 
     // First-touch lock: stamp the client's referral once, never overwrite.

@@ -421,6 +421,34 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-05 — FUSION P2 (pont moteur de prix + retrait parrainage B2C)
+
+- Phase : Fusion codex × Claude — P2 (greffes adaptées au schéma prod).
+- Tâches :
+  - Migration `20260705090000_pricing_engine_bridge.sql` : les tables du moteur
+    de prix prod (`pricing_parameters`, `product_pricing_inputs`,
+    `product_partner_prices`, créées par des migrations codex non commitées)
+    sont rapatriées dans le repo en `if not exists` (no-op prod, création
+    propre en CI), RLS admin-only (décision #4).
+  - `get_catalogue_prices()` v2 : coefficients canaux dérivés des marges
+    ACTIVES de `pricing_parameters` ((1+marge canal)/(1+marge direct)),
+    fallback `channel_coefficients`, clamp règle d'or en lecture ; le trigger
+    `enforce_override_golden_rule` dérive son facteur du `tier3_discount` actif.
+  - Fix régression fusion : `fetchCatalogFromDb` récupérait les prix canal
+    résolus via la RPC mais ne les passait jamais à `productFromRow`.
+  - Retrait cohérent du parrainage B2C −100 € : kill switch
+    `referral_program_settings.is_active=false` (réversible via l'admin),
+    panneau checkout devenu « Code apporteur » (attribution pure, zéro remise,
+    zéro appel serveur), accrual commission rapproche `partner_ref` PUIS
+    `referral_code`, `/account/parrainage` réécrit en pitch apporteur 8 %.
+  - Arbitrage spec : les commissions accruent sur l'attribution first-touch
+    (décision #3/#5), PAS sur le pipeline `partner_deals` (qui reste CRM).
+- Tests : typecheck 0, lint 0, 370 tests verts, build + budget bundle OK ;
+  nouveaux tests `pricing-engine-bridge-migration` + cohérence
+  coefficients/marges/valeurs de contrôle (SKU témoin ZF2000C).
+- Reste : appliquer les migrations en prod AVANT deploy (l'utilisateur s'en
+  charge), P3 (fixes SEO + audit final), page « prix prouvé » (#2).
+
 ### Session du 2026-07-02 — LOT 6 (Espace partenaire connecté v1)
 
 - Phase : Réseau partenaires — LOT 6 (espace connecté /partenaire)

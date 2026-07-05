@@ -245,7 +245,13 @@ export async function fetchCatalogFromDb(
   }
 
   const products: Product[] = (productsResult.data ?? [])
-    .map((row) => productFromRow(row, variantsByProduct.get(row.id) ?? []))
+    .map((row) =>
+      productFromRow(
+        row,
+        variantsByProduct.get(row.id) ?? [],
+        resolvedPriceByProduct.get(row.id),
+      ),
+    )
     .filter((product) => product.variants.length > 0)
 
   const currentContainer = containerRow

@@ -28,9 +28,37 @@ export const SALES_CHANNEL_LABEL: Record<SalesChannel, string> = {
 }
 
 /**
+ * Default markup-on-cost margins — mirror of the ACTIVE `pricing_parameters`
+ * row (direct_margin_rate / reseller_margin_rate / distributor_margin_rate).
+ * The server RPC derives its coefficients from the live row; these values are
+ * the client-side display mirror and the seed defaults.
+ */
+export const CHANNEL_MARGIN_RATES = {
+  direct: 0.9,
+  revendeur: 0.4,
+  distributeur: 0.28,
+} as const
+
+/**
+ * Coefficient applied to the public direct price for a given channel margin:
+ * (1 + channel margin) / (1 + direct margin), rounded to 4 decimals — the
+ * exact formula used by `get_catalogue_prices()`.
+ */
+export function channelCoefficientFromMargins(
+  directMarginRate: number,
+  channelMarginRate: number,
+): number {
+  return (
+    Math.round(((1 + channelMarginRate) / (1 + directMarginRate)) * 10_000) /
+    10_000
+  )
+}
+
+/**
  * Channel coefficients, derived from the markup-on-cost grid
  * (direct +90%, revendeur +40%, distributeur +28%). These MUST match the
- * `channel_coefficients` seed in the migration.
+ * defaults of the `pricing_parameters` engine (see the coherence unit test)
+ * and the `channel_coefficients` fallback seed in the migration.
  *
  * grand_compte stays 1.0000 here — its advantage (best direct tier, −10%
  * guaranteed) is applied in logic below, not via the coefficient.
