@@ -13,21 +13,11 @@ import {
   type CommissionAdminRow,
 } from '@/lib/commission/admin-repository'
 import { logAdminAction } from '@/lib/admin/audit-log'
+import { downloadCsv } from '@/lib/admin/csv'
 import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { CommissionStatus } from '@/lib/supabase/types'
-
-function downloadCsv(filename: string, csv: string): void {
-  if (typeof document === 'undefined') return
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
-}
 
 export function AdminCommissionsTab({
   authStatus,

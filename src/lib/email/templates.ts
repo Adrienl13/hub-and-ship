@@ -487,7 +487,7 @@ L'équipe Container Club
 
 Container Club — Pros Import EURL
 60 Rue François Ier, 75008 Paris
-adrienlaniez1@gmail.com`
+contact@prosimport.com`
 
   return {
     subject,

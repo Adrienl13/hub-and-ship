@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import type { AuthStatus } from '@/hooks/useAuth'
+import { downloadCsv, toCsv } from '@/lib/admin/csv'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import {
@@ -11,15 +12,6 @@ import {
   type NotifyAdminClient,
   type NotifyLead,
 } from '@/lib/leads/repository'
-
-function toCsv(leads: ReadonlyArray<NotifyLead>): string {
-  const header = 'email,source,created_at'
-  const lines = leads.map(
-    (l) =>
-      `${l.email},${(l.source ?? '').replace(/[,\n]/g, ' ')},${l.createdAt}`,
-  )
-  return [header, ...lines].join('\n')
-}
 
 export function AdminLeadsTab({ authStatus }: { authStatus: AuthStatus }) {
   const [leads, setLeads] = useState<ReadonlyArray<NotifyLead>>([])
@@ -52,15 +44,14 @@ export function AdminLeadsTab({ authStatus }: { authStatus: AuthStatus }) {
   }, [authStatus, refresh])
 
   function exportCsv(): void {
-    const blob = new Blob([toCsv(leads)], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'prospects-container.csv'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    downloadCsv(
+      'prospects-container.csv',
+      toCsv(leads, [
+        { header: 'email', value: (l: NotifyLead) => l.email },
+        { header: 'source', value: (l: NotifyLead) => l.source },
+        { header: 'created_at', value: (l: NotifyLead) => l.createdAt },
+      ]),
+    )
   }
 
   if (loading) {

@@ -130,7 +130,7 @@ export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
           <Link to="/partenaires">Déposer une demande partenaire</Link>
         </Button>
         <a
-          href="mailto:adrienlaniez1@gmail.com"
+          href="mailto:contact@prosimport.com"
           className="mt-4 inline-block text-xs text-muted-foreground hover:text-foreground"
         >
           Mon dossier est en cours — nous contacter

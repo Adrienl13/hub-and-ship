@@ -10,37 +10,12 @@ import { useEffect } from 'react'
 import { PartnerLinkTracker } from '@/components/PartnerLinkTracker'
 import { Toaster } from '@/components/ui/sonner'
 import { captureFirstTouchAttribution } from '@/lib/analytics/attribution'
+import { organizationJsonLd } from '@/lib/seo'
 import '@/styles/globals.css'
 
-const ORGANIZATION_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Container Club',
-  legalName: 'Pros Import',
-  description:
-    "Club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
-  url: 'https://prosimport.com',
-  email: 'contact@prosimport.com',
-  founder: {
-    '@type': 'Person',
-    name: 'Adrien Laniez',
-  },
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: '60 Rue François Ier',
-    postalCode: '75008',
-    addressLocality: 'Paris',
-    addressCountry: 'FR',
-  },
-  taxID: 'FR08988269981',
-  vatID: 'FR08988269981',
-  identifier: [
-    { '@type': 'PropertyValue', propertyID: 'SIRET', value: '98826998100011' },
-    { '@type': 'PropertyValue', propertyID: 'SIREN', value: '988269981' },
-  ],
-  areaServed: 'FR',
-  sameAs: [],
-}
+// Single source of truth for the Organization entity (stable @id) — child
+// routes must NOT inject a second copy; /avis merges into it via the @id.
+const ORGANIZATION_JSON_LD = organizationJsonLd()
 
 // Privacy-friendly analytics, only loaded when a Plausible domain is configured.
 const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN as

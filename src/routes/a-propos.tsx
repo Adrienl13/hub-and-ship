@@ -3,12 +3,7 @@ import { ArrowRight, PackageCheck, ShieldCheck, Ship } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  jsonLdScript,
-  organizationJsonLd,
-} from '@/lib/seo'
+import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 export const Route = createFileRoute('/a-propos')({
   component: AProposPage,
@@ -20,7 +15,6 @@ export const Route = createFileRoute('/a-propos')({
       path: '/a-propos',
     }),
     scripts: [
-      jsonLdScript(organizationJsonLd()),
       jsonLdScript(
         breadcrumbJsonLd([
           { name: 'Accueil', path: '/' },

@@ -269,7 +269,7 @@ export function buildQuoteHTML(q: QuoteData): string {
     </div>
 
     <footer>
-      <div>Container Club — édité par Pros Import EURL · adrienlaniez1@gmail.com</div>
+      <div>Container Club — édité par Pros Import EURL · contact@prosimport.com</div>
       <div>RCS Paris 988 269 981 · TVA FR08988269981</div>
     </footer>
   </div>

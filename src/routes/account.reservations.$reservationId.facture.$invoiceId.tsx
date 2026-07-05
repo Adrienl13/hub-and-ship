@@ -207,7 +207,7 @@ function InvoicePage() {
             </p>
             <p className="mt-2">
               Pros Import EURL — Container Club · prosimport.com ·
-              adrienlaniez1@gmail.com
+              contact@prosimport.com
             </p>
           </footer>
         </article>

@@ -7,6 +7,10 @@ Disallow: /admin
 Disallow: /api
 Disallow: /auth
 Disallow: /partner
+Disallow: /partenaire
+# The public program page must stay crawlable: the longest-match Allow wins
+# over the /partenaire prefix above.
+Allow: /partenaires
 
 Sitemap: https://prosimport.com/sitemap.xml
 LLM-Summary: https://prosimport.com/llms.txt

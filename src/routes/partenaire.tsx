@@ -135,7 +135,7 @@ function ReferentRecap({ channel }: { readonly channel: SalesChannel }) {
           suivis avec votre référent Container Club.
         </p>
         <Button asChild className="mt-4 gap-1.5">
-          <a href="mailto:adrienlaniez1@gmail.com?subject=Espace%20partenaire">
+          <a href="mailto:contact@prosimport.com?subject=Espace%20partenaire">
             <Mail className="h-4 w-4" />
             Contactez votre référent
           </a>

@@ -97,25 +97,46 @@ export function faqJsonLd(
   }
 }
 
+/**
+ * Canonical Organization node — injected ONCE globally by __root.tsx. The
+ * stable @id lets enriched variants (e.g. /avis with aggregateRating) merge
+ * into the same entity instead of declaring a second organization.
+ */
 export function organizationJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Pros Import',
+    '@id': `${SITE_URL}/#organization`,
+    name: 'Container Club',
     legalName: 'Pros Import EURL',
     alternateName: SITE_NAME,
     url: SITE_URL,
     email: 'contact@prosimport.com',
     description:
-      "Partenaire d'import français de mobilier outdoor CHR par container (achat groupé), pour restaurants, hôtels, campings et revendeurs.",
+      "Club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
+    founder: {
+      '@type': 'Person',
+      name: 'Adrien Laniez',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: '60 Rue François Ier',
+      postalCode: '75008',
+      addressLocality: 'Paris',
+      addressCountry: 'FR',
+    },
     areaServed: 'FR',
     sameAs: ['https://terrassea.com'],
+    taxID: 'FR08988269981',
     vatID: 'FR08988269981',
-    identifier: {
-      '@type': 'PropertyValue',
-      name: 'SIRET',
-      value: '98826998100011',
-    },
+    identifier: [
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'SIRET',
+        value: '98826998100011',
+      },
+      { '@type': 'PropertyValue', propertyID: 'SIREN', value: '988269981' },
+    ],
   }
 }
 

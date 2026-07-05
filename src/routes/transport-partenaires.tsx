@@ -319,7 +319,7 @@ function ContactCta() {
             asChild
             className="hover:bg-foreground/90 h-11 rounded-sm bg-foreground px-5 text-background"
           >
-            <a href="mailto:adrienlaniez1@gmail.com?subject=Demande%20de%20mise%20en%20relation%20transporteur">
+            <a href="mailto:contact@prosimport.com?subject=Demande%20de%20mise%20en%20relation%20transporteur">
               Demander une mise en relation
               <ArrowRight className="h-4 w-4" />
             </a>

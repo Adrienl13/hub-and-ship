@@ -3,12 +3,7 @@ import { ArrowRight, Clock, Handshake, Mail, Package } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  jsonLdScript,
-  organizationJsonLd,
-} from '@/lib/seo'
+import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
@@ -20,7 +15,6 @@ export const Route = createFileRoute('/contact')({
       path: '/contact',
     }),
     scripts: [
-      jsonLdScript(organizationJsonLd()),
       jsonLdScript(
         breadcrumbJsonLd([
           { name: 'Accueil', path: '/' },
@@ -50,10 +44,10 @@ function ContactPage() {
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[color:var(--ember)]" />
             <a
-              href="mailto:adrienlaniez1@gmail.com"
+              href="mailto:contact@prosimport.com"
               className="text-sm font-medium underline"
             >
-              adrienlaniez1@gmail.com
+              contact@prosimport.com
             </a>
           </div>
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

@@ -289,7 +289,9 @@ export const CURRENT_CONTAINER: ContainerSummary = {
   capacityCbm: 28,
   thresholdPercent: 80,
   minSeriesRequired: 3,
-  expectedCloseAt: '2026-03-14',
+  // No hardcoded close date: the live one comes from Supabase (containers).
+  // A stale date here would show a false "clôture imminente" urgency badge.
+  expectedCloseAt: null,
   status: 'open',
   seriesReached: 3,
   totalSeries: 5,

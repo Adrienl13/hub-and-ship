@@ -45,12 +45,7 @@ import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
-import {
-  buildSeoHead,
-  jsonLdScript,
-  organizationJsonLd,
-  SITE_URL,
-} from '@/lib/seo'
+import { buildSeoHead, jsonLdScript, SITE_URL } from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/')({
@@ -68,7 +63,6 @@ export const Route = createFileRoute('/')({
         name: 'Container Club Terrassea',
         url: SITE_URL,
       }),
-      jsonLdScript(organizationJsonLd()),
     ],
   }),
   component: ContainerClubPage,

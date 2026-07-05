@@ -155,7 +155,7 @@ export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Et si je n'arrive pas à trouver de transporteur ?",
-    a: "Écrivez-nous (adrienlaniez1@gmail.com) en précisant votre code postal de livraison, le volume (m³) et la date d'arrivée prévue. On vous met en relation directement avec un partenaire qui couvre votre zone.",
+    a: "Écrivez-nous (contact@prosimport.com) en précisant votre code postal de livraison, le volume (m³) et la date d'arrivée prévue. On vous met en relation directement avec un partenaire qui couvre votre zone.",
   },
   {
     q: 'Les prix indiqués sont-ils fermes ?',
