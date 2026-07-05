@@ -64,7 +64,7 @@ export function ProductDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-4xl">
+      <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-3xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <span className="label-eyebrow text-foreground/70 rounded-sm bg-muted px-2 py-0.5">
@@ -85,10 +85,9 @@ export function ProductDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:items-start">
-          {/* Galerie — sticky on desktop so it follows the scroll of the
-              taller details column instead of leaving a tall empty void. */}
-          <div className="space-y-2 md:sticky md:top-0 md:self-start">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {/* Galerie */}
+          <div className="space-y-2">
             <ProductGallery product={product} design={variant} />
 
             {/* Specs */}
@@ -185,8 +184,26 @@ export function ProductDetailDialog({
               </div>
             )}
 
-            {/* Quantité — kept high, right under price/design, so the buy
-                action sits above the reference info (specs, docs, reviews). */}
+            {/* Caractéristiques */}
+            <div>
+              <div className="label-eyebrow mb-1.5 text-muted-foreground">
+                Caractéristiques
+              </div>
+              <ul className="text-foreground/80 grid grid-cols-1 gap-1 text-xs">
+                {product.features.map((f) => (
+                  <li key={f} className="flex items-start gap-1.5">
+                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--forest)]" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <ProductDocumentsList product={product} />
+
+            <ProductReviews product={product} />
+
+            {/* Quantité */}
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-xs">
@@ -213,25 +230,6 @@ export function ProductDetailDialog({
                 </div>
               )}
             </div>
-
-            {/* Caractéristiques */}
-            <div>
-              <div className="label-eyebrow mb-1.5 text-muted-foreground">
-                Caractéristiques
-              </div>
-              <ul className="text-foreground/80 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
-                {product.features.map((f) => (
-                  <li key={f} className="flex items-start gap-1.5">
-                    <Check className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--forest)]" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <ProductDocumentsList product={product} />
-
-            <ProductReviews />
           </div>
         </div>
       </DialogContent>

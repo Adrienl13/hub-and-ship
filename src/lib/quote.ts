@@ -2,7 +2,6 @@
 // Container Club — devis PDF (print-to-PDF)
 // ============================================================
 
-import { trackEvent } from './analytics/plausible'
 import { CATEGORY_LABEL } from './products'
 import type { CartItem, OrderTotals } from './order'
 import { getContainerLabel } from './container/pricing'

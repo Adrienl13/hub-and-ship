@@ -51,6 +51,22 @@ export type PartnerDealStatus =
   | 'lost'
   | 'expired'
   | 'rejected'
+// Fusion Claude x Codex — canal de vente (attribut de compte, admin-only),
+// statut visé par une candidature (page /partenaires mockup), et ledger
+// de commissions apporteur (8% CA encaissé / 12 mois).
+export type SalesChannel =
+  | 'direct'
+  | 'revendeur'
+  | 'distributeur'
+  | 'grand_compte'
+export type PartnerTargetStatus =
+  | 'apporteur'
+  | 'revendeur'
+  | 'grand_compte'
+  | 'distributeur'
+  | 'nsp'
+export type CommissionStatus = 'accrued' | 'payable' | 'paid'
+export type CommissionPhase = 'accrual' | 'reversal'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -618,6 +634,15 @@ type PartnerApplicationRow = {
   reviewed_at: string | null
   created_at: string
   updated_at: string
+  // Extension fusion (migration partner_applications_extend) — champs de la
+  // page /partenaires mockup + attribution first-touch.
+  activity_profile: string | null
+  target_status: PartnerTargetStatus | null
+  siret_verified: boolean
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
 }
 
 type PartnerApplicationInsert = {
@@ -641,6 +666,13 @@ type PartnerApplicationInsert = {
   reviewed_at?: string | null
   created_at?: string
   updated_at?: string
+  activity_profile?: string | null
+  target_status?: PartnerTargetStatus | null
+  siret_verified?: boolean
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
 }
 
 type PartnerApplicationUpdate = Partial<PartnerApplicationInsert>
@@ -997,6 +1029,11 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      stock_lines: {
+        Row: StockLineRow
+        Insert: StockLineInsert
+        Update: StockLineUpdate
+      }
       partner_applications: {
         Row: PartnerApplicationRow
         Insert: PartnerApplicationInsert
@@ -1081,6 +1118,17 @@ export interface Database {
       create_reservation_with_items: {
         Args: { payload: Json }
         Returns: Json
+      }
+      get_catalogue_prices: {
+        Args: Record<string, never>
+        Returns: ReadonlyArray<{
+          product_id: string
+          unit_price_ht: number
+        }>
+      }
+      current_channel: {
+        Args: Record<string, never>
+        Returns: SalesChannel | null
       }
       find_partner_protected_deal: {
         Args: {

@@ -1,14 +1,16 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Handshake, ShieldCheck, User } from 'lucide-react'
+import { ArrowRight, Handshake, ShieldCheck, Tag, User } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useIsPartner } from '@/hooks/useIsPartner'
+import { SALES_CHANNEL_LABEL } from '@/lib/pricing/channel'
 
 export function Header({ onReserve }: { onReserve?: () => void }) {
   const { isAdmin } = useIsAdmin()
   const { isPartner } = useIsPartner()
+  const { channel } = useChannel()
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 h-16 border-b border-[color:var(--sand-deep)] backdrop-blur-md">

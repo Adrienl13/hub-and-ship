@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildPartnerApplicationDraft,
-  toPartnerApplicationInsertPayload,
+  toPartnerRequestApiPayload,
 } from './partner-applications'
 
 const VALID_SIRET = '552 081 317 01750' // Danone — passes the Luhn checksum
@@ -81,18 +81,43 @@ describe('buildPartnerApplicationDraft', () => {
   })
 })
 
-describe('toPartnerApplicationInsertPayload', () => {
-  it('maps the draft to snake_case with siret_verified false', () => {
+describe('toPartnerRequestApiPayload', () => {
+  it('maps the draft onto the /api/partner-requests payload with attribution', () => {
     const result = buildPartnerApplicationDraft(baseInput())
     if (!result.ok) throw new Error('expected valid draft')
-    const payload = toPartnerApplicationInsertPayload(result.draft)
-    expect(payload).toMatchObject({
-      company_name: 'Distri Boissons Provence',
-      siret: '55208131701750',
-      siret_verified: false,
-      target_status: 'apporteur',
-      activity_profile: 'brasseur',
-      status: 'new',
+    const payload = toPartnerRequestApiPayload(result.draft, {
+      utm_source: 'partner',
+      utm_medium: 'qr',
+      utm_campaign: 'corner_depot',
+      partner_ref: 'DBP-13',
     })
+    expect(payload).toMatchObject({
+      mode: 'application',
+      partnerKind: 'introducer', // apporteur → pipeline codex
+      companyName: 'Distri Boissons Provence',
+      contactEmail: 'contact@distri-provence.fr',
+      siret: '55208131701750',
+      territory: 'Bouches-du-Rhône',
+      activityProfile: 'brasseur',
+      targetStatus: 'apporteur',
+      utmSource: 'partner',
+      partnerRef: 'DBP-13',
+    })
+  })
+
+  it('maps every target status onto a codex partner_kind', () => {
+    const draft = (status: string) => {
+      const result = buildPartnerApplicationDraft({
+        ...baseInput(),
+        targetStatus: status,
+      })
+      if (!result.ok) throw new Error('expected valid draft')
+      return toPartnerRequestApiPayload(result.draft).partnerKind
+    }
+    expect(draft('apporteur')).toBe('introducer')
+    expect(draft('revendeur')).toBe('reseller')
+    expect(draft('distributeur')).toBe('network')
+    expect(draft('grand_compte')).toBe('other')
+    expect(draft('nsp')).toBe('other')
   })
 })

@@ -32,6 +32,17 @@ export const partnerSubmissionSchema = z.object({
   territory: z.string().trim().max(180).optional().nullable(),
   networkDescription: z.string().trim().max(700).optional().nullable(),
   expectedMonthlyVolume: z.string().trim().max(120).optional().nullable(),
+  // Extension fusion — champs de la page /partenaires (mockup) + attribution
+  // first-touch, persistés via la migration partner_applications_extend.
+  activityProfile: z.string().trim().max(40).optional().nullable(),
+  targetStatus: z
+    .enum(['apporteur', 'revendeur', 'grand_compte', 'distributeur', 'nsp'])
+    .optional()
+    .nullable(),
+  utmSource: z.string().trim().max(255).optional().nullable(),
+  utmMedium: z.string().trim().max(255).optional().nullable(),
+  utmCampaign: z.string().trim().max(255).optional().nullable(),
+  partnerRef: z.string().trim().max(255).optional().nullable(),
   message: z.string().trim().max(900).optional().nullable(),
   clientCompanyName: z.string().trim().max(180).optional().nullable(),
   clientSiret: z.string().trim().max(20).optional().nullable(),
@@ -165,6 +176,12 @@ export function buildPartnerSubmissionDraft(input: PartnerSubmissionInput):
     network_description: emptyToNull(parsed.data.networkDescription),
     expected_monthly_volume: emptyToNull(parsed.data.expectedMonthlyVolume),
     message: emptyToNull(parsed.data.message),
+    activity_profile: emptyToNull(parsed.data.activityProfile),
+    target_status: parsed.data.targetStatus ?? null,
+    utm_source: emptyToNull(parsed.data.utmSource),
+    utm_medium: emptyToNull(parsed.data.utmMedium),
+    utm_campaign: emptyToNull(parsed.data.utmCampaign),
+    partner_ref: emptyToNull(parsed.data.partnerRef),
     source:
       parsed.data.mode === 'deal' ? 'partners_deal_form' : 'partners_page',
     created_at: createdAt,

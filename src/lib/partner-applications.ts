@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-import type { Database } from '@/lib/supabase/types'
 import type {
   PartnerApplicationStatus,
   PartnerTargetStatus,
@@ -8,9 +7,6 @@ import type {
 import { cleanSiret, validateSiretChecksum } from '@/lib/validation/siret'
 
 export type { PartnerApplicationStatus, PartnerTargetStatus }
-
-export type PartnerApplicationInsertPayload =
-  Database['public']['Tables']['partner_applications']['Insert']
 
 /** Activity profiles offered by the /partenaires selector + form. */
 export const PARTNER_ACTIVITY_PROFILES = [
@@ -175,25 +171,52 @@ export function buildPartnerApplicationDraft(
   }
 }
 
-export function toPartnerApplicationInsertPayload(
+/**
+ * Statut visé (page mockup) → partner_kind (pipeline codex). Le statut visé
+ * reste stocké tel quel dans `target_status`; le kind alimente le tri du
+ * pipeline candidatures existant.
+ */
+export const TARGET_STATUS_TO_PARTNER_KIND: Record<
+  PartnerTargetStatus,
+  'introducer' | 'reseller' | 'network' | 'other'
+> = {
+  apporteur: 'introducer',
+  revendeur: 'reseller',
+  distributeur: 'network',
+  grand_compte: 'other',
+  nsp: 'other',
+}
+
+/**
+ * Map the validated mockup draft onto the /api/partner-requests payload
+ * (server-side intake: service-role insert + Brevo notifications). SIRET INSEE
+ * verification stays deferred to admin — format/checksum already validated.
+ */
+export function toPartnerRequestApiPayload(
   draft: PartnerApplicationDraft,
-): PartnerApplicationInsertPayload {
+  attribution?: {
+    readonly utm_source: string | null
+    readonly utm_medium: string | null
+    readonly utm_campaign: string | null
+    readonly partner_ref: string | null
+  },
+): Record<string, unknown> {
   return {
-    company_name: draft.companyName,
+    mode: 'application',
+    partnerKind: TARGET_STATUS_TO_PARTNER_KIND[draft.targetStatus],
+    companyName: draft.companyName,
+    contactName: draft.contactName,
+    contactEmail: draft.email,
+    contactPhone: draft.phone ?? '',
     siret: draft.siret,
-    // Anon submissions can't run the authenticated verify-siret edge function,
-    // so INSEE verification is deferred to admin — the format/checksum is
-    // already validated above (decision: non-blocking, l'admin vérifie).
-    siret_verified: false,
-    contact_name: draft.contactName,
-    email: draft.email,
-    phone: draft.phone,
-    activity_profile: draft.activityProfile,
-    target_status: draft.targetStatus,
-    zone: draft.zone,
-    estimated_volume: draft.estimatedVolume,
+    territory: draft.zone,
+    expectedMonthlyVolume: draft.estimatedVolume,
     message: draft.message,
-    status: draft.status,
-    created_at: draft.createdAt,
+    activityProfile: draft.activityProfile,
+    targetStatus: draft.targetStatus,
+    utmSource: attribution?.utm_source ?? null,
+    utmMedium: attribution?.utm_medium ?? null,
+    utmCampaign: attribution?.utm_campaign ?? null,
+    partnerRef: attribution?.partner_ref ?? null,
   }
 }

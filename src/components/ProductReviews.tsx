@@ -59,12 +59,6 @@ export function ProductReviews({ product }: { product: Product }) {
 
   const stats = aggregateReviews(reviews)
 
-// No official customer reviews exist yet. Rather than seed fake testimonials
-// (misleading, and a credibility risk for a B2B audience), we show a clean
-// empty state that frames the collection model: verified reviews are gathered
-// after each container delivery. When a real reviews source lands, render the
-// list here and keep this block as the zero-state fallback.
-export function ProductReviews() {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
       <div className="mb-3 flex items-start justify-between gap-3">

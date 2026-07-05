@@ -147,126 +147,6 @@ ${TEXT_SIGNATURE}
   }
 }
 
-export interface ReservationCancelledEmailInput {
-  readonly reference: string
-  readonly contactName: string
-  readonly containerReference: string
-  readonly cancellationReason: string | null
-  readonly hasPaidReservationFee: boolean
-}
-
-export function buildReservationCancelledEmailToUser(
-  input: ReservationCancelledEmailInput,
-): { subject: string; html: string; text: string } {
-  const subject = `Annulation de votre réservation — ${input.reference}`
-  const preheader = `Votre réservation ${input.reference} sur le container ${input.containerReference} a été annulée.`
-  const reasonBlock = input.cancellationReason
-    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;background:#f4e3d1;border-left:3px solid #c25e2a;padding:12px 16px;border-radius:0 4px 4px 0;"><strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#c25e2a;">Motif</strong><br><span style="font-size:13px;">${escape(input.cancellationReason)}</span></p>`
-    : ''
-  const refundBlock = input.hasPaidReservationFee
-    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Les frais de réservation déjà encaissés sont remboursés sous 5 à 10 jours ouvrés selon votre banque.</p>`
-    : `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Aucun frais de réservation n'a été encaissé — rien à rembourser de votre côté.</p>`
-  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation <strong>${escape(input.reference)}</strong> sur le container <strong>${escape(input.containerReference)}</strong> a été annulée par notre équipe.</p>
-${reasonBlock}
-${refundBlock}
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Si vous souhaitez rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email — on revient vers vous rapidement.</p>
-<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Merci pour votre confiance,<br>L'équipe Container Club</p>`
-
-  const reasonText = input.cancellationReason
-    ? `\nMotif : ${input.cancellationReason}\n`
-    : ''
-  const refundText = input.hasPaidReservationFee
-    ? `\nLes frais de réservation déjà encaissés sont remboursés sous 5 à 10 jours ouvrés.\n`
-    : `\nAucun frais de réservation n'a été encaissé.\n`
-
-  const text = `Bonjour ${input.contactName},
-
-Votre réservation ${input.reference} sur le container ${input.containerReference} a été annulée par notre équipe.
-${reasonText}${refundText}
-Pour rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email.
-
-Merci pour votre confiance,
-L'équipe Container Club
-
-Container Club — Pros Import EURL
-60 Rue François Ier, 75008 Paris
-adrienlaniez1@gmail.com`
-
-  return {
-    subject,
-    html: shell({ title: 'Réservation annulée', preheader, body }),
-    text,
-  }
-}
-
-export interface StockRequestEmailInput {
-  readonly reference: string
-  readonly companyName: string
-  readonly contactEmail: string
-  readonly contactPhone: string
-  readonly productName: string
-  readonly variantName: string
-  readonly sku: string
-  readonly requestedQuantity: number
-  readonly availableUnits: number
-  readonly unitPriceHt: number
-  readonly estimatedTotalHt: number
-  readonly location: string
-  readonly customerNote: string | null
-  readonly adminUrl: string
-}
-
-export function buildStockRequestNotificationToAdmin(
-  input: StockRequestEmailInput,
-): { subject: string; html: string; text: string } {
-  const subject = `[Container Club] Demande stock 24 h — ${input.companyName}`
-  const preheader = `${input.companyName} demande ${input.requestedQuantity} × ${input.productName} (${formatEur(input.estimatedTotalHt)} HT).`
-  const note = input.customerNote
-    ? `<tr><td colspan="2" style="padding:8px 0;font-size:12px;color:#666;border-top:1px solid #efe7d7;">Note client : <em>${escape(input.customerNote)}</em></td></tr>`
-    : ''
-  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle demande sur le stock 24 h à recontacter rapidement.</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Société</td><td style="font-size:13px;text-align:right;font-weight:600;">${escape(input.companyName)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Contact</td><td style="font-size:13px;text-align:right;"><a href="mailto:${escape(input.contactEmail)}" style="color:#1a1a1a;">${escape(input.contactEmail)}</a></td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Téléphone</td><td style="font-size:13px;text-align:right;">${escape(input.contactPhone)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Référence interne</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.reference)}</td></tr>
-</table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-top:1px solid #e3d8c4;padding-top:8px;">
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Produit</td><td style="font-size:13px;text-align:right;font-weight:600;">${escape(input.productName)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Variante</td><td style="font-size:13px;text-align:right;">${escape(input.variantName)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">SKU</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.sku)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Entrepôt</td><td style="font-size:13px;text-align:right;">${escape(input.location)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Quantité demandée</td><td style="font-size:13px;text-align:right;font-weight:600;">${input.requestedQuantity} / ${input.availableUnits} dispo</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">PU HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.unitPriceHt)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Estimation HT</td><td style="font-size:13px;text-align:right;font-weight:600;color:#c25e2a;">${formatEur(input.estimatedTotalHt)}</td></tr>
-${note}
-</table>
-<p style="margin:24px 0 0;text-align:center;">
-<a href="${escape(input.adminUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Ouvrir dans l'admin</a>
-</p>`
-
-  const text = `Nouvelle demande sur le stock 24 h.
-
-Société : ${input.companyName}
-Contact : ${input.contactEmail} · ${input.contactPhone}
-Référence : ${input.reference}
-
-Produit : ${input.productName} (${input.variantName}) · SKU ${input.sku}
-Entrepôt : ${input.location}
-Quantité demandée : ${input.requestedQuantity} / ${input.availableUnits} dispo
-PU HT : ${formatEur(input.unitPriceHt)}
-Estimation HT : ${formatEur(input.estimatedTotalHt)}
-${input.customerNote ? `\nNote client : ${input.customerNote}\n` : ''}
-Ouvrir dans l'admin : ${input.adminUrl}`
-
-  return {
-    subject,
-    html: shell({ title: 'Demande stock 24 h', preheader, body }),
-    text,
-  }
-}
-
 export function buildReservationCreatedEmailToAdmin(
   input: ReservationEmailInput,
 ): { subject: string; html: string; text: string } {
@@ -563,108 +443,55 @@ ${TEXT_SIGNATURE}`
   }
 }
 
-export interface PartnerApplicationEmailInput {
+export interface ReservationCancelledEmailInput {
   readonly reference: string
-  readonly companyName: string
-  readonly siret: string
-  readonly siretVerified: boolean
   readonly contactName: string
-  readonly email: string
-  readonly phone: string | null
-  readonly activityProfileLabel: string
-  readonly targetStatusLabel: string
-  readonly zone: string | null
-  readonly estimatedVolume: string | null
-  readonly message: string | null
-  readonly partnerRef: string | null
-  readonly utmSource: string | null
-  readonly adminUrl: string
+  readonly containerReference: string
+  readonly cancellationReason: string | null
+  readonly hasPaidReservationFee: boolean
 }
 
-export function buildPartnerApplicationNotificationToAdmin(
-  input: PartnerApplicationEmailInput,
+export function buildReservationCancelledEmailToUser(
+  input: ReservationCancelledEmailInput,
 ): { subject: string; html: string; text: string } {
-  const subject = `[Container Club] Candidature partenaire — ${input.companyName}`
-  const preheader = `${input.companyName} candidate au statut ${input.targetStatusLabel} (${input.activityProfileLabel}).`
-  const optionalRow = (label: string, value: string | null): string =>
-    value
-      ? `<tr><td style="font-size:12px;color:#666;padding:4px 0;">${escape(label)}</td><td style="font-size:13px;text-align:right;">${escape(value)}</td></tr>`
-      : ''
-  const attribution =
-    input.partnerRef || input.utmSource
-      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-top:1px solid #e3d8c4;padding-top:8px;">
-${optionalRow('Code partenaire (ref)', input.partnerRef)}
-${optionalRow('Source (utm)', input.utmSource)}
-</table>`
-      : ''
-  const note = input.message
-    ? `<p style="font-size:12px;color:#666;line-height:1.6;margin:0 0 16px;border-top:1px solid #efe7d7;padding-top:8px;">Message : <em>${escape(input.message)}</em></p>`
+  const subject = `Annulation de votre réservation — ${input.reference}`
+  const preheader = `Votre réservation ${input.reference} sur le container ${input.containerReference} a été annulée.`
+  const reasonBlock = input.cancellationReason
+    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;background:#f4e3d1;border-left:3px solid #c25e2a;padding:12px 16px;border-radius:0 4px 4px 0;"><strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#c25e2a;">Motif</strong><br><span style="font-size:13px;">${escape(input.cancellationReason)}</span></p>`
     : ''
-  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle candidature au programme partenaires à qualifier (réponse annoncée sous 48 h).</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Société</td><td style="font-size:13px;text-align:right;font-weight:600;">${escape(input.companyName)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">SIRET</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.siret)}${input.siretVerified ? ' ✓' : ' (à vérifier)'}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Contact</td><td style="font-size:13px;text-align:right;"><a href="mailto:${escape(input.email)}" style="color:#1a1a1a;">${escape(input.email)}</a></td></tr>
-${optionalRow('Nom', input.contactName)}
-${optionalRow('Téléphone', input.phone)}
-</table>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-top:1px solid #e3d8c4;padding-top:8px;">
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Profil d'activité</td><td style="font-size:13px;text-align:right;">${escape(input.activityProfileLabel)}</td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Statut visé</td><td style="font-size:13px;text-align:right;font-weight:600;color:#c25e2a;">${escape(input.targetStatusLabel)}</td></tr>
-${optionalRow('Zone', input.zone)}
-${optionalRow('Volume estimé', input.estimatedVolume)}
-</table>
-${attribution}
-${note}
-<p style="margin:24px 0 0;text-align:center;">
-<a href="${escape(input.adminUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Ouvrir dans l'admin</a>
-</p>`
-
-  const text = `Nouvelle candidature partenaire.
-
-Société : ${input.companyName}
-SIRET : ${input.siret}${input.siretVerified ? ' (vérifié)' : ' (à vérifier)'}
-Contact : ${input.contactName} <${input.email}>${input.phone ? ` · ${input.phone}` : ''}
-
-Profil : ${input.activityProfileLabel}
-Statut visé : ${input.targetStatusLabel}
-${input.zone ? `Zone : ${input.zone}\n` : ''}${input.estimatedVolume ? `Volume estimé : ${input.estimatedVolume}\n` : ''}${input.partnerRef ? `Code partenaire : ${input.partnerRef}\n` : ''}${input.message ? `\nMessage : ${input.message}\n` : ''}
-Ouvrir dans l'admin : ${input.adminUrl}`
-
-  return {
-    subject,
-    html: shell({ title: 'Candidature partenaire', preheader, body }),
-    text,
-  }
-}
-
-export function buildPartnerApplicationAckToUser(
-  input: Pick<
-    PartnerApplicationEmailInput,
-    'companyName' | 'contactName' | 'targetStatusLabel'
-  >,
-): { subject: string; html: string; text: string } {
-  const subject = 'Candidature partenaire reçue — Container Club'
-  const preheader =
-    'Nous avons bien reçu votre candidature. Réponse de notre équipe sous 48 h.'
+  const refundBlock = input.hasPaidReservationFee
+    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Les frais de réservation déjà encaissés sont remboursés sous 5 à 10 jours ouvrés selon votre banque.</p>`
+    : `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Aucun frais de réservation n'a été encaissé — rien à rembourser de votre côté.</p>`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Merci pour votre candidature au programme partenaires Container Club pour <strong>${escape(input.companyName)}</strong> (statut visé : ${escape(input.targetStatusLabel)}).</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Notre équipe vérifie votre SIRET et revient vers vous <strong>sous 48 h</strong> pour attribuer votre statut et vous transmettre vos conditions. Les grilles tarifaires partenaires sont communiquées uniquement après validation.</p>
-<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Une question d'ici là ? Répondez simplement à cet email.</p>`
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation <strong>${escape(input.reference)}</strong> sur le container <strong>${escape(input.containerReference)}</strong> a été annulée par notre équipe.</p>
+${reasonBlock}
+${refundBlock}
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Si vous souhaitez rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email — on revient vers vous rapidement.</p>
+<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Merci pour votre confiance,<br>L'équipe Container Club</p>`
+
+  const reasonText = input.cancellationReason
+    ? `\nMotif : ${input.cancellationReason}\n`
+    : ''
+  const refundText = input.hasPaidReservationFee
+    ? `\nLes frais de réservation déjà encaissés sont remboursés sous 5 à 10 jours ouvrés.\n`
+    : `\nAucun frais de réservation n'a été encaissé.\n`
 
   const text = `Bonjour ${input.contactName},
 
-Merci pour votre candidature au programme partenaires Container Club pour ${input.companyName} (statut visé : ${input.targetStatusLabel}).
+Votre réservation ${input.reference} sur le container ${input.containerReference} a été annulée par notre équipe.
+${reasonText}${refundText}
+Pour rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email.
 
-Notre équipe vérifie votre SIRET et revient vers vous sous 48 h pour attribuer votre statut et vous transmettre vos conditions.
+Merci pour votre confiance,
+L'équipe Container Club
 
-Une question ? Répondez simplement à cet email.
-
-Container Club — Pros Import EURL`
+Container Club — Pros Import EURL
+60 Rue François Ier, 75008 Paris
+adrienlaniez1@gmail.com`
 
   return {
     subject,
-    html: shell({ title: 'Candidature reçue', preheader, body }),
+    html: shell({ title: 'Réservation annulée', preheader, body }),
     text,
   }
 }

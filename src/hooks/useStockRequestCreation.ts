@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react'
 
 import { getAttributionFields } from '@/lib/analytics/attribution'
-import { sendStockRequestNotification } from '@/lib/email/stock-request-notification'
 import {
   saveStockRequestToLocalHistory,
   type StockRequestDraft,
@@ -120,13 +119,9 @@ export function useStockRequestCreation() {
           attribution: getAttributionFields(Date.now()),
         })
         saveLocal()
-        // Fire-and-forget admin notification. The lead is already persisted —
-        // any email pipeline failure is logged server-side, not surfaced.
-        void sendStockRequestNotification({
-          data: { stockRequestId: request.id },
-        }).catch((error) => {
-          console.error('sendStockRequestNotification failed', error)
-        })
+        // Emails (admin + accusé) are sent by the /api/stock-requests server
+        // route (Brevo). The direct browser-insert path skips them; P3 will
+        // flip the order to server-first so every lead gets notified.
         return { ok: true, persisted: true, request }
       } catch (error) {
         const serverRequest = await createStockRequestViaServer(draft)

@@ -1,3 +1,7 @@
+import {
+  EMPTY_ATTRIBUTION,
+  type AttributionFields,
+} from '@/lib/analytics/attribution'
 import type { Database, Json } from '@/lib/supabase/types'
 import type { ReservationDraft } from './draft'
 import {
@@ -41,9 +45,18 @@ export interface CreateReservationResult {
   readonly reference: string
 }
 
-function buildCreateReservationRpcPayload(draft: ReservationDraft): Json {
+function buildCreateReservationRpcPayload(
+  draft: ReservationDraft,
+  attribution: AttributionFields,
+): Json {
+  // First-touch attribution (utm_* / partner_ref) rides along in the payload;
+  // the RPC persists it once the partner-attribution migration lands, and the
+  // legacy insert path writes it directly.
   return {
-    reservation: toReservationInsertPayload(draft) as Json,
+    reservation: {
+      ...toReservationInsertPayload(draft),
+      ...attribution,
+    } as unknown as Json,
     items: toReservationItemInsertPayloads({
       draft,
       reservationId: draft.id,
@@ -127,13 +140,15 @@ async function createReservationWithLegacyInserts({
 export async function createReservationInSupabase({
   client,
   draft,
+  attribution = EMPTY_ATTRIBUTION,
 }: {
   readonly client: ReservationRepositoryClient
   readonly draft: ReservationDraft
+  readonly attribution?: AttributionFields
 }): Promise<CreateReservationResult> {
   if (client.rpc) {
     const result = await client.rpc('create_reservation_with_items', {
-      payload: buildCreateReservationRpcPayload(draft),
+      payload: buildCreateReservationRpcPayload(draft, attribution),
     })
 
     if (!result.error) {
@@ -145,7 +160,7 @@ export async function createReservationInSupabase({
     }
   }
 
-  return createReservationWithLegacyInserts({ client, draft })
+  return createReservationWithLegacyInserts({ client, draft, attribution })
 }
 
 // ---------------------------------------------------------------------------

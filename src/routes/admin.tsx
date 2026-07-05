@@ -38,6 +38,7 @@ import {
   type InvoicesClient,
 } from '@/lib/account/invoices'
 import { sendInvoiceEmail } from '@/lib/email/invoice-email'
+import { sendReservationCancelled } from '@/lib/email/reservation-cancelled'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -63,7 +64,6 @@ const ADMIN_TABS = [
   'overview',
   'stock-requests',
   'reservations',
-  'partner-applications',
   'companies',
   'commissions',
   'products',
@@ -253,7 +253,6 @@ function AdminPage() {
               ['overview', 'Vue générale'],
               ['stock-requests', 'Demandes stock'],
               ['reservations', 'Réservations'],
-              ['partner-applications', 'Partenaires'],
               ['companies', 'Comptes'],
               ['commissions', 'Commissions'],
               ['products', 'Catalogue'],

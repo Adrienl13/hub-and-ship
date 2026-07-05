@@ -135,6 +135,7 @@ export function OrderSidebar({
   const [exploded, setExploded] = useState(false)
   const [interactiveSceneEnabled, setInteractiveSceneEnabled] = useState(false)
   const hasItems = items.length > 0
+  const { channel } = useChannel()
   // Volume discounts (and loss leaders) are direct-channel only; resellers get
   // their coefficient price + RFA instead (decision #5 by extension).
   const showVolumeDiscounts = hasItems && channelAllowsVolumeDiscounts(channel)

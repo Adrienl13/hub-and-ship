@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 
 import { PartnerLinkTracker } from '@/components/PartnerLinkTracker'
 import { Toaster } from '@/components/ui/sonner'
+import { captureFirstTouchAttribution } from '@/lib/analytics/attribution'
 import '@/styles/globals.css'
 
 const ORGANIZATION_JSON_LD = {

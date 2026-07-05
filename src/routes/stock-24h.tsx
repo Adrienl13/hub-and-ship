@@ -2,15 +2,13 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   ArrowUpDown,
   Clock3,
-  LayoutGrid,
-  List,
   Mail,
   MapPin,
   PackageCheck,
   Phone,
   Search,
 } from 'lucide-react'
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
@@ -19,7 +17,6 @@ import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
-import { trackEvent } from '@/lib/analytics/plausible'
 import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
@@ -27,12 +24,12 @@ import {
   AVAILABLE_STOCK,
   calculateStockKpis,
   filterAndSortStockLines,
+  getAvailableStockLines,
   getStockCategoryCounts,
   type StockFilter,
   type StockLine,
   type StockSortKey,
 } from '@/lib/stock'
-import { useStockLines } from '@/hooks/useStockLines'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
@@ -78,23 +75,14 @@ export const Route = createFileRoute('/stock-24h')({
 })
 
 function Stock24hPage() {
-  const { lines } = useStockLines()
+  const lines = useMemo(() => getAvailableStockLines(), [])
   const kpis = useMemo(() => calculateStockKpis(lines), [lines])
   const counts = useMemo(() => getStockCategoryCounts(lines), [lines])
-  const [view, setView] = useState<'grid' | 'list'>('grid')
   const [filter, setFilter] = useState<StockFilter>('all')
   const [sort, setSort] = useState<StockSortKey>('priority')
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
-  const [selectedLineId, setSelectedLineId] = useState('')
-
-  // When the DB stock list lands (or changes), promote the first line
-  // as the default selection if the user hasn't picked one yet.
-  useEffect(() => {
-    if (selectedLineId) return
-    const firstId = lines[0]?.id
-    if (firstId) setSelectedLineId(firstId)
-  }, [lines, selectedLineId])
+  const [selectedLineId, setSelectedLineId] = useState(lines[0]?.id ?? '')
 
   const filtered = useMemo(
     () =>
@@ -215,43 +203,6 @@ function Stock24hPage() {
                     </select>
                   </label>
                 </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs text-muted-foreground">
-                    {filtered.length} lot{filtered.length > 1 ? 's' : ''}{' '}
-                    disponible{filtered.length > 1 ? 's' : ''}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-0.5 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setView('grid')}
-                      aria-pressed={view === 'grid'}
-                      aria-label="Vue grille"
-                      className={`flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors ${
-                        view === 'grid'
-                          ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
-                          : 'text-foreground/70 hover:text-foreground'
-                      }`}
-                    >
-                      <LayoutGrid className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Grille</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setView('list')}
-                      aria-pressed={view === 'list'}
-                      aria-label="Vue liste"
-                      className={`flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors ${
-                        view === 'list'
-                          ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
-                          : 'text-foreground/70 hover:text-foreground'
-                      }`}
-                    >
-                      <List className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Liste</span>
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -361,89 +312,6 @@ function StockCard({
   )
 }
 
-function StockGridCard({
-  line,
-  selected,
-  onSelect,
-}: {
-  readonly line: StockLine
-  readonly selected: boolean
-  readonly onSelect: () => void
-}) {
-  return (
-    <article
-      className={`flex flex-col overflow-hidden rounded-md border bg-card transition-shadow hover:shadow-md ${
-        selected
-          ? 'border-foreground ring-1 ring-foreground'
-          : 'border-[color:var(--sand-deep)]'
-      }`}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="group/card block w-full text-left"
-        aria-label={`Sélectionner ${line.product.name}`}
-      >
-        <div className="relative aspect-[4/5] w-full overflow-hidden bg-[color:var(--sand)]">
-          <img
-            src={
-              line.imageUrl ||
-              line.variant.imageUrl ||
-              line.product.mainImageUrl
-            }
-            alt={line.product.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
-          />
-          <span className="bg-[color:var(--sand-soft)]/90 absolute left-2.5 top-2.5 rounded-sm px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
-            {CATEGORY_LABEL[line.product.category]}
-          </span>
-          <span className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/90 absolute right-2.5 top-2.5 rounded-sm border px-2 py-1 text-[10px] font-medium text-white">
-            {STOCK_CONDITION_LABEL[line.condition]}
-          </span>
-        </div>
-        <div className="space-y-1.5 p-3 pb-0">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="min-w-0 flex-1 truncate font-display text-base font-semibold leading-tight tracking-tight">
-              {line.product.name}
-            </h3>
-            <span className="shrink-0 font-display text-base font-semibold tabular-nums">
-              {formatEUR(line.stockPriceHt)}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1 font-medium text-[color:var(--forest)]">
-              <PackageCheck className="h-3 w-3" />
-              {line.availableUnits} libres
-            </span>
-            <span>
-              · {line.reservedUnits} optionnée{line.reservedUnits > 1 ? 's' : ''}
-            </span>
-            <span>· {line.location}</span>
-          </div>
-        </div>
-      </button>
-
-      <div className="mt-auto p-3 pt-2.5">
-        <Button
-          type="button"
-          variant={selected ? 'default' : 'outline'}
-          size="sm"
-          className={`h-9 w-full rounded-sm ${
-            selected
-              ? 'bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]'
-              : 'border-[color:var(--sand-deep)]'
-          }`}
-          onClick={onSelect}
-        >
-          Demander
-        </Button>
-      </div>
-    </article>
-  )
-}
-
 function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
   const stockRequestCreation = useStockRequestCreation()
   const [submitting, setSubmitting] = useState(false)
@@ -520,7 +388,6 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
         {line.product.name}
       </h2>
-      <StockLotGallery line={line} />
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
         <PanelFact Icon={Clock3} text={line.readyLabel} />
         <PanelFact
@@ -640,84 +507,6 @@ function Badge({ children }: { readonly children: string }) {
     <span className="rounded-sm border border-[color:var(--sand-deep)] bg-card px-2.5 py-1 font-medium">
       {children}
     </span>
-  )
-}
-
-function StockLotGallery({ line }: { readonly line: StockLine }) {
-  // Build the visible photo list. Lot photography is the source of truth:
-  // as soon as the admin has uploaded a hero or any gallery shot for this
-  // specific lot, we show ONLY those — falling back on the parent
-  // product's catalog photos here would mix in generic seed/Unsplash
-  // visuals that don't match the actual crate in the warehouse (cf. the
-  // "wrong photos on the Picasso chair" report). The variant/product
-  // galleries are only used when the lot has no photos of its own.
-  const lotImages = [
-    line.imageUrl,
-    ...(line.imageUrls ?? []),
-  ].filter(Boolean) as string[]
-
-  const fallbackImages = [
-    line.variant.imageUrl,
-    line.product.mainImageUrl,
-    ...(line.variant.galleryUrls ?? []),
-    ...line.product.galleryUrls,
-  ].filter(Boolean) as string[]
-
-  const sources = lotImages.length > 0 ? lotImages : fallbackImages
-  const photos = Array.from(new Set(sources)).slice(0, 6)
-  const [active, setActive] = useState<string | undefined>(photos[0])
-
-  // Re-sync when the user switches stock line.
-  useEffect(() => {
-    setActive(photos[0])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [line.id])
-
-  if (!active) return null
-
-  return (
-    <div className="mt-4 space-y-2">
-      <div className="ring-foreground/10 relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1">
-        <img
-          src={active}
-          alt={line.product.name}
-          loading="lazy"
-          className="h-full w-full object-contain p-2"
-        />
-        {photos.length > 1 && (
-          <span className="absolute right-2 top-2 rounded-sm bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">
-            {photos.indexOf(active) + 1}/{photos.length}
-          </span>
-        )}
-      </div>
-      {photos.length > 1 && (
-        <div className="grid grid-cols-6 gap-1.5">
-          {photos.map((url) => {
-            const selected = url === active
-            return (
-              <button
-                key={url}
-                type="button"
-                onClick={() => setActive(url)}
-                aria-pressed={selected}
-                className={`relative aspect-square overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 transition ${
-                  selected
-                    ? 'ring-2 ring-foreground'
-                    : 'ring-foreground/10 hover:ring-foreground/40'
-                }`}
-              >
-                <img
-                  src={url}
-                  alt=""
-                  loading="lazy"
-                  className="h-full w-full object-contain p-1"
-                />
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
   )
 }
 

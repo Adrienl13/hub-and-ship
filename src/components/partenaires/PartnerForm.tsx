@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { usePartnerApplicationCreation } from '@/hooks/usePartnerApplicationCreation'
+import { getAttributionFields } from '@/lib/analytics/attribution'
 import { trackEvent } from '@/lib/analytics/plausible'
 import {
   buildPartnerApplicationDraft,
+  toPartnerRequestApiPayload,
   PARTNER_ACTIVITY_PROFILES,
   PARTNER_ACTIVITY_PROFILE_LABEL,
   PARTNER_TARGET_STATUSES,
@@ -51,7 +52,6 @@ const labelClass =
 export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
-  const creation = usePartnerApplicationCreation()
 
   // Sync the "profil" / "statut visé" selects when the selector or a card CTA
   // pre-fills a choice (nonce forces re-apply even on repeated clicks).
@@ -90,18 +90,43 @@ export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill 
     }
 
     setSubmitting(true)
-    const result = await creation.createPartnerApplication(draftResult.draft)
-    setSubmitting(false)
-
-    if (!result.ok) {
-      toast.error('Candidature non envoyée', { description: result.error })
-      return
+    // Server-side intake: /api/partner-requests validates, inserts with the
+    // service-role client (never the browser anon key) and fires the Brevo
+    // notifications (admin + accusé de réception 48 h).
+    let submitted = false
+    try {
+      const response = await fetch('/api/partner-requests', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(
+          toPartnerRequestApiPayload(
+            draftResult.draft,
+            getAttributionFields(Date.now()),
+          ),
+        ),
+      })
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean
+        error?: string
+      } | null
+      submitted = response.ok && payload?.ok === true
+      if (!submitted) {
+        toast.error('Candidature non envoyée', {
+          description:
+            payload?.error ?? 'Réessayez dans un instant ou écrivez-nous.',
+        })
+      }
+    } catch {
+      toast.error('Candidature non envoyée', {
+        description: 'Connexion impossible. Réessayez dans un instant.',
+      })
     }
+    setSubmitting(false)
+    if (!submitted) return
 
     trackEvent('partner_application_submitted', {
       profile: draftResult.draft.activityProfile,
       status: draftResult.draft.targetStatus,
-      persisted: result.persisted,
     })
     toast.success('Candidature envoyée', {
       description: 'Notre équipe revient vers vous sous 48 h.',
