@@ -11,6 +11,16 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://prosimport.com/catalogue/chaises-restaurant</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/catalogue/tables-restaurant</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://prosimport.com/livres</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -26,6 +36,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://prosimport.com/stock-mobilier-terrasse-24h</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://prosimport.com/partenaires</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -37,6 +52,46 @@
   </url>
   <url>
     <loc>https://prosimport.com/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/import-mobilier-chr-container</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/prix-chaises-restaurant-volume</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/container-20-pieds-vs-40-pieds-mobilier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/moq-chaises-restaurant</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/guides/prix-net-revendeur-mobilier-chr</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/a-propos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://prosimport.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

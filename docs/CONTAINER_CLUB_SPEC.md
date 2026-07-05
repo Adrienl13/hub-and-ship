@@ -3872,7 +3872,7 @@ officiel (Terrassea SAS, France), gère douane, TVA autoliquidée et SAV.
 - Norme feu M1/M2 (ERP hôtels/restaurants)
 - REACH (substances chimiques)
 - Adhésion Eco-mobilier (éco-contribution incluse)
-- Importateur EORI déclaré
+- Importateur déclaré
 
 ## Couverture géographique
 
@@ -4414,6 +4414,7 @@ Scénario : modifier le total côté client avant envoi à Stripe.
 Protections en place :
 
 - **Recalcul serveur systématique** dans `verify-siret` puis dans `create-payment-intent` :
+
   ```typescript
   // src/lib/server/pricing-server.ts
   export async function recalculateAndVerifyOrder(orderId: string) {
@@ -4440,6 +4441,7 @@ Protections en place :
     return recalculated
   }
   ```
+
 - Tous les montants envoyés à Stripe viennent du recalcul serveur, jamais du client
 
 **Fraude #4 : Card testing (cartes volées)**
@@ -5219,7 +5221,7 @@ One-click sur tous emails marketing (RGPD).
 ### Business
 
 - [ ] Adhésion Eco-mobilier finalisée
-- [ ] EORI vérifié actif
+- [ ] Identifiant importateur vérifié actif
 - [ ] Autoliquidation TVA validée avec expert-comptable
 - [ ] Commissionnaire en douane briefé
 - [ ] **5 transporteurs partenaires contactés** : tarifs récupérés, contacts dédiés, page `/transport-partenaires` complétée

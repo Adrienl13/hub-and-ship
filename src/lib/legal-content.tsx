@@ -23,8 +23,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
             Le présent site, accessible à l'adresse{' '}
-            <Strong>https://prosimport.com</Strong> (ci-après le « Site »),
-            est édité par :
+            <Strong>https://prosimport.com</Strong> (ci-après le « Site »), est
+            édité par :
           </P>
           <UL>
             <LI>
@@ -49,9 +49,6 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>TVA intracommunautaire :</Strong> FR08988269981
-            </LI>
-            <LI>
-              <Strong>EORI :</Strong> FR98826998100011
             </LI>
             <LI>
               <Strong>Email :</Strong> adrienlaniez1@gmail.com

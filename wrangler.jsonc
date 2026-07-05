@@ -6,6 +6,6 @@
   "main": "@tanstack/react-start/server-entry",
   "routes": [
     { "pattern": "prosimport.com", "custom_domain": true },
-    { "pattern": "www.prosimport.com", "custom_domain": true }
-  ]
+    { "pattern": "www.prosimport.com", "custom_domain": true },
+  ],
 }

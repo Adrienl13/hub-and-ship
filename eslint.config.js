@@ -13,6 +13,7 @@ export default tseslint.config(
       '.vinxi/**',
       'coverage/**',
       'playwright-report/**',
+      'test-results/**',
       'examples/**',
       'src/routeTree.gen.ts',
     ],

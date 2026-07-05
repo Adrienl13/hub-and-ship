@@ -7,23 +7,16 @@ import {
   ExternalLink,
   LayoutDashboard,
   PackageCheck,
+  Handshake,
   Ship,
   ShoppingCart,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-import { AdminCarrierPartnersTab } from '@/components/AdminCarrierPartnersTab'
-import { AdminCatalogueTab } from '@/components/AdminCatalogueTab'
-import { AdminCommissionsTab } from '@/components/AdminCommissionsTab'
-import { AdminCompaniesTab } from '@/components/AdminCompaniesTab'
-import { AdminContainersTab } from '@/components/AdminContainersTab'
 import { AdminGuard } from '@/components/AdminGuard'
-import { AdminPartnerApplicationsTab } from '@/components/AdminPartnerApplicationsTab'
-import { AdminQualityReportsTab } from '@/components/AdminQualityReportsTab'
-import { AdminStockTab } from '@/components/AdminStockTab'
-import { AdminUsersTab } from '@/components/AdminUsersTab'
+import { AdminReservationQuoteUpload } from '@/components/AdminReservationQuoteUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,8 +28,16 @@ import {
   type AdminReservationRow,
   type AdminReservationsClient,
 } from '@/lib/account/admin-reservations.repository'
+import { useServerFn } from '@tanstack/react-start'
+import { toast } from 'sonner'
+
 import { logAdminAction } from '@/lib/admin/audit-log'
-import { sendReservationCancelled } from '@/lib/email/reservation-cancelled'
+import { downloadCsv, toCsv } from '@/lib/admin/csv'
+import {
+  issueInvoice,
+  type InvoicesClient,
+} from '@/lib/account/invoices'
+import { sendInvoiceEmail } from '@/lib/email/invoice-email'
 import {
   ADMIN_DEMO_STOCK_REQUESTS,
   createAdminDashboardSnapshot,
@@ -51,6 +52,7 @@ import {
   type StockRequestAdminRow,
 } from '@/lib/stock-requests/admin-repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { AdminCommandCenter } from '@/components/AdminCommandCenter'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type {
   ReservationStatus,
@@ -69,10 +71,75 @@ const ADMIN_TABS = [
   'stock',
   'quality',
   'carriers',
+  'partners',
+  'claims',
+  'reviews',
+  'referrals',
+  'leads',
   'users',
 ] as const
 
 type AdminTab = (typeof ADMIN_TABS)[number]
+
+const LazyAdminCatalogueTab = lazy(() =>
+  import('@/components/AdminCatalogueTab').then((module) => ({
+    default: module.AdminCatalogueTab,
+  })),
+)
+
+const LazyAdminContainersTab = lazy(() =>
+  import('@/components/AdminContainersTab').then((module) => ({
+    default: module.AdminContainersTab,
+  })),
+)
+
+const LazyAdminQualityReportsTab = lazy(() =>
+  import('@/components/AdminQualityReportsTab').then((module) => ({
+    default: module.AdminQualityReportsTab,
+  })),
+)
+
+const LazyAdminCarrierPartnersTab = lazy(() =>
+  import('@/components/AdminCarrierPartnersTab').then((module) => ({
+    default: module.AdminCarrierPartnersTab,
+  })),
+)
+
+const LazyAdminUsersTab = lazy(() =>
+  import('@/components/AdminUsersTab').then((module) => ({
+    default: module.AdminUsersTab,
+  })),
+)
+
+const LazyAdminClaimsTab = lazy(() =>
+  import('@/components/AdminClaimsTab').then((module) => ({
+    default: module.AdminClaimsTab,
+  })),
+)
+
+const LazyAdminPartnersTab = lazy(() =>
+  import('@/components/AdminPartnersTab').then((module) => ({
+    default: module.AdminPartnersTab,
+  })),
+)
+
+const LazyAdminReviewsTab = lazy(() =>
+  import('@/components/AdminReviewsTab').then((module) => ({
+    default: module.AdminReviewsTab,
+  })),
+)
+
+const LazyAdminReferralsTab = lazy(() =>
+  import('@/components/AdminReferralsTab').then((module) => ({
+    default: module.AdminReferralsTab,
+  })),
+)
+
+const LazyAdminLeadsTab = lazy(() =>
+  import('@/components/AdminLeadsTab').then((module) => ({
+    default: module.AdminLeadsTab,
+  })),
+)
 
 const adminSearchSchema = z.object({
   tab: z.enum(ADMIN_TABS).optional(),
@@ -81,6 +148,12 @@ const adminSearchSchema = z.object({
 export const Route = createFileRoute('/admin')({
   component: AdminRoute,
   validateSearch: adminSearchSchema,
+  head: () => ({
+    meta: [
+      { title: 'Administration — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AdminRoute() {
@@ -101,6 +174,13 @@ const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
   in_transit: 'En transit',
   delivered: 'Livrée',
   cancelled: 'Annulée',
+}
+
+const PARTNER_ATTRIBUTION_REASON_LABEL: Record<string, string> = {
+  partner_link: 'Lien partenaire',
+  client_siret: 'SIRET',
+  client_email: 'Email',
+  client_email_domain: 'Domaine email',
 }
 
 const STOCK_REQUEST_STATUS_LABEL_LOCAL: Record<StockRequestStatus, string> = {
@@ -181,6 +261,11 @@ function AdminPage() {
               ['stock', 'Stock 24h'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
+              ['partners', 'Partenaires'],
+              ['claims', 'SAV'],
+              ['reviews', 'Avis'],
+              ['referrals', 'Parrainage'],
+              ['leads', 'Prospects'],
               ['users', 'Utilisateurs'],
             ] as const
           ).map(([id, label]) => {
@@ -202,38 +287,60 @@ function AdminPage() {
           })}
         </div>
 
-        {activeTab === 'overview' && <Overview snapshot={snapshot} />}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <AdminCommandCenter onNavigate={setActiveTab} />
+            <Overview snapshot={snapshot} />
+          </div>
+        )}
         {activeTab === 'stock-requests' && (
           <StockRequestsAdminPanel authStatus={auth.status} />
         )}
         {activeTab === 'reservations' && (
           <ReservationsAdminPanel authStatus={auth.status} />
         )}
-        {activeTab === 'partner-applications' && (
-          <AdminPartnerApplicationsTab authStatus={auth.status} />
-        )}
-        {activeTab === 'companies' && (
-          <AdminCompaniesTab authStatus={auth.status} />
-        )}
-        {activeTab === 'commissions' && (
-          <AdminCommissionsTab authStatus={auth.status} />
-        )}
-        {activeTab === 'products' && (
-          <AdminCatalogueTab authStatus={auth.status} />
-        )}
-        {activeTab === 'containers' && (
-          <AdminContainersTab authStatus={auth.status} />
-        )}
-        {activeTab === 'stock' && <AdminStockTab authStatus={auth.status} />}
-        {activeTab === 'quality' && (
-          <AdminQualityReportsTab authStatus={auth.status} />
-        )}
-        {activeTab === 'carriers' && (
-          <AdminCarrierPartnersTab authStatus={auth.status} />
-        )}
-        {activeTab === 'users' && <AdminUsersTab authStatus={auth.status} />}
+        <Suspense fallback={<AdminTabLoading />}>
+          {activeTab === 'products' && (
+            <LazyAdminCatalogueTab authStatus={auth.status} />
+          )}
+          {activeTab === 'containers' && (
+            <LazyAdminContainersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'quality' && (
+            <LazyAdminQualityReportsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'carriers' && (
+            <LazyAdminCarrierPartnersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'partners' && (
+            <LazyAdminPartnersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'claims' && (
+            <LazyAdminClaimsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'reviews' && (
+            <LazyAdminReviewsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'referrals' && (
+            <LazyAdminReferralsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'leads' && (
+            <LazyAdminLeadsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'users' && (
+            <LazyAdminUsersTab authStatus={auth.status} />
+          )}
+        </Suspense>
       </section>
     </main>
+  )
+}
+
+function AdminTabLoading() {
+  return (
+    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6 text-sm text-muted-foreground">
+      Chargement de l'onglet...
+    </div>
   )
 }
 
@@ -303,7 +410,7 @@ function Overview({
   return (
     <div className="space-y-6">
       <AdminWarning />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <Kpi
           Icon={ShoppingCart}
           label="Réservations actives"
@@ -321,6 +428,12 @@ function Overview({
           label="Demandes stock (demo)"
           value={`${snapshot.kpis.newStockRequests}`}
           detail="À traiter"
+        />
+        <Kpi
+          Icon={Handshake}
+          label="Partenaires"
+          value="Beta"
+          detail="Candidatures + deals"
         />
         <Kpi
           Icon={Boxes}
@@ -524,6 +637,31 @@ function StockRequestsAdminPanel({
             </option>
           ))}
         </select>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredRows.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `stock-leads-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredRows, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Produit', value: (r) => r.productName },
+                { header: 'Quantité', value: (r) => r.requestedQuantity },
+                { header: 'Estimation HT', value: (r) => r.estimatedTotalHt },
+                { header: 'Société', value: (r) => r.companyName },
+                { header: 'Email', value: (r) => r.contactEmail },
+                { header: 'Téléphone', value: (r) => r.contactPhone },
+                { header: 'Statut', value: (r) => r.status },
+                { header: 'Note', value: (r) => r.customerNote ?? '' },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Exporter CSV
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filteredRows.length} / {rows.length}
         </span>
@@ -672,6 +810,7 @@ function ReservationsAdminPanel({
   readonly authStatus: string
 }) {
   const auth = useAuth()
+  const sendInvoice = useServerFn(sendInvoiceEmail)
   const [rows, setRows] = useState<ReadonlyArray<AdminReservationRow>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -680,6 +819,15 @@ function ReservationsAdminPanel({
   const [cancelReason, setCancelReason] =
     useState<(typeof CANCELLATION_REASONS)[number]['value']>('client_request')
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>(
+    'all',
+  )
+  const [partnerFilter, setPartnerFilter] = useState<
+    'all' | 'partner' | 'direct'
+  >('all')
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>(
+    'all',
+  )
+  const [containerFilter, setContainerFilter] = useState<'all' | '20' | '40'>(
     'all',
   )
   const [search, setSearch] = useState('')
@@ -718,16 +866,49 @@ function ReservationsAdminPanel({
     const needle = search.trim().toLowerCase()
     return rows.filter((row) => {
       if (statusFilter !== 'all' && row.status !== statusFilter) return false
+
+      const hasPartner =
+        Boolean(row.partnerDealId) ||
+        Boolean(row.partnerApplicationId) ||
+        Boolean(row.partnerLinkSlug)
+      if (partnerFilter === 'partner' && !hasPartner) return false
+      if (partnerFilter === 'direct' && hasPartner) return false
+
+      const isPaid = row.paidReservationFeeAt !== null
+      if (paymentFilter === 'paid' && !isPaid) return false
+      if (paymentFilter === 'unpaid' && isPaid) return false
+
+      if (containerFilter !== 'all') {
+        const ct = row.requestedContainerType
+        if (containerFilter === '20' && !ct?.startsWith('20_')) return false
+        if (containerFilter === '40' && !ct?.startsWith('40_')) return false
+      }
+
       if (!needle) return true
       return (
         row.reference.toLowerCase().includes(needle) ||
         row.siret.toLowerCase().includes(needle) ||
         (row.companyLegalName?.toLowerCase().includes(needle) ?? false) ||
         (row.contactEmail?.toLowerCase().includes(needle) ?? false) ||
-        (row.contactName?.toLowerCase().includes(needle) ?? false)
+        (row.contactName?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerAttributionPartnerCompany
+          ?.toLowerCase()
+          .includes(needle) ??
+          false) ||
+        (row.partnerAttributionPartnerEmail?.toLowerCase().includes(needle) ??
+          false) ||
+        (row.partnerLinkSlug?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerLinkDisplayName?.toLowerCase().includes(needle) ?? false)
       )
     })
-  }, [rows, statusFilter, search])
+  }, [
+    rows,
+    statusFilter,
+    partnerFilter,
+    paymentFilter,
+    containerFilter,
+    search,
+  ])
 
   async function changeStatus(
     row: AdminReservationRow,
@@ -817,6 +998,36 @@ function ReservationsAdminPanel({
     }
   }
 
+  async function issueInvoiceFor(row: AdminReservationRow): Promise<void> {
+    if (!isConfigured) return
+    if (
+      !window.confirm(
+        `Émettre une facture définitive pour ${row.reference} ? La numérotation est continue et non annulable.`,
+      )
+    ) {
+      return
+    }
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as unknown as InvoicesClient
+    try {
+      const invoice = await issueInvoice(client, row.id)
+      // Email the invoice to the client (no-op when Resend is not configured).
+      try {
+        await sendInvoice({ data: { invoiceId: invoice.id } })
+      } catch (mailErr) {
+        console.error('admin: invoice email failed', mailErr)
+      }
+      toast.success(`Facture ${invoice.number} émise`)
+    } catch (err) {
+      toast.error('Émission impossible', {
+        description: err instanceof Error ? err.message : undefined,
+      })
+    }
+    setBusyId(null)
+  }
+
   if (!isConfigured) {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
@@ -843,7 +1054,7 @@ function ReservationsAdminPanel({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          placeholder="Rechercher référence / SIRET / société / email"
+          placeholder="Rechercher référence / SIRET / société / email / partenaire"
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 max-w-sm text-xs"
         />
@@ -863,6 +1074,100 @@ function ReservationsAdminPanel({
             ),
           )}
         </select>
+        <select
+          value={partnerFilter}
+          onChange={(e) =>
+            setPartnerFilter(e.target.value as 'all' | 'partner' | 'direct')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par origine partenaire"
+        >
+          <option value="all">Toutes origines</option>
+          <option value="partner">Partenaire reconnu</option>
+          <option value="direct">Direct (sans partenaire)</option>
+        </select>
+        <select
+          value={paymentFilter}
+          onChange={(e) =>
+            setPaymentFilter(e.target.value as 'all' | 'paid' | 'unpaid')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par paiement"
+        >
+          <option value="all">Tous paiements</option>
+          <option value="paid">Frais payés</option>
+          <option value="unpaid">Frais en attente</option>
+        </select>
+        <select
+          value={containerFilter}
+          onChange={(e) =>
+            setContainerFilter(e.target.value as 'all' | '20' | '40')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par type de container demandé"
+        >
+          <option value="all">Tous containers</option>
+          <option value="20">20&apos; demandé</option>
+          <option value="40">40&apos; demandé</option>
+        </select>
+        {(statusFilter !== 'all' ||
+          partnerFilter !== 'all' ||
+          paymentFilter !== 'all' ||
+          containerFilter !== 'all' ||
+          search.trim() !== '') && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setStatusFilter('all')
+              setPartnerFilter('all')
+              setPaymentFilter('all')
+              setContainerFilter('all')
+              setSearch('')
+            }}
+            className="h-9 px-2 text-xs"
+          >
+            Réinitialiser
+          </Button>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={filteredRows.length === 0}
+          onClick={() =>
+            downloadCsv(
+              `reservations-${new Date().toISOString().slice(0, 10)}.csv`,
+              toCsv(filteredRows, [
+                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Référence', value: (r) => r.reference },
+                { header: 'Container', value: (r) => r.containerReference },
+                { header: 'Société', value: (r) => r.companyLegalName ?? '' },
+                { header: 'SIRET', value: (r) => r.siret },
+                { header: 'Email', value: (r) => r.contactEmail ?? '' },
+                { header: 'Statut', value: (r) => RESERVATION_STATUS_LABEL[r.status] },
+                { header: 'Total HT', value: (r) => r.totalHt },
+                { header: 'Frais réservation', value: (r) => r.reservationFee },
+                {
+                  header: 'Frais payés',
+                  value: (r) => (r.paidReservationFeeAt ? 'oui' : 'non'),
+                },
+                {
+                  header: 'Partenaire',
+                  value: (r) => r.partnerAttributionPartnerCompany ?? '',
+                },
+                {
+                  header: 'Attribution',
+                  value: (r) => r.partnerAttributionReason ?? '',
+                },
+              ]),
+            )
+          }
+          className="h-9 px-2 text-xs"
+        >
+          Exporter CSV
+        </Button>
         <span className="text-xs text-muted-foreground">
           {filteredRows.length} / {rows.length}
         </span>
@@ -885,6 +1190,18 @@ function ReservationsAdminPanel({
               const isCancelling = cancellingId === row.id
               const readOnly =
                 row.status === 'delivered' || row.status === 'cancelled'
+              const hasPartnerSignal =
+                Boolean(row.partnerDealId) ||
+                Boolean(row.partnerApplicationId) ||
+                Boolean(row.partnerLinkSlug)
+              const partnerSignalLabel = row.partnerDealId
+                ? 'Deal partenaire reconnu'
+                : row.partnerApplicationId
+                  ? 'Partenaire reconnu'
+                  : 'Lien partenaire capté'
+              const partnerSignalName =
+                row.partnerAttributionPartnerCompany ??
+                row.partnerLinkDisplayName
               return (
                 <article
                   key={row.id}
@@ -898,7 +1215,7 @@ function ReservationsAdminPanel({
                       {row.requestedContainerType &&
                         row.requestedContainerType.startsWith('40_') && (
                           <span
-                            className="inline-flex items-center rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]"
+                            className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--ember)]"
                             title="L'acheteur a demandé un container 40' au lieu du 20' actif"
                           >
                             40&apos; demandé
@@ -908,6 +1225,27 @@ function ReservationsAdminPanel({
                     <div className="mt-1 text-xs text-muted-foreground">
                       {row.containerReference} · SIRET {row.siret}
                     </div>
+                    {hasPartnerSignal && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[color:var(--forest)]">
+                        <Handshake className="h-3.5 w-3.5" />
+                        <span className="font-medium">
+                          {partnerSignalLabel}
+                        </span>
+                        {partnerSignalName && <span>· {partnerSignalName}</span>}
+                        {row.partnerAttributionReason && (
+                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
+                            {PARTNER_ATTRIBUTION_REASON_LABEL[
+                              row.partnerAttributionReason
+                            ] ?? row.partnerAttributionReason}
+                          </span>
+                        )}
+                        {!row.partnerAttributionReason && row.partnerLinkSlug && (
+                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
+                            {row.partnerLinkSlug}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {row.stripePaymentIntentId && (
                       <a
                         href={buildStripePaymentIntentUrl(
@@ -958,6 +1296,20 @@ function ReservationsAdminPanel({
                           {a.label}
                         </Button>
                       ))}
+                    {row.status !== 'pending_reservation_fee' &&
+                      row.status !== 'cancelled' && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={busy}
+                          onClick={() => void issueInvoiceFor(row)}
+                          className="h-7 rounded-sm px-2 text-[11px]"
+                        >
+                          Facturer
+                        </Button>
+                      )}
+                    <AdminReservationQuoteUpload reservationId={row.id} />
                     <Button
                       asChild
                       variant="outline"

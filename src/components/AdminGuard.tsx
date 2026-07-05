@@ -22,7 +22,10 @@ interface AdminGuardProps {
 export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   const auth = useAuth()
   const { isAdmin, isLoading: isCheckingRole } = useIsAdmin()
-  const noop = () => undefined
+  const returnTo =
+    typeof window === 'undefined'
+      ? '/admin'
+      : `${window.location.pathname}${window.location.search}`
 
   if (auth.status === 'loading' || isCheckingRole) {
     return (
@@ -35,16 +38,18 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (auth.status === 'unconfigured') {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
             Authentification indisponible
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            La connexion Supabase n'est pas configurée localement. Définissez
-            VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans <code>.env</code>
-            puis redémarrez le serveur.
+            L'authentification administrateur n'est pas encore active sur cet
+            environnement. Variables publiques manquantes :{' '}
+            <code>{auth.missingConfig.join(', ')}</code>. En local,
+            renseignez-les dans <code>.env.local</code> puis redémarrez le
+            serveur ; en production, ajoutez-les au build et redéployez.
           </p>
           <Link
             to="/"
@@ -61,7 +66,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (auth.status !== 'authenticated') {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
@@ -75,7 +80,9 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
             asChild
             className="hover:bg-foreground/90 mt-6 h-11 w-full rounded-sm bg-foreground text-background"
           >
-            <Link to="/auth/login">Se connecter</Link>
+            <Link to="/auth/login" search={{ returnTo }}>
+              Se connecter
+            </Link>
           </Button>
           <Link
             to="/"
@@ -92,7 +99,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
-        <Header onReserve={onReserve ?? noop} />
+        <Header onReserve={onReserve} />
         <main className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-[color:var(--ember)]" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">

@@ -3,10 +3,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import {
-  ImageGalleryUploader,
-  ImageUploader,
-} from '@/components/ImageUploader'
+import { ImageGalleryUploader, ImageUploader } from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -307,9 +304,7 @@ export function AdminProductEditor({
     // Resolve the target product id up-front. In create mode the id is
     // derived from the SKU (stable, human-readable). In edit mode we keep
     // the existing id.
-    const targetProductId = isCreating
-      ? deriveProductId(state.sku)
-      : productId!
+    const targetProductId = isCreating ? deriveProductId(state.sku) : productId!
     if (isCreating && !targetProductId) {
       setError('Le SKU est requis pour créer un produit.')
       setSaving(false)
@@ -326,68 +321,46 @@ export function AdminProductEditor({
         gallery_urls: v.galleryUrls.filter((url) => url.trim()),
         sort_order: v.sortOrder,
       }))
-    // Only keep commitments whose design survives this save. A removed design
-    // is deleted by the RPC (cascading its commitments), so re-sending a
-    // commitment for it would violate container_seed_commitments' FK and abort
-    // the whole save.
-    const survivingVariantIds = new Set(variantsPayload.map((v) => v.id))
+    // Only keep commitments tied to a design that is actually being saved.
+    // Designs that were removed (CASCADE-deleted by the RPC) or left unnamed
+    // (filtered out of variantsPayload) must NOT carry commitments, otherwise
+    // the RPC re-inserts a commitment referencing a now-deleted variant_id and
+    // the whole save fails on the FK — silently, mid-screen.
+    const savedVariantIds = new Set(variantsPayload.map((v) => v.id))
     const commitmentsPayload = commitments
-      .filter((c) => survivingVariantIds.has(c.variantId))
+      .filter((c) => savedVariantIds.has(c.variantId))
       .map((c) => ({
         container_id: c.containerId,
         variant_id: c.variantId,
         units_committed: Math.max(0, Math.round(c.unitsCommitted)),
       }))
 
-    // Guard: a product with no design is hidden from the public catalogue
-    // (db.ts filters variants.length > 0). Warn before saving such a product,
-    // and if the admin confirms, force it inactive so the state is explicit
-    // (never "actif mais introuvable"). A DB-side net enforces the same
-    // invariant for any other caller.
-    if (variantsPayload.length === 0) {
-      const confirmed = window.confirm(
-        "Ce produit n'a aucun design.\n\n" +
-          'Un produit sans design est masqué du catalogue public. ' +
-          'Voulez-vous quand même enregistrer ? Il sera automatiquement ' +
-          'marqué « Inactif ».',
-      )
-      if (!confirmed) {
-        setSaving(false)
-        return
-      }
-      productPayload.is_active = false
-    }
-
     // One transactional RPC instead of N sequential writes — avoids the
     // partial-failure window where the product was saved but its variants
     // (or commitments) were not.
-    const { error: rpcError } = await client.rpc(
-      'admin_save_product_full',
-      {
-        payload: {
-          id: targetProductId,
-          create: isCreating,
-          product: productPayload as unknown as Json,
-          variants: variantsPayload as unknown as Json,
-          removed_variant_ids: removedVariantIds,
-          commitments: commitmentsPayload as unknown as Json,
-        } as unknown as Json,
-      } as never,
-    )
+    const { error: rpcError } = await client.rpc('admin_save_product_full', {
+      payload: {
+        id: targetProductId,
+        create: isCreating,
+        product: productPayload as unknown as Json,
+        variants: variantsPayload as unknown as Json,
+        removed_variant_ids: removedVariantIds,
+        commitments: commitmentsPayload as unknown as Json,
+      } as unknown as Json,
+    } as never)
 
     if (rpcError) {
       setError(rpcError.message)
-      // Surface it as a toast too: the inline banner sits at the top of a tall
-      // scrollable form, so a user who clicked "Enregistrer" at the bottom
-      // would otherwise see nothing happen.
-      toast.error('Enregistrement échoué', { description: rpcError.message })
+      // The error banner sits at the top of a long form; surface a toast too
+      // so a save failure is visible even when scrolled to Designs/commitments.
+      toast.error(`Échec de l'enregistrement : ${rpcError.message}`)
       setSaving(false)
       return
     }
 
     setSaving(false)
-    toast.success('Produit enregistré')
-    await onSaved(targetProductId)
+    toast.success('Produit enregistré.')
+    await onSaved()
   }
 
   if (loading) {

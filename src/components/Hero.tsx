@@ -1,8 +1,18 @@
 import { ShieldCheck, Award, FileBadge } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { AnimatedNumber } from '@/components/motion-helpers'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
+import { CountdownBadge } from '@/components/CountdownBadge'
+
+const LINE_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: 'easeOut' },
+  },
+}
 
 function formatDate(iso: string | null) {
   if (!iso) return 'date à confirmer'
@@ -28,7 +38,29 @@ export function Hero({
 }) {
   return (
     <section id="top" className="relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 pb-16 pt-12 sm:pt-16">
+      {/* Aura animée en fond — dérive lente, derrière le contenu */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <motion.div
+          className="absolute -left-20 -top-28 h-80 w-80 rounded-full bg-[color:var(--ember)]/25 blur-3xl"
+          animate={{ x: [0, 60, 0], y: [0, 30, 0], scale: [1, 1.18, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute right-[-6%] top-1/4 h-96 w-96 rounded-full bg-[color:var(--forest)]/18 blur-3xl"
+          animate={{ x: [0, -60, 0], y: [0, -25, 0], scale: [1, 1.22, 1] }}
+          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute left-1/3 top-[-20%] h-72 w-72 rounded-full bg-[color:var(--ochre)]/15 blur-3xl"
+          animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-12 sm:pt-16">
         {/* Bandeau pré-header */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -51,6 +83,11 @@ export function Hero({
           <span className="text-foreground/70">
             Clôture estimée {formatDate(container.expectedCloseAt)}
           </span>
+          <CountdownBadge
+            target={container.expectedCloseAt}
+            withIcon={false}
+            className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/15 ml-1 inline-flex animate-pulse items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold text-[color:var(--ember)]"
+          />
         </motion.div>
 
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
@@ -61,13 +98,36 @@ export function Hero({
             transition={{ duration: 0.6, delay: 0.05 }}
             className="lg:col-span-7"
           >
-            <h1 className="font-display text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
-              Mobilier outdoor pro,
-              <br />
-              <span className="text-[color:var(--ember)]">direct usine,</span>
-              <br />
-              sans intermédiaire.
-            </h1>
+            <motion.h1
+              className="font-display text-4xl leading-[1.05] sm:text-5xl md:text-6xl"
+              initial="hidden"
+              animate="show"
+              variants={{
+                show: {
+                  transition: { staggerChildren: 0.13, delayChildren: 0.15 },
+                },
+              }}
+            >
+              <motion.span className="block" variants={LINE_VARIANTS}>
+                Mobilier outdoor pro,
+              </motion.span>
+              <motion.span className="block" variants={LINE_VARIANTS}>
+                <motion.span
+                  className="inline-block bg-[length:200%_auto] bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(90deg, var(--ember), #efb15a 45%, var(--ember))',
+                  }}
+                  animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+                >
+                  direct usine,
+                </motion.span>
+              </motion.span>
+              <motion.span className="block" variants={LINE_VARIANTS}>
+                sans intermédiaire.
+              </motion.span>
+            </motion.h1>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)]">
               Pré-commande groupée par container 20' avec d'autres
               professionnels. Jusqu'à{' '}
@@ -157,9 +217,7 @@ export function Hero({
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                   <span>0%</span>
-                  <span>
-                    Seuil départ {container.thresholdPercent}%
-                  </span>
+                  <span>Seuil départ {container.thresholdPercent}%</span>
                   <span>100%</span>
                 </div>
               </div>

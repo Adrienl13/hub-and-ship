@@ -10,29 +10,55 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransportPartenairesRouteImport } from './routes/transport-partenaires'
+import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as QualiteRouteImport } from './routes/qualite'
+import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartenairesRouteImport } from './routes/partenaires'
-import { Route as PartenaireRouteImport } from './routes/partenaire'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as AvisRouteImport } from './routes/avis'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
+import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
+import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
+import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
+import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
+import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
+import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
+import { Route as AccountParametresRouteImport } from './routes/account.parametres'
+import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
+import { Route as AccountAvisRouteImport } from './routes/account.avis'
+import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
+import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
+import { Route as AccountReservationsReservationIdFactureInvoiceIdRouteImport } from './routes/account.reservations.$reservationId.facture.$invoiceId'
 
 const TransportPartenairesRoute = TransportPartenairesRouteImport.update({
   id: '/transport-partenaires',
   path: '/transport-partenaires',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StockMobilierTerrasse24hRoute =
+  StockMobilierTerrasse24hRouteImport.update({
+    id: '/stock-mobilier-terrasse-24h',
+    path: '/stock-mobilier-terrasse-24h',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const Stock24hRoute = Stock24hRouteImport.update({
   id: '/stock-24h',
   path: '/stock-24h',
@@ -43,14 +69,14 @@ const QualiteRoute = QualiteRouteImport.update({
   path: '/qualite',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartenairesRoute = PartenairesRouteImport.update({
   id: '/partenaires',
   path: '/partenaires',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PartenaireRoute = PartenaireRouteImport.update({
-  id: '/partenaire',
-  path: '/partenaire',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -58,14 +84,29 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CatalogueRoute = CatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AvisRoute = AvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AProposRoute = AProposRouteImport.update({
+  id: '/a-propos',
+  path: '/a-propos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +124,26 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
   path: '/legal/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/account/',
+  path: '/account/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerSelectionsRoute = PartnerSelectionsRouteImport.update({
+  id: '/selections',
+  path: '/selections',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PPartnerSlugRoute = PPartnerSlugRouteImport.update({
+  id: '/p/$partnerSlug',
+  path: '/p/$partnerSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LivresSlugRoute = LivresSlugRouteImport.update({
   id: '/livres/$slug',
   path: '/livres/$slug',
@@ -93,6 +154,23 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
   path: '/legal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogueTablesRestaurantRoute =
+  CatalogueTablesRestaurantRouteImport.update({
+    id: '/catalogue_/tables-restaurant',
+    path: '/catalogue/tables-restaurant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CatalogueChaisesRestaurantRoute =
+  CatalogueChaisesRestaurantRouteImport.update({
+    id: '/catalogue_/chaises-restaurant',
+    path: '/catalogue/chaises-restaurant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
@@ -103,10 +181,45 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStockRequestsRoute = ApiStockRequestsRouteImport.update({
+  id: '/api/stock-requests',
+  path: '/api/stock-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPartnerRequestsRoute = ApiPartnerRequestsRouteImport.update({
+  id: '/api/partner-requests',
+  path: '/api/partner-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountReservationsRoute = AccountReservationsRouteImport.update({
   id: '/account/reservations',
   path: '/account/reservations',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AccountParrainageRoute = AccountParrainageRouteImport.update({
+  id: '/account/parrainage',
+  path: '/account/parrainage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountParametresRoute = AccountParametresRouteImport.update({
+  id: '/account/parametres',
+  path: '/account/parametres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountFavorisRoute = AccountFavorisRouteImport.update({
+  id: '/account/favoris',
+  path: '/account/favoris',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountAvisRoute = AccountAvisRouteImport.update({
+  id: '/account/avis',
+  path: '/account/avis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PPartnerSlugDevisRoute = PPartnerSlugDevisRouteImport.update({
+  id: '/devis',
+  path: '/devis',
+  getParentRoute: () => PPartnerSlugRoute,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
@@ -119,146 +232,294 @@ const AccountReservationsReservationIdRoute =
     path: '/$reservationId',
     getParentRoute: () => AccountReservationsRoute,
   } as any)
+const AccountReservationsReservationIdDocumentRoute =
+  AccountReservationsReservationIdDocumentRouteImport.update({
+    id: '/document',
+    path: '/document',
+    getParentRoute: () => AccountReservationsReservationIdRoute,
+  } as any)
+const AccountReservationsReservationIdFactureInvoiceIdRoute =
+  AccountReservationsReservationIdFactureInvoiceIdRouteImport.update({
+    id: '/facture/$invoiceId',
+    path: '/facture/$invoiceId',
+    getParentRoute: () => AccountReservationsReservationIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
+  '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
-  '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
+  '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
+  '/partner/selections': typeof PartnerSelectionsRoute
+  '/account/': typeof AccountIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
+  '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
-  '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
+  '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
+  '/partner/selections': typeof PartnerSelectionsRoute
+  '/account': typeof AccountIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/admin': typeof AdminRoute
+  '/avis': typeof AvisRoute
   '/catalogue': typeof CatalogueRoute
+  '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
-  '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
+  '/partner': typeof PartnerRouteWithChildren
   '/qualite': typeof QualiteRoute
   '/stock-24h': typeof Stock24hRoute
+  '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
+  '/account/avis': typeof AccountAvisRoute
+  '/account/favoris': typeof AccountFavorisRoute
+  '/account/parametres': typeof AccountParametresRoute
+  '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/livres/$slug': typeof LivresSlugRoute
+  '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
+  '/partner/selections': typeof PartnerSelectionsRoute
+  '/account/': typeof AccountIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
-  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRoute
+  '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
+  '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
+  '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
+    | '/contact'
     | '/faq'
-    | '/partenaire'
     | '/partenaires'
+    | '/partner'
     | '/qualite'
     | '/stock-24h'
+    | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
+    | '/account/favoris'
+    | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
+    | '/api/partner-requests'
+    | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/chaises-restaurant'
+    | '/catalogue/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
+    | '/partner/selections'
+    | '/account/'
+    | '/guides/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
+    | '/contact'
     | '/faq'
-    | '/partenaire'
     | '/partenaires'
+    | '/partner'
     | '/qualite'
     | '/stock-24h'
+    | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
+    | '/account/favoris'
+    | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
+    | '/api/partner-requests'
+    | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/chaises-restaurant'
+    | '/catalogue/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
+    | '/partner/selections'
+    | '/account'
+    | '/guides'
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   id:
     | '__root__'
     | '/'
+    | '/a-propos'
     | '/admin'
+    | '/avis'
     | '/catalogue'
+    | '/contact'
     | '/faq'
-    | '/partenaire'
     | '/partenaires'
+    | '/partner'
     | '/qualite'
     | '/stock-24h'
+    | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
+    | '/account/avis'
+    | '/account/favoris'
+    | '/account/parametres'
+    | '/account/parrainage'
     | '/account/reservations'
+    | '/api/partner-requests'
+    | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue_/chaises-restaurant'
+    | '/catalogue_/tables-restaurant'
+    | '/guides/$slug'
     | '/legal/$slug'
     | '/livres/$slug'
+    | '/p/$partnerSlug'
+    | '/partner/selections'
+    | '/account/'
+    | '/guides/'
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/p/$partnerSlug/devis'
+    | '/account/reservations/$reservationId/document'
+    | '/account/reservations/$reservationId/facture/$invoiceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AProposRoute: typeof AProposRoute
   AdminRoute: typeof AdminRoute
+  AvisRoute: typeof AvisRoute
   CatalogueRoute: typeof CatalogueRoute
+  ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
-  PartenaireRoute: typeof PartenaireRoute
   PartenairesRoute: typeof PartenairesRoute
+  PartnerRoute: typeof PartnerRouteWithChildren
   QualiteRoute: typeof QualiteRoute
   Stock24hRoute: typeof Stock24hRoute
+  StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
+  AccountAvisRoute: typeof AccountAvisRoute
+  AccountFavorisRoute: typeof AccountFavorisRoute
+  AccountParametresRoute: typeof AccountParametresRoute
+  AccountParrainageRoute: typeof AccountParrainageRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
+  ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
+  ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
+  CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
+  PPartnerSlugRoute: typeof PPartnerSlugRouteWithChildren
+  AccountIndexRoute: typeof AccountIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -271,6 +532,13 @@ declare module '@tanstack/react-router' {
       path: '/transport-partenaires'
       fullPath: '/transport-partenaires'
       preLoaderRoute: typeof TransportPartenairesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stock-mobilier-terrasse-24h': {
+      id: '/stock-mobilier-terrasse-24h'
+      path: '/stock-mobilier-terrasse-24h'
+      fullPath: '/stock-mobilier-terrasse-24h'
+      preLoaderRoute: typeof StockMobilierTerrasse24hRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stock-24h': {
@@ -287,18 +555,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QualiteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/partenaires': {
       id: '/partenaires'
       path: '/partenaires'
       fullPath: '/partenaires'
       preLoaderRoute: typeof PartenairesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/partenaire': {
-      id: '/partenaire'
-      path: '/partenaire'
-      fullPath: '/partenaire'
-      preLoaderRoute: typeof PartenaireRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -308,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalogue': {
       id: '/catalogue'
       path: '/catalogue'
@@ -315,11 +590,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/avis': {
+      id: '/avis'
+      path: '/avis'
+      fullPath: '/avis'
+      preLoaderRoute: typeof AvisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/a-propos': {
+      id: '/a-propos'
+      path: '/a-propos'
+      fullPath: '/a-propos'
+      preLoaderRoute: typeof AProposRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -343,6 +632,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/account'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner/selections': {
+      id: '/partner/selections'
+      path: '/selections'
+      fullPath: '/partner/selections'
+      preLoaderRoute: typeof PartnerSelectionsRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/p/$partnerSlug': {
+      id: '/p/$partnerSlug'
+      path: '/p/$partnerSlug'
+      fullPath: '/p/$partnerSlug'
+      preLoaderRoute: typeof PPartnerSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/livres/$slug': {
       id: '/livres/$slug'
       path: '/livres/$slug'
@@ -355,6 +672,27 @@ declare module '@tanstack/react-router' {
       path: '/legal/$slug'
       fullPath: '/legal/$slug'
       preLoaderRoute: typeof LegalSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/tables-restaurant': {
+      id: '/catalogue_/tables-restaurant'
+      path: '/catalogue/tables-restaurant'
+      fullPath: '/catalogue/tables-restaurant'
+      preLoaderRoute: typeof CatalogueTablesRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/chaises-restaurant': {
+      id: '/catalogue_/chaises-restaurant'
+      path: '/catalogue/chaises-restaurant'
+      fullPath: '/catalogue/chaises-restaurant'
+      preLoaderRoute: typeof CatalogueChaisesRestaurantRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
@@ -371,12 +709,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stock-requests': {
+      id: '/api/stock-requests'
+      path: '/api/stock-requests'
+      fullPath: '/api/stock-requests'
+      preLoaderRoute: typeof ApiStockRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/partner-requests': {
+      id: '/api/partner-requests'
+      path: '/api/partner-requests'
+      fullPath: '/api/partner-requests'
+      preLoaderRoute: typeof ApiPartnerRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/reservations': {
       id: '/account/reservations'
       path: '/account/reservations'
       fullPath: '/account/reservations'
       preLoaderRoute: typeof AccountReservationsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/account/parrainage': {
+      id: '/account/parrainage'
+      path: '/account/parrainage'
+      fullPath: '/account/parrainage'
+      preLoaderRoute: typeof AccountParrainageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/parametres': {
+      id: '/account/parametres'
+      path: '/account/parametres'
+      fullPath: '/account/parametres'
+      preLoaderRoute: typeof AccountParametresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/favoris': {
+      id: '/account/favoris'
+      path: '/account/favoris'
+      fullPath: '/account/favoris'
+      preLoaderRoute: typeof AccountFavorisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/avis': {
+      id: '/account/avis'
+      path: '/account/avis'
+      fullPath: '/account/avis'
+      preLoaderRoute: typeof AccountAvisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$partnerSlug/devis': {
+      id: '/p/$partnerSlug/devis'
+      path: '/devis'
+      fullPath: '/p/$partnerSlug/devis'
+      preLoaderRoute: typeof PPartnerSlugDevisRouteImport
+      parentRoute: typeof PPartnerSlugRoute
     }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
@@ -392,35 +779,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReservationsReservationIdRouteImport
       parentRoute: typeof AccountReservationsRoute
     }
+    '/account/reservations/$reservationId/document': {
+      id: '/account/reservations/$reservationId/document'
+      path: '/document'
+      fullPath: '/account/reservations/$reservationId/document'
+      preLoaderRoute: typeof AccountReservationsReservationIdDocumentRouteImport
+      parentRoute: typeof AccountReservationsReservationIdRoute
+    }
+    '/account/reservations/$reservationId/facture/$invoiceId': {
+      id: '/account/reservations/$reservationId/facture/$invoiceId'
+      path: '/facture/$invoiceId'
+      fullPath: '/account/reservations/$reservationId/facture/$invoiceId'
+      preLoaderRoute: typeof AccountReservationsReservationIdFactureInvoiceIdRouteImport
+      parentRoute: typeof AccountReservationsReservationIdRoute
+    }
   }
 }
 
+interface PartnerRouteChildren {
+  PartnerSelectionsRoute: typeof PartnerSelectionsRoute
+}
+
+const PartnerRouteChildren: PartnerRouteChildren = {
+  PartnerSelectionsRoute: PartnerSelectionsRoute,
+}
+
+const PartnerRouteWithChildren =
+  PartnerRoute._addFileChildren(PartnerRouteChildren)
+
+interface AccountReservationsReservationIdRouteChildren {
+  AccountReservationsReservationIdDocumentRoute: typeof AccountReservationsReservationIdDocumentRoute
+  AccountReservationsReservationIdFactureInvoiceIdRoute: typeof AccountReservationsReservationIdFactureInvoiceIdRoute
+}
+
+const AccountReservationsReservationIdRouteChildren: AccountReservationsReservationIdRouteChildren =
+  {
+    AccountReservationsReservationIdDocumentRoute:
+      AccountReservationsReservationIdDocumentRoute,
+    AccountReservationsReservationIdFactureInvoiceIdRoute:
+      AccountReservationsReservationIdFactureInvoiceIdRoute,
+  }
+
+const AccountReservationsReservationIdRouteWithChildren =
+  AccountReservationsReservationIdRoute._addFileChildren(
+    AccountReservationsReservationIdRouteChildren,
+  )
+
 interface AccountReservationsRouteChildren {
-  AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRoute
+  AccountReservationsReservationIdRoute: typeof AccountReservationsReservationIdRouteWithChildren
 }
 
 const AccountReservationsRouteChildren: AccountReservationsRouteChildren = {
-  AccountReservationsReservationIdRoute: AccountReservationsReservationIdRoute,
+  AccountReservationsReservationIdRoute:
+    AccountReservationsReservationIdRouteWithChildren,
 }
 
 const AccountReservationsRouteWithChildren =
   AccountReservationsRoute._addFileChildren(AccountReservationsRouteChildren)
 
+interface PPartnerSlugRouteChildren {
+  PPartnerSlugDevisRoute: typeof PPartnerSlugDevisRoute
+}
+
+const PPartnerSlugRouteChildren: PPartnerSlugRouteChildren = {
+  PPartnerSlugDevisRoute: PPartnerSlugDevisRoute,
+}
+
+const PPartnerSlugRouteWithChildren = PPartnerSlugRoute._addFileChildren(
+  PPartnerSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AProposRoute: AProposRoute,
   AdminRoute: AdminRoute,
+  AvisRoute: AvisRoute,
   CatalogueRoute: CatalogueRoute,
+  ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
-  PartenaireRoute: PartenaireRoute,
   PartenairesRoute: PartenairesRoute,
+  PartnerRoute: PartnerRouteWithChildren,
   QualiteRoute: QualiteRoute,
   Stock24hRoute: Stock24hRoute,
+  StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
+  AccountAvisRoute: AccountAvisRoute,
+  AccountFavorisRoute: AccountFavorisRoute,
+  AccountParametresRoute: AccountParametresRoute,
+  AccountParrainageRoute: AccountParrainageRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
+  ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
+  ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
+  CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
+  CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
+  PPartnerSlugRoute: PPartnerSlugRouteWithChildren,
+  AccountIndexRoute: AccountIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
@@ -430,10 +889,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

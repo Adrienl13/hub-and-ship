@@ -7,9 +7,7 @@ import type { DesignVariant, Product } from '@/lib/products'
 const GALLERY_LABELS = ['Vue produit', 'Ambiance', 'Matière', 'Détail']
 
 function uniqueImages(urls: Array<string | null | undefined>): string[] {
-  return Array.from(
-    new Set(urls.filter((url): url is string => Boolean(url))),
-  )
+  return Array.from(new Set(urls.filter((url): url is string => Boolean(url))))
 }
 
 export function ProductGallery({

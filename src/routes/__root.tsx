@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
-import { captureFirstTouchAttribution } from '@/lib/analytics/attribution'
+import { PartnerLinkTracker } from '@/components/PartnerLinkTracker'
 import { Toaster } from '@/components/ui/sonner'
 import '@/styles/globals.css'
 
@@ -19,7 +19,7 @@ const ORGANIZATION_JSON_LD = {
   description:
     "Club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
   url: 'https://prosimport.com',
-  email: 'adrienlaniez1@gmail.com',
+  email: 'contact@prosimport.com',
   founder: {
     '@type': 'Person',
     name: 'Adrien Laniez',
@@ -36,41 +36,33 @@ const ORGANIZATION_JSON_LD = {
   identifier: [
     { '@type': 'PropertyValue', propertyID: 'SIRET', value: '98826998100011' },
     { '@type': 'PropertyValue', propertyID: 'SIREN', value: '988269981' },
-    {
-      '@type': 'PropertyValue',
-      propertyID: 'EORI',
-      value: 'FR98826998100011',
-    },
   ],
   areaServed: 'FR',
   sameAs: [],
 }
 
-const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN ?? ''
-const PLAUSIBLE_API_HOST =
-  import.meta.env.VITE_PLAUSIBLE_API_HOST ?? 'https://plausible.io'
+// Privacy-friendly analytics, only loaded when a Plausible domain is configured.
+const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN as
+  | string
+  | undefined
+const PLAUSIBLE_SRC =
+  (import.meta.env.VITE_PLAUSIBLE_SRC as string | undefined) ??
+  'https://plausible.io/js/script.tagged-events.js'
 
-/**
- * Plausible analytics scripts, only emitted when a domain is configured.
- * `script.js` auto-tracks pageviews; our custom events go through the inline
- * snippet below, which defines the `plausible()` queue so events triggered
- * before the script loads are buffered. RGPD-friendly (no cookies), so no
- * consent banner needed.
- */
-function plausibleScripts(): Array<Record<string, string | boolean>> {
-  if (!PLAUSIBLE_DOMAIN) return []
-  return [
-    {
-      defer: true,
-      'data-domain': PLAUSIBLE_DOMAIN,
-      src: `${PLAUSIBLE_API_HOST}/js/script.js`,
-    },
-    {
-      children:
-        'window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}',
-    },
-  ]
-}
+const ANALYTICS_SCRIPTS = PLAUSIBLE_DOMAIN
+  ? [
+      // Queue stub so custom events fire even before the script finishes loading.
+      {
+        children:
+          'window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}',
+      },
+      {
+        src: PLAUSIBLE_SRC,
+        defer: true,
+        'data-domain': PLAUSIBLE_DOMAIN,
+      },
+    ]
+  : []
 
 function NotFoundComponent() {
   return (
@@ -167,7 +159,7 @@ export const Route = createRootRoute({
         type: 'application/ld+json',
         children: JSON.stringify(ORGANIZATION_JSON_LD),
       },
-      ...plausibleScripts(),
+      ...ANALYTICS_SCRIPTS,
     ],
   }),
   component: RootComponent,
@@ -185,10 +177,20 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body>
+        <HydrationMarker />
+        <PartnerLinkTracker />
         <Outlet />
         <Toaster />
         <Scripts />
       </body>
     </html>
   )
+}
+
+function HydrationMarker() {
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = 'true'
+  }, [])
+
+  return null
 }

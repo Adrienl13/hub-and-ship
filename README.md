@@ -62,6 +62,8 @@ container-club/
 │   ├── PROGRESS.md              # État du projet
 │   ├── CHANGELOG.md             # Historique versions
 │   ├── DECISIONS.md             # Décisions techniques
+│   ├── PLATFORM_STRATEGY.md     # Brief stratégique IA, canal revendeur/direct
+│   ├── HANDOFF_CLAUDE_CODE.md   # Prochains chantiers priorisés
 │   ├── KNOWN_ISSUES.md          # Bugs connus
 │   ├── SCRIPTS.md               # Commandes utiles
 │   └── PROMPTS.md               # Templates Claude Code

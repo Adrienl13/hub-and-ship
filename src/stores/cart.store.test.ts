@@ -1,6 +1,8 @@
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { createCartSnapshot, useCartStore } from '@/stores/cart.store'
+import { PRODUCTS } from '@/lib/products'
+import { createCartSnapshot, useCart, useCartStore } from '@/stores/cart.store'
 
 describe('cart store', () => {
   beforeEach(() => {
@@ -46,5 +48,40 @@ describe('cart store', () => {
     )
 
     expect(persisted.state.qtyByProduct.p1).toBe(60)
+  })
+
+  it('automatically opens a 40 foot container when the cart exceeds the active 20 foot capacity', async () => {
+    useCartStore.getState().setQty('p1', 400)
+
+    const { result } = renderHook(() =>
+      useCart({ products: PRODUCTS, capacityCbm: 28 }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.preferredContainerType).toBe('40_hc')
+    })
+    expect(result.current.containerPreferenceSource).toBe('auto')
+    expect(result.current.fill.capacity).toBe(66)
+  })
+
+  it('returns to the active 20 foot container when an automatic upgrade is no longer needed', async () => {
+    useCartStore.getState().setQty('p1', 400)
+
+    const { result } = renderHook(() =>
+      useCart({ products: PRODUCTS, capacityCbm: 28 }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.preferredContainerType).toBe('40_hc')
+    })
+
+    act(() => {
+      useCartStore.getState().setQty('p1', 50)
+    })
+
+    await waitFor(() => {
+      expect(result.current.preferredContainerType).toBeNull()
+    })
+    expect(result.current.fill.capacity).toBe(28)
   })
 })

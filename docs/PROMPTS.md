@@ -26,6 +26,16 @@ Lis PROGRESS.md + CHANGELOG.md + 10 derniers commits Git.
 Résume en 5 lignes où on en est et propose la suite.
 ```
 
+### Session passage de relais priorisé
+
+```
+Lis docs/HANDOFF_CLAUDE_CODE.md, docs/PROGRESS.md,
+docs/PLATFORM_STRATEGY.md, docs/DECISIONS.md et docs/KNOWN_ISSUES.md.
+Commence par les tâches P0, puis P1 si P0 est validé.
+Ne rends jamais publics les prix nets partenaires, les marges internes ou un EORI.
+Pose des questions seulement si un accès externe manque.
+```
+
 ---
 
 ## 🎯 Implémentation

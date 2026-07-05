@@ -1,14 +1,21 @@
+import { useMemo } from 'react'
 import type { CartItem } from '@/lib/order'
 import { packContainerPackages } from '@/lib/container/packing'
+import type { ContainerType } from '@/lib/supabase/types'
 
 export function ContainerScene3DFallback({
   items,
   fillPercent,
+  containerType,
 }: {
   items: CartItem[]
   fillPercent: number
+  containerType?: ContainerType | null
 }) {
-  const packed = packContainerPackages(items)
+  const packed = useMemo(
+    () => packContainerPackages(items, containerType),
+    [containerType, items],
+  )
   const totalPackages = packed.packages.length
   const safeFill = Math.max(0, Math.min(100, fillPercent))
 
@@ -16,7 +23,7 @@ export function ContainerScene3DFallback({
     <div className="absolute inset-0 grid place-items-center bg-[color:var(--sand)] p-5">
       <div className="w-full max-w-[260px]">
         <div className="mb-2 flex items-center justify-between text-[10px] text-muted-foreground">
-          <span>Fallback 2D</span>
+          <span>Aperçu logistique</span>
           <span className="tabular-nums">{safeFill.toFixed(0)}%</span>
         </div>
         <div className="border-foreground/35 relative h-28 overflow-hidden rounded-sm border-2 bg-[color:var(--sand-soft)]">
@@ -24,14 +31,14 @@ export function ContainerScene3DFallback({
             {items.length === 0 ? (
               <div className="h-full w-full rounded-sm border border-dashed border-[color:var(--sand-deep)]" />
             ) : (
-              packed.slices.map((slice) => {
+              packed.slices.map((slice, index) => {
                 const share =
                   totalPackages > 0
                     ? (slice.packageCount / totalPackages) * safeFill
                     : 0
                 return (
                   <div
-                    key={slice.productId}
+                    key={`${slice.productId}:${slice.color}:${index}`}
                     className="min-w-2 rounded-t-sm ring-1 ring-black/10"
                     style={{
                       width: `${Math.max(4, share)}%`,

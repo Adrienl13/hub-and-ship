@@ -194,7 +194,7 @@ URL de retour :
 | États `?session_id` / `?canceled` sur `/account/reservations/$reservationId` | OK — bandeaux dédiés, bouton "Retenter le paiement" inclus                                                           |
 | Lecture serveur du montant depuis la DB (anti-tampering)                     | OK                                                                                                                   |
 | Idempotence webhook (`WHERE status='pending_reservation_fee'`)               | OK — testable via `stripe trigger checkout.session.completed --override metadata.reservation_id=<uuid>`              |
-| Migration DB `20260522072655_stripe_payment_columns.sql`                     | **Appliquée** le 2026-05-22 sur `mkfztwibolswqcggukeq` (avec les 4 migrations codex préalables)                       |
+| Migration DB `20260522072655_stripe_payment_columns.sql`                     | **Appliquée** le 2026-05-22 sur `mkfztwibolswqcggukeq` (avec les 4 migrations codex préalables)                      |
 | Mode prod (clés `sk_live_*` + webhook prod)                                  | À activer après validation du flux test                                                                              |
 | Restricted key (`rk_*`) pour la prod                                         | Recommandé — permissions ciblées Checkout Sessions + Payment Intents                                                 |
 

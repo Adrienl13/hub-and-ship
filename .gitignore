@@ -20,6 +20,7 @@ build/
 # Environment variables (CRITIQUE)
 .env
 .env.local
+.env.*
 .env.*.local
 !.env.example
 

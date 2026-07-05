@@ -1,10 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense, useMemo, useState } from 'react'
 
-import { FaqAccordion } from '@/components/FaqAccordion'
+import { FAQ, FaqAccordion } from '@/components/FaqAccordion'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { useCatalog } from '@/hooks/useCatalog'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  faqJsonLd,
+  jsonLdScript,
+} from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 const LazyReservationDialog = lazy(() =>
@@ -16,13 +22,20 @@ const LazyReservationDialog = lazy(() =>
 export const Route = createFileRoute('/faq')({
   component: FaqPage,
   head: () => ({
-    meta: [
-      { title: 'FAQ — Container Club Terrassea' },
-      {
-        name: 'description',
-        content:
-          'Foire aux questions Container Club : seuil 80 %, MOQ par design, échéancier de paiement, douane, livraison, garanties et SAV.',
-      },
+    ...buildSeoHead({
+      title: 'FAQ achat groupé mobilier outdoor',
+      description:
+        'Foire aux questions Container Club : seuil 80 %, MOQ par design, échéancier de paiement, douane, livraison, garanties et SAV.',
+      path: '/faq',
+    }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'FAQ', path: '/faq' },
+        ]),
+      ),
+      jsonLdScript(faqJsonLd(FAQ)),
     ],
   }),
 })

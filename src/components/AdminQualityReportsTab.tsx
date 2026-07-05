@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -307,6 +308,10 @@ export function AdminQualityReportsTab({
             <DialogTitle>
               Éditer le rapport {editing?.referenceNumber}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulaire administrateur pour modifier les métadonnées, la
+              publication et les informations du rapport qualité.
+            </DialogDescription>
           </DialogHeader>
           {editing && (
             <AdminQualityReportEditor

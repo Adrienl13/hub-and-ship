@@ -27,6 +27,12 @@ import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export const Route = createFileRoute('/account/reservations')({
   component: AccountReservationsPage,
+  head: () => ({
+    meta: [
+      { title: 'Mes réservations — Container Club Terrassea' },
+      { name: 'robots', content: 'noindex,nofollow' },
+    ],
+  }),
 })
 
 function AccountReservationsPage() {
@@ -160,14 +166,7 @@ function AccountReservationsPage() {
             ) : reservations.length === 0 ? (
               <EmptyReservations authStatus={auth.status} />
             ) : (
-              <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-                {reservations.map((reservation) => (
-                  <ReservationRow
-                    key={reservation.id}
-                    reservation={reservation}
-                  />
-                ))}
-              </div>
+              <ReservationGroups reservations={reservations} />
             )}
           </div>
         </div>
@@ -176,18 +175,71 @@ function AccountReservationsPage() {
   )
 }
 
+function ReservationGroups({
+  reservations,
+}: {
+  readonly reservations: ReadonlyArray<AccountReservation>
+}) {
+  const active = reservations.filter(
+    (r) => r.status !== 'delivered' && r.status !== 'cancelled',
+  )
+  const history = reservations.filter(
+    (r) => r.status === 'delivered' || r.status === 'cancelled',
+  )
+
+  return (
+    <div>
+      {active.length > 0 && (
+        <ReservationGroup title="En cours" count={active.length} reservations={active} />
+      )}
+      {history.length > 0 && (
+        <ReservationGroup
+          title="Historique"
+          count={history.length}
+          reservations={history}
+        />
+      )}
+    </div>
+  )
+}
+
+function ReservationGroup({
+  title,
+  count,
+  reservations,
+}: {
+  readonly title: string
+  readonly count: number
+  readonly reservations: ReadonlyArray<AccountReservation>
+}) {
+  return (
+    <div>
+      <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {title} ({count})
+      </div>
+      <div className="divide-[color:var(--sand-deep)]/70 divide-y">
+        {reservations.map((reservation) => (
+          <ReservationRow key={reservation.id} reservation={reservation} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function EmptyReservations({ authStatus }: { authStatus: string }) {
   if (authStatus === 'authenticated') {
     return (
       <div className="space-y-3 p-8 text-center">
-        <div className="text-sm font-medium">Aucune réservation enregistrée.</div>
+        <div className="text-sm font-medium">
+          Aucune réservation enregistrée.
+        </div>
         <p className="mx-auto max-w-md text-xs leading-5 text-muted-foreground">
           Vos commandes container apparaîtront ici dès votre première
           réservation. Démarrez par le catalogue.
         </p>
         <Link
           to="/catalogue"
-          className="text-foreground/85 hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs underline underline-offset-4"
+          className="text-foreground/85 mt-2 inline-flex items-center gap-1 text-xs underline underline-offset-4 hover:text-foreground"
         >
           Voir le catalogue →
         </Link>
@@ -197,15 +249,17 @@ function EmptyReservations({ authStatus }: { authStatus: string }) {
 
   return (
     <div className="space-y-3 p-8 text-center">
-      <div className="text-sm font-medium">Connectez-vous pour retrouver vos réservations.</div>
+      <div className="text-sm font-medium">
+        Connectez-vous pour retrouver vos réservations.
+      </div>
       <p className="mx-auto max-w-md text-xs leading-5 text-muted-foreground">
-        Les réservations faites avec votre email professionnel sont
-        consultables après connexion. Les commandes anonymes restent
-        accessibles depuis ce navigateur via le lien envoyé par email.
+        Les réservations faites avec votre email professionnel sont consultables
+        après connexion. Les commandes anonymes restent accessibles depuis ce
+        navigateur via le lien envoyé par email.
       </p>
       <Link
         to="/auth/login"
-        className="bg-foreground text-background hover:bg-[color:var(--ink-soft)] mt-2 inline-flex h-9 items-center rounded-sm px-4 text-xs font-medium"
+        className="mt-2 inline-flex h-9 items-center rounded-sm bg-foreground px-4 text-xs font-medium text-background hover:bg-[color:var(--ink-soft)]"
       >
         Se connecter
       </Link>
@@ -292,7 +346,7 @@ function ReservationRow({
       <div className="min-w-0">
         <Link
           to="/account/reservations/$reservationId"
-          params={{ reservationId: reservation.id }}
+          params={{ reservationId: reservation.draft.id }}
           className="font-medium hover:underline"
         >
           {reservation.draft.reference}
@@ -321,7 +375,7 @@ function ReservationRow({
       >
         <Link
           to="/account/reservations/$reservationId"
-          params={{ reservationId: reservation.id }}
+          params={{ reservationId: reservation.draft.id }}
           aria-label={`Ouvrir ${reservation.draft.reference}`}
         >
           <ArrowRight className="h-4 w-4" />

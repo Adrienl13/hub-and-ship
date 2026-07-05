@@ -1,14 +1,14 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, ShieldCheck, Tag, User } from 'lucide-react'
+import { ArrowRight, Handshake, ShieldCheck, User } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
-import { SALES_CHANNEL_LABEL } from '@/lib/pricing/channel'
+import { useIsPartner } from '@/hooks/useIsPartner'
 
-export function Header({ onReserve }: { onReserve: () => void }) {
+export function Header({ onReserve }: { onReserve?: () => void }) {
   const { isAdmin } = useIsAdmin()
-  const { channel } = useChannel()
+  const { isPartner } = useIsPartner()
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 h-16 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
@@ -24,12 +24,14 @@ export function Header({ onReserve }: { onReserve: () => void }) {
         </a>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-5 md:flex">
           {[
             ['Catalogue', '/catalogue'],
             ['Stock 24h', '/stock-24h'],
+            ['Partenaires', '/partenaires'],
             ['Comment ça marche', '/#comment'],
             ['Containers livrés', '/livres'],
+            ['Avis', '/avis'],
             ['Qualité & Tests', '/qualite'],
             ['Devenir partenaire', '/partenaires'],
             ['FAQ', '/faq'],
@@ -67,25 +69,51 @@ export function Header({ onReserve }: { onReserve: () => void }) {
               </Link>
             </Button>
           )}
+          {isPartner && (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] md:inline-flex"
+            >
+              <Link to="/partner">
+                <Handshake className="h-3.5 w-3.5" />
+                Espace partenaire
+              </Link>
+            </Button>
+          )}
           <Button
             asChild
             variant="ghost"
             size="sm"
             className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <Link to="/account/reservations">
+            <Link to="/account">
               <User className="h-3.5 w-3.5" />
               Mon compte
             </Link>
           </Button>
-          <Button
-            size="sm"
-            onClick={onReserve}
-            className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
-          >
-            Réserver
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
+          {onReserve ? (
+            <Button
+              size="sm"
+              onClick={onReserve}
+              className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+            >
+              Réserver
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+            >
+              <Link to="/catalogue">
+                Réserver
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

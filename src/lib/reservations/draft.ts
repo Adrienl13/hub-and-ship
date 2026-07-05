@@ -1,5 +1,6 @@
 import type { CartItem, OrderTotals } from '@/lib/order'
 import { calculateOrder } from '@/lib/order'
+import type { PartnerLinkContext } from '@/lib/partners/link'
 import type { ReferralApplication } from '@/lib/pricing/referral'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 import {
@@ -34,15 +35,12 @@ export interface ReservationDraftInput {
   readonly items: ReadonlyArray<CartItem>
   readonly containerReference: string
   readonly containerId?: string
+  readonly referralApplication?: ReferralApplication
+  readonly partnerContext?: PartnerLinkContext | null
   readonly now?: Date
   readonly sequence?: number
   readonly id?: string
-  readonly requestedContainerType?:
-    | '20_dv'
-    | '20_hc'
-    | '40_gp'
-    | '40_hc'
-    | null
+  readonly requestedContainerType?: '20_dv' | '20_hc' | '40_gp' | '40_hc' | null
 }
 
 export interface ReservationDraftLine {
@@ -94,16 +92,12 @@ export interface ReservationDraft {
     readonly status: ReferralApplication['status'] | 'none'
     readonly discountAmount: number
   }
+  readonly partnerContext: PartnerLinkContext | null
   /** ISO container format the buyer explicitly picked at checkout
    *  (via the sidebar toggle). `null` = accepted the active default
    *  (typically a 20' HC group-buy). Persisted on the reservation
    *  row so ops can spot distributor-scale demand orders. */
-  readonly requestedContainerType:
-    | '20_dv'
-    | '20_hc'
-    | '40_gp'
-    | '40_hc'
-    | null
+  readonly requestedContainerType: '20_dv' | '20_hc' | '40_gp' | '40_hc' | null
 }
 
 export interface ReservationDraftValidationIssue {
@@ -252,6 +246,7 @@ export function buildReservationDraft(
         status: 'none',
         discountAmount: round2(referralDiscount),
       },
+      partnerContext: input.partnerContext ?? null,
       requestedContainerType: input.requestedContainerType ?? null,
     },
   }

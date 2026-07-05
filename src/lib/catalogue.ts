@@ -61,23 +61,71 @@ export function getCategoryCounts(products: Product[] = PRODUCTS) {
   )
 }
 
+export interface CatalogueAdvancedFilters {
+  readonly maxPrice: number | null
+  readonly maxMoq: number | null
+  readonly fireM1Only: boolean
+  readonly stackableOnly: boolean
+}
+
+export const EMPTY_ADVANCED_FILTERS: CatalogueAdvancedFilters = {
+  maxPrice: null,
+  maxMoq: null,
+  fireM1Only: false,
+  stackableOnly: false,
+}
+
+export function isStackable(product: Product): boolean {
+  return product.features.some((feature) =>
+    feature.toLocaleLowerCase('fr-FR').includes('empil'),
+  )
+}
+
+export function hasActiveAdvancedFilters(
+  advanced: CatalogueAdvancedFilters,
+): boolean {
+  return (
+    advanced.maxPrice !== null ||
+    advanced.maxMoq !== null ||
+    advanced.fireM1Only ||
+    advanced.stackableOnly
+  )
+}
+
+function matchesAdvanced(
+  product: Product,
+  advanced: CatalogueAdvancedFilters,
+): boolean {
+  if (advanced.maxPrice !== null && product.basePriceHt > advanced.maxPrice) {
+    return false
+  }
+  if (advanced.maxMoq !== null && product.moqUnits > advanced.maxMoq) {
+    return false
+  }
+  if (advanced.fireM1Only && product.fireRating !== 'M1') return false
+  if (advanced.stackableOnly && !isStackable(product)) return false
+  return true
+}
+
 export function filterAndSortProducts({
   products = PRODUCTS,
   filter,
   search,
   sort,
+  advanced = EMPTY_ADVANCED_FILTERS,
 }: {
   products?: Product[]
   filter: CatalogueFilter
   search: string
   sort: SortKey
+  advanced?: CatalogueAdvancedFilters
 }) {
   const query = search.trim().toLocaleLowerCase('fr-FR')
   let list = products.filter((product) => {
     const categoryMatch = filter === 'all' || product.category === filter
     const searchMatch =
       query.length === 0 || productSearchText(product).includes(query)
-    return categoryMatch && searchMatch
+    return categoryMatch && searchMatch && matchesAdvanced(product, advanced)
   })
 
   if (sort === 'price-asc') {

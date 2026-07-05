@@ -164,6 +164,14 @@ export function getAvailableStockLines(
   return stock.map(resolveStockLine)
 }
 
+export function getAvailableStockLineById(
+  id: string,
+  stock: ReadonlyArray<AvailableStockItem> = AVAILABLE_STOCK,
+): StockLine | null {
+  const item = stock.find((entry) => entry.id === id)
+  return item ? resolveStockLine(item) : null
+}
+
 export function productStockSearchText(line: StockLine): string {
   return [
     line.product.name,

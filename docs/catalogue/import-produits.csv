@@ -1,0 +1,2 @@
+sku,nom,categorie,description,moq_units,prix_ht,prix_retail,eco_contribution,longueur_cm,largeur_cm,hauteur_cm,cbm_unite,poids_kg,classement_feu,image_principale,galerie,points_forts,actif,ordre
+FAU-MAL-002,Fauteuil Malibu Lounge,armchair,Fauteuil lounge outdoor structure aluminium et corde tressée,50,245,420,1.00,72,68,90,0.35,9.5,M2,https://exemple.com/malibu-hero.jpg,https://exemple.com/malibu-1.jpg|https://exemple.com/malibu-2.jpg,Résistant UV 5 ans|Empilable|Coussins déhoussables,true,1

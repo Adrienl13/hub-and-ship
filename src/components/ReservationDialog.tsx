@@ -11,6 +11,7 @@ import {
   ArrowRight,
   BadgePercent,
   CreditCard,
+  Handshake,
   Lock,
   Mail,
   RefreshCcw,
@@ -21,9 +22,11 @@ import { Link } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { sendReservationConfirmation } from '@/lib/email/reservation-confirmation'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -44,6 +47,21 @@ import { useReservationCreation } from '@/hooks/useReservationCreation'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
 import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
+import {
+  normalizeReferralCode,
+  type ReferralApplication,
+  type ReferralApplicationStatus,
+} from '@/lib/pricing/referral'
+import {
+  readPartnerLinkContext,
+  type PartnerLinkContext,
+} from '@/lib/partners/link'
+import {
+  previewReferralCode,
+  type ReferralPreviewClient,
+} from '@/lib/referrals/repository'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
@@ -107,6 +125,30 @@ const DELIVERY_OPTIONS: ReadonlyArray<{
   },
 ] as const
 
+function referralMessage(
+  status: ReferralApplicationStatus,
+  referrerLabel?: string,
+): string {
+  switch (status) {
+    case 'applied':
+      return referrerLabel
+        ? `${referrerLabel} vous parraine : remise appliquée sur les frais de réservation.`
+        : 'Code parrainage appliqué : remise sur les frais de réservation.'
+    case 'unknown':
+      return 'Code parrainage introuvable.'
+    case 'inactive':
+      return 'Ce code parrainage est désactivé.'
+    case 'expired':
+      return 'Ce code parrainage a expiré.'
+    case 'exhausted':
+      return "Ce code a atteint sa limite d'utilisations."
+    case 'self_referral':
+      return 'Le parrainage ne peut pas être utilisé par la société parrainée.'
+    default:
+      return ''
+  }
+}
+
 export function ReservationDialog({
   open,
   onOpenChange,
@@ -126,6 +168,8 @@ export function ReservationDialog({
   })
   const [emailWarningAccepted, setEmailWarningAccepted] = useState(false)
   const [cgvAccepted, setCgvAccepted] = useState(false)
+  const [partnerContext, setPartnerContext] =
+    useState<PartnerLinkContext | null>(null)
   // Pick up the buyer's container choice (from the sidebar toggle) so
   // we can persist it on the reservation row. NULL when they kept the
   // active default — only distributors carry a value here.
@@ -154,9 +198,78 @@ export function ReservationDialog({
   })
 
   const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
-  // LOT 5: the checkout code is an apporteur partner code (attribution for the
-  // 8% commission), not a B2C discount — pay-now is the full reservation fee.
-  const checkoutPayNow = totals.reservationFee
+  const hasReservableItems = items.length > 0 && totals.subtotalHt > 0
+  // Referral validation is now server-authoritative: we preview the code via a
+  // SECURITY DEFINER RPC (real code, active, not exhausted, not self-referral)
+  // and the discount is re-checked + applied at reservation creation.
+  const [referralApplication, setReferralApplication] =
+    useState<ReferralApplication>({
+      status: 'none',
+      code: '',
+      discountAmount: 0,
+      payNow: totals.reservationFee,
+      message: '',
+    })
+
+  useEffect(() => {
+    const fee = Math.max(0, totals.reservationFee)
+    const raw = form.referralCode.trim()
+    if (!raw) {
+      setReferralApplication({
+        status: 'none',
+        code: '',
+        discountAmount: 0,
+        payNow: fee,
+        message: '',
+      })
+      return
+    }
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    let cancelled = false
+    const handle = setTimeout(() => {
+      void (async () => {
+        try {
+          const client = createSupabaseBrowserClient(
+            config,
+          ) as unknown as ReferralPreviewClient
+          const result = await previewReferralCode(
+            client,
+            raw,
+            form.email,
+            form.siret,
+          )
+          if (cancelled) return
+          const discount =
+            result.status === 'applied'
+              ? Math.min(result.discount ?? 100, fee)
+              : 0
+          setReferralApplication({
+            status: result.status,
+            code: normalizeReferralCode(raw),
+            referrerLabel: result.referrerLabel,
+            discountAmount: discount,
+            payNow: Math.round((fee - discount) * 100) / 100,
+            message: referralMessage(result.status, result.referrerLabel),
+          })
+        } catch {
+          if (!cancelled)
+            setReferralApplication({
+              status: 'none',
+              code: normalizeReferralCode(raw),
+              discountAmount: 0,
+              payNow: fee,
+              message: '',
+            })
+        }
+      })()
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(handle)
+    }
+  }, [form.referralCode, form.email, form.siret, totals.reservationFee])
+  const checkoutPayNow = referralApplication.payNow
   const contactValid =
     form.name.trim().length > 1 &&
     form.company.trim().length > 1 &&
@@ -173,6 +286,7 @@ export function ReservationDialog({
     setSiretCheck({ status: 'idle' })
     setEmailWarningAccepted(false)
     setCgvAccepted(false)
+    setPartnerContext(null)
     setSubmitting(false)
     setCreatedReservation(null)
   }
@@ -200,6 +314,11 @@ export function ReservationDialog({
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return
+    setPartnerContext(readPartnerLinkContext({ storage: window.localStorage }))
+  }, [open])
+
   const handlePay = async () => {
     const draftResult = buildReservationDraft({
       siret: form.siret,
@@ -219,6 +338,8 @@ export function ReservationDialog({
       items,
       containerReference: container.reference,
       containerId: container.id,
+      referralApplication,
+      partnerContext,
       requestedContainerType,
     })
 
@@ -242,6 +363,10 @@ export function ReservationDialog({
       })
       return
     }
+
+    track(AnalyticsEvent.ReservationSubmit, {
+      persisted: creation.persisted,
+    })
 
     // Persist a lightweight confirmation snapshot the success page can use
     // to render an immediate recap before the webhook completes.
@@ -300,6 +425,7 @@ export function ReservationDialog({
           // Redirect to the hosted Stripe Checkout page. The dialog stays
           // mounted; on cancel/return the user lands on
           // /account/reservations/<id>?session_id=… or ?canceled=true.
+          track(AnalyticsEvent.CheckoutRedirect)
           window.location.assign(checkout.url)
           return
         }
@@ -392,25 +518,43 @@ export function ReservationDialog({
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
         <DialogHeader>
           <div className="label-eyebrow text-[color:var(--ember)]">
-            Étape {step} / 4 - Réservation
+            {!hasReservableItems
+              ? 'Commande à composer'
+              : step < 5
+                ? `Étape ${step} / 4 - Réservation`
+                : 'Confirmation'}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {step === 1 && 'Identification professionnelle'}
-            {step === 2 && 'Coordonnées de contact'}
-            {step === 3 && 'Mode de livraison'}
-            {step === 4 && 'Récapitulatif et paiement'}
-            {step === 5 && 'Réservation préparée'}
+            {!hasReservableItems && 'Composez votre commande avant de réserver'}
+            {hasReservableItems &&
+              step === 1 &&
+              'Identification professionnelle'}
+            {hasReservableItems && step === 2 && 'Coordonnées de contact'}
+            {hasReservableItems && step === 3 && 'Mode de livraison'}
+            {hasReservableItems && step === 4 && 'Récapitulatif et paiement'}
+            {hasReservableItems && step === 5 && 'Réservation préparée'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Formulaire de réservation en plusieurs étapes pour vérifier la
+            société, renseigner le contact, choisir la livraison et confirmer le
+            paiement.
+          </DialogDescription>
         </DialogHeader>
 
-        {step < 5 && (
+        {!hasReservableItems && <EmptyReservationState />}
+
+        {hasReservableItems && step < 5 && (
           <>
             <StepIndicator step={step} />
-            <SummaryCard totals={totals} payNow={checkoutPayNow} />
+            <SummaryCard
+              totals={totals}
+              referralApplication={referralApplication}
+              partnerContext={partnerContext}
+            />
           </>
         )}
 
-        {step === 1 && (
+        {hasReservableItems && step === 1 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -440,7 +584,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 2 && (
+        {hasReservableItems && step === 2 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -498,7 +642,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 3 && (
+        {hasReservableItems && step === 3 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -547,7 +691,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {step === 4 && (
+        {hasReservableItems && step === 4 && (
           <div className="space-y-4">
             <ReferralCodePanel
               value={form.referralCode}
@@ -637,7 +781,7 @@ export function ReservationDialog({
           </div>
         )}
 
-        {step === 5 && createdReservation && (
+        {hasReservableItems && step === 5 && createdReservation && (
           <div className="space-y-4">
             <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">
@@ -703,12 +847,48 @@ export function ReservationDialog({
   )
 }
 
+function EmptyReservationState() {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+        <div className="text-sm font-medium">Aucun produit sélectionné</div>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Le tunnel de réservation se déclenche après une vraie sélection :
+          choisissez vos produits dans le catalogue, ou utilisez le stock 24h si
+          votre besoin est urgent.
+        </p>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button
+          asChild
+          className="h-11 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+        >
+          <Link to="/catalogue">
+            Ouvrir le catalogue
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 rounded-sm border-[color:var(--sand-deep)]"
+        >
+          <Link to="/stock-24h">Voir le stock 24h</Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function SummaryCard({
   totals,
-  payNow,
+  referralApplication,
+  partnerContext,
 }: {
   totals: OrderTotals
-  payNow: number
+  referralApplication: ReferralApplication
+  partnerContext: PartnerLinkContext | null
 }) {
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
@@ -736,6 +916,25 @@ function SummaryCard({
               {formatEUR(totals.reservationFee)}
             </span>
           </div>
+          {referralApplication.status === 'applied' && (
+            <div className="flex justify-between text-[color:var(--forest)]">
+              <span>Code parrainage</span>
+              <span className="tabular-nums">
+                -{formatEUR(referralApplication.discountAmount)}
+              </span>
+            </div>
+          )}
+          {partnerContext && (
+            <div className="flex items-start justify-between gap-3 text-[color:var(--forest)]">
+              <span className="inline-flex items-center gap-1.5">
+                <Handshake className="h-3 w-3" />
+                Lien partenaire
+              </span>
+              <span className="text-right font-medium">
+                {partnerContext.displayName}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-baseline justify-between">
           <span className="text-foreground/80 text-xs">

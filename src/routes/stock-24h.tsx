@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
@@ -23,6 +24,7 @@ import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
   STOCK_FILTERS,
+  AVAILABLE_STOCK,
   calculateStockKpis,
   filterAndSortStockLines,
   getStockCategoryCounts,
@@ -32,9 +34,46 @@ import {
 } from '@/lib/stock'
 import { useStockLines } from '@/hooks/useStockLines'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
+import {
+  breadcrumbJsonLd,
+  buildSeoHead,
+  itemListJsonLd,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const Route = createFileRoute('/stock-24h')({
+  head: () => {
+    const stockProducts = getAvailableStockLines(AVAILABLE_STOCK).map(
+      (line) => line.product,
+    )
+
+    return {
+      ...buildSeoHead({
+        title: 'Stock mobilier terrasse disponible sous 24h',
+        description:
+          'Lots de mobilier outdoor professionnel déjà disponibles en France : chaises, fauteuils et tables pour terrasse urgente, retrait Marseille-Fos sous 24h.',
+        path: '/stock-24h',
+        image: stockProducts[0]?.mainImageUrl,
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Stock 24h', path: '/stock-24h' },
+          ]),
+        ),
+        jsonLdScript(
+          itemListJsonLd({
+            name: 'Stock mobilier terrasse disponible sous 24h',
+            path: '/stock-24h',
+            products: stockProducts,
+          }),
+        ),
+      ],
+    }
+  },
   component: Stock24hPage,
 })
 
@@ -69,6 +108,18 @@ function Stock24hPage() {
   )
   const selectedLine =
     lines.find((line) => line.id === selectedLineId) ?? filtered[0] ?? null
+
+  const selectLine = (id: string) => {
+    setSelectedLineId(id)
+    // On mobile the request panel is below the grid — bring it into view.
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      requestAnimationFrame(() =>
+        document
+          .getElementById('stock-request-panel')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      )
+    }
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
@@ -208,43 +259,23 @@ function Stock24hPage() {
               <div className="mt-5 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-16 text-center text-sm text-muted-foreground">
                 Aucun lot disponible ne correspond à cette recherche.
               </div>
-            ) : view === 'list' ? (
-              <div className="mt-5 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-                <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[52px_minmax(180px,1.2fr)_92px_92px_96px_112px] md:gap-3">
-                  <span />
-                  <span>Produit</span>
-                  <span>Stock</span>
-                  <span>État</span>
-                  <span className="text-right">Prix HT</span>
-                  <span />
-                </div>
-                <div className="divide-[color:var(--sand-deep)]/70 divide-y">
-                  {filtered.map((line) => (
-                    <StockRow
-                      key={line.id}
+            ) : (
+              <RevealStagger className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {filtered.map((line) => (
+                  <RevealItem key={line.id}>
+                    <StockCard
                       line={line}
                       selected={selectedLine?.id === line.id}
-                      onSelect={() => setSelectedLineId(line.id)}
+                      onSelect={() => selectLine(line.id)}
                     />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {filtered.map((line) => (
-                  <StockGridCard
-                    key={line.id}
-                    line={line}
-                    selected={selectedLine?.id === line.id}
-                    onSelect={() => setSelectedLineId(line.id)}
-                  />
+                  </RevealItem>
                 ))}
-              </div>
+              </RevealStagger>
             )}
           </div>
 
           <aside className="lg:col-span-4">
-            <div className="sticky top-24">
+            <div id="stock-request-panel" className="sticky top-24 scroll-mt-20">
               <StockRequestPanel line={selectedLine} />
             </div>
           </aside>
@@ -256,7 +287,7 @@ function Stock24hPage() {
   )
 }
 
-function StockRow({
+function StockCard({
   line,
   selected,
   onSelect,
@@ -267,81 +298,65 @@ function StockRow({
 }) {
   return (
     <article
-      className={`grid gap-3 bg-card px-3 py-3 text-sm transition-colors md:grid-cols-[52px_minmax(180px,1.2fr)_92px_92px_96px_112px] md:items-center md:gap-3 ${
+      className={`shadow-paper group flex flex-col overflow-hidden rounded-md border bg-card transition-shadow ${
         selected
-          ? 'bg-[color:var(--sand-soft)]'
-          : 'hover:bg-[color:var(--sand-soft)]'
+          ? 'border-[color:var(--ember)] ring-2 ring-[color:var(--ember)]/40'
+          : 'border-[color:var(--sand-deep)]'
       }`}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '92px' }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '420px' }}
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="ring-foreground/10 relative h-20 w-full overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 md:h-[52px] md:w-[52px]"
-        aria-label={`Sélectionner ${line.product.name}`}
-      >
-        <img
-          src={
-            line.imageUrl ||
-            line.variant.imageUrl ||
-            line.product.mainImageUrl
-          }
-          alt={line.product.name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
-      </button>
-
-      <div className="min-w-0">
+      <div className="relative">
         <button
           type="button"
           onClick={onSelect}
-          className="block min-w-0 text-left font-display text-base font-semibold leading-tight tracking-tight md:truncate"
+          className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
+          aria-label={`Sélectionner ${line.product.name}`}
         >
-          {line.product.name}
+          <img
+            src={line.product.mainImageUrl}
+            alt={line.product.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
         </button>
-        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
-          <span>{line.product.sku}</span>
-          <span>{CATEGORY_LABEL[line.product.category]}</span>
-          <span>{line.variant.name}</span>
-          <span>{line.location}</span>
-        </div>
-        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground md:hidden">
-          {line.note}
-        </p>
+
+        <span className="absolute left-2 top-2 inline-flex items-center rounded-sm bg-[color:var(--forest)] px-2 py-0.5 text-[11px] font-medium text-white shadow-sm">
+          {STOCK_CONDITION_LABEL[line.condition]}
+        </span>
+        <span className="absolute right-2 top-2 inline-flex items-center rounded-sm bg-white/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[color:var(--ink)] shadow-sm backdrop-blur">
+          {line.availableUnits} libre{line.availableUnits > 1 ? 's' : ''}
+        </span>
       </div>
 
-      <div>
-        <div className="font-display text-lg font-semibold tabular-nums md:text-sm">
-          {line.availableUnits}
+      <div className="flex flex-1 flex-col p-2.5 text-foreground">
+        <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+          {CATEGORY_LABEL[line.product.category]} · {line.location}
         </div>
-        <div className="text-[10px] text-muted-foreground">
-          {line.reservedUnits} optionnée{line.reservedUnits > 1 ? 's' : ''}
+        <h3 className="mt-1 line-clamp-2 font-display text-sm font-semibold leading-tight tracking-tight">
+          {line.product.name}
+        </h3>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">
+          <div>
+            <div className="font-display text-base font-semibold tabular-nums">
+              {formatEUR(line.stockPriceHt)}
+            </div>
+            <div className="text-[10px] text-muted-foreground">{line.readyLabel}</div>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSelect}
+            className={`h-8 shrink-0 rounded-sm px-2.5 text-xs ${
+              selected
+                ? 'bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember)]/90'
+                : 'bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]'
+            }`}
+          >
+            Demander
+          </Button>
         </div>
       </div>
-
-      <span className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 inline-flex h-7 w-fit items-center rounded-sm border px-2 text-[11px] font-medium text-[color:var(--forest)]">
-        {STOCK_CONDITION_LABEL[line.condition]}
-      </span>
-
-      <div className="font-display text-lg font-semibold tabular-nums md:text-right md:text-sm">
-        {formatEUR(line.stockPriceHt)}
-      </div>
-
-      <Button
-        type="button"
-        variant={selected ? 'default' : 'outline'}
-        size="sm"
-        className={`h-9 rounded-sm ${
-          selected
-            ? 'bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]'
-            : 'border-[color:var(--sand-deep)]'
-        }`}
-        onClick={onSelect}
-      >
-        Demander
-      </Button>
     </article>
   )
 }
@@ -480,14 +495,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       return
     }
 
-    trackEvent('stock_request_submitted', {
-      sku: line.product.sku,
-      persisted: creation.persisted,
-    })
+    track(AnalyticsEvent.StockRequest, { persisted: creation.persisted })
     toast.success('Demande stock préparée', {
       description: creation.persisted
         ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`
-        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé dans l'admin local.`,
+        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé sur cet appareil, rappel manuel conseillé.`,
     })
     setForm({ company: '', email: '', phone: '', quantity: '' })
   }
@@ -594,7 +606,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
         {submitting ? 'Enregistrement...' : 'Être rappelé'}
       </Button>
       <a
-        href={`mailto:adrienlaniez1@gmail.com?subject=Stock 24h - ${encodeURIComponent(
+        href={`mailto:contact@prosimport.com?subject=Stock 24h - ${encodeURIComponent(
           line.product.name,
         )}`}
         className="hover:border-foreground/40 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors"

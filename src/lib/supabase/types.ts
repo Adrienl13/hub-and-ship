@@ -28,24 +28,29 @@ export type StockRequestStatus =
   | 'reserved'
   | 'converted'
   | 'closed'
-export type PartnerTargetStatus =
-  | 'apporteur'
-  | 'revendeur'
-  | 'grand_compte'
-  | 'distributeur'
-  | 'nsp'
 export type PartnerApplicationStatus =
   | 'new'
-  | 'in_review'
+  | 'reviewing'
+  | 'qualified'
   | 'approved'
   | 'rejected'
-export type CommissionStatus = 'accrued' | 'payable' | 'paid'
-export type CommissionPhase = 'accrual' | 'reversal'
-export type SalesChannel =
-  | 'direct'
-  | 'revendeur'
-  | 'distributeur'
-  | 'grand_compte'
+  | 'archived'
+export type PartnerKind =
+  | 'introducer'
+  | 'reseller'
+  | 'agency'
+  | 'installer'
+  | 'network'
+  | 'other'
+export type PartnerDealStatus =
+  | 'submitted'
+  | 'protected'
+  | 'quoted'
+  | 'reserved'
+  | 'won'
+  | 'lost'
+  | 'expired'
+  | 'rejected'
 export type ContainerStatus =
   | 'open'
   | 'locked'
@@ -387,6 +392,10 @@ type ReservationRow = {
   stripe_customer_id: string | null
   stripe_checkout_session_id: string | null
   paid_reservation_fee_at: string | null
+  partner_deal_id: string | null
+  partner_application_id: string | null
+  partner_attribution_reason: string | null
+  partner_attribution_snapshot: Json
   created_at: string
   updated_at: string
   requested_container_type: ContainerType | null
@@ -433,6 +442,10 @@ type ReservationInsert = {
   stripe_customer_id?: string | null
   stripe_checkout_session_id?: string | null
   paid_reservation_fee_at?: string | null
+  partner_deal_id?: string | null
+  partner_application_id?: string | null
+  partner_attribution_reason?: string | null
+  partner_attribution_snapshot?: Json
   created_at?: string
   updated_at?: string
   requested_container_type?: ContainerType | null
@@ -586,49 +599,101 @@ type StockRequestUpdate = Partial<StockRequestInsert>
 
 type PartnerApplicationRow = {
   id: string
-  company_name: string
-  siret: string
-  siret_verified: boolean
-  contact_name: string
-  email: string
-  phone: string | null
-  activity_profile: string
-  target_status: PartnerTargetStatus
-  zone: string | null
-  estimated_volume: string | null
-  message: string | null
-  utm_source: string | null
-  utm_medium: string | null
-  utm_campaign: string | null
-  partner_ref: string | null
   status: PartnerApplicationStatus
-  admin_notes: string | null
+  partner_kind: PartnerKind
+  company_name: string
+  contact_name: string
+  contact_email: string
+  contact_phone: string
+  siret: string | null
+  website: string | null
+  partner_referral_slug: string | null
+  territory: string | null
+  network_description: string | null
+  expected_monthly_volume: string | null
+  message: string | null
+  source: string
+  internal_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
   created_at: string
+  updated_at: string
 }
 
 type PartnerApplicationInsert = {
   id?: string
-  company_name: string
-  siret: string
-  siret_verified?: boolean
-  contact_name: string
-  email: string
-  phone?: string | null
-  activity_profile: string
-  target_status: PartnerTargetStatus
-  zone?: string | null
-  estimated_volume?: string | null
-  message?: string | null
-  utm_source?: string | null
-  utm_medium?: string | null
-  utm_campaign?: string | null
-  partner_ref?: string | null
   status?: PartnerApplicationStatus
-  admin_notes?: string | null
+  partner_kind?: PartnerKind
+  company_name: string
+  contact_name: string
+  contact_email: string
+  contact_phone: string
+  siret?: string | null
+  website?: string | null
+  partner_referral_slug?: string | null
+  territory?: string | null
+  network_description?: string | null
+  expected_monthly_volume?: string | null
+  message?: string | null
+  source?: string
+  internal_note?: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
   created_at?: string
+  updated_at?: string
 }
 
 type PartnerApplicationUpdate = Partial<PartnerApplicationInsert>
+
+type PartnerDealRow = {
+  id: string
+  application_id: string | null
+  status: PartnerDealStatus
+  partner_company_name: string
+  partner_contact_email: string
+  partner_referral_slug: string | null
+  client_company_name: string
+  client_siret: string | null
+  client_email: string | null
+  project_city: string | null
+  project_type: string
+  expected_budget_ht: number | null
+  expected_purchase_window: string | null
+  product_interest: string | null
+  protection_days: number
+  protected_until: string | null
+  message: string | null
+  source: string
+  internal_note: string | null
+  created_at: string
+  updated_at: string
+}
+
+type PartnerDealInsert = {
+  id?: string
+  application_id?: string | null
+  status?: PartnerDealStatus
+  partner_company_name: string
+  partner_contact_email: string
+  partner_referral_slug?: string | null
+  client_company_name: string
+  client_siret?: string | null
+  client_email?: string | null
+  project_city?: string | null
+  project_type: string
+  expected_budget_ht?: number | null
+  expected_purchase_window?: string | null
+  product_interest?: string | null
+  protection_days?: number
+  protected_until?: string | null
+  message?: string | null
+  source?: string
+  internal_note?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type PartnerDealUpdate = Partial<PartnerDealInsert>
 
 type ContainerRow = {
   id: string
@@ -937,10 +1002,10 @@ export interface Database {
         Insert: PartnerApplicationInsert
         Update: PartnerApplicationUpdate
       }
-      stock_lines: {
-        Row: StockLineRow
-        Insert: StockLineInsert
-        Update: StockLineUpdate
+      partner_deals: {
+        Row: PartnerDealRow
+        Insert: PartnerDealInsert
+        Update: PartnerDealUpdate
       }
       containers: {
         Row: ContainerRow
@@ -997,20 +1062,55 @@ export interface Database {
         Args: Record<string, never>
         Returns: boolean
       }
+      is_partner: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      current_partner_application_ids: {
+        Args: Record<string, never>
+        Returns: string[]
+      }
+      claim_partner_access: {
+        Args: Record<string, never>
+        Returns: string[]
+      }
       admin_save_product_full: {
         Args: { payload: Json }
         Returns: void
       }
-      get_catalogue_prices: {
-        Args: Record<string, never>
+      create_reservation_with_items: {
+        Args: { payload: Json }
+        Returns: Json
+      }
+      find_partner_protected_deal: {
+        Args: {
+          p_client_siret: string | null
+          p_client_email: string | null
+          p_now?: string
+        }
         Returns: ReadonlyArray<{
-          product_id: string
-          unit_price_ht: number
+          deal_id: string
+          partner_company_name: string
+          partner_contact_email: string
+          reason: string
+          matched_value: string
+          protected_until: string
         }>
       }
-      current_channel: {
-        Args: Record<string, never>
-        Returns: SalesChannel
+      find_partner_link_attribution: {
+        Args: {
+          p_partner_slug: string | null
+          p_now?: string
+        }
+        Returns: ReadonlyArray<{
+          partner_application_id: string | null
+          deal_id: string | null
+          partner_company_name: string
+          partner_contact_email: string
+          reason: string
+          matched_value: string
+          protected_until: string | null
+        }>
       }
     }
     Enums: {
@@ -1018,10 +1118,9 @@ export interface Database {
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
-      partner_target_status: PartnerTargetStatus
       partner_application_status: PartnerApplicationStatus
-      sales_channel: SalesChannel
-      stock_condition: StockCondition
+      partner_kind: PartnerKind
+      partner_deal_status: PartnerDealStatus
       security_event_type: SecurityEventType
       container_status: ContainerStatus
       quality_report_organization: QualityReportOrganization

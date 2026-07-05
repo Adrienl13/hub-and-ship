@@ -5,11 +5,13 @@ import { CheckCircle2, Clock, Quote, Star } from 'lucide-react'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import {
+  getFallbackDeliveredContainerBySlug,
   getDeliveredContainerBySlug,
   type DeliveredContainer,
 } from '@/lib/delivered-containers/repository'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL } from '@/lib/products'
+import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
@@ -17,6 +19,28 @@ import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/livres/$slug')({
   component: LivreDetailPage,
+  head: ({ params }) => {
+    const container = getFallbackDeliveredContainerBySlug(params.slug)
+    if (!container) {
+      return {
+        meta: [
+          { title: 'Container livré — Container Club Terrassea' },
+          { name: 'robots', content: 'noindex,follow' },
+        ],
+      }
+    }
+
+    return {
+      ...buildSeoHead({
+        title: `${container.reference} livré à ${container.port}`,
+        description:
+          container.story ??
+          `Retour d'expérience du container ${container.reference} livré à ${container.port} : produits, délais, volumes et preuve opérationnelle.`,
+        path: `/livres/${params.slug}`,
+        image: container.photoUrl ?? container.gallery[0]?.url,
+      }),
+    }
+  },
 })
 
 const LazyReservationDialog = lazy(() =>
@@ -52,7 +76,15 @@ function LivreDetailPage() {
     let cancelled = false
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      setError('Supabase non configuré.')
+      const fallback = getFallbackDeliveredContainerBySlug(slug)
+      if (!fallback) {
+        setIsNotFound(true)
+      } else {
+        setContainer(fallback)
+        if (typeof document !== 'undefined') {
+          document.title = `${fallback.reference} — Container Club Terrassea`
+        }
+      }
       setLoading(false)
       return
     }
@@ -72,7 +104,13 @@ function LivreDetailPage() {
       })
       .catch((err: unknown) => {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        const fallback = getFallbackDeliveredContainerBySlug(slug)
+        if (fallback) {
+          setContainer(fallback)
+          setError(null)
+        } else {
+          setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -128,7 +166,6 @@ function LivreDetailPage() {
     </div>
   )
 }
-
 
 function DeliveredContainerView({
   container,

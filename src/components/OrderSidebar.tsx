@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Maximize2,
@@ -14,6 +14,7 @@ import { ContainerFillBar } from '@/components/ContainerFillBar'
 import { ContainerFormatToggle } from '@/components/ContainerFormatToggle'
 import { ContainerScene3DFallback } from '@/components/ContainerScene3DFallback'
 import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
+import { CountdownBadge } from '@/components/CountdownBadge'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
 import { ParticipantsCount } from '@/components/ParticipantsCount'
 import { SeriesProgressIndicator } from '@/components/SeriesProgressIndicator'
@@ -26,6 +27,7 @@ import {
   getRemainingCbm,
   getVolumeUpgradeDelta,
 } from '@/lib/container/pricing'
+import { packContainerPackages } from '@/lib/container/packing'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
 import type { ContainerType } from '@/lib/supabase/types'
@@ -44,6 +46,67 @@ const LazyContainerScene = lazy(() =>
     default: module.ContainerScene,
   })),
 )
+
+const RESERVED_SCENE_MAX_SHARE = 0.3
+
+function getItemsCbm(items: ReadonlyArray<CartItem>): number {
+  return items.reduce(
+    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
+    0,
+  )
+}
+
+function InteractiveSceneLoading() {
+  return (
+    <div className="bg-[color:var(--sand)]/70 absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[1px]">
+      <div className="shadow-paper rounded-sm border border-black/10 bg-white/90 px-3 py-2 text-[11px] font-medium text-foreground">
+        Chargement de la vue 3D...
+      </div>
+    </div>
+  )
+}
+
+function limitReservedItemsForScene({
+  items,
+  liveItems,
+  maxCbm,
+  containerType,
+}: {
+  readonly items: ReadonlyArray<CartItem>
+  readonly liveItems: ReadonlyArray<CartItem>
+  readonly maxCbm: number
+  readonly containerType: ContainerType
+}): CartItem[] {
+  if (maxCbm <= 0) return []
+
+  for (let scale = 1; scale >= 0; scale -= 0.1) {
+    const limited: CartItem[] = []
+    let remainingCbm = maxCbm * scale
+
+    for (const item of items) {
+      const unitCbm = item.product.cbmPerUnit
+      if (unitCbm <= 0) continue
+
+      const quantity = Math.min(
+        item.quantity,
+        Math.floor(remainingCbm / unitCbm),
+      )
+      if (quantity <= 0) continue
+
+      limited.push({ ...item, quantity, reserved: true })
+      remainingCbm -= quantity * unitCbm
+    }
+
+    if (
+      packContainerPackages([...limited, ...liveItems], containerType)
+        .overflowUnits === 0
+    ) {
+      return limited
+    }
+  }
+
+  return []
+}
 
 export function OrderSidebar({
   items,
@@ -70,7 +133,7 @@ export function OrderSidebar({
   container?: ContainerSummary
 }) {
   const [exploded, setExploded] = useState(false)
-  const { channel } = useChannel()
+  const [interactiveSceneEnabled, setInteractiveSceneEnabled] = useState(false)
   const hasItems = items.length > 0
   // Volume discounts (and loss leaders) are direct-channel only; resellers get
   // their coefficient price + RFA instead (decision #5 by extension).
@@ -91,20 +154,40 @@ export function OrderSidebar({
     ? null
     : getVolumeUpgradeDelta(activeContainerType, '40_hc')
   const remainingCbm = getRemainingCbm(activeContainerType, usedCbm)
-  // Total volume already taken by other pros on this container — used
-  // for the "already reserved" badge under the fill bar.
-  const reservedCbm = reservedItems.reduce(
-    (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
-    0,
-  )
   // De-duplicate against the visitor's cart so they don't see *their*
   // own load doubled when the variant they're picking already had
   // earlier commitments — the cart line stays the source of truth.
-  const visitorVariantIds = new Set(items.map((it) => it.variant.id))
-  const sceneReserved = reservedItems.filter(
-    (it) => !visitorVariantIds.has(it.variant.id),
+  const visitorVariantIds = useMemo(
+    () => new Set(items.map((it) => it.variant.id)),
+    [items],
   )
-  const sceneItems: CartItem[] = [...sceneReserved, ...items]
+  const rawSceneReserved = useMemo(
+    () => reservedItems.filter((it) => !visitorVariantIds.has(it.variant.id)),
+    [reservedItems, visitorVariantIds],
+  )
+  // The live cart must stay visually dominant. `unitsCommitted` is a
+  // catalogue-level MOQ signal, not a reliable physical manifest for
+  // the current container, so the 3D scene only shows a capped context
+  // load instead of letting historical commitments turn the view grey.
+  const sceneReserved = useMemo(
+    () =>
+      limitReservedItemsForScene({
+        items: rawSceneReserved,
+        liveItems: items,
+        maxCbm: Math.min(
+          Math.max(0, capacity - usedCbm),
+          capacity * RESERVED_SCENE_MAX_SHARE,
+        ),
+        containerType: activeContainerType,
+      }),
+    [activeContainerType, capacity, items, rawSceneReserved, usedCbm],
+  )
+  const sceneItems = useMemo<CartItem[]>(
+    () => [...sceneReserved, ...items],
+    [items, sceneReserved],
+  )
+  const reservedCbm = useMemo(() => getItemsCbm(sceneReserved), [sceneReserved])
+  const hasSceneItems = sceneItems.length > 0
 
   return (
     <div className="sticky top-20 space-y-3">
@@ -119,14 +202,31 @@ export function OrderSidebar({
               {container.port} · {CONTAINER_TYPE_LABEL[activeContainerType]} ·{' '}
               {capacity.toFixed(0)} m³ utiles
             </div>
+            <CountdownBadge
+              target={container.expectedCloseAt}
+              className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 mt-1.5 inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--ember)]"
+            />
           </div>
           <Button
-            variant={exploded ? 'default' : 'outline'}
+            variant={
+              interactiveSceneEnabled && exploded ? 'default' : 'outline'
+            }
             size="sm"
             className="h-7 gap-1 rounded-sm border-[color:var(--sand-deep)] px-2 text-[11px]"
-            onClick={() => setExploded((v) => !v)}
+            disabled={!hasSceneItems}
+            onClick={() => {
+              if (!interactiveSceneEnabled) {
+                setInteractiveSceneEnabled(true)
+                return
+              }
+              setExploded((v) => !v)
+            }}
           >
-            {exploded ? (
+            {!interactiveSceneEnabled ? (
+              <>
+                <Maximize2 className="h-3 w-3" /> Activer 3D
+              </>
+            ) : exploded ? (
               <>
                 <Minimize2 className="h-3 w-3" /> Regrouper
               </>
@@ -138,14 +238,42 @@ export function OrderSidebar({
           </Button>
         </div>
         <div className="relative h-[360px] w-full bg-[color:var(--sand)] md:h-[420px]">
-          <ContainerScene3DFallback items={items} fillPercent={fillPercent} />
-          <Suspense fallback={null}>
-            <LazyContainerScene
-              items={sceneItems}
-              exploded={exploded}
-              containerType={activeContainerType}
-            />
-          </Suspense>
+          <ContainerScene3DFallback
+            items={sceneItems}
+            fillPercent={fillPercent}
+            containerType={activeContainerType}
+          />
+          {interactiveSceneEnabled && (
+            <Suspense fallback={<InteractiveSceneLoading />}>
+              <LazyContainerScene
+                items={sceneItems}
+                exploded={exploded}
+                containerType={activeContainerType}
+              />
+            </Suspense>
+          )}
+          {hasSceneItems && (
+            <div className="shadow-paper absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-sm border border-black/10 bg-white/90 px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur">
+              {items.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="inline-block h-2.5 w-2.5 rounded-sm bg-[#55c7c3]"
+                  />
+                  Votre commande
+                </span>
+              )}
+              {sceneReserved.length > 0 && (
+                <span className="text-foreground/70 flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="inline-block h-2.5 w-2.5 rounded-sm bg-[#b6aea3]"
+                  />
+                  Déjà réservé
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Stats */}
@@ -167,7 +295,7 @@ export function OrderSidebar({
             thresholdPercent={container.thresholdPercent}
           />
           {reservedCbm > 0.01 && (
-            <div className="flex items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1.5 text-[11px] text-foreground/70">
+            <div className="text-foreground/70 flex items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1.5 text-[11px]">
               <span className="flex items-center gap-1.5">
                 <span
                   aria-hidden
@@ -175,7 +303,7 @@ export function OrderSidebar({
                 />
                 Déjà réservé par d&apos;autres pros
               </span>
-              <span className="tabular-nums font-medium text-foreground">
+              <span className="font-medium tabular-nums text-foreground">
                 {reservedCbm.toFixed(1)} m³
               </span>
             </div>
@@ -194,7 +322,7 @@ export function OrderSidebar({
               40' by quoting the m³ they'd unlock; on the 40', remind
               them how much room they still have to grow the order. */}
           {usedCbm > 1 && (
-            <div className="rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 px-2 py-1.5 text-[11px] leading-snug text-foreground/80">
+            <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 text-foreground/80 rounded-sm border px-2 py-1.5 text-[11px] leading-snug">
               {isLargeFormat ? (
                 <>
                   Encore{' '}
@@ -289,6 +417,9 @@ export function OrderSidebar({
             className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs"
           >
             <AnimRow label="Sous-total HT" value={totals.subtotalHt} />
+            <AnimRow label="TVA 20%" value={totals.vat} muted />
+            <AnimRow label="Total TTC" value={totals.totalTtc} bold />
+            <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
             <AnimRow
               label="Frais réservation (3%)"
               value={totals.reservationFee}

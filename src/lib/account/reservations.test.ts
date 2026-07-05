@@ -135,6 +135,22 @@ describe('account reservations merging', () => {
     expect(getAccountReservationById('missing', [reservation])).toBeNull()
   })
 
+  it('finds legacy local reservations by their draft uuid', () => {
+    const draft = makeDraft('00000000-0000-4000-8000-000000000015')
+    const reservation = accountReservationFromLocalRecord({
+      id: `local-${draft.reference}`,
+      status: 'pending_reservation_fee',
+      draft,
+      paidAmount: 0,
+      nextActionLabel: 'A regler',
+      updatedAt: draft.cgvAcceptedAt,
+    })
+
+    expect(getAccountReservationById(draft.id, [reservation])).toEqual(
+      reservation,
+    )
+  })
+
   it('aggregates KPIs from the merged list', () => {
     const draft = makeDraft('00000000-0000-4000-8000-000000000006')
     const reservation = accountReservationFromLocalRecord({

@@ -6,13 +6,41 @@
 
 ## 🎯 État global
 
-**Phase actuelle** : Phase 1.5 (SEO + Admin éditable + Transporteurs)
+**Phase actuelle** : Phase 2.9 (Liens partenaires co-brandés + attribution)
 **Démarrage projet** : 2026-05-17
-**Dernière mise à jour** : 2026-05-22
+**Dernière mise à jour** : 2026-06-07
 **Cible launch beta** : Semaine 10+
 **Première session Claude Code** : 2026-05-17 — Session 0 initialisation
 
-### Récap dernière session (2026-05-22, après v1.4.0)
+### Récap dernière session (2026-06-07, liens partenaires)
+
+Le chantier partenaire a maintenant un premier outil partageable :
+
+- ✅ **Page `/p/{slug}`** — page co-brandée publique, utile à un revendeur pour ouvrir un accès Pros Import à son client sans exposer ses prix nets.
+- ✅ **Page partenaire plus dynamique** — bloc animé "Attribution en coulisses" pour expliquer le lien capté, le projet reconnu, le deal protégé et les prix nets privés.
+- ✅ **Capture d'attribution par lien** — `/p/{slug}`, `?partner=`, `?partner_slug=` et `?revendeur=` sont captés 120 jours dans le navigateur.
+- ✅ **Réservation enrichie** — le contexte partenaire est ajouté à `contact_snapshot.partner_context`, puis récupérable dans le compte et l'admin.
+- ✅ **Fondation visibilité IA** — `public/llms.txt` ajouté et déclaré dans `robots.txt`, avec test sécurité dédié.
+- ✅ **Admin réservations** — badge interne "Lien partenaire capté", "Partenaire reconnu" ou "Deal partenaire reconnu" selon le niveau d'attribution.
+- ✅ **Migration Supabase prête** — `20260607090000_partner_link_attribution.sql` ajoute `partner_referral_slug`, `partner_application_id` et la fonction `find_partner_link_attribution`.
+- ✅ **Tests** — module lien partenaire, persistence réservation, migration sécurité et parcours E2E `/p/chr-conseil`.
+- ✅ **Déploiement prod** — Cloudflare version `6b96d65d-b07d-45a5-b268-56dc60d1d3ce`, smoke test `https://prosimport.com/p/chr-conseil?deploy=09757d8` en HTTP 200.
+- 🚨 **Blocage restant** — appliquer les migrations Supabase partenaires en production dès que `SUPABASE_ACCESS_TOKEN` est disponible.
+
+### Récap précédente (2026-06-06, canal partenaire)
+
+Le chantier revendeur a quitté le stade éditorial pour devenir captable et pilotable :
+
+- ✅ **Page `/partenaires` opérationnelle** — positionnement revendeur protégé, deal registration, prix nets réservés, FAQ conflit de canal et formulaire intégré.
+- ✅ **Endpoint serveur `/api/partner-requests`** — intake same-origin avec service role Supabase, validation Zod et refus des origines externes navigateur.
+- ✅ **Supabase partenaires** — migrations créées pour `partner_applications` + `partner_deals`, statuts, RLS admin-only, index de triage, protection 120 jours et attribution automatique des réservations par SIRET/email. Push distant à effectuer quand `SUPABASE_ACCESS_TOKEN` sera disponible.
+- ✅ **Fallback anti-perte de lead** — si la persistance serveur échoue, la demande est sauvegardée localement sur l'appareil au lieu de disparaître.
+- ✅ **Admin `Partenaires`** — onglet dédié pour filtrer candidatures/opportunités et changer les statuts.
+- ✅ **Admin réservations enrichi** — badge interne "Deal partenaire reconnu" lorsque la réservation matche une opportunité protégée.
+- ✅ **Tests** — API partenaire, builder de demande, matching attribution, migrations sécurité et parcours public ajoutés.
+- ✅ **Passage de relais** — `docs/HANDOFF_CLAUDE_CODE.md` créé avec chantiers P0/P1/P2/P3, commandes, risques et prompts de reprise.
+
+### Récap précédente importante (2026-05-22, après v1.4.0)
 
 Couverture des derniers angles morts du back-office et SEO public :
 
@@ -162,6 +190,7 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - ✅ Page `/catalogue` dense type order sheet
 - ✅ Page `/stock-24h` pour lots disponibles rapidement
 - ✅ Demandes stock 24h persistables (Supabase + fallback local admin)
+- ✅ Page `/partenaires` avec formulaire de demande + protection d'opportunité
 - ✅ Bloc livraison rendue port aligné V1.3 (transport post-port côté client)
 - 🔄 PastContainersGrid Lovable intégré
 - 🔄 FaqAccordion Lovable intégré
@@ -213,6 +242,21 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - ❌ Email confirmation envoyé
 - ❌ Génération devis PDF
 - ❌ Tests E2E Playwright parcours complet
+
+### 2.6 Canal partenaires
+
+- ✅ Page publique `/partenaires` orientée revendeurs/agenceurs/apporteurs
+- ✅ Formulaire demande partenaire et deal registration
+- ✅ API serveur `/api/partner-requests`
+- ✅ Migration Supabase `partner_applications` et `partner_deals`
+- ✅ RLS admin-only sur données prospects partenaires
+- ✅ Onglet admin `Partenaires`
+- ✅ Attribution automatique SIRET/email implémentée en migration PostgreSQL
+- ✅ Lien co-brandé MVP `/p/{slug}`
+- ✅ Capture contexte partenaire 120 jours et snapshot réservation
+- 🔄 Attribution par lien implémentée en migration, push Supabase distant encore bloqué par token
+- ❌ Espace partenaire authentifié avec prix nets
+- 🔄 Sélections et devis co-brandés : MVP public sans persistance, dashboard et PDF à faire
 
 ### 🎯 DoD Phase 2
 
@@ -507,6 +551,20 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tâches : ProductGallery ajouté dans ProductDetailDialog avec sélection de visuels, navigation, compteur et état à compléter pour fournisseurs sans galerie.
 - Phase : Phase 2 — Règles quantité
 - Tâches : règle métier chaises centralisée : minimum 50 unités puis incrément par packs de 10 dans catalogue, accueil et fiche produit.
+- Phase : Phase 2 — Performance 3D
+- Tâches : scène 3D allégée en retirant `@react-three/drei`, interaction drag native conservée, chunk lazy contrôlé par budget build brut + gzip.
+- Phase : Phase 2 — Audit conversion devis
+- Tâches : devis imprimable aligné sur le format container actif 20'/40', fallback popup bloqué ajouté, confirmation réservation renommée proprement, test E2E devis 40' ajouté.
+- Phase : Phase 2 — Audit admin/Supabase
+- Tâches : création réservation rendue atomique via RPC Supabase `create_reservation_with_items`, fallback legacy limité au cas migration absente, migration ajoutée pour fermer les inserts anonymes directs sur `reservations` et `reservation_items`.
+- Phase : Phase 2 — Audit Stripe/compte
+- Tâches : historique local aligné sur l'UUID de réservation, statut local maintenu en attente jusqu'au webhook Stripe, page retour paiement sécurisée contre les faux `session_id`, expiration Stripe limitée à la session Checkout active, E2E détail compte renforcé.
+- Phase : Phase 2 — Audit stock 24h
+- Tâches : endpoint serveur `/api/stock-requests` ajouté pour persister les leads urgents via service role quand le flux public Supabase échoue, payload reconstruit côté serveur depuis le lot disponible, fallback local explicité côté UI.
+- Phase : Phase 2 — Catalogue visuel
+- Tâches : `/catalogue` et la section catalogue home repassés en cartes portrait plein cadre, abandon de la table compacte côté client, E2E ajouté pour verrouiller ce rendu.
+- Phase : Phase 2 — Audit admin/Supabase
+- Tâches : messages admin/login clarifiés pour prod et local, magic links bloqués si la config publique Supabase est incomplète, `returnTo` admin préservé, E2E admin/auth renforcé.
 - Phase : Phase 2 — Documents produit
 - Tâches : ProductDocumentsList ajouté dans ProductDetailDialog avec fiche technique, documents conformité/garantie/qualité et états verrouillés en attente auth.
 - Phase : Phase 2 — Avis produit
@@ -539,11 +597,32 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 - Tests : typecheck, lint, Vitest, build et vérification navigateur local validés.
 - Notes : les composants Lovable utilisent encore des données mock et un flow réservation 2 étapes ; il faudra aligner avec le checkout V1.3 SIRET obligatoire en 4 étapes.
 
+### Session du 2026-06-06 — stratégie plateforme
+
+- Phase : Direction produit — Revendeurs, direct pro et différenciation.
+- Tâches : brief stratégique IA ajouté dans `docs/PLATFORM_STRATEGY.md`, cadrant le modèle Pros Import / Container Club comme centrale d'import digitale, la protection revendeur, le direct pro encadré, les chantiers prioritaires, les règles UX/catalogue/3D/qualité, les KPI, les risques et les sources marché.
+- Décision : D-018 actée dans `docs/DECISIONS.md` pour figer le modèle canal hybride revendeur protégé + direct pro encadré.
+- Notes : ce brief doit être lu par toute IA ou prestataire avant les prochains développements produit.
+- Phase : Phase 2 — Positionnement partenaires
+- Tâches : page `/partenaires` créée, promesse "Votre client reste votre client" posée, modèle apporteur/revendeur/direct pro expliqué, CTA beta partenaire ajouté, home enrichie avec deux entrées direct pro et réseau revendeur, header/footer/sitemap branchés.
+- Phase : Phase 2 — Confiance qualité
+- Tâches : `/qualite` refondue en carnet de preuves avec protocole qualité, traçabilité, accès PDF pro et coffre documentaire à venir ; l'état public n'affiche plus le message Supabase non configuré comme preuve principale.
+- Tests : typecheck, lint, Vitest, build et E2E ciblés `/partenaires` + `/qualite` desktop/mobile validés.
+
+### Session du 2026-06-07 — liens partenaires co-brandés
+
+- Phase : Phase 2 — Protection partenaire + partage.
+- Tâches : route `/p/$partnerSlug` ajoutée, capture globale des liens partenaires, propagation du contexte dans les drafts et payloads de réservation, lecture compte/admin, badge admin enrichi, migration Supabase d'attribution par lien, tests unitaires/sécurité/E2E, docs de handoff mis à jour et déploiement Cloudflare effectué.
+- Décision : D-021 actée dans `docs/DECISIONS.md` pour figer le lien public co-brandé sans exposition des prix nets.
+- Reste : appliquer les migrations Supabase en production, créer/éditer les slugs dans l'admin, puis construire les sélections persistées et devis PDF co-brandés.
+
 ---
 
 ## 🔗 Liens rapides
 
 - Brief technique complet : `CONTAINER_CLUB_SPEC.md`
+- Brief stratégique IA : `PLATFORM_STRATEGY.md`
+- Passage de relais priorisé : `HANDOFF_CLAUDE_CODE.md`
 - Changelog versions spec : `CHANGELOG.md`
 - Décisions techniques : `DECISIONS.md`
 - Bugs connus : `KNOWN_ISSUES.md`

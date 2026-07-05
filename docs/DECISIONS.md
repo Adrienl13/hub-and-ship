@@ -224,6 +224,83 @@ Liste des questions ouvertes nécessitant arbitrage utilisateur :
 
 ---
 
+### D-015 — Audit dépendances compatible Bun (2026-06-04)
+
+**Statut** : Acceptée
+**Contexte** : Le projet utilise `bun.lock`, donc `npm audit` échoue sans `package-lock.json`. L'audit Bun a ensuite signalé des advisories via `vitest@2`, `supabase@1` et leurs dépendances transitives.
+**Décision** : Utiliser `bun audit --audit-level=moderate`, mettre à jour Vitest en v4 avec le plugin React dans `vitest.config.ts`, Supabase CLI en v2, Vite/TanStack Start en patch courant et Wrangler/Cloudflare Vite plugin en patch courant.
+**Alternatives** : Ajouter un `package-lock.json` juste pour `npm audit` aurait doublonné le lockfile ; ignorer les advisories aurait laissé un audit sécurité rouge.
+**Raison** : Garder un seul gestionnaire de dépendances cohérent et supprimer les vulnérabilités sans changer la stack applicative.
+**Conséquences** : Les futures commandes d'audit doivent passer par Bun ; les tests TSX Vitest dépendent explicitement du plugin React.
+
+---
+
+### D-016 — Création réservation atomique via RPC Supabase (2026-06-05)
+
+**Statut** : Acceptée
+**Contexte** : Le tunnel public écrivait d'abord `reservations`, puis `reservation_items` depuis le navigateur. Une erreur sur le second insert pouvait laisser une réservation orpheline/incomplète visible en admin.
+**Décision** : Créer `public.create_reservation_with_items(payload jsonb)` en `SECURITY DEFINER`, appelée par le client pour insérer réservation + lignes dans une seule transaction. La migration supprime ensuite les policies d'insert anonyme direct.
+**Alternatives** : Garder deux inserts client avec cleanup manuel en cas d'erreur ; ajouter un endpoint serveur Cloudflare utilisant la service role.
+**Raison** : La RPC garde la logique au plus près de PostgreSQL/RLS, évite un endpoint applicatif supplémentaire et permet des validations serveur sur les totaux, le SIRET, le statut initial et l'appartenance des lignes.
+**Conséquences** : La migration DB doit être appliquée avant de considérer la surface RLS fermée. Le frontend conserve un fallback legacy uniquement pour survivre à un environnement où la RPC n'existe pas encore.
+
+---
+
+### D-017 — Filet serveur pour les demandes stock 24h (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Le stock 24h capte des demandes urgentes. Un échec de l'insert public Supabase navigateur (env anon absente, RLS en dérive, réseau client) ne doit pas transformer le lead en simple erreur silencieuse.
+**Décision** : Ajouter `/api/stock-requests`, un endpoint serveur same-origin qui accepte uniquement l'ID du lot + coordonnées client, reconstruit le draft depuis le catalogue stock local et persiste via la service role Supabase. Le hook public tente navigateur, endpoint serveur, puis sauvegarde locale sur l'appareil en dernier ressort.
+**Alternatives** : Garder uniquement l'insert navigateur ; envoyer toutes les demandes stock par email ; accepter un payload complet depuis le navigateur.
+**Raison** : La reconstruction côté serveur évite de faire confiance aux prix/snapshots envoyés par le client et réduit le risque de perdre une demande chaude pendant une dérive d'environnement.
+**Conséquences** : Le fallback local reste un mode dégradé non centralisé ; il doit être annoncé comme tel. La route serveur dépend de `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` côté worker.
+
+---
+
+### D-018 — Modèle canal hybride revendeur protégé + direct pro encadré (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : La plateforme doit vendre aux restaurateurs/hôtels en direct sans bloquer l'acquisition de revendeurs. Un revendeur ne partagera pas naturellement un site public s'il peut perdre son client final.
+**Décision** : Conserver un canal direct pro avec conditions et marge cible plus élevée, tout en créant un canal partenaire protégé avec prix net réservé, deal registration, attribution SIRET/email/lien et devis co-brandé. Le prix public conseillé peut exister mais ne doit jamais devenir un prix minimum imposé.
+**Alternatives** : Fermer le direct aux restaurants/hôtels aurait limité le cash court terme ; vendre tout publiquement au même prix aurait détruit la confiance des revendeurs.
+**Raison** : Le modèle gagnant est de devenir l'infrastructure d'import des revendeurs tout en gardant une capacité de conversion directe contrôlée.
+**Conséquences** : Les prochains chantiers doivent prioriser `/revendeurs`, la protection des deals, le pricing par rôle et les sélections co-brandées. Voir `docs/PLATFORM_STRATEGY.md`.
+
+---
+
+### D-019 — Intake partenaires via endpoint serveur admin-only (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Les demandes partenaires et opportunités protégées contiennent des prospects, SIRET client, emails, zones, volumes et signaux commerciaux. Un insert public navigateur serait plus simple, mais il rendrait la surface RLS plus sensible et mélangerait le canal partenaire avec les demandes stock publiques.
+**Décision** : Capturer les demandes via `/api/partner-requests`, endpoint same-origin qui valide le payload, persiste avec la service role Supabase et conserve les tables `partner_applications` / `partner_deals` en RLS admin-only.
+**Alternatives** : Ouvrir une policy `anon insert` sur `partner_applications` et `partner_deals` ; envoyer les demandes par email ; garder seulement une sauvegarde localStorage.
+**Raison** : Le canal partenaire doit protéger les données prospects et les règles commerciales dès le départ. L'endpoint serveur limite l'exposition, centralise la validation et prépare les futures règles d'attribution.
+**Conséquences** : Le worker doit avoir `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` configurés. En environnement incomplet, le formulaire conserve un fallback local annoncé comme mode dégradé.
+
+---
+
+### D-020 — Attribution partenaire au niveau PostgreSQL (2026-06-06)
+
+**Statut** : Acceptée
+**Contexte** : Une réservation peut être créée via la RPC atomique, le fallback legacy, un futur back-office ou un futur lien co-brandé. Si l'attribution partenaire vivait seulement dans le navigateur, le revendeur resterait exposé au court-circuit.
+**Décision** : Enrichir `reservations` avec `partner_deal_id`, `partner_attribution_reason` et `partner_attribution_snapshot`, puis déclencher l'attribution en base avant insert/update SIRET/contact. Le matching priorise SIRET exact, email exact, puis domaine email professionnel, en excluant les domaines génériques pour le fallback domaine.
+**Alternatives** : Créer une table `partner_attributions` séparée ; effectuer le matching dans `/api/checkout` ; attendre l'espace partenaire avant de protéger les deals.
+**Raison** : Le trigger couvre toutes les voies d'écriture et garde la protection au plus près des données sensibles, sans exposer le partenaire dans l'UI publique.
+**Conséquences** : La migration `20260606210000_partner_attribution_on_reservations.sql` doit être appliquée en production avec les tables partenaires. Le matching par lien co-brandé est traité dans D-021.
+
+---
+
+### D-021 — Lien partenaire public sans prix net exposé (2026-06-07)
+
+**Statut** : Acceptée
+**Contexte** : Un revendeur doit pouvoir partager Pros Import sans craindre que son client voie les prix nets partenaires ou contourne l'attribution. Le site public doit rester vendable en direct, mais un prospect apporte par lien doit laisser une trace exploitable en admin.
+**Décision** : Créer une route publique `/p/{slug}` co-brandée, capturer le contexte partenaire dans `localStorage` pendant 120 jours, l'inclure dans `contact_snapshot.partner_context` au moment de la réservation et ajouter une migration PostgreSQL qui rattache la réservation à un deal ou partenaire qualifié via `partner_referral_slug`.
+**Alternatives** : Attendre l'espace partenaire complet avant tout partage ; exposer un prix net partenaire dans une page cachee ; attribuer uniquement via query string sans persistance locale.
+**Raison** : Le MVP donne tout de suite un outil partageable et mesurable, tout en respectant la doctrine canal : prix publics côté client final, conditions nettes dans un futur espace authentifié.
+**Conséquences** : Les slugs partenaires doivent être créés/validés côté admin ou migration. La page `/p/{slug}` reste publique et ne remplace pas le futur dashboard partenaire, les devis PDF co-brandés et les sélections persistées.
+
+---
+
 ## 📚 Lectures de référence
 
 - [ADR Github template](https://github.com/joelparkerhenderson/architecture-decision-record)

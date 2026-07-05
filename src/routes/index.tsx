@@ -7,7 +7,14 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { ArrowUpDown, Search } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Handshake,
+  LockKeyhole,
+  Search,
+  Store,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Header } from '@/components/Header'
 import { Hero } from '@/components/Hero'
@@ -15,7 +22,6 @@ import { ValueProps } from '@/components/ValueProps'
 import { HowItWorks } from '@/components/HowItWorks'
 import { ComparisonTable } from '@/components/ComparisonTable'
 import { ProductCard } from '@/components/ProductCard'
-import { ProductRow } from '@/components/ProductRow'
 import { OrderSidebar } from '@/components/OrderSidebar'
 import { DeliveryInfoBox } from '@/components/DeliveryInfoBox'
 import { PastContainers } from '@/components/PastContainers'
@@ -39,9 +45,32 @@ import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
 import { useCatalog } from '@/hooks/useCatalog'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
+import {
+  buildSeoHead,
+  jsonLdScript,
+  organizationJsonLd,
+  SITE_URL,
+} from '@/lib/seo'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/')({
+  head: () => ({
+    ...buildSeoHead({
+      title: 'Mobilier outdoor pro direct usine par container',
+      description:
+        'Container Club mutualise les commandes de mobilier outdoor pour restaurants, hôtels et campings : prix usine, container partagé, contrôle qualité et stock disponible.',
+      path: '/',
+    }),
+    scripts: [
+      jsonLdScript({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Container Club Terrassea',
+        url: SITE_URL,
+      }),
+      jsonLdScript(organizationJsonLd()),
+    ],
+  }),
   component: ContainerClubPage,
 })
 
@@ -72,6 +101,7 @@ function ContainerClubPage() {
     totals,
     fill,
     totalUnits,
+    preferredContainerType,
     variantByProduct,
     qtyByProduct,
     setQty,
@@ -122,7 +152,7 @@ function ContainerClubPage() {
   )
 
   const handlePdf = () => {
-    openQuotePDF({
+    const opened = openQuotePDF({
       items,
       totals,
       fillPercent: fill.percent,
@@ -130,7 +160,15 @@ function ContainerClubPage() {
       capacity: fill.capacity,
       containerRef: currentContainer.reference,
       port: currentContainer.port,
+      containerType:
+        preferredContainerType ?? currentContainer.containerType ?? '20_hc',
     })
+    if (!opened) {
+      toast.error('Devis bloqué par le navigateur', {
+        description:
+          'Autorisez les popups pour ouvrir le devis imprimable en PDF.',
+      })
+    }
   }
 
   return (
@@ -146,6 +184,7 @@ function ContainerClubPage() {
       />
 
       <ValueProps />
+      <PartnerPathway />
       <Stock24hTeaser />
       <HowItWorks />
       <ComparisonTable />
@@ -246,7 +285,7 @@ function ContainerClubPage() {
                   Aucun produit dans cette catégorie pour ce container.
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {visibleProducts.map((product) => {
                     const selectedVariantId =
                       variantByProduct[product.id] ??
@@ -262,11 +301,7 @@ function ContainerClubPage() {
                       onOpenDetails: () => setDetailId(product.id),
                     }
 
-                    return isMobile ? (
-                      <ProductCard key={product.id} {...commonProps} />
-                    ) : (
-                      <ProductRow key={product.id} {...commonProps} />
-                    )
+                    return <ProductCard key={product.id} {...commonProps} />
                   })}
                 </div>
               )}
@@ -356,6 +391,71 @@ function ContainerClubPage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+function PartnerPathway() {
+  const lanes = [
+    {
+      Icon: Store,
+      title: "J'équipe mon établissement",
+      desc: 'Prix direct pro, MOQ clair, réservation container et stock 24h pour les besoins urgents.',
+      href: '/catalogue',
+      cta: 'Explorer les produits',
+    },
+    {
+      Icon: Handshake,
+      title: 'Je revends à mon réseau',
+      desc: 'Prix nets réservés, opportunités protégées et sélections co-brandées à construire avec les premiers partenaires.',
+      href: '/partenaires',
+      cta: 'Voir le programme',
+    },
+  ] as const
+
+  return (
+    <section className="border-t border-[color:var(--sand-deep)]">
+      <div className="mx-auto max-w-7xl px-6 py-14">
+        <div className="mb-7 flex max-w-3xl items-start gap-3">
+          <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]">
+            <LockKeyhole className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Deux parcours, une règle
+            </div>
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+              Acheter en direct ou revendre : le canal doit rester clair.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
+              Pros Import garde une offre directe pour les pros, tout en
+              construisant une protection partenaire pour que les revendeurs
+              puissent partager la plateforme sans perdre leur client.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {lanes.map(({ Icon, title, desc, href, cta }) => (
+            <Link
+              key={title}
+              to={href}
+              className="hover:border-[color:var(--foreground)]/35 rounded-md border border-[color:var(--sand-deep)] bg-card p-5 transition-colors"
+            >
+              <Icon className="h-5 w-5 text-[color:var(--ember)]" />
+              <h3 className="mt-5 font-display text-xl font-semibold">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {desc}
+              </p>
+              <span className="mt-5 inline-flex text-sm font-medium text-foreground">
+                {cta} →
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 

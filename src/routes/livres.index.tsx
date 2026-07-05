@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { useCatalog } from '@/hooks/useCatalog'
 import {
   computeStats,
+  listFallbackDeliveredContainers,
   listPublishedDeliveredContainers,
   type DeliveredContainersListItem,
   type DeliveredContainersStats,
@@ -15,17 +16,28 @@ import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
+import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 export const Route = createFileRoute('/livres/')({
   component: LivresPage,
+  // NOTE: this page currently renders an empty SSR shell and hydrates
+  // client-side (ISSUE-003), so neither these head scripts nor body content
+  // appear in the server HTML yet. Kept consistent with sibling pages; will
+  // emit once the SSR bail on /livres is fixed.
   head: () => ({
-    meta: [
-      { title: 'Containers livrés — Container Club Terrassea' },
-      {
-        name: 'description',
-        content:
-          'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
-      },
+    ...buildSeoHead({
+      title: 'Containers livrés',
+      description:
+        'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
+      path: '/livres',
+    }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Containers livrés', path: '/livres' },
+        ]),
+      ),
     ],
   }),
 })
@@ -54,8 +66,8 @@ function LivresPage() {
     let cancelled = false
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      setContainers([])
-      setError('Supabase non configuré : impossible de charger les containers.')
+      setContainers(listFallbackDeliveredContainers())
+      setError(null)
       setLoading(false)
       return
     }
@@ -67,9 +79,10 @@ function LivresPage() {
         setContainers(data)
         setError(null)
       })
-      .catch((err: unknown) => {
+      .catch(() => {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        setContainers(listFallbackDeliveredContainers())
+        setError(null)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

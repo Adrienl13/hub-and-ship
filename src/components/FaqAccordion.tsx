@@ -1,157 +1,37 @@
-import type { ReactNode } from 'react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 
-interface FaqItem {
-  readonly q: string
-  readonly category: string
-  readonly a: ReactNode
-}
+import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 
-const FAQ: ReadonlyArray<FaqItem> = [
-  // ---- Sécurité financière ---------------------------------------
+export const FAQ = [
   {
-    category: 'Sécurité',
-    q: 'Que se passe-t-il si le container n’atteint pas 80 % de remplissage à la clôture ?',
-    a: (
-      <>
-        <p>
-          Container Club ne lance jamais un container à moitié vide. Si à la
-          date de clôture estimée le seuil de 80 % de remplissage n’est pas
-          atteint, deux scénarios sont possibles :
-        </p>
-        <ul>
-          <li>
-            <strong>Prolongation transparente.</strong> Nous prolongeons la
-            collecte de 2 semaines maximum, en vous expliquant exactement
-            combien de m³ manquent et combien de pros sont engagés. Vous
-            recevez un email + une notification dans votre espace pro.
-          </li>
-          <li>
-            <strong>Remboursement intégral si le seuil reste non atteint.</strong>{' '}
-            Les frais de réservation <em>et</em> l’éventuel acompte vous sont
-            remboursés sur la carte d’origine sous <strong>5 jours ouvrés</strong>{' '}
-            (via Stripe). Aucun frais retenu, aucune pénalité — c’est notre
-            risque, pas le vôtre.
-          </li>
-        </ul>
-        <p>
-          Vous gardez la possibilité de retirer votre commande à tout moment
-          avant clôture sans aucune justification.
-        </p>
-      </>
-    ),
+    q: "Que se passe-t-il si le container n'atteint pas 80% de remplissage ?",
+    a: "Le seuil de 80% garantit que le container part dans des conditions économiques optimales pour tout le monde : c'est ce qui permet d'obtenir les prix direct usine. Tant qu'il n'est pas atteint, rien n'est lancé en production et vous n'êtes débité que des frais de réservation.\n\nSi le seuil n'est pas atteint à la date de clôture estimée, nous pouvons prolonger la collecte de 2 semaines maximum pour laisser arriver les dernières réservations. Vous êtes tenu informé en temps réel depuis votre espace et par email.\n\nSi malgré tout le seuil reste non atteint, le container est purement et simplement annulé : l'intégralité des sommes versées (frais de réservation + acompte éventuel) vous est remboursée sous 5 jours ouvrés, sans aucune retenue. Vous ne prenez donc aucun risque financier sur le remplissage.",
   },
   {
-    category: 'Sécurité',
-    q: 'Que se passe-t-il si mon design spécifique n’atteint pas le MOQ de 50 unités ?',
-    a: (
-      <>
-        <p>
-          Le MOQ (Minimum Order Quantity) est fixé par l’usine pour lancer
-          une série dédiée d’un design précis. Si à la clôture votre design
-          n’a pas atteint 50 unités cumulées sur l’ensemble des pros, vous
-          recevez un email automatique avec <strong>trois options à choisir
-          en 48 h</strong> :
-        </p>
-        <ol>
-          <li>
-            <strong>Migrer vers un design confirmé du même produit</strong> —
-            même prix, même fournisseur, même container. Aucun coût
-            supplémentaire.
-          </li>
-          <li>
-            <strong>Reporter automatiquement sur le container suivant</strong>{' '}
-            (sans frais, sans nouvelle réservation). Votre acompte est
-            conservé tel quel sur la nouvelle commande.
-          </li>
-          <li>
-            <strong>Remboursement uniquement sur cette ligne</strong>. Le
-            reste de votre commande continue normalement.
-          </li>
-        </ol>
-        <p>
-          En 18 mois d’opération, <strong>92 %</strong> des MOQ ont été
-          atteints sur le premier essai et 100 % avec un report sur le
-          container suivant.
-        </p>
-      </>
-    ),
+    q: "Que se passe-t-il si mon design n'atteint pas le MOQ de 50 ?",
+    a: "Chaque design (coloris / finition) doit réunir un minimum de 50 unités commandées, toutes réservations confondues, pour être lancé en production. C'est ce minimum qui rend le prix usine possible sur une finition donnée.\n\nSi votre design n'atteint pas ce seuil à la clôture, vous n'êtes jamais bloqué : trois options vous sont communiquées immédiatement. 1) Basculer votre commande vers un design confirmé du même produit, au même prix. 2) Reporter automatiquement votre ligne sur le container suivant, sans frais supplémentaires, le temps que le design se complète. 3) Être remboursé sur cette ligne uniquement, le reste de votre commande étant maintenu.\n\nVous gardez la main : aucune décision n'est prise à votre place, et vous disposez d'un délai clair pour choisir.",
+  },
+  {
+    q: 'Quand suis-je débité ? Et de combien à chaque étape ?',
+    a: "Le paiement est échelonné en 3 étapes, calées sur l'avancement réel du container — vous n'avancez jamais une grosse somme dans le vide.\n\nÉtape 1 — Réservation : 3% du montant (minimum 150 €, maximum 500 €). Ces frais réservent votre place et votre quantité. Ils ne sont pas remboursables, sauf si c'est Container Club qui annule (container non lancé), auquel cas vous récupérez tout.\n\nÉtape 2 — Lancement : lorsque le container atteint 80%, un acompte complémentaire de 27% est appelé. Vous êtes prévenu 48h à l'avance, donc jamais débité par surprise.\n\nÉtape 3 — Avant expédition : le solde de 70% est réglé une fois la production terminée ET le contrôle qualité SGS validé en usine. Vous payez le solde en sachant que la marchandise est conforme et prête à charger.",
+  },
+  {
+    q: "Qui s'occupe de la douane et de la TVA à l'import ?",
+    a: "Tout est pris en charge par Container Club (Pros Import EURL), votre importateur officiel français. Vous n'avez aucune démarche douanière à effectuer : nous gérons la déclaration d'importation, le dédouanement, la TVA à l'import (autoliquidée) et la conformité réglementaire des produits (marquage CE, REACH, classement au feu pour les ERP).\n\nVous recevez une facture française en bonne et due forme : prix HT + TVA 20% en sus, parfaitement déductible pour votre entreprise. Pas de facture étrangère, pas de TVA bloquée, pas de surprise au passage en douane.\n\nConcrètement, vous achetez auprès d'un fournisseur français et recevez une marchandise déjà dédouanée et conforme au marché européen.",
+  },
+  {
+    q: 'Comment se passe la livraison ? Combien ça coûte ?',
+    a: "Le prix affiché est un prix rendu port : il inclut la marchandise, l'importation, la douane et l'acheminement jusqu'au port d'arrivée (Marseille-Fos ou Le Havre selon le container).\n\nÀ partir du port, trois possibilités : vous enlevez vous-même la marchandise, vous mandatez votre propre transporteur, ou nous vous mettons en relation avec des transporteurs partenaires recommandés. Le transport entre le port et votre établissement est contractualisé et réglé directement par vos soins — ce qui vous laisse libre de choisir l'option la moins chère pour votre zone.\n\nVous savez donc à l'avance ce qui est inclus (jusqu'au port) et ce qui reste à votre main (le dernier kilomètre), sans frais cachés.",
+  },
+  {
+    q: 'Quelle garantie sur les produits ? Et le SAV ?',
+    a: "Tous les produits bénéficient d'une garantie commerciale de 2 ans sur les pièces et la structure, assurée par Container Club en France — pas besoin de contacter une usine à l'étranger.\n\nLe SAV est joignable par email, avec une réponse sous 48h ouvrées. En cas de besoin, des pièces détachées sont disponibles et nous organisons la prise en charge selon les cas (réparation, remplacement de pièce, solution adaptée).\n\nL'éco-participation Eco-mobilier est incluse dans le prix : la fin de vie et le recyclage du mobilier sont déjà couverts. Vous avez un interlocuteur français, des factures françaises et une garantie française.",
   },
   {
     category: 'Sécurité',
     q: 'Puis-je annuler ma réservation ? Sous quelles conditions ?',
-    a: (
-      <>
-        <p>
-          L’annulation reste libre jusqu’à un point précis du process —
-          au-delà, votre place est garantie à l’usine, donc l’engagement
-          devient ferme.
-        </p>
-        <ul>
-          <li>
-            <strong>Avant clôture du container (= avant 80 %).</strong> Vous
-            retirez une ligne ou la totalité depuis votre espace pro en
-            un clic. Seul le frais de réservation initial (3 %, min 150 €)
-            est conservé — c’est ce qui finance la collecte et la
-            sécurisation de votre place.
-          </li>
-          <li>
-            <strong>Après passage à 80 % et appel d’acompte.</strong> Votre
-            place est désormais réservée à l’usine, l’engagement devient
-            ferme. Une annulation à ce stade n’est possible qu’en cas de
-            défaillance Container Club, auquel cas le remboursement est
-            intégral (frais de réservation + acompte + tout autre versement).
-          </li>
-        </ul>
-        <p>
-          Pour toute situation particulière (faillite, force majeure,
-          changement de projet), écrivez-nous à{' '}
-          <strong>adrienlaniez1@gmail.com</strong> — on étudie au cas par cas.
-        </p>
-      </>
-    ),
-  },
-
-  // ---- Paiement --------------------------------------------------
-  {
-    category: 'Paiement',
-    q: 'Quand suis-je débité, et combien à chaque étape ?',
-    a: (
-      <>
-        <p>
-          L’échéancier est conçu pour étaler la trésorerie et n’engager des
-          fonds qu’à mesure que le projet se confirme — pas de paiement
-          d’avance complet, jamais.
-        </p>
-        <ul>
-          <li>
-            <strong>Étape 1 — Réservation (3 %, min 150 €, max 500 €).</strong>{' '}
-            Débit immédiat sur Stripe Checkout (CB / Visa / Mastercard / Amex,
-            3D-Secure). Sécurise votre place + finance la collecte.{' '}
-            <em>
-              Non remboursable sauf annulation Container Club ou non-atteinte
-              du seuil 80 %.
-            </em>
-          </li>
-          <li>
-            <strong>Étape 2 — Acompte (27 %) au passage 80 %.</strong> Nous
-            vous prévenons par email <strong>48 h à l’avance</strong> avec un
-            lien de paiement Stripe. Vous validez en 1 clic. C’est cet
-            acompte qui déclenche le lancement de la production usine.
-          </li>
-          <li>
-            <strong>Étape 3 — Solde (70 %) avant expédition.</strong>{' '}
-            Déclenché après le rapport SGS validé (contrôle qualité). Vous
-            recevez le rapport photo+vidéo en amont, vous validez le solde
-            par Stripe puis le container quitte l’usine sous 7 jours.
-          </li>
-        </ul>
-        <p>
-          Tous les paiements passent par Stripe (PCI DSS niveau 1, aucune
-          donnée carte stockée chez nous). Une facture HT française avec
-          TVA 20 % autoliquidée est émise à chaque étape.
-        </p>
-      </>
-    ),
+    a: "Oui, tant que le container n'est pas clôturé. Avant la clôture, vous pouvez retirer une ligne de votre commande à tout moment : seuls les frais de réservation de cette ligne restent acquis (c'est ce qui sécurise les places pour le groupe).\n\nUne fois le container passé à 80% et l'acompte appelé, l'engagement devient ferme : la production est lancée en votre nom, la commande ne peut plus être annulée unilatéralement.\n\nLa seule exception est une défaillance de Container Club (container non lancé, annulation de notre fait) : dans ce cas, vous êtes intégralement remboursé. En clair, le risque ne pèse jamais sur vous tant que la production n'a pas démarré.",
   },
   {
     category: 'Paiement',
@@ -369,120 +249,19 @@ const FAQ: ReadonlyArray<FaqItem> = [
   {
     category: 'Qualité',
     q: 'Comment vérifiez-vous la qualité avant expédition ?',
-    a: (
-      <>
-        <p>
-          Nous mandatons <strong>SGS</strong> (Société Générale de
-          Surveillance), organisme de certification indépendant mondial,
-          pour un contrôle qualité en usine <em>avant chargement du
-          container</em>. C’est non négociable et systématique.
-        </p>
-        <ul>
-          <li>
-            <strong>Échantillonnage AQL 2.5</strong> (norme ISO 2859-1) sur
-            la totalité du lot. Sur un container de 300 articles, cela
-            représente 32 pièces inspectées en détail.
-          </li>
-          <li>
-            <strong>Critères contrôlés</strong> : dimensions, couleur,
-            finition, soudure, tressage, qualité du tissu, classement feu,
-            étiquetage CE. Tout est rejeté à la moindre dérive (taux de
-            réjection accepté : 1 défaut majeur, 4 défauts mineurs max).
-          </li>
-          <li>
-            <strong>Rapport SGS livré sous 48 h</strong> à tous les pros
-            engagés : photos haute résolution, vidéo de l’ouverture des
-            cartons, fiche de mesure. Vous décidez de débloquer le paiement
-            du solde après lecture.
-          </li>
-          <li>
-            <strong>Aucun container ne quitte l’usine sans validation SGS</strong>.
-            Si la production échoue le contrôle, nous obtenons une refonte
-            sans coût supplémentaire ou un remboursement intégral.
-          </li>
-        </ul>
-        <p>
-          Vous pouvez consulter les rapports SGS des containers déjà livrés
-          dans la section <strong>Containers livrés</strong> du site —
-          aucune intervention, juste les pièces brutes telles que SGS les
-          rend.
-        </p>
-      </>
-    ),
+    a: "Avant chaque chargement, nous mandatons SGS — organisme de certification indépendant et reconnu mondialement — pour un contrôle physique en usine. Ce contrôle suit un échantillonnage normé (AQL 2.5) : dimensions, finitions, solidité et conformité aux spécifications commandées.\n\nUn rapport photo et vidéo est partagé avec l'ensemble des professionnels engagés sur le container, en toute transparence. Vous voyez ce que vous allez recevoir avant que cela ne quitte l'usine.\n\nRègle simple : aucun container ne quitte l'usine sans cette validation. C'est précisément cette étape qui vous protège des mauvaises surprises courantes de l'import direct.",
   },
   {
-    category: 'Qualité',
-    q: 'Que se passe-t-il si un produit arrive défectueux ou non conforme ?',
-    a: (
-      <>
-        <p>
-          Malgré le contrôle SGS, un défaut peut toujours survenir au
-          transport ou en manipulation post-port. Le process est
-          standardisé :
-        </p>
-        <ul>
-          <li>
-            <strong>Vous avez 14 jours après livraison</strong> pour
-            constater et déclarer tout défaut. Photo + description envoyées
-            à <strong>sav@prosimport.com</strong>, traitement sous 48 h
-            ouvrées.
-          </li>
-          <li>
-            <strong>Selon la nature du défaut</strong> : remplacement par la
-            pièce de rechange (stockée à Marseille-Fos pour les principales
-            références), avoir sur la prochaine commande, ou remboursement
-            de la ligne concernée selon le ratio de pièces touchées.
-          </li>
-          <li>
-            <strong>Garantie commerciale 2 ans</strong> sur structure et
-            défauts d’assemblage usine, couverte par Container Club en
-            France (pas de renvoi en usine, pas de barrière de langue).
-          </li>
-          <li>
-            <strong>Pièces détachées disponibles</strong> à l’unité (pieds,
-            assises, fixations) pour les principaux modèles, expédiées sous
-            5 jours ouvrés.
-          </li>
-        </ul>
-        <p>
-          Tous les rapports SAV publiés sont consultables par les pros
-          engagés sur les prochains containers — c’est notre engagement de
-          transparence opérationnelle.
-        </p>
-      </>
-    ),
+    q: 'Qui se cache derrière Container Club ? Est-ce une entreprise française fiable ?',
+    a: "Container Club est édité par Pros Import EURL, société française immatriculée au RCS de Paris (988 269 981), basée au 60 Rue François Ier, 75008 Paris. C'est notre société qui achète, importe, dédouane et vous facture, en tant qu'importateur officiel.\n\nVous traitez donc avec une entreprise française, soumise au droit français, qui émet des factures françaises et porte la garantie. Pas d'intermédiaire opaque ni de plateforme étrangère.\n\nNotre modèle est volontairement transparent : prix, étapes de paiement, seuils de départ et délais sont affichés avant même que vous ne réserviez.",
   },
-
-  // ---- Légitimité / éligibilité ----------------------------------
   {
-    category: 'Éligibilité',
-    q: 'Mon activité n’est pas dans la restauration, puis-je commander ?',
-    a: (
-      <>
-        <p>
-          Oui — Container Club s’adresse à <strong>tout professionnel ayant
-          un usage outdoor du mobilier</strong>. Les profils que nous
-          servons régulièrement :
-        </p>
-        <ul>
-          <li>Cafés, restaurants, brasseries, plages privées</li>
-          <li>Hôtels, campings, villages vacances, gîtes pro</li>
-          <li>Espaces événementiels, séminaires, salons</li>
-          <li>Mairies, collectivités (terrasses publiques, halls)</li>
-          <li>Architectes & agenceurs CHR (achat groupé pour clients)</li>
-          <li>Distributeurs et grossistes B2B (commande 40’ GP)</li>
-        </ul>
-        <p>
-          Le seul prérequis :{' '}
-          <strong>
-            disposer d’un numéro SIRET valide et actif au moment de la
-            réservation
-          </strong>{' '}
-          (vérifié automatiquement contre la base INSEE). Aucune restriction
-          de chiffre d’affaires, d’ancienneté ou de secteur d’activité.
-        </p>
-      </>
-    ),
+    q: 'Combien de temps entre ma réservation et la réception de la marchandise ?',
+    a: "Le délai dépend d'abord du remplissage du container. Tant que le seuil de départ n'est pas atteint, la collecte se poursuit — c'est la phase la plus variable, et vous en suivez l'avancement en temps réel.\n\nUne fois le container lancé, comptez environ 45 jours de production en usine, puis environ 30 jours de transit maritime, auxquels s'ajoute le dédouanement. Soit, en règle générale, de l'ordre de 3 mois entre le lancement du container et sa mise à disposition au port.\n\nNous communiquons une date de clôture estimée et vous tenons informé à chaque étape : lancement, fin de production, embarquement, arrivée au port.",
+  },
+  {
+    q: 'Et si un produit arrive abîmé ou non conforme ?',
+    a: "Le contrôle SGS avant expédition réduit fortement ce risque, mais s'il subsiste un souci, vous êtes couvert. À la réception, vérifiez la marchandise et signalez tout produit endommagé ou non conforme à notre SAV, photos à l'appui.\n\nNous organisons alors la prise en charge : envoi de pièces détachées, remplacement ou solution adaptée selon le cas, dans le cadre de la garantie 2 ans.\n\nVous n'êtes jamais seul face à une usine à l'autre bout du monde : l'interlocuteur, c'est nous, en France.",
   },
 ]
 
@@ -497,6 +276,8 @@ const CATEGORY_COLOR: Record<string, string> = {
 }
 
 export function FaqAccordion() {
+  const [open, setOpen] = useState<number | null>(0)
+
   return (
     <section
       id="faq"
@@ -524,36 +305,66 @@ export function FaqAccordion() {
           </p>
         </div>
 
-        <div className="divide-y divide-[color:var(--sand-deep)] border-y border-[color:var(--sand-deep)]">
-          {FAQ.map((item, i) => (
-            <details
-              key={i}
-              className="group [&_summary::-webkit-details-marker]:hidden"
-            >
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 py-5 text-sm transition-colors hover:text-[color:var(--ember)]">
-                <div className="min-w-0">
-                  <span
-                    className={`label-eyebrow block ${
-                      CATEGORY_COLOR[item.category] ??
-                      'text-[color:var(--ember)]'
-                    }`}
+        <RevealStagger className="space-y-3">
+          {FAQ.map((item, i) => {
+            const isOpen = open === i
+            const panelId = `faq-panel-${i}`
+            return (
+              <RevealItem key={i}>
+                <div
+                  className={`overflow-hidden rounded-md border bg-card transition-colors duration-300 ${
+                    isOpen
+                      ? 'border-[color:var(--ember)]/50 shadow-[0_8px_24px_-14px_rgba(0,0,0,0.25)]'
+                      : 'border-[color:var(--sand-deep)] hover:border-[color:var(--foreground)]/30'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    className="flex w-full cursor-pointer items-start justify-between gap-4 p-5 text-left"
                   >
-                    {item.category}
-                  </span>
-                  <span className="mt-1 block font-display text-base font-medium tracking-tight">
-                    {item.q}
-                  </span>
+                    <span
+                      className={`font-display text-base font-medium tracking-tight transition-colors ${
+                        isOpen ? 'text-[color:var(--ember)]' : ''
+                      }`}
+                    >
+                      {item.q}
+                    </span>
+                    <span
+                      className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xl font-light transition-all duration-300 ${
+                        isOpen
+                          ? 'rotate-45 bg-[color:var(--ember)] text-white'
+                          : 'text-foreground/60 bg-[color:var(--sand-soft)]'
+                      }`}
+                    >
+                      +
+                    </span>
+                  </button>
+                  <motion.div
+                    id={panelId}
+                    initial={false}
+                    animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+                    transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-3 px-5 pb-5">
+                      {item.a.split('\n\n').map((para, k) => (
+                        <p
+                          key={k}
+                          className="text-sm leading-relaxed text-[color:var(--ink-soft)]"
+                        >
+                          {para}
+                        </p>
+                      ))}
+                    </div>
+                  </motion.div>
                 </div>
-                <span className="text-foreground/60 mt-1.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-xl font-light transition-transform group-open:rotate-45">
-                  +
-                </span>
-              </summary>
-              <div className="legal-prose pb-6 pr-9 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                {item.a}
-              </div>
-            </details>
-          ))}
-        </div>
+              </RevealItem>
+            )
+          })}
+        </RevealStagger>
       </div>
     </section>
   )

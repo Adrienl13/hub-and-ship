@@ -63,7 +63,7 @@ function DesignThumb({
         </span>
       )}
       {selected && (
-        <span className="absolute inset-0 flex items-center justify-center bg-foreground/35">
+        <span className="bg-foreground/35 absolute inset-0 flex items-center justify-center">
           <Check className="h-4 w-4 text-white drop-shadow" strokeWidth={2.5} />
         </span>
       )}

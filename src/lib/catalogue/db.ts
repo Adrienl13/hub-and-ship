@@ -4,11 +4,7 @@
 // `container_seed_commitments` are all behind public SELECT policies.
 
 import type { Database } from '@/lib/supabase/types'
-import type {
-  DesignVariant,
-  Product,
-  ProductCategory,
-} from '@/lib/products'
+import type { DesignVariant, Product, ProductCategory } from '@/lib/products'
 
 type ProductRow = Database['public']['Tables']['products']['Row']
 type VariantRow = Database['public']['Tables']['product_variants']['Row']
@@ -75,9 +71,7 @@ interface CatalogueDbClient {
             column: 'created_at',
             options: { ascending: boolean },
           ) => {
-            limit: (
-              n: number,
-            ) => PromiseLike<{
+            limit: (n: number) => PromiseLike<{
               data: ReadonlyArray<ContainerRow> | null
               error: { message: string } | null
             }>
@@ -251,13 +245,7 @@ export async function fetchCatalogFromDb(
   }
 
   const products: Product[] = (productsResult.data ?? [])
-    .map((row) =>
-      productFromRow(
-        row,
-        variantsByProduct.get(row.id) ?? [],
-        resolvedPriceByProduct.get(row.id),
-      ),
-    )
+    .map((row) => productFromRow(row, variantsByProduct.get(row.id) ?? []))
     .filter((product) => product.variants.length > 0)
 
   const currentContainer = containerRow
