@@ -421,6 +421,35 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-06 — Chantiers NOW (stratégie IA 2026)
+
+- Phase : Exécution roadmap `STRATEGIE_IA_2026.md` — bloc NOW (colmater le
+  funnel + readiness agents IA).
+- Tâches :
+  - **Magic-link post-paiement (bug réparé)** : le webhook Stripe génère un
+    lien de connexion (compte créé à la volée, email confirmé par le
+    paiement) inclus dans l'email de confirmation — l'invité retrouve sa
+    réservation ; `claim_my_reservations` rattache ses commandes au premier
+    accès. (`src/lib/auth/magic-link.ts` + webhook + template.)
+  - **Analytics unifié** : suppression du 2e wrapper (`analytics/plausible`),
+    tout passe par `lib/analytics` ; nouveaux événements funnel
+    `reserve_step`, `checkout_cancel`, `reservation_paid`, `siret_blocked`,
+    `contact_submit` ; `partner_request_submit` enfin émis (PartnerForm) ;
+    ouverture du dialog et chaque étape trackées.
+  - **Formulaire /contact** : `/api/contact` (validation zod, notification
+    admin Reply-To prospect + accusé 24 h ouvrées via Brevo), formulaire en
+    tête de page — fin du mailto-only.
+  - **Capture email pages froides** : `ContainerNotifySection` (variante
+    claire du formulaire notify) posée sur `/prix`, `/faq` et chaque guide.
+  - **Readiness agents IA** : robots.txt explicite (crawlers IA bienvenus),
+    runbook `docs/RUNBOOK_AGENTS_IA.md` (config Cloudflare AVANT le
+    15/09/2026, UA à laisser passer, vérifs curl).
+  - Header : lien dupliqué « Devenir partenaire » remplacé par « Le prix
+    prouvé ».
+- Tests : typecheck 0, lint 0, 377 tests verts, build + budget bundle OK.
+- Reste (bloc NEXT) : relances impayés (cron), pages produit SSR + feed,
+  synchro Brevo notify_leads, calculateur container.
+
 ### Session du 2026-07-05 — FUSION P2 (pont moteur de prix + retrait parrainage B2C)
 
 - Phase : Fusion codex × Claude — P2 (greffes adaptées au schéma prod).

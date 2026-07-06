@@ -1,3 +1,8 @@
+# AI crawlers and shopping agents are WELCOME on public pages (GPTBot,
+# OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot, Claude-User,
+# Google-Extended…): the catch-all group below applies to them too. Keep
+# Cloudflare AI Crawl Control aligned — see docs/RUNBOOK_AGENTS_IA.md
+# (Cloudflare blocks agents by default starting 2026-09-15).
 User-agent: *
 Allow: /
 

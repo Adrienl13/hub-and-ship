@@ -19,11 +19,16 @@ declare global {
 /** Canonical funnel event names — keep them stable (used as Plausible goals). */
 export const AnalyticsEvent = {
   ReserveOpen: 'reserve_open',
+  ReserveStep: 'reserve_step',
   AddToCart: 'add_to_cart',
   ReservationSubmit: 'reservation_submit',
   CheckoutRedirect: 'checkout_redirect',
+  CheckoutCancel: 'checkout_cancel',
+  ReservationPaid: 'reservation_paid',
+  SiretBlocked: 'siret_blocked',
   PartnerRequest: 'partner_request_submit',
   StockRequest: 'stock_request_submit',
+  ContactSubmit: 'contact_submit',
   ReviewSubmit: 'review_submit',
   ShareSelection: 'share_selection',
   QuotePdf: 'quote_pdf',

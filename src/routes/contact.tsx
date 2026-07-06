@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, Clock, Handshake, Mail, Package } from 'lucide-react'
 
+import { ContactForm } from '@/components/ContactForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
@@ -40,7 +41,9 @@ function ContactPage() {
           programme revendeur ? Choisissez le canal le plus adapté.
         </p>
 
-        <section className="mt-6 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+        <ContactForm />
+
+        <section className="mt-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[color:var(--ember)]" />
             <a

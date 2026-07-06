@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
+import { AnalyticsEvent, track } from '@/lib/analytics'
 import { getAttributionFields } from '@/lib/analytics/attribution'
-import { trackEvent } from '@/lib/analytics/plausible'
 import {
   buildPartnerApplicationDraft,
   toPartnerRequestApiPayload,
@@ -124,7 +124,7 @@ export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill 
     setSubmitting(false)
     if (!submitted) return
 
-    trackEvent('partner_application_submitted', {
+    track(AnalyticsEvent.PartnerRequest, {
       profile: draftResult.draft.activityProfile,
       status: draftResult.draft.targetStatus,
     })

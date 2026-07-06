@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
+import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import {
@@ -321,6 +322,8 @@ function PrixPage() {
             Stock disponible sous 24 h
           </Link>
         </div>
+
+        <ContainerNotifySection source="prix" />
       </main>
 
       <Footer />

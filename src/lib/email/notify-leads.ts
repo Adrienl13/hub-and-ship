@@ -9,12 +9,15 @@ import {
   sendEmail,
 } from '@/lib/email/server'
 import {
+  buildContactAdminEmail,
+  buildContactConfirmationEmail,
   buildPartnerRequestAdminEmail,
   buildPartnerRequestConfirmationEmail,
   buildPaymentConfirmedAdminEmail,
   buildPaymentConfirmedEmailToUser,
   buildStockRequestAdminEmail,
   buildStockRequestConfirmationEmail,
+  type ContactEmailInput,
   type PartnerRequestEmailInput,
   type PaymentConfirmedEmailInput,
   type StockRequestEmailInput,
@@ -52,11 +55,18 @@ export async function notifyPartnerRequest(
 }
 
 export async function notifyPaymentConfirmed(
-  input: Omit<PaymentConfirmedEmailInput, 'accountUrl'>,
+  input: Omit<
+    PaymentConfirmedEmailInput,
+    'accountUrl' | 'accountLinkIsMagic'
+  > & {
+    /** One-time sign-in URL (magic link). Falls back to the account page. */
+    readonly accountAccessLink?: string | null
+  },
 ): Promise<void> {
   const full: PaymentConfirmedEmailInput = {
     ...input,
-    accountUrl: `${SITE_URL}/account/reservations`,
+    accountUrl: input.accountAccessLink ?? `${SITE_URL}/account/reservations`,
+    accountLinkIsMagic: Boolean(input.accountAccessLink),
   }
 
   const admin = buildPaymentConfirmedAdminEmail(full)
@@ -106,4 +116,26 @@ export async function notifyStockRequest(
       replyTo: getAdminNotificationEmail(),
     })
   }
+}
+
+export async function notifyContactMessage(
+  input: ContactEmailInput,
+): Promise<void> {
+  const admin = buildContactAdminEmail(input)
+  await sendEmail({
+    to: getAdminNotificationEmail(),
+    subject: admin.subject,
+    html: admin.html,
+    text: admin.text,
+    replyTo: input.email,
+  })
+
+  const confirmation = buildContactConfirmationEmail(input)
+  await sendEmail({
+    to: input.email,
+    subject: confirmation.subject,
+    html: confirmation.html,
+    text: confirmation.text,
+    replyTo: getAdminNotificationEmail(),
+  })
 }

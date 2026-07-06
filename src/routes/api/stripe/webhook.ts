@@ -22,6 +22,10 @@ import {
   getStripeWebhookSecret,
   isStripeConfigured,
 } from '@/lib/stripe/server'
+import {
+  createAccountAccessLink,
+  type MagicLinkAdminClient,
+} from '@/lib/auth/magic-link'
 import { notifyPaymentConfirmed } from '@/lib/email/notify-leads'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import {
@@ -77,14 +81,26 @@ async function handleWebhook(request: Request): Promise<Response> {
       })
       // Notify (no-op when email is not configured); never fail the webhook.
       try {
+        const customerEmail = session.customer_details?.email ?? null
+        // Deliver the sign-in promised at checkout: a guest buyer gets an
+        // account (email pre-confirmed by the payment) + a one-time link;
+        // claim_my_reservations attaches their reservations on first visit.
+        const accountAccessLink = customerEmail
+          ? await createAccountAccessLink({
+              client: getSupabaseAdmin() as unknown as MagicLinkAdminClient,
+              email: customerEmail,
+              redirectTo: 'https://prosimport.com/account/reservations',
+            })
+          : null
         await notifyPaymentConfirmed({
           reference: session.metadata?.reference ?? 'réservation',
           containerReference: session.metadata?.container_reference ?? '',
-          customerEmail: session.customer_details?.email ?? null,
+          customerEmail,
           amountPaid:
             typeof session.amount_total === 'number'
               ? session.amount_total / 100
               : null,
+          accountAccessLink,
         })
       } catch (notifyError) {
         console.error('stripe webhook: payment email failed', notifyError)

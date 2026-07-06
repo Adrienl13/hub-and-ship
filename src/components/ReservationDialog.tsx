@@ -230,6 +230,30 @@ export function ReservationDialog({
     setPartnerContext(readPartnerLinkContext({ storage: window.localStorage }))
   }, [open])
 
+  // Funnel instrumentation: dialog opened = tunnel entered; each step reached
+  // is tracked so abandonment per step becomes measurable in Plausible.
+  useEffect(() => {
+    if (open) track(AnalyticsEvent.ReserveOpen)
+  }, [open])
+
+  useEffect(() => {
+    if (open && step > 1) track(AnalyticsEvent.ReserveStep, { step })
+  }, [open, step])
+
+  // A blocking terminal SIRET state is where step 1 silently loses buyers —
+  // count it (idle/checking are transient; verified/unavailable let through).
+  useEffect(() => {
+    const status = siretCheck.status
+    if (
+      status !== 'idle' &&
+      status !== 'checking' &&
+      status !== 'verified' &&
+      status !== 'verification_unavailable'
+    ) {
+      track(AnalyticsEvent.SiretBlocked, { status })
+    }
+  }, [siretCheck.status])
+
   const handlePay = async () => {
     const draftResult = buildReservationDraft({
       siret: form.siret,

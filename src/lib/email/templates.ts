@@ -200,6 +200,8 @@ export interface PaymentConfirmedEmailInput {
   readonly customerEmail: string | null
   readonly amountPaid: number | null
   readonly accountUrl: string
+  /** True when accountUrl is a one-time magic sign-in link. */
+  readonly accountLinkIsMagic?: boolean
 }
 
 export function buildPaymentConfirmedEmailToUser(
@@ -216,13 +218,18 @@ ${amountLine}
 <p style="font-size:13px;line-height:1.6;margin:0 0 16px;color:#666;">Les prochaines étapes (acompte, production, transport) apparaissent dans votre espace au fur et à mesure.</p>
 <p style="margin:24px 0 0;text-align:center;">
 <a href="${escape(input.accountUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Voir ma réservation</a>
-</p>`
+</p>${
+    input.accountLinkIsMagic
+      ? `
+<p style="font-size:12px;line-height:1.6;margin:12px 0 0;text-align:center;color:#999;">Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.</p>`
+      : ''
+  }`
   const text = `Bonjour,
 
 Nous confirmons la réception de votre paiement pour la réservation ${input.reference} (container ${input.containerReference}). Votre place est verrouillée.
 ${input.amountPaid ? `Montant réglé : ${formatEur(input.amountPaid)}\n` : ''}
-Voir votre réservation : ${input.accountUrl}
-
+Voir votre réservation (connexion automatique) : ${input.accountUrl}
+${input.accountLinkIsMagic ? 'Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.\n' : ''}
 ${TEXT_SIGNATURE}`
   return {
     subject,
@@ -492,6 +499,76 @@ contact@prosimport.com`
   return {
     subject,
     html: shell({ title: 'Réservation annulée', preheader, body }),
+    text,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contact form (/contact → /api/contact)
+// ---------------------------------------------------------------------------
+
+export interface ContactEmailInput {
+  readonly name: string
+  readonly email: string
+  readonly company: string | null
+  readonly phone: string | null
+  readonly topicLabel: string
+  readonly message: string
+}
+
+export function buildContactAdminEmail(input: ContactEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const subject = `[Contact] ${input.topicLabel} — ${input.company ?? input.name}`
+  const preheader = `${input.name} (${input.email})`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouveau message via le formulaire de contact.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+${detailRow('Sujet', input.topicLabel)}
+${detailRow('Nom', input.name)}
+${input.company ? detailRow('Société', input.company) : ''}
+${detailRow('Email', input.email)}
+${input.phone ? detailRow('Téléphone', input.phone) : ''}
+</table>
+<p style="font-size:13px;line-height:1.7;margin:0;padding:12px;background:#f6f2ea;border-radius:4px;white-space:pre-wrap;">${escape(input.message)}</p>`
+  const text = `Nouveau message via le formulaire de contact.
+
+Sujet : ${input.topicLabel}
+Nom : ${input.name}
+${input.company ? `Société : ${input.company}\n` : ''}Email : ${input.email}
+${input.phone ? `Téléphone : ${input.phone}\n` : ''}
+Message :
+${input.message}`
+  return {
+    subject,
+    html: shell({ title: 'Nouveau message de contact', preheader, body }),
+    text,
+  }
+}
+
+export function buildContactConfirmationEmail(input: ContactEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const subject = 'Message bien reçu — réponse sous 24 h ouvrées'
+  const preheader = 'Notre équipe vous répond sous 24 h ouvrées.'
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.name)},</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre message (<strong>${escape(input.topicLabel)}</strong>). Notre équipe vous répond sous <strong>24 h ouvrées</strong>, directement à cette adresse.</p>
+<p style="font-size:13px;line-height:1.7;margin:0 0 16px;padding:12px;background:#f6f2ea;border-radius:4px;white-space:pre-wrap;color:#666;">${escape(input.message)}</p>
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">En attendant : le catalogue et les prix directs sont sur <a href="https://prosimport.com/catalogue" style="color:#1a1a1a;">prosimport.com/catalogue</a>, et la méthode de prix sur <a href="https://prosimport.com/prix" style="color:#1a1a1a;">prosimport.com/prix</a>.</p>`
+  const text = `Bonjour ${input.name},
+
+Nous avons bien reçu votre message (${input.topicLabel}). Notre équipe vous répond sous 24 h ouvrées, directement à cette adresse.
+
+Votre message :
+${input.message}
+
+${TEXT_SIGNATURE}`
+  return {
+    subject,
+    html: shell({ title: 'Message bien reçu', preheader, body }),
     text,
   }
 }

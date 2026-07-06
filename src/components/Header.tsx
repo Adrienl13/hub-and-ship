@@ -35,7 +35,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             ['Containers livrés', '/livres'],
             ['Avis', '/avis'],
             ['Qualité & Tests', '/qualite'],
-            ['Devenir partenaire', '/partenaires'],
+            ['Le prix prouvé', '/prix'],
             ['FAQ', '/faq'],
           ].map(([label, href]) => (
             <a

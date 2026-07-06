@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense, useMemo, useState } from 'react'
 
 import { FAQ, FaqAccordion } from '@/components/FaqAccordion'
+import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { useCatalog } from '@/hooks/useCatalog'
@@ -71,6 +72,10 @@ function FaqPage() {
 
       <div className="mx-auto max-w-4xl">
         <FaqAccordion />
+      </div>
+
+      <div className="mx-auto max-w-4xl px-6 pb-10">
+        <ContainerNotifySection source="faq" />
       </div>
 
       <Footer />

@@ -1,6 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 
+import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { getGuideBySlug } from '@/lib/guides/content'
@@ -147,6 +148,8 @@ function GuidePage() {
             </ul>
           </section>
         </article>
+
+        <ContainerNotifySection source="guide" />
       </main>
 
       <Footer />

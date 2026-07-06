@@ -39,6 +39,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
 import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
+import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
 import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
@@ -203,6 +204,11 @@ const ApiPartnerRequestsRoute = ApiPartnerRequestsRouteImport.update({
   path: '/api/partner-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiContactRoute = ApiContactRouteImport.update({
+  id: '/api/contact',
+  path: '/api/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountReservationsRoute = AccountReservationsRouteImport.update({
   id: '/account/reservations',
   path: '/account/reservations',
@@ -278,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -320,6 +327,7 @@ export interface FileRoutesByTo {
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
+  '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
+    | '/api/contact'
     | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
+    | '/api/contact'
     | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
+    | '/api/contact'
     | '/api/partner-requests'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   AccountParametresRoute: typeof AccountParametresRoute
   AccountParrainageRoute: typeof AccountParrainageRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
+  ApiContactRoute: typeof ApiContactRoute
   ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -763,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPartnerRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/contact': {
+      id: '/api/contact'
+      path: '/api/contact'
+      fullPath: '/api/contact'
+      preLoaderRoute: typeof ApiContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/reservations': {
       id: '/account/reservations'
       path: '/account/reservations'
@@ -910,6 +930,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountParametresRoute: AccountParametresRoute,
   AccountParrainageRoute: AccountParrainageRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
+  ApiContactRoute: ApiContactRoute,
   ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
