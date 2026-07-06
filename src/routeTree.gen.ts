@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransportPartenairesRouteImport } from './routes/transport-partenaires'
 import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
+import { Route as SitemapProductsDotxmlRouteImport } from './routes/sitemap-products[.]xml'
 import { Route as QualiteRouteImport } from './routes/qualite'
 import { Route as PrixRouteImport } from './routes/prix'
 import { Route as PartnerRouteImport } from './routes/partner'
@@ -46,6 +47,7 @@ import { Route as AccountParametresRouteImport } from './routes/account.parametr
 import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
+import { Route as CataloguePSlugRouteImport } from './routes/catalogue_.p.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
@@ -65,6 +67,11 @@ const StockMobilierTerrasse24hRoute =
 const Stock24hRoute = Stock24hRouteImport.update({
   id: '/stock-24h',
   path: '/stock-24h',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapProductsDotxmlRoute = SitemapProductsDotxmlRouteImport.update({
+  id: '/sitemap-products.xml',
+  path: '/sitemap-products.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QualiteRoute = QualiteRouteImport.update({
@@ -239,6 +246,11 @@ const PPartnerSlugDevisRoute = PPartnerSlugDevisRouteImport.update({
   path: '/devis',
   getParentRoute: () => PPartnerSlugRoute,
 } as any)
+const CataloguePSlugRoute = CataloguePSlugRouteImport.update({
+  id: '/catalogue_/p/$slug',
+  path: '/catalogue/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -276,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -302,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
   '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
@@ -319,6 +333,7 @@ export interface FileRoutesByTo {
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
   '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
@@ -363,6 +379,7 @@ export interface FileRoutesById {
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
@@ -389,6 +406,7 @@ export interface FileRoutesById {
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/catalogue_/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
   '/account/reservations/$reservationId/facture/$invoiceId': typeof AccountReservationsReservationIdFactureInvoiceIdRoute
@@ -408,6 +426,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/prix'
     | '/qualite'
+    | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
@@ -434,6 +453,7 @@ export interface FileRouteTypes {
     | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
     | '/account/reservations/$reservationId/facture/$invoiceId'
@@ -451,6 +471,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/prix'
     | '/qualite'
+    | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
@@ -477,6 +498,7 @@ export interface FileRouteTypes {
     | '/livres'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
     | '/account/reservations/$reservationId/facture/$invoiceId'
@@ -494,6 +516,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/prix'
     | '/qualite'
+    | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
@@ -520,6 +543,7 @@ export interface FileRouteTypes {
     | '/livres/'
     | '/account/reservations/$reservationId'
     | '/api/stripe/webhook'
+    | '/catalogue_/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
     | '/account/reservations/$reservationId/facture/$invoiceId'
@@ -538,6 +562,7 @@ export interface RootRouteChildren {
   PartnerRoute: typeof PartnerRouteWithChildren
   PrixRoute: typeof PrixRoute
   QualiteRoute: typeof QualiteRoute
+  SitemapProductsDotxmlRoute: typeof SitemapProductsDotxmlRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
   TransportPartenairesRoute: typeof TransportPartenairesRoute
@@ -562,6 +587,7 @@ export interface RootRouteChildren {
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  CataloguePSlugRoute: typeof CataloguePSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -585,6 +611,13 @@ declare module '@tanstack/react-router' {
       path: '/stock-24h'
       fullPath: '/stock-24h'
       preLoaderRoute: typeof Stock24hRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap-products.xml': {
+      id: '/sitemap-products.xml'
+      path: '/sitemap-products.xml'
+      fullPath: '/sitemap-products.xml'
+      preLoaderRoute: typeof SitemapProductsDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/qualite': {
@@ -825,6 +858,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PPartnerSlugDevisRouteImport
       parentRoute: typeof PPartnerSlugRoute
     }
+    '/catalogue_/p/$slug': {
+      id: '/catalogue_/p/$slug'
+      path: '/catalogue/p/$slug'
+      fullPath: '/catalogue/p/$slug'
+      preLoaderRoute: typeof CataloguePSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -922,6 +962,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartnerRoute: PartnerRouteWithChildren,
   PrixRoute: PrixRoute,
   QualiteRoute: QualiteRoute,
+  SitemapProductsDotxmlRoute: SitemapProductsDotxmlRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
   TransportPartenairesRoute: TransportPartenairesRoute,
@@ -946,6 +987,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  CataloguePSlugRoute: CataloguePSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

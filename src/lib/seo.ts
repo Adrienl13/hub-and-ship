@@ -1,3 +1,4 @@
+import { productPath } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 
 export const SITE_URL = 'https://prosimport.com'
@@ -195,10 +196,12 @@ export function linkListJsonLd({
   }
 }
 
-export function productJsonLd(product: Product) {
+export function productJsonLd(product: Product, options?: { url?: string }) {
+  const url = options?.url ? absoluteUrl(options.url) : undefined
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    ...(url ? { '@id': `${url}#product`, url } : {}),
     name: product.name,
     sku: product.sku,
     image: [product.mainImageUrl, ...product.galleryUrls],
@@ -230,7 +233,7 @@ export function productJsonLd(product: Product) {
       priceCurrency: 'EUR',
       price: product.basePriceHt.toFixed(2),
       availability: 'https://schema.org/PreOrder',
-      url: absoluteUrl('/catalogue'),
+      url: url ?? absoluteUrl('/catalogue'),
       eligibleQuantity: {
         '@type': 'QuantitativeValue',
         minValue: product.moqUnits,
@@ -258,7 +261,7 @@ export function itemListJsonLd({
     itemListElement: products.map((product, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      item: productJsonLd(product),
+      item: productJsonLd(product, { url: productPath(product) }),
     })),
   }
 }

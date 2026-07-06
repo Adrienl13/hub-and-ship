@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, PackageCheck, Ship } from 'lucide-react'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
+import { productSlug } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
 
@@ -154,7 +155,13 @@ export function SeoLandingPage({
                       {product.moqUnits}
                     </div>
                     <h3 className="mt-1 font-display text-lg font-semibold tracking-tight">
-                      {product.name}
+                      <Link
+                        to="/catalogue/p/$slug"
+                        params={{ slug: productSlug(product) }}
+                        className="hover:underline"
+                      >
+                        {product.name}
+                      </Link>
                     </h3>
                     <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
                       {product.description}
