@@ -14,6 +14,7 @@ import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mob
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as SitemapProductsDotxmlRouteImport } from './routes/sitemap-products[.]xml'
 import { Route as QualiteRouteImport } from './routes/qualite'
+import { Route as ProductFeedDotxmlRouteImport } from './routes/product-feed[.]xml'
 import { Route as PrixRouteImport } from './routes/prix'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartenairesRouteImport } from './routes/partenaires'
@@ -77,6 +78,11 @@ const SitemapProductsDotxmlRoute = SitemapProductsDotxmlRouteImport.update({
 const QualiteRoute = QualiteRouteImport.update({
   id: '/qualite',
   path: '/qualite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductFeedDotxmlRoute = ProductFeedDotxmlRouteImport.update({
+  id: '/product-feed.xml',
+  path: '/product-feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrixRoute = PrixRouteImport.update({
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
@@ -378,6 +386,7 @@ export interface FileRoutesById {
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
   '/prix': typeof PrixRoute
+  '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/partenaires'
     | '/partner'
     | '/prix'
+    | '/product-feed.xml'
     | '/qualite'
     | '/sitemap-products.xml'
     | '/stock-24h'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/partenaires'
     | '/partner'
     | '/prix'
+    | '/product-feed.xml'
     | '/qualite'
     | '/sitemap-products.xml'
     | '/stock-24h'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/partenaires'
     | '/partner'
     | '/prix'
+    | '/product-feed.xml'
     | '/qualite'
     | '/sitemap-products.xml'
     | '/stock-24h'
@@ -561,6 +573,7 @@ export interface RootRouteChildren {
   PartenairesRoute: typeof PartenairesRoute
   PartnerRoute: typeof PartnerRouteWithChildren
   PrixRoute: typeof PrixRoute
+  ProductFeedDotxmlRoute: typeof ProductFeedDotxmlRoute
   QualiteRoute: typeof QualiteRoute
   SitemapProductsDotxmlRoute: typeof SitemapProductsDotxmlRoute
   Stock24hRoute: typeof Stock24hRoute
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/qualite'
       fullPath: '/qualite'
       preLoaderRoute: typeof QualiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product-feed.xml': {
+      id: '/product-feed.xml'
+      path: '/product-feed.xml'
+      fullPath: '/product-feed.xml'
+      preLoaderRoute: typeof ProductFeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prix': {
@@ -961,6 +981,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartenairesRoute: PartenairesRoute,
   PartnerRoute: PartnerRouteWithChildren,
   PrixRoute: PrixRoute,
+  ProductFeedDotxmlRoute: ProductFeedDotxmlRoute,
   QualiteRoute: QualiteRoute,
   SitemapProductsDotxmlRoute: SitemapProductsDotxmlRoute,
   Stock24hRoute: Stock24hRoute,
