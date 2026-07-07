@@ -31,6 +31,8 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 4 | `20260702140000_partner_self_read.sql` | RLS self-read espace partenaire |
 | 5 | `20260703140000_partner_applications_extend.sql` | enum partner_target_status + colonnes mockup/attribution sur partner_applications |
 | 6 | `20260705090000_pricing_engine_bridge.sql` | rapatrie pricing_parameters & co (no-op en prod), get_catalogue_prices v2 (marges actives), désactive le parrainage B2C |
+| 7 | `20260706090000_payment_reminders.sql` | colonnes + index des relances impayés (J+1/J+3) |
+| 8 | `20260706100000_reservation_rpc_channel_attribution.sql` | create_reservation_with_items v3 : validation au prix CANAL du caller + persistance utm_*/partner_ref |
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.
@@ -65,7 +67,8 @@ schéma) :
 
 ```bash
 supabase migration repair --status applied 20260702100000 20260702120000 \
-  20260702130000 20260702140000 20260703140000 20260705090000
+  20260702130000 20260702140000 20260703140000 20260705090000 \
+  20260706090000 20260706100000
 ```
 
 ## 5. Déployer le code
