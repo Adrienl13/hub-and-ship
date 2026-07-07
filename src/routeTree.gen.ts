@@ -50,6 +50,7 @@ import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as CataloguePSlugRouteImport } from './routes/catalogue_.p.$slug'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
+import { Route as ApiCronPaymentRemindersRouteImport } from './routes/api/cron/payment-reminders'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
 import { Route as AccountReservationsReservationIdFactureInvoiceIdRouteImport } from './routes/account.reservations.$reservationId.facture.$invoiceId'
@@ -262,6 +263,11 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronPaymentRemindersRoute = ApiCronPaymentRemindersRouteImport.update({
+  id: '/api/cron/payment-reminders',
+  path: '/api/cron/payment-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountReservationsReservationIdRoute =
   AccountReservationsReservationIdRouteImport.update({
     id: '/$reservationId',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/catalogue_/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
+    | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
     | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/livres'
     | '/account/reservations/$reservationId'
+    | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
     | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/legal/'
     | '/livres/'
     | '/account/reservations/$reservationId'
+    | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
     | '/catalogue_/p/$slug'
     | '/p/$partnerSlug/devis'
@@ -599,6 +611,7 @@ export interface RootRouteChildren {
   GuidesIndexRoute: typeof GuidesIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
+  ApiCronPaymentRemindersRoute: typeof ApiCronPaymentRemindersRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   CataloguePSlugRoute: typeof CataloguePSlugRoute
 }
@@ -892,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/payment-reminders': {
+      id: '/api/cron/payment-reminders'
+      path: '/api/cron/payment-reminders'
+      fullPath: '/api/cron/payment-reminders'
+      preLoaderRoute: typeof ApiCronPaymentRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/reservations/$reservationId': {
       id: '/account/reservations/$reservationId'
       path: '/$reservationId'
@@ -1007,6 +1027,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesIndexRoute: GuidesIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
+  ApiCronPaymentRemindersRoute: ApiCronPaymentRemindersRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   CataloguePSlugRoute: CataloguePSlugRoute,
 }

@@ -572,3 +572,64 @@ ${TEXT_SIGNATURE}`
     text,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Payment reminder (unpaid reservation — J+1 / J+3 cron)
+// ---------------------------------------------------------------------------
+
+export interface PaymentReminderEmailInput {
+  readonly reference: string
+  readonly contactName: string | null
+  readonly payNow: number
+  /** 1 = première relance (J+1), 2 = dernière (J+3). */
+  readonly stage: 1 | 2
+  /** Lien (magic link si possible) vers la page de reprise de paiement. */
+  readonly payUrl: string
+}
+
+export function buildPaymentReminderEmail(
+  input: PaymentReminderEmailInput,
+): { subject: string; html: string; text: string } {
+  const isLast = input.stage === 2
+  const subject = isLast
+    ? `Dernier rappel — votre place ${input.reference} expire bientôt`
+    : `Votre réservation ${input.reference} attend son règlement`
+  const preheader = isLast
+    ? 'Sans règlement, votre place sur le container sera libérée.'
+    : `Il reste ${formatEur(input.payNow)} à régler pour verrouiller votre place.`
+  const greeting = input.contactName
+    ? `Bonjour ${escape(input.contactName)},`
+    : 'Bonjour,'
+  const urgency = isLast
+    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">C'est le <strong>dernier rappel</strong> : sans règlement des frais de réservation, votre place sur le container sera <strong>libérée pour les professionnels en liste d'attente</strong>.</p>`
+    : `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation est enregistrée mais votre place n'est <strong>pas encore verrouillée</strong> : les frais de réservation (<strong>${formatEur(input.payNow)}</strong>, déduits du total) restent à régler.</p>`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">${greeting}</p>
+${urgency}
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.payUrl)}" style="display:inline-block;background:#c25e2a;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Régler ${formatEur(input.payNow)} et verrouiller ma place</a>
+</p>
+<p style="font-size:12px;line-height:1.6;margin:16px 0 0;text-align:center;color:#999;">Le lien vous connecte automatiquement à votre réservation.</p>
+<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Un imprévu, une question sur les quantités ou la livraison ? Répondez simplement à cet email.</p>`
+  const text = `${input.contactName ? `Bonjour ${input.contactName},` : 'Bonjour,'}
+
+${
+  isLast
+    ? `Dernier rappel : sans règlement des frais de réservation, votre place ${input.reference} sur le container sera libérée.`
+    : `Votre réservation ${input.reference} est enregistrée, mais votre place n'est pas encore verrouillée : il reste ${formatEur(input.payNow)} de frais de réservation à régler (déduits du total).`
+}
+
+Régler et verrouiller ma place : ${input.payUrl}
+
+Un imprévu ? Répondez simplement à cet email.
+
+${TEXT_SIGNATURE}`
+  return {
+    subject,
+    html: shell({
+      title: isLast ? 'Dernier rappel' : 'Votre place vous attend',
+      preheader,
+      body,
+    }),
+    text,
+  }
+}

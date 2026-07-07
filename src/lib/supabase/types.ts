@@ -412,6 +412,8 @@ type ReservationRow = {
   partner_application_id: string | null
   partner_attribution_reason: string | null
   partner_attribution_snapshot: Json
+  payment_reminder_count: number
+  payment_reminder_last_at: string | null
   created_at: string
   updated_at: string
   requested_container_type: ContainerType | null
@@ -462,6 +464,8 @@ type ReservationInsert = {
   partner_application_id?: string | null
   partner_attribution_reason?: string | null
   partner_attribution_snapshot?: Json
+  payment_reminder_count?: number
+  payment_reminder_last_at?: string | null
   created_at?: string
   updated_at?: string
   requested_container_type?: ContainerType | null
