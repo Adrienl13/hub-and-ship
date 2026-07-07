@@ -24,6 +24,11 @@ const stockRequestApiSchema = z.object({
   contactPhone: z.string().trim().min(6).max(40),
   requestedQuantity: z.number().int().positive().max(10_000),
   customerNote: z.string().trim().max(500).optional().nullable(),
+  // Attribution first-touch (LOT 2) — le client l'émet, la route la persiste.
+  utmSource: z.string().trim().max(255).optional().nullable(),
+  utmMedium: z.string().trim().max(255).optional().nullable(),
+  utmCampaign: z.string().trim().max(255).optional().nullable(),
+  partnerRef: z.string().trim().max(255).optional().nullable(),
 })
 
 type StockRequestApiInput = z.infer<typeof stockRequestApiSchema>
@@ -145,6 +150,12 @@ export async function handleCreateStockRequest(
     const created = await createStockRequestInSupabase({
       client: persistenceClient,
       draft: draftResult.draft,
+      attribution: {
+        utm_source: parsed.data.utmSource?.trim() || null,
+        utm_medium: parsed.data.utmMedium?.trim() || null,
+        utm_campaign: parsed.data.utmCampaign?.trim() || null,
+        partner_ref: parsed.data.partnerRef?.trim() || null,
+      },
     })
 
     // Fire notifications, but never let an email failure break lead capture.

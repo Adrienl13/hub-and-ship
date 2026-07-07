@@ -34,6 +34,7 @@ interface StockRequestApiResponse {
 }
 
 function toApiPayload(draft: StockRequestDraft) {
+  const attribution = getAttributionFields(Date.now())
   return {
     stockLineId: draft.stockLineId,
     companyName: draft.companyName,
@@ -41,6 +42,10 @@ function toApiPayload(draft: StockRequestDraft) {
     contactPhone: draft.contactPhone,
     requestedQuantity: draft.requestedQuantity,
     customerNote: draft.customerNote,
+    utmSource: attribution.utm_source,
+    utmMedium: attribution.utm_medium,
+    utmCampaign: attribution.utm_campaign,
+    partnerRef: attribution.partner_ref,
   }
 }
 
@@ -95,13 +100,17 @@ export function useStockRequestCreation() {
         })
       }
 
-      if (!client) {
-        const serverRequest = await createStockRequestViaServer(draft)
-        if (serverRequest) {
-          saveLocal()
-          return { ok: true, persisted: true, request: serverRequest }
-        }
+      // Server-first : la route /api/stock-requests persiste ET envoie les
+      // emails (notif admin + accusé Brevo). L'insert navigateur direct est
+      // le secours (aucun email) — l'inverse laissait le chemin nominal
+      // muet : lead enregistré, personne prévenu.
+      const serverRequest = await createStockRequestViaServer(draft)
+      if (serverRequest) {
+        saveLocal()
+        return { ok: true, persisted: true, request: serverRequest }
+      }
 
+      if (!client) {
         saveLocal()
         return {
           ok: true,
@@ -119,17 +128,8 @@ export function useStockRequestCreation() {
           attribution: getAttributionFields(Date.now()),
         })
         saveLocal()
-        // Emails (admin + accusé) are sent by the /api/stock-requests server
-        // route (Brevo). The direct browser-insert path skips them; P3 will
-        // flip the order to server-first so every lead gets notified.
         return { ok: true, persisted: true, request }
       } catch (error) {
-        const serverRequest = await createStockRequestViaServer(draft)
-        if (serverRequest) {
-          saveLocal()
-          return { ok: true, persisted: true, request: serverRequest }
-        }
-
         saveLocal()
         return {
           ok: true,

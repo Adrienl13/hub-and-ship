@@ -53,7 +53,11 @@ import {
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
-import { listMyReservationsFromSupabase } from '@/lib/reservations/repository'
+import {
+  claimMyReservationsInSupabase,
+  listMyReservationsFromSupabase,
+  type ClaimReservationsClient,
+} from '@/lib/reservations/repository'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
 import { getReservationQuoteUrl } from '@/lib/reservations/quote-access'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -113,12 +117,17 @@ function AccountReservationDetailPage() {
 
   // Stripe redirects back here with ?session_id=... once the reservation fee
   // is paid, or ?canceled=true on an aborted checkout. Fire the funnel event
-  // once per return so abandonment finally shows up in analytics.
+  // once per return, then strip the params from the URL (replaceState) so a
+  // reload/bookmark doesn't re-emit the event — the UI state is already read.
   useEffect(() => {
+    if (!sessionId && !canceled) return
     if (sessionId) {
       track(AnalyticsEvent.ReservationPaid, { reservation: reservationId })
-    } else if (canceled) {
+    } else {
       track(AnalyticsEvent.CheckoutCancel, { reservation: reservationId })
+    }
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', window.location.pathname)
     }
   }, [sessionId, canceled, reservationId])
 
@@ -143,6 +152,17 @@ function AccountReservationDetailPage() {
     void (async () => {
       try {
         const client = createSupabaseBrowserClient(config)
+        // Cible du magic-link des relances impayés : adopter d'abord les
+        // réservations invité faites avec cet email, sinon la liste RLS est
+        // vide au premier passage. Best-effort — l'échec n'empêche pas la
+        // lecture de l'existant.
+        try {
+          await claimMyReservationsInSupabase(
+            client as unknown as ClaimReservationsClient,
+          )
+        } catch {
+          // ignore — listing below still runs
+        }
         const list = await listMyReservationsFromSupabase(
           client as unknown as Parameters<
             typeof listMyReservationsFromSupabase
@@ -270,16 +290,19 @@ function AccountReservationDetailPage() {
         </div>
       ) : null}
 
-      {canceled && canRetryPayment ? (
+      {/* Tant que les frais restent dus, la page DOIT offrir le paiement —
+          pas seulement au retour d'un checkout annulé (?canceled=true) :
+          c'est aussi la cible des emails de relance. */}
+      {canRetryPayment && !showPaymentSyncing ? (
         <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 border-b">
           <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 text-[color:var(--ochre)]" />
             <div className="flex-1">
               <div className="font-medium">Paiement non finalisé</div>
               <div className="mt-0.5 text-xs leading-5">
-                Vous avez quitté la page de paiement avant la fin. La
-                réservation est toujours en attente — vous pouvez retenter
-                immédiatement.
+                {canceled
+                  ? 'Vous avez quitté la page de paiement avant la fin. La réservation est toujours en attente — vous pouvez retenter immédiatement.'
+                  : 'Les frais de réservation restent à régler : votre place n’est pas encore verrouillée sur le container.'}
               </div>
             </div>
             <Button

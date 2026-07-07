@@ -15,6 +15,7 @@ export type AccountReservationStatus =
   | 'pending_reservation_fee'
   | 'reserved'
   | 'deposit_called'
+  | 'deposit_paid'
   | 'in_production'
   | 'in_transit'
   | 'delivered'
@@ -43,6 +44,7 @@ export const ACCOUNT_RESERVATION_STATUS_LABEL: Record<
   pending_reservation_fee: 'Frais reservation',
   reserved: 'Reservee',
   deposit_called: 'Acompte appele',
+  deposit_paid: 'Acompte paye',
   in_production: 'Production',
   in_transit: 'Transit',
   delivered: 'Livree',
@@ -53,6 +55,7 @@ const ACTIVE_STATUSES: ReadonlySet<AccountReservationStatus> = new Set([
   'pending_reservation_fee',
   'reserved',
   'deposit_called',
+  'deposit_paid',
   'in_production',
   'in_transit',
 ])
@@ -65,6 +68,8 @@ function nextActionLabelFor(status: AccountReservationStatus): string {
       return 'Acompte de 30 % a appeler'
     case 'deposit_called':
       return 'Acompte en attente de paiement'
+    case 'deposit_paid':
+      return 'Acompte encaisse — production a lancer'
     case 'in_production':
       return 'Production en cours'
     case 'in_transit':

@@ -51,7 +51,9 @@ function PartenairePage() {
             asChild
             className="hover:bg-foreground/90 mt-6 h-11 w-full rounded-sm bg-foreground text-background"
           >
-            <Link to="/auth/login">Se connecter</Link>
+            <Link to="/auth/login" search={{ returnTo: '/partenaire' }}>
+              Se connecter
+            </Link>
           </Button>
         }
       >

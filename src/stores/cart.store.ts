@@ -33,7 +33,11 @@ interface CartStoreState {
    *  Persisted across reloads so distributors don't lose their pick. */
   preferredContainerType: ContainerType | null
   containerPreferenceSource: ContainerPreferenceSource | null
-  setQty: (productId: string, quantity: number) => void
+  setQty: (
+    productId: string,
+    quantity: number,
+    options?: { readonly silent?: boolean },
+  ) => void
   setVariant: (productId: string, variantId: string) => void
   setPreferredContainerType: (
     type: ContainerType | null,
@@ -100,7 +104,7 @@ export const useCartStore = create<CartStoreState>()(
       qtyByProduct: createDefaultQtyByProduct(),
       preferredContainerType: null,
       containerPreferenceSource: null,
-      setQty: (productId, quantity) =>
+      setQty: (productId, quantity, options) =>
         set((previous) => {
           const product = PRODUCTS.find((item) => item.id === productId)
           if (!product) return previous
@@ -110,7 +114,9 @@ export const useCartStore = create<CartStoreState>()(
             getQuantityRule(product),
           )
           const prevQty = previous.qtyByProduct[productId] ?? 0
-          if (prevQty === 0 && nextQty > 0) {
+          // silent = restauration programmatique (lien partagé) : ouvrir un
+          // lien ne constitue pas un ajout au panier de l'utilisateur.
+          if (!options?.silent && prevQty === 0 && nextQty > 0) {
             track(AnalyticsEvent.AddToCart, { product: productId })
           }
 

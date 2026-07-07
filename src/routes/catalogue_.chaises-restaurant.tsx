@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
+import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { PRODUCTS } from '@/lib/products'
 import {
   breadcrumbJsonLd,
@@ -30,6 +31,13 @@ const FAQ = [
 ] as const
 
 export const Route = createFileRoute('/catalogue_/chaises-restaurant')({
+  // Produits LIVE (fallback statique) : les liens fiches produit doivent
+  // pointer vers des slugs qui existent réellement en base, pas vers le mock.
+  loader: async () => {
+    const products = await loadCatalogProducts()
+    const filtered = products.filter((p) => p.category === 'chair')
+    return { products: filtered }
+  },
   head: () => ({
     ...buildSeoHead({
       title: 'Chaises restaurant terrasse pro par container',
@@ -63,6 +71,7 @@ export const Route = createFileRoute('/catalogue_/chaises-restaurant')({
 })
 
 function ChaisesRestaurantPage() {
+  const { products } = Route.useLoaderData()
   return (
     <SeoLandingPage
       eyebrow="Chaises restaurant"
@@ -73,7 +82,7 @@ function ChaisesRestaurantPage() {
         'Modèles empilables pour optimiser le stockage et le container',
         'Prix HT direct usine avec réservation groupée entre pros',
       ]}
-      products={CHAIR_PRODUCTS}
+      products={products}
       sections={[
         {
           title: 'Pour terrasses à forte rotation',

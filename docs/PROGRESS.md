@@ -421,6 +421,46 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-06 (suite) — Audit connecteurs & clics + relances
+
+- Phase : « tout doit être connecté et marcher en fonction du clic » — audit
+  multi-agents (6 dimensions, vérification adversariale) + corrections.
+- Défauts CRITIQUES corrigés (migration
+  `20260706100000_reservation_rpc_channel_attribution.sql`) :
+  - `create_reservation_with_items` rejetait tout prix ≠ prix de base : un
+    client revendeur/distributeur/grand_compte (prix canal LOT 4) ne pouvait
+    PAS réserver. La v3 résout le prix canal du caller (même logique que
+    get_catalogue_prices) et stocke le prix validé.
+  - Le RPC ignorait silencieusement utm_*/partner_ref → l'attribution
+    first-touch n'atteignait jamais la base (aucune commission possible).
+    La v3 les insère.
+  - Types corrigés dans les migrations canal : products.id est TEXT — les
+    déclarations uuid auraient fait échouer l'application en prod.
+- Défauts majeurs corrigés :
+  - Onglets admin Comptes/Commissions/Stock 24h : boutons actifs, contenu
+    jamais rendu (composants existants non importés) — câblés.
+  - `claim_my_reservations` jamais appelé sur les pages cibles des
+    magic-links (liste + détail) : la réservation invité restait invisible
+    après connexion — câblé (best-effort avant listing).
+  - Page détail : le bouton « retenter le paiement » n'apparaissait qu'avec
+    `?canceled=true` — visible désormais tant que les frais sont dus.
+  - CTA « Réserver » sur /stock-24h : no-op silencieux → scroll vers le
+    panneau de demande sans écraser la sélection.
+  - Flux stock-24h passé serveur-d'abord : le chemin nominal n'envoyait
+    AUCUN email (notif admin + accusé seulement dans la route de secours).
+  - Formulaire partenaire : téléphone requis côté client (le serveur le
+    rejetait après coup), plafonds alignés (180/120/900), attribution
+    ajoutée au flux stock via l'API.
+  - Statut `deposit_paid` absent du typage compte (libellé vide, KPIs faux).
+  - Analytics : reserve_open compté double sur /catalogue, reservation_paid/
+    checkout_cancel ré-émis à chaque rechargement (URL nettoyée),
+    add_to_cart fantôme à l'ouverture d'un lien partagé (setQty silent).
+- Défauts mineurs : returnTo manquant sur /partenaire, dialog panier vide
+  qui ne se fermait pas vers /catalogue, promesses email adoucies, landings
+  SEO passées en produits live (les liens fiches pointaient vers le mock).
+- Tests : typecheck 0, lint 0, 392 tests verts, build OK ; smoke runtime :
+  16 routes en 200, /api/contact 201, cron protégé (503 sans secret).
+
 ### Session du 2026-07-06 — Chantiers NOW (stratégie IA 2026)
 
 - Phase : Exécution roadmap `STRATEGIE_IA_2026.md` — bloc NOW (colmater le

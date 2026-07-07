@@ -81,6 +81,24 @@ const ADMIN_TABS = [
 
 type AdminTab = (typeof ADMIN_TABS)[number]
 
+const LazyAdminCompaniesTab = lazy(() =>
+  import('@/components/AdminCompaniesTab').then((module) => ({
+    default: module.AdminCompaniesTab,
+  })),
+)
+
+const LazyAdminCommissionsTab = lazy(() =>
+  import('@/components/AdminCommissionsTab').then((module) => ({
+    default: module.AdminCommissionsTab,
+  })),
+)
+
+const LazyAdminStockTab = lazy(() =>
+  import('@/components/AdminStockTab').then((module) => ({
+    default: module.AdminStockTab,
+  })),
+)
+
 const LazyAdminCatalogueTab = lazy(() =>
   import('@/components/AdminCatalogueTab').then((module) => ({
     default: module.AdminCatalogueTab,
@@ -328,6 +346,15 @@ function AdminPage() {
           )}
           {activeTab === 'users' && (
             <LazyAdminUsersTab authStatus={auth.status} />
+          )}
+          {activeTab === 'companies' && (
+            <LazyAdminCompaniesTab authStatus={auth.status} />
+          )}
+          {activeTab === 'commissions' && (
+            <LazyAdminCommissionsTab authStatus={auth.status} />
+          )}
+          {activeTab === 'stock' && (
+            <LazyAdminStockTab authStatus={auth.status} />
           )}
         </Suspense>
       </section>

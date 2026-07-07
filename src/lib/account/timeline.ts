@@ -55,6 +55,7 @@ const CURRENT_STEP: Record<AccountReservationStatus, number> = {
   pending_reservation_fee: 1,
   reserved: 2,
   deposit_called: 2,
+  deposit_paid: 3,
   in_production: 3,
   in_transit: 4,
   delivered: 6,

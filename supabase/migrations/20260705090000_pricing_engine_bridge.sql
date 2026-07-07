@@ -136,7 +136,7 @@ create policy "Admins manage product partner prices"
 --    grand_compte = pire prix direct (1 − tier3_discount) d'office.
 -- ---------------------------------------------------------------------------
 create or replace function public.get_catalogue_prices()
-returns table (product_id uuid, unit_price_ht numeric)
+returns table (product_id text, unit_price_ht numeric)
 language plpgsql
 stable
 security definer

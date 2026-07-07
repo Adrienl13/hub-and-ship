@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
+import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { PRODUCTS } from '@/lib/products'
 import {
   breadcrumbJsonLd,
@@ -30,6 +31,13 @@ const FAQ = [
 ] as const
 
 export const Route = createFileRoute('/catalogue_/tables-restaurant')({
+  // Produits LIVE (fallback statique) : les liens fiches produit doivent
+  // pointer vers des slugs qui existent réellement en base, pas vers le mock.
+  loader: async () => {
+    const products = await loadCatalogProducts()
+    const filtered = products.filter((p) => p.category === 'table')
+    return { products: filtered }
+  },
   head: () => ({
     ...buildSeoHead({
       title: 'Tables restaurant outdoor pro par container',
@@ -60,6 +68,7 @@ export const Route = createFileRoute('/catalogue_/tables-restaurant')({
 })
 
 function TablesRestaurantPage() {
+  const { products } = Route.useLoaderData()
   return (
     <SeoLandingPage
       eyebrow="Tables restaurant"
@@ -70,7 +79,7 @@ function TablesRestaurantPage() {
         'Colis plats pour optimiser le chargement container',
         'Formats ronds et rectangulaires pour 2 à 6 couverts',
       ]}
-      products={TABLE_PRODUCTS}
+      products={products}
       sections={[
         {
           title: 'Formats CHR pratiques',

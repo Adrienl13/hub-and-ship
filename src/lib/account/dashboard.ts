@@ -17,6 +17,7 @@ const ACTION_PRIORITY: Record<AccountReservationStatus, number> = {
   pending_reservation_fee: 0,
   deposit_called: 1,
   reserved: 2,
+  deposit_paid: 3,
   in_production: 3,
   in_transit: 4,
   delivered: 8,

@@ -111,7 +111,11 @@ function Stock24hPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
-      <Header onReserve={() => setSelectedLineId(lines[0]?.id ?? '')} />
+      {/* Le CTA header amène au panneau de demande (scroll mobile inclus)
+          sans écraser un lot déjà sélectionné. */}
+      <Header
+        onReserve={() => selectLine(selectedLine?.id ?? lines[0]?.id ?? '')}
+      />
 
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">

@@ -389,7 +389,7 @@ export function ReservationDialog({
     setStep(5)
     if (creation.persisted) {
       toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} — confirmation envoyée par email. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
+        description: `${creation.reservation.reference} — récapitulatif en route vers votre email. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
       })
     } else {
       toast.success('Réservation enregistrée', {
@@ -476,7 +476,9 @@ export function ReservationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {!hasReservableItems && <EmptyReservationState />}
+        {!hasReservableItems && (
+          <EmptyReservationState onNavigate={() => onOpenChange(false)} />
+        )}
 
         {hasReservableItems && step < 5 && (
           <>
@@ -728,7 +730,7 @@ export function ReservationDialog({
               </div>
               <p className="text-foreground/75 mt-2 text-xs leading-5">
                 {createdReservation.persisted
-                  ? 'Réservation enregistrée. Une confirmation par email vient de partir vers votre adresse — vérifiez votre boîte (et le dossier spam au cas où).'
+                  ? 'Réservation enregistrée. Le récapitulatif arrive par email d’ici quelques minutes — vérifiez votre boîte (et le dossier spam au cas où).'
                   : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte dès que les services seront activés.'}
               </p>
             </div>
@@ -782,7 +784,11 @@ export function ReservationDialog({
   )
 }
 
-function EmptyReservationState() {
+function EmptyReservationState({
+  onNavigate,
+}: {
+  readonly onNavigate: () => void
+}) {
   return (
     <div className="space-y-4">
       <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
@@ -799,7 +805,9 @@ function EmptyReservationState() {
           asChild
           className="h-11 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
         >
-          <Link to="/catalogue">
+          {/* Fermer le dialog : naviguer vers la même route serait un no-op
+              et le dialog resterait affiché par-dessus le catalogue. */}
+          <Link to="/catalogue" onClick={onNavigate}>
             Ouvrir le catalogue
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -809,7 +817,9 @@ function EmptyReservationState() {
           variant="outline"
           className="h-11 rounded-sm border-[color:var(--sand-deep)]"
         >
-          <Link to="/stock-24h">Voir le stock 24h</Link>
+          <Link to="/stock-24h" onClick={onNavigate}>
+            Voir le stock 24h
+          </Link>
         </Button>
       </div>
     </div>

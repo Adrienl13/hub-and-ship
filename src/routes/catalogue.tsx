@@ -182,7 +182,7 @@ function CataloguePage() {
       if (product.variants.some((v) => v.id === entry.variantId)) {
         setVariant(entry.productId, entry.variantId)
       }
-      setQty(entry.productId, entry.qty)
+      setQty(entry.productId, entry.qty, { silent: true })
     }
     toast.success('Sélection chargée depuis le lien partagé.')
   }, [productsArray, setQty, setVariant])
@@ -241,12 +241,9 @@ function CataloguePage() {
       id="top"
       className="min-h-screen overflow-x-hidden bg-background text-foreground"
     >
-      <Header
-        onReserve={() => {
-          track(AnalyticsEvent.ReserveOpen)
-          setReserveOpen(true)
-        }}
-      />
+      {/* reserve_open est émis par le ReservationDialog à l'ouverture — pas
+          ici, sinon un clic compte double dans le funnel. */}
+      <Header onReserve={() => setReserveOpen(true)} />
 
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">

@@ -21,7 +21,11 @@ import {
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
-import { listMyReservationsFromSupabase } from '@/lib/reservations/repository'
+import {
+  claimMyReservationsInSupabase,
+  listMyReservationsFromSupabase,
+  type ClaimReservationsClient,
+} from '@/lib/reservations/repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -78,6 +82,17 @@ function AccountReservationsPage() {
     void (async () => {
       try {
         const client = createSupabaseBrowserClient(config)
+        // Cible du magic-link post-paiement : adopter d'abord les
+        // réservations invité faites avec cet email, sinon la liste RLS est
+        // vide au premier passage. Best-effort — l'échec n'empêche pas la
+        // lecture de l'existant.
+        try {
+          await claimMyReservationsInSupabase(
+            client as unknown as ClaimReservationsClient,
+          )
+        } catch {
+          // ignore — listing below still runs
+        }
         const list = await listMyReservationsFromSupabase(
           client as unknown as Parameters<
             typeof listMyReservationsFromSupabase

@@ -67,17 +67,41 @@ describe('buildPartnerApplicationDraft', () => {
   it('normalizes blank optional fields to null', () => {
     const result = buildPartnerApplicationDraft({
       ...baseInput(),
-      phone: '',
       zone: '   ',
       estimatedVolume: '',
       message: '',
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.draft.phone).toBeNull()
     expect(result.draft.zone).toBeNull()
     expect(result.draft.estimatedVolume).toBeNull()
     expect(result.draft.message).toBeNull()
+  })
+
+  it('requires the phone (the server intake rejects it anyway)', () => {
+    const result = buildPartnerApplicationDraft({ ...baseInput(), phone: '' })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues.some((i) => i.path === 'phone')).toBe(true)
+  })
+
+  it('caps zone/volume/message at the server limits (180/120/900)', () => {
+    expect(
+      buildPartnerApplicationDraft({ ...baseInput(), zone: 'x'.repeat(181) })
+        .ok,
+    ).toBe(false)
+    expect(
+      buildPartnerApplicationDraft({
+        ...baseInput(),
+        estimatedVolume: 'x'.repeat(121),
+      }).ok,
+    ).toBe(false)
+    expect(
+      buildPartnerApplicationDraft({
+        ...baseInput(),
+        message: 'x'.repeat(901),
+      }).ok,
+    ).toBe(false)
   })
 })
 

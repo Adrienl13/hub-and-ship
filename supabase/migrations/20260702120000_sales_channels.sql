@@ -76,7 +76,8 @@ on conflict (channel) do nothing;
 -- ---------------------------------------------------------------------------
 create table if not exists public.channel_price_overrides (
   id uuid primary key default extensions.gen_random_uuid(),
-  product_id uuid not null references public.products(id) on delete cascade,
+  -- products.id is TEXT (cf. rattrapage_schema) — a uuid FK would fail.
+  product_id text not null references public.products(id) on delete cascade,
   channel public.sales_channel not null,
   unit_price_ht numeric(10, 2) not null check (unit_price_ht > 0),
   unique (product_id, channel)
@@ -146,7 +147,7 @@ create index if not exists channel_price_overrides_channel_idx
 -- max direct tier (−10%) d'office. anon / no company → direct.
 -- ---------------------------------------------------------------------------
 create or replace function public.get_catalogue_prices()
-returns table (product_id uuid, unit_price_ht numeric)
+returns table (product_id text, unit_price_ht numeric)
 language plpgsql
 stable
 security definer

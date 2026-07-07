@@ -106,16 +106,35 @@ const partnerApplicationSchema = z.object({
     }),
   contactName: z.string().trim().min(2, 'Contact obligatoire'),
   email: z.string().trim().email('Email professionnel invalide'),
-  phone: z.string().trim().min(6, 'Téléphone invalide').optional().or(z.literal('')),
+  // Aligné sur le schéma serveur (/api/partner-requests exige min 6) : un
+  // téléphone vide passait la validation client puis mourait en 400 serveur.
+  phone: z.string().trim().min(6, 'Téléphone obligatoire').max(40),
   activityProfile: z.enum(PARTNER_ACTIVITY_PROFILES, {
     message: 'Profil d’activité obligatoire',
   }),
   targetStatus: z.enum(['apporteur', 'revendeur', 'grand_compte', 'distributeur', 'nsp'] as const, {
     message: 'Statut visé obligatoire',
   }),
-  zone: z.string().trim().max(200).optional().or(z.literal('')),
-  estimatedVolume: z.string().trim().max(200).optional().or(z.literal('')),
-  message: z.string().trim().max(1000).optional().or(z.literal('')),
+  // Plafonds = ceux du schéma serveur (territory 180 / volume 120 /
+  // message 900) : l'erreur est captée AVANT le POST, pas après.
+  zone: z
+    .string()
+    .trim()
+    .max(180, 'Zone trop longue (180 caractères max)')
+    .optional()
+    .or(z.literal('')),
+  estimatedVolume: z
+    .string()
+    .trim()
+    .max(120, 'Volume estimé trop long (120 caractères max)')
+    .optional()
+    .or(z.literal('')),
+  message: z
+    .string()
+    .trim()
+    .max(900, 'Message trop long (900 caractères max)')
+    .optional()
+    .or(z.literal('')),
 })
 
 function emptyToNull(value: string | undefined): string | null {
