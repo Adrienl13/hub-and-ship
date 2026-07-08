@@ -1,3 +1,5 @@
+import { ArrowDown, ArrowRight, BadgeCheck } from 'lucide-react'
+
 import {
   BRASSEUR_STEPS,
   COMPARISON_HEAD,
@@ -7,10 +9,21 @@ import {
   PROCESS_STEPS,
 } from './data'
 
-export function PartnerHero() {
+const HERO_TRUST_CHIPS = [
+  'Vérification SIRET sous 48 h',
+  'Commissions sur CA encaissé',
+  'Zéro stock, zéro avance',
+] as const
+
+export function PartnerHero({ onApply }: { readonly onApply: () => void }) {
   return (
-    <section className="relative overflow-hidden border-b border-[color:var(--sand-deep)] py-16">
-      <div className="mx-auto grid max-w-5xl gap-9 px-6">
+    <section className="relative overflow-hidden border-b border-[color:var(--sand-deep)] py-16 md:py-20">
+      {/* Halo discret pour donner de la profondeur sans image. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-40 -top-40 h-[480px] w-[480px] rounded-full bg-[color:var(--ember)]/10 blur-3xl"
+      />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-[1.15fr_1fr]">
         <div>
           <div className="mb-5 flex items-center gap-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--ember)]" />
@@ -18,31 +31,79 @@ export function PartnerHero() {
               Programme partenaires · Manifeste CC-2026-P01
             </span>
           </div>
-          <h1 className="max-w-[15ch] font-display text-4xl font-black leading-[1.04] tracking-tight sm:text-5xl md:text-6xl">
+          <h1 className="max-w-[16ch] font-display text-4xl font-black leading-[1.04] tracking-tight sm:text-5xl md:text-6xl">
             Vos clients ont des terrasses.{' '}
             <em className="not-italic text-[color:var(--ember)]">
               Nous avons les containers.
             </em>
           </h1>
-          <p className="mt-4 max-w-[56ch] text-[17px] text-[color:var(--ink-soft)]">
+          <p className="mt-5 max-w-[54ch] text-[17px] leading-relaxed text-[color:var(--ink-soft)]">
             Quatre statuts partenaires pour gagner sur le mobilier CHR sans les
             risques de l’import : commission, marge de revente, conditions grand
             compte ou exclusivité territoriale. Vous choisissez le niveau
-            d’engagement — nous gérons l’usine, la douane, la garantie et le SAV.
+            d’engagement — nous gérons l’usine, la douane, la garantie et le
+            SAV.
           </p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onApply}
+              className="inline-flex h-12 items-center gap-2 rounded-[4px] bg-[color:var(--ember)] px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[color:var(--ember-hover)]"
+            >
+              Devenir partenaire
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <a
+              href="#statuts"
+              className="inline-flex h-12 items-center gap-2 rounded-[4px] border border-[color:var(--border-strong)] px-6 text-[15px] font-semibold transition-colors hover:border-[color:var(--ink)]"
+            >
+              Comparer les 4 statuts
+              <ArrowDown className="h-4 w-4" />
+            </a>
+          </div>
+          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+            {HERO_TRUST_CHIPS.map((chip) => (
+              <li
+                key={chip}
+                className="inline-flex items-center gap-1.5 text-[13px] text-[color:var(--ink-soft)]"
+              >
+                <BadgeCheck className="h-3.5 w-3.5 text-[color:var(--forest)]" />
+                {chip}
+              </li>
+            ))}
+          </ul>
         </div>
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-[color:var(--border-strong)] bg-[color:var(--border-strong)] md:grid-cols-4">
-          {PARTNER_STATS.map((stat) => (
-            <div key={stat.label} className="bg-[color:var(--sand-soft)] p-4">
-              <dt className="mono text-2xl font-bold tracking-tight">
-                {stat.value}
-              </dt>
-              <dd className="mt-1 text-[12.5px] text-[color:var(--ink-soft)]">
-                {stat.label}
-              </dd>
+
+        {/* Panneau chiffres : la promesse du programme, lisible en 3 secondes. */}
+        <div className="relative">
+          <div
+            aria-hidden
+            className="absolute -inset-1.5 rounded-xl bg-[color:var(--ink)]/[0.04]"
+          />
+          <dl className="relative grid grid-cols-2 overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] shadow-paper">
+            {PARTNER_STATS.map((stat, index) => (
+              <div
+                key={stat.label}
+                className={`p-6 ${index % 2 === 0 ? 'border-r' : ''} ${
+                  index < 2 ? 'border-b' : ''
+                } border-[color:var(--sand-deep)]`}
+              >
+                <dt className="font-display text-3xl font-black tracking-tight text-[color:var(--ember)] md:text-4xl">
+                  {stat.value}
+                </dt>
+                <dd className="mt-1.5 text-[13px] leading-snug text-[color:var(--ink-soft)]">
+                  {stat.label}
+                </dd>
+              </div>
+            ))}
+            <div className="col-span-2 border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-6 py-3.5">
+              <p className="mono text-[10.5px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                Pros Import EURL · importateur officiel · contrôle SGS ·
+                garantie 2 ans
+              </p>
             </div>
-          ))}
-        </dl>
+          </dl>
+        </div>
       </div>
     </section>
   )
@@ -164,16 +225,27 @@ export function PartnerSteps() {
           eyebrow="Démarrage"
           title="De la candidature aux premiers gains"
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PROCESS_STEPS.map((step) => (
+        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Fil conducteur entre les étapes (desktop). */}
+          <div
+            aria-hidden
+            className="absolute left-[12%] right-[12%] top-[38px] hidden h-px bg-[color:var(--sand-deep)] lg:block"
+          />
+          {PROCESS_STEPS.map((step, index) => (
             <div
               key={step.num}
-              className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-5"
+              className="relative rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(26,26,28,0.07)]"
             >
-              <span className="mono text-[13px] font-bold text-[color:var(--ember)]">
+              <span
+                className={`mono inline-flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold ${
+                  index === PROCESS_STEPS.length - 1
+                    ? 'bg-[color:var(--forest)] text-white'
+                    : 'bg-[color:var(--ember)] text-white'
+                }`}
+              >
                 {step.num}
               </span>
-              <b className="mt-2 block text-[15.5px]">{step.title}</b>
+              <b className="mt-3 block text-[15.5px]">{step.title}</b>
               <span className="mt-1.5 block text-[13.5px] text-[color:var(--ink-soft)]">
                 {step.desc}
               </span>

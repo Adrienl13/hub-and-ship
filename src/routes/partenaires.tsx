@@ -83,7 +83,7 @@ function PartenairesPage() {
       <Header onReserve={() => void navigate({ to: '/catalogue' })} />
 
       <main>
-        <PartnerHero />
+        <PartnerHero onApply={scrollToForm} />
         <PartnerSelector
           activeProfile={activeProfile}
           onSelect={handleSelectProfile}

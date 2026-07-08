@@ -1,8 +1,26 @@
-import { Check, Minus } from 'lucide-react'
+import {
+  Building2,
+  Check,
+  Globe2,
+  Handshake,
+  Minus,
+  Store,
+} from 'lucide-react'
 
 import type { PartnerTargetStatus } from '@/lib/partner-applications'
 import { PARTNER_STATUS_CARDS, type PartnerStatusCard } from './data'
 import { SectionHead } from './sections'
+
+const STATUS_ICON: Record<
+  PartnerTargetStatus,
+  typeof Handshake
+> = {
+  apporteur: Handshake,
+  revendeur: Store,
+  grand_compte: Building2,
+  distributeur: Globe2,
+  nsp: Handshake,
+}
 
 export function PartnerStatusCards({
   recommended,
@@ -14,7 +32,10 @@ export function PartnerStatusCards({
   return (
     <section id="statuts" className="py-14">
       <div className="mx-auto max-w-5xl px-6">
-        <SectionHead eyebrow="Les 4 statuts" title="Choisissez comment vous gagnez" />
+        <SectionHead
+          eyebrow="Les 4 statuts"
+          title="Choisissez comment vous gagnez"
+        />
         <div className="grid gap-5 md:grid-cols-2">
           {PARTNER_STATUS_CARDS.map((card) => (
             <StatusCard
@@ -39,9 +60,11 @@ function StatusCard({
   readonly highlighted: boolean
   readonly onPick: () => void
 }) {
+  const Icon = STATUS_ICON[card.status]
+
   return (
     <article
-      className={`relative flex flex-col rounded-lg border bg-[color:var(--paper)] py-6 pl-9 pr-6 transition-all ${
+      className={`relative flex flex-col rounded-lg border bg-[color:var(--paper)] p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(26,26,28,0.08)] ${
         highlighted
           ? 'border-[color:var(--ember)] shadow-[0_0_0_2px_var(--ember-soft),0_6px_18px_rgba(184,92,31,0.10)]'
           : 'border-[color:var(--sand-deep)]'
@@ -52,13 +75,28 @@ function StatusCard({
           Recommandé pour vous
         </span>
       )}
-      <span className="mono w-fit rounded-[3px] bg-[color:var(--ink)] px-2.5 py-1 text-[12.5px] font-bold tracking-[0.1em] text-[color:var(--sand-soft)]">
-        {card.plate}
-      </span>
-      <h3 className="mt-3.5 text-xl font-extrabold">{card.title}</h3>
-      <p className="mt-1 text-sm text-[color:var(--ink-soft)]">{card.tagline}</p>
 
-      <div className="mt-4 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3.5 py-3 text-[14.5px]">
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-md ${
+            highlighted
+              ? 'bg-[color:var(--ember)] text-white'
+              : 'bg-[color:var(--ember)]/10 text-[color:var(--ember)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="mono rounded-[3px] bg-[color:var(--ink)] px-2.5 py-1 text-[12.5px] font-bold tracking-[0.1em] text-[color:var(--sand-soft)]">
+          {card.plate}
+        </span>
+      </div>
+
+      <h3 className="mt-4 text-xl font-extrabold">{card.title}</h3>
+      <p className="mt-1 text-sm text-[color:var(--ink-soft)]">
+        {card.tagline}
+      </p>
+
+      <div className="mt-4 rounded-md border-l-[3px] border-[color:var(--ember)] bg-[color:var(--ember-soft)]/60 px-3.5 py-3 text-[14.5px]">
         <span className="mono mb-1.5 block text-[10.5px] uppercase tracking-[0.13em] text-[color:var(--muted)]">
           Comment vous gagnez
         </span>
@@ -94,7 +132,9 @@ function StatusCard({
       </ul>
 
       <p className="mt-4 text-[12.5px] text-[color:var(--muted)]">
-        <b className="font-semibold text-[color:var(--ink-soft)]">Conditions :</b>{' '}
+        <b className="font-semibold text-[color:var(--ink-soft)]">
+          Conditions :
+        </b>{' '}
         {card.conditions}
       </p>
       {card.zoneBadge && (
@@ -106,7 +146,11 @@ function StatusCard({
       <button
         type="button"
         onClick={onPick}
-        className="mt-4.5 inline-flex w-fit items-center justify-center rounded-[4px] bg-[color:var(--ink)] px-5 py-2.5 text-sm font-semibold text-[color:var(--sand-soft)] transition-colors hover:bg-[#2a2a2c]"
+        className={`mt-5 inline-flex w-full items-center justify-center rounded-[4px] px-5 py-3 text-sm font-semibold transition-colors ${
+          highlighted
+            ? 'bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember-hover)]'
+            : 'bg-[color:var(--ink)] text-[color:var(--sand-soft)] hover:bg-[#2a2a2c]'
+        }`}
       >
         {card.cta}
       </button>
