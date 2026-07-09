@@ -64,10 +64,15 @@ where table_name = 'partner_applications'
 -- Après les migrations 9-10 (pilotage P0) :
 -- Les règles publiques ne rendent QUE paliers + frais (7 clés, aucune marge) :
 select public.get_public_pricing_rules();
--- Le témoin répond (1 ligne ; computable=false si le SKU témoin ZF2000C ne
--- correspond à aucun produit actif du catalogue — c'est le cas aujourd'hui,
--- le garde-fou s'activera quand le témoin pointera un vrai produit) :
-select * from public.check_pricing_control();
+-- NE PAS appeler check_pricing_control() depuis le SQL Editor : la session
+-- n'est pas authentifiée, la fonction refuse avec « caller is not admin » —
+-- c'est le garde-fou qui fonctionne. La vérification du témoin se fait dans
+-- l'admin (bandeau de l'onglet Catalogue). Équivalent sans guard :
+select p2.control_sku, p2.control_direct_price_ht,
+       (select id from public.products p
+        where p.sku = p2.control_sku or p.id = p2.control_sku
+        limit 1) as produit_resolu
+from public.pricing_parameters p2 where p2.is_active;
 ```
 
 Attendu : count > 0, `is_active=true` côté pricing, `is_active=false` côté
