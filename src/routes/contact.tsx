@@ -36,7 +36,7 @@ function ContactPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main id="contenu" className="mx-auto max-w-3xl px-6 py-10">
         <div className="label-eyebrow text-[color:var(--ember)]">Contact</div>
         <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
           Parler à Pros Import

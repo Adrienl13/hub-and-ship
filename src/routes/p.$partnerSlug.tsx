@@ -95,7 +95,7 @@ function PartnerSharePage() {
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <main>
+      <main id="contenu">
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch">
             <Reveal className="flex flex-col justify-center py-8">

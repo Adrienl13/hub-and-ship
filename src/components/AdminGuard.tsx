@@ -39,7 +39,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
     return (
       <div className="min-h-screen bg-background">
         <Header onReserve={onReserve} />
-        <main className="mx-auto max-w-md px-6 py-24 text-center">
+        <main id="contenu" className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
             Authentification indisponible
@@ -67,7 +67,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
     return (
       <div className="min-h-screen bg-background">
         <Header onReserve={onReserve} />
-        <main className="mx-auto max-w-md px-6 py-24 text-center">
+        <main id="contenu" className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-muted-foreground" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
             Espace administrateur
@@ -100,7 +100,7 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
     return (
       <div className="min-h-screen bg-background">
         <Header onReserve={onReserve} />
-        <main className="mx-auto max-w-md px-6 py-24 text-center">
+        <main id="contenu" className="mx-auto max-w-md px-6 py-24 text-center">
           <ShieldOff className="mx-auto h-8 w-8 text-[color:var(--ember)]" />
           <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
             Accès refusé

@@ -102,7 +102,7 @@ function matchesAdvanced(
   if (advanced.maxMoq !== null && product.moqUnits > advanced.maxMoq) {
     return false
   }
-  if (advanced.fireM1Only && product.fireRating !== 'M1') return false
+  if (advanced.fireM1Only && !product.fireRating) return false
   if (advanced.stackableOnly && !isStackable(product)) return false
   return true
 }

@@ -218,7 +218,7 @@ function AdminPage() {
   const snapshot = useMemo(() => createAdminDashboardSnapshot(), [])
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="contenu" className="min-h-screen bg-background text-foreground">
       <AdminTopBar />
 
       <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">

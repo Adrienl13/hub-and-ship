@@ -62,7 +62,7 @@ function GuidePage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main id="contenu" className="mx-auto max-w-3xl px-6 py-10">
         <nav className="flex items-center gap-1 text-xs text-muted-foreground">
           <Link to="/" className="hover:text-foreground">
             Accueil

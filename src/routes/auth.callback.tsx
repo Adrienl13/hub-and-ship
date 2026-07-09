@@ -47,7 +47,7 @@ function AuthCallbackPage() {
   }, [authenticated, target])
 
   return (
-    <main className="min-h-screen bg-[color:var(--sand-soft)] text-foreground">
+    <main id="contenu" className="min-h-screen bg-[color:var(--sand-soft)] text-foreground">
       <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-12">
         <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6 text-center">
           <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)]">

@@ -1,4 +1,5 @@
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { productPath } from '@/lib/product-slugs'
 
 export const SITE_URL = 'https://prosimport.com'
 export const SITE_NAME = 'Container Club Terrassea'
@@ -33,9 +34,7 @@ export function buildSeoHead({
     meta: [
       { title: fullTitle },
       { name: 'description', content: description },
-      ...(noindex
-        ? [{ name: 'robots', content: 'noindex, nofollow' }]
-        : []),
+      ...(noindex ? [{ name: 'robots', content: 'noindex, nofollow' }] : []),
       { property: 'og:title', content: fullTitle },
       { property: 'og:description', content: description },
       { property: 'og:type', content: 'website' },
@@ -157,7 +156,10 @@ export function linkListJsonLd({
 }: {
   readonly name: string
   readonly path: string
-  readonly items: ReadonlyArray<{ readonly name: string; readonly path: string }>
+  readonly items: ReadonlyArray<{
+    readonly name: string
+    readonly path: string
+  }>
 }) {
   return {
     '@context': 'https://schema.org',
@@ -174,13 +176,16 @@ export function linkListJsonLd({
   }
 }
 
-export function productJsonLd(product: Product) {
+export function productJsonLd(product: Product, path = productPath(product)) {
+  const url = absoluteUrl(path)
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     sku: product.sku,
-    image: [product.mainImageUrl, ...product.galleryUrls],
+    url,
+    image: [product.mainImageUrl, ...product.galleryUrls].map(absoluteUrl),
     description: product.description,
     category: CATEGORY_LABEL[product.category],
     brand: {
@@ -203,13 +208,28 @@ export function productJsonLd(product: Product) {
         name: 'Dimensions',
         value: `${product.dimensions.l} x ${product.dimensions.w} x ${product.dimensions.h} cm`,
       },
+      {
+        '@type': 'PropertyValue',
+        name: 'Poids',
+        value: `${product.weightKg} kg`,
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Usage',
+        value: 'Mobilier extérieur professionnel CHR',
+      },
     ],
     offers: {
       '@type': 'Offer',
       priceCurrency: 'EUR',
       price: product.basePriceHt.toFixed(2),
       availability: 'https://schema.org/PreOrder',
-      url: absoluteUrl('/catalogue'),
+      itemCondition: 'https://schema.org/NewCondition',
+      url,
+      seller: {
+        '@type': 'Organization',
+        name: 'Pros Import',
+      },
       eligibleQuantity: {
         '@type': 'QuantitativeValue',
         minValue: product.moqUnits,

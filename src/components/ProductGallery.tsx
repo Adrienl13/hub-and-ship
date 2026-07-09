@@ -39,6 +39,7 @@ export function ProductGallery({
   const [selectedIndex, setSelectedIndex] = useState(0)
   const selectedImage = images[selectedIndex] ?? product.mainImageUrl
   const hasMultipleImages = images.length > 1
+  const selectedLabel = GALLERY_LABELS[selectedIndex] ?? `Photo ${selectedIndex + 1}`
 
   // Reset to the first photo whenever the product OR the chosen design
   // changes — the user expects to see the design's hero, not whichever
@@ -64,7 +65,7 @@ export function ProductGallery({
       <div className="ring-foreground/10 group relative aspect-[4/3] overflow-hidden rounded-md bg-[color:var(--sand)] ring-1 md:aspect-square">
         <img
           src={selectedImage}
-          alt={`${product.name} — ${GALLERY_LABELS[selectedIndex] ?? 'vue produit'}`}
+          alt={`${product.name} — ${selectedLabel}`}
           className="h-full w-full object-cover"
         />
 
@@ -74,7 +75,7 @@ export function ProductGallery({
             {selectedIndex + 1}/{images.length}
           </span>
           <span className="rounded-sm bg-black/35 px-2 py-1 text-[11px] font-medium backdrop-blur">
-            {GALLERY_LABELS[selectedIndex] ?? 'Vue'}
+            {selectedLabel}
           </span>
         </div>
 
@@ -120,15 +121,16 @@ export function ProductGallery({
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
-        {images.slice(0, 4).map((url, index) => {
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-4">
+        {images.map((url, index) => {
           const selected = index === selectedIndex
+          const label = GALLERY_LABELS[index] ?? `Photo ${index + 1}`
           return (
             <button
               key={url}
               type="button"
               onClick={() => setSelectedIndex(index)}
-              aria-label={`Afficher ${GALLERY_LABELS[index] ?? `image ${index + 1}`}`}
+              aria-label={`Afficher ${label}`}
               aria-pressed={selected}
               className={`relative aspect-square overflow-hidden rounded-sm bg-[color:var(--sand)] ring-1 transition ${
                 selected
@@ -143,7 +145,7 @@ export function ProductGallery({
                 className="h-full w-full object-cover"
               />
               <span className="absolute inset-x-0 bottom-0 bg-black/45 px-1.5 py-1 text-left text-[10px] font-medium text-white">
-                {GALLERY_LABELS[index] ?? `Vue ${index + 1}`}
+                {label}
               </span>
             </button>
           )

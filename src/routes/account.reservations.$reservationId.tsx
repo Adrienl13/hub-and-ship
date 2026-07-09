@@ -182,7 +182,7 @@ function AccountReservationDetailPage() {
 
   if (!reservation) {
     return (
-      <main className="min-h-screen bg-background px-6 py-10 text-foreground">
+      <main id="contenu" className="min-h-screen bg-background px-6 py-10 text-foreground">
         <div className="mx-auto max-w-3xl">
           <Button asChild variant="outline">
             <Link to="/account/reservations">
@@ -205,7 +205,7 @@ function AccountReservationDetailPage() {
   const canRetryPayment = reservation.status === 'pending_reservation_fee'
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="contenu" className="min-h-screen bg-background text-foreground">
       <header className="bg-[color:var(--sand)]/85 border-b border-[color:var(--sand-deep)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link

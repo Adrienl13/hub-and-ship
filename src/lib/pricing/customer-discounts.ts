@@ -12,9 +12,8 @@ export interface CustomerDiscountStatus {
 
 export const CUSTOMER_QUANTITY_DISCOUNT_TIERS: ReadonlyArray<CustomerDiscountTier> =
   [
-    { minUnits: 50, discountPercent: 2 },
-    { minUnits: 150, discountPercent: 6 },
-    { minUnits: 300, discountPercent: 10 },
+    { minUnits: 100, discountPercent: 6 },
+    { minUnits: 150, discountPercent: 10 },
   ] as const
 
 export function getCustomerDiscountStatus(

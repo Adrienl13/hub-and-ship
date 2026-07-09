@@ -5,7 +5,7 @@ import { Reveal } from '@/components/motion-helpers'
 const ROWS = [
   ['Prix HT/unité', '€€', '€€', '€€€'],
   ['Rotin garanti UV 5 ans', 'yes', 'unknown', 'Variable'],
-  ['Certification M1/M2', 'yes', 'no', 'Variable'],
+  ['Conformité CE', 'yes', 'no', 'Variable'],
   ['Rapport SGS disponible', 'yes', 'no', 'Variable'],
   ['Garantie', '2 ans FR', '1 an', 'Variable'],
   ['Origine transparente', 'yes', 'no', 'Variable'],
@@ -61,7 +61,11 @@ export function ComparisonTable() {
           </p>
         </Reveal>
 
-        <Reveal className="overflow-x-auto border-y border-[color:var(--sand-deep)]">
+        <Reveal
+          className="overflow-x-auto border-y border-[color:var(--sand-deep)]"
+          tabIndex={0}
+          aria-label="Tableau comparatif horizontal"
+        >
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead>
               <tr className="text-left">

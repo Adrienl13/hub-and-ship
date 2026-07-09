@@ -15,6 +15,24 @@ export interface MagicLinkResult {
   readonly message: string
 }
 
+function getFriendlyAuthMessage(message: string): string {
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes('invalid login credentials')) {
+    return 'Email ou mot de passe incorrect.'
+  }
+
+  if (normalized.includes('email not confirmed')) {
+    return "L'email doit être confirmé avant de pouvoir se connecter."
+  }
+
+  if (normalized.includes('rate limit') || normalized.includes('too many')) {
+    return 'Trop de tentatives. Réessayez dans quelques minutes.'
+  }
+
+  return message
+}
+
 export function useAuth() {
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const [status, setStatus] = useState<AuthStatus>(
@@ -110,6 +128,36 @@ export function useAuth() {
     [client, config.appUrl],
   )
 
+  const signInWithPassword = useCallback(
+    async (
+      email: string,
+      password: string,
+    ): Promise<MagicLinkResult> => {
+      if (!client) {
+        return {
+          ok: false,
+          message:
+            "Supabase Auth n'est pas encore configuré. Renseignez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.",
+        }
+      }
+
+      const { error } = await client.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        return { ok: false, message: getFriendlyAuthMessage(error.message) }
+      }
+
+      return {
+        ok: true,
+        message: 'Connexion réussie.',
+      }
+    },
+    [client],
+  )
+
   const signOut = useCallback(async (): Promise<void> => {
     if (!client) return
     await client.auth.signOut()
@@ -120,6 +168,7 @@ export function useAuth() {
     user,
     isConfigured: config.isConfigured,
     missingConfig: config.missing,
+    signInWithPassword,
     signInWithMagicLink,
     signOut,
   }

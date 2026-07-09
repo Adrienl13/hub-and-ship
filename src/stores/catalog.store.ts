@@ -37,6 +37,9 @@ function pickCatalog(db: DbCatalog | null): {
   if (db && db.currentContainer && db.products.length > 0) {
     return {
       source: 'db',
+      // Once Supabase is available, it is the source of truth. Do not merge
+      // local seed products here: otherwise an admin-hidden imported product
+      // could reappear from the static catalogue.
       products: db.products,
       currentContainer: db.currentContainer,
     }

@@ -109,6 +109,7 @@ function limitReservedItemsForScene({
 export function OrderSidebar({
   items,
   reservedItems = [],
+  linePrices = {},
   totals,
   fillPercent,
   usedCbm,
@@ -122,6 +123,10 @@ export function OrderSidebar({
    *  the 3D scene in a muted grey, ignored by the fill bar (which keeps
    *  measuring only the live visitor's cart). */
   reservedItems?: ReadonlyArray<CartItem>
+  linePrices?: Record<
+    string,
+    { readonly quantity: number; readonly tierApplied: string }
+  >
   totals: OrderTotals
   fillPercent: number
   usedCbm: number
@@ -361,43 +366,57 @@ export function OrderSidebar({
         {hasItems ? (
           <ul className="divide-[color:var(--sand-deep)]/60 divide-y">
             <AnimatePresence initial={false}>
-              {items.map((item) => (
-                <motion.li
-                  key={`${item.product.id}:${item.variant.id}`}
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 8 }}
-                  transition={{ duration: 0.25 }}
-                  className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    {item.variant.imageUrl ? (
-                      <img
-                        src={item.variant.imageUrl}
-                        alt=""
-                        loading="lazy"
-                        className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm object-cover ring-1"
-                      />
-                    ) : (
-                      <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
-                    )}
-                    <span className="truncate">
-                      <span className="font-medium tabular-nums">
-                        {item.quantity}×{' '}
+              {items.map((item) => {
+                const pricingBadge = getCartPricingBadge(
+                  linePrices[item.product.id],
+                  item.quantity,
+                )
+
+                return (
+                  <motion.li
+                    key={`${item.product.id}:${item.variant.id}`}
+                    layout
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 8 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      {item.variant.imageUrl ? (
+                        <img
+                          src={item.variant.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm object-cover ring-1"
+                        />
+                      ) : (
+                        <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate">
+                          <span className="font-medium tabular-nums">
+                            {item.quantity}×{' '}
+                          </span>
+                          {item.product.name}
+                          <span className="text-muted-foreground">
+                            {' '}
+                            · {item.variant.name}
+                          </span>
+                        </span>
+                        {pricingBadge && (
+                          <span className="mt-0.5 block truncate text-[10px] font-medium text-[color:var(--ember)]">
+                            {pricingBadge}
+                          </span>
+                        )}
                       </span>
-                      {item.product.name}
-                      <span className="text-muted-foreground">
-                        {' '}
-                        · {item.variant.name}
-                      </span>
+                    </div>
+                    <span className="shrink-0 font-medium tabular-nums">
+                      {formatEUR(item.product.basePriceHt * item.quantity)}
                     </span>
-                  </div>
-                  <span className="shrink-0 font-medium tabular-nums">
-                    {formatEUR(item.product.basePriceHt * item.quantity)}
-                  </span>
-                </motion.li>
-              ))}
+                  </motion.li>
+                )
+              })}
             </AnimatePresence>
           </ul>
         ) : (
@@ -505,6 +524,19 @@ export function OrderSidebar({
       </ul>
     </div>
   )
+}
+
+function getCartPricingBadge(
+  linePrice:
+    | { readonly quantity: number; readonly tierApplied: string }
+    | undefined,
+  quantity: number,
+): string | null {
+  if (!linePrice || linePrice.quantity !== quantity) return null
+  if (linePrice.tierApplied === 'tier2') return 'Remise volume 100+ appliquée'
+  if (linePrice.tierApplied === 'tier3') return 'Remise volume 150+ appliquée'
+  if (linePrice.tierApplied === 'loss_leader') return 'Prix série appliqué'
+  return null
 }
 
 function AnimRow({

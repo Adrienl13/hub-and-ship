@@ -77,10 +77,11 @@ function nextActionLabelFor(status: AccountReservationStatus): string {
 }
 
 function paidAmountFor(row: ReservationRow): number {
-  // Reservation fee is paid as soon as the Stripe webhook flips status to
-  // 'reserved' (or any later state). Anything before that is unpaid.
+  // The upfront amount is paid as soon as the Stripe webhook flips status to
+  // 'reserved' (or any later state). Referral discounts reduce this pay-now
+  // amount, so do not display the theoretical reservation_fee as paid.
   if (row.status === 'pending_reservation_fee') return 0
-  return Number(row.reservation_fee)
+  return Number(row.pay_now)
 }
 
 function readPartnerContextFromSnapshot(

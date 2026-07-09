@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/lib/products'
 
-type ProductDocumentKind = 'technical' | 'fire' | 'warranty' | 'quality'
+type ProductDocumentKind = 'technical' | 'ce' | 'warranty' | 'quality'
 
 interface ProductDocument {
   kind: ProductDocumentKind
@@ -20,7 +20,7 @@ interface ProductDocument {
 
 const DOCUMENT_ICONS: Record<ProductDocumentKind, typeof FileText> = {
   technical: FileText,
-  fire: ShieldCheck,
+  ce: ShieldCheck,
   warranty: FileCheck2,
   quality: FileCheck2,
 }
@@ -36,9 +36,9 @@ function getProductDocuments(product: Product): ProductDocument[] {
     ...(product.fireRating
       ? [
           {
-            kind: 'fire' as const,
-            title: `Certificat feu ${product.fireRating}`,
-            meta: 'Document conformité ERP',
+            kind: 'ce' as const,
+            title: 'Déclaration conformité CE',
+            meta: 'Usage mobilier extérieur',
             gated: true,
           },
         ]

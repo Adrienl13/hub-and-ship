@@ -2,6 +2,11 @@
 // Container Club — catalogue, variantes, container courant
 // ============================================================
 
+import { BISTRO_PRODUCTS } from './bistro-products'
+import { ROPE_PRODUCTS } from './rope-products'
+import { TABLE_BASE_PRODUCTS } from './table-base-products'
+import { TESLIN_PRODUCTS } from './teslin-products'
+
 export type ProductCategory = 'chair' | 'armchair' | 'table' | 'bench'
 
 export interface DesignVariant {
@@ -45,14 +50,14 @@ export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   bench: 'Banc',
 }
 
-export const PRODUCTS: Product[] = [
+const CORE_PRODUCTS: Product[] = [
   {
     id: 'p1',
     sku: 'CHA-CAN-001',
     category: 'chair',
-    name: 'Chaise Cannes Empilable',
+    name: 'Chaise de terrasse CANNES - rotin synthétique',
     description:
-      "Chaise outdoor en rotin synthétique S-PE tressé sur structure aluminium thermolaqué. Empilable jusqu'à 8 unités.",
+      'Chaise de terrasse CANNES - rotin synthétique pour restaurant, café, hôtel, brasserie, camping et terrasse CHR. Mobilier extérieur professionnel en rotin synthétique outdoor et structure aluminium, dimensions 55x58x85 cm, poids 4.2 kg. MOQ 50 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 55, w: 58, h: 85 },
     cbmPerUnit: 0.08,
     weightKg: 4.2,
@@ -87,9 +92,9 @@ export const PRODUCTS: Product[] = [
     id: 'p2',
     sku: 'FAU-MAL-002',
     category: 'armchair',
-    name: 'Fauteuil Malibu Lounge',
+    name: 'Fauteuil de terrasse MALIBU - rotin synthétique',
     description:
-      'Fauteuil large outdoor avec coussins déperlants inclus. Structure aluminium et tressage rotin synthétique haute densité.',
+      'Fauteuil de terrasse MALIBU - rotin synthétique pour terrasse de restaurant, café, hôtel, rooftop et espace CHR premium. Mobilier extérieur professionnel en rotin synthétique outdoor et structure aluminium, dimensions 78x82x78 cm, poids 11.5 kg. MOQ 50 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 78, w: 82, h: 78 },
     cbmPerUnit: 0.35,
     weightKg: 11.5,
@@ -130,9 +135,9 @@ export const PRODUCTS: Product[] = [
     id: 'p3',
     sku: 'TAB-LYO-003',
     category: 'table',
-    name: 'Table Lyon Pied Central',
+    name: 'Table de terrasse PALAIS - plateau HPL',
     description:
-      'Table outdoor ronde 80 cm, plateau HPL résistant et pied central aluminium. Idéale brasseries et terrasses.',
+      'Table de terrasse PALAIS - plateau HPL pour terrasse de restaurant, brasserie, hôtel, camping, espace événementiel et terrasse CHR. Mobilier extérieur professionnel en plateau HPL et structure aluminium, dimensions 80x80x73 cm, poids 18 kg. MOQ 20 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 80, w: 80, h: 73 },
     cbmPerUnit: 0.25,
     weightKg: 18.0,
@@ -166,9 +171,9 @@ export const PRODUCTS: Product[] = [
     id: 'p4',
     sku: 'CHA-MON-004',
     category: 'chair',
-    name: 'Chaise Monaco Textilène',
+    name: 'Chaise de terrasse DAUPHINE - textilène outdoor',
     description:
-      'Chaise outdoor textilène haute densité sur structure aluminium. Confort et légèreté pour le secteur hôtelier.',
+      'Chaise de terrasse DAUPHINE - textilène outdoor pour restaurant, café, hôtel, brasserie, camping et terrasse CHR. Mobilier extérieur professionnel en textilène outdoor et structure aluminium, dimensions 52x58x88 cm, poids 3.5 kg. MOQ 50 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 52, w: 58, h: 88 },
     cbmPerUnit: 0.07,
     weightKg: 3.5,
@@ -206,9 +211,9 @@ export const PRODUCTS: Product[] = [
     id: 'p5',
     sku: 'BAN-PRO-005',
     category: 'bench',
-    name: 'Banc Provence 180 cm',
+    name: 'Banc de terrasse PROVENCE - rotin synthétique',
     description:
-      "Banc outdoor 3 places en rotin synthétique sur structure aluminium. Parfait pour entrées d'hôtels et halls.",
+      'Banc de terrasse PROVENCE - rotin synthétique pour zone lounge, piscine, rooftop, camping, hôtel et terrasse CHR. Mobilier extérieur professionnel en rotin synthétique outdoor et structure aluminium, dimensions 180x55x82 cm, poids 14 kg. MOQ 50 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 180, w: 55, h: 82 },
     cbmPerUnit: 0.45,
     weightKg: 14.0,
@@ -234,9 +239,9 @@ export const PRODUCTS: Product[] = [
     id: 'p6',
     sku: 'TAB-MAR-006',
     category: 'table',
-    name: 'Table Marseille Rectangulaire',
+    name: 'Table de terrasse AUTEUIL - plateau HPL',
     description:
-      'Table outdoor rectangulaire 160×80 cm pour 6 personnes. Plateau HPL et structure aluminium.',
+      'Table de terrasse AUTEUIL - plateau HPL pour terrasse de restaurant, brasserie, hôtel, camping, espace événementiel et terrasse CHR. Mobilier extérieur professionnel en plateau HPL et structure aluminium, dimensions 160x80x73 cm, poids 28 kg. MOQ 20 unités, achat groupé par container avec prix HT visible, photos produit et volume logistique. Coloris et finitions personnalisables sur projet en volume.',
     dimensions: { l: 160, w: 80, h: 73 },
     cbmPerUnit: 0.45,
     weightKg: 28.0,
@@ -264,6 +269,14 @@ export const PRODUCTS: Product[] = [
       { id: 'v6c', name: 'Plateau Béton', unitsCommitted: 4 },
     ],
   },
+]
+
+export const PRODUCTS: Product[] = [
+  ...CORE_PRODUCTS,
+  ...BISTRO_PRODUCTS,
+  ...ROPE_PRODUCTS,
+  ...TESLIN_PRODUCTS,
+  ...TABLE_BASE_PRODUCTS,
 ]
 
 export interface ContainerSummary {

@@ -53,25 +53,27 @@ function FaqPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]">
-        <div className="mx-auto max-w-4xl px-6 py-16">
-          <div className="label-eyebrow text-[color:var(--ember)]">
-            Foire aux questions
+      <main id="contenu">
+        <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]">
+          <div className="mx-auto max-w-4xl px-6 py-16">
+            <div className="label-eyebrow text-[color:var(--ember)]">
+              Foire aux questions
+            </div>
+            <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+              Tout ce qu'il faut savoir avant de réserver.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[color:var(--ink-soft)]">
+              Seuils de remplissage, échéancier de paiement, douane et TVA,
+              livraison, garanties, SAV — les réponses claires aux questions que
+              les pros nous posent le plus.
+            </p>
           </div>
-          <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-            Tout ce qu'il faut savoir avant de réserver.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[color:var(--ink-soft)]">
-            Seuils de remplissage, échéancier de paiement, douane et TVA,
-            livraison, garanties, SAV — les réponses claires aux questions que
-            les pros nous posent le plus.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      <div className="mx-auto max-w-4xl">
-        <FaqAccordion />
-      </div>
+        <div className="mx-auto max-w-4xl">
+          <FaqAccordion />
+        </div>
+      </main>
 
       <Footer />
 

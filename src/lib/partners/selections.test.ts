@@ -6,6 +6,7 @@ import {
   quoteReference,
   selectionEcoTotal,
   selectionEntryKey,
+  selectionPartnerNetTotals,
   selectionPublicTotalHt,
   selectionTotalUnits,
 } from './selections'
@@ -94,6 +95,36 @@ describe('selection totals', () => {
 
   it('sums the eco contribution', () => {
     expect(selectionEcoTotal(items)).toBe(1.5 * 15)
+  })
+
+  it('computes private partner totals without changing public snapshots', () => {
+    const totals = selectionPartnerNetTotals(items, new Map([['p1', 61]]))
+    expect(totals).toEqual({
+      netTotalHt: 61 * 15,
+      marginTotalHt: (89 - 61) * 15,
+      pricedUnits: 15,
+      missingUnits: 0,
+      isComplete: true,
+    })
+    expect(Object.keys(items[0]!.snapshot)).not.toContain('netPriceHt')
+  })
+
+  it('tracks units missing private net prices', () => {
+    const otherProduct = { ...product, id: 'p2' } as unknown as Product
+    const mixedItems = [
+      buildSelectionItemInput(product, null, 2),
+      buildSelectionItemInput(otherProduct, null, 3),
+    ]
+
+    expect(selectionPartnerNetTotals(mixedItems, new Map([['p1', 61]]))).toEqual(
+      {
+        netTotalHt: 61 * 2,
+        marginTotalHt: (89 - 61) * 2,
+        pricedUnits: 2,
+        missingUnits: 3,
+        isComplete: false,
+      },
+    )
   })
 })
 

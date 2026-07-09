@@ -5,8 +5,8 @@
 // Security model:
 //   - The client supplies ONLY the reservation id (uuid).
 //   - This handler reads the reservation via the SERVICE ROLE client (RLS
-//     bypassed) and uses its `reservation_fee` value — never a price sent by
-//     the browser. Anti-tampering.
+//     bypassed) and uses its stored `pay_now` value — never a price sent by the
+//     browser. Anti-tampering.
 //   - If Stripe is not configured (no secret), we return `{ skipped: true }`
 //     instead of throwing, so the client can fall back to the legacy "OK"
 //     UX while the keys are being provisioned.
@@ -76,7 +76,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     const { data: reservation, error } = await supabase
       .from('reservations')
       .select(
-        'id, reference, reservation_fee, contact_snapshot, status, container_reference, requested_container_type',
+        'id, reference, pay_now, contact_snapshot, status, container_reference, requested_container_type',
       )
       .eq('id', data.reservationId)
       .maybeSingle()
@@ -105,11 +105,11 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
     const origin = resolveOrigin(getRequest())
     const stripe = getStripe()
     const customerEmail = extractContactEmail(reservation.contact_snapshot)
-    const unitAmount = Math.round(Number(reservation.reservation_fee) * 100)
+    const unitAmount = Math.round(Number(reservation.pay_now) * 100)
 
     if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
       throw new Error(
-        `Invalid reservation_fee for ${reservation.id} (got=${reservation.reservation_fee})`,
+        `Invalid pay_now for ${reservation.id} (got=${reservation.pay_now})`,
       )
     }
 

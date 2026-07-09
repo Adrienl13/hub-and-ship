@@ -74,6 +74,8 @@ function ChaisesRestaurantPage() {
         'Prix HT direct usine avec réservation groupée entre pros',
       ]}
       products={CHAIR_PRODUCTS}
+      primaryHref="/catalogue?categorie=chair"
+      primaryLabel="Voir les chaises"
       sections={[
         {
           title: 'Pour terrasses à forte rotation',

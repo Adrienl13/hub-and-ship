@@ -6,6 +6,7 @@ import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
+import { productPath } from '@/lib/product-slugs'
 
 export interface SeoLandingSection {
   readonly title: string
@@ -25,7 +26,7 @@ export interface SeoLandingPageProps {
   readonly products: ReadonlyArray<Product>
   readonly sections: ReadonlyArray<SeoLandingSection>
   readonly faqs: ReadonlyArray<SeoLandingFaq>
-  readonly primaryHref?: '/catalogue' | '/stock-24h'
+  readonly primaryHref?: string
   readonly primaryLabel?: string
 }
 
@@ -48,7 +49,7 @@ export function SeoLandingPage({
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={goToCatalogue} />
 
-      <main>
+      <main id="contenu">
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 lg:grid-cols-[1fr_360px] lg:items-end">
             <div className="max-w-3xl">
@@ -66,10 +67,10 @@ export function SeoLandingPage({
                   asChild
                   className="h-11 rounded-sm bg-foreground text-background hover:bg-[color:var(--ink-soft)]"
                 >
-                  <Link to={primaryHref}>
+                  <a href={primaryHref}>
                     {primaryLabel}
                     <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </a>
                 </Button>
                 <Button
                   asChild
@@ -168,6 +169,13 @@ export function SeoLandingPage({
                       {formatEUR(product.basePriceHt)} HT
                     </span>
                   </div>
+                  <a
+                    href={productPath(product)}
+                    className="inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-foreground px-3 text-sm font-medium text-background hover:bg-[color:var(--ink-soft)]"
+                  >
+                    Voir cette référence
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
                 </div>
               </article>
             ))}

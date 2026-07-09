@@ -70,7 +70,7 @@ function LegalHub() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <div className="mx-auto max-w-5xl px-6 py-12">
+      <main id="contenu" className="mx-auto max-w-5xl px-6 py-12">
         <nav
           aria-label="Fil d'Ariane"
           className="mb-8 flex items-center gap-1.5 text-xs text-muted-foreground"
@@ -139,7 +139,7 @@ function LegalHub() {
             — réponse sous 5 jours ouvrés.
           </p>
         </div>
-      </div>
+      </main>
 
       <Footer />
 

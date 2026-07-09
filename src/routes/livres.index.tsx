@@ -99,7 +99,7 @@ function LivresPage() {
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <main>
+      <main id="contenu">
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto max-w-7xl px-6 py-12">
             <div className="label-eyebrow text-[color:var(--ember)]">

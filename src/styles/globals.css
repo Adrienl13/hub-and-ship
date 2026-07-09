@@ -31,10 +31,10 @@
     --sand-deep: #e8dfd0;
     --ink: #1a1a1c;
     --ink-soft: #5a544a;
-    --ember: #b85c1f;
+    --ember: #a44712;
     --ember-soft: #f4e3d1;
     --forest: #3a5a3a;
-    --ochre: #9a7b2a;
+    --ochre: #765f1f;
 
     --color-bg-base: #f4ede1;
     --color-bg-alt: #faf6ee;
@@ -44,14 +44,14 @@
     --color-text-secondary: #5a544a;
     --color-text-muted: #8a8276;
     --color-text-on-dark: #faf6ee;
-    --color-accent-primary: #b85c1f;
-    --color-accent-hover: #9d4d18;
+    --color-accent-primary: #a44712;
+    --color-accent-hover: #963d0f;
     --color-accent-light: #f4e3d1;
     --color-border-base: #e8dfd0;
     --color-border-strong: #c9bfac;
     --color-success: #3a5a3a;
     --color-success-bg: #e8eee0;
-    --color-warning: #9a7b2a;
+    --color-warning: #765f1f;
     --color-warning-bg: #f4ecd6;
     --color-danger: #8a3a2a;
     --color-danger-bg: #f0d8cc;
@@ -93,6 +93,30 @@
   a {
     color: inherit;
     text-decoration: none;
+  }
+
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    transform: translateY(-150%);
+    border-radius: 0.125rem;
+    background: var(--foreground);
+    color: var(--background);
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 160ms ease;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
   }
 
   .label-eyebrow {

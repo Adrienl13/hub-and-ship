@@ -81,6 +81,7 @@ export function TableConfigurator({
   const selectedVariant = product.variants.find(
     (variant) => variant.id === variantId,
   )
+  const hasMultipleVariants = product.variants.length > 1
   const adjustedPrice = Math.max(
     0,
     product.basePriceHt * (1 + selectedShape.priceModifier),
@@ -144,11 +145,12 @@ export function TableConfigurator({
           </div>
         </div>
 
-        {shapeId !== 'base-only' && (
+        {shapeId !== 'base-only' && hasMultipleVariants && (
           <DesignSelector
             variants={product.variants}
             selectedVariantId={variantId}
             onChange={onVariantChange}
+            label="Choisir plateau / finition"
             showLabel
             fallbackImageUrl={product.mainImageUrl}
           />

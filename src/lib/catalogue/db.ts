@@ -11,6 +11,35 @@ type VariantRow = Database['public']['Tables']['product_variants']['Row']
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 type CommitmentRow =
   Database['public']['Tables']['container_seed_commitments']['Row']
+type PublicProductPriceRow = {
+  readonly product_id: string
+  readonly unit_price_ht: number | string
+  readonly tier_applied: string
+  readonly parameters_version: number
+}
+
+const PUBLIC_PRODUCT_COLUMNS = [
+  'id',
+  'sku',
+  'category',
+  'name',
+  'description',
+  'dim_length_cm',
+  'dim_width_cm',
+  'dim_height_cm',
+  'cbm_per_unit',
+  'weight_kg',
+  'moq_units',
+  'base_price_ht',
+  'retail_price_ref',
+  'eco_contribution',
+  'main_image_url',
+  'gallery_urls',
+  'features',
+  'fire_rating',
+  'is_active',
+  'sort_order',
+].join(', ')
 
 export interface DbCurrentContainer {
   readonly id: string
@@ -33,9 +62,16 @@ export interface DbCatalog {
 }
 
 interface CatalogueDbClient {
+  rpc?: (
+    fn: 'get_public_product_prices',
+    args: { readonly p_quantity: number },
+  ) => PromiseLike<{
+    data: ReadonlyArray<PublicProductPriceRow> | null
+    error: { message: string } | null
+  }>
   from: {
     (table: 'products'): {
-      select: (columns: '*') => {
+      select: (columns: string) => {
         eq: (
           column: 'is_active',
           value: boolean,
@@ -109,6 +145,7 @@ function variantFromRow(
 function productFromRow(
   row: ProductRow,
   variants: ReadonlyArray<DesignVariant>,
+  publicPrice: PublicProductPriceRow | null,
 ): Product {
   return {
     id: row.id,
@@ -124,7 +161,7 @@ function productFromRow(
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,
-    basePriceHt: Number(row.base_price_ht),
+    basePriceHt: Number(publicPrice?.unit_price_ht ?? row.base_price_ht),
     retailPriceRef: Number(row.retail_price_ref),
     ecoContribution: Number(row.eco_contribution),
     mainImageUrl: row.main_image_url,
@@ -171,10 +208,11 @@ export async function fetchCatalogFromDb(
   // Run the three independent queries in parallel; the commitments query
   // can only start once we know which container is open, so it is awaited
   // separately below.
-  const [productsResult, variantsResult, containerResult] = await Promise.all([
+  const [productsResult, variantsResult, containerResult, pricesResult] =
+    await Promise.all([
     client
       .from('products')
-      .select('*')
+      .select(PUBLIC_PRODUCT_COLUMNS)
       .eq('is_active', true)
       .order('sort_order', { ascending: true }),
     client
@@ -187,11 +225,15 @@ export async function fetchCatalogFromDb(
       .eq('status', 'open')
       .order('created_at', { ascending: false })
       .limit(1),
+    client.rpc
+      ? client.rpc('get_public_product_prices', { p_quantity: 1 })
+      : Promise.resolve({ data: null, error: null }),
   ])
 
   if (productsResult.error) throw new Error(productsResult.error.message)
   if (variantsResult.error) throw new Error(variantsResult.error.message)
   if (containerResult.error) throw new Error(containerResult.error.message)
+  if (pricesResult.error) throw new Error(pricesResult.error.message)
 
   const containerRow = containerResult.data?.[0] ?? null
 
@@ -221,8 +263,19 @@ export async function fetchCatalogFromDb(
     variantsByProduct.set(row.product_id, list)
   }
 
+  const priceByProduct = new Map<string, PublicProductPriceRow>()
+  for (const row of pricesResult.data ?? []) {
+    priceByProduct.set(row.product_id, row)
+  }
+
   const products: Product[] = (productsResult.data ?? [])
-    .map((row) => productFromRow(row, variantsByProduct.get(row.id) ?? []))
+    .map((row) =>
+      productFromRow(
+        row,
+        variantsByProduct.get(row.id) ?? [],
+        priceByProduct.get(row.id) ?? null,
+      ),
+    )
     .filter((product) => product.variants.length > 0)
 
   const currentContainer = containerRow

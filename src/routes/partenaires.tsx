@@ -102,7 +102,7 @@ function PartenairesPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <main>
+      <main id="contenu">
         <PartnerHero />
         <PartnerPromise />
         <PartnerOperatingModel />

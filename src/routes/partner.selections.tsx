@@ -22,6 +22,7 @@ import {
   listMySelections,
   replaceSelectionItems,
   selectionEntryKey,
+  selectionPartnerNetTotals,
   selectionPublicTotalHt,
   selectionTotalUnits,
   setSelectionStatus,
@@ -37,6 +38,7 @@ import { formatEUR } from '@/lib/order'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import type { Database } from '@/lib/supabase/types'
 
 export const Route = createFileRoute('/partner/selections')({
   component: PartnerSelectionsRoute,
@@ -71,6 +73,20 @@ interface DraftState {
   readonly quantities: ReadonlyMap<string, number>
 }
 
+type PartnerNetPriceByProduct = ReadonlyMap<string, number>
+type PartnerNetPriceRow = Pick<
+  Database['public']['Tables']['product_partner_prices']['Row'],
+  'product_id' | 'net_price_ht'
+>
+
+function isMissingOptionalPartnerPriceTable(errorMessage: string): boolean {
+  return (
+    errorMessage.includes("Could not find the table 'public.product_partner_prices'") ||
+    (errorMessage.includes('product_partner_prices') &&
+      errorMessage.includes('schema cache'))
+  )
+}
+
 const EMPTY_DRAFT: DraftState = {
   id: null,
   title: '',
@@ -95,6 +111,8 @@ function SelectionsManager() {
   )
   const [draft, setDraft] = useState<DraftState | null>(null)
   const [busy, setBusy] = useState(false)
+  const [partnerNetPrices, setPartnerNetPrices] =
+    useState<PartnerNetPriceByProduct>(new Map())
 
   const selectionsClient = useMemo(
     () =>
@@ -117,6 +135,26 @@ function SelectionsManager() {
           : null,
       )
       const list = await listMySelections(selectionsClient)
+      const { data: priceRows, error: priceError } =
+        await createSupabaseBrowserClient(config)
+          .from('product_partner_prices')
+          .select('product_id, net_price_ht')
+          .eq('is_active', true)
+      if (priceError) {
+        if (isMissingOptionalPartnerPriceTable(priceError.message)) {
+          setPartnerNetPrices(new Map())
+        } else {
+          throw new Error(priceError.message)
+        }
+      } else {
+        setPartnerNetPrices(
+          new Map(
+            ((priceRows ?? []) as ReadonlyArray<PartnerNetPriceRow>).map(
+              (row) => [row.product_id, Number(row.net_price_ht)],
+            ),
+          ),
+        )
+      }
       setSelections(list)
       setLoadState('loaded')
     } catch {
@@ -274,7 +312,7 @@ function SelectionsManager() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main id="contenu" className="mx-auto max-w-5xl px-6 py-10">
         <a
           href="/partner"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
@@ -308,6 +346,7 @@ function SelectionsManager() {
           <SelectionBuilder
             draft={draft}
             entries={entries}
+            partnerNetPrices={partnerNetPrices}
             busy={busy}
             onChange={setDraft}
             onCancel={() => setDraft(null)}
@@ -422,6 +461,7 @@ function SelectionsManager() {
 function SelectionBuilder({
   draft,
   entries,
+  partnerNetPrices,
   busy,
   onChange,
   onCancel,
@@ -429,6 +469,7 @@ function SelectionBuilder({
 }: {
   readonly draft: DraftState
   readonly entries: ReadonlyArray<CatalogSelectionEntry>
+  readonly partnerNetPrices: PartnerNetPriceByProduct
   readonly busy: boolean
   readonly onChange: (next: DraftState) => void
   readonly onCancel: () => void
@@ -444,6 +485,7 @@ function SelectionBuilder({
   const selectedItems = entries
     .filter((entry) => (draft.quantities.get(entry.key) ?? 0) > 0)
     .map((entry) => ({
+      productId: entry.product.id,
       quantity: draft.quantities.get(entry.key) ?? 0,
       snapshot: {
         name: '',
@@ -456,6 +498,10 @@ function SelectionBuilder({
     }))
   const totalHt = selectionPublicTotalHt(selectedItems)
   const totalUnits = selectionTotalUnits(selectedItems)
+  const partnerTotals = selectionPartnerNetTotals(
+    selectedItems,
+    partnerNetPrices,
+  )
 
   return (
     <div className="mt-6 space-y-5">
@@ -489,6 +535,12 @@ function SelectionBuilder({
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {entries.map((entry) => {
           const qty = draft.quantities.get(entry.key) ?? 0
+          const publicPrice = entry.product.basePriceHt
+          const partnerNetPrice = partnerNetPrices.get(entry.product.id) ?? null
+          const partnerMargin =
+            partnerNetPrice !== null
+              ? Math.max(0, publicPrice - partnerNetPrice)
+              : null
           const imageUrl =
             entry.variant?.imageUrl ?? entry.product.mainImageUrl
           return (
@@ -516,8 +568,21 @@ function SelectionBuilder({
                 )}
                 <div className="text-[11px] text-muted-foreground">
                   {CATEGORY_LABEL[entry.product.category]} ·{' '}
-                  {formatEUR(entry.product.basePriceHt)} HT
+                  {formatEUR(publicPrice)} HT public
                 </div>
+                {partnerNetPrice !== null && (
+                  <div className="text-[11px] font-medium text-emerald-700">
+                    Net partenaire {formatEUR(partnerNetPrice)} HT
+                    {partnerMargin !== null
+                      ? ` · marge ${formatEUR(partnerMargin)}`
+                      : ''}
+                  </div>
+                )}
+                {partnerNetPrice === null && (
+                  <div className="text-[11px] text-muted-foreground">
+                    Prix net non configuré
+                  </div>
+                )}
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <Button
                     type="button"
@@ -552,10 +617,40 @@ function SelectionBuilder({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/40 px-4 py-3">
-        <span className="text-sm text-muted-foreground">
-          {totalUnits} unité{totalUnits > 1 ? 's' : ''} · Total public{' '}
-          <strong className="text-foreground">{formatEUR(totalHt)} HT</strong>
-        </span>
+        <div>
+          <div className="text-sm text-muted-foreground">
+            {totalUnits} unité{totalUnits > 1 ? 's' : ''} · Total public{' '}
+            <strong className="text-foreground">
+              {formatEUR(totalHt)} HT
+            </strong>
+          </div>
+          {totalUnits > 0 && (
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {partnerTotals.pricedUnits > 0 && (
+                <span>
+                  Net partenaire{' '}
+                  <strong className="text-emerald-700">
+                    {formatEUR(partnerTotals.netTotalHt)} HT
+                  </strong>
+                </span>
+              )}
+              {partnerTotals.pricedUnits > 0 && (
+                <span>
+                  Marge indicative{' '}
+                  <strong className="text-foreground">
+                    {formatEUR(partnerTotals.marginTotalHt)} HT
+                  </strong>
+                </span>
+              )}
+              {partnerTotals.missingUnits > 0 && (
+                <span>
+                  {partnerTotals.missingUnits} unité
+                  {partnerTotals.missingUnits > 1 ? 's' : ''} sans prix net
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"

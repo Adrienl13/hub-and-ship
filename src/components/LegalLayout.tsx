@@ -104,7 +104,7 @@ export function LegalLayout({
           </aside>
 
           {/* Content */}
-          <main className="lg:col-span-9">
+          <main id="contenu" className="lg:col-span-9">
             <header className="border-b border-[color:var(--sand-deep)] pb-6">
               <div className="label-eyebrow text-[color:var(--ember)]">
                 Document légal

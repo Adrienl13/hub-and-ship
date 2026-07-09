@@ -54,7 +54,7 @@ const PUBLIC_ROUTES: ReadonlyArray<{
 const CANONICAL_ROUTES = PUBLIC_ROUTES.map((route) => route.path)
 
 async function gotoHydrated(page: Page, path: string) {
-  const response = await page.goto(path)
+  const response = await page.goto(path, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     () => document.documentElement.dataset.hydrated === 'true',
   )
@@ -84,7 +84,11 @@ test.describe('site audit parcours publics', () => {
   test('public internal links and anchors resolve', async ({
     page,
     request,
-  }) => {
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'mobile-chrome',
+      'Desktop crawl validates route/link integrity; mobile rendering is covered separately.',
+    )
     test.setTimeout(60_000)
 
     for (const route of PUBLIC_ROUTES) {
@@ -116,10 +120,14 @@ test.describe('site audit parcours publics', () => {
           await gotoHydrated(page, targetPath)
           const id = decodeURIComponent(target.hash.slice(1))
           await expect
-            .poll(() =>
-              page.evaluate((anchorId) => {
-                return Boolean(document.getElementById(anchorId))
-              }, id),
+            .poll(
+              () =>
+                page.evaluate((anchorId) => {
+                  return Boolean(document.getElementById(anchorId))
+                }, id),
+              {
+                message: `${route.path} -> ${href} resolved to missing #${id} on ${targetPath}`,
+              },
             )
             .toBe(true)
         }
@@ -505,9 +513,13 @@ test.describe('site audit stock et admin', () => {
 
     await page.getByLabel('Email professionnel').fill('admin@prosimport.com')
 
-    await expect(page.getByText('Supabase Auth est indisponible')).toBeVisible()
     await expect(
-      page.getByRole('button', { name: 'Configuration Supabase requise' }),
+      page.getByText('La connexion est momentanément indisponible.'),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', {
+        name: 'Connexion momentanément indisponible',
+      }),
     ).toBeDisabled()
   })
 })

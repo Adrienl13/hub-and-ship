@@ -112,7 +112,7 @@ function ReviewsPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-3xl px-6 py-14">
+      <main id="contenu" className="mx-auto max-w-3xl px-6 py-14">
         <div className="label-eyebrow text-[color:var(--ember)]">
           Avis clients
         </div>

@@ -155,7 +155,7 @@ function PartnerGuardShell({
   return (
     <div className="min-h-screen bg-background">
       <Header onReserve={onReserve} />
-      <main className="mx-auto max-w-md px-6 py-24 text-center">
+      <main id="contenu" className="mx-auto max-w-md px-6 py-24 text-center">
         <Icon className="mx-auto h-8 w-8 text-[color:var(--ember)]" />
         {children}
       </main>

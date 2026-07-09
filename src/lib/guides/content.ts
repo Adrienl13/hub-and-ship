@@ -142,7 +142,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
     ],
     related: [
-      { label: 'Chaises de restaurant', href: '/catalogue/chaises-restaurant' },
+      { label: 'Voir les chaises', href: '/catalogue?categorie=chair' },
       {
         label: 'Importer par container',
         href: '/guides/import-mobilier-chr-container',
@@ -246,7 +246,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
     ],
     related: [
-      { label: 'Chaises de restaurant', href: '/catalogue/chaises-restaurant' },
+      { label: 'Voir les chaises', href: '/catalogue?categorie=chair' },
       {
         label: 'Prix des chaises en volume',
         href: '/guides/prix-chaises-restaurant-volume',

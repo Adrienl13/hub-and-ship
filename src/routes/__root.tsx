@@ -72,7 +72,7 @@ function NotFoundComponent() {
         <title>Page introuvable — Container Club</title>
       </head>
       <body className="bg-background text-foreground">
-        <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
+        <main id="contenu" className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
           <div className="label-eyebrow text-[color:var(--ember)]">404</div>
           <h1 className="mt-2 font-display text-4xl tracking-tight">
             Page introuvable.

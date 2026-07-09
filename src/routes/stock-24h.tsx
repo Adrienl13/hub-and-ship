@@ -113,7 +113,7 @@ function Stock24hPage() {
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setSelectedLineId(lines[0]?.id ?? '')} />
 
-      <main>
+      <main id="contenu">
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1fr_360px] lg:items-end">
             <div className="max-w-3xl">
@@ -182,6 +182,7 @@ function Stock24hPage() {
                       type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
+                      aria-label="Rechercher dans le stock disponible"
                       placeholder="Rechercher modèle, SKU, design..."
                       className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     />
@@ -193,6 +194,7 @@ function Stock24hPage() {
                       onChange={(event) =>
                         setSort(event.target.value as StockSortKey)
                       }
+                      aria-label="Trier le stock disponible"
                       className="h-11 min-w-48 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     >
                       <option value="priority">Priorité stock</option>
@@ -254,7 +256,6 @@ function StockCard({
           ? 'border-[color:var(--ember)] ring-2 ring-[color:var(--ember)]/40'
           : 'border-[color:var(--sand-deep)]'
       }`}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '420px' }}
     >
       <div className="relative">
         <button
@@ -401,7 +402,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       </p>
 
       <div className="mt-5 space-y-3">
+        <label className="sr-only" htmlFor="stock-company">
+          Société
+        </label>
         <Input
+          id="stock-company"
           value={form.company}
           onChange={(event) =>
             setForm((previous) => ({
@@ -412,7 +417,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
           placeholder="Société"
           className="h-11 rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
         />
+        <label className="sr-only" htmlFor="stock-email">
+          Email professionnel
+        </label>
         <Input
+          id="stock-email"
           value={form.email}
           onChange={(event) =>
             setForm((previous) => ({ ...previous, email: event.target.value }))
@@ -421,7 +430,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
           placeholder="Email professionnel"
           className="h-11 rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
         />
+        <label className="sr-only" htmlFor="stock-phone">
+          Téléphone
+        </label>
         <Input
+          id="stock-phone"
           value={form.phone}
           onChange={(event) =>
             setForm((previous) => ({ ...previous, phone: event.target.value }))
@@ -430,7 +443,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
           placeholder="Téléphone"
           className="h-11 rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
         />
+        <label className="sr-only" htmlFor="stock-quantity">
+          Quantité souhaitée
+        </label>
         <Input
+          id="stock-quantity"
           value={form.quantity}
           onChange={(event) =>
             setForm((previous) => ({

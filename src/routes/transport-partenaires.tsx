@@ -66,7 +66,7 @@ function TransportPartenairesPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <main>
+      <main id="contenu">
         <HeroSection carrierCount={carriers.length} />
         <ProcessSection />
         <CarriersGrid carriers={carriers} />

@@ -32,7 +32,12 @@ import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
+import { Route as CatalogueMobilierTextileneRouteImport } from './routes/catalogue_.mobilier-textilene'
+import { Route as CatalogueMobilierCordageRouteImport } from './routes/catalogue_.mobilier-cordage'
+import { Route as CatalogueFauteuilsRestaurantRouteImport } from './routes/catalogue_.fauteuils-restaurant'
 import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
+import { Route as CatalogueBancsTerrasseRouteImport } from './routes/catalogue_.bancs-terrasse'
+import { Route as CatalogueProductSlugRouteImport } from './routes/catalogue_.$productSlug'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
@@ -165,12 +170,40 @@ const CatalogueTablesRestaurantRoute =
     path: '/catalogue/tables-restaurant',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CatalogueMobilierTextileneRoute =
+  CatalogueMobilierTextileneRouteImport.update({
+    id: '/catalogue_/mobilier-textilene',
+    path: '/catalogue/mobilier-textilene',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CatalogueMobilierCordageRoute =
+  CatalogueMobilierCordageRouteImport.update({
+    id: '/catalogue_/mobilier-cordage',
+    path: '/catalogue/mobilier-cordage',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CatalogueFauteuilsRestaurantRoute =
+  CatalogueFauteuilsRestaurantRouteImport.update({
+    id: '/catalogue_/fauteuils-restaurant',
+    path: '/catalogue/fauteuils-restaurant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CatalogueChaisesRestaurantRoute =
   CatalogueChaisesRestaurantRouteImport.update({
     id: '/catalogue_/chaises-restaurant',
     path: '/catalogue/chaises-restaurant',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CatalogueBancsTerrasseRoute = CatalogueBancsTerrasseRouteImport.update({
+  id: '/catalogue_/bancs-terrasse',
+  path: '/catalogue/bancs-terrasse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogueProductSlugRoute = CatalogueProductSlugRouteImport.update({
+  id: '/catalogue_/$productSlug',
+  path: '/catalogue/$productSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
@@ -268,7 +301,12 @@ export interface FileRoutesByFullPath {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/$productSlug': typeof CatalogueProductSlugRoute
+  '/catalogue/bancs-terrasse': typeof CatalogueBancsTerrasseRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue/fauteuils-restaurant': typeof CatalogueFauteuilsRestaurantRoute
+  '/catalogue/mobilier-cordage': typeof CatalogueMobilierCordageRoute
+  '/catalogue/mobilier-textilene': typeof CatalogueMobilierTextileneRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
@@ -308,7 +346,12 @@ export interface FileRoutesByTo {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/$productSlug': typeof CatalogueProductSlugRoute
+  '/catalogue/bancs-terrasse': typeof CatalogueBancsTerrasseRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue/fauteuils-restaurant': typeof CatalogueFauteuilsRestaurantRoute
+  '/catalogue/mobilier-cordage': typeof CatalogueMobilierCordageRoute
+  '/catalogue/mobilier-textilene': typeof CatalogueMobilierTextileneRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
@@ -349,7 +392,12 @@ export interface FileRoutesById {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue_/$productSlug': typeof CatalogueProductSlugRoute
+  '/catalogue_/bancs-terrasse': typeof CatalogueBancsTerrasseRoute
   '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
+  '/catalogue_/fauteuils-restaurant': typeof CatalogueFauteuilsRestaurantRoute
+  '/catalogue_/mobilier-cordage': typeof CatalogueMobilierCordageRoute
+  '/catalogue_/mobilier-textilene': typeof CatalogueMobilierTextileneRoute
   '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$slug': typeof LegalSlugRoute
@@ -391,7 +439,12 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/$productSlug'
+    | '/catalogue/bancs-terrasse'
     | '/catalogue/chaises-restaurant'
+    | '/catalogue/fauteuils-restaurant'
+    | '/catalogue/mobilier-cordage'
+    | '/catalogue/mobilier-textilene'
     | '/catalogue/tables-restaurant'
     | '/guides/$slug'
     | '/legal/$slug'
@@ -431,7 +484,12 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/$productSlug'
+    | '/catalogue/bancs-terrasse'
     | '/catalogue/chaises-restaurant'
+    | '/catalogue/fauteuils-restaurant'
+    | '/catalogue/mobilier-cordage'
+    | '/catalogue/mobilier-textilene'
     | '/catalogue/tables-restaurant'
     | '/guides/$slug'
     | '/legal/$slug'
@@ -471,7 +529,12 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue_/$productSlug'
+    | '/catalogue_/bancs-terrasse'
     | '/catalogue_/chaises-restaurant'
+    | '/catalogue_/fauteuils-restaurant'
+    | '/catalogue_/mobilier-cordage'
+    | '/catalogue_/mobilier-textilene'
     | '/catalogue_/tables-restaurant'
     | '/guides/$slug'
     | '/legal/$slug'
@@ -512,7 +575,12 @@ export interface RootRouteChildren {
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  CatalogueProductSlugRoute: typeof CatalogueProductSlugRoute
+  CatalogueBancsTerrasseRoute: typeof CatalogueBancsTerrasseRoute
   CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
+  CatalogueFauteuilsRestaurantRoute: typeof CatalogueFauteuilsRestaurantRoute
+  CatalogueMobilierCordageRoute: typeof CatalogueMobilierCordageRoute
+  CatalogueMobilierTextileneRoute: typeof CatalogueMobilierTextileneRoute
   CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
   LegalSlugRoute: typeof LegalSlugRoute
@@ -688,11 +756,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogueTablesRestaurantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/catalogue_/mobilier-textilene': {
+      id: '/catalogue_/mobilier-textilene'
+      path: '/catalogue/mobilier-textilene'
+      fullPath: '/catalogue/mobilier-textilene'
+      preLoaderRoute: typeof CatalogueMobilierTextileneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/mobilier-cordage': {
+      id: '/catalogue_/mobilier-cordage'
+      path: '/catalogue/mobilier-cordage'
+      fullPath: '/catalogue/mobilier-cordage'
+      preLoaderRoute: typeof CatalogueMobilierCordageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/fauteuils-restaurant': {
+      id: '/catalogue_/fauteuils-restaurant'
+      path: '/catalogue/fauteuils-restaurant'
+      fullPath: '/catalogue/fauteuils-restaurant'
+      preLoaderRoute: typeof CatalogueFauteuilsRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalogue_/chaises-restaurant': {
       id: '/catalogue_/chaises-restaurant'
       path: '/catalogue/chaises-restaurant'
       fullPath: '/catalogue/chaises-restaurant'
       preLoaderRoute: typeof CatalogueChaisesRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/bancs-terrasse': {
+      id: '/catalogue_/bancs-terrasse'
+      path: '/catalogue/bancs-terrasse'
+      fullPath: '/catalogue/bancs-terrasse'
+      preLoaderRoute: typeof CatalogueBancsTerrasseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/$productSlug': {
+      id: '/catalogue_/$productSlug'
+      path: '/catalogue/$productSlug'
+      fullPath: '/catalogue/$productSlug'
+      preLoaderRoute: typeof CatalogueProductSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
@@ -872,7 +975,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
+  CatalogueProductSlugRoute: CatalogueProductSlugRoute,
+  CatalogueBancsTerrasseRoute: CatalogueBancsTerrasseRoute,
   CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
+  CatalogueFauteuilsRestaurantRoute: CatalogueFauteuilsRestaurantRoute,
+  CatalogueMobilierCordageRoute: CatalogueMobilierCordageRoute,
+  CatalogueMobilierTextileneRoute: CatalogueMobilierTextileneRoute,
   CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
   GuidesSlugRoute: GuidesSlugRoute,
   LegalSlugRoute: LegalSlugRoute,

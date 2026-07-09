@@ -71,9 +71,10 @@ describe('advanced catalogue filters', () => {
     ])
   })
 
-  it('filters M1 fire rating only', () => {
+  it('filters CE-compliant products only', () => {
     expect(run({ ...EMPTY_ADVANCED_FILTERS, fireM1Only: true })).toEqual([
       'cheap-stack-m1',
+      'pricey-m2',
     ])
   })
 

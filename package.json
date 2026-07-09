@@ -38,6 +38,9 @@
     "gen-routes": "tsr generate",
     "update-progress": "./scripts/update-progress.sh",
     "audit": "bun audit --audit-level=moderate",
+    "audit:supabase": "node scripts/audit-supabase-rls.mjs",
+    "pricing:shadow": "node scripts/pricing-shadow-compare.mjs",
+    "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
     "gitleaks": "gitleaks detect --source . --verbose",
     "stats": "find src tests supabase -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.sql' \\) -print | xargs wc -l",
     "prepare": "husky"
@@ -74,6 +77,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@cloudflare/vite-plugin": "^1.40.0",
     "@playwright/test": "^1.48.2",
     "@tailwindcss/forms": "^0.5.9",

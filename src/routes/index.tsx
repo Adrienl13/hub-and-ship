@@ -101,6 +101,7 @@ function ContainerClubPage() {
     totals,
     fill,
     totalUnits,
+    linePrices,
     preferredContainerType,
     variantByProduct,
     qtyByProduct,
@@ -175,184 +176,190 @@ function ContainerClubPage() {
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      <Hero
-        fillPercent={fill.percent}
-        seriesReached={currentContainer.seriesReached}
-        totalSeries={currentContainer.totalSeries}
-        professionalsEngaged={currentContainer.professionalsEngaged}
-        container={currentContainer}
-      />
+      <main id="contenu">
+        <Hero
+          fillPercent={fill.percent}
+          seriesReached={currentContainer.seriesReached}
+          totalSeries={currentContainer.totalSeries}
+          professionalsEngaged={currentContainer.professionalsEngaged}
+          container={currentContainer}
+        />
 
-      <ValueProps />
-      <PartnerPathway />
-      <Stock24hTeaser />
-      <HowItWorks />
-      <ComparisonTable />
+        <ValueProps />
+        <PartnerPathway />
+        <Stock24hTeaser />
+        <HowItWorks />
+        <ComparisonTable />
 
-      {/* Catalogue */}
-      <section
-        id="catalogue"
-        className="scroll-mt-20 border-t border-[color:var(--sand-deep)]"
-      >
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-2xl">
-              <div className="label-eyebrow text-[color:var(--ember)]">
-                Catalogue
+        {/* Catalogue */}
+        <section
+          id="catalogue"
+          className="scroll-mt-20 border-t border-[color:var(--sand-deep)]"
+        >
+          <div className="mx-auto max-w-7xl px-6 py-16">
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+              <div className="max-w-2xl">
+                <div className="label-eyebrow text-[color:var(--ember)]">
+                  Catalogue
+                </div>
+                <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+                  Choisissez vos modèles, design par design.
+                </h2>
+                <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
+                  Chaque référence affiche son MOQ en temps réel : ajoutez votre
+                  quantité pour faire grimper la barre et déclencher la série.
+                </p>
               </div>
-              <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-                Choisissez vos modèles, design par design.
-              </h2>
-              <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
-                Chaque référence affiche son MOQ en temps réel : ajoutez votre
-                quantité pour faire grimper la barre et déclencher la série.
-              </p>
+              <Link
+                to="/catalogue"
+                className="inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
+              >
+                Ouvrir le catalogue complet
+              </Link>
             </div>
-            <Link
-              to="/catalogue"
-              className="inline-flex min-h-11 items-center rounded-sm border border-[color:var(--foreground)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[color:var(--foreground)] hover:text-[color:var(--background)]"
-            >
-              Ouvrir le catalogue complet
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-            {/* Catalogue (60%) */}
-            <div className="lg:col-span-7">
-              <div className="mb-5 flex flex-col gap-3 border-b border-[color:var(--sand-deep)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-                  {CATEGORY_FILTERS.map((f) => {
-                    const active = f.id === filter
-                    const count = categoryCounts[f.id]
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setFilter(f.id)}
-                        className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-0 ${
-                          active
-                            ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
-                            : 'text-foreground/75 hover:border-foreground/40 border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] hover:text-foreground'
-                        }`}
-                      >
-                        {f.label}
-                        <span
-                          className={`ml-1.5 tabular-nums ${active ? 'opacity-70' : 'opacity-50'}`}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+              {/* Catalogue (60%) */}
+              <div className="lg:col-span-7">
+                <div className="mb-5 flex flex-col gap-3 border-b border-[color:var(--sand-deep)] pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+                    {CATEGORY_FILTERS.map((f) => {
+                      const active = f.id === filter
+                      const count = categoryCounts[f.id]
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setFilter(f.id)}
+                          className={`min-h-11 shrink-0 rounded-sm px-3 py-1.5 text-xs font-medium transition-colors sm:min-h-0 ${
+                            active
+                              ? 'bg-[color:var(--foreground)] text-[color:var(--background)]'
+                              : 'text-foreground/75 hover:border-foreground/40 border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] hover:text-foreground'
+                          }`}
                         >
-                          {count}
-                        </span>
-                      </button>
-                    )
-                  })}
+                          {f.label}
+                          <span
+                            className={`ml-1.5 tabular-nums ${active ? 'opacity-70' : 'opacity-50'}`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <label className="relative block text-xs text-muted-foreground">
+                      <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+                      <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        aria-label="Rechercher dans le catalogue"
+                        placeholder="Rechercher SKU, modèle, design..."
+                        className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:w-64 sm:text-xs"
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <ArrowUpDown className="h-3 w-3" />
+                      <select
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value as SortKey)}
+                        aria-label="Trier les références"
+                        className="h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:text-xs"
+                      >
+                        <option value="default">Tri par défaut</option>
+                        <option value="price-asc">Prix croissant</option>
+                        <option value="price-desc">Prix décroissant</option>
+                        <option value="cbm-asc">Volume CBM</option>
+                        <option value="popular">Popularité</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {filtered.length} référence
+                    {filtered.length > 1 ? 's' : ''} trouvée
+                    {filtered.length > 1 ? 's' : ''} ·{' '}
+                    {visibleProducts.length} affichée
+                    {visibleProducts.length > 1 ? 's' : ''}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <label className="relative block text-xs text-muted-foreground">
-                    <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
-                    <input
-                      type="search"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Rechercher SKU, modèle, design..."
-                      className="h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:w-64 sm:text-xs"
-                    />
-                  </label>
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <ArrowUpDown className="h-3 w-3" />
-                    <select
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value as SortKey)}
-                      className="h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground sm:h-8 sm:text-xs"
+
+                {filtered.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-16 text-center text-sm text-muted-foreground">
+                    Aucun produit dans cette catégorie pour ce container.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {visibleProducts.map((product) => {
+                      const selectedVariantId =
+                        variantByProduct[product.id] ??
+                        getDefaultVariant(product).id
+                      const quantity = qtyByProduct[product.id] ?? 0
+                      const commonProps = {
+                        product,
+                        variantId: selectedVariantId,
+                        qty: quantity,
+                        onQtyChange: (n: number) => setQty(product.id, n),
+                        onVariantChange: (id: string) =>
+                          setVariant(product.id, id),
+                        onOpenDetails: () => setDetailId(product.id),
+                      }
+
+                      return <ProductCard key={product.id} {...commonProps} />
+                    })}
+                  </div>
+                )}
+
+                {remainingProducts > 0 && (
+                  <div className="mt-5 border-t border-[color:var(--sand-deep)] pt-5 text-center">
+                    <button
+                      type="button"
+                      className="hover:border-foreground/40 min-h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-sm font-medium transition-colors"
+                      onClick={() =>
+                        setVisibleCount((current) => current + pageSize)
+                      }
                     >
-                      <option value="default">Tri par défaut</option>
-                      <option value="price-asc">Prix croissant</option>
-                      <option value="price-desc">Prix décroissant</option>
-                      <option value="cbm-asc">Volume CBM</option>
-                      <option value="popular">Popularité</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
-                  trouvée
-                  {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
-                  affichée
-                  {visibleProducts.length > 1 ? 's' : ''}
+                      Charger {Math.min(pageSize, remainingProducts)} référence
+                      {Math.min(pageSize, remainingProducts) > 1 ? 's' : ''} de
+                      plus
+                    </button>
+                  </div>
+                )}
+
+                <div className="mt-4 text-[11px] text-muted-foreground">
+                  MOQ usine :{' '}
+                  <strong className="text-foreground/80">
+                    50 unités par modèle ET par design
+                  </strong>{' '}
+                  pour les assises, 20 pour les tables.
                 </div>
               </div>
 
-              {filtered.length === 0 ? (
-                <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-16 text-center text-sm text-muted-foreground">
-                  Aucun produit dans cette catégorie pour ce container.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {visibleProducts.map((product) => {
-                    const selectedVariantId =
-                      variantByProduct[product.id] ??
-                      getDefaultVariant(product).id
-                    const quantity = qtyByProduct[product.id] ?? 0
-                    const commonProps = {
-                      product,
-                      variantId: selectedVariantId,
-                      qty: quantity,
-                      onQtyChange: (n: number) => setQty(product.id, n),
-                      onVariantChange: (id: string) =>
-                        setVariant(product.id, id),
-                      onOpenDetails: () => setDetailId(product.id),
-                    }
-
-                    return <ProductCard key={product.id} {...commonProps} />
-                  })}
-                </div>
-              )}
-
-              {remainingProducts > 0 && (
-                <div className="mt-5 border-t border-[color:var(--sand-deep)] pt-5 text-center">
-                  <button
-                    type="button"
-                    className="hover:border-foreground/40 min-h-11 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-sm font-medium transition-colors"
-                    onClick={() =>
-                      setVisibleCount((current) => current + pageSize)
-                    }
-                  >
-                    Charger {Math.min(pageSize, remainingProducts)} référence
-                    {Math.min(pageSize, remainingProducts) > 1 ? 's' : ''} de
-                    plus
-                  </button>
-                </div>
-              )}
-
-              <div className="mt-4 text-[11px] text-muted-foreground">
-                MOQ usine :{' '}
-                <strong className="text-foreground/80">
-                  50 unités par modèle ET par design
-                </strong>{' '}
-                pour les assises, 20 pour les tables.
-              </div>
+              {/* Sidebar (40%) */}
+              <aside className="lg:col-span-5">
+                <OrderSidebar
+                  items={items}
+                  reservedItems={reservedItems}
+                  linePrices={linePrices}
+                  totals={totals}
+                  fillPercent={fill.percent}
+                  usedCbm={fill.usedCbm}
+                  capacity={fill.capacity}
+                  onReserve={() => setReserveOpen(true)}
+                  onDownloadPdf={handlePdf}
+                  container={currentContainer}
+                />
+              </aside>
             </div>
-
-            {/* Sidebar (40%) */}
-            <aside className="lg:col-span-5">
-              <OrderSidebar
-                items={items}
-                reservedItems={reservedItems}
-                totals={totals}
-                fillPercent={fill.percent}
-                usedCbm={fill.usedCbm}
-                capacity={fill.capacity}
-                onReserve={() => setReserveOpen(true)}
-                onDownloadPdf={handlePdf}
-                container={currentContainer}
-              />
-            </aside>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <DeliveryInfoBox />
-      <PastContainers />
-      <FaqAccordion />
-      <FinalCta onReserve={() => setReserveOpen(true)} />
+        <DeliveryInfoBox />
+        <PastContainers />
+        <FaqAccordion />
+        <FinalCta onReserve={() => setReserveOpen(true)} />
+      </main>
+
       <Footer />
 
       <MobileStickyBar

@@ -106,7 +106,7 @@ function AccountReservationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="contenu" className="min-h-screen bg-background text-foreground">
       <AccountTopBar />
       <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
         <div className="mx-auto max-w-7xl px-6 py-8">

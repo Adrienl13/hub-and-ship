@@ -54,7 +54,7 @@ function AccountDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main id="contenu" className="mx-auto max-w-5xl px-6 py-8">
         <section className="shadow-paper relative overflow-hidden rounded-xl border border-[color:var(--ember)]/30">
           <div
             aria-hidden

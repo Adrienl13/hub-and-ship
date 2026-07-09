@@ -18,7 +18,7 @@ export const FAQ = [
   },
   {
     q: "Qui s'occupe de la douane et de la TVA à l'import ?",
-    a: "Tout est pris en charge par Container Club (Pros Import EURL), votre importateur officiel français. Vous n'avez aucune démarche douanière à effectuer : nous gérons la déclaration d'importation, le dédouanement, la TVA à l'import (autoliquidée) et la conformité réglementaire des produits (marquage CE, REACH, classement au feu pour les ERP).\n\nVous recevez une facture française en bonne et due forme : prix HT + TVA 20% en sus, parfaitement déductible pour votre entreprise. Pas de facture étrangère, pas de TVA bloquée, pas de surprise au passage en douane.\n\nConcrètement, vous achetez auprès d'un fournisseur français et recevez une marchandise déjà dédouanée et conforme au marché européen.",
+    a: "Tout est pris en charge par Container Club (Pros Import EURL), votre importateur officiel français. Vous n'avez aucune démarche douanière à effectuer : nous gérons la déclaration d'importation, le dédouanement, la TVA à l'import (autoliquidée) et la conformité réglementaire des produits, notamment le marquage CE et REACH selon les produits.\n\nVous recevez une facture française en bonne et due forme : prix HT + TVA 20% en sus, parfaitement déductible pour votre entreprise. Pas de facture étrangère, pas de TVA bloquée, pas de surprise au passage en douane.\n\nConcrètement, vous achetez auprès d'un fournisseur français et recevez une marchandise déjà dédouanée et conforme au marché européen.",
   },
   {
     q: 'Comment se passe la livraison ? Combien ça coûte ?',
@@ -107,6 +107,7 @@ export function FaqAccordion() {
                   </button>
                   <motion.div
                     id={panelId}
+                    aria-hidden={!isOpen}
                     initial={false}
                     animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
                     transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}

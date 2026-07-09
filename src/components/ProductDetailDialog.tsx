@@ -2,7 +2,6 @@ import {
   Ruler,
   Weight,
   Package,
-  Flame,
   ShieldCheck,
   TrendingDown,
   Check,
@@ -61,6 +60,7 @@ export function ProductDetailDialog({
   const totalLine = product.basePriceHt * qty
   const lineCbm = product.cbmPerUnit * qty
   const quantityRule = getQuantityRule(product)
+  const hasMultipleDesigns = product.variants.length > 1
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,11 +125,10 @@ export function ProductDetailDialog({
             </div>
 
             {product.fireRating && (
-              <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs">
-                <Flame className="h-3.5 w-3.5 text-[color:var(--ember)]" />
+              <div className="border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs">
+                <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--forest)]" />
                 <span>
-                  Classement feu <strong>{product.fireRating}</strong> ·
-                  conforme ERP
+                  Conformité <strong>CE</strong> · adaptée mobilier extérieur
                 </span>
               </div>
             )}
@@ -165,15 +164,30 @@ export function ProductDetailDialog({
               />
             ) : (
               <div>
-                <DesignSelector
-                  variants={product.variants}
-                  selectedVariantId={variantId}
-                  onChange={onVariantChange}
-                  size="lg"
-                  fallbackImageUrl={product.mainImageUrl}
-                />
+                {hasMultipleDesigns ? (
+                  <DesignSelector
+                    variants={product.variants}
+                    selectedVariantId={variantId}
+                    onChange={onVariantChange}
+                    size="lg"
+                    label="Choisir un motif / coloris"
+                    fallbackImageUrl={product.mainImageUrl}
+                  />
+                ) : (
+                  <div className="rounded-sm border border-[color:var(--sand-deep)] bg-card p-3 text-xs">
+                    <div className="label-eyebrow text-muted-foreground">
+                      Photos du produit
+                    </div>
+                    <p className="mt-1 leading-relaxed text-foreground/75">
+                      Design présenté. Coloris et finitions personnalisables sur
+                      projet.
+                    </p>
+                  </div>
+                )}
                 <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
-                  <span className="font-medium">MOQ {variant.name} :</span>{' '}
+                  <span className="font-medium">
+                    MOQ {hasMultipleDesigns ? variant.name : 'produit'} :
+                  </span>{' '}
                   <span className="tabular-nums">
                     {variant.unitsCommitted + qty} / {product.moqUnits}
                   </span>{' '}

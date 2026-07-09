@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -14,6 +14,9 @@ import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 import type { ContainerType } from '@/lib/supabase/types'
 import { AnalyticsEvent, track } from '@/lib/analytics'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import type { Json } from '@/lib/supabase/types'
 
 export type ProductVariantSelection = Record<string, string>
 export type ProductQuantitySelection = Record<string, number>
@@ -25,6 +28,34 @@ export interface CartSnapshot {
   fill: ReturnType<typeof calculateContainerFill>
   totalUnits: number
 }
+
+type PublicCartLinePrice = {
+  readonly product_id: string
+  readonly quantity: number
+  readonly unit_price_ht: number | string
+  readonly tier_applied: string
+  readonly parameters_version: number
+}
+
+type PublicCartPricingClient = {
+  readonly rpc: (
+    fn: 'get_public_product_prices_for_lines',
+    args: { readonly p_lines: Json },
+  ) => PromiseLike<{
+    readonly data: ReadonlyArray<PublicCartLinePrice> | null
+    readonly error: { readonly message: string } | null
+  }>
+}
+
+type LinePriceState = Record<
+  string,
+  {
+    readonly quantity: number
+    readonly unitPriceHt: number
+    readonly tierApplied: string
+    readonly parametersVersion: number
+  }
+>
 
 interface CartStoreState {
   variantByProduct: ProductVariantSelection
@@ -51,9 +82,39 @@ function createDefaultVariantByProduct(
 }
 
 function createDefaultQtyByProduct(): ProductQuantitySelection {
+  return {}
+}
+
+function isLegacyDemoCart(quantityByProduct: unknown): boolean {
+  if (
+    !quantityByProduct ||
+    typeof quantityByProduct !== 'object' ||
+    Array.isArray(quantityByProduct)
+  ) {
+    return false
+  }
+
+  const entries = Object.entries(quantityByProduct)
+  return (
+    entries.length === 2 &&
+    entries.some(([id, quantity]) => id === 'p1' && quantity === 50) &&
+    entries.some(([id, quantity]) => id === 'p3' && quantity === 10)
+  )
+}
+
+function migratePersistedCart(persisted: unknown): unknown {
+  if (!persisted || typeof persisted !== 'object' || Array.isArray(persisted)) {
+    return persisted
+  }
+
+  const state = persisted as Partial<CartStoreState>
+  if (!isLegacyDemoCart(state.qtyByProduct)) return persisted
+
   return {
-    p1: 50,
-    p3: 10,
+    ...state,
+    qtyByProduct: createDefaultQtyByProduct(),
+    preferredContainerType: null,
+    containerPreferenceSource: null,
   }
 }
 
@@ -143,6 +204,8 @@ export const useCartStore = create<CartStoreState>()(
     }),
     {
       name: 'container-club-cart',
+      version: 1,
+      migrate: migratePersistedCart,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         variantByProduct: state.variantByProduct,
@@ -184,6 +247,84 @@ export function useCart(options: UseCartOptions = {}) {
   const products = options.products
   const capacityCbm = options.capacityCbm
   const baseCapacityCbm = capacityCbm ?? CURRENT_CONTAINER.capacityCbm
+  const [linePrices, setLinePrices] = useState<LinePriceState>({})
+
+  const cartPriceLines = useMemo(() => {
+    const sourceProducts = products ?? PRODUCTS
+    return sourceProducts.flatMap((product) => {
+      const quantity = qtyByProduct[product.id] ?? 0
+      if (quantity <= 0) return []
+      return [{ product_id: product.id, quantity }]
+    })
+  }, [products, qtyByProduct])
+
+  const cartPriceKey = useMemo(
+    () =>
+      cartPriceLines
+        .map((line) => `${line.product_id}:${line.quantity}`)
+        .sort()
+        .join('|'),
+    [cartPriceLines],
+  )
+
+  useEffect(() => {
+    if (cartPriceLines.length === 0) {
+      setLinePrices({})
+      return
+    }
+
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) {
+      setLinePrices({})
+      return
+    }
+
+    let cancelled = false
+    async function loadLinePrices() {
+      const client = createSupabaseBrowserClient(
+        config,
+      ) as unknown as PublicCartPricingClient
+      const { data, error } = await client.rpc(
+        'get_public_product_prices_for_lines',
+        { p_lines: cartPriceLines as unknown as Json },
+      )
+
+      if (cancelled) return
+      if (error) {
+        console.error('useCart: cart pricing fetch failed', error)
+        setLinePrices({})
+        return
+      }
+
+      const next: LinePriceState = {}
+      for (const row of (data ?? []) as ReadonlyArray<PublicCartLinePrice>) {
+        const unitPriceHt = Number(row.unit_price_ht)
+        if (!Number.isFinite(unitPriceHt)) continue
+        next[row.product_id] = {
+          quantity: row.quantity,
+          unitPriceHt,
+          tierApplied: row.tier_applied,
+          parametersVersion: row.parameters_version,
+        }
+      }
+      setLinePrices(next)
+    }
+
+    void loadLinePrices()
+    return () => {
+      cancelled = true
+    }
+  }, [cartPriceKey, cartPriceLines])
+
+  const pricedProducts = useMemo(() => {
+    const sourceProducts = products ?? PRODUCTS
+    return sourceProducts.map((product) => {
+      const price = linePrices[product.id]
+      const quantity = qtyByProduct[product.id] ?? 0
+      if (!price || price.quantity !== quantity) return product
+      return { ...product, basePriceHt: price.unitPriceHt }
+    })
+  }, [linePrices, products, qtyByProduct])
 
   // If the user actively picked a container format (e.g. switched to a
   // 40' GP for a bigger order), its usable cbm overrides the active
@@ -198,10 +339,10 @@ export function useCart(options: UseCartOptions = {}) {
       createCartSnapshot({
         qtyByProduct,
         variantByProduct,
-        products,
+        products: pricedProducts,
         capacityCbm: effectiveCapacityCbm,
       }),
-    [qtyByProduct, variantByProduct, products, effectiveCapacityCbm],
+    [qtyByProduct, variantByProduct, pricedProducts, effectiveCapacityCbm],
   )
 
   useEffect(() => {
@@ -236,5 +377,6 @@ export function useCart(options: UseCartOptions = {}) {
     setQty,
     setVariant,
     setPreferredContainerType,
+    linePrices,
   }
 }

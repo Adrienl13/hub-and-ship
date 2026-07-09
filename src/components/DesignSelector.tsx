@@ -79,6 +79,7 @@ export function DesignSelector({
   showLabel = true,
   showSelectedName = true,
   fallbackImageUrl,
+  label = 'Design',
 }: {
   variants: DesignVariant[]
   selectedVariantId: string
@@ -86,6 +87,7 @@ export function DesignSelector({
   size?: 'sm' | 'lg'
   showLabel?: boolean
   showSelectedName?: boolean
+  label?: string
   /** Used when a variant has no `imageUrl` yet — typically the product's
    * main image, so the selector stays visual instead of greying out. */
   fallbackImageUrl?: string
@@ -95,7 +97,7 @@ export function DesignSelector({
   return (
     <div>
       {showLabel && (
-        <div className="label-eyebrow mb-2 text-muted-foreground">Design</div>
+        <div className="label-eyebrow mb-2 text-muted-foreground">{label}</div>
       )}
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
         {variants.map((variant) => (

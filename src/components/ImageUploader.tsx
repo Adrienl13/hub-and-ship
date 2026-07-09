@@ -11,7 +11,14 @@
 //   - <ImageGalleryUploader values onChange /> N images, drag-free reorder
 //     via add/remove (kept simple to match the rest of the admin UI).
 
-import { ImageOff, Plus, Trash2, Upload } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ImageOff,
+  Plus,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -105,6 +112,17 @@ async function deleteByPublicUrl(url: string): Promise<void> {
   if (!config.isConfigured) return
   const client = createSupabaseBrowserClient(config)
   await client.storage.from(BUCKET).remove([path])
+}
+
+function moveItem<T>(items: ReadonlyArray<T>, from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length) {
+    return [...items]
+  }
+  const next = [...items]
+  const [item] = next.splice(from, 1)
+  if (item === undefined) return next
+  next.splice(Math.min(to, next.length), 0, item)
+  return next
 }
 
 export interface ImageUploaderProps {
@@ -264,9 +282,13 @@ export function ImageGalleryUploader({
     if (url) await deleteByPublicUrl(url)
   }
 
+  function handleMove(index: number, direction: -1 | 1): void {
+    onChange(moveItem(values, index, index + direction))
+  }
+
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {values.map((url, i) => (
           <div
             key={`${url}-${i}`}
@@ -284,14 +306,40 @@ export function ImageGalleryUploader({
                 <ImageOff className="h-4 w-4 text-muted-foreground" />
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => void handleRemove(i)}
-              aria-label="Retirer cette image"
-              className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-sm bg-black/55 text-white opacity-0 transition-opacity hover:bg-black/75 group-hover:opacity-100"
-            >
-              <Trash2 className="h-3 w-3" />
-            </button>
+            <div className="absolute left-1 top-1 rounded-sm bg-black/55 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-white">
+              {i + 1}
+            </div>
+            <div className="absolute bottom-1 left-1 right-1 flex justify-between gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => handleMove(i, -1)}
+                disabled={i === 0}
+                aria-label="Déplacer cette image vers la gauche"
+                title="Déplacer vers la gauche"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-black/55 text-white transition-colors hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleRemove(i)}
+                aria-label="Retirer cette image"
+                title="Retirer"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-black/55 text-white transition-colors hover:bg-black/75"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMove(i, 1)}
+                disabled={i === values.length - 1}
+                aria-label="Déplacer cette image vers la droite"
+                title="Déplacer vers la droite"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-black/55 text-white transition-colors hover:bg-black/75 disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         ))}
         <button

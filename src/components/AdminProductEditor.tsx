@@ -12,12 +12,14 @@ import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { Database, FireRatingDb, Json } from '@/lib/supabase/types'
 import type { ProductCategory } from '@/lib/products'
 import {
+  getActivePricingParameters,
   getProductWithVariants,
   listCommitmentsForProduct,
   type CatalogueAdminClient,
 } from '@/lib/catalogue-admin/repository'
 import type {
   AdminContainerOption,
+  AdminPricingParameters,
   AdminProductDetail,
   AdminProductVariant,
   AdminSeedCommitment,
@@ -29,9 +31,10 @@ const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = [
   'table',
   'bench',
 ]
-const FIRE_RATING_VALUES: ReadonlyArray<FireRatingDb> = ['M1', 'M2']
-
 type ProductUpdate = Database['public']['Tables']['products']['Update']
+type ProductEditorPayload = ProductUpdate & {
+  readonly partner_net_price_ht: number | null
+}
 
 type EditableVariant = AdminProductVariant & { readonly _new?: boolean }
 
@@ -42,6 +45,11 @@ interface EditableProduct {
   category: ProductCategory
   moq_units: string
   base_price_ht: string
+  fob_usd: string
+  qty_per_container: string
+  is_loss_leader: boolean
+  table_price_modifier_rate: string
+  partner_net_price_ht: string
   retail_price_ref: string
   eco_contribution: string
   dim_length_cm: string
@@ -65,6 +73,14 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
     category: detail.category,
     moq_units: String(detail.moqUnits),
     base_price_ht: detail.basePriceHt.toString(),
+    fob_usd: detail.fobUsd?.toString() ?? '',
+    qty_per_container: detail.qtyPerContainer?.toString() ?? '',
+    is_loss_leader: detail.isLossLeader,
+    table_price_modifier_rate:
+      detail.tablePriceModifierRate === null
+        ? ''
+        : (detail.tablePriceModifierRate * 100).toString(),
+    partner_net_price_ht: detail.partnerNetPriceHt?.toString() ?? '',
     retail_price_ref: detail.retailPriceRef.toString(),
     eco_contribution: detail.ecoContribution.toString(),
     dim_length_cm: String(detail.dimensions.l),
@@ -89,6 +105,11 @@ function emptyEditable(): EditableProduct {
     category: 'chair',
     moq_units: '50',
     base_price_ht: '0',
+    fob_usd: '',
+    qty_per_container: '',
+    is_loss_leader: false,
+    table_price_modifier_rate: '',
+    partner_net_price_ht: '',
     retail_price_ref: '0',
     eco_contribution: '0',
     dim_length_cm: '0',
@@ -121,7 +142,105 @@ function parseNumber(value: string, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback
 }
 
-function toUpdatePayload(state: EditableProduct): ProductUpdate {
+function toOptionalPositivePrice(value: string): number | null {
+  if (!value.trim()) return null
+  const parsed = parseNumber(value)
+  return parsed > 0 ? parsed : null
+}
+
+function toOptionalPositiveNumber(value: string): number | null {
+  if (!value.trim()) return null
+  const parsed = parseNumber(value)
+  return parsed > 0 ? parsed : null
+}
+
+function toOptionalPositiveInt(value: string): number | null {
+  const parsed = toOptionalPositiveNumber(value)
+  return parsed === null ? null : Math.max(1, Math.round(parsed))
+}
+
+function toOptionalRateFromPercent(value: string): number | null {
+  if (!value.trim()) return null
+  return parseNumber(value) / 100
+}
+
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
+type PricingPreviewRow = {
+  readonly label: string
+  readonly quantity: number
+  readonly channel: 'direct' | 'reseller' | 'distributor'
+  readonly landedCostHt: number
+  readonly formulaPriceHt: number
+  readonly unitPriceHt: number
+  readonly tierApplied: string
+  readonly deltaVsCurrent: number
+}
+
+function buildPricingPreviewRows(
+  state: EditableProduct,
+  params: AdminPricingParameters,
+): ReadonlyArray<PricingPreviewRow> {
+  const basePrice = Math.max(0, parseNumber(state.base_price_ht))
+  const fobUsd = toOptionalPositiveNumber(state.fob_usd)
+  const qtyPerContainer = toOptionalPositiveInt(state.qty_per_container)
+  const hasRealCost = fobUsd !== null && qtyPerContainer !== null
+  const landedCostHt = hasRealCost
+    ? round2(
+        fobUsd * params.fxUsdEur * (1 + params.customsRate + params.importInsuranceRate) +
+          params.freightEur40hc / qtyPerContainer +
+          params.fixedImportFeeEur,
+      )
+    : round2(basePrice / (1 + params.directMarginRate))
+  const floor = round2(landedCostHt * (1 + params.minMarginFloor))
+  const isLossLeader = state.is_loss_leader
+
+  const rows: Array<{
+    label: string
+    channel: 'direct' | 'reseller' | 'distributor'
+    quantity: number
+  }> = [
+    { label: 'Direct', channel: 'direct', quantity: 1 },
+    { label: `Direct palier ${params.tier2Qty}`, channel: 'direct', quantity: params.tier2Qty },
+    { label: `Direct palier ${params.tier3Qty}`, channel: 'direct', quantity: params.tier3Qty },
+    { label: 'Revendeur', channel: 'reseller', quantity: 1 },
+    { label: 'Distributeur', channel: 'distributor', quantity: 1 },
+  ]
+
+  return rows.map((row) => {
+    let rawPrice = landedCostHt * (1 + params.directMarginRate)
+    let tierApplied = 'none'
+
+    if (row.channel === 'reseller') {
+      rawPrice = landedCostHt * (1 + params.resellerMarginRate)
+    } else if (row.channel === 'distributor') {
+      rawPrice = landedCostHt * (1 + params.distributorMarginRate)
+    } else if (isLossLeader && row.quantity >= params.lossLeaderMinLot) {
+      rawPrice = floor
+      tierApplied = 'loss_leader'
+    } else if (row.quantity >= params.tier3Qty) {
+      rawPrice *= 1 - params.tier3Discount
+      tierApplied = 'tier3'
+    } else if (row.quantity >= params.tier2Qty) {
+      rawPrice *= 1 - params.tier2Discount
+      tierApplied = 'tier2'
+    }
+
+    const formulaPriceHt = Math.max(round2(rawPrice), floor)
+    return {
+      ...row,
+      landedCostHt,
+      formulaPriceHt,
+      unitPriceHt: formulaPriceHt,
+      tierApplied,
+      deltaVsCurrent: round2(formulaPriceHt - basePrice),
+    }
+  })
+}
+
+function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
   return {
     sku: state.sku.trim(),
     name: state.name.trim(),
@@ -129,6 +248,13 @@ function toUpdatePayload(state: EditableProduct): ProductUpdate {
     category: state.category,
     moq_units: Math.max(1, Math.round(parseNumber(state.moq_units, 1))),
     base_price_ht: Math.max(0, parseNumber(state.base_price_ht)),
+    fob_usd: toOptionalPositiveNumber(state.fob_usd),
+    qty_per_container: toOptionalPositiveInt(state.qty_per_container),
+    is_loss_leader: state.is_loss_leader,
+    table_price_modifier_rate: toOptionalRateFromPercent(
+      state.table_price_modifier_rate,
+    ),
+    partner_net_price_ht: toOptionalPositivePrice(state.partner_net_price_ht),
     retail_price_ref: Math.max(0, parseNumber(state.retail_price_ref)),
     eco_contribution: Math.max(0, parseNumber(state.eco_contribution)),
     dim_length_cm: Math.max(0, Math.round(parseNumber(state.dim_length_cm))),
@@ -172,11 +298,41 @@ export function AdminProductEditor({
   const [variants, setVariants] = useState<EditableVariant[]>([])
   const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([])
   const [commitments, setCommitments] = useState<AdminSeedCommitment[]>([])
+  const [pricingParameters, setPricingParameters] =
+    useState<AdminPricingParameters | null>(null)
   const [loading, setLoading] = useState(!isCreating)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
+  const directPrice = state ? Math.max(0, parseNumber(state.base_price_ht)) : 0
+  const partnerPrice = state
+    ? toOptionalPositivePrice(state.partner_net_price_ht)
+    : null
+  const partnerMargin =
+    partnerPrice && directPrice > 0
+      ? Math.max(0, directPrice - partnerPrice)
+      : null
+  const cbmPerUnit = state ? Math.max(0, parseNumber(state.cbm_per_unit)) : 0
+  const qtyPerContainer = state
+    ? toOptionalPositiveInt(state.qty_per_container)
+    : null
+  const indicativeQtyPerContainer =
+    cbmPerUnit > 0 ? Math.round(76 / cbmPerUnit) : null
+  const qtyDeltaRatio =
+    qtyPerContainer && indicativeQtyPerContainer
+      ? Math.abs(qtyPerContainer - indicativeQtyPerContainer) /
+        Math.max(qtyPerContainer, 1)
+      : null
+  const qtyNeedsReview = qtyDeltaRatio !== null && qtyDeltaRatio > 0.15
+  const pricingPreviewRows =
+    state && pricingParameters
+      ? buildPricingPreviewRows(state, pricingParameters)
+      : []
+  const pricingUsesFallback =
+    state !== null &&
+    (!toOptionalPositiveNumber(state.fob_usd) ||
+      !toOptionalPositiveInt(state.qty_per_container))
 
   useEffect(() => {
     if (isCreating) return
@@ -189,9 +345,10 @@ export function AdminProductEditor({
       }
       const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
       try {
-        const [productDetail, commitmentRows] = await Promise.all([
+        const [productDetail, commitmentRows, pricing] = await Promise.all([
           getProductWithVariants(client, productId!),
           listCommitmentsForProduct(client, productId!),
+          getActivePricingParameters(client),
         ])
         if (cancelled) return
         if (!productDetail) {
@@ -203,6 +360,7 @@ export function AdminProductEditor({
         setState(toEditable(productDetail))
         setVariants(productDetail.variants.map((v) => ({ ...v })))
         setCommitments([...commitmentRows])
+        setPricingParameters(pricing)
         setLoading(false)
       } catch (err) {
         if (cancelled) return
@@ -215,6 +373,24 @@ export function AdminProductEditor({
       cancelled = true
     }
   }, [config, productId, isCreating])
+
+  useEffect(() => {
+    if (!isCreating || !config.isConfigured) return
+    let cancelled = false
+    async function loadPricing() {
+      const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+      try {
+        const pricing = await getActivePricingParameters(client)
+        if (!cancelled) setPricingParameters(pricing)
+      } catch {
+        if (!cancelled) setPricingParameters(null)
+      }
+    }
+    void loadPricing()
+    return () => {
+      cancelled = true
+    }
+  }, [config, isCreating])
 
   function setField<K extends keyof EditableProduct>(
     key: K,
@@ -414,24 +590,17 @@ export function AdminProductEditor({
               ))}
             </select>
           </Field>
-          <Field label="Classement feu">
-            <select
-              value={state.fire_rating}
-              onChange={(e) =>
-                setField(
-                  'fire_rating',
-                  (e.target.value as FireRatingDb | '') || '',
-                )
-              }
-              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
-            >
-              <option value="">— Aucun</option>
-              {FIRE_RATING_VALUES.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+          <Field label="Conformité CE">
+            <label className="flex min-h-9 items-center gap-2 rounded-md border border-input px-3 text-sm">
+              <input
+                type="checkbox"
+                checked={Boolean(state.fire_rating)}
+                onChange={(e) =>
+                  setField('fire_rating', e.target.checked ? 'M2' : '')
+                }
+              />
+              <span>Produit conforme CE pour usage extérieur</span>
+            </label>
           </Field>
           <Field label="Actif">
             <label className="flex items-center gap-2 text-sm">
@@ -477,6 +646,17 @@ export function AdminProductEditor({
               onChange={(e) => setField('base_price_ht', e.target.value)}
             />
           </Field>
+          <Field label="Prix net partenaire (€)">
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="Privé, réservé aux partenaires"
+              value={state.partner_net_price_ht}
+              onChange={(e) =>
+                setField('partner_net_price_ht', e.target.value)
+              }
+            />
+          </Field>
           <Field label="Prix retail référence (€)">
             <Input
               type="number"
@@ -494,6 +674,107 @@ export function AdminProductEditor({
             />
           </Field>
         </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          Le prix HT base alimente le catalogue public et les réservations
+          directes. Le prix net partenaire est stocké séparément derrière RLS et
+          n&apos;est jamais exposé aux visiteurs anonymes.
+          {partnerMargin !== null && (
+            <>
+              {' '}
+              Marge indicative au prix public :{' '}
+              <span className="font-medium text-foreground">
+                {partnerMargin.toFixed(2)} €
+              </span>
+              .
+            </>
+          )}
+        </p>
+      </Fieldset>
+
+      <Fieldset title="Moteur pricing">
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="FOB USD / unité">
+            <Input
+              type="number"
+              step="0.0001"
+              placeholder="Coût usine HT en USD"
+              value={state.fob_usd}
+              onChange={(e) => setField('fob_usd', e.target.value)}
+            />
+          </Field>
+          <Field label="Quantité réelle / 40HC">
+            <Input
+              type="number"
+              min={1}
+              placeholder="Saisie manuelle, source de vérité"
+              value={state.qty_per_container}
+              onChange={(e) => setField('qty_per_container', e.target.value)}
+            />
+          </Field>
+          <Field label="Modificateur table (%)">
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="ex. -8 ou 18"
+              value={state.table_price_modifier_rate}
+              onChange={(e) =>
+                setField('table_price_modifier_rate', e.target.value)
+              }
+            />
+          </Field>
+          <Field label="Loss leader">
+            <label className="flex min-h-9 items-center gap-2 rounded-md border border-input px-3 text-sm">
+              <input
+                type="checkbox"
+                checked={state.is_loss_leader}
+                onChange={(e) =>
+                  setField('is_loss_leader', e.target.checked)
+                }
+              />
+              <span>Activer pour une référence stratégique</span>
+            </label>
+          </Field>
+        </div>
+        <div
+          className={`rounded-md border px-3 py-2 text-xs leading-5 ${
+            qtyNeedsReview
+              ? 'border-amber-300 bg-amber-50 text-amber-950'
+              : 'border-[color:var(--sand-deep)] bg-card text-muted-foreground'
+          }`}
+        >
+          <div>
+            Quantité indicative d&apos;après CBM 40HC utile :{' '}
+            <span className="font-medium text-foreground">
+              {indicativeQtyPerContainer ?? '—'}
+            </span>
+            {qtyPerContainer ? (
+              <>
+                {' '}
+                · Quantité saisie :{' '}
+                <span className="font-medium text-foreground">
+                  {qtyPerContainer}
+                </span>
+              </>
+            ) : null}
+          </div>
+          {qtyNeedsReview ? (
+            <div className="mt-1 font-medium">
+              Écart supérieur à 15% : vérifier la valeur réelle de la quote
+              sheet avant d&apos;utiliser ce produit dans le moteur.
+            </div>
+          ) : (
+            <div className="mt-1">
+              La quantité saisie reste toujours prioritaire. Le CBM sert
+              uniquement d&apos;alerte.
+            </div>
+          )}
+        </div>
+        {pricingPreviewRows.length > 0 && (
+          <PricingPreviewTable
+            rows={pricingPreviewRows}
+            usesFallback={pricingUsesFallback}
+          />
+        )}
       </Fieldset>
 
       <Fieldset title="Dimensions & logistique">
@@ -745,6 +1026,84 @@ function Field({
     <div className="space-y-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
+    </div>
+  )
+}
+
+function formatSignedEuro(value: number): string {
+  if (Math.abs(value) < 0.005) return '0.00 €'
+  return `${value > 0 ? '+' : ''}${value.toFixed(2)} €`
+}
+
+function formatPricingRule(tierApplied: string): string {
+  if (tierApplied === 'tier2') return 'Remise 100+'
+  if (tierApplied === 'tier3') return 'Remise 150+'
+  if (tierApplied === 'loss_leader') return 'Prix stratégique'
+  return 'Prix standard'
+}
+
+function PricingPreviewTable({
+  rows,
+  usesFallback,
+}: {
+  readonly rows: ReadonlyArray<PricingPreviewRow>
+  readonly usesFallback: boolean
+}) {
+  const direct = rows[0]
+
+  return (
+    <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2">
+        <div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            Prévisualisation calculée
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            Coût rendu estimé :{' '}
+            <span className="font-medium text-foreground">
+              {direct ? `${direct.landedCostHt.toFixed(2)} €` : '—'}
+            </span>
+          </div>
+        </div>
+        {usesFallback && (
+          <span className="rounded-sm bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-900">
+            Fallback prix actuel
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-[1.2fr_70px_95px_95px_95px] border-b border-[color:var(--sand-deep)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        <span>Canal</span>
+        <span className="text-right">Qté</span>
+        <span className="text-right">Prix</span>
+        <span className="text-right">Écart</span>
+        <span className="text-right">Règle</span>
+      </div>
+      {rows.map((row) => (
+        <div
+          key={`${row.channel}-${row.quantity}`}
+          className="grid grid-cols-[1.2fr_70px_95px_95px_95px] px-3 py-2 text-xs odd:bg-[color:var(--sand-soft)]/40"
+        >
+          <span className="font-medium">{row.label}</span>
+          <span className="text-right tabular-nums">{row.quantity}</span>
+          <span className="text-right font-medium tabular-nums">
+            {row.unitPriceHt.toFixed(2)} €
+          </span>
+          <span
+            className={`text-right tabular-nums ${
+              row.deltaVsCurrent > 0
+                ? 'text-amber-800'
+                : row.deltaVsCurrent < 0
+                  ? 'text-[color:var(--forest)]'
+                  : 'text-muted-foreground'
+            }`}
+          >
+            {formatSignedEuro(row.deltaVsCurrent)}
+          </span>
+          <span className="text-right text-muted-foreground">
+            {formatPricingRule(row.tierApplied)}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

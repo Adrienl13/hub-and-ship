@@ -15,13 +15,27 @@ Pros Import operates Container Club, a French B2B group-buying platform for prof
 - Home: https://prosimport.com/
 - Catalogue: https://prosimport.com/catalogue
 - Chairs category: https://prosimport.com/catalogue/chaises-restaurant
+- Armchairs category: https://prosimport.com/catalogue/fauteuils-restaurant
 - Tables category: https://prosimport.com/catalogue/tables-restaurant
+- Benches and lounge category: https://prosimport.com/catalogue/bancs-terrasse
+- Rope outdoor furniture: https://prosimport.com/catalogue/mobilier-cordage
+- Textilene outdoor furniture: https://prosimport.com/catalogue/mobilier-textilene
 - Stock available quickly: https://prosimport.com/stock-24h
 - Reseller partner program: https://prosimport.com/partenaires
 - Quality and tests: https://prosimport.com/qualite
 - Delivered containers: https://prosimport.com/livres
 - Recommended carriers: https://prosimport.com/transport-partenaires
 - FAQ: https://prosimport.com/faq
+
+## Product pages
+
+Individual product pages are available under `/catalogue/{product-name-and-sku}` and are listed in the sitemap. These pages expose the product name, SKU, public professional price excluding VAT, MOQ, dimensions, weight, CBM volume, photos, compliance signal, buying context and Product structured data.
+
+Examples:
+
+- Bistro chair RIVOLI: https://prosimport.com/catalogue/chaise-de-bistrot-rivoli-chevron-blanc-gris-bis-001
+- Bistro chair MONCEAU: https://prosimport.com/catalogue/chaise-de-bistrot-monceau-tressage-vert-emeraude-ecru-blanc-bis-002
+- Bistro chair OPERA: https://prosimport.com/catalogue/chaise-de-bistrot-opera-raye-blanc-rouge-bis-003
 
 ## Guides (educational, citable)
 
@@ -61,4 +75,3 @@ The public website may show direct-pro prices, public discounts, MOQ, CBM, conta
 
 Primary website: https://prosimport.com/
 Email: adrienlaniez1@gmail.com
-

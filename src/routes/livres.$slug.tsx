@@ -126,7 +126,7 @@ function LivreDetailPage() {
       <Header onReserve={() => setReserveOpen(true)} />
 
       {loading ? (
-        <main className="mx-auto max-w-7xl px-6 py-12">
+        <main id="contenu" className="mx-auto max-w-7xl px-6 py-12">
           <div className="bg-primary/10 h-72 animate-pulse rounded-md" />
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -142,7 +142,7 @@ function LivreDetailPage() {
           throw notFound()
         })()
       ) : error ? (
-        <main className="mx-auto max-w-3xl px-6 py-24 text-center">
+        <main id="contenu" className="mx-auto max-w-3xl px-6 py-24 text-center">
           <h1 className="font-display text-3xl">Erreur</h1>
           <p className="mt-3 text-sm text-muted-foreground">{error}</p>
         </main>
@@ -178,7 +178,7 @@ function DeliveredContainerView({
     'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?auto=format&fit=crop&w=1600&q=80'
 
   return (
-    <main>
+    <main id="contenu">
       <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
         <div className="mx-auto max-w-7xl px-6 pt-10">
           <Link

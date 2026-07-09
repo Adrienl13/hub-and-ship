@@ -49,7 +49,7 @@ export function QuantityStepper({
               ),
             )
           }
-          className={`${inputSize} bg-transparent text-center font-semibold tabular-nums [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+          className={`${inputSize} rounded-sm bg-transparent text-center font-semibold tabular-nums [appearance:textfield] focus:outline-none focus-visible:ring-1 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
           aria-label="Quantité"
           min={0}
           step={rule.step}

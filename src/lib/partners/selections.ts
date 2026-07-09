@@ -140,6 +140,57 @@ export function selectionTotalUnits(
   return items.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+export interface PartnerNetTotals {
+  readonly netTotalHt: number
+  readonly marginTotalHt: number
+  readonly pricedUnits: number
+  readonly missingUnits: number
+  readonly isComplete: boolean
+}
+
+/**
+ * Private partner economics used only inside authenticated partner tooling.
+ * Public selection snapshots stay unchanged and only carry basePriceHt.
+ */
+export function selectionPartnerNetTotals(
+  items: ReadonlyArray<{
+    readonly productId: string
+    readonly quantity: number
+    readonly snapshot: SelectionItemSnapshot
+  }>,
+  partnerNetPrices: ReadonlyMap<string, number>,
+): PartnerNetTotals {
+  return items.reduce<PartnerNetTotals>(
+    (totals, item) => {
+      if (!partnerNetPrices.has(item.productId)) {
+        return {
+          ...totals,
+          missingUnits: totals.missingUnits + item.quantity,
+          isComplete: false,
+        }
+      }
+
+      const netPrice = Math.max(0, partnerNetPrices.get(item.productId) ?? 0)
+      const publicPrice = Math.max(0, item.snapshot.basePriceHt)
+      return {
+        ...totals,
+        netTotalHt: totals.netTotalHt + netPrice * item.quantity,
+        marginTotalHt:
+          totals.marginTotalHt +
+          Math.max(0, publicPrice - netPrice) * item.quantity,
+        pricedUnits: totals.pricedUnits + item.quantity,
+      }
+    },
+    {
+      netTotalHt: 0,
+      marginTotalHt: 0,
+      pricedUnits: 0,
+      missingUnits: 0,
+      isComplete: true,
+    },
+  )
+}
+
 /** Eco-contribution total (public). */
 export function selectionEcoTotal(
   items: ReadonlyArray<{

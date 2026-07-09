@@ -122,7 +122,7 @@ function PartnerDashboard() {
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main id="contenu" className="mx-auto max-w-5xl px-6 py-8">
         <PartnerHero partnerName={partnerName} report={report} />
 
         {state === 'loading' ? (

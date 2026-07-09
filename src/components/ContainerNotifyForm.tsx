@@ -18,6 +18,7 @@ export function ContainerNotifyForm({ source = 'site' }: { source?: string }) {
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const inputId = `container-notify-email-${source}`
 
   async function submit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
@@ -60,21 +61,29 @@ export function ContainerNotifyForm({ source = 'site' }: { source?: string }) {
 
   return (
     <form onSubmit={(e) => void submit(e)} className="w-full max-w-sm">
-      <div className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-[color:var(--sand)]">
+      <label
+        htmlFor={inputId}
+        className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-[color:var(--sand)]"
+      >
         <BellRing className="h-4 w-4 text-[color:var(--ember)]" />
         Prévenez-moi du prochain container
-      </div>
-      <p className="mb-2 text-xs text-[color:var(--sand)]/60">
+      </label>
+      <p
+        id={`${inputId}-hint`}
+        className="mb-2 text-xs text-[color:var(--sand)]/60"
+      >
         Recevez un email à l’ouverture d’un nouveau départ. Pas de spam.
       </p>
       <div className="flex gap-2">
         <input
+          id={inputId}
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="vous@etablissement.fr"
-          className="min-w-0 flex-1 rounded-sm border border-[color:var(--sand)]/25 bg-[color:var(--sand)]/10 px-3 py-2 text-sm text-[color:var(--sand)] placeholder:text-[color:var(--sand)]/40 focus:border-[color:var(--ember)] focus:outline-none"
+          aria-describedby={`${inputId}-hint`}
+          className="min-w-0 flex-1 rounded-sm border border-[color:var(--sand)]/35 bg-[color:var(--foreground)] px-3 py-2 text-sm text-[color:var(--sand-soft)] placeholder:text-[color:var(--sand-deep)] focus:border-[color:var(--ember-soft)] focus:outline-none"
         />
         <button
           type="submit"

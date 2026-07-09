@@ -19,7 +19,11 @@ export function MobileStickyBar({
 }) {
   if (totalItems <= 0) return null
   return (
-    <div className="bg-[color:var(--sand-soft)]/95 sticky bottom-0 z-30 border-t border-[color:var(--sand-deep)] px-4 py-2.5 backdrop-blur lg:hidden">
+    <div
+      className="bg-[color:var(--sand-soft)]/95 sticky bottom-0 z-30 border-t border-[color:var(--sand-deep)] px-4 py-2.5 backdrop-blur lg:hidden"
+      role="region"
+      aria-label="Résumé de la sélection"
+    >
       <div className="mx-auto max-w-7xl">
         <ContainerFillBar
           percent={fillPercent}
@@ -41,6 +45,7 @@ export function MobileStickyBar({
             size="sm"
             className="h-10 shrink-0 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
             onClick={onReserve}
+            aria-label={`Réserver ${totalItems} produits pour ${formatEUR(subtotalHt)} HT`}
           >
             Réserver <ArrowRight className="h-3.5 w-3.5" />
           </Button>

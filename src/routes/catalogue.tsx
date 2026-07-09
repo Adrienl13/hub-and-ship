@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   lazy,
   Suspense,
+  useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -40,6 +41,7 @@ import {
 } from '@/lib/catalogue/share-cart'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
+import { getQuantityRule } from '@/lib/quantity'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useFavorites } from '@/hooks/useFavorites'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
@@ -90,6 +92,19 @@ const LazyReservationDialog = lazy(() =>
   })),
 )
 
+const SEO_CATEGORY_LINKS = [
+  { href: '/catalogue/chaises-restaurant', label: 'Chaises restaurant' },
+  { href: '/catalogue/fauteuils-restaurant', label: 'Fauteuils terrasse' },
+  { href: '/catalogue/tables-restaurant', label: 'Tables restaurant' },
+  { href: '/catalogue/bancs-terrasse', label: 'Bancs et lounge' },
+  { href: '/catalogue/mobilier-cordage', label: 'Mobilier cordage' },
+  { href: '/catalogue/mobilier-textilene', label: 'Mobilier textilène' },
+] as const
+
+function isCatalogueFilter(value: string | null): value is CatalogueFilter {
+  return CATEGORY_FILTERS.some((category) => category.id === value)
+}
+
 function CataloguePage() {
   const { products, currentContainer } = useCatalog()
   const favorites = useFavorites()
@@ -103,6 +118,7 @@ function CataloguePage() {
     totals,
     fill,
     totalUnits,
+    linePrices,
     preferredContainerType,
     variantByProduct,
     qtyByProduct,
@@ -167,8 +183,20 @@ function CataloguePage() {
     })
   }
 
+  const quickReserveProduct = useCallback(
+    (product: Product, source = 'product_card'): void => {
+      if ((qtyByProduct[product.id] ?? 0) <= 0) {
+        setQty(product.id, getQuantityRule(product).minimum)
+      }
+      track(AnalyticsEvent.ReserveOpen, { source })
+      setReserveOpen(true)
+    },
+    [qtyByProduct, setQty],
+  )
+
   // Reconstruct the cart from a shared ?panier= link, once products are loaded.
   const sharedApplied = useRef(false)
+  const directLinkApplied = useRef(false)
   useEffect(() => {
     if (sharedApplied.current || productsArray.length === 0) return
     sharedApplied.current = true
@@ -186,6 +214,68 @@ function CataloguePage() {
     }
     toast.success('Sélection chargée depuis le lien partagé.')
   }, [productsArray, setQty, setVariant])
+
+  useEffect(() => {
+    if (
+      directLinkApplied.current ||
+      productsArray.length === 0 ||
+      typeof window === 'undefined'
+    ) {
+      return
+    }
+    directLinkApplied.current = true
+
+    const params = new URLSearchParams(window.location.search)
+    const categoryParam = params.get('categorie') ?? params.get('category')
+    const searchParam = params.get('recherche') ?? params.get('search')
+    const productId =
+      params.get('produit') ??
+      params.get('product') ??
+      params.get('acheter') ??
+      params.get('reserve')
+    const normalizedProductId = productId?.toLocaleLowerCase('fr-FR')
+    const product = normalizedProductId
+      ? productsArray.find(
+          (item) =>
+            item.id.toLocaleLowerCase('fr-FR') === normalizedProductId ||
+            item.sku.toLocaleLowerCase('fr-FR') === normalizedProductId,
+        )
+      : null
+    const nextFilter = isCatalogueFilter(categoryParam)
+      ? categoryParam
+      : product?.category
+
+    if (nextFilter) setFilter(nextFilter)
+    if (searchParam) setSearch(searchParam)
+    if (product) {
+      const productsInFilter = nextFilter
+        ? productsArray.filter((item) =>
+            nextFilter === 'all' ? true : item.category === nextFilter,
+          )
+        : productsArray
+      const productIndex = productsInFilter.findIndex(
+        (item) => item.id === product.id,
+      )
+      if (productIndex >= pageSize) {
+        setVisibleCount(Math.ceil((productIndex + 1) / pageSize) * pageSize)
+      }
+    }
+
+    if (product && (params.has('acheter') || params.has('reserve'))) {
+      window.setTimeout(() => {
+        quickReserveProduct(product, 'direct_catalogue_link')
+      }, 250)
+      return
+    }
+
+    if (product) {
+      window.setTimeout(() => {
+        document
+          .getElementById(`produit-${product.id}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 150)
+    }
+  }, [pageSize, productsArray, quickReserveProduct])
 
   async function shareSelection(): Promise<void> {
     const entries = productsArray
@@ -248,7 +338,7 @@ function CataloguePage() {
         }}
       />
 
-      <main>
+      <main id="contenu">
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
           <div className="mx-auto grid max-w-7xl gap-6 px-6 py-10 md:grid-cols-[1fr_auto] md:items-end">
             <div className="max-w-3xl">
@@ -263,6 +353,20 @@ function CataloguePage() {
                 cadre, designs accessibles, quantité directe, recherche
                 SKU/design et panier toujours visible.
               </p>
+              <nav
+                aria-label="Familles du catalogue"
+                className="mt-5 flex flex-wrap gap-2"
+              >
+                {SEO_CATEGORY_LINKS.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="text-foreground/75 rounded-sm border border-[color:var(--sand-deep)] bg-background px-3 py-1.5 text-xs font-medium hover:text-foreground"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
             </div>
             <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-sm">
               <div className="label-eyebrow text-muted-foreground">
@@ -314,6 +418,7 @@ function CataloguePage() {
                       type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
+                      aria-label="Rechercher dans le catalogue"
                       placeholder="Rechercher SKU, modèle, design..."
                       className="h-11 w-full min-w-0 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     />
@@ -325,6 +430,7 @@ function CataloguePage() {
                       onChange={(event) =>
                         setSort(event.target.value as SortKey)
                       }
+                      aria-label="Trier le catalogue"
                       className="h-11 min-w-0 flex-1 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     >
                       <option value="default">Tri par défaut</option>
@@ -343,6 +449,7 @@ function CataloguePage() {
                           Number(event.target.value) as PageSizeOption,
                         )
                       }
+                      aria-label="Nombre de références affichées par page"
                       className="h-11 min-w-0 flex-1 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     >
                       {PAGE_SIZE_OPTIONS.map((option) => (
@@ -394,7 +501,7 @@ function CataloguePage() {
                       setAdvanced((a) => ({ ...a, fireM1Only: !a.fireM1Only }))
                     }
                   >
-                    Classé feu M1
+                    Conformité CE
                   </FilterToggle>
                   <FilterToggle
                     active={advanced.stackableOnly}
@@ -460,6 +567,7 @@ function CataloguePage() {
                         setVariant(product.id, variantId)
                       }
                       onOpenDetails={() => setDetailId(product.id)}
+                      onQuickReserve={() => quickReserveProduct(product)}
                       compareSelected={compareIds.has(product.id)}
                       onToggleCompare={() => toggleCompare(product.id)}
                       isFavorite={favorites.isFavorite(product.id)}
@@ -491,6 +599,7 @@ function CataloguePage() {
             <OrderSidebar
               items={items}
               reservedItems={reservedItems}
+              linePrices={linePrices}
               totals={totals}
               fillPercent={fill.percent}
               usedCbm={fill.usedCbm}
@@ -597,7 +706,7 @@ function FilterToggle({
       className={`inline-flex h-9 items-center rounded-sm border px-3 text-xs font-medium transition-colors ${
         active
           ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
-          : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground hover:border-foreground/40'
+          : 'hover:border-foreground/40 border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground'
       }`}
     >
       {children}
@@ -617,7 +726,10 @@ function CatalogueComparison({
   const rows: ReadonlyArray<{ label: string; value: (p: Product) => string }> =
     [
       { label: 'Catégorie', value: (p) => CATEGORY_LABEL[p.category] },
-      { label: 'Prix direct pro HT', value: (p) => `${formatEUR(p.basePriceHt)}` },
+      {
+        label: 'Prix direct pro HT',
+        value: (p) => `${formatEUR(p.basePriceHt)}`,
+      },
       { label: 'Prix retail réf.', value: (p) => formatEUR(p.retailPriceRef) },
       {
         label: 'Économie',
@@ -627,11 +739,12 @@ function CatalogueComparison({
       { label: 'MOQ', value: (p) => `${p.moqUnits} u.` },
       {
         label: 'Dimensions',
-        value: (p) => `${p.dimensions.l}×${p.dimensions.w}×${p.dimensions.h} cm`,
+        value: (p) =>
+          `${p.dimensions.l}×${p.dimensions.w}×${p.dimensions.h} cm`,
       },
       { label: 'Volume', value: (p) => `${p.cbmPerUnit.toFixed(2)} m³` },
       { label: 'Poids', value: (p) => `${p.weightKg} kg` },
-      { label: 'Classé feu', value: (p) => p.fireRating ?? '—' },
+      { label: 'Conformité CE', value: (p) => (p.fireRating ? 'Oui' : '—') },
       { label: 'Empilable', value: (p) => (isStackable(p) ? 'Oui' : '—') },
       { label: 'SKU', value: (p) => p.sku },
     ]
@@ -641,6 +754,7 @@ function CatalogueComparison({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="catalogue-comparison-title"
       onClick={onClose}
     >
       <div
@@ -648,7 +762,12 @@ function CatalogueComparison({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold">Comparateur</h2>
+          <h2
+            id="catalogue-comparison-title"
+            className="font-display text-xl font-semibold"
+          >
+            Comparateur
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -694,7 +813,10 @@ function CatalogueComparison({
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.label} className="border-b border-[color:var(--sand-deep)]/60">
+                <tr
+                  key={row.label}
+                  className="border-[color:var(--sand-deep)]/60 border-b"
+                >
                   <td className="py-2 pr-3 text-xs font-medium text-muted-foreground">
                     {row.label}
                   </td>

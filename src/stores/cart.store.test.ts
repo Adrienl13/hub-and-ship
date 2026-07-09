@@ -10,14 +10,13 @@ describe('cart store', () => {
     useCartStore.getState().resetCart()
   })
 
-  it('starts from the catalogue demo cart', () => {
+  it('starts with an empty cart', () => {
     const { qtyByProduct, variantByProduct } = useCartStore.getState()
     const snapshot = createCartSnapshot({ qtyByProduct, variantByProduct })
 
-    expect(qtyByProduct.p1).toBe(50)
-    expect(qtyByProduct.p3).toBe(10)
-    expect(snapshot.items).toHaveLength(2)
-    expect(snapshot.totalUnits).toBe(60)
+    expect(qtyByProduct).toEqual({})
+    expect(snapshot.items).toHaveLength(0)
+    expect(snapshot.totalUnits).toBe(0)
   })
 
   it('normalizes chair quantities through the shared business rule', () => {
@@ -37,7 +36,7 @@ describe('cart store', () => {
     const state = useCartStore.getState()
 
     expect(state.variantByProduct.p1).toBe('v1c')
-    expect(state.qtyByProduct.p1).toBe(50)
+    expect(state.qtyByProduct.p1).toBeUndefined()
   })
 
   it('persists cart selections for full page navigation', () => {
