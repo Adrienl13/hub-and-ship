@@ -868,6 +868,10 @@ type ProductRow = {
   weight_kg: number
   moq_units: number
   base_price_ht: number
+  fob_usd: number | null
+  qty_per_container: number | null
+  is_loss_leader: boolean
+  table_price_modifier_rate: number | null
   retail_price_ref: number
   eco_contribution: number
   main_image_url: string
@@ -893,6 +897,10 @@ type ProductInsert = {
   weight_kg: number
   moq_units: number
   base_price_ht: number
+  fob_usd?: number | null
+  qty_per_container?: number | null
+  is_loss_leader?: boolean
+  table_price_modifier_rate?: number | null
   retail_price_ref: number
   eco_contribution?: number
   main_image_url: string
@@ -984,6 +992,140 @@ type CarrierPartnerInsert = {
 }
 
 type CarrierPartnerUpdate = Partial<CarrierPartnerInsert>
+
+type ProductPricingInputRow = {
+  product_id: string
+  fob_usd: number | null
+  qty_per_container: number | null
+  is_loss_leader: boolean
+  table_price_modifier_rate: number | null
+  created_at: string
+  updated_at: string
+}
+
+type ProductPricingInputInsert = {
+  product_id: string
+  fob_usd?: number | null
+  qty_per_container?: number | null
+  is_loss_leader?: boolean
+  table_price_modifier_rate?: number | null
+  created_at?: string
+  updated_at?: string
+}
+
+type ProductPricingInputUpdate = Partial<ProductPricingInputInsert>
+
+type ProductPartnerPriceRow = {
+  product_id: string
+  partner_application_id: string | null
+  net_price_ht: number
+  override_reason: string | null
+  formula_price_ht: number | null
+  min_margin_floor: number | null
+  checked_at: string | null
+  created_by: string | null
+  updated_by: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+type ProductPartnerPriceInsert = {
+  product_id: string
+  partner_application_id?: string | null
+  net_price_ht: number
+  override_reason?: string | null
+  formula_price_ht?: number | null
+  min_margin_floor?: number | null
+  checked_at?: string | null
+  created_by?: string | null
+  updated_by?: string | null
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+type ProductPartnerPriceUpdate = Partial<ProductPartnerPriceInsert>
+
+type PricingParameterRow = {
+  id: string
+  version: number
+  label: string
+  is_active: boolean
+  effective_from: string
+  fx_usd_eur: number
+  freight_eur_40hc: number
+  useful_container_cbm_40hc: number
+  customs_rate: number
+  import_insurance_rate: number
+  fixed_import_fee_eur: number
+  direct_margin_rate: number
+  reseller_margin_rate: number
+  distributor_margin_rate: number
+  min_margin_floor: number
+  tier2_qty: number
+  tier2_discount: number
+  tier3_qty: number
+  tier3_discount: number
+  max_loss_leaders: number
+  loss_leader_min_lot: number
+  reservation_fee_rate: number
+  reservation_fee_min: number
+  reservation_fee_max: number
+  referrer_commission_rate: number
+  referrer_duration_months: number
+  control_sku: string
+  control_landed_cost_ht: number
+  control_direct_price_ht: number
+  control_direct_tier2_price_ht: number
+  control_direct_tier3_price_ht: number
+  control_reseller_price_ht: number
+  control_distributor_price_ht: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+type PricingParameterInsert = {
+  id?: string
+  version: number
+  label: string
+  is_active?: boolean
+  effective_from?: string
+  fx_usd_eur?: number
+  freight_eur_40hc?: number
+  useful_container_cbm_40hc?: number
+  customs_rate?: number
+  import_insurance_rate?: number
+  fixed_import_fee_eur?: number
+  direct_margin_rate?: number
+  reseller_margin_rate?: number
+  distributor_margin_rate?: number
+  min_margin_floor?: number
+  tier2_qty?: number
+  tier2_discount?: number
+  tier3_qty?: number
+  tier3_discount?: number
+  max_loss_leaders?: number
+  loss_leader_min_lot?: number
+  reservation_fee_rate?: number
+  reservation_fee_min?: number
+  reservation_fee_max?: number
+  referrer_commission_rate?: number
+  referrer_duration_months?: number
+  control_sku?: string
+  control_landed_cost_ht?: number
+  control_direct_price_ht?: number
+  control_direct_tier2_price_ht?: number
+  control_direct_tier3_price_ht?: number
+  control_reseller_price_ht?: number
+  control_distributor_price_ht?: number
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type PricingParameterUpdate = Partial<PricingParameterInsert>
 
 export interface Database {
   public: {
@@ -1082,6 +1224,21 @@ export interface Database {
         Row: ChannelCoefficientRow
         Insert: ChannelCoefficientInsert
         Update: ChannelCoefficientUpdate
+      }
+      product_partner_prices: {
+        Row: ProductPartnerPriceRow
+        Insert: ProductPartnerPriceInsert
+        Update: ProductPartnerPriceUpdate
+      }
+      product_pricing_inputs: {
+        Row: ProductPricingInputRow
+        Insert: ProductPricingInputInsert
+        Update: ProductPricingInputUpdate
+      }
+      pricing_parameters: {
+        Row: PricingParameterRow
+        Insert: PricingParameterInsert
+        Update: PricingParameterUpdate
       }
       channel_price_overrides: {
         Row: ChannelPriceOverrideRow

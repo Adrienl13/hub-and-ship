@@ -421,6 +421,30 @@ Voir `docs/CHANGELOG.md` §1.5.0 et §1.4.0 pour le détail exhaustif.
 > Mise à jour automatique à chaque session.
 > Format : Date — Phase — Tâches accomplies — Tokens estimés
 
+### Session du 2026-07-09 — Restauration du pilotage pricing admin (régression CODEX)
+
+- Constat : l'outil de pilotage des prix (fret 40HC, taux USD→EUR, marges
+  direct/revendeur/distributeur, paliers, FOB par produit) vivait uniquement
+  dans le code CODEX jamais commité — la fusion avait pris les versions main
+  de 4 fichiers. Récupéré depuis la branche `codex/etat-local-images`.
+- Restauré + fusionné avec nos apports (éditeur Stock 24h, reload du store
+  public, signature onSaved(productId)) :
+  - `AdminCatalogueTab` : panneau « Paramètres pricing » (12 paramètres),
+    filtres type/collection/état + recherche, miniatures produits, colonne
+    prix partenaire, badge « Pricing prêt / Coûts à compléter », imports des
+    4 collections.
+  - `AdminProductEditor` : FOB USD, qté/40HC, loss leader, modificateur
+    table, prix net partenaire.
+  - `catalogue-admin/{repository,types}` : fonctions pricing_parameters +
+    product_partner_prices + product_pricing_inputs.
+  - Libs collections (bistro/rope/teslin/table-base) rapatriées.
+  - `supabase/types.ts` : tables pricing + colonnes coût sur products.
+  - Migration `20260706110000_admin_pricing_engine_parity.sql` : colonnes
+    products + admin_save_product_full v pricing (état prod, idempotent).
+- Les 13 migrations fantômes CODEX sont désormais visibles dans git
+  (branche codex/etat-local-images) — rebaseline complet planifiable.
+- Tests : typecheck 0, lint 0, 392 verts, build OK.
+
 ### Session du 2026-07-06 (suite) — Audit connecteurs & clics + relances
 
 - Phase : « tout doit être connecté et marcher en fonction du clic » — audit
