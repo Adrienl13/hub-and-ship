@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import {
   Calculator,
   Download,
+  Handshake,
   History,
   ImageOff,
   PackagePlus,
@@ -14,6 +15,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 
+import { AdminPartnerPriceGrid } from '@/components/AdminPartnerPriceGrid'
 import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { AdminStockEditor } from '@/components/AdminStockEditor'
 import { Button } from '@/components/ui/button'
@@ -1006,6 +1008,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [adjustLastApplied, setAdjustLastApplied] = useState<number | null>(
     null,
   )
+  const [partnerGridOpen, setPartnerGridOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminProduct | null>(null)
@@ -1481,6 +1484,16 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
         <Button
           type="button"
           size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 rounded-sm"
+          onClick={() => setPartnerGridOpen(true)}
+        >
+          <Handshake className="h-3.5 w-3.5" />
+          Grille partenaires
+        </Button>
+        <Button
+          type="button"
+          size="sm"
           className="h-8 gap-1.5 rounded-sm"
           onClick={() => setCreating(true)}
         >
@@ -1488,6 +1501,14 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           Créer un produit
         </Button>
       </div>
+
+      <AdminPartnerPriceGrid
+        open={partnerGridOpen}
+        products={rows}
+        parameters={pricingParameters}
+        onClose={() => setPartnerGridOpen(false)}
+        onSaved={() => void refresh()}
+      />
 
       {controlStatus && <PricingControlBanner status={controlStatus} />}
 

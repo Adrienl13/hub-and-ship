@@ -336,6 +336,78 @@ export async function listChannelPriceOverrides(
     }))
 }
 
+export interface ProductChannelPriceOverride extends ChannelPriceOverride {
+  readonly productId: string
+}
+
+/** Tous les overrides du catalogue d'un coup (grille d'édition en masse). */
+export async function listAllChannelPriceOverrides(
+  client: CatalogueAdminClient,
+): Promise<ReadonlyArray<ProductChannelPriceOverride>> {
+  const { data, error } = await client
+    .from('channel_price_overrides')
+    .select('product_id, channel, unit_price_ht')
+
+  if (error) throw new Error(error.message)
+  return ((data ?? []) as ReadonlyArray<{
+    product_id: string
+    channel: string
+    unit_price_ht: number | string
+  }>)
+    .filter(
+      (
+        row,
+      ): row is {
+        product_id: string
+        channel: PartnerChannel
+        unit_price_ht: number
+      } => (PARTNER_CHANNELS as ReadonlyArray<string>).includes(row.channel),
+    )
+    .map((row) => ({
+      productId: row.product_id,
+      channel: row.channel,
+      unitPriceHt: Number(row.unit_price_ht),
+    }))
+}
+
+/**
+ * Miroir du chemin legacy d'admin_save_product_full : le prix net revendeur
+ * reste visible du moteur get_price (et de son trigger plancher) via
+ * product_partner_prices. Prix null/0 → désactivation.
+ */
+export async function savePartnerNetPrice(
+  client: CatalogueAdminClient,
+  productId: string,
+  netPriceHt: number | null,
+  userId: string | null,
+): Promise<void> {
+  if (netPriceHt !== null && netPriceHt > 0) {
+    const { error } = await client.from('product_partner_prices').upsert(
+      {
+        product_id: productId,
+        net_price_ht: netPriceHt,
+        is_active: true,
+        override_reason: 'Grille prix partenaires (édition en masse)',
+        created_by: userId,
+        updated_by: userId,
+        updated_at: new Date().toISOString(),
+      } as never,
+      { onConflict: 'product_id' },
+    )
+    if (error) throw new Error(error.message)
+  } else {
+    const { error } = await client
+      .from('product_partner_prices')
+      .update({
+        is_active: false,
+        updated_by: userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq('product_id', productId)
+    if (error) throw new Error(error.message)
+  }
+}
+
 /**
  * Écrit l'état cible des overrides d'un produit : prix > 0 → upsert,
  * null/vide → suppression (le canal retombe sur base × coefficient).
