@@ -54,6 +54,7 @@ import type {
   AdminProduct,
 } from '@/lib/catalogue-admin/types'
 import { useAuth } from '@/hooks/useAuth'
+import { computeProductProfit } from '@/lib/pricing/product-profit'
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -359,6 +360,56 @@ const EUR_PRECISE = new Intl.NumberFormat('fr-FR', {
   currency: 'EUR',
   maximumFractionDigits: 2,
 })
+
+const EUR_ROUND = new Intl.NumberFormat('fr-FR', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0,
+})
+
+// Bénéfice estimé au prix public actuel (base − coût rendu), avec la
+// projection sur un container plein. « — » tant que les coûts FOB manquent.
+function ProductProfitCell({
+  row,
+  parameters,
+}: {
+  readonly row: AdminProduct
+  readonly parameters: AdminPricingParameters | null
+}) {
+  const profit = parameters
+    ? computeProductProfit(
+        row.basePriceHt,
+        row.fobUsd,
+        row.qtyPerContainer,
+        parameters,
+      )
+    : null
+
+  if (!profit) {
+    return (
+      <span className="text-xs text-muted-foreground md:text-right">—</span>
+    )
+  }
+
+  const tone =
+    profit.unitProfitHt > 0 && !profit.belowFloor
+      ? 'text-[color:var(--forest)]'
+      : 'text-red-700'
+  const sign = profit.unitProfitHt > 0 ? '+' : ''
+  return (
+    <span className="md:text-right" title="Bénéfice HT estimé au prix direct actuel (hors frais de vente)">
+      <span className={`font-medium tabular-nums ${tone}`}>
+        {sign}
+        {profit.unitProfitHt.toFixed(2)} €
+      </span>
+      <span className="block text-[10px] text-muted-foreground tabular-nums">
+        {profit.marginPercent.toFixed(0)} % ·{' '}
+        {EUR_ROUND.format(profit.containerProfitHt)}/40HC
+        {profit.belowFloor ? ' · sous plancher' : ''}
+      </span>
+    </span>
+  )
+}
 
 // P0.3 — bandeau du SKU témoin : vert quand le prix moteur recalculé colle
 // aux valeurs tamponnées à la dernière sauvegarde, rouge quand la formule ou
@@ -1226,13 +1277,14 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       </div>
 
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-        <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[74px_minmax(180px,1.4fr)_100px_70px_90px_100px_90px_70px_220px] md:gap-3">
+        <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[74px_minmax(180px,1.4fr)_100px_70px_90px_100px_110px_90px_70px_220px] md:gap-3">
           <span>Image</span>
           <span>Produit</span>
           <span>Catégorie</span>
           <span>MOQ</span>
           <span className="text-right">Prix direct</span>
           <span className="text-right">Prix partenaire</span>
+          <span className="text-right">Bénéfice/u.</span>
           <span>État</span>
           <span>Variantes</span>
           <span>Actions</span>
@@ -1256,7 +1308,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
               return (
                 <article
                   key={row.id}
-                  className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[74px_minmax(180px,1.4fr)_100px_70px_90px_100px_90px_70px_220px] md:items-center md:gap-3"
+                  className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[74px_minmax(180px,1.4fr)_100px_70px_90px_100px_110px_90px_70px_220px] md:items-center md:gap-3"
                 >
                   <div className="flex items-start gap-3 md:block">
                     <div className="ring-foreground/10 h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-[color:var(--sand-soft)] ring-1">
@@ -1305,6 +1357,10 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                       ? `${row.partnerNetPriceHt.toFixed(2)} €`
                       : '—'}
                   </span>
+                  <ProductProfitCell
+                    row={row}
+                    parameters={pricingParameters}
+                  />
                   <span
                     className={`inline-flex w-fit items-center rounded-sm px-2 py-0.5 text-[11px] font-medium ${
                       row.isActive

@@ -773,6 +773,8 @@ export function AdminProductEditor({
           <PricingPreviewTable
             rows={pricingPreviewRows}
             usesFallback={pricingUsesFallback}
+            currentBasePriceHt={directPrice}
+            qtyPerContainer={qtyPerContainer}
           />
         )}
       </Fieldset>
@@ -1042,12 +1044,49 @@ function formatPricingRule(tierApplied: string): string {
   return 'Prix standard'
 }
 
+function ProfitLine({
+  label,
+  sellPriceHt,
+  landedCostHt,
+  qtyPerContainer,
+}: {
+  readonly label: string
+  readonly sellPriceHt: number
+  readonly landedCostHt: number
+  readonly qtyPerContainer: number | null
+}) {
+  const unitProfit = round2(sellPriceHt - landedCostHt)
+  const marginPercent =
+    sellPriceHt > 0 ? (unitProfit / sellPriceHt) * 100 : 0
+  const tone =
+    unitProfit > 0 ? 'text-[color:var(--forest)]' : 'text-red-700'
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 text-xs">
+      <span className="text-muted-foreground">
+        {label} ({sellPriceHt.toFixed(2)} €) :
+      </span>
+      <span className={`font-medium tabular-nums ${tone}`}>
+        {formatSignedEuro(unitProfit)}/unité ({marginPercent.toFixed(1)} %)
+      </span>
+      {qtyPerContainer !== null && (
+        <span className={`tabular-nums ${tone}`}>
+          · {formatSignedEuro(round2(unitProfit * qtyPerContainer))} / 40HC
+        </span>
+      )}
+    </div>
+  )
+}
+
 function PricingPreviewTable({
   rows,
   usesFallback,
+  currentBasePriceHt,
+  qtyPerContainer,
 }: {
   readonly rows: ReadonlyArray<PricingPreviewRow>
   readonly usesFallback: boolean
+  readonly currentBasePriceHt: number
+  readonly qtyPerContainer: number | null
 }) {
   const direct = rows[0]
 
@@ -1071,6 +1110,30 @@ function PricingPreviewTable({
           </span>
         )}
       </div>
+      {/* Bénéfice estimé — seulement quand le coût rendu vient des VRAIS
+          coûts (FOB + qté). En fallback il dérive du prix actuel : un
+          « bénéfice » calculé dessus serait circulaire et trompeur. */}
+      {direct && !usesFallback && (
+        <div className="space-y-1 border-b border-[color:var(--sand-deep)] px-3 py-2">
+          <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            Bénéfice estimé (hors frais de vente)
+          </div>
+          {currentBasePriceHt > 0 && (
+            <ProfitLine
+              label="Au prix actuel"
+              sellPriceHt={currentBasePriceHt}
+              landedCostHt={direct.landedCostHt}
+              qtyPerContainer={qtyPerContainer}
+            />
+          )}
+          <ProfitLine
+            label="Au prix moteur direct"
+            sellPriceHt={direct.unitPriceHt}
+            landedCostHt={direct.landedCostHt}
+            qtyPerContainer={qtyPerContainer}
+          />
+        </div>
+      )}
       <div className="grid grid-cols-[1.2fr_70px_95px_95px_95px] border-b border-[color:var(--sand-deep)] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
         <span>Canal</span>
         <span className="text-right">Qté</span>
