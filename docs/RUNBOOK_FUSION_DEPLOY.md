@@ -18,7 +18,7 @@ le formulaire partenaires.
 Dashboard Supabase → Database → Backups : vérifier qu'un backup récent existe
 (ou déclencher un backup manuel / noter le point PITR).
 
-## 2. Appliquer les 6 migrations fusion (SQL Editor, dans cet ordre)
+## 2. Appliquer les migrations fusion (SQL Editor, dans cet ordre)
 
 Toutes sont **additives et idempotentes** (`if not exists`, `create or
 replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
@@ -33,6 +33,12 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 6 | `20260705090000_pricing_engine_bridge.sql` | rapatrie pricing_parameters & co (no-op en prod), get_catalogue_prices v2 (marges actives), désactive le parrainage B2C |
 | 7 | `20260706090000_payment_reminders.sql` | colonnes + index des relances impayés (J+1/J+3) |
 | 8 | `20260706100000_reservation_rpc_channel_attribution.sql` | create_reservation_with_items v3 : validation au prix CANAL du caller + persistance utm_*/partner_ref |
+| 9 | `20260706110000_admin_pricing_engine_parity.sql` | parité moteur : get_price/landed_cost + admin_save_product_full (FOB dans la table PRIVÉE) — version miroir du fix privacy CODEX |
+| 10 | `20260709090000_pricing_pilotage_p0.sql` | **P0 pilotage** : sauvegarde versionnée des paramètres + re-tampon du témoin, check_pricing_control, recalcul explicite (preview/apply), get_public_pricing_rules (paliers + frais, AUCUNE marge), create_reservation_with_items v4 (frais depuis paramètres) |
+
+> Migrations 1-8 déjà appliquées le 08-09/07 (vérifications ok). Si tu
+> reprends ce runbook après coup : il reste **9 et 10** à appliquer, dans cet
+> ordre, AVANT le prochain deploy du code.
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.
@@ -54,6 +60,14 @@ select is_active from public.referral_program_settings;
 select column_name from information_schema.columns
 where table_name = 'partner_applications'
   and column_name in ('activity_profile','target_status','partner_ref');
+
+-- Après les migrations 9-10 (pilotage P0) :
+-- Les règles publiques ne rendent QUE paliers + frais (7 clés, aucune marge) :
+select public.get_public_pricing_rules();
+-- Le témoin répond (1 ligne ; computable=false si le SKU témoin ZF2000C ne
+-- correspond à aucun produit actif du catalogue — c'est le cas aujourd'hui,
+-- le garde-fou s'activera quand le témoin pointera un vrai produit) :
+select * from public.check_pricing_control();
 ```
 
 Attendu : count > 0, `is_active=true` côté pricing, `is_active=false` côté
@@ -68,7 +82,7 @@ schéma) :
 ```bash
 supabase migration repair --status applied 20260702100000 20260702120000 \
   20260702130000 20260702140000 20260703140000 20260705090000 \
-  20260706090000 20260706100000
+  20260706090000 20260706100000 20260706110000 20260709090000
 ```
 
 ## 5. Déployer le code

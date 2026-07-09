@@ -1,3 +1,5 @@
+import { getActiveCustomerDiscountTiers } from './public-rules'
+
 export interface CustomerDiscountTier {
   readonly minUnits: number
   readonly discountPercent: number
@@ -10,6 +12,9 @@ export interface CustomerDiscountStatus {
   readonly discountPercent: number
 }
 
+// Grille historique (défaut compile-time — sert aussi de borne au garde-fou
+// canal dans channel.ts). La grille effective vient des paramètres pricing
+// actifs via getActiveCustomerDiscountTiers().
 export const CUSTOMER_QUANTITY_DISCOUNT_TIERS: ReadonlyArray<CustomerDiscountTier> =
   [
     { minUnits: 100, discountPercent: 6 },
@@ -18,7 +23,7 @@ export const CUSTOMER_QUANTITY_DISCOUNT_TIERS: ReadonlyArray<CustomerDiscountTie
 
 export function getCustomerDiscountStatus(
   totalUnits: number,
-  tiers: ReadonlyArray<CustomerDiscountTier> = CUSTOMER_QUANTITY_DISCOUNT_TIERS,
+  tiers: ReadonlyArray<CustomerDiscountTier> = getActiveCustomerDiscountTiers(),
 ): CustomerDiscountStatus {
   const safeTotalUnits = Math.max(0, Math.trunc(totalUnits))
   const sortedTiers = [...tiers].sort((a, b) => a.minUnits - b.minUnits)

@@ -2,6 +2,7 @@
 // Container Club — logique métier (panier, MOQ, container)
 // ============================================================
 
+import { getPublicPricingRules } from './pricing/public-rules'
 import type { DesignVariant, Product } from './products'
 
 export interface CartItem {
@@ -30,14 +31,21 @@ export interface OrderTotals {
   savingsPercent: number
 }
 
+// Grille historique (défaut). Les valeurs effectives viennent des paramètres
+// pricing actifs via get_public_pricing_rules() — même source que le RPC de
+// réservation, qui revalide ces montants côté serveur (tolérance 0,05 €).
 export const RESERVATION_RATE = 0.03
 export const RESERVATION_MIN = 150
 export const RESERVATION_MAX = 500
 
 export function calculateReservationFee(subtotalHt: number): number {
   if (subtotalHt <= 0) return 0
-  const calculated = subtotalHt * RESERVATION_RATE
-  return Math.min(Math.max(calculated, RESERVATION_MIN), RESERVATION_MAX)
+  const rules = getPublicPricingRules()
+  const calculated = subtotalHt * rules.reservationFeeRate
+  return Math.min(
+    Math.max(calculated, rules.reservationFeeMin),
+    rules.reservationFeeMax,
+  )
 }
 
 export function calculateOrder(items: CartItem[]): OrderTotals {

@@ -89,6 +89,13 @@ Deux options pour rebrancher le moteur :
 
 ### P0 — Rendre l'outil VRAI (fiabilité)
 
+> ✅ **Réalisé le 09/07/2026** — migration `20260709090000_pricing_pilotage_p0.sql`
+> (à appliquer en prod, cf. `RUNBOOK_FUSION_DEPLOY.md` §2 lignes 9-10) +
+> `src/lib/pricing/public-rules.ts`, panneau admin (bandeau témoin, carte
+> « Recalcul des prix » avec aperçu diff, historique/restauration des
+> versions), frais + paliers branchés client ET serveur sur les paramètres
+> actifs avec la grille historique en fallback.
+
 | # | Proposition | Ce que ça change |
 |---|---|---|
 | P0.1 | **Bouton « Recalculer les prix » avec diff** (dry-run → aperçu ancien/nouveau/Δ% par produit → appliquer) via `get_price` + RPC d'application auditée | Le panneau agit enfin sur les prix ; zéro surprise |

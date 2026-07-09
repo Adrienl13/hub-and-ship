@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
+  Calculator,
   Download,
+  History,
   ImageOff,
   PackagePlus,
   Pencil,
   Plus,
   Power,
   PowerOff,
+  ShieldCheck,
+  TriangleAlert,
 } from 'lucide-react'
 
 import { AdminProductEditor } from '@/components/AdminProductEditor'
@@ -27,15 +31,22 @@ import { TABLE_BASE_PRODUCTS } from '@/lib/table-base-products'
 import { TESLIN_PRODUCTS } from '@/lib/teslin-products'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import {
+  applyReprice,
+  checkPricingControl,
   getActivePricingParameters,
   listAdminContainers,
+  listPricingParameterVersions,
   listProducts,
+  previewReprice,
   reactivateProduct,
+  savePricingParametersVersion,
   softDeleteProduct,
   updatePricingParameters,
   upsertProduct,
   upsertVariant,
   type CatalogueAdminClient,
+  type PricingControlStatus,
+  type RepriceRow,
 } from '@/lib/catalogue-admin/repository'
 import type {
   AdminContainerOption,
@@ -343,6 +354,330 @@ function PricingInput({
   )
 }
 
+const EUR_PRECISE = new Intl.NumberFormat('fr-FR', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 2,
+})
+
+// P0.3 — bandeau du SKU témoin : vert quand le prix moteur recalculé colle
+// aux valeurs tamponnées à la dernière sauvegarde, rouge quand la formule ou
+// les données ont dérivé sans décision admin.
+function PricingControlBanner({
+  status,
+}: {
+  readonly status: PricingControlStatus
+}) {
+  if (!status.computable || status.driftPercent === null) {
+    return (
+      <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2 text-xs text-muted-foreground">
+        Témoin {status.controlSku} : prix moteur non calculable (produit ou
+        coûts FOB manquants). Le garde-fou de dérive est inactif.
+      </div>
+    )
+  }
+
+  const drifted = Math.abs(status.driftPercent) >= 0.5
+  if (!drifted) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-[color:var(--forest)]/35 bg-[color:var(--forest)]/8 px-3 py-2 text-xs text-foreground">
+        <ShieldCheck className="h-4 w-4 shrink-0 text-[color:var(--forest)]" />
+        <span>
+          Formule conforme — témoin {status.controlSku} :{' '}
+          {status.actualDirectHt === null
+            ? '—'
+            : EUR_PRECISE.format(status.actualDirectHt)}{' '}
+          direct HT (attendu{' '}
+          {status.expectedDirectHt === null
+            ? '—'
+            : EUR_PRECISE.format(status.expectedDirectHt)}
+          ).
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-900">
+      <TriangleAlert className="h-4 w-4 shrink-0" />
+      <span>
+        Dérive détectée sur le témoin {status.controlSku} :{' '}
+        {status.driftPercent > 0 ? '+' : ''}
+        {status.driftPercent.toFixed(2)}% (
+        {status.actualDirectHt === null
+          ? '—'
+          : EUR_PRECISE.format(status.actualDirectHt)}{' '}
+        calculé vs{' '}
+        {status.expectedDirectHt === null
+          ? '—'
+          : EUR_PRECISE.format(status.expectedDirectHt)}{' '}
+        attendu). Vérifiez paramètres et coûts avant tout recalcul.
+      </span>
+    </div>
+  )
+}
+
+// P0.1 — recalcul explicite : dry-run (diff produit par produit) puis
+// application en un clic. Rien ne bouge tant que l'admin n'applique pas.
+function RepricePanel({
+  rows,
+  previewing,
+  applying,
+  lastApplied,
+  onPreview,
+  onApply,
+  onClose,
+}: {
+  readonly rows: ReadonlyArray<RepriceRow> | null
+  readonly previewing: boolean
+  readonly applying: boolean
+  readonly lastApplied: number | null
+  readonly onPreview: () => void
+  readonly onApply: () => void
+  readonly onClose: () => void
+}) {
+  const priced = (rows ?? []).filter(
+    (row): row is RepriceRow & { enginePriceHt: number } =>
+      row.enginePriceHt !== null,
+  )
+  const changed = priced.filter(
+    (row) => Math.abs(row.enginePriceHt - row.currentPriceHt) > 0.005,
+  )
+  const withoutCosts = (rows ?? []).filter((row) => !row.hasCosts)
+  const atFloor = priced.filter((row) => row.atMarginFloor)
+  const averageDelta =
+    changed.length > 0
+      ? changed.reduce((sum, row) => sum + (row.deltaPercent ?? 0), 0) /
+        changed.length
+      : 0
+
+  return (
+    <div className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="label-eyebrow text-muted-foreground">
+            Recalcul des prix
+          </div>
+          <div className="mt-1 text-sm font-medium">
+            Moteur → base_price_ht (canal direct, qté 1)
+          </div>
+          <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+            L&apos;aperçu compare le prix public actuel au prix théorique du
+            moteur (FOB + fret + douane + marge). Rien n&apos;est modifié tant
+            que vous n&apos;appliquez pas.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 rounded-sm"
+            disabled={previewing || applying}
+            onClick={onPreview}
+          >
+            <Calculator className="h-3.5 w-3.5" />
+            {previewing ? 'Calcul en cours…' : 'Prévisualiser le recalcul'}
+          </Button>
+          {rows !== null && (
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 rounded-sm"
+              disabled={applying || changed.length === 0}
+              onClick={onApply}
+            >
+              {applying
+                ? 'Application…'
+                : `Appliquer (${changed.length} prix)`}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {lastApplied !== null && (
+        <div className="rounded-sm border border-[color:var(--forest)]/35 bg-[color:var(--forest)]/8 px-3 py-2 text-xs">
+          Recalcul appliqué : {lastApplied} prix mis à jour.
+        </div>
+      )}
+
+      {rows !== null && (
+        <>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-sm bg-[color:var(--sand-soft)] px-2 py-1">
+              {priced.length} produits avec coûts
+            </span>
+            <span className="rounded-sm bg-[color:var(--sand-soft)] px-2 py-1">
+              {changed.length} prix qui changeraient · Δ moyen{' '}
+              {averageDelta > 0 ? '+' : ''}
+              {averageDelta.toFixed(2)}%
+            </span>
+            <span
+              className={`rounded-sm px-2 py-1 ${
+                atFloor.length > 0
+                  ? 'bg-amber-50 text-amber-950'
+                  : 'bg-[color:var(--sand-soft)]'
+              }`}
+            >
+              {atFloor.length} au plancher de marge
+            </span>
+            <span className="rounded-sm bg-[color:var(--sand-soft)] px-2 py-1">
+              {withoutCosts.length} sans coûts (inchangés)
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-sm px-2 py-1 text-muted-foreground underline-offset-2 hover:underline"
+            >
+              Fermer l&apos;aperçu
+            </button>
+          </div>
+
+          {changed.length === 0 ? (
+            <div className="rounded-sm bg-[color:var(--sand-soft)] px-3 py-2 text-xs text-muted-foreground">
+              Aucun écart entre les prix actuels et le moteur : rien à
+              appliquer.
+            </div>
+          ) : (
+            <div className="max-h-72 overflow-auto rounded-sm border border-[color:var(--sand-deep)]">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-[color:var(--sand-soft)] text-left">
+                  <tr>
+                    <th className="px-2 py-1.5 font-medium">SKU</th>
+                    <th className="px-2 py-1.5 font-medium">Produit</th>
+                    <th className="px-2 py-1.5 text-right font-medium">
+                      Actuel HT
+                    </th>
+                    <th className="px-2 py-1.5 text-right font-medium">
+                      Moteur HT
+                    </th>
+                    <th className="px-2 py-1.5 text-right font-medium">Δ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {changed.map((row) => (
+                    <tr
+                      key={row.productId}
+                      className="border-t border-[color:var(--sand-deep)]"
+                    >
+                      <td className="px-2 py-1.5 font-mono">{row.sku}</td>
+                      <td className="max-w-52 truncate px-2 py-1.5">
+                        {row.name}
+                        {row.atMarginFloor && (
+                          <span className="ml-1.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[10px] text-amber-950">
+                            plancher
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {EUR_PRECISE.format(row.currentPriceHt)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {EUR_PRECISE.format(row.enginePriceHt)}
+                      </td>
+                      <td
+                        className={`px-2 py-1.5 text-right tabular-nums ${
+                          (row.deltaPercent ?? 0) > 0
+                            ? 'text-red-700'
+                            : 'text-[color:var(--forest)]'
+                        }`}
+                      >
+                        {(row.deltaPercent ?? 0) > 0 ? '+' : ''}
+                        {(row.deltaPercent ?? 0).toFixed(2)}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// P0.2 — historique des versions de paramètres : chaque sauvegarde crée une
+// ligne, restaurer = re-sauvegarder les valeurs d'une ancienne version.
+function PricingVersionHistory({
+  versions,
+  activeVersion,
+  restoringId,
+  onRestore,
+}: {
+  readonly versions: ReadonlyArray<AdminPricingParameters>
+  readonly activeVersion: number | null
+  readonly restoringId: string | null
+  readonly onRestore: (version: AdminPricingParameters) => void
+}) {
+  const [open, setOpen] = useState(false)
+  if (versions.length <= 1) return null
+
+  return (
+    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 text-left"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium">
+          <History className="h-4 w-4 text-muted-foreground" />
+          Historique des paramètres ({versions.length} versions)
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {open ? 'Replier' : 'Déplier'}
+        </span>
+      </button>
+
+      {open && (
+        <ul className="mt-3 space-y-1.5">
+          {versions.map((version) => {
+            const isActive = version.version === activeVersion
+            return (
+              <li
+                key={version.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-[color:var(--sand-deep)] px-2.5 py-1.5 text-xs"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="font-medium">v{version.version}</span>
+                  <span className="text-muted-foreground">
+                    {version.label}
+                  </span>
+                  {isActive && (
+                    <span className="rounded-sm bg-[color:var(--forest)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--forest)]">
+                      active
+                    </span>
+                  )}
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="text-muted-foreground tabular-nums">
+                    fret {version.freightEur40hc.toFixed(0)} € · marge directe{' '}
+                    {(version.directMarginRate * 100).toFixed(0)}%
+                  </span>
+                  {!isActive && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-sm px-2 text-xs"
+                      disabled={restoringId !== null}
+                      onClick={() => onRestore(version)}
+                    >
+                      {restoringId === version.id
+                        ? 'Restauration…'
+                        : 'Restaurer'}
+                    </Button>
+                  )}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [rows, setRows] = useState<ReadonlyArray<AdminProduct>>([])
   const [containers, setContainers] = useState<
@@ -351,6 +686,21 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [pricingParameters, setPricingParameters] =
     useState<AdminPricingParameters | null>(null)
   const [pricingSaving, setPricingSaving] = useState(false)
+  const [pricingVersions, setPricingVersions] = useState<
+    ReadonlyArray<AdminPricingParameters>
+  >([])
+  const [controlStatus, setControlStatus] =
+    useState<PricingControlStatus | null>(null)
+  const [repriceRows, setRepriceRows] =
+    useState<ReadonlyArray<RepriceRow> | null>(null)
+  const [repricePreviewing, setRepricePreviewing] = useState(false)
+  const [repriceApplying, setRepriceApplying] = useState(false)
+  const [repriceLastApplied, setRepriceLastApplied] = useState<number | null>(
+    null,
+  )
+  const [restoringVersionId, setRestoringVersionId] = useState<string | null>(
+    null,
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminProduct | null>(null)
@@ -440,9 +790,19 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           listAdminContainers(client),
           getActivePricingParameters(client),
         ])
+        // P0 pilotage : historique + témoin. Tolérants tant que la migration
+        // 20260709090000 n'est pas appliquée (RPC absente ≠ panne du tab).
+        const [versions, control] = await Promise.all([
+          listPricingParameterVersions(client).catch(
+            () => [] as ReadonlyArray<AdminPricingParameters>,
+          ),
+          checkPricingControl(client).catch(() => null),
+        ])
         setRows(products)
         setContainers(containerRows)
         setPricingParameters(activePricingParameters)
+        setPricingVersions(versions)
+        setControlStatus(control)
         setError(null)
         // Propagate to the public-facing catalogue store so edits show up
         // live in the same session (the store is otherwise load-once).
@@ -591,23 +951,111 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
 
   async function savePricingParameters(
     payload: Parameters<typeof updatePricingParameters>[2],
+    label?: string,
   ): Promise<void> {
     if (!isConfigured || !pricingParameters) return
     setPricingSaving(true)
     setError(null)
     const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
     try {
-      await updatePricingParameters(client, pricingParameters.id, payload)
+      // P0.2 : chaque sauvegarde crée une nouvelle version (historique
+      // immuable + re-tamponnage du témoin). Repli sur l'update en place
+      // tant que la migration 20260709090000 n'est pas appliquée.
+      try {
+        await savePricingParametersVersion(
+          client,
+          label ? { ...payload, label } : payload,
+        )
+      } catch (rpcError) {
+        const message =
+          rpcError instanceof Error ? rpcError.message : String(rpcError)
+        if (!message.includes('admin_save_pricing_parameters')) throw rpcError
+        await updatePricingParameters(client, pricingParameters.id, payload)
+      }
       await logAdminAction(client, auth.user?.id ?? null, {
-        action: 'pricing_parameters.update',
+        action: 'pricing_parameters.save_version',
         target: pricingParameters.id,
-        extra: { fields: Object.keys(payload) },
+        extra: { fields: Object.keys(payload), label: label ?? null },
       })
+      // Un aperçu de recalcul calculé avec les anciens paramètres est périmé.
+      setRepriceRows(null)
+      setRepriceLastApplied(null)
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
       setPricingSaving(false)
+    }
+  }
+
+  async function restorePricingVersion(
+    version: AdminPricingParameters,
+  ): Promise<void> {
+    if (restoringVersionId) return
+    setRestoringVersionId(version.id)
+    try {
+      await savePricingParameters(
+        {
+          fx_usd_eur: version.fxUsdEur,
+          freight_eur_40hc: version.freightEur40hc,
+          useful_container_cbm_40hc: version.usefulContainerCbm40hc,
+          customs_rate: version.customsRate,
+          import_insurance_rate: version.importInsuranceRate,
+          fixed_import_fee_eur: version.fixedImportFeeEur,
+          direct_margin_rate: version.directMarginRate,
+          reseller_margin_rate: version.resellerMarginRate,
+          distributor_margin_rate: version.distributorMarginRate,
+          min_margin_floor: version.minMarginFloor,
+          loss_leader_min_lot: version.lossLeaderMinLot,
+          tier2_qty: version.tier2Qty,
+          tier2_discount: version.tier2Discount,
+          tier3_qty: version.tier3Qty,
+          tier3_discount: version.tier3Discount,
+          reservation_fee_rate: version.reservationFeeRate,
+          reservation_fee_min: version.reservationFeeMin,
+          reservation_fee_max: version.reservationFeeMax,
+        },
+        `Restauration v${version.version}`,
+      )
+    } finally {
+      setRestoringVersionId(null)
+    }
+  }
+
+  async function previewRepriceDiff(): Promise<void> {
+    if (!isConfigured || repricePreviewing) return
+    setRepricePreviewing(true)
+    setRepriceLastApplied(null)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      setRepriceRows(await previewReprice(client))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    } finally {
+      setRepricePreviewing(false)
+    }
+  }
+
+  async function applyRepriceDiff(): Promise<void> {
+    if (!isConfigured || repriceApplying) return
+    setRepriceApplying(true)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      const updated = await applyReprice(client)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'pricing.reprice_apply',
+        target: 'products.base_price_ht',
+        extra: { updated },
+      })
+      setRepriceLastApplied(updated)
+      setRepriceRows(null)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    } finally {
+      setRepriceApplying(false)
     }
   }
 
@@ -694,6 +1142,8 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
         </Button>
       </div>
 
+      {controlStatus && <PricingControlBanner status={controlStatus} />}
+
       {pricingParameters && (
         <PricingParametersPanel
           parameters={pricingParameters}
@@ -701,6 +1151,25 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           onSave={(payload) => void savePricingParameters(payload)}
         />
       )}
+
+      {pricingParameters && (
+        <RepricePanel
+          rows={repriceRows}
+          previewing={repricePreviewing}
+          applying={repriceApplying}
+          lastApplied={repriceLastApplied}
+          onPreview={() => void previewRepriceDiff()}
+          onApply={() => void applyRepriceDiff()}
+          onClose={() => setRepriceRows(null)}
+        />
+      )}
+
+      <PricingVersionHistory
+        versions={pricingVersions}
+        activeVersion={pricingParameters?.version ?? null}
+        restoringId={restoringVersionId}
+        onRestore={(version) => void restorePricingVersion(version)}
+      />
 
       <div className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-center">

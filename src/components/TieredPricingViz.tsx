@@ -1,14 +1,15 @@
 import { TrendingDown } from 'lucide-react'
 
 import type { CartItem } from '@/lib/order'
-import {
-  CUSTOMER_QUANTITY_DISCOUNT_TIERS,
-  getCustomerDiscountStatus,
-} from '@/lib/pricing/customer-discounts'
+import { getCustomerDiscountStatus } from '@/lib/pricing/customer-discounts'
+import { getActiveCustomerDiscountTiers } from '@/lib/pricing/public-rules'
 
 export function TieredPricingViz({ items }: { items: CartItem[] }) {
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
-  const discountStatus = getCustomerDiscountStatus(totalUnits)
+  // Tiers actifs (paramètres admin), pas la grille historique — la même
+  // liste alimente le statut pour garder l'identité référentielle des tiers.
+  const tiers = getActiveCustomerDiscountTiers()
+  const discountStatus = getCustomerDiscountStatus(totalUnits, tiers)
 
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-3 text-xs">
@@ -47,7 +48,7 @@ export function TieredPricingViz({ items }: { items: CartItem[] }) {
       </div>
 
       <div className="grid grid-cols-2 gap-1.5">
-        {CUSTOMER_QUANTITY_DISCOUNT_TIERS.map((tier) => {
+        {tiers.map((tier) => {
           const active = tier === discountStatus.activeTier
           const reached = totalUnits >= tier.minUnits
           return (

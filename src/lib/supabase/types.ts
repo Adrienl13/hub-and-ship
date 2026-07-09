@@ -1287,6 +1287,41 @@ export interface Database {
           unit_price_ht: number
         }>
       }
+      get_public_pricing_rules: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      admin_save_pricing_parameters: {
+        Args: { payload: Json }
+        Returns: Json
+      }
+      check_pricing_control: {
+        Args: Record<string, never>
+        Returns: ReadonlyArray<{
+          control_sku: string
+          computable: boolean
+          expected_direct_ht: number | null
+          actual_direct_ht: number | null
+          drift_percent: number | null
+        }>
+      }
+      admin_preview_reprice: {
+        Args: Record<string, never>
+        Returns: ReadonlyArray<{
+          product_id: string
+          sku: string
+          name: string
+          has_costs: boolean
+          current_price_ht: number
+          engine_price_ht: number | null
+          delta_percent: number | null
+          at_margin_floor: boolean
+        }>
+      }
+      admin_apply_reprice: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       current_channel: {
         Args: Record<string, never>
         Returns: SalesChannel | null

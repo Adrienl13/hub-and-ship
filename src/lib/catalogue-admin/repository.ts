@@ -15,6 +15,7 @@ import type {
   AdminProductDetail,
   AdminProductVariant,
   AdminSeedCommitment,
+  PricingParameterRow,
   PricingParameterUpdate,
   ProductPartnerPriceRow,
   ProductPricingInputRow,
@@ -93,6 +94,137 @@ export async function updatePricingParameters(
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------------
+// P0 pilotage — RPCs de la migration 20260709090000. Chaque sauvegarde crée
+// une NOUVELLE version (l'historique est immuable) ; le recalcul des prix est
+// toujours explicite : dry-run (preview) puis application en un clic.
+// ---------------------------------------------------------------------------
+
+// Les RPCs ci-dessous passent par des casts explicites : le client typé
+// supabase-js ne résout pas les fonctions de notre Database maintenue à la
+// main (même motif que le `as never` de AdminProductEditor).
+type RpcResult<T> = {
+  readonly data: T | null
+  readonly error: { readonly message: string } | null
+}
+
+export async function savePricingParametersVersion(
+  client: CatalogueAdminClient,
+  payload: PricingParameterUpdate & { readonly label?: string },
+): Promise<void> {
+  const { error } = (await client.rpc('admin_save_pricing_parameters', {
+    payload,
+  } as never)) as RpcResult<unknown>
+  if (error) throw new Error(error.message)
+}
+
+export async function listPricingParameterVersions(
+  client: CatalogueAdminClient,
+  limit = 12,
+): Promise<ReadonlyArray<AdminPricingParameters>> {
+  const { data, error } = await client
+    .from('pricing_parameters')
+    .select('*')
+    .order('version', { ascending: false })
+    .limit(limit)
+
+  if (error) throw new Error(error.message)
+  return ((data ?? []) as ReadonlyArray<PricingParameterRow>).map(
+    fromPricingParameterRow,
+  )
+}
+
+export interface PricingControlStatus {
+  readonly controlSku: string
+  readonly computable: boolean
+  readonly expectedDirectHt: number | null
+  readonly actualDirectHt: number | null
+  readonly driftPercent: number | null
+}
+
+export async function checkPricingControl(
+  client: CatalogueAdminClient,
+): Promise<PricingControlStatus | null> {
+  const { data, error } = (await client.rpc(
+    'check_pricing_control',
+  )) as RpcResult<
+    ReadonlyArray<{
+      control_sku: string
+      computable: boolean
+      expected_direct_ht: number | string | null
+      actual_direct_ht: number | string | null
+      drift_percent: number | string | null
+    }>
+  >
+  if (error) throw new Error(error.message)
+  const row = (data ?? [])[0]
+  if (!row) return null
+  return {
+    controlSku: row.control_sku,
+    computable: row.computable,
+    expectedDirectHt:
+      row.expected_direct_ht === null ? null : Number(row.expected_direct_ht),
+    actualDirectHt:
+      row.actual_direct_ht === null ? null : Number(row.actual_direct_ht),
+    driftPercent:
+      row.drift_percent === null ? null : Number(row.drift_percent),
+  }
+}
+
+export interface RepriceRow {
+  readonly productId: string
+  readonly sku: string
+  readonly name: string
+  readonly hasCosts: boolean
+  readonly currentPriceHt: number
+  readonly enginePriceHt: number | null
+  readonly deltaPercent: number | null
+  readonly atMarginFloor: boolean
+}
+
+export async function previewReprice(
+  client: CatalogueAdminClient,
+): Promise<ReadonlyArray<RepriceRow>> {
+  const { data, error } = (await client.rpc(
+    'admin_preview_reprice',
+  )) as RpcResult<
+    ReadonlyArray<{
+      product_id: string
+      sku: string
+      name: string
+      has_costs: boolean
+      current_price_ht: number | string
+      engine_price_ht: number | string | null
+      delta_percent: number | string | null
+      at_margin_floor: boolean
+    }>
+  >
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => ({
+    productId: row.product_id,
+    sku: row.sku,
+    name: row.name,
+    hasCosts: row.has_costs,
+    currentPriceHt: Number(row.current_price_ht),
+    enginePriceHt:
+      row.engine_price_ht === null ? null : Number(row.engine_price_ht),
+    deltaPercent:
+      row.delta_percent === null ? null : Number(row.delta_percent),
+    atMarginFloor: row.at_margin_floor,
+  }))
+}
+
+export async function applyReprice(
+  client: CatalogueAdminClient,
+): Promise<number> {
+  const { data, error } = (await client.rpc(
+    'admin_apply_reprice',
+  )) as RpcResult<{ updated?: number }>
+  if (error) throw new Error(error.message)
+  const updated = data?.updated
+  return typeof updated === 'number' ? updated : 0
 }
 
 function activePartnerNetPrice(row: ProductPartnerPriceRow | null | undefined) {
