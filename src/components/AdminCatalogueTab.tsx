@@ -1591,7 +1591,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           <span>Catégorie</span>
           <span>MOQ</span>
           <span className="text-right">Prix direct</span>
-          <span className="text-right">Prix partenaire</span>
+          <span className="text-right">Net revendeur</span>
           <span className="text-right">Bénéfice/u.</span>
           <span>État</span>
           <span>Variantes</span>

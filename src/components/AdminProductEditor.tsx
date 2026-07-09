@@ -14,9 +14,14 @@ import type { ProductCategory } from '@/lib/products'
 import {
   getActivePricingParameters,
   getProductWithVariants,
+  listChannelPriceOverrides,
   listCommitmentsForProduct,
+  PARTNER_CHANNELS,
+  saveChannelPriceOverrides,
   type CatalogueAdminClient,
+  type PartnerChannel,
 } from '@/lib/catalogue-admin/repository'
+import { computeLandedCostHt } from '@/lib/pricing/product-profit'
 import type {
   AdminContainerOption,
   AdminPricingParameters,
@@ -168,6 +173,36 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100
 }
 
+const PARTNER_CHANNEL_LABELS: Record<PartnerChannel, string> = {
+  revendeur: 'Revendeur',
+  distributeur: 'Distributeur',
+  grand_compte: 'Grand compte',
+}
+
+// Prix par défaut d'un canal sans override : base × coefficient dérivé des
+// marges actives, borné par la règle d'or — même dérivation que
+// get_catalogue_prices v2 côté SQL.
+function channelDefaultPrice(
+  channel: PartnerChannel,
+  basePriceHt: number,
+  params: AdminPricingParameters,
+): number {
+  const worstDirect = 1 - params.tier3Discount
+  if (channel === 'grand_compte') return round2(basePriceHt * worstDirect)
+  const channelMargin =
+    channel === 'revendeur'
+      ? params.resellerMarginRate
+      : params.distributorMarginRate
+  let coefficient =
+    params.directMarginRate > -1
+      ? Math.round(
+          ((1 + channelMargin) / (1 + params.directMarginRate)) * 10000,
+        ) / 10000
+      : 1
+  if (coefficient >= worstDirect) coefficient = worstDirect - 0.0001
+  return round2(basePriceHt * coefficient)
+}
+
 type PricingPreviewRow = {
   readonly label: string
   readonly quantity: number
@@ -300,18 +335,32 @@ export function AdminProductEditor({
   const [commitments, setCommitments] = useState<AdminSeedCommitment[]>([])
   const [pricingParameters, setPricingParameters] =
     useState<AdminPricingParameters | null>(null)
+  const [channelOverrides, setChannelOverrides] = useState<
+    Record<PartnerChannel, string>
+  >({ revendeur: '', distributeur: '', grand_compte: '' })
   const [loading, setLoading] = useState(!isCreating)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const directPrice = state ? Math.max(0, parseNumber(state.base_price_ht)) : 0
-  const partnerPrice = state
-    ? toOptionalPositivePrice(state.partner_net_price_ht)
-    : null
-  const partnerMargin =
-    partnerPrice && directPrice > 0
-      ? Math.max(0, directPrice - partnerPrice)
+  // Dérivés pour la section « Prix nets partenaires » : pire prix direct
+  // (règle d'or), coût rendu et plancher — recalculés à chaque frappe.
+  const channelWorstDirect =
+    pricingParameters && directPrice > 0
+      ? round2(directPrice * (1 - pricingParameters.tier3Discount))
+      : null
+  const channelLandedCost =
+    state && pricingParameters
+      ? computeLandedCostHt(
+          toOptionalPositiveNumber(state.fob_usd),
+          toOptionalPositiveInt(state.qty_per_container),
+          pricingParameters,
+        )
+      : null
+  const channelFloor =
+    channelLandedCost !== null && pricingParameters
+      ? round2(channelLandedCost * (1 + pricingParameters.minMarginFloor))
       : null
   const cbmPerUnit = state ? Math.max(0, parseNumber(state.cbm_per_unit)) : 0
   const qtyPerContainer = state
@@ -345,19 +394,41 @@ export function AdminProductEditor({
       }
       const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
       try {
-        const [productDetail, commitmentRows, pricing] = await Promise.all([
-          getProductWithVariants(client, productId!),
-          listCommitmentsForProduct(client, productId!),
-          getActivePricingParameters(client),
-        ])
+        const [productDetail, commitmentRows, pricing, overrides] =
+          await Promise.all([
+            getProductWithVariants(client, productId!),
+            listCommitmentsForProduct(client, productId!),
+            getActivePricingParameters(client),
+            listChannelPriceOverrides(client, productId!).catch(
+              () => [] as const,
+            ),
+          ])
         if (cancelled) return
         if (!productDetail) {
           setError('Produit introuvable.')
           setLoading(false)
           return
         }
+        // Les overrides par canal sont la source live ; l'ancien prix net
+        // unique (product_partner_prices) sert d'amorce revendeur quand
+        // aucun override n'existe encore.
+        const overrideValues: Record<PartnerChannel, string> = {
+          revendeur: '',
+          distributeur: '',
+          grand_compte: '',
+        }
+        for (const override of overrides) {
+          overrideValues[override.channel] = String(override.unitPriceHt)
+        }
+        if (!overrideValues.revendeur && productDetail.partnerNetPriceHt) {
+          overrideValues.revendeur = String(productDetail.partnerNetPriceHt)
+        }
         setDetail(productDetail)
-        setState(toEditable(productDetail))
+        setState({
+          ...toEditable(productDetail),
+          partner_net_price_ht: overrideValues.revendeur,
+        })
+        setChannelOverrides(overrideValues)
         setVariants(productDetail.variants.map((v) => ({ ...v })))
         setCommitments([...commitmentRows])
         setPricingParameters(pricing)
@@ -397,6 +468,14 @@ export function AdminProductEditor({
     value: EditableProduct[K],
   ): void {
     setState((prev) => (prev ? { ...prev, [key]: value } : prev))
+  }
+
+  // Le prix net revendeur alimente AUSSI l'ancien champ unique
+  // (product_partner_prices) : le moteur get_price et son trigger plancher
+  // continuent de le voir, pas de divergence entre les deux tables.
+  function setChannelOverride(channel: PartnerChannel, value: string): void {
+    setChannelOverrides((prev) => ({ ...prev, [channel]: value }))
+    if (channel === 'revendeur') setField('partner_net_price_ht', value)
   }
 
   function updateVariant(index: number, next: EditableVariant): void {
@@ -487,6 +566,33 @@ export function AdminProductEditor({
       return
     }
 
+    // Règle d'or vérifiée AVANT d'écrire : un prix net revendeur/distributeur
+    // doit rester strictement sous le pire prix direct (le trigger SQL
+    // rejetterait de toute façon, avec un message moins lisible).
+    const nextBasePrice = Math.max(0, parseNumber(state.base_price_ht))
+    const parsedOverrides = PARTNER_CHANNELS.map((channel) => ({
+      channel,
+      unitPriceHt: toOptionalPositivePrice(channelOverrides[channel]),
+    }))
+    if (pricingParameters && nextBasePrice > 0) {
+      const worstDirect = round2(
+        nextBasePrice * (1 - pricingParameters.tier3Discount),
+      )
+      const violation = parsedOverrides.find(
+        (entry) =>
+          entry.channel !== 'grand_compte' &&
+          entry.unitPriceHt !== null &&
+          entry.unitPriceHt >= worstDirect,
+      )
+      if (violation) {
+        const message = `Prix net ${PARTNER_CHANNEL_LABELS[violation.channel]} (${violation.unitPriceHt?.toFixed(2)} €) : doit rester sous le pire prix direct (${worstDirect.toFixed(2)} €) — règle d'or.`
+        setError(message)
+        toast.error(message)
+        setSaving(false)
+        return
+      }
+    }
+
     const productPayload = toUpdatePayload(state)
     const variantsPayload = variants
       .filter((v) => v.name.trim())
@@ -530,6 +636,18 @@ export function AdminProductEditor({
       // The error banner sits at the top of a long form; surface a toast too
       // so a save failure is visible even when scrolled to Designs/commitments.
       toast.error(`Échec de l'enregistrement : ${rpcError.message}`)
+      setSaving(false)
+      return
+    }
+
+    // Prix nets par canal : la table channel_price_overrides est celle que le
+    // catalogue et la réservation lisent réellement pour chaque canal.
+    try {
+      await saveChannelPriceOverrides(client, targetProductId, parsedOverrides)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(`Produit enregistré, mais prix par canal refusés : ${message}`)
+      toast.error(`Prix par canal refusés : ${message}`)
       setSaving(false)
       return
     }
@@ -646,17 +764,6 @@ export function AdminProductEditor({
               onChange={(e) => setField('base_price_ht', e.target.value)}
             />
           </Field>
-          <Field label="Prix net partenaire (€)">
-            <Input
-              type="number"
-              step="0.01"
-              placeholder="Privé, réservé aux partenaires"
-              value={state.partner_net_price_ht}
-              onChange={(e) =>
-                setField('partner_net_price_ht', e.target.value)
-              }
-            />
-          </Field>
           <Field label="Prix retail référence (€)">
             <Input
               type="number"
@@ -676,19 +783,103 @@ export function AdminProductEditor({
         </div>
         <p className="text-xs leading-5 text-muted-foreground">
           Le prix HT base alimente le catalogue public et les réservations
-          directes. Le prix net partenaire est stocké séparément derrière RLS et
-          n&apos;est jamais exposé aux visiteurs anonymes.
-          {partnerMargin !== null && (
+          directes. Les prix nets partenaires se pilotent canal par canal dans
+          la section suivante.
+        </p>
+      </Fieldset>
+
+      <Fieldset title="Prix nets partenaires (par canal)">
+        <p className="text-xs leading-5 text-muted-foreground">
+          Sans prix net, chaque canal paie le prix de base × coefficient des
+          marges actives (défaut affiché ci-dessous). Un prix net saisi ici
+          s&apos;applique au catalogue et aux réservations de ce canal — stocké
+          derrière RLS, jamais exposé aux autres canaux ni aux anonymes.
+          {channelWorstDirect !== null && (
             <>
               {' '}
-              Marge indicative au prix public :{' '}
+              Règle d&apos;or : revendeur et distributeur restent sous le pire
+              prix direct (
               <span className="font-medium text-foreground">
-                {partnerMargin.toFixed(2)} €
+                {channelWorstDirect.toFixed(2)} €
               </span>
-              .
+              ).
             </>
           )}
         </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          {PARTNER_CHANNELS.map((channel) => {
+            const defaultPrice =
+              pricingParameters && directPrice > 0
+                ? channelDefaultPrice(channel, directPrice, pricingParameters)
+                : null
+            const overrideValue = toOptionalPositivePrice(
+              channelOverrides[channel],
+            )
+            const effectivePrice = overrideValue ?? defaultPrice
+            const goldenViolation =
+              channel !== 'grand_compte' &&
+              overrideValue !== null &&
+              channelWorstDirect !== null &&
+              overrideValue >= channelWorstDirect
+            const belowFloor =
+              !goldenViolation &&
+              channelFloor !== null &&
+              effectivePrice !== null &&
+              effectivePrice < channelFloor
+            const profit =
+              channelLandedCost !== null && effectivePrice !== null
+                ? round2(effectivePrice - channelLandedCost)
+                : null
+            return (
+              <div
+                key={channel}
+                className="space-y-1.5 rounded-md border border-input p-3"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium">
+                    {PARTNER_CHANNEL_LABELS[channel]}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
+                    défaut{' '}
+                    {defaultPrice !== null
+                      ? `${defaultPrice.toFixed(2)} €`
+                      : '—'}
+                  </span>
+                </div>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Prix net (vide = défaut)"
+                  value={channelOverrides[channel]}
+                  onChange={(e) => setChannelOverride(channel, e.target.value)}
+                />
+                {goldenViolation && (
+                  <div className="rounded-sm bg-red-50 px-2 py-1 text-[11px] text-red-900">
+                    Doit rester sous {channelWorstDirect?.toFixed(2)} € (règle
+                    d&apos;or) — l&apos;enregistrement sera refusé.
+                  </div>
+                )}
+                {belowFloor && (
+                  <div className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] text-amber-950">
+                    Sous le plancher de marge ({channelFloor?.toFixed(2)} €).
+                  </div>
+                )}
+                {profit !== null && !goldenViolation && (
+                  <div
+                    className={`text-[11px] tabular-nums ${
+                      profit > 0
+                        ? 'text-[color:var(--forest)]'
+                        : 'text-red-700'
+                    }`}
+                  >
+                    Bénéfice : {profit > 0 ? '+' : ''}
+                    {profit.toFixed(2)} €/unité
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </Fieldset>
 
       <Fieldset title="Moteur pricing">

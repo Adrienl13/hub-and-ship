@@ -294,6 +294,84 @@ export async function applyPriceAdjustment(
   return typeof updated === 'number' ? updated : 0
 }
 
+// ---------------------------------------------------------------------------
+// Prix nets PAR CANAL partenaire — channel_price_overrides est la table que
+// le circuit live lit réellement (get_catalogue_prices + RPC réservation).
+// RLS « Admins manage channel price overrides » : accès table direct.
+// ---------------------------------------------------------------------------
+
+export type PartnerChannel = 'revendeur' | 'distributeur' | 'grand_compte'
+
+export const PARTNER_CHANNELS: ReadonlyArray<PartnerChannel> = [
+  'revendeur',
+  'distributeur',
+  'grand_compte',
+]
+
+export interface ChannelPriceOverride {
+  readonly channel: PartnerChannel
+  readonly unitPriceHt: number
+}
+
+export async function listChannelPriceOverrides(
+  client: CatalogueAdminClient,
+  productId: string,
+): Promise<ReadonlyArray<ChannelPriceOverride>> {
+  const { data, error } = await client
+    .from('channel_price_overrides')
+    .select('channel, unit_price_ht')
+    .eq('product_id', productId)
+
+  if (error) throw new Error(error.message)
+  return ((data ?? []) as ReadonlyArray<{
+    channel: string
+    unit_price_ht: number | string
+  }>)
+    .filter((row): row is { channel: PartnerChannel; unit_price_ht: number } =>
+      (PARTNER_CHANNELS as ReadonlyArray<string>).includes(row.channel),
+    )
+    .map((row) => ({
+      channel: row.channel,
+      unitPriceHt: Number(row.unit_price_ht),
+    }))
+}
+
+/**
+ * Écrit l'état cible des overrides d'un produit : prix > 0 → upsert,
+ * null/vide → suppression (le canal retombe sur base × coefficient).
+ */
+export async function saveChannelPriceOverrides(
+  client: CatalogueAdminClient,
+  productId: string,
+  next: ReadonlyArray<{
+    readonly channel: PartnerChannel
+    readonly unitPriceHt: number | null
+  }>,
+): Promise<void> {
+  for (const entry of next) {
+    if (entry.unitPriceHt !== null && entry.unitPriceHt > 0) {
+      const { error } = await client
+        .from('channel_price_overrides')
+        .upsert(
+          {
+            product_id: productId,
+            channel: entry.channel,
+            unit_price_ht: entry.unitPriceHt,
+          } as never,
+          { onConflict: 'product_id,channel' },
+        )
+      if (error) throw new Error(`${entry.channel} : ${error.message}`)
+    } else {
+      const { error } = await client
+        .from('channel_price_overrides')
+        .delete()
+        .eq('product_id', productId)
+        .eq('channel', entry.channel)
+      if (error) throw new Error(`${entry.channel} : ${error.message}`)
+    }
+  }
+}
+
 function activePartnerNetPrice(row: ProductPartnerPriceRow | null | undefined) {
   return row?.is_active ? Number(row.net_price_ht) : null
 }

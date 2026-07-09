@@ -132,6 +132,23 @@ Deux options pour rebrancher le moteur :
    déblocage des 159 « Coûts à compléter ».
 3. **Dette (P2)** — le rebaseline P2.1 en session dédiée, à froid.
 
+## 5. Complément du 09/07 — prix nets partenaires par canal
+
+**Constat (audit à la demande d'Adrien)** : l'éditeur ne proposait qu'UN
+« prix net partenaire » (écrit dans `product_partner_prices`)… que le circuit
+live ne lit jamais : catalogue (`get_catalogue_prices` v2) et réservation
+lisent `channel_price_overrides` — une table PAR CANAL (revendeur /
+distributeur / grand compte, trigger règle d'or, RLS admin) qui n'avait
+aucune interface d'administration.
+
+**✅ Réalisé** : section « Prix nets partenaires (par canal) » dans l'éditeur —
+défaut calculé par canal (base × coefficient des marges actives), override
+par canal écrit dans `channel_price_overrides` (la table réellement lue),
+bénéfice €/unité par canal, alertes règle d'or (bloquante) et plancher de
+marge. Le prix revendeur alimente aussi l'ancien champ unique pour garder le
+moteur et son trigger plancher cohérents. Aucune migration requise (la table
+et ses RLS existaient déjà).
+
 *Références code : `AdminCatalogueTab.tsx` (panneau l.128-334, note l.314),
 `AdminProductEditor.tsx` (préviz l.175-240), `catalogue-admin/repository.ts`
 (update in place), migrations fantômes `20260701110000` (`get_price`,
