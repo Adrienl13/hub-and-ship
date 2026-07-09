@@ -1322,6 +1322,23 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
+      admin_preview_price_adjustment: {
+        Args: { payload: Json }
+        Returns: ReadonlyArray<{
+          product_id: string
+          sku: string
+          name: string
+          category: string
+          current_price_ht: number
+          new_price_ht: number
+          delta_percent: number
+          below_floor: boolean
+        }>
+      }
+      admin_apply_price_adjustment: {
+        Args: { payload: Json }
+        Returns: Json
+      }
       current_channel: {
         Args: Record<string, never>
         Returns: SalesChannel | null

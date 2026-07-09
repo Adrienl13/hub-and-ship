@@ -227,6 +227,73 @@ export async function applyReprice(
   return typeof updated === 'number' ? updated : 0
 }
 
+// Ajustement ciblé (migration 20260709120000) : ±X % sur une catégorie et/ou
+// un préfixe de SKU (collection), en deux temps preview → apply.
+export interface PriceAdjustmentScope {
+  readonly category?: string
+  readonly skuPrefix?: string
+  readonly percent: number
+}
+
+export interface PriceAdjustmentRow {
+  readonly productId: string
+  readonly sku: string
+  readonly name: string
+  readonly category: string
+  readonly currentPriceHt: number
+  readonly newPriceHt: number
+  readonly belowFloor: boolean
+}
+
+function adjustmentPayload(scope: PriceAdjustmentScope) {
+  return {
+    category: scope.category ?? null,
+    sku_prefix: scope.skuPrefix ?? null,
+    percent: scope.percent,
+  }
+}
+
+export async function previewPriceAdjustment(
+  client: CatalogueAdminClient,
+  scope: PriceAdjustmentScope,
+): Promise<ReadonlyArray<PriceAdjustmentRow>> {
+  const { data, error } = (await client.rpc('admin_preview_price_adjustment', {
+    payload: adjustmentPayload(scope),
+  } as never)) as RpcResult<
+    ReadonlyArray<{
+      product_id: string
+      sku: string
+      name: string
+      category: string
+      current_price_ht: number | string
+      new_price_ht: number | string
+      below_floor: boolean
+    }>
+  >
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => ({
+    productId: row.product_id,
+    sku: row.sku,
+    name: row.name,
+    category: row.category,
+    currentPriceHt: Number(row.current_price_ht),
+    newPriceHt: Number(row.new_price_ht),
+    belowFloor: row.below_floor,
+  }))
+}
+
+export async function applyPriceAdjustment(
+  client: CatalogueAdminClient,
+  scope: PriceAdjustmentScope,
+): Promise<number> {
+  const { data, error } = (await client.rpc('admin_apply_price_adjustment', {
+    payload: adjustmentPayload(scope),
+  } as never)) as RpcResult<{ updated?: number }>
+  if (error) throw new Error(error.message)
+  const updated = data?.updated
+  return typeof updated === 'number' ? updated : 0
+}
+
 function activePartnerNetPrice(row: ProductPartnerPriceRow | null | undefined) {
   return row?.is_active ? Number(row.net_price_ht) : null
 }

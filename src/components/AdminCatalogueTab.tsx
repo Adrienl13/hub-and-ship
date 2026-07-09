@@ -31,12 +31,14 @@ import { TABLE_BASE_PRODUCTS } from '@/lib/table-base-products'
 import { TESLIN_PRODUCTS } from '@/lib/teslin-products'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import {
+  applyPriceAdjustment,
   applyReprice,
   checkPricingControl,
   getActivePricingParameters,
   listAdminContainers,
   listPricingParameterVersions,
   listProducts,
+  previewPriceAdjustment,
   previewReprice,
   reactivateProduct,
   savePricingParametersVersion,
@@ -45,6 +47,8 @@ import {
   upsertProduct,
   upsertVariant,
   type CatalogueAdminClient,
+  type PriceAdjustmentRow,
+  type PriceAdjustmentScope,
   type PricingControlStatus,
   type RepriceRow,
 } from '@/lib/catalogue-admin/repository'
@@ -648,6 +652,249 @@ function RepricePanel({
   )
 }
 
+// Ajustement ciblé : ±X % sur une catégorie et/ou une collection, sans
+// toucher au reste du catalogue. Même philosophie que le recalcul : aperçu
+// produit par produit, puis application explicite.
+const ADJUST_CATEGORY_OPTIONS: ReadonlyArray<{
+  readonly id: string
+  readonly label: string
+}> = [
+  { id: '', label: 'Tous types' },
+  { id: 'chair', label: 'Chaises' },
+  { id: 'armchair', label: 'Fauteuils' },
+  { id: 'table', label: 'Tables' },
+  { id: 'bench', label: 'Bancs' },
+]
+
+const ADJUST_COLLECTION_OPTIONS: ReadonlyArray<{
+  readonly id: string
+  readonly label: string
+}> = [
+  { id: '', label: 'Toutes collections' },
+  { id: 'BIS-', label: 'Bistrot (BIS-)' },
+  { id: 'ROP-', label: 'Cordage (ROP-)' },
+  { id: 'TES-', label: 'Textilène (TES-)' },
+  { id: 'TBA-', label: 'Piètements (TBA-)' },
+]
+
+function ScopedAdjustmentPanel({
+  rows,
+  previewing,
+  applying,
+  lastApplied,
+  onPreview,
+  onApply,
+  onClear,
+}: {
+  readonly rows: ReadonlyArray<PriceAdjustmentRow> | null
+  readonly previewing: boolean
+  readonly applying: boolean
+  readonly lastApplied: number | null
+  readonly onPreview: (scope: PriceAdjustmentScope) => void
+  readonly onApply: (scope: PriceAdjustmentScope) => void
+  readonly onClear: () => void
+}) {
+  const [category, setCategory] = useState('')
+  const [collection, setCollection] = useState('')
+  const [percentInput, setPercentInput] = useState('')
+  const [previewedScope, setPreviewedScope] =
+    useState<PriceAdjustmentScope | null>(null)
+
+  const percent = Number(percentInput.trim().replace(',', '.'))
+  const percentValid =
+    percentInput.trim() !== '' &&
+    Number.isFinite(percent) &&
+    percent !== 0 &&
+    percent >= -50 &&
+    percent <= 100
+
+  function buildScope(): PriceAdjustmentScope {
+    return {
+      category: category || undefined,
+      skuPrefix: collection || undefined,
+      percent,
+    }
+  }
+
+  // Tout changement de périmètre rend l'aperçu périmé.
+  function invalidatePreview(): void {
+    if (previewedScope !== null) {
+      setPreviewedScope(null)
+      onClear()
+    }
+  }
+
+  const belowFloor = (rows ?? []).filter((row) => row.belowFloor)
+
+  return (
+    <div className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
+      <div>
+        <div className="label-eyebrow text-muted-foreground">
+          Ajustement ciblé des prix
+        </div>
+        <div className="mt-1 text-sm font-medium">
+          ±X % sur une catégorie ou une collection, sans toucher au reste
+        </div>
+        <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+          Les prix revendeur / distributeur suivent automatiquement (ils
+          dérivent du prix de base). Aperçu obligatoire avant application.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Type</span>
+          <select
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value)
+              invalidatePreview()
+            }}
+            className="block h-9 rounded-sm border border-[color:var(--sand-deep)] bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+          >
+            {ADJUST_CATEGORY_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Collection</span>
+          <select
+            value={collection}
+            onChange={(event) => {
+              setCollection(event.target.value)
+              invalidatePreview()
+            }}
+            className="block h-9 rounded-sm border border-[color:var(--sand-deep)] bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+          >
+            {ADJUST_COLLECTION_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1.5 text-xs text-muted-foreground">
+          <span>Ajustement (%)</span>
+          <input
+            type="number"
+            step="0.5"
+            min="-50"
+            max="100"
+            value={percentInput}
+            placeholder="ex. 5 ou -3"
+            onChange={(event) => {
+              setPercentInput(event.target.value)
+              invalidatePreview()
+            }}
+            className="block h-9 w-28 rounded-sm border border-[color:var(--sand-deep)] bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+          />
+        </label>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-9 gap-1.5 rounded-sm"
+          disabled={!percentValid || previewing || applying}
+          onClick={() => {
+            const scope = buildScope()
+            setPreviewedScope(scope)
+            onPreview(scope)
+          }}
+        >
+          <Calculator className="h-3.5 w-3.5" />
+          {previewing ? 'Calcul…' : "Prévisualiser l'ajustement"}
+        </Button>
+        {rows !== null && previewedScope !== null && rows.length > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            className="h-9 rounded-sm"
+            disabled={applying}
+            onClick={() => onApply(previewedScope)}
+          >
+            {applying
+              ? 'Application…'
+              : `Appliquer ${previewedScope.percent > 0 ? '+' : ''}${previewedScope.percent}% (${rows.length} produits)`}
+          </Button>
+        )}
+      </div>
+
+      {lastApplied !== null && (
+        <div className="rounded-sm border border-[color:var(--forest)]/35 bg-[color:var(--forest)]/8 px-3 py-2 text-xs">
+          Ajustement appliqué : {lastApplied} prix mis à jour.
+        </div>
+      )}
+
+      {rows !== null &&
+        (rows.length === 0 ? (
+          <div className="rounded-sm bg-[color:var(--sand-soft)] px-3 py-2 text-xs text-muted-foreground">
+            Aucun produit actif ne correspond à ce périmètre.
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="rounded-sm bg-[color:var(--sand-soft)] px-2 py-1">
+                {rows.length} produits concernés
+              </span>
+              <span
+                className={`rounded-sm px-2 py-1 ${
+                  belowFloor.length > 0
+                    ? 'bg-amber-50 text-amber-950'
+                    : 'bg-[color:var(--sand-soft)]'
+                }`}
+              >
+                {belowFloor.length} passeraient sous le plancher de marge
+              </span>
+            </div>
+            <div className="max-h-72 overflow-auto rounded-sm border border-[color:var(--sand-deep)]">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-[color:var(--sand-soft)] text-left">
+                  <tr>
+                    <th className="px-2 py-1.5 font-medium">SKU</th>
+                    <th className="px-2 py-1.5 font-medium">Produit</th>
+                    <th className="px-2 py-1.5 text-right font-medium">
+                      Actuel HT
+                    </th>
+                    <th className="px-2 py-1.5 text-right font-medium">
+                      Nouveau HT
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr
+                      key={row.productId}
+                      className="border-t border-[color:var(--sand-deep)]"
+                    >
+                      <td className="px-2 py-1.5 font-mono">{row.sku}</td>
+                      <td className="max-w-52 truncate px-2 py-1.5">
+                        {row.name}
+                        {row.belowFloor && (
+                          <span className="ml-1.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[10px] text-amber-950">
+                            sous plancher
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {EUR_PRECISE.format(row.currentPriceHt)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-medium tabular-nums">
+                        {EUR_PRECISE.format(row.newPriceHt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ))}
+    </div>
+  )
+}
+
 // P0.2 — historique des versions de paramètres : chaque sauvegarde crée une
 // ligne, restaurer = re-sauvegarder les valeurs d'une ancienne version.
 function PricingVersionHistory({
@@ -750,6 +997,13 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     null,
   )
   const [restoringVersionId, setRestoringVersionId] = useState<string | null>(
+    null,
+  )
+  const [adjustRows, setAdjustRows] =
+    useState<ReadonlyArray<PriceAdjustmentRow> | null>(null)
+  const [adjustPreviewing, setAdjustPreviewing] = useState(false)
+  const [adjustApplying, setAdjustApplying] = useState(false)
+  const [adjustLastApplied, setAdjustLastApplied] = useState<number | null>(
     null,
   )
   const [loading, setLoading] = useState(true)
@@ -1088,6 +1342,48 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     }
   }
 
+  async function previewAdjustment(scope: PriceAdjustmentScope): Promise<void> {
+    if (!isConfigured || adjustPreviewing) return
+    setAdjustPreviewing(true)
+    setAdjustLastApplied(null)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      setAdjustRows(await previewPriceAdjustment(client, scope))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    } finally {
+      setAdjustPreviewing(false)
+    }
+  }
+
+  async function applyAdjustment(scope: PriceAdjustmentScope): Promise<void> {
+    if (!isConfigured || adjustApplying) return
+    setAdjustApplying(true)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      const updated = await applyPriceAdjustment(client, scope)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'pricing.scoped_adjustment_apply',
+        target: 'products.base_price_ht',
+        extra: {
+          updated,
+          percent: scope.percent,
+          category: scope.category ?? null,
+          sku_prefix: scope.skuPrefix ?? null,
+        },
+      })
+      setAdjustLastApplied(updated)
+      setAdjustRows(null)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    } finally {
+      setAdjustApplying(false)
+    }
+  }
+
   async function applyRepriceDiff(): Promise<void> {
     if (!isConfigured || repriceApplying) return
     setRepriceApplying(true)
@@ -1212,6 +1508,18 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           onPreview={() => void previewRepriceDiff()}
           onApply={() => void applyRepriceDiff()}
           onClose={() => setRepriceRows(null)}
+        />
+      )}
+
+      {pricingParameters && (
+        <ScopedAdjustmentPanel
+          rows={adjustRows}
+          previewing={adjustPreviewing}
+          applying={adjustApplying}
+          lastApplied={adjustLastApplied}
+          onPreview={(scope) => void previewAdjustment(scope)}
+          onApply={(scope) => void applyAdjustment(scope)}
+          onClear={() => setAdjustRows(null)}
         />
       )}
 

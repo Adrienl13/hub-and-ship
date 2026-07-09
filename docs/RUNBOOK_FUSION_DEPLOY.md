@@ -35,10 +35,11 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 8 | `20260706100000_reservation_rpc_channel_attribution.sql` | create_reservation_with_items v3 : validation au prix CANAL du caller + persistance utm_*/partner_ref |
 | 9 | `20260706110000_admin_pricing_engine_parity.sql` | parité moteur : get_price/landed_cost + admin_save_product_full (FOB dans la table PRIVÉE) — version miroir du fix privacy CODEX |
 | 10 | `20260709090000_pricing_pilotage_p0.sql` | **P0 pilotage** : sauvegarde versionnée des paramètres + re-tampon du témoin, check_pricing_control, recalcul explicite (preview/apply), get_public_pricing_rules (paliers + frais, AUCUNE marge), create_reservation_with_items v4 (frais depuis paramètres) |
+| 11 | `20260709120000_scoped_price_adjustment.sql` | Ajustement ciblé des prix : ±X % (borné -50..+100) sur une catégorie et/ou un préfixe SKU, preview → apply, admin only |
 
-> Migrations 1-8 déjà appliquées le 08-09/07 (vérifications ok). Si tu
-> reprends ce runbook après coup : il reste **9 et 10** à appliquer, dans cet
-> ordre, AVANT le prochain deploy du code.
+> Migrations 1-8 déjà appliquées le 08-09/07 (vérifications ok), puis 9-10 le
+> 09/07. Si tu reprends ce runbook après coup : il reste **11** à appliquer
+> AVANT le prochain deploy du code.
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.
@@ -87,7 +88,8 @@ schéma) :
 ```bash
 supabase migration repair --status applied 20260702100000 20260702120000 \
   20260702130000 20260702140000 20260703140000 20260705090000 \
-  20260706090000 20260706100000 20260706110000 20260709090000
+  20260706090000 20260706100000 20260706110000 20260709090000 \
+  20260709120000
 ```
 
 ## 5. Déployer le code
