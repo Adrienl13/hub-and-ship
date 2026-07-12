@@ -28,7 +28,14 @@ export interface Product {
   weightKg: number
   /** 50 assises · 20 tables */
   moqUnits: number
+  /** Prix affiché à l'utilisateur : pour un revendeur connecté c'est son prix
+   *  NET canal (via get_catalogue_prices). Pour anon/direct == prix public. */
   basePriceHt: number
+  /** Prix PUBLIC direct (products.base_price_ht brut, jamais canalisé) — à
+   *  utiliser partout où l'on fige/expose un prix destiné au client FINAL
+   *  (sélections partenaires publiées, devis co-brandés) pour ne jamais fuiter
+   *  le prix net d'un revendeur. Absent (undefined) = retomber sur basePriceHt. */
+  publicBasePriceHt?: number
   retailPriceRef: number
   ecoContribution: number
   mainImageUrl: string

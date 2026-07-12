@@ -143,6 +143,9 @@ function productFromRow(
     // the raw base_price_ht so every downstream render + the order math use the
     // caller's channel price. Anon / direct → resolved == base (no change).
     basePriceHt: resolvedPriceHt ?? Number(row.base_price_ht),
+    // Prix PUBLIC direct brut, JAMAIS canalisé : fige les prix destinés au
+    // client final (sélections/devis partenaires) sans fuiter le net revendeur.
+    publicBasePriceHt: Number(row.base_price_ht),
     retailPriceRef: Number(row.retail_price_ref),
     ecoContribution: Number(row.eco_contribution),
     mainImageUrl: row.main_image_url,

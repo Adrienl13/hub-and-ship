@@ -75,7 +75,10 @@ export function buildSelectionItemInput(
       category: product.category,
       sku: product.sku,
       imageUrl: variant?.imageUrl ?? product.mainImageUrl,
-      basePriceHt: product.basePriceHt,
+      // TOUJOURS le prix PUBLIC direct : le snapshot est lu par le client final
+      // (page /p/$slug, devis co-brandé). Utiliser product.basePriceHt fuiterait
+      // le prix NET du revendeur connecté (canalisé) — M11.
+      basePriceHt: product.publicBasePriceHt ?? product.basePriceHt,
       ecoContribution: product.ecoContribution,
     },
   }

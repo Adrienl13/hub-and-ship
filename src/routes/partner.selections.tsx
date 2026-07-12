@@ -451,7 +451,9 @@ function SelectionBuilder({
         sku: '',
         imageUrl: '',
         ecoContribution: 0,
-        basePriceHt: entry.product.basePriceHt,
+        // Prix PUBLIC direct (jamais le net revendeur canalisé) — cohérent
+        // avec ce qui sera figé/publié pour le client final (M11).
+        basePriceHt: entry.product.publicBasePriceHt ?? entry.product.basePriceHt,
       },
     }))
   const totalHt = selectionPublicTotalHt(selectedItems)
@@ -516,7 +518,11 @@ function SelectionBuilder({
                 )}
                 <div className="text-[11px] text-muted-foreground">
                   {CATEGORY_LABEL[entry.product.category]} ·{' '}
-                  {formatEUR(entry.product.basePriceHt)} HT
+                  {formatEUR(
+                    entry.product.publicBasePriceHt ??
+                      entry.product.basePriceHt,
+                  )}{' '}
+                  HT
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <Button

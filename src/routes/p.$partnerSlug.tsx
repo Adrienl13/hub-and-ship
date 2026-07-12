@@ -66,6 +66,10 @@ export const Route = createFileRoute('/p/$partnerSlug')({
           'Sélection partenaire Pros Import : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
         path: buildPartnerSharePath({ slug }),
         image: PRODUCTS[0]?.mainImageUrl,
+        // Espace d'URL non borné (n'importe quel slug matche) : ces pages
+        // co-brandées se partagent par lien direct, elles n'ont pas à être
+        // indexées (contenu catalogue dupliqué par partenaire + usurpation).
+        noindex: true,
       }),
       scripts: [
         jsonLdScript(

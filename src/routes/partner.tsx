@@ -14,6 +14,7 @@ import {
   Copy,
   Handshake,
   Link2,
+  Mail,
   Plus,
   ShieldCheck,
   ShoppingBag,
@@ -23,8 +24,12 @@ import {
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { PartnerGuard } from '@/components/PartnerGuard'
+import { ApporteurDashboard } from '@/components/partenaire/ApporteurDashboard'
+import { RevendeurDashboard } from '@/components/partenaire/RevendeurDashboard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { usePartnerSpace } from '@/hooks/usePartnerSpace'
+import { SALES_CHANNEL_LABEL, type SalesChannel } from '@/lib/pricing/channel'
 import {
   createPartnerDeal,
   loadPartnerWorkspace,
@@ -160,12 +165,74 @@ function PartnerDashboard() {
             <AttributedReservationsCard
               reservations={workspace.reservations}
             />
+            <ChannelSpaceSections />
           </div>
         ) : null}
       </main>
 
       <Footer />
     </div>
+  )
+}
+
+/**
+ * Sections canal & commissions (ex-/partenaire, unifiées ici — audit M5) :
+ * QR + ledger apporteur quand le compte détient un code, grille revendeur /
+ * récap grand compte selon le canal de la société. S'affiche uniquement
+ * quand il y a quelque chose à montrer — un partenaire « deals seulement »
+ * garde son espace inchangé.
+ */
+function ChannelSpaceSections() {
+  const space = usePartnerSpace()
+  if (space.status !== 'ready') return null
+
+  const showApporteur = space.data.codes.length > 0
+  const showRevendeur = space.channel === 'revendeur'
+  const showReferent =
+    space.channel === 'grand_compte' || space.channel === 'distributeur'
+  if (!showApporteur && !showRevendeur && !showReferent) return null
+
+  return (
+    <div className="space-y-6 border-t border-[color:var(--sand-deep)] pt-6">
+      {showApporteur && <ApporteurDashboard data={space.data} />}
+      {showRevendeur && <RevendeurDashboard />}
+      {showReferent && <ReferentRecap channel={space.channel} />}
+    </div>
+  )
+}
+
+function ReferentRecap({ channel }: { readonly channel: SalesChannel }) {
+  return (
+    <section className="space-y-4">
+      <div>
+        <span className="mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
+          Espace {SALES_CHANNEL_LABEL[channel].toLowerCase()}
+        </span>
+        <h2 className="mt-1 font-display text-2xl font-black tracking-tight">
+          Vos conditions {SALES_CHANNEL_LABEL[channel].toLowerCase()}
+        </h2>
+      </div>
+      <div className="rounded-lg border border-[color:var(--sand-deep)] bg-card p-5 text-sm text-muted-foreground">
+        <p>
+          Votre compte bénéficie des conditions{' '}
+          <b className="text-foreground">{SALES_CHANNEL_LABEL[channel]}</b> :
+          meilleures conditions de la grille
+          {channel === 'distributeur'
+            ? ', exclusivité territoriale et priorité production.'
+            : ', palier direct garanti et interlocuteur dédié.'}
+        </p>
+        <p className="mt-3">
+          Le détail de vos conditions et votre calendrier de containers sont
+          suivis avec votre référent Container Club.
+        </p>
+        <Button asChild className="mt-4 gap-1.5">
+          <a href="mailto:contact@prosimport.com?subject=Espace%20partenaire">
+            <Mail className="h-4 w-4" />
+            Contactez votre référent
+          </a>
+        </Button>
+      </div>
+    </section>
   )
 }
 

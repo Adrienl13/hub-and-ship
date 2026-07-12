@@ -18,16 +18,25 @@ const base = {
 }
 
 describe('isAccruableStatus', () => {
-  it('excludes draft, pending fee and cancelled (no CA collected)', () => {
-    expect(isAccruableStatus('draft')).toBe(false)
-    expect(isAccruableStatus('pending_reservation_fee')).toBe(false)
-    expect(isAccruableStatus('cancelled')).toBe(false)
+  it('excludes every partially-collected status (only full CA accrues)', () => {
+    // reserved = frais seuls ; deposit_* = acompte 30% ; in_production = solde
+    // pas encore appelé → commissionner 100% du CA serait une fuite comptable.
+    for (const status of [
+      'draft',
+      'pending_reservation_fee',
+      'reserved',
+      'deposit_called',
+      'deposit_paid',
+      'in_production',
+      'cancelled',
+    ] as const) {
+      expect(isAccruableStatus(status)).toBe(false)
+    }
   })
 
-  it('allows paid/downstream statuses', () => {
-    expect(isAccruableStatus('deposit_paid')).toBe(true)
+  it('accrues only once the full CA is collected (in_transit / delivered)', () => {
+    expect(isAccruableStatus('in_transit')).toBe(true)
     expect(isAccruableStatus('delivered')).toBe(true)
-    expect(isAccruableStatus('reserved')).toBe(true)
   })
 })
 

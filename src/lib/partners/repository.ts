@@ -253,6 +253,52 @@ export async function updatePartnerApplicationStatus(
   if (error) throw new Error(error.message)
 }
 
+export interface CreatedPartnerCode {
+  readonly id: string
+  readonly code: string
+  readonly companyId: string
+  readonly linkedUser: boolean
+  readonly created: boolean
+}
+
+/**
+ * Génère (ou renvoie, idempotent) le code apporteur d'une candidature
+ * approuvée via la RPC admin. Provisionne la société côté serveur.
+ */
+export async function createPartnerCodeForApplication(
+  client: PartnerAdminRepositoryClient,
+  applicationId: string,
+): Promise<CreatedPartnerCode> {
+  const { data, error } = (await (
+    client as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>
+    }
+  ).rpc('admin_create_partner_code', { p_application_id: applicationId })) as {
+    data: {
+      id?: string
+      code?: string
+      company_id?: string
+      linked_user?: boolean
+      created?: boolean
+    } | null
+    error: { message: string } | null
+  }
+  if (error) throw new Error(error.message)
+  if (!data?.code || !data.id) {
+    throw new Error('admin_create_partner_code returned an invalid payload')
+  }
+  return {
+    id: data.id,
+    code: data.code,
+    companyId: data.company_id ?? '',
+    linkedUser: data.linked_user === true,
+    created: data.created !== false,
+  }
+}
+
 export async function updatePartnerDealStatus(
   client: PartnerAdminRepositoryClient,
   id: string,

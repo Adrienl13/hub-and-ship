@@ -38,14 +38,19 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 11 | `20260709120000_scoped_price_adjustment.sql` | Ajustement ciblé des prix : ±X % (borné -50..+100) sur une catégorie et/ou un préfixe SKU, preview → apply, admin only |
 | 12 | `20260711120000_reservation_volume_discount.sql` | **Sprint 1 (C3)** : colonne `volume_discount` + create_reservation_with_items **v5** — remise volume (−6 %/−10 %, canal direct) appliquée au sous-total et revalidée ; durcit aussi pay_now = frais − parrainage |
 | 13 | `20260711140000_pricing_guardrails.sql` | **Sprint 2 (M1/M2/M9)** : bornes CHECK sur pricing_parameters (NOT VALID, écritures futures), plancher de marge SQL sur les 2 tables de prix nets partenaires, purge des overrides invalides après changement de base_price_ht |
+| 14 | `20260711160000_bistro_tables_moq_fix.sql` | **Sprint 3 (M4)** : MOQ des 7 tables bistro alignés sur le réel (50 → 20 unités) dans products + descriptions |
+| 15 | `20260711170000_users_profile_signup_repair.sql` | **Sprint 3 (M14)** : SECOND trigger sur auth.users → handle_new_user (users_profile) + backfill des comptes créés depuis la casse du 20/05 — répare toute la chaîne canal (current_company_id) |
+| 16 | `20260711180000_admin_create_partner_code.sql` | **Sprint 3 (M13)** : RPC admin_create_partner_code — provisionne la société, relie users_profile, génère le code AP-XXXXXX (unicité case-insensitive + retry), idempotent au re-clic, admin only |
 
 > Migrations 1-8 déjà appliquées le 08-09/07, 9-10 le 09/07. **Ordre
-> impératif** : appliquer 11 → 12 → 13 (12 remplace le RPC de réservation en
-> v5 ; 13 s'appuie sur les fonctions des migrations précédentes) AVANT le
-> deploy du code. Le code Sprint 1+2 et les migrations 12-13 vont ENSEMBLE :
-> déploie le code juste après avoir passé les migrations (l'ancien code envoie
-> des payloads sans `volume_discount`, tolérés par v5 ; mais le nouveau code
-> avec l'ancien RPC refuserait les paniers ≥ 100 unités).
+> impératif** : appliquer 11 → 12 → 13 → 14 → 15 → 16 (12 remplace le RPC de
+> réservation en v5 ; 13 s'appuie sur les fonctions des migrations
+> précédentes ; 16 dépend du backfill users_profile de 15) AVANT le deploy du
+> code. Le code Sprint 1+2+3 et les migrations 12-16 vont ENSEMBLE : déploie
+> le code juste après avoir passé les migrations (l'ancien code envoie des
+> payloads sans `volume_discount`, tolérés par v5 ; mais le nouveau code avec
+> l'ancien RPC refuserait les paniers ≥ 100 unités, et le bouton « Générer le
+> code » de l'onglet Partenaires échouerait sans la migration 16).
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.
@@ -75,6 +80,23 @@ where table_name = 'reservations' and column_name = 'volume_discount';
 -- Après la migration 13 (garde-fous) : les triggers de plancher/purge sont là :
 select tgname from pg_trigger
 where tgname in ('product_partner_prices_floor', 'products_prune_overrides');
+
+-- Après la migration 14 (MOQ bistro) : les 7 tables sont à 20 unités :
+select sku, moq_units from public.products
+where sku in ('BIS-031','BIS-032','BIS-033','BIS-034','BIS-036','BIS-038','BIS-042');
+
+-- Après la migration 15 (réparation signup) : les DEUX triggers coexistent
+-- et plus aucun compte n'est orphelin de users_profile (doit rendre 0) :
+select tgname from pg_trigger
+where tgname in ('on_auth_user_created', 'on_auth_user_created_profile');
+select count(*) from auth.users u
+where not exists (select 1 from public.users_profile p where p.id = u.id);
+
+-- Après la migration 16 (code partenaire) : le RPC existe et l'index
+-- d'unicité case-insensitive est en place :
+select proname from pg_proc where proname = 'admin_create_partner_code';
+select indexname from pg_indexes
+where indexname = 'partner_codes_code_lower_uidx';
 
 -- Après les migrations 9-10 (pilotage P0) :
 -- Les règles publiques ne rendent QUE paliers + frais (7 clés, aucune marge) :

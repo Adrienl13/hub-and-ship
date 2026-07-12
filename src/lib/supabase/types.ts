@@ -1274,6 +1274,10 @@ export interface Database {
         Args: Record<string, never>
         Returns: string[]
       }
+      admin_create_partner_code: {
+        Args: { p_application_id: string; p_code?: string }
+        Returns: Json
+      }
       admin_save_product_full: {
         Args: { payload: Json }
         Returns: void

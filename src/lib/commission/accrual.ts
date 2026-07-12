@@ -5,13 +5,24 @@ import {
 import type { ReservationStatus } from '@/lib/supabase/types'
 
 /**
- * Reservation states that never earn commission: not-yet-a-real-order and
- * cancelled. Commissions accrue only on collected revenue (decision #3), so the
- * caller triggers accrual at full payment and this guard blocks the rest.
+ * La commission est calculée sur le CA RÉELLEMENT ENCAISSÉ (décision #3). La
+ * base d'accrual est le total_ht complet : elle n'est donc légitime QUE lorsque
+ * le solde a été payé, c.-à-d. avant expédition. Seuls `in_transit` et
+ * `delivered` garantissent 100 % encaissé.
+ *
+ * Les statuts intermédiaires n'encaissent qu'une fraction :
+ *  - `reserved`        = frais de réservation payés (≈ 3 %, plancher 150 €)
+ *  - `deposit_called` / `deposit_paid` = acompte 30 %
+ *  - `in_production`   = solde pas encore appelé
+ * Les accruer commissionnerait 100 % du CA pour 3-30 % encaissé → interdit.
  */
 const NON_ACCRUABLE_STATUSES: ReadonlySet<ReservationStatus> = new Set([
   'draft',
   'pending_reservation_fee',
+  'reserved',
+  'deposit_called',
+  'deposit_paid',
+  'in_production',
   'cancelled',
 ])
 

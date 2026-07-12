@@ -6,7 +6,9 @@ import {
   ShieldCheck,
   TrendingDown,
   Check,
+  ArrowUpRight,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import {
   Dialog,
@@ -16,6 +18,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { productSlug } from '@/lib/catalogue/product-slug'
 import { getMoqStatus, formatEUR } from '@/lib/order'
 import { TableConfigurator } from '@/components/TableConfigurator'
 import { ProductGallery } from '@/components/ProductGallery'
@@ -83,6 +86,16 @@ export function ProductDetailDialog({
           <DialogDescription className="text-foreground/70 text-sm leading-relaxed">
             {product.description}
           </DialogDescription>
+          {/* Lien vers la fiche SSR partageable : maillage interne + URL propre
+              à envoyer à un confrère (le dialog n'a pas d'URL). */}
+          <Link
+            to="/catalogue/p/$slug"
+            params={{ slug: productSlug(product) }}
+            className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-medium text-[color:var(--ember)] underline-offset-2 hover:underline"
+          >
+            Voir la fiche produit
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

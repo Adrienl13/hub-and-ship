@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  createPartnerCodeForApplication,
   listPartnerApplications,
   listPartnerDeals,
   updatePartnerApplicationNote,
@@ -16,6 +17,7 @@ import {
   type PartnerApplicationAdminRow,
   type PartnerDealAdminRow,
 } from '@/lib/partners/repository'
+import { buildPartnerLink } from '@/lib/partner-space/qr'
 import {
   listAllReservations,
   type AdminReservationRow,
@@ -167,6 +169,40 @@ export function AdminPartnersTab({
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
+  // M13 — chaînon manquant : sans code apporteur, aucune commission ne peut
+  // s'accruer. Idempotent côté SQL (re-clic = renvoie le code existant).
+  async function generatePartnerCode(
+    row: PartnerApplicationAdminRow,
+  ): Promise<void> {
+    if (!isConfigured) return
+    setBusyId(row.id)
+    const client = createPartnerAdminClient(config)
+    try {
+      const result = await createPartnerCodeForApplication(client, row.id)
+      const link = buildPartnerLink(result.code)
+      try {
+        await navigator.clipboard.writeText(link)
+      } catch {
+        // copie refusée (permissions) — le toast affiche quand même le lien.
+      }
+      toast.success(
+        result.created
+          ? `Code apporteur créé : ${result.code}`
+          : `Code apporteur existant : ${result.code}`,
+        {
+          description: result.linkedUser
+            ? `Lien copié : ${link} — compte partenaire relié à sa société.`
+            : `Lien copié : ${link} — le partenaire verra son espace après création de son compte (${row.contactEmail}).`,
+        },
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      toast.error('Code apporteur non créé', { description: message })
+      setError(message)
     }
     setBusyId(null)
   }
@@ -416,6 +452,7 @@ export function AdminPartnersTab({
               }
               onSaveSlug={(slug) => void saveApplicationSlug(row, slug)}
               onSaveNote={(note) => void saveApplicationNote(row, note)}
+              onGenerateCode={() => void generatePartnerCode(row)}
             />
           )
         })}
@@ -488,6 +525,7 @@ function ApplicationCard({
   onChangeStatus,
   onSaveSlug,
   onSaveNote,
+  onGenerateCode,
 }: {
   readonly row: PartnerApplicationAdminRow
   readonly busy: boolean
@@ -498,6 +536,7 @@ function ApplicationCard({
   readonly onChangeStatus: (status: PartnerApplicationStatus) => void
   readonly onSaveSlug: (slug: string | null) => void
   readonly onSaveNote: (note: string | null) => void
+  readonly onGenerateCode: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const attributionActive =
@@ -564,6 +603,18 @@ function ApplicationCard({
               </option>
             ))}
           </select>
+          {row.status === 'approved' && (
+            <Button
+              type="button"
+              size="sm"
+              disabled={busy}
+              onClick={onGenerateCode}
+              className="h-8 w-full px-2 text-xs"
+              title="Génère le code de suivi ?ref= (QR/lien) et provisionne la société — nécessaire pour les commissions apporteur"
+            >
+              {busy ? 'Génération…' : 'Générer le code apporteur'}
+            </Button>
+          )}
           <Button
             type="button"
             size="sm"

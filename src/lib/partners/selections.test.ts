@@ -54,6 +54,18 @@ describe('buildSelectionItemInput', () => {
     expect(item.snapshot.imageUrl).toBe('https://img/p1.jpg')
     expect(item.quantity).toBe(1)
   })
+
+  it('snapshots the PUBLIC direct price, never the net channel price (M11)', () => {
+    // Revendeur connecté : basePriceHt = son prix NET canalisé (66), mais le
+    // client final ne doit voir que le prix public direct (89).
+    const resellerView = {
+      ...product,
+      basePriceHt: 66,
+      publicBasePriceHt: 89,
+    } as unknown as Product
+    const item = buildSelectionItemInput(resellerView, variant, 5)
+    expect(item.snapshot.basePriceHt).toBe(89)
+  })
 })
 
 describe('catalogSelectionEntries', () => {
