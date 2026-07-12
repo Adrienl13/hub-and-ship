@@ -36,10 +36,16 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 9 | `20260706110000_admin_pricing_engine_parity.sql` | parité moteur : get_price/landed_cost + admin_save_product_full (FOB dans la table PRIVÉE) — version miroir du fix privacy CODEX |
 | 10 | `20260709090000_pricing_pilotage_p0.sql` | **P0 pilotage** : sauvegarde versionnée des paramètres + re-tampon du témoin, check_pricing_control, recalcul explicite (preview/apply), get_public_pricing_rules (paliers + frais, AUCUNE marge), create_reservation_with_items v4 (frais depuis paramètres) |
 | 11 | `20260709120000_scoped_price_adjustment.sql` | Ajustement ciblé des prix : ±X % (borné -50..+100) sur une catégorie et/ou un préfixe SKU, preview → apply, admin only |
+| 12 | `20260711120000_reservation_volume_discount.sql` | **Sprint 1 (C3)** : colonne `volume_discount` + create_reservation_with_items **v5** — remise volume (−6 %/−10 %, canal direct) appliquée au sous-total et revalidée ; durcit aussi pay_now = frais − parrainage |
+| 13 | `20260711140000_pricing_guardrails.sql` | **Sprint 2 (M1/M2/M9)** : bornes CHECK sur pricing_parameters (NOT VALID, écritures futures), plancher de marge SQL sur les 2 tables de prix nets partenaires, purge des overrides invalides après changement de base_price_ht |
 
-> Migrations 1-8 déjà appliquées le 08-09/07 (vérifications ok), puis 9-10 le
-> 09/07. Si tu reprends ce runbook après coup : il reste **11** à appliquer
-> AVANT le prochain deploy du code.
+> Migrations 1-8 déjà appliquées le 08-09/07, 9-10 le 09/07. **Ordre
+> impératif** : appliquer 11 → 12 → 13 (12 remplace le RPC de réservation en
+> v5 ; 13 s'appuie sur les fonctions des migrations précédentes) AVANT le
+> deploy du code. Le code Sprint 1+2 et les migrations 12-13 vont ENSEMBLE :
+> déploie le code juste après avoir passé les migrations (l'ancien code envoie
+> des payloads sans `volume_discount`, tolérés par v5 ; mais le nouveau code
+> avec l'ancien RPC refuserait les paniers ≥ 100 unités).
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.
@@ -61,6 +67,14 @@ select is_active from public.referral_program_settings;
 select column_name from information_schema.columns
 where table_name = 'partner_applications'
   and column_name in ('activity_profile','target_status','partner_ref');
+
+-- Après la migration 12 (remise volume) : la colonne existe (défaut 0) :
+select column_name from information_schema.columns
+where table_name = 'reservations' and column_name = 'volume_discount';
+
+-- Après la migration 13 (garde-fous) : les triggers de plancher/purge sont là :
+select tgname from pg_trigger
+where tgname in ('product_partner_prices_floor', 'products_prune_overrides');
 
 -- Après les migrations 9-10 (pilotage P0) :
 -- Les règles publiques ne rendent QUE paliers + frais (7 clés, aucune marge) :
