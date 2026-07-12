@@ -2,7 +2,10 @@ import { productPath } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 
 export const SITE_URL = 'https://prosimport.com'
-export const SITE_NAME = 'Container Club Terrassea'
+// D6 : une seule marque visible. « Terrassea » reste une marque déposée de
+// Pros Import (legal-content) et un site partenaire, mais ne compose plus
+// les titres SEO ni le nom de marque produit.
+export const SITE_NAME = 'Container Club'
 
 export interface SeoInput {
   readonly title: string
@@ -110,7 +113,9 @@ export function organizationJsonLd() {
     '@id': `${SITE_URL}/#organization`,
     name: 'Container Club',
     legalName: 'Pros Import EURL',
-    alternateName: SITE_NAME,
+    // Ancien nom composite conservé ici (invisible) pour que Google relie
+    // l'entité historique à la marque unifiée.
+    alternateName: 'Container Club Terrassea',
     url: SITE_URL,
     email: 'contact@prosimport.com',
     description:
@@ -209,7 +214,7 @@ export function productJsonLd(product: Product, options?: { url?: string }) {
     category: CATEGORY_LABEL[product.category],
     brand: {
       '@type': 'Brand',
-      name: 'Terrassea',
+      name: 'Container Club',
     },
     additionalProperty: [
       {

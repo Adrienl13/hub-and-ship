@@ -52,6 +52,9 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 > payloads sans `volume_discount`, tolérés par v5 ; mais le nouveau code avec
 > l'ancien RPC refuserait les paniers ≥ 100 unités, et le bouton « Générer le
 > code » de l'onglet Partenaires échouerait sans la migration 16).
+>
+> Le Sprint 4 (design/personnalisation) est 100 % code, AUCUNE migration :
+> il part dans le même `bun run deploy` que le reste.
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.

@@ -19,6 +19,7 @@ import {
 import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { ProofTimeline } from '@/components/ProofTimeline'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -177,6 +178,16 @@ function PrixPage() {
             </Link>{' '}
             de chaque container.
           </p>
+        </section>
+
+        {/* D2 : la méthode, en images — frise compacte du trajet container. */}
+        <section className="mt-10">
+          <h2 className="font-display text-2xl tracking-tight">
+            Le trajet de votre container
+          </h2>
+          <div className="mt-4">
+            <ProofTimeline compact />
+          </div>
         </section>
 
         <section className="mt-10">
@@ -341,6 +352,31 @@ function PrixPage() {
                 </p>
               </details>
             ))}
+          </div>
+        </section>
+
+        {/* D5 : la transparence prix est signée par un humain, pas par une
+            marque anonyme. */}
+        <section className="mt-10 flex items-start gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+          <span
+            aria-hidden
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[color:var(--foreground)] font-display text-lg font-semibold text-[color:var(--background)]"
+          >
+            AL
+          </span>
+          <div>
+            <p className="text-sm leading-7 text-[color:var(--ink-soft)]">
+              « Cette page décrit exactement comment nos prix sont construits.
+              Si un point reste flou, écrivez-moi : je réponds
+              personnellement. »
+            </p>
+            <p className="mt-2 text-xs font-semibold">Adrien Laniez</p>
+            <p className="text-xs text-muted-foreground">
+              Fondateur &amp; gérant, Pros Import EURL ·{' '}
+              <a href="/contact" className="underline">
+                contact
+              </a>
+            </p>
           </div>
         </section>
 

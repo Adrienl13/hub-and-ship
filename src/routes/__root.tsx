@@ -86,23 +86,23 @@ export const Route = createRootRoute({
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       {
         title:
-          'Container Club Terrassea — Mobilier outdoor pro mutualisé par container',
+          'Container Club — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'description',
         content:
-          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle Terrassea.",
+          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle France.",
       },
-      { name: 'author', content: 'Pros Import — Container Club Terrassea' },
+      { name: 'author', content: 'Pros Import — Container Club' },
       {
         property: 'og:title',
         content:
-          'Container Club Terrassea — Mobilier outdoor pro mutualisé par container',
+          'Container Club — Mobilier outdoor pro mutualisé par container',
       },
       {
         property: 'og:description',
         content:
-          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle Terrassea.",
+          "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle France.",
       },
       { property: 'og:type', content: 'website' },
       { property: 'og:locale', content: 'fr_FR' },
@@ -110,7 +110,7 @@ export const Route = createRootRoute({
       {
         name: 'twitter:title',
         content:
-          'Container Club Terrassea — Mobilier outdoor pro mutualisé par container',
+          'Container Club — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'twitter:description',
@@ -119,6 +119,7 @@ export const Route = createRootRoute({
       },
     ],
     links: [
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       {
         rel: 'preconnect',

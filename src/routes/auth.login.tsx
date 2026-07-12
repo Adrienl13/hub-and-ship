@@ -31,7 +31,7 @@ export const Route = createFileRoute('/auth/login')({
   validateSearch: loginSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Connexion — Container Club Terrassea' },
+      { title: 'Connexion — Container Club' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),

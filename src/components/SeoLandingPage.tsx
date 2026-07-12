@@ -28,6 +28,8 @@ export interface SeoLandingPageProps {
   readonly faqs: ReadonlyArray<SeoLandingFaq>
   readonly primaryHref?: '/catalogue' | '/stock-24h'
   readonly primaryLabel?: string
+  /** D3 : bandeau visuel sous le hero — vrais packshots de la gamme. */
+  readonly showcaseImages?: ReadonlyArray<string>
 }
 
 export function SeoLandingPage({
@@ -40,6 +42,7 @@ export function SeoLandingPage({
   faqs,
   primaryHref = '/catalogue',
   primaryLabel = 'Voir les produits',
+  showcaseImages,
 }: SeoLandingPageProps) {
   const goToCatalogue = () => {
     window.location.href = primaryHref
@@ -97,6 +100,25 @@ export function SeoLandingPage({
             </div>
           </div>
         </section>
+
+        {showcaseImages && showcaseImages.length > 0 && (
+          <section
+            aria-hidden
+            className="border-b border-[color:var(--sand-deep)] bg-card"
+          >
+            <div className="mx-auto flex max-w-7xl items-center justify-center gap-6 overflow-x-auto px-6 py-8 sm:gap-12">
+              {showcaseImages.map((src) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="h-32 w-auto shrink-0 object-contain drop-shadow-md sm:h-40"
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="border-b border-[color:var(--sand-deep)]">
           <div className="mx-auto grid max-w-7xl gap-4 px-6 py-10 md:grid-cols-3">

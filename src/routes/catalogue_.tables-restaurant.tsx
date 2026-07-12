@@ -80,6 +80,11 @@ function TablesRestaurantPage() {
         'Formats ronds et rectangulaires pour 2 à 6 couverts',
       ]}
       products={products}
+      showcaseImages={[
+        '/catalogue/rope-series/ROP-013-01.webp',
+        '/catalogue/table-base-series/TBA-005-01.webp',
+        '/catalogue/table-base-series/TBA-003-01.webp',
+      ]}
       sections={[
         {
           title: 'Formats CHR pratiques',

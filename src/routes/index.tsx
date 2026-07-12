@@ -16,8 +16,10 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { CollectionsShowcase } from '@/components/CollectionsShowcase'
 import { Header } from '@/components/Header'
 import { Hero } from '@/components/Hero'
+import { TerraceConfigurator } from '@/components/TerraceConfigurator'
 import { ValueProps } from '@/components/ValueProps'
 import { HowItWorks } from '@/components/HowItWorks'
 import { ComparisonTable } from '@/components/ComparisonTable'
@@ -61,7 +63,7 @@ export const Route = createFileRoute('/')({
       jsonLdScript({
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'Container Club Terrassea',
+        name: 'Container Club',
         url: SITE_URL,
       }),
     ],
@@ -178,7 +180,14 @@ function ContainerClubPage() {
         container={currentContainer}
       />
 
+      {/* D3 : le produit se montre avant tout discours. */}
+      <CollectionsShowcase products={productsArray} />
+
       <ValueProps />
+
+      {/* D4 : couverts → mix chiffré → panier. */}
+      <TerraceConfigurator products={productsArray} />
+
       <PartnerPathway />
       <Stock24hTeaser />
       <HowItWorks />

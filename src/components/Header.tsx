@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -107,9 +108,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
         <a href="/#top" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--foreground)] font-display text-base font-semibold text-[color:var(--background)]">
-            C
-          </span>
+          <BrandMark className="h-8 w-8" />
           <span className="font-display text-base font-semibold tracking-tight">
             Container Club
           </span>

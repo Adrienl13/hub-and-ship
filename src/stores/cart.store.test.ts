@@ -32,14 +32,37 @@ describe('cart store', () => {
     expect(useCartStore.getState().qtyByProduct['bistro-bis-001']).toBe(12)
   })
 
-  it('starts from the catalogue demo cart', () => {
+  it('starts from an EMPTY cart — no demo pre-fill inflating the hero gauge', () => {
     const { qtyByProduct, variantByProduct } = useCartStore.getState()
     const snapshot = createCartSnapshot({ qtyByProduct, variantByProduct })
 
-    expect(qtyByProduct.p1).toBe(50)
-    expect(qtyByProduct.p3).toBe(10)
-    expect(snapshot.items).toHaveLength(2)
-    expect(snapshot.totalUnits).toBe(60)
+    expect(qtyByProduct).toEqual({})
+    expect(snapshot.items).toHaveLength(0)
+    expect(snapshot.totalUnits).toBe(0)
+    expect(snapshot.fill.percent).toBe(0)
+  })
+
+  it('purges the legacy demo cart (p1:50/p3:10) from persisted storage on migrate', async () => {
+    localStorage.setItem(
+      'container-club-cart',
+      JSON.stringify({
+        state: {
+          qtyByProduct: { p1: 50, p3: 10, p4: 20 },
+          variantByProduct: {},
+          preferredContainerType: null,
+          containerPreferenceSource: null,
+        },
+        version: 0,
+      }),
+    )
+
+    await useCartStore.persist.rehydrate()
+    const qty = useCartStore.getState().qtyByProduct
+
+    // Les lignes de démo héritées disparaissent, les choix réels restent.
+    expect(qty.p1).toBeUndefined()
+    expect(qty.p3).toBeUndefined()
+    expect(qty.p4).toBe(20)
   })
 
   it('normalizes chair quantities through the shared business rule', () => {
@@ -55,6 +78,7 @@ describe('cart store', () => {
   })
 
   it('updates variants without changing quantities', () => {
+    useCartStore.getState().setQty('p1', 50)
     useCartStore.getState().setVariant('p1', 'v1c')
     const state = useCartStore.getState()
 

@@ -33,7 +33,7 @@ export const Route = createFileRoute('/account/reservations')({
   component: AccountReservationsPage,
   head: () => ({
     meta: [
-      { title: 'Mes réservations — Container Club Terrassea' },
+      { title: 'Mes réservations — Container Club' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),

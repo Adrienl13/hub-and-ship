@@ -78,6 +78,38 @@ function AProposPage() {
           ))}
         </section>
 
+        {/* D5 : incarnation — en B2B artisanal, savoir QUI importe est le
+            premier signal de confiance. La photo d'Adrien remplacera
+            l'initiale dès qu'un portrait sera fourni. */}
+        <section className="mt-8 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+          <div className="label-eyebrow text-[color:var(--ember)]">
+            Qui importe pour vous
+          </div>
+          <div className="mt-4 flex items-start gap-4">
+            <span
+              aria-hidden
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[color:var(--foreground)] font-display text-xl font-semibold text-[color:var(--background)]"
+            >
+              AL
+            </span>
+            <div>
+              <p className="font-display text-base font-semibold">
+                Adrien Laniez
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Fondateur &amp; gérant, Pros Import EURL
+              </p>
+              <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
+                « Chaque container est suivi de bout en bout : sélection usine,
+                négociation, contrôle SGS avant chargement, dédouanement et
+                livraison au port. Vous savez qui importe votre mobilier, et
+                vous pouvez me joindre directement — c&apos;est aussi ça, le
+                club. »
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="mt-8">
           <h2 className="font-display text-xl font-semibold tracking-tight">
             Ce que nous ne faisons pas

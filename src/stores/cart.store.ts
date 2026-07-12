@@ -46,7 +46,8 @@ interface CartStoreState {
   ) => void
   resetCart: () => void
   /** Vide complètement le panier (après une réservation confirmée) —
-   *  contrairement à resetCart qui restaure le panier de démonstration. */
+   *  contrairement à resetCart qui restaure aussi les variantes par défaut
+   *  du catalogue. Les deux laissent les quantités vides. */
   clearCart: () => void
 }
 
@@ -58,11 +59,11 @@ function createDefaultVariantByProduct(
   )
 }
 
+// Le panier démarre VIDE : l'ancien panier de démonstration (50 chaises +
+// 10 tables pré-remplies) gonflait artificiellement la jauge « Remplissage »
+// du hero pour chaque nouveau visiteur — une fausse preuve sociale (audit D7).
 function createDefaultQtyByProduct(): ProductQuantitySelection {
-  return {
-    p1: 50,
-    p3: 10,
-  }
+  return {}
 }
 
 export function createCartSnapshot({
@@ -169,6 +170,23 @@ export const useCartStore = create<CartStoreState>()(
         preferredContainerType: state.preferredContainerType,
         containerPreferenceSource: state.containerPreferenceSource,
       }),
+      // v1 : purge le panier de démonstration hérité (p1:50/p3:10) que les
+      // anciennes versions écrivaient par défaut dans le localStorage de
+      // chaque visiteur — sans quoi la jauge « Votre sélection » resterait
+      // gonflée par des lignes jamais choisies.
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as {
+          qtyByProduct?: ProductQuantitySelection
+        } | null
+        if (state?.qtyByProduct) {
+          const qty = { ...state.qtyByProduct }
+          if (qty.p1 === 50) delete qty.p1
+          if (qty.p3 === 10) delete qty.p3
+          state.qtyByProduct = qty
+        }
+        return state
+      },
     },
   ),
 )

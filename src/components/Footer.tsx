@@ -1,3 +1,6 @@
+import { ShieldCheck } from 'lucide-react'
+
+import { BrandMark } from '@/components/BrandMark'
 import { ContainerNotifyForm } from '@/components/ContainerNotifyForm'
 
 export function Footer() {
@@ -20,9 +23,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-[color:var(--sand)] font-display text-base font-semibold text-foreground">
-                C
-              </span>
+              <BrandMark className="h-8 w-8" inverse />
               <span className="font-display text-base font-semibold tracking-tight">
                 Container Club
               </span>
@@ -189,23 +190,32 @@ export function Footer() {
               <li className="text-[color:var(--sand)]/65">
                 Lun – Ven · 9h – 18h
               </li>
-              <li>
-                <a
-                  href="https://terrassea.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
-                >
-                  terrassea.com →
-                </a>
+              <li className="text-[color:var(--sand)]/65">
+                60 Rue François Ier, 75008 Paris
               </li>
             </ul>
           </div>
         </div>
-        <div className="border-[color:var(--sand)]/15 text-[color:var(--sand)]/55 mt-12 flex flex-col gap-2 border-t pt-6 text-[11px] sm:flex-row sm:justify-between">
+        <div className="border-[color:var(--sand)]/15 mt-12 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-6">
+          {[
+            'Paiement sécurisé Stripe · 3D Secure',
+            'Carte bancaire & virement SEPA',
+            'Importateur officiel enregistré en France',
+            'Acompte protégé — remboursé si le container ne part pas',
+          ].map((label) => (
+            <span
+              key={label}
+              className="text-[color:var(--sand)]/70 inline-flex items-center gap-1.5 text-[11px]"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--ember-soft)]" />
+              {label}
+            </span>
+          ))}
+        </div>
+        <div className="text-[color:var(--sand)]/55 mt-4 flex flex-col gap-2 text-[11px] sm:flex-row sm:justify-between">
           <span>
-            © 2026 Pros Import EURL · RCS Paris 988 269 981 · SIRET
-            98826998100011
+            © 2026 Pros Import EURL · 60 Rue François Ier, 75008 Paris · RCS
+            Paris 988 269 981 · SIRET 98826998100011
           </span>
           <span>TVA FR08988269981</span>
         </div>

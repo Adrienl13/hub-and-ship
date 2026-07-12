@@ -4,6 +4,7 @@ import {
   type Product,
   type ProductCategory,
 } from '@/lib/products'
+import { collectionOf, type CollectionKey } from '@/lib/collections'
 
 export const CATEGORY_FILTERS: Array<{
   id: 'all' | ProductCategory
@@ -113,19 +114,29 @@ export function filterAndSortProducts({
   search,
   sort,
   advanced = EMPTY_ADVANCED_FILTERS,
+  collection = null,
 }: {
   products?: Product[]
   filter: CatalogueFilter
   search: string
   sort: SortKey
   advanced?: CatalogueAdvancedFilters
+  /** Axe indépendant de la catégorie : la gamme (préfixe SKU). */
+  collection?: CollectionKey | null
 }) {
   const query = search.trim().toLocaleLowerCase('fr-FR')
   let list = products.filter((product) => {
     const categoryMatch = filter === 'all' || product.category === filter
+    const collectionMatch =
+      collection === null || collectionOf(product) === collection
     const searchMatch =
       query.length === 0 || productSearchText(product).includes(query)
-    return categoryMatch && searchMatch && matchesAdvanced(product, advanced)
+    return (
+      categoryMatch &&
+      collectionMatch &&
+      searchMatch &&
+      matchesAdvanced(product, advanced)
+    )
   })
 
   if (sort === 'price-asc') {

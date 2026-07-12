@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { ProofTimeline } from '@/components/ProofTimeline'
 import { QualityReportCard } from '@/components/QualityReportCard'
 import { useAuth } from '@/hooks/useAuth'
 import { getReportFileUrl } from '@/lib/quality-reports/access'
@@ -222,6 +223,10 @@ function QualitePage() {
         </section>
 
         <QualityMethodSection />
+
+        {/* D2 : la version visuelle du dossier de preuve — les slots se
+            rempliront des photos réelles de chaque container. */}
+        <ProofTimeline />
 
         <section className="mx-auto max-w-7xl px-6 py-8">
           <div className="mb-6 max-w-2xl">

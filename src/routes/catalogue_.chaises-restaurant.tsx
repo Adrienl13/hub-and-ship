@@ -83,6 +83,12 @@ function ChaisesRestaurantPage() {
         'Prix HT direct usine avec réservation groupée entre pros',
       ]}
       products={products}
+      showcaseImages={[
+        '/catalogue/bistro-seating-clean/BIS-011-03.webp',
+        '/catalogue/bistro-seating-clean/BIS-001-01.webp',
+        '/catalogue/teslin-series/TES-001-01.webp',
+        '/catalogue/rope-series/ROP-013-02.webp',
+      ]}
       sections={[
         {
           title: 'Pour terrasses à forte rotation',

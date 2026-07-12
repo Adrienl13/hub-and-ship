@@ -1,4 +1,4 @@
-import { ShieldCheck, Award, FileBadge } from 'lucide-react'
+import { ShieldCheck, ArrowRight, Award, FileBadge } from 'lucide-react'
 import { motion, type Variants } from 'framer-motion'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { AnimatedNumber } from '@/components/motion-helpers'
@@ -135,6 +135,23 @@ export function Hero({
               retail français. Importation, douane et garantie 2 ans incluses.
             </p>
 
+            {/* UN CTA principal (D1) : le hero doit avoir une action évidente. */}
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href="/catalogue"
+                className="inline-flex h-12 items-center gap-2 rounded-sm bg-[color:var(--foreground)] px-6 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
+              >
+                Voir le catalogue
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="#comment"
+                className="inline-flex h-12 items-center rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-5 text-sm font-medium transition-colors hover:border-foreground/40"
+              >
+                Comment ça marche
+              </a>
+            </div>
+
             {/* Chips réassurance */}
             <div className="mt-8 flex flex-wrap gap-2">
               {[
@@ -181,10 +198,13 @@ export function Hero({
                 Destination {container.port} · 20' High Cube
               </div>
 
-              {/* Progress */}
+              {/* Progress — jauge honnête : elle mesure la sélection du
+                  visiteur (son panier), pas un remplissage global inventé. */}
               <div className="mt-5">
                 <div className="mb-1.5 flex items-baseline justify-between text-xs">
-                  <span className="text-muted-foreground">Remplissage</span>
+                  <span className="text-muted-foreground">
+                    Votre sélection
+                  </span>
                   <span className="font-display text-lg font-semibold tabular-nums">
                     <AnimatedNumber value={fillPercent} suffix="%" />
                   </span>

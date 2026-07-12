@@ -40,6 +40,13 @@ import {
 } from '@/lib/catalogue/share-cart'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
+import {
+  COLLECTIONS,
+  countByCollection,
+  getCollection,
+  isCollectionKey,
+  type CollectionKey,
+} from '@/lib/collections'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useFavorites } from '@/hooks/useFavorites'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
@@ -52,6 +59,21 @@ import {
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/catalogue')({
+  // ?collection=bistrot|cordage|textilene|pietements — pré-filtre la gamme
+  // (cartes « univers » de la home, D3). Valeur inconnue → ignorée. La clé
+  // est OPTIONNELLE : les <Link to="/catalogue"> existants restent valides.
+  // ?panier= (lien de partage de sélection) transite aussi par le router
+  // pour ne pas être effacé quand on navigue entre collections.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { collection?: CollectionKey; panier?: string } => ({
+    ...(isCollectionKey(search.collection)
+      ? { collection: search.collection }
+      : {}),
+    ...(typeof search.panier === 'string' && search.panier.length > 0
+      ? { panier: search.panier }
+      : {}),
+  }),
   head: () => ({
     ...buildSeoHead({
       title: 'Catalogue mobilier outdoor professionnel',
@@ -112,7 +134,17 @@ function CataloguePage() {
     products: productsArray,
     capacityCbm: currentContainer.capacityCbm,
   })
+  const { collection: collectionFromUrl } = Route.useSearch()
+  const navigate = Route.useNavigate()
   const [filter, setFilter] = useState<CatalogueFilter>('all')
+  const collection: CollectionKey | null = collectionFromUrl ?? null
+  const setCollection = (next: CollectionKey | null) => {
+    void navigate({
+      search: (prev) => ({ ...prev, collection: next ?? undefined }),
+      replace: true,
+      resetScroll: false,
+    })
+  }
   const [sort, setSort] = useState<SortKey>('default')
   const [search, setSearch] = useState('')
   const [advanced, setAdvanced] = useState<CatalogueAdvancedFilters>(
@@ -130,6 +162,10 @@ function CataloguePage() {
     () => getCategoryCounts(productsArray),
     [productsArray],
   )
+  const collectionCounts = useMemo(
+    () => countByCollection(productsArray),
+    [productsArray],
+  )
   const filtered = useMemo(
     () =>
       filterAndSortProducts({
@@ -138,8 +174,9 @@ function CataloguePage() {
         search: deferredSearch,
         sort,
         advanced,
+        collection,
       }),
-    [deferredSearch, filter, sort, advanced, productsArray],
+    [deferredSearch, filter, sort, advanced, productsArray, collection],
   )
   const visibleProducts = useMemo(
     () => filtered.slice(0, visibleCount),
@@ -227,7 +264,7 @@ function CataloguePage() {
 
   useEffect(() => {
     setVisibleCount(pageSize)
-  }, [deferredSearch, filter, pageSize, sort, advanced])
+  }, [deferredSearch, filter, pageSize, sort, advanced, collection])
 
   const handlePdf = () => {
     track(AnalyticsEvent.QuotePdf, { items: items.length })
@@ -287,6 +324,71 @@ function CataloguePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* D3 — le rail des univers : chaque gamme est une scène cliquable
+            qui pré-filtre la grille (état porté par ?collection=). */}
+        <section className="mx-auto max-w-7xl px-6 pt-6">
+          <div className="flex gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 sm:overflow-visible">
+            {COLLECTIONS.map((info) => {
+              const active = collection === info.key
+              return (
+                <button
+                  key={info.key}
+                  type="button"
+                  onClick={() => setCollection(active ? null : info.key)}
+                  aria-pressed={active}
+                  className={`group flex min-w-[180px] items-center gap-3 rounded-md border p-2.5 text-left transition-all sm:min-w-0 ${
+                    active
+                      ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
+                      : 'hover:-translate-y-0.5 border-[color:var(--sand-deep)] bg-card hover:shadow-sm'
+                  }`}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-[color:var(--sand-soft)]">
+                    <img
+                      src={info.heroImage}
+                      alt=""
+                      loading="lazy"
+                      className="max-h-full w-auto object-contain"
+                    />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-display text-sm font-semibold tracking-tight">
+                      {info.label}
+                    </span>
+                    <span
+                      className={`block text-[11px] ${active ? 'text-[color:var(--background)]/70' : 'text-muted-foreground'}`}
+                    >
+                      {collectionCounts[info.key] > 0
+                        ? `${collectionCounts[info.key]} modèles`
+                        : 'Bientôt'}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {collection && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-3">
+              <p className="text-sm">
+                <span className="font-display font-semibold">
+                  Collection {getCollection(collection).label}
+                </span>
+                <span className="text-muted-foreground">
+                  {' '}
+                  — {getCollection(collection).tagline}
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setCollection(null)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[color:var(--ember)] hover:underline"
+              >
+                <X className="h-3.5 w-3.5" />
+                Toute la gamme
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-12">

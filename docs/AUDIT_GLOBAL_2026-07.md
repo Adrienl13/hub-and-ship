@@ -199,8 +199,36 @@ rétroactive des snapshots de sélections, backfill signup dédoublonné.
   d'annulation : le reversal est manuel pour l'instant, le libellé de
   l'onglet Commissions le dit désormais honnêtement.
 
-**Sprint 4 — personnalisation visuelle (§3) :** D1→D7, en commençant par le
-hero photographique et la bande « preuve par l'image ».
+**Sprint 4 — personnalisation visuelle (§3) : FAIT (12/07).** Parti pris :
+le produit RÉEL est le héros (vrais packshots de /public/catalogue composés
+en scènes), pas de photo d'ambiance générée en preuve. Livré :
+- D1 : hero avec CTA principal « Voir le catalogue », jauge relabellisée
+  « Votre sélection » (honnête), panier de démo SUPPRIMÉ (démarrage vide).
+- D3 : module `collections.ts` (Bistrot/Cordage/Textilène/Piètements par
+  préfixe SKU), vitrine 4 univers sur la home, rail + filtre `?collection=`
+  au catalogue, bandeaux packshots sur les landings chaises/tables.
+- D4 : configurateur de terrasse (couverts → mix chaises+tables via
+  `calculateOrder`, économie vs retail, CTA panier) + `terrace-mix.ts` testé.
+- D2 : frise « la preuve par l'image » (usine → container → port → terrasse)
+  sur /qualite et /prix, avec slots photo honnêtes « publiées à chaque
+  étape » (jamais de visuel de substitution — cohérent C8).
+- D5 : « Qui importe pour vous » (a-propos) + signature d'Adrien sur /prix
+  (avatar initiales en attendant un vrai portrait).
+- D6 : marque unifiée « Container Club » (titres SEO, JSON-LD brand, author),
+  Terrassea conservé uniquement en legal + lien « site partenaire » sur
+  a-propos, vrai logo SVG (BrandMark) + favicon.
+- D7 : bande réassurance footer (Stripe 3D Secure, CB/SEPA, importateur
+  officiel, acompte protégé), adresse postale footer + contact, délai de
+  réponse engagé (« sous 1 jour ouvré » — à ajuster si besoin).
+
+**Reporté (Sprint 4) — nécessite des éléments réels d'Adrien :**
+- Photos terrain D2 (contrôle SGS, chargement, port, installation) pour
+  remplir les slots de la frise ; portrait d'Adrien pour D5 ; numéro de
+  téléphone pro + n° EORI pour D7 (jamais inventés).
+- 6 visuels d'ambiance photo-réalistes ont été générés (compte Higgsfield,
+  modèle gpt_image_2, 2688×1520) comme upgrade optionnel du hero/bandeaux —
+  le proxy de la session bloquait leur téléchargement ; les déposer dans
+  `public/images/ambiance/` et les brancher reste possible plus tard.
 
 > Je n'ai appliqué **aucun** correctif : cet audit est un état des lieux. Dis-moi
 > par quel sprint tu veux commencer et je l'implémente avec la même rigueur

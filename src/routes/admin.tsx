@@ -168,7 +168,7 @@ export const Route = createFileRoute('/admin')({
   validateSearch: adminSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Administration — Container Club Terrassea' },
+      { title: 'Administration — Container Club' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),

@@ -1,5 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, Clock, Handshake, Mail, Package } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock,
+  Handshake,
+  Mail,
+  MapPin,
+  Package,
+} from 'lucide-react'
 
 import { ContactForm } from '@/components/ContactForm'
 import { Footer } from '@/components/Footer'
@@ -55,7 +62,11 @@ function ContactPage() {
           </div>
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
-            Lundi – Vendredi · 9h – 18h
+            Lundi – Vendredi · 9h – 18h · réponse sous 1 jour ouvré
+          </p>
+          <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5" />
+            Pros Import EURL · 60 Rue François Ier, 75008 Paris
           </p>
         </section>
 

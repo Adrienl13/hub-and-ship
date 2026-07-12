@@ -82,7 +82,7 @@ export const Route = createFileRoute('/account/reservations/$reservationId')({
   validateSearch: reservationSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Détail réservation — Container Club Terrassea' },
+      { title: 'Détail réservation — Container Club' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),
