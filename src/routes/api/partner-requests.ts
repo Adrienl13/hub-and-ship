@@ -16,6 +16,7 @@ import {
 } from '@/lib/partners/repository'
 import { PARTNER_KIND_LABEL } from '@/lib/partners/types'
 import { notifyPartnerRequest } from '@/lib/email/notify-leads'
+import { enforceApiRateLimit } from '@/lib/security/api-rate-limit'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 function jsonResponse(body: unknown, init: ResponseInit): Response {
@@ -73,6 +74,9 @@ export async function handleCreatePartnerRequest(
       { status: 403 },
     )
   }
+
+  const limited = enforceApiRateLimit(request, 'partner-requests')
+  if (!limited.allowed) return limited.response!
 
   const draftResult = buildPartnerSubmissionDraft(
     (await readJson(request)) as PartnerSubmissionInput,

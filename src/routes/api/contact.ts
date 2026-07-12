@@ -9,6 +9,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { buildContactMessageDraft, CONTACT_TOPIC_LABEL } from '@/lib/contact'
 import { notifyContactMessage } from '@/lib/email/notify-leads'
+import { enforceApiRateLimit } from '@/lib/security/api-rate-limit'
 
 function jsonResponse(body: unknown, init: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
@@ -58,6 +59,9 @@ export async function handleContactMessage(
       { status: 403 },
     )
   }
+
+  const limited = enforceApiRateLimit(request, 'contact')
+  if (!limited.allowed) return limited.response!
 
   const draftResult = buildContactMessageDraft(await readJson(request))
   if (!draftResult.ok) {

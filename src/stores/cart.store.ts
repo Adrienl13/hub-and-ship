@@ -45,6 +45,9 @@ interface CartStoreState {
     source?: ContainerPreferenceSource,
   ) => void
   resetCart: () => void
+  /** Vide complètement le panier (après une réservation confirmée) —
+   *  contrairement à resetCart qui restaure le panier de démonstration. */
+  clearCart: () => void
 }
 
 function createDefaultVariantByProduct(
@@ -146,6 +149,13 @@ export const useCartStore = create<CartStoreState>()(
         set({
           variantByProduct: createDefaultVariantByProduct(),
           qtyByProduct: createDefaultQtyByProduct(),
+          preferredContainerType: null,
+          containerPreferenceSource: null,
+        }),
+      clearCart: () =>
+        set({
+          variantByProduct: {},
+          qtyByProduct: {},
           preferredContainerType: null,
           containerPreferenceSource: null,
         }),

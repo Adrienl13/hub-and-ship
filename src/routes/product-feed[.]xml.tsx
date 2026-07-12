@@ -20,24 +20,39 @@ function xmlEscape(value: string): string {
     .replace(/'/g, '&apos;')
 }
 
-export async function buildProductFeed(): Promise<string> {
+// Une précommande Merchant exige une date de disponibilité. Le modèle
+// container est un achat groupé (~3 mois rendu port) : on annonce une date
+// glissante à +90 jours au format ISO 8601 (date seule).
+function defaultAvailabilityDate(now: Date = new Date()): string {
+  const date = new Date(now)
+  date.setDate(date.getDate() + 90)
+  return date.toISOString().slice(0, 10)
+}
+
+export async function buildProductFeed(
+  availabilityDate: string = defaultAvailabilityDate(),
+): Promise<string> {
   const products = await loadCatalogProducts()
   const items = products
     .map((product) => {
       const link = absoluteUrl(productPath(product))
+      // image_link DOIT être absolu (Merchant rejette les chemins relatifs).
+      const image = absoluteUrl(product.mainImageUrl)
       return `    <item>
       <g:id>${xmlEscape(product.sku)}</g:id>
       <g:title>${xmlEscape(product.name)}</g:title>
       <g:description>${xmlEscape(product.description)}</g:description>
       <g:link>${xmlEscape(link)}</g:link>
-      <g:image_link>${xmlEscape(product.mainImageUrl)}</g:image_link>
+      <g:image_link>${xmlEscape(image)}</g:image_link>
       <g:price>${product.basePriceHt.toFixed(2)} EUR</g:price>
       <g:availability>preorder</g:availability>
+      <g:availability_date>${xmlEscape(availabilityDate)}</g:availability_date>
       <g:condition>new</g:condition>
       <g:brand>Container Club</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
       <g:product_type>${xmlEscape(CATEGORY_LABEL[product.category])}</g:product_type>
       <g:min_handling_time>30</g:min_handling_time>
-      <g:multipack>${product.moqUnits}</g:multipack>
+      <g:minimum_order_quantity>${product.moqUnits}</g:minimum_order_quantity>
     </item>`
     })
     .join('\n')

@@ -310,6 +310,13 @@ export function ReservationDialog({
       persisted: creation.persisted,
     })
 
+    // Le panier est devenu une réservation : on le VIDE pour qu'un retour au
+    // catalogue (ou une session Stripe abandonnée puis reprise) ne conduise
+    // pas à re-réserver les mêmes lignes par erreur. La suite du flux
+    // (redirection Stripe / écran de confirmation) n'utilise plus le panier
+    // live mais le snapshot de la réservation.
+    useCartStore.getState().clearCart()
+
     // Persist a lightweight confirmation snapshot the success page can use
     // to render an immediate recap before the webhook completes.
     if (creation.persisted && typeof window !== 'undefined') {

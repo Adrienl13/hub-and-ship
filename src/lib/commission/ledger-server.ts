@@ -8,15 +8,42 @@
 // with from the browser.
 
 import { createServerFn } from '@tanstack/react-start'
+import { getRequest } from '@tanstack/react-start/server'
 import { z } from 'zod'
 
+import { parseCookieHeader } from '@/lib/auth/cookies'
 import {
   matchPartnerCodeId,
   resolveReservationAccrual,
   type AccrualSkipReason,
 } from '@/lib/commission/accrual'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { ReservationStatus } from '@/lib/supabase/types'
+
+/**
+ * Garde d'authentification : cette server-function écrit dans le ledger avec
+ * le client service-role — l'endpoint HTTP doit donc vérifier lui-même que
+ * l'appelant est un admin connecté (l'AdminGuard côté client ne protège que
+ * l'affichage, pas la requête). Session lue depuis les cookies Supabase,
+ * rôle vérifié via is_admin() avec le JWT de l'appelant.
+ */
+async function callerIsAdmin(): Promise<boolean> {
+  try {
+    const request = getRequest()
+    const cookieEntries = parseCookieHeader(request.headers.get('cookie'))
+    const sessionClient = createSupabaseServerClient({
+      cookies: { getAll: () => cookieEntries },
+    })
+    const { data: userData } = await sessionClient.auth.getUser()
+    if (!userData.user) return false
+    const { data: isAdmin, error } = await sessionClient.rpc('is_admin')
+    return !error && isAdmin === true
+  } catch (error) {
+    console.warn('accrueReservationCommission: auth check failed', error)
+    return false
+  }
+}
 
 const inputSchema = z.object({
   reservationId: z.string().uuid(),
@@ -34,6 +61,10 @@ export type AccrueCommissionResult =
 export const accrueReservationCommission = createServerFn({ method: 'POST' })
   .inputValidator(inputSchema)
   .handler(async ({ data }): Promise<AccrueCommissionResult> => {
+    if (!(await callerIsAdmin())) {
+      return { ok: false, error: 'Accès réservé aux administrateurs.' }
+    }
+
     const supabase = getSupabaseAdmin()
 
     const { data: reservation, error: resErr } = await supabase

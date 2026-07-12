@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import {
   ArrowRight,
   BadgeCheck,
@@ -10,6 +11,11 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
+import {
+  getPublicPricingRules,
+  refreshPublicPricingRules,
+  type PublicPricingRules,
+} from '@/lib/pricing/public-rules'
 import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -96,23 +102,54 @@ const COST_STEPS: ReadonlyArray<{
   },
 ]
 
-const PUBLIC_RULES: ReadonlyArray<{
-  readonly label: string
-  readonly value: string
-}> = [
-  { label: 'Remise volume — dès 100 pièces', value: '−6 %' },
-  { label: 'Remise volume — dès 150 pièces', value: '−10 %' },
-  {
-    label: 'Frais de réservation (déduits du total)',
-    value: '3 % · min 150 € · max 500 €',
-  },
-  { label: 'Acompte à 80 % de remplissage du container', value: '27 %' },
-  { label: 'Solde avant expédition', value: '70 %' },
-  { label: 'Enlèvement au port (Marseille-Fos / Le Havre)', value: 'Gratuit' },
-  { label: 'Garantie fabricant + SAV France', value: '2 ans' },
-]
+// Grille RÉELLEMENT appliquée : dérivée des paramètres pricing actifs (mêmes
+// valeurs que le checkout et le moteur), plus jamais des nombres codés en dur
+// qui divergeraient au premier changement admin. Les lignes fixes (enlèvement,
+// garantie) ne dépendent pas des paramètres.
+function buildPublicRules(
+  rules: PublicPricingRules,
+): ReadonlyArray<{ readonly label: string; readonly value: string }> {
+  const pct = (fraction: number) =>
+    `−${(fraction * 100).toFixed(fraction * 100 % 1 === 0 ? 0 : 1)} %`
+  const eur = (n: number) =>
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0,
+    }).format(n)
+  return [
+    {
+      label: `Remise volume — dès ${rules.tier2Qty} pièces`,
+      value: pct(rules.tier2Discount),
+    },
+    {
+      label: `Remise volume — dès ${rules.tier3Qty} pièces`,
+      value: pct(rules.tier3Discount),
+    },
+    {
+      label: 'Frais de réservation (déduits du total)',
+      value: `${(rules.reservationFeeRate * 100).toFixed(0)} % · min ${eur(rules.reservationFeeMin)} · max ${eur(rules.reservationFeeMax)}`,
+    },
+    { label: 'Acompte à 80 % de remplissage du container', value: '27 %' },
+    { label: 'Solde avant expédition', value: '70 %' },
+    { label: 'Enlèvement au port (Marseille-Fos / Le Havre)', value: 'Gratuit' },
+    { label: 'Garantie fabricant + SAV France', value: '2 ans' },
+  ]
+}
 
 function PrixPage() {
+  // Hydrate les règles publiques (les mêmes qu'au checkout) puis re-render.
+  const [rules, setRules] = useState<PublicPricingRules>(getPublicPricingRules())
+  useEffect(() => {
+    let cancelled = false
+    void refreshPublicPricingRules().then(() => {
+      if (!cancelled) setRules(getPublicPricingRules())
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  const publicRules = buildPublicRules(rules)
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
@@ -228,7 +265,7 @@ function PrixPage() {
             publiées ici, appliquées automatiquement au panier.
           </p>
           <div className="mt-4 grid gap-2">
-            {PUBLIC_RULES.map((rule) => (
+            {publicRules.map((rule) => (
               <div
                 key={rule.label}
                 className="flex items-baseline justify-between gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-3"

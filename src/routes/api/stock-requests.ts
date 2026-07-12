@@ -18,6 +18,7 @@ import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
+import { enforceApiRateLimit } from '@/lib/security/api-rate-limit'
 import {
   createStockRequestInSupabase,
   type StockRequestRepositoryClient,
@@ -166,6 +167,9 @@ export async function handleCreateStockRequest(
       { status: 403 },
     )
   }
+
+  const limited = enforceApiRateLimit(request, 'stock-requests')
+  if (!limited.allowed) return limited.response!
 
   const parsed = stockRequestApiSchema.safeParse(await readJson(request))
   if (!parsed.success) {
