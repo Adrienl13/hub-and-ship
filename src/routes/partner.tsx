@@ -57,9 +57,13 @@ export const Route = createFileRoute('/partner')({
 function PartnerRoute() {
   // Cette route est à la fois une page (/partner) ET le parent de
   // /partner/selections. Sans <Outlet/>, l'enfant ne s'affichait jamais.
-  // Les enfants sont autonomes (leur propre PartnerGuard + layout).
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
-  if (pathname !== '/partner') {
+  // Détection par identité du match feuille (robuste : encodage %, casse) ;
+  // les enfants sont autonomes (leur propre PartnerGuard + layout).
+  const isLeaf = useRouterState({
+    select: (state) =>
+      state.matches[state.matches.length - 1]?.routeId === Route.id,
+  })
+  if (!isLeaf) {
     return <Outlet />
   }
   return (

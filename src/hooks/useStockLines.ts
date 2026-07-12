@@ -10,11 +10,12 @@ import { useCatalog } from '@/hooks/useCatalog'
 import {
   AVAILABLE_STOCK,
   getAvailableStockLines,
+  stockLineFromRow,
   type StockLine,
 } from '@/lib/stock'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
-import type { Database, StockCondition } from '@/lib/supabase/types'
+import type { Database } from '@/lib/supabase/types'
 
 type StockLineRow = Database['public']['Tables']['stock_lines']['Row']
 
@@ -24,30 +25,8 @@ interface UseStockLinesResult {
   readonly loading: boolean
 }
 
-function rowToLine(
-  row: StockLineRow,
-  products: ReturnType<typeof useCatalog>['products'],
-): StockLine | null {
-  const product = products.find((p) => p.id === row.product_id)
-  if (!product) return null
-  const variant = product.variants.find((v) => v.id === row.variant_id)
-  if (!variant) return null
-  return {
-    id: row.id,
-    product,
-    variant,
-    availableUnits: row.available_units,
-    reservedUnits: row.reserved_units,
-    stockPriceHt: Number(row.stock_price_ht),
-    location: row.location,
-    readyLabel: row.ready_label,
-    condition: row.condition as StockCondition,
-    priority: row.priority,
-    note: row.note,
-    imageUrl: row.image_url ?? null,
-    imageUrls: row.image_urls ?? [],
-  }
-}
+// Le mapping row→StockLine vit dans lib/stock.ts (stockLineFromRow), partagé
+// avec la route API /api/stock-requests.
 
 export function useStockLines(): UseStockLinesResult {
   const { products } = useCatalog()
@@ -101,7 +80,7 @@ export function useStockLines(): UseStockLinesResult {
     () =>
       rows
         ? rows
-            .map((row) => rowToLine(row, products))
+            .map((row) => stockLineFromRow(row, products))
             .filter((line): line is StockLine => line !== null)
         : null,
     [rows, products],
@@ -117,6 +96,12 @@ export function useStockLines(): UseStockLinesResult {
   }
   if (dbLines && dbLines.length > 0) {
     return { lines: dbLines, source: 'db', loading: false }
+  }
+  // Des lignes existent mais aucune n'est encore résoluble : le catalogue
+  // n'a probablement pas fini de charger — rester en « chargement » plutôt
+  // que d'afficher à tort « aucun stock ».
+  if (rows !== null && rows.length > 0) {
+    return { lines: [], source: 'db', loading: true }
   }
   return { lines: [], source: 'db', loading }
 }

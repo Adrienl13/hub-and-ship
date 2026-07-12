@@ -83,9 +83,13 @@ export const Route = createFileRoute('/p/$partnerSlug')({
 function PartnerSharePage() {
   const { partnerSlug } = Route.useParams()
   // Parent de /p/$partnerSlug/devis : sans <Outlet/>, le CTA « Télécharger le
-  // devis » ne rendait jamais la page devis (autonome). Pass-through quand on
-  // n'est pas exactement sur la page de partage.
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  // devis » ne rendait jamais la page devis (autonome). Pass-through basé sur
+  // l'identité du match feuille — une comparaison de pathname casse sur les
+  // URLs percent-encodées ou la casse (le matching du routeur est insensible).
+  const isLeaf = useRouterState({
+    select: (state) =>
+      state.matches[state.matches.length - 1]?.routeId === Route.id,
+  })
   const { selection: selectionId } = Route.useSearch()
   const normalizedSlug = normalizePartnerSlug(partnerSlug) ?? 'partenaire'
   const partnerName = partnerDisplayNameFromSlug(normalizedSlug)
@@ -100,7 +104,7 @@ function PartnerSharePage() {
   const selection = usePublicSelection(selectionId)
 
   // Après tous les hooks (règles des hooks) : rendre l'enfant /devis autonome.
-  if (pathname !== `/p/${partnerSlug}`) {
+  if (!isLeaf) {
     return <Outlet />
   }
 

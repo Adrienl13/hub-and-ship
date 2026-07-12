@@ -102,6 +102,28 @@ export function resetPublicPricingRules(): void {
   currentRules = DEFAULT_PUBLIC_PRICING_RULES
 }
 
+/**
+ * Re-fetch des règles actives juste avant un moment critique (checkout) : le
+ * RPC de réservation valide contre les paramètres LIVE, un cache hydraté au
+ * chargement du catalogue peut être périmé si l'admin a modifié les paliers ou
+ * les frais en cours de session. Échec silencieux = on garde le cache.
+ */
+export async function refreshPublicPricingRules(): Promise<void> {
+  try {
+    const { getSupabasePublicConfig } = await import('@/lib/supabase/env')
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
+    const { createSupabaseBrowserClient } = await import(
+      '@/lib/supabase/client'
+    )
+    const client = createSupabaseBrowserClient(config)
+    const { data, error } = await client.rpc('get_public_pricing_rules')
+    if (!error && data != null) setPublicPricingRules(data)
+  } catch {
+    // Réseau/RLS indisponible : le cache actuel reste la meilleure estimation.
+  }
+}
+
 /** Paliers volume actifs au format d'affichage client (remise en %). */
 export function getActiveCustomerDiscountTiers(): ReadonlyArray<CustomerDiscountTier> {
   return [

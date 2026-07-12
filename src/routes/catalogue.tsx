@@ -176,6 +176,7 @@ function CataloguePage() {
       new URLSearchParams(window.location.search).get('panier'),
     )
     if (entries.length === 0) return
+    let applied = 0
     for (const entry of entries) {
       const product = productsArray.find((p) => p.id === entry.productId)
       if (!product) continue
@@ -183,8 +184,21 @@ function CataloguePage() {
         setVariant(entry.productId, entry.variantId)
       }
       setQty(entry.productId, entry.qty, { silent: true })
+      applied += 1
     }
-    toast.success('Sélection chargée depuis le lien partagé.')
+    // Ne jamais annoncer un succès trompeur : des produits du lien ont pu
+    // être retirés/désactivés depuis le partage.
+    if (applied === 0) {
+      toast.error(
+        'Les produits de ce lien partagé ne sont plus disponibles au catalogue.',
+      )
+    } else if (applied < entries.length) {
+      toast.warning(
+        `Sélection partiellement chargée : ${entries.length - applied} produit(s) du lien ne sont plus disponibles.`,
+      )
+    } else {
+      toast.success('Sélection chargée depuis le lien partagé.')
+    }
   }, [productsArray, setQty, setVariant])
 
   async function shareSelection(): Promise<void> {
@@ -505,7 +519,7 @@ function CataloguePage() {
       <MobileStickyBar
         totalItems={totalUnits}
         fillPercent={fill.percent}
-        subtotalHt={totals.subtotalHt}
+        subtotalHt={totals.totalHt}
         onReserve={() => setReserveOpen(true)}
         container={currentContainer}
       />

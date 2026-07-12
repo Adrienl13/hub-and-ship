@@ -70,7 +70,7 @@ export const sendReservationConfirmation = createServerFn({ method: 'POST' })
     const { data: reservation, error } = await supabase
       .from('reservations')
       .select(
-        'id, reference, container_reference, siret, contact_snapshot, subtotal_ht, total_ttc, pay_now',
+        'id, reference, container_reference, siret, contact_snapshot, subtotal_ht, volume_discount, total_ht, total_ttc, pay_now',
       )
       .eq('id', data.reservationId)
       .maybeSingle()
@@ -115,6 +115,10 @@ export const sendReservationConfirmation = createServerFn({ method: 'POST' })
       siret: reservation.siret,
       containerReference: reservation.container_reference,
       subtotalHt: Number(reservation.subtotal_ht),
+      volumeDiscount: Number(
+        (reservation as { volume_discount?: number }).volume_discount ?? 0,
+      ),
+      totalHt: Number(reservation.total_ht),
       totalTtc: Number(reservation.total_ttc),
       payNow: Number(reservation.pay_now),
       lines: (items ?? []).map((item) => ({

@@ -40,8 +40,9 @@ export const Route = createFileRoute('/account/reservations')({
 })
 
 function AccountReservationsPage() {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
+  const isLeaf = useRouterState({
+    select: (state) =>
+      state.matches[state.matches.length - 1]?.routeId === Route.id,
   })
   const auth = useAuth()
   const [localRecords, setLocalRecords] = useState<
@@ -116,7 +117,7 @@ function AccountReservationsPage() {
     }
   }, [auth.status])
 
-  if (pathname !== '/account/reservations') {
+  if (!isLeaf) {
     return <Outlet />
   }
 

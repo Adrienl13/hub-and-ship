@@ -19,7 +19,12 @@ export interface ReservationEmailInput {
   readonly contactPhone: string
   readonly siret: string
   readonly containerReference: string
+  /** Somme des lignes AVANT remise volume. */
   readonly subtotalHt: number
+  /** Montant HT de la remise volume déduite (0 si aucune). */
+  readonly volumeDiscount: number
+  /** Total HT réellement dû (net de remise) — cohérent avec totalTtc. */
+  readonly totalHt: number
   readonly totalTtc: number
   readonly payNow: number
   readonly lines: ReadonlyArray<{
@@ -113,7 +118,9 @@ export function buildReservationCreatedEmailToUser(
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Un membre Container Club vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}). À réception, votre place est verrouillée.</p>
 ${renderLines(input.lines)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;border-top:2px solid #1a1a1a;padding-top:8px;">
-<tr><td style="font-size:13px;">Total commande HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.subtotalHt)}</td></tr>
+${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
+<tr><td style="font-size:13px;color:#2d6a4f;">Remise volume</td><td style="font-size:13px;text-align:right;color:#2d6a4f;">−${formatEur(input.volumeDiscount)}</td></tr>` : ''}
+<tr><td style="font-size:13px;">Total commande HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.totalHt)}</td></tr>
 <tr><td style="font-size:13px;">Total TTC</td><td style="font-size:13px;text-align:right;">${formatEur(input.totalTtc)}</td></tr>
 <tr><td style="font-size:13px;font-weight:600;">À régler maintenant</td><td style="font-size:13px;text-align:right;font-weight:600;color:#c25e2a;">${formatEur(input.payNow)}</td></tr>
 </table>
@@ -131,7 +138,7 @@ Un membre Container Club vous recontacte sous 24 h pour finaliser les frais de r
 Récapitulatif :
 ${input.lines.map((l) => `- ${l.productName} (${l.variantName}) · ${l.quantity} unités · ${formatEur(l.subtotalHt)}`).join('\n')}
 
-Total HT : ${formatEur(input.subtotalHt)}
+${input.volumeDiscount > 0 ? `Sous-total HT : ${formatEur(input.subtotalHt)}\nRemise volume : −${formatEur(input.volumeDiscount)}\n` : ''}Total HT : ${formatEur(input.totalHt)}
 Total TTC : ${formatEur(input.totalTtc)}
 À régler : ${formatEur(input.payNow)}
 
@@ -151,7 +158,7 @@ export function buildReservationCreatedEmailToAdmin(
   input: ReservationEmailInput,
 ): { subject: string; html: string; text: string } {
   const subject = `[Container Club] Nouvelle résa ${input.reference} — ${input.contactCompany}`
-  const preheader = `${input.contactCompany} (${input.siret}) a réservé pour ${formatEur(input.subtotalHt)} HT sur ${input.containerReference}.`
+  const preheader = `${input.contactCompany} (${input.siret}) a réservé pour ${formatEur(input.totalHt)} HT sur ${input.containerReference}.`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle réservation à traiter sous 24h.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">Référence</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.reference)}</td></tr>
@@ -164,7 +171,9 @@ export function buildReservationCreatedEmailToAdmin(
 </table>
 ${renderLines(input.lines)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;border-top:2px solid #1a1a1a;padding-top:8px;">
-<tr><td style="font-size:13px;">Total HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.subtotalHt)}</td></tr>
+${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
+<tr><td style="font-size:13px;">Remise volume</td><td style="font-size:13px;text-align:right;">−${formatEur(input.volumeDiscount)}</td></tr>` : ''}
+<tr><td style="font-size:13px;">Total HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.totalHt)}</td></tr>
 <tr><td style="font-size:13px;">Total TTC</td><td style="font-size:13px;text-align:right;">${formatEur(input.totalTtc)}</td></tr>
 <tr><td style="font-size:13px;">Frais à appeler</td><td style="font-size:13px;text-align:right;">${formatEur(input.payNow)}</td></tr>
 </table>`
@@ -179,7 +188,7 @@ Contact : ${input.contactName} <${input.contactEmail}> · ${input.contactPhone}
 Lignes :
 ${input.lines.map((l) => `- ${l.productName} (${l.variantName}) · ${l.quantity} unités · ${formatEur(l.subtotalHt)}`).join('\n')}
 
-Total HT : ${formatEur(input.subtotalHt)}
+${input.volumeDiscount > 0 ? `Sous-total HT : ${formatEur(input.subtotalHt)}\nRemise volume : −${formatEur(input.volumeDiscount)}\n` : ''}Total HT : ${formatEur(input.totalHt)}
 Total TTC : ${formatEur(input.totalTtc)}
 Frais à appeler : ${formatEur(input.payNow)}`
 

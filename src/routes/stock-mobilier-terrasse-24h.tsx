@@ -1,17 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useMemo } from 'react'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
-import { getAvailableStockLines } from '@/lib/stock'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  faqJsonLd,
-  itemListJsonLd,
-  jsonLdScript,
-} from '@/lib/seo'
-
-const STOCK_LINES = getAvailableStockLines()
-const STOCK_PRODUCTS = STOCK_LINES.map((line) => line.product)
+import { useStockLines } from '@/hooks/useStockLines'
+import { breadcrumbJsonLd, buildSeoHead, faqJsonLd, jsonLdScript } from '@/lib/seo'
 
 const FAQ = [
   {
@@ -29,13 +21,14 @@ const FAQ = [
 ] as const
 
 export const Route = createFileRoute('/stock-mobilier-terrasse-24h')({
+  // Head STATIQUE : aucun produit fixture annoncé aux crawlers — la grille de
+  // produits du composant est DB-first (useStockLines) et se vide honnêtement.
   head: () => ({
     ...buildSeoHead({
       title: 'Stock mobilier terrasse disponible sous 24h',
       description:
         'Mobilier de terrasse professionnel déjà disponible en France : chaises, fauteuils et tables pour ouverture urgente, complément CHR ou remplacement rapide.',
       path: '/stock-mobilier-terrasse-24h',
-      image: STOCK_PRODUCTS[0]?.mainImageUrl,
     }),
     scripts: [
       jsonLdScript(
@@ -47,13 +40,6 @@ export const Route = createFileRoute('/stock-mobilier-terrasse-24h')({
           },
         ]),
       ),
-      jsonLdScript(
-        itemListJsonLd({
-          name: 'Stock mobilier terrasse professionnel sous 24h',
-          path: '/stock-mobilier-terrasse-24h',
-          products: STOCK_PRODUCTS,
-        }),
-      ),
       jsonLdScript(faqJsonLd(FAQ)),
     ],
   }),
@@ -61,17 +47,23 @@ export const Route = createFileRoute('/stock-mobilier-terrasse-24h')({
 })
 
 function StockMobilierTerrasse24hPage() {
+  // Stock réel uniquement (fixture réservée au dev local non configuré).
+  const { lines } = useStockLines()
+  const stockProducts = useMemo(
+    () => lines.map((line) => line.product),
+    [lines],
+  )
   return (
     <SeoLandingPage
       eyebrow="Stock urgent"
       title="Mobilier de terrasse disponible rapidement pour les pros."
       description="Une solution pour les restaurants, hôtels et campings qui doivent ouvrir, remplacer ou compléter une terrasse sans attendre le prochain container."
       proofPoints={[
-        'Lots déjà disponibles en France',
+        'Lots ponctuellement disponibles en France, selon arrivages',
         'Retrait Marseille-Fos possible sous 24h selon disponibilité',
         'Complément compatible avec une future commande container',
       ]}
-      products={STOCK_PRODUCTS}
+      products={stockProducts}
       sections={[
         {
           title: 'Pour les ouvertures urgentes',

@@ -53,6 +53,7 @@ import {
   readPartnerLinkContext,
   type PartnerLinkContext,
 } from '@/lib/partners/link'
+import { refreshPublicPricingRules } from '@/lib/pricing/public-rules'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
@@ -255,6 +256,12 @@ export function ReservationDialog({
   }, [siretCheck.status])
 
   const handlePay = async () => {
+    // Re-synchronise les règles publiques (paliers + frais) juste avant de
+    // figer le brouillon : si l'admin a changé les paramètres pendant la
+    // session, le RPC de réservation validera contre les valeurs LIVE — un
+    // cache périmé ferait rejeter un checkout légitime (tolérance 0,05 €).
+    await refreshPublicPricingRules()
+
     const draftResult = buildReservationDraft({
       siret: form.siret,
       contact: {

@@ -161,6 +161,12 @@ function ReservationDocumentPage() {
           <div className="mt-4 flex justify-end">
             <dl className="w-64 space-y-1 text-sm">
               <Row label="Sous-total HT" value={formatEUR(totals.subtotalHt)} />
+              {totals.volumeDiscountAmount > 0 && (
+                <Row
+                  label="Remise volume"
+                  value={`−${formatEUR(totals.volumeDiscountAmount)}`}
+                />
+              )}
               <Row
                 label="Éco-participation"
                 value={formatEURprecise(totals.ecoContributionTotal)}

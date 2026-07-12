@@ -8,7 +8,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
-import { getAvailableStockLineById } from '@/lib/stock'
+import {
+  getAvailableStockLineById,
+  stockLineFromRow,
+  type StockLine,
+  type StockLineDbRow,
+} from '@/lib/stock'
+import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
 import {
   createStockRequestInSupabase,
@@ -69,8 +77,38 @@ async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-function buildDraftFromInput(input: StockRequestApiInput) {
-  const line = getAvailableStockLineById(input.stockLineId)
+// Résout la ligne de stock RÉELLE (table stock_lines + catalogue live) quand
+// Supabase est configuré ; la fixture ne sert qu'au dev local. Sans cela,
+// toute demande sur un lot réel (id uuid DB) répondait 404 et retombait sur
+// l'insert navigateur qui n'envoie aucun email — lead enregistré, personne
+// prévenu.
+async function resolveRequestedStockLine(
+  stockLineId: string,
+): Promise<StockLine | null> {
+  const config = getSupabasePublicConfig()
+  if (!config.isConfigured) {
+    return getAvailableStockLineById(stockLineId)
+  }
+
+  try {
+    const client = createSupabaseBrowserClient(config)
+    const { data, error } = await client
+      .from('stock_lines')
+      .select('*')
+      .eq('id', stockLineId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (error || !data) return null
+    const products = await loadCatalogProducts()
+    return stockLineFromRow(data as StockLineDbRow, products)
+  } catch (resolveError) {
+    console.error('stock request api: stock line lookup failed', resolveError)
+    return null
+  }
+}
+
+async function buildDraftFromInput(input: StockRequestApiInput) {
+  const line = await resolveRequestedStockLine(input.stockLineId)
   if (!line) {
     return {
       ok: false as const,
@@ -141,7 +179,7 @@ export async function handleCreateStockRequest(
     )
   }
 
-  const draftResult = buildDraftFromInput(parsed.data)
+  const draftResult = await buildDraftFromInput(parsed.data)
   if (!draftResult.ok) return draftResult.response
 
   try {

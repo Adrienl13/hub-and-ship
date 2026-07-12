@@ -18,6 +18,7 @@ import {
 } from '@/lib/partners/selections'
 import { CATEGORY_LABEL } from '@/lib/products'
 import { formatEUR, formatEURprecise } from '@/lib/order'
+import { getCustomerDiscountStatus } from '@/lib/pricing/customer-discounts'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -112,10 +113,16 @@ function PartnerQuotePage() {
   const items = selection.items
   const subtotalHt = selectionPublicTotalHt(items)
   const ecoTotal = selectionEcoTotal(items)
-  const totalHt = subtotalHt + ecoTotal
+  const totalUnits = selectionTotalUnits(items)
+  // Même remise volume que le checkout (canal direct du client final) : sans
+  // elle, le devis annoncerait un TTC supérieur au montant réellement facturé.
+  const volumeDiscountPercent =
+    getCustomerDiscountStatus(totalUnits).discountPercent
+  const volumeDiscountAmount =
+    Math.round(((subtotalHt * volumeDiscountPercent) / 100) * 100) / 100
+  const totalHt = subtotalHt - volumeDiscountAmount + ecoTotal
   const vat = totalHt * VAT_RATE
   const ttc = totalHt + vat
-  const totalUnits = selectionTotalUnits(items)
 
   const now = new Date()
   const validUntil = new Date(now)
@@ -212,6 +219,12 @@ function PartnerQuotePage() {
           <div className="mt-4 flex justify-end">
             <dl className="w-64 space-y-1 text-sm">
               <Row label="Sous-total HT" value={formatEUR(subtotalHt)} />
+              {volumeDiscountAmount > 0 && (
+                <Row
+                  label={`Remise volume −${volumeDiscountPercent}%`}
+                  value={`−${formatEUR(volumeDiscountAmount)}`}
+                />
+              )}
               <Row label="Éco-participation" value={formatEURprecise(ecoTotal)} />
               <Row label="Total HT" value={formatEUR(totalHt)} strong />
               <Row label={`TVA ${VAT_RATE * 100}%`} value={formatEUR(vat)} />

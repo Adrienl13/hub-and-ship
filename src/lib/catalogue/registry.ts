@@ -7,6 +7,7 @@
 // catalog.store en dépendent tous les deux.
 
 import { PRODUCTS, type Product } from '@/lib/products'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 const registry = new Map<string, Product>()
 
@@ -21,14 +22,21 @@ export function registerCatalogueProducts(
 }
 
 /**
- * Résout un produit par id : catalogue live d'abord, mock en secours. Le mock
- * ne couvre que p1…p6, d'où le bug historique où tout produit DB (ex.
- * `bistro-bis-001`) ou créé par l'admin était introuvable → non ajoutable.
+ * Résout un produit par id : catalogue live d'abord ; le mock ne sert de
+ * secours QUE sur un site non configuré (dev local). Sur un site configuré,
+ * un id absent du registre est absent tout court — sinon un produit désactivé
+ * par l'admin ressusciterait avec ses prix seed périmés (les ids mock p1…p6
+ * sont aussi de vrais ids DB).
  */
 export function resolveCatalogueProduct(
   productId: string,
 ): Product | undefined {
-  return registry.get(productId) ?? PRODUCTS.find((p) => p.id === productId)
+  const live = registry.get(productId)
+  if (live) return live
+  if (getSupabasePublicConfig().isConfigured && registry.size > 0) {
+    return undefined
+  }
+  return PRODUCTS.find((p) => p.id === productId)
 }
 
 /** Réservé aux tests. */

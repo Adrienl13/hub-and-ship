@@ -418,7 +418,7 @@ export function OrderSidebar({
             className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs"
           >
             <AnimRow label="Sous-total HT" value={totals.subtotalHt} />
-            {totals.volumeDiscountPercent > 0 && (
+            {showVolumeDiscounts && totals.volumeDiscountPercent > 0 && (
               <div className="flex items-center justify-between text-[color:var(--forest)]">
                 <span>Remise volume −{totals.volumeDiscountPercent}%</span>
                 <span className="font-medium tabular-nums">
@@ -426,7 +426,7 @@ export function OrderSidebar({
                 </span>
               </div>
             )}
-            {totals.volumeDiscountPercent > 0 && (
+            {showVolumeDiscounts && totals.volumeDiscountPercent > 0 && (
               <AnimRow label="Total HT remisé" value={totals.totalHt} />
             )}
             <AnimRow label="TVA 20%" value={totals.vat} muted />

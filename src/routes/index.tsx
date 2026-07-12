@@ -353,7 +353,7 @@ function ContainerClubPage() {
       <MobileStickyBar
         totalItems={totalUnits}
         fillPercent={fill.percent}
-        subtotalHt={totals.subtotalHt}
+        subtotalHt={totals.totalHt}
         onReserve={() => setReserveOpen(true)}
         container={currentContainer}
       />
@@ -456,12 +456,22 @@ function PartnerPathway() {
 
 function Stock24hTeaser() {
   // Stock RÉEL (DB-first). Pas de stock → on masque tout le bloc plutôt que
-  // d'afficher un inventaire fictif sur la home.
+  // d'afficher un inventaire fictif sur la home. Pendant le chargement, un
+  // squelette réserve la place pour éviter le saut de mise en page.
   const { lines: stockLines, loading: stockLoading } = useStockLines()
   const kpis = useMemo(() => calculateStockKpis(stockLines), [stockLines])
   const topLines = stockLines.slice(0, 3)
 
-  if (stockLoading || stockLines.length === 0) return null
+  if (stockLoading) {
+    return (
+      <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <div className="h-48 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-card/60" />
+        </div>
+      </section>
+    )
+  }
+  if (stockLines.length === 0) return null
 
   return (
     <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">

@@ -447,11 +447,15 @@ begin
     raise exception 'create_reservation_with_items: derived monetary fields are inconsistent';
   end if;
 
-  -- A referral can only reduce the up-front fee, never below zero.
+  -- A referral can only reduce the up-front fee, never below zero — and
+  -- pay_now must equal fee minus referral (a tampered pay_now=0 would persist
+  -- a misleading « à payer aujourd'hui 0 € » row even though Stripe charges
+  -- the validated fee).
   if v_referral_discount < 0
     or v_referral_discount > v_fee + 0.01
     or v_pay_now < 0
-    or v_pay_now > v_fee + 0.01 then
+    or v_pay_now > v_fee + 0.01
+    or abs(v_pay_now - (v_fee - v_referral_discount)) > c_tol then
     raise exception 'create_reservation_with_items: invalid referral discount';
   end if;
 

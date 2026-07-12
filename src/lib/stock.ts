@@ -4,6 +4,9 @@ import {
   type Product,
   type ProductCategory,
 } from '@/lib/products'
+import type { Database } from '@/lib/supabase/types'
+
+export type StockLineDbRow = Database['public']['Tables']['stock_lines']['Row']
 
 export type StockCondition = 'new' | 'opened_box' | 'showroom'
 export type StockFilter = 'all' | ProductCategory
@@ -170,6 +173,37 @@ export function getAvailableStockLineById(
 ): StockLine | null {
   const item = stock.find((entry) => entry.id === id)
   return item ? resolveStockLine(item) : null
+}
+
+/**
+ * Mappe une ligne DB `stock_lines` vers le shape public, en résolvant produit
+ * et design dans le catalogue fourni. Partagé entre le hook client
+ * (useStockLines) et la route API /api/stock-requests — une seule définition
+ * de « ligne de stock réelle ».
+ */
+export function stockLineFromRow(
+  row: StockLineDbRow,
+  products: ReadonlyArray<Product>,
+): StockLine | null {
+  const product = products.find((p) => p.id === row.product_id)
+  if (!product) return null
+  const variant = product.variants.find((v) => v.id === row.variant_id)
+  if (!variant) return null
+  return {
+    id: row.id,
+    product,
+    variant,
+    availableUnits: row.available_units,
+    reservedUnits: row.reserved_units,
+    stockPriceHt: Number(row.stock_price_ht),
+    location: row.location,
+    readyLabel: row.ready_label,
+    condition: row.condition as StockCondition,
+    priority: row.priority,
+    note: row.note,
+    imageUrl: row.image_url ?? null,
+    imageUrls: row.image_urls ?? [],
+  }
 }
 
 export function productStockSearchText(line: StockLine): string {

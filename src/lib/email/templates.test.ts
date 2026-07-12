@@ -15,6 +15,8 @@ const baseInput: ReservationEmailInput = {
   siret: '55208131701750',
   containerReference: 'CC-2026-001',
   subtotalHt: 4450,
+  volumeDiscount: 0,
+  totalHt: 4450,
   totalTtc: 5340,
   payNow: 150,
   lines: [
@@ -38,6 +40,25 @@ describe('reservation email templates', () => {
     expect(html).toContain('https://container-club.fr/account/reservations/abc')
     expect(text).toContain('CC-2026-001-20260518-0001')
     expect(text).toContain('Total HT : 4 450,00')
+  })
+
+  it('shows the volume discount line when a discount applies (net ≠ brut)', () => {
+    const discounted: ReservationEmailInput = {
+      ...baseInput,
+      subtotalHt: 10000,
+      volumeDiscount: 1000,
+      totalHt: 9000,
+      totalTtc: 10800,
+    }
+    // Intl fr-FR insère des espaces insécables dans les montants.
+    const discountLine = /Remise volume : −1[\s\u00A0\u202F]000,00/
+    const netLine = /Total HT : 9[\s\u00A0\u202F]000,00/
+    const user = buildReservationCreatedEmailToUser(discounted)
+    expect(user.text).toMatch(discountLine)
+    expect(user.text).toMatch(netLine)
+    const admin = buildReservationCreatedEmailToAdmin(discounted)
+    expect(admin.text).toMatch(discountLine)
+    expect(admin.text).toMatch(netLine)
   })
 
   it('renders the admin email with contact + siret + financials', () => {

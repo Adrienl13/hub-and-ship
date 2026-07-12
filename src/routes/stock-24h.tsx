@@ -21,10 +21,8 @@ import { CATEGORY_LABEL } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
   STOCK_FILTERS,
-  AVAILABLE_STOCK,
   calculateStockKpis,
   filterAndSortStockLines,
-  getAvailableStockLines,
   getStockCategoryCounts,
   type StockFilter,
   type StockLine,
@@ -34,44 +32,28 @@ import { buildStockRequestDraft } from '@/lib/stock-requests'
 import { useStockLines } from '@/hooks/useStockLines'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
-import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  itemListJsonLd,
-  jsonLdScript,
-} from '@/lib/seo'
+import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 export const Route = createFileRoute('/stock-24h')({
-  head: () => {
-    const stockProducts = getAvailableStockLines(AVAILABLE_STOCK).map(
-      (line) => line.product,
-    )
-
-    return {
-      ...buildSeoHead({
-        title: 'Stock mobilier terrasse disponible sous 24h',
-        description:
-          'Lots de mobilier outdoor professionnel déjà disponibles en France : chaises, fauteuils et tables pour terrasse urgente, retrait Marseille-Fos sous 24h.',
-        path: '/stock-24h',
-        image: stockProducts[0]?.mainImageUrl,
-      }),
-      scripts: [
-        jsonLdScript(
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Stock 24h', path: '/stock-24h' },
-          ]),
-        ),
-        jsonLdScript(
-          itemListJsonLd({
-            name: 'Stock mobilier terrasse disponible sous 24h',
-            path: '/stock-24h',
-            products: stockProducts,
-          }),
-        ),
-      ],
-    }
-  },
+  // Head STATIQUE : plus d'ItemList ni d'og:image dérivés de la fixture — les
+  // crawlers ne doivent jamais voir un inventaire que la page (DB-first)
+  // dément. Le breadcrumb suffit tant que le stock réel n'est pas SSR.
+  head: () => ({
+    ...buildSeoHead({
+      title: 'Stock mobilier terrasse disponible sous 24h',
+      description:
+        'Lots de mobilier outdoor professionnel déjà disponibles en France : chaises, fauteuils et tables pour terrasse urgente, retrait Marseille-Fos sous 24h.',
+      path: '/stock-24h',
+    }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: 'Accueil', path: '/' },
+          { name: 'Stock 24h', path: '/stock-24h' },
+        ]),
+      ),
+    ],
+  }),
   component: Stock24hPage,
 })
 

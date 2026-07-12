@@ -99,7 +99,10 @@ function AccountReservationDetailPage() {
   const sessionId = routeSessionId ?? runtimeSearch?.get('session_id')
   const canceled =
     routeCanceled === true || runtimeSearch?.get('canceled') === 'true'
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const isLeaf = useRouterState({
+    select: (state) =>
+      state.matches[state.matches.length - 1]?.routeId === Route.id,
+  })
   const auth = useAuth()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
@@ -191,6 +194,15 @@ function AccountReservationDetailPage() {
     }
   }, [auth.status])
 
+  // Parent de /document et /facture/$invoiceId (récapitulatif & factures) :
+  // pass-through AVANT le notFound() ci-dessous, sinon un lien profond ouvert
+  // sans session verrait la 404 du parent au lieu du guard de l'enfant.
+  // Détection par identité du match feuille (robuste : encodage %, casse,
+  // trailing slash — contrairement à une comparaison de pathname).
+  if (!isLeaf) {
+    return <Outlet />
+  }
+
   const fullyResolved = localLoaded && remoteLoaded
   if (fullyResolved && !reservation) {
     throw notFound()
@@ -217,12 +229,6 @@ function AccountReservationDetailPage() {
     } finally {
       setRetryingPayment(false)
     }
-  }
-
-  // Parent de /document et /facture/$invoiceId (récapitulatif & factures) :
-  // sans <Outlet/>, ces pages autonomes ne s'affichaient jamais.
-  if (pathname !== `/account/reservations/${reservationId}`) {
-    return <Outlet />
   }
 
   if (!reservation) {
@@ -409,9 +415,26 @@ function AccountReservationDetailPage() {
             </div>
             <div className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-4 text-sm">
               <div className="ml-auto max-w-sm space-y-2">
+                {reservation.draft.totals.volumeDiscountAmount > 0 && (
+                  <>
+                    <AmountRow
+                      label="Sous-total HT"
+                      value={reservation.draft.totals.subtotalHt}
+                    />
+                    <div className="flex items-center justify-between text-[color:var(--forest)]">
+                      <span>Remise volume</span>
+                      <span className="font-medium tabular-nums">
+                        −
+                        {formatEUR(
+                          reservation.draft.totals.volumeDiscountAmount,
+                        )}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <AmountRow
                   label="Total HT"
-                  value={reservation.draft.totals.subtotalHt}
+                  value={reservation.draft.totals.totalHt}
                 />
                 <AmountRow label="TVA" value={reservation.draft.totals.vat} />
                 <AmountRow
