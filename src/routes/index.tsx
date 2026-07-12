@@ -32,7 +32,8 @@ import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 import { type Product } from '@/lib/products'
-import { calculateStockKpis, getAvailableStockLines } from '@/lib/stock'
+import { calculateStockKpis } from '@/lib/stock'
+import { useStockLines } from '@/hooks/useStockLines'
 import {
   CATEGORY_FILTERS,
   filterAndSortProducts,
@@ -454,9 +455,13 @@ function PartnerPathway() {
 }
 
 function Stock24hTeaser() {
-  const stockLines = useMemo(() => getAvailableStockLines(), [])
+  // Stock RÉEL (DB-first). Pas de stock → on masque tout le bloc plutôt que
+  // d'afficher un inventaire fictif sur la home.
+  const { lines: stockLines, loading: stockLoading } = useStockLines()
   const kpis = useMemo(() => calculateStockKpis(stockLines), [stockLines])
   const topLines = stockLines.slice(0, 3)
+
+  if (stockLoading || stockLines.length === 0) return null
 
   return (
     <section className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">

@@ -14,6 +14,7 @@ const chair = PRODUCTS.find((product) => product.category === 'chair')!
 describe('reservation persistence payloads', () => {
   it('maps a reservation draft to Supabase insert payloads', () => {
     const result = buildReservationDraft({
+      id: '00000000-0000-4000-8000-000000000abc',
       siret: '55208131701750',
       contact: {
         name: 'Adrien Laniez',
@@ -39,7 +40,8 @@ describe('reservation persistence payloads', () => {
     if (!result.ok) return
 
     expect(toReservationInsertPayload(result.draft)).toMatchObject({
-      reference: 'CC-2026-001-20260518-0001',
+      reference: 'CC-2026-001-20260518-0001-000000',
+      volume_discount: 0,
       status: 'pending_reservation_fee',
       siret: '55208131701750',
       delivery_mode: 'pickup_at_port',

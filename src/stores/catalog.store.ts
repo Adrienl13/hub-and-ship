@@ -13,6 +13,7 @@ import {
   type DbCatalog,
   type DbCurrentContainer,
 } from '@/lib/catalogue/db'
+import { registerCatalogueProducts } from '@/lib/catalogue/registry'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -59,6 +60,7 @@ export const useCatalogStore = create<CatalogState>()((set, get) => ({
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
       // No Supabase at all (local dev): the static mock is the only data.
+      registerCatalogueProducts(PRODUCTS)
       set({
         status: 'ready',
         source: 'fallback',
@@ -78,6 +80,8 @@ export const useCatalogStore = create<CatalogState>()((set, get) => ({
         )
         // Real DB data wins — even an empty list. A missing open container
         // falls back only for the capacity default, never for products.
+        // Register so the cart store's setQty resolves these live ids.
+        registerCatalogueProducts(db.products)
         set({
           status: 'ready',
           source: 'db',

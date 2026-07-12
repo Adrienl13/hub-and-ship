@@ -843,8 +843,14 @@ function SummaryCard({
             Total commande HT
           </div>
           <div className="mt-0.5 font-display text-lg font-semibold tabular-nums">
-            {formatEUR(totals.subtotalHt)}
+            {formatEUR(totals.totalHt)}
           </div>
+          {totals.volumeDiscountPercent > 0 && (
+            <div className="mt-0.5 text-[11px] text-[color:var(--forest)]">
+              dont remise volume −{totals.volumeDiscountPercent}% (
+              {formatEUR(totals.volumeDiscountAmount)})
+            </div>
+          )}
         </div>
         <div>
           <div className="label-eyebrow text-muted-foreground">Économie</div>

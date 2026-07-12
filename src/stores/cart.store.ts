@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 import { getDefaultVariant } from '@/lib/catalogue'
+import { resolveCatalogueProduct } from '@/lib/catalogue/registry'
 import {
   calculateContainerFill,
   calculateOrder,
@@ -106,7 +107,9 @@ export const useCartStore = create<CartStoreState>()(
       containerPreferenceSource: null,
       setQty: (productId, quantity, options) =>
         set((previous) => {
-          const product = PRODUCTS.find((item) => item.id === productId)
+          // Résout via le registre du catalogue live (mock en secours) : sans
+          // cela, seuls les 6 produits de démo étaient ajoutables au panier.
+          const product = resolveCatalogueProduct(productId)
           if (!product) return previous
 
           const nextQty = sanitizeOrderQuantity(

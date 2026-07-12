@@ -1,13 +1,35 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { PRODUCTS } from '@/lib/products'
+import { PRODUCTS, type Product } from '@/lib/products'
+import {
+  clearCatalogueRegistry,
+  registerCatalogueProducts,
+} from '@/lib/catalogue/registry'
 import { createCartSnapshot, useCart, useCartStore } from '@/stores/cart.store'
 
 describe('cart store', () => {
   beforeEach(() => {
     localStorage.clear()
+    clearCatalogueRegistry()
     useCartStore.getState().resetCart()
+  })
+
+  it('accepts a live DB product whose id is not in the static mock (C1)', () => {
+    // A product created by the admin / seeded from a collection has an id
+    // outside the mock p1…p6. Before the registry fix, setQty silently no-oped.
+    const table = PRODUCTS.find((p) => p.category === 'table')!
+    const dbProduct: Product = { ...table, id: 'bistro-bis-001', sku: 'BIS-001' }
+    // Not registered yet → cannot resolve → no-op (proves the mechanism).
+    useCartStore.getState().setQty('bistro-bis-001', 12)
+    expect(
+      useCartStore.getState().qtyByProduct['bistro-bis-001'],
+    ).toBeUndefined()
+
+    // Registered (as the catalog store does on load) → now addable.
+    registerCatalogueProducts([dbProduct])
+    useCartStore.getState().setQty('bistro-bis-001', 12)
+    expect(useCartStore.getState().qtyByProduct['bistro-bis-001']).toBe(12)
   })
 
   it('starts from the catalogue demo cart', () => {

@@ -40,6 +40,7 @@ export function toReservationInsertPayload(
     eco_contribution_total: draft.totals.ecoContributionTotal,
     referral_code: draft.referral.code,
     referral_discount: draft.referral.discountAmount,
+    volume_discount: draft.totals.volumeDiscountAmount,
     total_ht: draft.totals.totalHt,
     vat_amount: draft.totals.vat,
     total_ttc: draft.totals.totalTtc,

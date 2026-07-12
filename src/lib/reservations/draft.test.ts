@@ -24,6 +24,8 @@ const baseInput = {
   containerReference: 'CC-2026-001',
   now: new Date('2026-05-18T10:00:00.000Z'),
   sequence: 12,
+  // id fixe → jeton d'unicité de la référence déterministe pour les tests.
+  id: '0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9',
 }
 
 describe('reservation draft builder', () => {
@@ -35,6 +37,43 @@ describe('reservation draft builder', () => {
         sequence: 7,
       }),
     ).toBe('CC-2026-001-20260518-0007')
+  })
+
+  it('appends a uniqueness token so same-day references never collide', () => {
+    const args = {
+      containerReference: 'CC-2026-001',
+      now: new Date('2026-05-18T10:00:00.000Z'),
+      sequence: 1,
+    }
+    const refA = createReservationReference({
+      ...args,
+      token: 'aaaaaaaa-1111',
+    })
+    const refB = createReservationReference({
+      ...args,
+      token: 'bbbbbbbb-2222',
+    })
+    expect(refA).toBe('CC-2026-001-20260518-0001-AAAAAA')
+    expect(refA).not.toBe(refB)
+  })
+
+  it('gives two distinct reservations distinct references (anti-collision)', () => {
+    const items = [
+      { product: chair, variant: getDefaultVariant(chair), quantity: 50 },
+    ]
+    const a = buildReservationDraft({
+      ...baseInput,
+      id: undefined,
+      items,
+    })
+    const b = buildReservationDraft({
+      ...baseInput,
+      id: undefined,
+      items,
+    })
+    expect(a.ok && b.ok).toBe(true)
+    if (!a.ok || !b.ok) return
+    expect(a.draft.reference).not.toBe(b.draft.reference)
   })
 
   it('builds a server-side reservation draft with locked line snapshots', () => {
@@ -57,7 +96,7 @@ describe('reservation draft builder', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    expect(result.draft.reference).toBe('CC-2026-001-20260518-0012')
+    expect(result.draft.reference).toBe('CC-2026-001-20260518-0012-0A1B2C')
     expect(result.draft.siret).toBe('55208131701750')
     expect(result.draft.lines).toHaveLength(2)
     expect(result.draft.lines[0]).toMatchObject({

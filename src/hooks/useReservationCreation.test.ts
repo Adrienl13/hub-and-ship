@@ -10,6 +10,7 @@ const chair = PRODUCTS.find((product) => product.category === 'chair')!
 
 function createDraft() {
   const result = buildReservationDraft({
+    id: '00000000-0000-4000-8000-000000000abc',
     siret: '55208131701750',
     contact: {
       name: 'Adrien Laniez',
@@ -45,7 +46,7 @@ describe('useReservationCreation', () => {
     ).resolves.toEqual({
       ok: true,
       persisted: false,
-      reservation: { reference: 'CC-2026-001-20260518-0001' },
+      reservation: { reference: 'CC-2026-001-20260518-0001-000000' },
     })
   })
 })

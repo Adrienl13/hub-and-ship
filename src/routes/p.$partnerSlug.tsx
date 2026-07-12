@@ -1,4 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import {
+  Outlet,
+  createFileRoute,
+  useRouterState,
+} from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import {
   ArrowRight,
@@ -78,6 +82,10 @@ export const Route = createFileRoute('/p/$partnerSlug')({
 
 function PartnerSharePage() {
   const { partnerSlug } = Route.useParams()
+  // Parent de /p/$partnerSlug/devis : sans <Outlet/>, le CTA « Télécharger le
+  // devis » ne rendait jamais la page devis (autonome). Pass-through quand on
+  // n'est pas exactement sur la page de partage.
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { selection: selectionId } = Route.useSearch()
   const normalizedSlug = normalizePartnerSlug(partnerSlug) ?? 'partenaire'
   const partnerName = partnerDisplayNameFromSlug(normalizedSlug)
@@ -90,6 +98,11 @@ function PartnerSharePage() {
   })
   const [reserveOpen, setReserveOpen] = useState(false)
   const selection = usePublicSelection(selectionId)
+
+  // Après tous les hooks (règles des hooks) : rendre l'enfant /devis autonome.
+  if (pathname !== `/p/${partnerSlug}`) {
+    return <Outlet />
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">

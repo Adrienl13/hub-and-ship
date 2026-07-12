@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
+import { setActiveSalesChannel } from '@/lib/pricing/channel-state'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { SalesChannel } from '@/lib/supabase/types'
@@ -30,6 +31,7 @@ export function useChannel(): UseChannelResult {
   useEffect(() => {
     if (!client || auth.status !== 'authenticated' || !auth.user) {
       setChannel('direct')
+      setActiveSalesChannel('direct')
       setIsLoading(auth.status === 'loading')
       return
     }
@@ -38,7 +40,11 @@ export function useChannel(): UseChannelResult {
     setIsLoading(true)
     void client.rpc('current_channel').then(({ data, error }) => {
       if (cancelled) return
-      setChannel(error || !data ? 'direct' : (data as SalesChannel))
+      const resolved = error || !data ? 'direct' : (data as SalesChannel)
+      setChannel(resolved)
+      // Synchronise le module lu par calculateOrder : la remise volume ne
+      // s'applique qu'au canal direct, comme le RPC de réservation.
+      setActiveSalesChannel(resolved)
       setIsLoading(false)
     })
 

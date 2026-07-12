@@ -109,8 +109,14 @@ export function useStockLines(): UseStockLinesResult {
 
   const fallback = useMemo(() => getAvailableStockLines(AVAILABLE_STOCK), [])
 
+  // En local (Supabase non configuré), la fixture sert de démo. En PROD on ne
+  // montre JAMAIS de stock fictif : une base vide = liste vide, et la page
+  // affiche un état vide honnête (« aucun stock disponible actuellement »).
+  if (!config.isConfigured) {
+    return { lines: fallback, source: 'fixture', loading: false }
+  }
   if (dbLines && dbLines.length > 0) {
     return { lines: dbLines, source: 'db', loading: false }
   }
-  return { lines: fallback, source: 'fixture', loading }
+  return { lines: [], source: 'db', loading }
 }

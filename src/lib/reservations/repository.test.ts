@@ -43,7 +43,7 @@ describe('createReservationInSupabase', () => {
     const rpc = vi.fn().mockResolvedValue({
       data: {
         id: '00000000-0000-4000-8000-000000000abc',
-        reference: 'CC-2026-001-20260518-0001',
+        reference: 'CC-2026-001-20260518-0001-000000',
       },
       error: null,
     })
@@ -64,7 +64,7 @@ describe('createReservationInSupabase', () => {
       createReservationInSupabase({ client, draft: createDraft() }),
     ).resolves.toEqual({
       id: '00000000-0000-4000-8000-000000000abc',
-      reference: 'CC-2026-001-20260518-0001',
+      reference: 'CC-2026-001-20260518-0001-000000',
     })
 
     expect(rpc).toHaveBeenCalledWith(
@@ -73,7 +73,7 @@ describe('createReservationInSupabase', () => {
         payload: expect.objectContaining({
           reservation: expect.objectContaining({
             id: '00000000-0000-4000-8000-000000000abc',
-            reference: 'CC-2026-001-20260518-0001',
+            reference: 'CC-2026-001-20260518-0001-000000',
             status: 'pending_reservation_fee',
           }),
           items: [
@@ -129,7 +129,7 @@ describe('createReservationInSupabase', () => {
       createReservationInSupabase({ client, draft: createDraft() }),
     ).resolves.toEqual({
       id: '00000000-0000-4000-8000-000000000abc',
-      reference: 'CC-2026-001-20260518-0001',
+      reference: 'CC-2026-001-20260518-0001-000000',
     })
 
     expect(insertReservation).toHaveBeenCalledOnce()

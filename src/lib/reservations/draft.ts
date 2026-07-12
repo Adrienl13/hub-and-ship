@@ -127,18 +127,29 @@ export function createReservationReference({
   containerReference,
   now = new Date(),
   sequence = 1,
+  token,
 }: {
   readonly containerReference: string
   readonly now?: Date
   readonly sequence?: number
+  /**
+   * Jeton d'unicité. `reservations.reference` est UNIQUE : sans lui, deux
+   * réservations du même container le même jour partagent `...-0001` et la 2ᵉ
+   * échoue sur violation de contrainte. Le jeton (dérivé de l'id unique de la
+   * réservation) garantit une référence distincte par réservation distincte.
+   */
+  readonly token?: string
 }): string {
   const datePart = now.toISOString().slice(0, 10).replace(/-/g, '')
   const sequencePart = String(Math.max(1, Math.trunc(sequence))).padStart(
     4,
     '0',
   )
+  const tokenPart = token
+    ? `-${token.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase()}`
+    : ''
 
-  return `${containerReference}-${datePart}-${sequencePart}`
+  return `${containerReference}-${datePart}-${sequencePart}${tokenPart}`
 }
 
 export function createReservationId(): string {
@@ -206,6 +217,11 @@ export function buildReservationDraft(
     return { ok: false, issues }
   }
 
+  // L'id est calculé AVANT la référence : son unicité alimente le jeton de la
+  // référence, si bien que deux réservations distinctes (donc deux ids) ne
+  // peuvent jamais produire la même référence, même sur le même container le
+  // même jour (cf. contrainte UNIQUE sur reservations.reference).
+  const reservationId = input.id ?? createReservationId()
   const totals = calculateOrder([...input.items])
   // LOT 5: the apporteur program replaced the B2C referral credit — the benefit
   // is an 8% commission to the referrer (commission_ledger), not a discount to
@@ -213,16 +229,19 @@ export function buildReservationDraft(
   // no longer reduces pay-now. (referral.ts is kept read-only for past rows.)
   const referralDiscount = 0
   const payNow = totals.reservationFee
-  const depositAmount = round2(totals.subtotalHt * 0.3)
+  // Acompte 30% calculé sur le total NET (après remise volume), cohérent avec
+  // le RPC de réservation qui dérive tout du sous-total net.
+  const depositAmount = round2(totals.totalHt * 0.3)
 
   return {
     ok: true,
     draft: {
-      id: input.id ?? createReservationId(),
+      id: reservationId,
       reference: createReservationReference({
         containerReference: input.containerReference,
         now: input.now,
         sequence: input.sequence,
+        token: reservationId,
       }),
       status: 'ready_for_payment',
       containerReference: input.containerReference,

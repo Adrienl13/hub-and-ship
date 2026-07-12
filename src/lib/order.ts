@@ -2,6 +2,8 @@
 // Container Club — logique métier (panier, MOQ, container)
 // ============================================================
 
+import { getActiveSalesChannel } from './pricing/channel-state'
+import { getCustomerDiscountStatus } from './pricing/customer-discounts'
 import { getPublicPricingRules } from './pricing/public-rules'
 import type { DesignVariant, Product } from './products'
 
@@ -17,18 +19,28 @@ export interface CartItem {
 }
 
 export interface OrderTotals {
+  /** Somme des lignes AVANT remise volume. */
   subtotalHt: number
+  /** Palier de remise volume atteint (en %, ex. 10 pour −10 %). */
+  volumeDiscountPercent: number
+  /** Montant HT de la remise volume déduit du sous-total. */
+  volumeDiscountAmount: number
   ecoContributionTotal: number
   reservationFee: number
   payNow: number
   payAt80Percent: number
   payBeforeShipping: number
+  /** Total HT réellement dû = sous-total − remise volume. */
   totalHt: number
   vat: number
   totalTtc: number
   retailReference: number
   savings: number
   savingsPercent: number
+}
+
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
 }
 
 // Grille historique (défaut). Les valeurs effectives viennent des paramètres
@@ -57,34 +69,52 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     (sum, item) => sum + item.product.ecoContribution * item.quantity,
     0,
   )
-  const reservationFee = calculateReservationFee(subtotalHt)
-  const deposit30 = subtotalHt * 0.3
+
+  // Remise volume publique (« −6 % dès 100 pièces, −10 % dès 150 »), CANAL
+  // DIRECT UNIQUEMENT — les revendeurs/distributeurs ont déjà leur prix canal.
+  // Basée sur le nombre TOTAL d'unités du panier, appliquée au sous-total. Le
+  // RPC de réservation recompute et revalide exactement la même remise depuis
+  // les paramètres pricing actifs — client et serveur restent synchrones.
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
+  const volumeDiscountPercent =
+    getActiveSalesChannel() === 'direct'
+      ? getCustomerDiscountStatus(totalUnits).discountPercent
+      : 0
+  const volumeDiscountAmount = round2(
+    (subtotalHt * volumeDiscountPercent) / 100,
+  )
+  const netHt = round2(subtotalHt - volumeDiscountAmount)
+
+  const reservationFee = calculateReservationFee(netHt)
+  const deposit30 = netHt * 0.3
   const payAt80Percent = Math.max(0, deposit30 - reservationFee)
   // Solde = reste à payer après les frais de réservation déjà encaissés et
   // l'acompte appelé à 80%. On ne fige PAS le solde à 70% : sinon, quand les
   // frais plancher (150€) dépassent l'acompte de 30% sur une petite commande,
-  // le total encaissé (frais + 0 + 70%) dépasserait 100% du sous-total. En
-  // dérivant le solde, frais + acompte + solde == sous-total HT, toujours.
+  // le total encaissé (frais + 0 + 70%) dépasserait 100% du total. En
+  // dérivant le solde, frais + acompte + solde == total HT net, toujours.
   const payBeforeShipping = Math.max(
     0,
-    subtotalHt - reservationFee - payAt80Percent,
+    netHt - reservationFee - payAt80Percent,
   )
   const retailReference = items.reduce(
     (sum, item) => sum + item.product.retailPriceRef * item.quantity,
     0,
   )
-  const savings = retailReference - subtotalHt
+  const savings = retailReference - netHt
 
   return {
     subtotalHt,
+    volumeDiscountPercent,
+    volumeDiscountAmount,
     ecoContributionTotal,
     reservationFee,
     payNow: reservationFee,
     payAt80Percent,
     payBeforeShipping,
-    totalHt: subtotalHt,
-    vat: subtotalHt * 0.2,
-    totalTtc: subtotalHt * 1.2,
+    totalHt: netHt,
+    vat: round2(netHt * 0.2),
+    totalTtc: round2(netHt * 1.2),
     retailReference,
     savings,
     savingsPercent: retailReference > 0 ? (savings / retailReference) * 100 : 0,

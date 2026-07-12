@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -55,6 +55,13 @@ export const Route = createFileRoute('/partner')({
 })
 
 function PartnerRoute() {
+  // Cette route est à la fois une page (/partner) ET le parent de
+  // /partner/selections. Sans <Outlet/>, l'enfant ne s'affichait jamais.
+  // Les enfants sont autonomes (leur propre PartnerGuard + layout).
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  if (pathname !== '/partner') {
+    return <Outlet />
+  }
   return (
     <PartnerGuard>
       <PartnerDashboard />

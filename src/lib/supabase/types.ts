@@ -387,6 +387,7 @@ type ReservationRow = {
   eco_contribution_total: number
   referral_code: string | null
   referral_discount: number
+  volume_discount: number
   total_ht: number
   vat_rate: number
   vat_amount: number
@@ -439,6 +440,7 @@ type ReservationInsert = {
   eco_contribution_total?: number
   referral_code?: string | null
   referral_discount?: number
+  volume_discount?: number
   total_ht: number
   vat_rate?: number
   vat_amount: number

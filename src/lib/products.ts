@@ -298,62 +298,31 @@ export const CURRENT_CONTAINER: ContainerSummary = {
   professionalsEngaged: 12,
 }
 
-export const PAST_CONTAINERS = [
-  {
-    reference: 'CC-2025-014',
-    port: 'Marseille-Fos',
-    deliveredAt: '2025-12-12',
-    professionalsServed: 8,
-    totalItems: 287,
-    plannedDays: 75,
-    actualDays: 78,
-    testimonial: {
-      quote:
-        'Qualité au rendez-vous, délais tenus, on recommence sur le prochain.',
-      author: 'Hôtel Le Lavandou',
-      location: 'Var',
-      rating: 5,
-    },
-    photoUrl:
-      'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    reference: 'CC-2025-013',
-    port: 'Le Havre',
-    deliveredAt: '2025-11-28',
-    professionalsServed: 6,
-    totalItems: 198,
-    plannedDays: 75,
-    actualDays: 71,
-    testimonial: {
-      quote:
-        'Économies réelles vs nos fournisseurs habituels. Process clair et rassurant.',
-      author: 'Camping Les Pins Bleus',
-      location: 'Landes',
-      rating: 5,
-    },
-    photoUrl:
-      'https://images.unsplash.com/photo-1605283176568-9b41fde3a09c?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    reference: 'CC-2025-012',
-    port: 'Marseille-Fos',
-    deliveredAt: '2025-10-15',
-    professionalsServed: 11,
-    totalItems: 412,
-    plannedDays: 75,
-    actualDays: 82,
-    testimonial: {
-      quote:
-        'Petit retard de 7 jours communiqué en transparence. Mobilier au top, prix imbattable.',
-      author: 'Restaurant La Marina',
-      location: "Cap d'Agde",
-      rating: 4,
-    },
-    photoUrl:
-      'https://images.unsplash.com/photo-1516571748831-5d81767b788d?auto=format&fit=crop&w=900&q=80',
-  },
-]
+export interface PastContainerTestimonial {
+  readonly quote: string
+  readonly author: string
+  readonly location: string
+  readonly rating: number
+}
+
+export interface PastContainer {
+  readonly reference: string
+  readonly port: string
+  readonly deliveredAt: string
+  readonly professionalsServed: number
+  readonly totalItems: number
+  readonly plannedDays: number
+  readonly actualDays: number
+  readonly testimonial: PastContainerTestimonial
+  readonly photoUrl: string
+}
+
+// Aucune preuve inventée : tant qu'aucun container n'a réellement été livré, ce
+// fallback reste VIDE. Les vrais containers livrés viennent de la table
+// `delivered_containers` (repository DB-first) ; les composants publics
+// (PastContainers, /livres) masquent proprement la section quand la liste est
+// vide — cohérent avec /avis qui n'affiche encore aucun avis client.
+export const PAST_CONTAINERS: ReadonlyArray<PastContainer> = []
 
 export function findVariant(
   p: Product,

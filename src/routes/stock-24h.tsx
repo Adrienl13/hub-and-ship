@@ -31,6 +31,7 @@ import {
   type StockSortKey,
 } from '@/lib/stock'
 import { buildStockRequestDraft } from '@/lib/stock-requests'
+import { useStockLines } from '@/hooks/useStockLines'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
 import {
@@ -75,7 +76,9 @@ export const Route = createFileRoute('/stock-24h')({
 })
 
 function Stock24hPage() {
-  const lines = useMemo(() => getAvailableStockLines(), [])
+  // Stock RÉEL (table stock_lines, DB-first). Aucun inventaire fictif en prod :
+  // base vide → liste vide → état vide honnête plus bas.
+  const { lines, loading: stockLoading } = useStockLines()
   const kpis = useMemo(() => calculateStockKpis(lines), [lines])
   const counts = useMemo(() => getStockCategoryCounts(lines), [lines])
   const [filter, setFilter] = useState<StockFilter>('all')
@@ -210,7 +213,27 @@ function Stock24hPage() {
               </div>
             </div>
 
-            {filtered.length === 0 ? (
+            {stockLoading ? (
+              <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-64 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+                  />
+                ))}
+              </div>
+            ) : lines.length === 0 ? (
+              <div className="mt-5 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-16 text-center text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">
+                  Aucun stock disponible actuellement.
+                </p>
+                <p className="mt-2">
+                  Le stock 24h se reconstitue au fil des arrivages. Écrivez-nous
+                  votre besoin&nbsp;: on vous prévient dès qu&apos;un lot
+                  correspond, ou on le cale sur la prochaine commande container.
+                </p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="mt-5 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-16 text-center text-sm text-muted-foreground">
                 Aucun lot disponible ne correspond à cette recherche.
               </div>

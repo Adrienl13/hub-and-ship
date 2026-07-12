@@ -157,9 +157,15 @@ function totalsFromRow(
     (sum, line) => sum + line.productSnapshot.retailPriceRef * line.quantity,
     0,
   )
-  const savings = Math.max(0, retailReference - subtotalHt)
+  const volumeDiscountAmount = Number(row.volume_discount ?? 0)
+  const savings = Math.max(0, retailReference - subtotalHt + volumeDiscountAmount)
   return {
     subtotalHt,
+    volumeDiscountPercent:
+      subtotalHt > 0
+        ? Math.round((volumeDiscountAmount / subtotalHt) * 1000) / 10
+        : 0,
+    volumeDiscountAmount,
     ecoContributionTotal: Number(row.eco_contribution_total),
     reservationFee: Number(row.reservation_fee),
     payNow: Number(row.pay_now),

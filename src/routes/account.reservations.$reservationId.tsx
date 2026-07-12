@@ -1,4 +1,10 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  notFound,
+  useRouterState,
+} from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import {
   AlertTriangle,
@@ -93,6 +99,7 @@ function AccountReservationDetailPage() {
   const sessionId = routeSessionId ?? runtimeSearch?.get('session_id')
   const canceled =
     routeCanceled === true || runtimeSearch?.get('canceled') === 'true'
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const auth = useAuth()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
@@ -210,6 +217,12 @@ function AccountReservationDetailPage() {
     } finally {
       setRetryingPayment(false)
     }
+  }
+
+  // Parent de /document et /facture/$invoiceId (récapitulatif & factures) :
+  // sans <Outlet/>, ces pages autonomes ne s'affichaient jamais.
+  if (pathname !== `/account/reservations/${reservationId}`) {
+    return <Outlet />
   }
 
   if (!reservation) {
