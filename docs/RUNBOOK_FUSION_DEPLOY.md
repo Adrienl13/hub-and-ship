@@ -40,13 +40,14 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 13 | `20260711140000_pricing_guardrails.sql` | **Sprint 2 (M1/M2/M9)** : bornes CHECK sur pricing_parameters (NOT VALID, écritures futures), plancher de marge SQL sur les 2 tables de prix nets partenaires, purge des overrides invalides après changement de base_price_ht |
 | 14 | `20260711160000_bistro_tables_moq_fix.sql` | **Sprint 3 (M4)** : MOQ des 7 tables bistro alignés sur le réel (50 → 20 unités) dans products + descriptions |
 | 15 | `20260711170000_users_profile_signup_repair.sql` | **Sprint 3 (M14)** : SECOND trigger sur auth.users → handle_new_user (users_profile) + backfill des comptes créés depuis la casse du 20/05 — répare toute la chaîne canal (current_company_id) |
-| 16 | `20260711180000_admin_create_partner_code.sql` | **Sprint 3 (M13)** : RPC admin_create_partner_code — provisionne la société, relie users_profile, génère le code AP-XXXXXX (unicité case-insensitive + retry), idempotent au re-clic, admin only |
+| 16 | `20260711180000_admin_create_partner_code.sql` | **Sprint 3 (M13)** : RPC admin_create_partner_code — provisionne la société (résolution SIRET d'abord), relie users_profile, génère le code AP-XXXXXX (unicité case-insensitive + retry + verrou anti-concurrence), refuse les candidatures non approuvées, admin only (is_admin). Inclut claim_partner_access **v2** : un partenaire qui crée son compte APRÈS la génération du code est rattaché à sa société au premier login |
+| 17 | `20260711190000_selection_snapshot_price_repair.sql` | **Sprint 3 (M11 rétroactif)** : retamponne les snapshots de sélections partenaires déjà persistés au prix PUBLIC (les anciennes sélections d'un revendeur figeaient son prix NET, servi aux anonymes sur /p/slug) |
 
 > Migrations 1-8 déjà appliquées le 08-09/07, 9-10 le 09/07. **Ordre
-> impératif** : appliquer 11 → 12 → 13 → 14 → 15 → 16 (12 remplace le RPC de
-> réservation en v5 ; 13 s'appuie sur les fonctions des migrations
+> impératif** : appliquer 11 → 12 → 13 → 14 → 15 → 16 → 17 (12 remplace le
+> RPC de réservation en v5 ; 13 s'appuie sur les fonctions des migrations
 > précédentes ; 16 dépend du backfill users_profile de 15) AVANT le deploy du
-> code. Le code Sprint 1+2+3 et les migrations 12-16 vont ENSEMBLE : déploie
+> code. Le code Sprint 1+2+3 et les migrations 12-17 vont ENSEMBLE : déploie
 > le code juste après avoir passé les migrations (l'ancien code envoie des
 > payloads sans `volume_discount`, tolérés par v5 ; mais le nouveau code avec
 > l'ancien RPC refuserait les paniers ≥ 100 unités, et le bouton « Générer le
@@ -92,11 +93,21 @@ where tgname in ('on_auth_user_created', 'on_auth_user_created_profile');
 select count(*) from auth.users u
 where not exists (select 1 from public.users_profile p where p.id = u.id);
 
--- Après la migration 16 (code partenaire) : le RPC existe et l'index
--- d'unicité case-insensitive est en place :
+-- Après la migration 16 (code partenaire) : le RPC existe, l'index
+-- d'unicité case-insensitive est en place et la colonne de rattachement
+-- candidature → société existe :
 select proname from pg_proc where proname = 'admin_create_partner_code';
 select indexname from pg_indexes
 where indexname = 'partner_codes_code_lower_uidx';
+select column_name from information_schema.columns
+where table_name = 'partner_applications' and column_name = 'company_id';
+
+-- Après la migration 17 (snapshots sélections) : plus aucun snapshot ne
+-- diverge du prix public courant (doit rendre 0) :
+select count(*) from public.partner_selection_items psi
+join public.products p on p.id::text = psi.product_id
+where psi.product_snapshot ? 'basePriceHt'
+  and (psi.product_snapshot -> 'basePriceHt') is distinct from to_jsonb(p.base_price_ht);
 
 -- Après les migrations 9-10 (pilotage P0) :
 -- Les règles publiques ne rendent QUE paliers + frais (7 clés, aucune marge) :

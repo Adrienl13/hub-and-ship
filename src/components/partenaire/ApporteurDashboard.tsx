@@ -26,9 +26,9 @@ export function ApporteurDashboard({ data }: { readonly data: PartnerSpaceData }
         <span className="mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
           Espace apporteur
         </span>
-        <h1 className="mt-1 font-display text-2xl font-black tracking-tight">
+        <h2 className="mt-1 font-display text-2xl font-black tracking-tight">
           Vos tournées, vos commissions
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           8% du CA encaissé de chaque client apporté, pendant 12 mois.
         </p>

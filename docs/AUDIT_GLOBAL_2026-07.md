@@ -186,7 +186,18 @@ M4 (dédupliquer les règles de prix), M15 (rate-limiting).
 
 **Sprint 3 — chaîne partenaires & cohérence :** M5/M13/M14 (unifier les
 espaces + créer les codes + companies), M10/M11/M12 (MOQ, fuite, accrual),
-mineurs SEO/maillage.
+mineurs SEO/maillage. ✅ Fait (12/07) — revue adversariale passée : gate
+NULL-safe (is_admin), résolution société par SIRET, verrou anti-concurrence,
+claim_partner_access v2 (rattachement au premier login), réparation
+rétroactive des snapshots de sélections, backfill signup dédoublonné.
+
+**Reporté (issu de la revue Sprint 3, à traiter plus tard) :**
+- Traçage de l'encaissement du solde (`paid_balance_at` ou statut
+  `balance_paid`) : aujourd'hui « Embarquée » est un statut logistique — la
+  commission 8 % suppose que le solde est encaissé avant de cliquer.
+- Brancher `buildCommissionReversal` (écriture négative) sur le flux
+  d'annulation : le reversal est manuel pour l'instant, le libellé de
+  l'onglet Commissions le dit désormais honnêtement.
 
 **Sprint 4 — personnalisation visuelle (§3) :** D1→D7, en commençant par le
 hero photographique et la bande « preuve par l'image ».

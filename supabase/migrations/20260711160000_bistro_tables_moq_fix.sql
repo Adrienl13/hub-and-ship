@@ -9,7 +9,10 @@
 
 update public.products
 set moq_units = 20,
-    description = replace(description, 'MOQ 50 unités', 'MOQ 20 unités')
+    description = replace(description, 'MOQ 50 unités', 'MOQ 20 unités'),
+    -- Le tableau features porte la même mention (chip « MOQ 50 unités » rendue
+    -- par la fiche produit SSR) — sans ça la fiche afficherait 20 et 50 à la fois.
+    features = array_replace(features, 'MOQ 50 unités', 'MOQ 20 unités')
 where sku in ('BIS-031', 'BIS-032', 'BIS-033', 'BIS-034', 'BIS-036', 'BIS-038', 'BIS-042')
   and category = 'table'
   and moq_units = 50;

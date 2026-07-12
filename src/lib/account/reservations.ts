@@ -71,9 +71,11 @@ function nextActionLabelFor(status: AccountReservationStatus): string {
     case 'deposit_paid':
       return 'Acompte encaisse — production a lancer'
     case 'in_production':
-      return 'Production en cours'
+      // Le solde (70 %) est exigible AVANT expédition (CGV) : c'est pendant la
+      // production qu'il se règle, pas une fois le container en mer.
+      return 'Production en cours — solde a regler avant expedition'
     case 'in_transit':
-      return 'Solde avant expedition a venir'
+      return 'Solde encaisse — container en mer'
     case 'delivered':
       return 'Livre — pieces et facture disponibles'
     case 'cancelled':

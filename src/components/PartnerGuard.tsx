@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { useChannel } from '@/hooks/useChannel'
 import { claimPartnerAccess, type PartnerPortalClient } from '@/lib/partners/portal'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -24,6 +25,10 @@ interface PartnerGuardProps {
  */
 export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
   const auth = useAuth()
+  // Second critère d'admission (ex-gate /partenaire) : un compte relié à une
+  // société sur un canal négocié est partenaire même sans candidature au même
+  // email (ex. grand compte provisionné à la main par l'admin).
+  const { channel, isLoading: channelLoading } = useChannel()
   const [state, setState] = useState<
     'idle' | 'claiming' | 'granted' | 'denied' | 'error'
   >('idle')
@@ -59,7 +64,9 @@ export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
   if (
     auth.status === 'loading' ||
     (auth.status === 'authenticated' &&
-      (state === 'idle' || state === 'claiming'))
+      (state === 'idle' ||
+        state === 'claiming' ||
+        (state === 'denied' && channelLoading)))
   ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -110,6 +117,10 @@ export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
         </Link>
       </PartnerGuardShell>
     )
+  }
+
+  if (state === 'denied' && channel !== 'direct') {
+    return <>{children}</>
   }
 
   if (state !== 'granted') {

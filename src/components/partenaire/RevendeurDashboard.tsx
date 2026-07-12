@@ -66,9 +66,9 @@ export function RevendeurDashboard() {
         <span className="mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
           Espace revendeur
         </span>
-        <h1 className="mt-1 font-display text-2xl font-black tracking-tight">
+        <h2 className="mt-1 font-display text-2xl font-black tracking-tight">
           Votre grille &amp; votre RFA
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Votre grille tarifaire revendeur, résolue côté serveur. Elle ne
           transite jamais en clair pour un autre canal.

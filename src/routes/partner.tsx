@@ -184,6 +184,31 @@ function PartnerDashboard() {
  */
 function ChannelSpaceSections() {
   const space = usePartnerSpace()
+
+  // Un échec de chargement ne doit pas ressembler à « pas de code, pas de
+  // commission » : on surface l'erreur avec un retry (contrat usePartnerSpace).
+  if (space.status === 'error') {
+    return (
+      <div className="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+        Vos commissions et codes apporteur n'ont pas pu être chargés.{' '}
+        <button
+          type="button"
+          onClick={space.reload}
+          className="font-medium underline underline-offset-2"
+        >
+          Réessayer
+        </button>
+      </div>
+    )
+  }
+  if (space.status === 'loading') {
+    return (
+      <div
+        aria-hidden
+        className="h-24 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+      />
+    )
+  }
   if (space.status !== 'ready') return null
 
   const showApporteur = space.data.codes.length > 0

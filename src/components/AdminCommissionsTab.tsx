@@ -96,6 +96,28 @@ export function AdminCommissionsTab({
     setBusy(false)
   }
 
+  function skipReasonLabel(
+    reason:
+      | 'status_not_paid'
+      | 'no_partner_code'
+      | 'outside_window'
+      | 'not_found'
+      | 'already_accrued',
+  ): string {
+    switch (reason) {
+      case 'status_not_paid':
+        return "le statut de la réservation ne prouve pas l'encaissement complet. Passez-la en « Embarquée (in_transit) » une fois le solde encaissé — seuls Transit et Livrée génèrent la commission."
+      case 'no_partner_code':
+        return "aucun code apporteur n'est attaché à cette réservation (ni partner_ref, ni code parrainage reconnu)."
+      case 'outside_window':
+        return 'la fenêtre de commission de 12 mois après le rattachement du client est dépassée.'
+      case 'not_found':
+        return "réservation introuvable — vérifiez l'UUID."
+      case 'already_accrued':
+        return 'la commission de cette réservation a déjà été générée (aucun doublon possible).'
+    }
+  }
+
   async function generateAccrual(): Promise<void> {
     const id = reservationId.trim()
     if (!id) return
@@ -112,7 +134,7 @@ export function AdminCommissionsTab({
         setReservationId('')
         await refresh()
       } else {
-        setNotice(`Aucune commission : ${result.reason}.`)
+        setNotice(`Aucune commission : ${skipReasonLabel(result.reason)}`)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -150,8 +172,10 @@ export function AdminCommissionsTab({
 
       <p className="text-xs text-muted-foreground">
         8% du CA encaissé (HT) par client apporté, pendant 12 mois. Les écritures
-        sont générées uniquement à l&apos;encaissement complet et ne sont jamais
-        supprimées (annulation → écriture négative).
+        sont générées uniquement à l&apos;encaissement complet (statuts Embarquée
+        / Livrée) et ne sont jamais supprimées. En cas d&apos;annulation après
+        commission, l&apos;écriture négative (reversal) est à passer manuellement
+        pour l&apos;instant.
       </p>
 
       {/* Accrual trigger — the admin "encaissement complet" action. */}
