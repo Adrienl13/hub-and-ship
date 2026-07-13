@@ -31,6 +31,21 @@ Alternates AMALFI générées : cc1d3bd5 (golden hour, coloris jaune/vert seul),
 | Fauteuil textilène crème (TES-001) | Bord de piscine méditerranéen, pergola | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_081029_077f996c-9b60-48ef-89f6-0c261d894bef.png |
 | Piètement fonte (TBA-005) | Café haussmannien, plateau marbre, croissant (3:2) | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_081055_255a80d5-357a-444e-8816-7a03bacaf9f7.png |
 
+## Vague 2 — le lieu éponyme (13/07), en attente de validation
+
+Storytelling : chaque modèle est photographié dans le lieu qui lui donne son
+nom.
+
+| Produit | Décor | URL (PNG 2k) |
+|---|---|---|
+| Tabouret DEAUVILLE damier noir/blanc (BIS-027) | Bar des Planches de Deauville, parasols emblématiques | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_093942_0ca2e6b9-ae1a-4918-a3e7-91eb0a7edcd9.png |
+| Banquette HONFLEUR damier vert sauge (BIS-028) | Quai du Vieux Bassin d'Honfleur, voiliers | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_094143_1f9035e2-aeb4-4d66-b758-dd6e66294500.png |
+| Fauteuil HYDRA vichy noir/blanc (BIS-054) | Taverne de l'île d'Hydra, murs chaulés, bougainvillier | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_094210_649c1ec8-62ea-4269-a8f4-ae94ae61312d.png |
+
+Références importées : BIS-027-01 → 0228f360-da8f-4297-8665-5e9aabc5e8f6,
+BIS-028-01 → b0a83ef1-bc36-4c60-893a-e180d6cc0b51,
+BIS-054-01 → f4493483-9aa8-4e35-b0e4-42d048200c53.
+
 ## Intégration dans le site
 
 1. Adrien télécharge les images retenues depuis son compte Higgsfield (le
