@@ -21,15 +21,15 @@ présenter comme des photos de containers livrés ou d'installations clients
 Alternates AMALFI générées : cc1d3bd5 (golden hour, coloris jaune/vert seul),
 47012a03 (gros plan méditerranéen 3:2).
 
-## Vague 1 — en cours de génération (12/07)
+## Vague 1 — générée le 13/07, en attente de validation d'Adrien
 
-| Produit | Décor (tous différents) | Génération (id) |
+| Produit | Décor (tous différents) | URL (PNG 2k) |
 |---|---|---|
-| Chaise bistrot RIVOLI vert/crème (BIS-011) | Cour d'hôtel parisienne sous verrière, matin | bb4c7b41-5baf-4fe5-a6d7-cdd62ec4bd17 |
-| Chaise bistrot (BIS-001) | Brasserie classique, store rayé rouge, midi | 5b0d7531-6395-492d-9ef2-9e03e0ba59e9 |
-| Salon cordage (ROP-013) | Rooftop au crépuscule, guirlandes, skyline | 80344fb3-3356-4420-918a-65bb5816fa6e |
-| Fauteuil textilène crème (TES-001) | Bord de piscine méditerranéen, pergola | 077f996c-9b60-48ef-89f6-0c261d894bef |
-| Piètement fonte (TBA-005) | Café haussmannien, plateau marbre, croissant | 255a80d5-357a-444e-8816-7a03bacaf9f7 |
+| Chaise bistrot vert/crème (BIS-011) | Cour d'hôtel parisienne sous verrière, matin | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_080646_bb4c7b41-5baf-4fe5-a6d7-cdd62ec4bd17.png |
+| Chaise bistrot (BIS-001) | Brasserie classique, store rayé rouge, midi | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_080703_5b0d7531-6395-492d-9ef2-9e03e0ba59e9.png |
+| Salon cordage (ROP-013) | Rooftop au crépuscule, guirlandes, skyline | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_080722_80344fb3-3356-4420-918a-65bb5816fa6e.png |
+| Fauteuil textilène crème (TES-001) | Bord de piscine méditerranéen, pergola | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_081029_077f996c-9b60-48ef-89f6-0c261d894bef.png |
+| Piètement fonte (TBA-005) | Café haussmannien, plateau marbre, croissant (3:2) | https://d8j0ntlcm91z4.cloudfront.net/user_3DisRTQcUs0PB9kwurVdVznkRWT/hf_20260713_081055_255a80d5-357a-444e-8816-7a03bacaf9f7.png |
 
 ## Intégration dans le site
 
