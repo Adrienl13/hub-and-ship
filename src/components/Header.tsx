@@ -23,7 +23,7 @@ import { SALES_CHANNEL_LABEL } from '@/lib/pricing/channel'
 // un nouveau visiteur en une seconde).
 const PRIMARY_LINKS: ReadonlyArray<readonly [string, string]> = [
   ['Catalogue', '/catalogue'],
-  ['Stock 24h', '/stock-24h'],
+  ['Stock', '/stock-24h'],
   ['Partenaires', '/partenaires'],
   ['Le prix prouvé', '/prix'],
 ]

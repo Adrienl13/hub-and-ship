@@ -49,7 +49,7 @@ export const Route = createFileRoute('/stock-24h')({
       jsonLdScript(
         breadcrumbJsonLd([
           { name: 'Accueil', path: '/' },
-          { name: 'Stock 24h', path: '/stock-24h' },
+          { name: 'Stock', path: '/stock-24h' },
         ]),
       ),
     ],

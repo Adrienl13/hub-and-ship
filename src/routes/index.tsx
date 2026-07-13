@@ -506,7 +506,7 @@ function Stock24hTeaser() {
             to="/stock-24h"
             className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-[color:var(--foreground)] px-4 py-2 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
           >
-            Voir le stock 24h
+            Voir le stock
           </Link>
         </div>
 

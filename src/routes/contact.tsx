@@ -91,7 +91,7 @@ function ContactPage() {
               title: 'Besoin urgent',
               text: 'Du mobilier déjà disponible en France, expédiable rapidement.',
               href: '/stock-24h',
-              cta: 'Stock 24h',
+              cta: 'Stock',
             },
           ].map(({ Icon, title, text, href, cta }) => (
             <a

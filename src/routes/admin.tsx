@@ -275,7 +275,7 @@ function AdminPage() {
               ['commissions', 'Commissions'],
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
-              ['stock', 'Stock 24h'],
+              ['stock', 'Stock'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
               ['partners', 'Partenaires'],
@@ -387,7 +387,7 @@ function AdminTopBar() {
             to="/stock-24h"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            Stock 24h
+            Stock
           </Link>
           <Button
             asChild
