@@ -55,6 +55,15 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 >
 > Le Sprint 4 (design/personnalisation) est 100 % code, AUCUNE migration :
 > il part dans le même `bun run deploy` que le reste.
+>
+> La refonte design v2 (handoff accueil) ajoute UNE migration :
+
+| 18 | `20260716120000_site_media.sql` | **Design v2** : table site_media (photos administrables de l'accueil — slides hero, gammes, bandeau), lecture publique / écriture admin, fichiers dans le bucket existant catalogue-images |
+
+```sql
+-- Après la migration 18 : la table et ses politiques existent :
+select count(*) from public.site_media;  -- 0 = normal (défauts embarqués)
+```
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,
 coller dans le SQL Editor, Run. Une erreur = STOP, me coller le message.

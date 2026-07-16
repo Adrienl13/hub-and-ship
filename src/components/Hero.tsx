@@ -1,18 +1,18 @@
-import { ShieldCheck, ArrowRight, Award, FileBadge } from 'lucide-react'
-import { motion, type Variants } from 'framer-motion'
-import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
-import { AnimatedNumber } from '@/components/motion-helpers'
-import { ContainerStatusBadge } from '@/components/ContainerStatusBadge'
-import { CountdownBadge } from '@/components/CountdownBadge'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
 
-const LINE_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: 'easeOut' },
-  },
-}
+import { CountdownBadge } from '@/components/CountdownBadge'
+import { AnimatedNumber } from '@/components/motion-helpers'
+import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
+import type { SiteMediaItem } from '@/lib/site-media'
+
+// Hero v2 (handoff design 07/2026) : carrousel photo à droite (56 %),
+// texte à gauche, carte « Container en cours » en verre dépoli — données
+// temps réel. Auto-avance 5,5 s, flèches, pastilles, swipe tactile ; toute
+// interaction manuelle stoppe l'auto-play (comme le prototype).
+
+const AUTOPLAY_MS = 5500
+const SWIPE_THRESHOLD_PX = 40
 
 function formatDate(iso: string | null) {
   if (!iso) return 'date à confirmer'
@@ -29,239 +29,245 @@ export function Hero({
   totalSeries,
   professionalsEngaged,
   container = CURRENT_CONTAINER,
+  slides,
 }: {
   fillPercent: number
   seriesReached: number
   totalSeries: number
   professionalsEngaged: number
   container?: ContainerSummary
+  slides: ReadonlyArray<SiteMediaItem>
 }) {
+  const count = Math.max(1, slides.length)
+  const [index, setIndex] = useState(0)
+  const [autoplay, setAutoplay] = useState(true)
+  const touchStartX = useRef<number | null>(null)
+
+  // Le nombre de slides peut changer quand l'admin en ajoute/retire.
+  const safeIndex = index % count
+
+  useEffect(() => {
+    if (!autoplay || count <= 1) return
+    const timer = setInterval(() => {
+      setIndex((current) => (current + 1) % count)
+    }, AUTOPLAY_MS)
+    return () => clearInterval(timer)
+  }, [autoplay, count])
+
+  const goTo = (next: number) => {
+    setAutoplay(false)
+    setIndex(((next % count) + count) % count)
+  }
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null
+  }
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const start = touchStartX.current
+    touchStartX.current = null
+    const end = event.changedTouches[0]?.clientX
+    if (start === null || end === undefined) return
+    const delta = end - start
+    if (Math.abs(delta) < SWIPE_THRESHOLD_PX) return
+    goTo(delta < 0 ? safeIndex + 1 : safeIndex - 1)
+  }
+
   return (
-    <section id="top" className="relative overflow-hidden">
-      {/* Aura animée en fond — dérive lente, derrière le contenu */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        <motion.div
-          className="absolute -left-20 -top-28 h-80 w-80 rounded-full bg-[color:var(--ember)]/25 blur-3xl"
-          animate={{ x: [0, 60, 0], y: [0, 30, 0], scale: [1, 1.18, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute right-[-6%] top-1/4 h-96 w-96 rounded-full bg-[color:var(--forest)]/18 blur-3xl"
-          animate={{ x: [0, -60, 0], y: [0, -25, 0], scale: [1, 1.22, 1] }}
-          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute left-1/3 top-[-20%] h-72 w-72 rounded-full bg-[color:var(--ochre)]/15 blur-3xl"
-          animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-12 sm:pt-16">
-        {/* Bandeau pré-header */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/8 mb-10 inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-xs"
+    <section id="top" className="mx-auto max-w-[1240px] px-5 pt-7 sm:px-10">
+      <div className="relative overflow-hidden rounded-[22px] bg-[color:var(--sand)] shadow-[0_30px_80px_-34px_rgba(26,24,21,.4)] lg:h-[660px]">
+        {/* Carrousel photo */}
+        <div
+          className="relative h-[300px] w-full sm:h-[400px] lg:absolute lg:bottom-0 lg:right-0 lg:top-0 lg:h-auto lg:w-[56%]"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--forest)] opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--forest)]" />
-          </span>
-          <span className="font-medium text-foreground">
-            Container {container.reference} ouvert
-          </span>
-          <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">
-            Destination {container.port}
-          </span>
-          <span className="text-foreground/60">·</span>
-          <span className="text-foreground/70">
-            Clôture estimée {formatDate(container.expectedCloseAt)}
-          </span>
-          <CountdownBadge
-            target={container.expectedCloseAt}
-            withIcon={false}
-            className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/15 ml-1 inline-flex animate-pulse items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold text-[color:var(--ember)]"
-          />
-        </motion.div>
-
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
-          {/* Texte */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="lg:col-span-7"
-          >
-            <motion.h1
-              className="font-display text-4xl leading-[1.05] sm:text-5xl md:text-6xl"
-              initial="hidden"
-              animate="show"
-              variants={{
-                show: {
-                  transition: { staggerChildren: 0.13, delayChildren: 0.15 },
-                },
-              }}
+          {slides.map((slide, i) => (
+            <div
+              key={slide.id}
+              className="absolute inset-0 transition-opacity duration-[550ms] ease-in-out"
+              style={{ opacity: i === safeIndex ? 1 : 0 }}
+              aria-hidden={i !== safeIndex}
             >
-              <motion.span className="block" variants={LINE_VARIANTS}>
-                Mobilier outdoor pro,
-              </motion.span>
-              <motion.span className="block" variants={LINE_VARIANTS}>
-                <motion.span
-                  className="inline-block bg-[length:200%_auto] bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(90deg, var(--ember), #efb15a 45%, var(--ember))',
-                  }}
-                  animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-                >
-                  direct usine,
-                </motion.span>
-              </motion.span>
-              <motion.span className="block" variants={LINE_VARIANTS}>
-                sans intermédiaire.
-              </motion.span>
-            </motion.h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)]">
-              Pré-commande groupée par container 20' avec d'autres
-              professionnels. Jusqu'à{' '}
-              <strong className="font-semibold text-foreground">−40%</strong> vs
-              retail français. Importation, douane et garantie 2 ans incluses.
-            </p>
-
-            {/* UN CTA principal (D1) : le hero doit avoir une action évidente. */}
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href="/catalogue"
-                className="inline-flex h-12 items-center gap-2 rounded-sm bg-[color:var(--foreground)] px-6 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
-              >
-                Voir le catalogue
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#comment"
-                className="inline-flex h-12 items-center rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-5 text-sm font-medium transition-colors hover:border-foreground/40"
-              >
-                Comment ça marche
-              </a>
+              <img
+                src={slide.url}
+                alt={slide.alt}
+                className="h-full w-full object-cover"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                draggable={false}
+              />
             </div>
+          ))}
 
-            {/* Chips réassurance */}
-            <div className="mt-8 flex flex-wrap gap-2">
-              {[
-                { Icon: FileBadge, label: 'Importateur officiel français' },
-                { Icon: Award, label: 'Contrôle qualité SGS avant expédition' },
-                { Icon: ShieldCheck, label: 'Garantie 2 ans + SAV France' },
-              ].map(({ Icon, label }) => (
-                <span
-                  key={label}
-                  className="text-foreground/80 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-1.5 text-xs"
+          {/* Fondu crème vers le texte (gauche en desktop, bas en mobile) */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,rgba(244,239,231,1)_0%,rgba(244,239,231,0)_20%)] lg:bg-[linear-gradient(90deg,rgba(244,239,231,1)_0%,rgba(244,239,231,.35)_14%,rgba(244,239,231,0)_36%)]"
+          />
+
+          {count > 1 && (
+            <>
+              {/* Flèches */}
+              <div className="absolute right-[22px] top-[22px] z-[4] flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => goTo(safeIndex - 1)}
+                  aria-label="Photo précédente"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-[rgba(28,25,22,.42)] text-[19px] text-white backdrop-blur transition-colors hover:bg-[rgba(28,25,22,.72)]"
                 >
-                  <Icon
-                    className="text-foreground/60 h-3.5 w-3.5"
-                    strokeWidth={1.5}
-                  />
-                  {label}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Mini-card container */}
-          <motion.aside
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="lg:col-span-5"
-          >
-            <div className="shadow-paper rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5">
-              <div className="flex items-center justify-between">
-                <span className="label-eyebrow text-muted-foreground">
-                  Container en cours
-                </span>
-                <ContainerStatusBadge
-                  status={container.status}
-                  fillPercent={fillPercent}
-                  thresholdPercent={container.thresholdPercent}
-                />
-              </div>
-              <div className="mt-3 font-display text-xl font-semibold tracking-tight">
-                {container.reference}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Destination {container.port} · 20' High Cube
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goTo(safeIndex + 1)}
+                  aria-label="Photo suivante"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-[rgba(28,25,22,.42)] text-[19px] text-white backdrop-blur transition-colors hover:bg-[rgba(28,25,22,.72)]"
+                >
+                  ›
+                </button>
               </div>
 
-              {/* Progress — jauge honnête : elle mesure la sélection du
-                  visiteur (son panier), pas un remplissage global inventé. */}
-              <div className="mt-5">
-                <div className="mb-1.5 flex items-baseline justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Votre sélection
-                  </span>
-                  <span className="font-display text-lg font-semibold tabular-nums">
-                    <AnimatedNumber value={fillPercent} suffix="%" />
-                  </span>
-                </div>
-                <div className="relative h-1 w-full overflow-hidden rounded-full bg-[color:var(--sand-deep)]">
-                  <motion.div
-                    className="h-full bg-[color:var(--foreground)]"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${fillPercent}%` }}
-                    transition={{
-                      duration: 1.1,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: 0.25,
+              {/* Pastilles */}
+              <div className="absolute right-[22px] top-[78px] z-[4] flex justify-end gap-[7px]">
+                {slides.map((slide, i) => (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => goTo(i)}
+                    aria-label={`Photo ${i + 1}`}
+                    aria-current={i === safeIndex}
+                    className="h-[7px] rounded-full transition-all duration-300"
+                    style={{
+                      width: i === safeIndex ? 22 : 7,
+                      background:
+                        i === safeIndex
+                          ? 'var(--ember)'
+                          : 'rgba(255,255,255,.65)',
                     }}
                   />
-                  <motion.div
-                    className="absolute inset-y-[-3px] w-[40%] -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                    animate={{ x: ['-100%', '260%'] }}
-                    transition={{
-                      duration: 2.6,
-                      ease: 'easeInOut',
-                      repeat: Infinity,
-                      repeatDelay: 1.4,
-                    }}
-                  />
-                  <div
-                    className="absolute inset-y-0 w-px bg-[color:var(--ember)]"
-                    style={{ left: `${container.thresholdPercent}%` }}
-                  />
-                </div>
-                <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                  <span>0%</span>
-                  <span>Seuil départ {container.thresholdPercent}%</span>
-                  <span>100%</span>
-                </div>
+                ))}
               </div>
+            </>
+          )}
+        </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[color:var(--sand-deep)] pt-4 text-xs">
-                <div>
-                  <div className="label-eyebrow text-muted-foreground">
-                    Séries
-                  </div>
-                  <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-                    <AnimatedNumber value={seriesReached} />/{totalSeries}
-                  </div>
-                </div>
-                <div>
-                  <div className="label-eyebrow text-muted-foreground">
-                    Pros engagés
-                  </div>
-                  <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-                    <AnimatedNumber value={professionalsEngaged} />
-                  </div>
-                </div>
+        {/* Texte */}
+        <div className="relative z-[2] flex flex-col gap-6 px-5 pt-6 sm:px-8 lg:absolute lg:left-11 lg:top-16 lg:w-[540px] lg:p-0">
+          <div className="inline-flex w-max max-w-full items-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-3.5 py-[7px]">
+            <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-[#7BB661] shadow-[0_0_0_3px_rgba(123,182,97,.22)]" />
+            <span className="truncate text-[12.5px] font-semibold text-[#4a443c]">
+              Container {container.reference} ouvert · Clôture estimée{' '}
+              {formatDate(container.expectedCloseAt)}
+            </span>
+            <CountdownBadge
+              target={container.expectedCloseAt}
+              withIcon={false}
+              className="hidden shrink-0 items-center rounded-full bg-[color:var(--ember-soft)] px-2 py-0.5 text-[11px] font-bold text-[color:var(--ember)] sm:inline-flex"
+            />
+          </div>
+
+          <h1 className="m-0 text-[38px] font-extrabold leading-[0.96] tracking-[-0.03em] text-foreground sm:text-[50px] lg:text-[66px]">
+            Mobilier outdoor pro,
+            <br className="hidden lg:block" />{' '}
+            <span className="text-[color:var(--ember)]">
+              direct usine,&nbsp;
+            </span>
+            sans intermédiaire.
+          </h1>
+
+          <p className="m-0 max-w-[430px] text-[17px] leading-normal text-[color:var(--ink-soft)] lg:text-lg">
+            Pré-commande groupée par container 20&apos; entre professionnels.
+            Jusqu&apos;à{' '}
+            <strong className="font-bold text-foreground">−40%</strong> vs
+            retail français. Import, douane et garantie 2 ans inclus.
+          </p>
+
+          <div className="flex flex-wrap gap-3.5">
+            <a
+              href="/catalogue"
+              className="inline-flex items-center gap-2 rounded-[11px] bg-foreground px-6 py-[15px] text-base font-bold text-[color:var(--sand)] transition-colors hover:bg-[color:var(--color-cta-primary-hover)]"
+            >
+              Voir le catalogue
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            <a
+              href="#comment"
+              className="inline-flex items-center rounded-[11px] border border-[color:var(--border-strong)] bg-white px-6 py-[15px] text-base font-semibold text-foreground transition-colors hover:border-foreground/40"
+            >
+              Comment ça marche
+            </a>
+          </div>
+
+          <div className="mt-1.5 flex flex-wrap gap-2.5">
+            {[
+              'Importateur officiel FR',
+              'Contrôle SGS',
+              'Garantie 2 ans',
+            ].map((label) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border-strong)] px-3.5 py-2 text-[12.5px] font-semibold text-[#4a443c]"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Carte container — verre dépoli, données temps réel */}
+        <div className="relative z-[2] m-5 flex flex-col gap-3.5 rounded-2xl border border-white/60 bg-white/90 p-5 shadow-[0_20px_40px_-18px_rgba(26,24,21,.45)] backdrop-blur-md sm:m-7 lg:absolute lg:bottom-8 lg:right-8 lg:m-0 lg:w-[280px]">
+          <div className="flex items-center justify-between">
+            <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[color:var(--muted)]">
+              Container en cours
+            </span>
+            <span className="inline-flex items-center gap-[5px] text-xs font-bold text-[color:var(--forest)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--forest)]" />
+              {container.status === 'open' ? 'Ouvert' : 'Clôturé'}
+            </span>
+          </div>
+          <div className="text-[22px] font-extrabold text-foreground">
+            {container.reference}
+          </div>
+          <div className="flex flex-col gap-[7px]">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[12.5px] text-[color:var(--color-text-secondary)]">
+                Votre sélection
+              </span>
+              <span className="text-lg font-extrabold text-foreground">
+                <AnimatedNumber value={fillPercent} suffix="%" />
+              </span>
+            </div>
+            <div className="relative h-1.5 rounded-full bg-[color:var(--sand-deep)]">
+              <div
+                className="absolute bottom-0 left-0 top-0 rounded-full bg-[color:var(--ember)] transition-[width] duration-700"
+                style={{ width: `${Math.min(100, fillPercent)}%` }}
+              />
+              <div
+                className="absolute -bottom-[3px] -top-[3px] w-0.5 bg-[#b7ac98]"
+                style={{ left: `${container.thresholdPercent}%` }}
+              />
+            </div>
+            <div className="text-[11px] text-[color:var(--muted)]">
+              Départ du container à {container.thresholdPercent}%
+            </div>
+          </div>
+          <div className="flex gap-[22px] border-t border-[color:var(--sand-deep)] pt-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                Séries
+              </div>
+              <div className="text-[17px] font-extrabold text-foreground">
+                <AnimatedNumber value={seriesReached} />/{totalSeries}
               </div>
             </div>
-          </motion.aside>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                Pros
+              </div>
+              <div className="text-[17px] font-extrabold text-foreground">
+                <AnimatedNumber value={professionalsEngaged} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

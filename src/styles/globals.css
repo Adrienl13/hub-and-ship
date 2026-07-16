@@ -4,70 +4,76 @@
 
 @layer base {
   :root {
-    --radius: 0.375rem;
+    /* Design v2 (handoff accueil 07/2026) : crème #F4EFE7, noir chaud
+       #1A1815, orange #D97A34 (#E8963F sur fond sombre), typo Archivo,
+       rayons élargis. Les alias historiques (--sand, --ember…) pointent
+       vers la nouvelle palette pour que tout le site suive. */
+    --radius: 0.6875rem;
 
-    --background: #f4ede1;
-    --foreground: #1a1a1c;
-    --card: #faf6ee;
-    --card-foreground: #1a1a1c;
-    --popover: #fbf8f1;
-    --popover-foreground: #1a1a1c;
-    --primary: #1a1a1c;
-    --primary-foreground: #faf6ee;
-    --secondary: #e8dfd0;
-    --secondary-foreground: #1a1a1c;
-    --muted: #e8dfd0;
-    --muted-foreground: #70695f;
-    --accent: #e8dfd0;
-    --accent-foreground: #1a1a1c;
+    --background: #f4efe7;
+    --foreground: #1a1815;
+    --card: #ffffff;
+    --card-foreground: #1a1815;
+    --popover: #ffffff;
+    --popover-foreground: #1a1815;
+    --primary: #1a1815;
+    --primary-foreground: #f4efe7;
+    --secondary: #e4dccd;
+    --secondary-foreground: #1a1815;
+    --muted: #e4dccd;
+    --muted-foreground: #6b6357;
+    --accent: #e4dccd;
+    --accent-foreground: #1a1815;
     --destructive: #8a3a2a;
-    --destructive-foreground: #faf6ee;
-    --border: #e8dfd0;
-    --input: #e8dfd0;
-    --ring: #1a1a1c;
+    --destructive-foreground: #f4efe7;
+    --border: #e4dccd;
+    --input: #d8cfbf;
+    --ring: #1a1815;
 
-    --sand: #f4ede1;
-    --sand-soft: #faf6ee;
-    --sand-deep: #e8dfd0;
-    --ink: #1a1a1c;
-    --ink-soft: #5a544a;
-    --ember: #b85c1f;
-    --ember-hover: #9d4d18;
-    --ember-soft: #f4e3d1;
-    --forest: #3a5a3a;
-    --forest-bg: #e8eee0;
+    --sand: #f4efe7;
+    --sand-soft: #faf7f1;
+    --sand-deep: #e4dccd;
+    --ink: #1a1815;
+    --ink-soft: #5f584d;
+    --ember: #d97a34;
+    --ember-hover: #b9601f;
+    /* Tinte claire (fonds de pastilles) / orange vif lisible sur fond noir. */
+    --ember-soft: #f0e6d6;
+    --ember-bright: #e8963f;
+    --forest: #3f8f2a;
+    --forest-bg: #e9f0e2;
     --ochre: #9a7b2a;
-    --muted: #8a8276;
-    --border-strong: #c9bfac;
+    --muted: #8a8073;
+    --border-strong: #d8cfbf;
     --paper: #ffffff;
     --stamp: #8a3a2a;
     --stamp-bg: #f0d8cc;
     --info: #3a4f6a;
 
-    --color-bg-base: #f4ede1;
-    --color-bg-alt: #faf6ee;
+    --color-bg-base: #f4efe7;
+    --color-bg-alt: #faf7f1;
     --color-bg-elevated: #ffffff;
-    --color-bg-dark: #1a1a1c;
-    --color-text-primary: #1a1a1c;
-    --color-text-secondary: #5a544a;
-    --color-text-muted: #8a8276;
-    --color-text-on-dark: #faf6ee;
-    --color-accent-primary: #b85c1f;
-    --color-accent-hover: #9d4d18;
-    --color-accent-light: #f4e3d1;
-    --color-border-base: #e8dfd0;
-    --color-border-strong: #c9bfac;
-    --color-success: #3a5a3a;
-    --color-success-bg: #e8eee0;
+    --color-bg-dark: #1a1815;
+    --color-text-primary: #1a1815;
+    --color-text-secondary: #5f584d;
+    --color-text-muted: #8a8073;
+    --color-text-on-dark: #f4efe7;
+    --color-accent-primary: #d97a34;
+    --color-accent-hover: #b9601f;
+    --color-accent-light: #f0e6d6;
+    --color-border-base: #e4dccd;
+    --color-border-strong: #d8cfbf;
+    --color-success: #3f8f2a;
+    --color-success-bg: #e9f0e2;
     --color-warning: #9a7b2a;
     --color-warning-bg: #f4ecd6;
     --color-danger: #8a3a2a;
     --color-danger-bg: #f0d8cc;
     --color-info: #3a4f6a;
     --color-info-bg: #d8e0e8;
-    --color-cta-primary: #1a1a1c;
-    --color-cta-primary-hover: #2a2a2c;
-    --color-cta-text: #faf6ee;
+    --color-cta-primary: #1a1815;
+    --color-cta-primary-hover: #2e2a24;
+    --color-cta-text: #f4efe7;
   }
 
   * {
@@ -79,7 +85,7 @@
     background: var(--background);
     color: var(--foreground);
     font-family:
-      Inter,
+      Archivo,
       system-ui,
       -apple-system,
       BlinkMacSystemFont,
@@ -93,9 +99,10 @@
   h2,
   h3,
   h4 {
-    font-family: Inter, system-ui, sans-serif;
-    font-weight: 600;
+    font-family: Archivo, system-ui, sans-serif;
+    font-weight: 800;
     letter-spacing: -0.025em;
+    text-wrap: balance;
   }
 
   a {

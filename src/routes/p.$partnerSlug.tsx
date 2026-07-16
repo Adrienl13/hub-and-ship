@@ -228,7 +228,7 @@ function PartnerSharePage() {
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--background)]">
           <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
             <Reveal>
-              <div className="label-eyebrow text-[color:var(--ember-soft)]">
+              <div className="label-eyebrow text-[color:var(--ember-bright)]">
                 Attribution en coulisses
               </div>
               <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
@@ -273,9 +273,9 @@ function PartnerSharePage() {
                   key={step}
                   className="border-[color:var(--sand)]/15 bg-[color:var(--sand)]/[0.06] relative overflow-hidden rounded-md border p-4"
                 >
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--ember-soft)] to-transparent" />
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--ember-bright)] to-transparent" />
                   <div className="flex items-center justify-between gap-2">
-                    <Icon className="h-4 w-4 text-[color:var(--ember-soft)]" />
+                    <Icon className="h-4 w-4 text-[color:var(--ember-bright)]" />
                     <span className="text-[color:var(--sand)]/25 font-display text-2xl">
                       {step}
                     </span>

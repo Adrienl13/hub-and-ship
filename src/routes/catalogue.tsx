@@ -17,6 +17,7 @@ import { Header } from '@/components/Header'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { OrderSidebar } from '@/components/OrderSidebar'
 import { ProductCard } from '@/components/ProductCard'
+import { TerraceConfigurator } from '@/components/TerraceConfigurator'
 import { Button } from '@/components/ui/button'
 import {
   CATEGORY_FILTERS,
@@ -614,6 +615,10 @@ function CataloguePage() {
             />
           </aside>
         </section>
+
+        {/* D4 : couverts → mix chiffré → panier (déplacé de l'accueil lors
+            de la refonte design v2). */}
+        <TerraceConfigurator products={productsArray} />
       </main>
 
       <Footer />

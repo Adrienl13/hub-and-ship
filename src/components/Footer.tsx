@@ -64,7 +64,7 @@ export function Footer() {
               <li className="pt-1">
                 <a
                   href="/guides"
-                  className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
+                  className="text-[color:var(--ember-bright)] hover:text-[color:var(--sand)]"
                 >
                   Tous les guides →
                 </a>
@@ -98,7 +98,7 @@ export function Footer() {
               <li className="pt-1">
                 <a
                   href="/legal"
-                  className="text-[color:var(--ember-soft)] hover:text-[color:var(--sand)]"
+                  className="text-[color:var(--ember-bright)] hover:text-[color:var(--sand)]"
                 >
                   Tous les documents légaux →
                 </a>
@@ -207,7 +207,7 @@ export function Footer() {
               key={label}
               className="text-[color:var(--sand)]/70 inline-flex items-center gap-1.5 text-[11px]"
             >
-              <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--ember-soft)]" />
+              <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--ember-bright)]" />
               {label}
             </span>
           ))}

@@ -114,7 +114,7 @@ export function PartnerBrasseurs({ onApply }: { onApply: () => void }) {
     <section className="py-14">
       <div className="mx-auto max-w-5xl px-6">
         <div className="relative overflow-hidden rounded-[10px] bg-[color:var(--ink)] px-9 py-10 text-[color:var(--sand-soft)]">
-          <span className="mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--ember-soft)]">
+          <span className="mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--ember-bright)]">
             Réseaux &amp; tournées · Distributeurs boissons
           </span>
           <h2 className="mt-2.5 max-w-[24ch] font-display text-2xl font-black md:text-3xl">
@@ -134,7 +134,7 @@ export function PartnerBrasseurs({ onApply }: { onApply: () => void }) {
                 key={step.tag}
                 className="rounded-md border border-[color:var(--sand-soft)]/20 p-4"
               >
-                <span className="mono text-[11px] tracking-[0.12em] text-[color:var(--ember-soft)]">
+                <span className="mono text-[11px] tracking-[0.12em] text-[color:var(--ember-bright)]">
                   {step.tag}
                 </span>
                 <b className="mt-1.5 block text-[14.5px]">{step.title}</b>
