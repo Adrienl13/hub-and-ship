@@ -10,7 +10,7 @@ import type { ContainerSummary, Product } from '@/lib/products'
 // fiches produit RÉELLES (prix, barre MOQ, compteur réservés) et panneau
 // container sticky avec les mêmes données temps réel que le hero.
 
-const PREVIEW_COUNT = 3
+const PREVIEW_COUNT = 5
 
 function committedUnits(product: Product): number {
   return product.variants.reduce(
@@ -125,15 +125,17 @@ export function CataloguePreview({
                     onClick={() => onOpenProduct(product.id)}
                     className="group overflow-hidden rounded-2xl border border-[color:var(--sand-deep)] bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="relative h-[180px] bg-[color:var(--sand-deep)]">
+                    {/* Packshots carrés fond studio : object-contain + padding
+                        pour montrer le produit EN ENTIER (jamais recadré). */}
+                    <div className="flex h-[190px] items-center justify-center bg-[color:var(--sand-soft)] p-4">
                       <img
                         src={product.mainImageUrl}
                         alt={product.name}
                         loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        className="max-h-full w-auto max-w-full object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.05]"
                       />
                     </div>
-                    <div className="flex flex-col gap-2 p-4">
+                    <div className="flex flex-col gap-2 border-t border-[color:var(--sand-deep)] p-4">
                       <div className="truncate text-base font-extrabold">
                         {product.name}
                       </div>
@@ -158,6 +160,29 @@ export function CataloguePreview({
                   </button>
                 )
               })}
+
+              {/* La profondeur du catalogue doit se voir : tuile de renvoi
+                  avec le compte réel des références restantes. */}
+              {products.length > preview.length && (
+                <Link
+                  to="/catalogue"
+                  className="group flex min-h-[190px] flex-col items-start justify-center gap-2 rounded-2xl bg-foreground p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <span className="text-[34px] font-black leading-none tracking-[-0.02em] text-[color:var(--ember-bright)]">
+                    +{products.length - preview.length}
+                  </span>
+                  <span className="text-lg font-extrabold text-[#F9F6F0]">
+                    autres références
+                  </span>
+                  <span className="text-[14.5px] text-[rgba(244,239,231,.72)]">
+                    Chaises, fauteuils, tables, bancs — tous les designs et
+                    coloris.
+                  </span>
+                  <span className="mt-1 border-b-2 border-[color:var(--ember-bright)] pb-0.5 text-[15px] font-bold text-[#F9F6F0]">
+                    Ouvrir le catalogue →
+                  </span>
+                </Link>
+              )}
             </div>
           )}
         </div>
