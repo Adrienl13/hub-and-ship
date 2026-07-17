@@ -1,402 +1,654 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import {
-  ArrowRight,
-  BadgeCheck,
-  Container,
-  Factory,
-  FileCheck,
-  Percent,
-  Ship,
-  ShieldCheck,
-} from 'lucide-react'
+import { Camera } from 'lucide-react'
 
-import {
-  getPublicPricingRules,
-  refreshPublicPricingRules,
-  type PublicPricingRules,
-} from '@/lib/pricing/public-rules'
-import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import { ProofTimeline } from '@/components/ProofTimeline'
+import { PriceChart } from '@/components/prix/PriceChart'
+import { VolumeSimulator } from '@/components/prix/VolumeSimulator'
+import { useCatalog } from '@/hooks/useCatalog'
+import { useSiteMedia } from '@/hooks/useSiteMedia'
+import { productPath } from '@/lib/catalogue/product-slug'
 import {
-  breadcrumbJsonLd,
-  buildSeoHead,
-  faqJsonLd,
-  jsonLdScript,
-} from '@/lib/seo'
+  listPublishedDeliveredContainers,
+} from '@/lib/delivered-containers/repository'
+import { refreshPublicPricingRules } from '@/lib/pricing/public-rules'
+import {
+  aggregateReviews,
+  reviewFromRow,
+  type ProductReviewRow,
+} from '@/lib/reviews/reviews'
+import { buildSeoHead, faqJsonLd, jsonLdScript } from '@/lib/seo'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
-// « Prix prouvé » — page pilier : on montre COMMENT le prix est construit
-// (méthode + règles publiques), jamais les coûts d'achat ni les marges
-// (décision #4 : ces données ne quittent pas le serveur).
+// Page « Le prix prouvé » v2 (handoff design 07/2026) : hero sombre #332E27
+// avec graphique de circuit interactif, sommaire d'ancres, méthode en 5
+// briques, simulateur branché sur les paliers publics RÉELS, frise photo
+// administrable, preuves dynamiques (jamais de faux chiffres) et FAQ.
 
-const PRICE_FAQ: ReadonlyArray<{ readonly q: string; readonly a: string }> = [
+const FAQ = [
   {
     q: 'Pourquoi le mobilier CHR coûte-t-il 2 à 3 fois plus cher en showroom ?',
-    a: "Un meuble importé passe classiquement par 4 à 5 intermédiaires (usine, importateur, grossiste, distributeur, showroom) qui empilent chacun leur marge, plus le coût des stocks et des salles d'exposition. Container Club suprime ces étapes : achat direct usine, container mutualisé entre professionnels, une seule marge. L'écart est visible sur chaque fiche produit via le prix public conseillé affiché en référence.",
+    direct:
+      "Parce que chaque intermédiaire ajoute sa marge : le prix usine est multiplié par 2,5 à 3 avant d'arriver en showroom.",
+    bullets: [
+      'Circuit classique : usine → importateur → grossiste → distributeur → showroom. 4 marges empilées, plus le coût des stocks et des salles d’exposition.',
+      'Notre circuit : usine → vous. Une seule marge, qui couvre fret, douane, contrôle SGS et SAV.',
+      'Vérifiable : chaque fiche produit affiche le prix public conseillé en référence, à côté du nôtre.',
+    ],
   },
   {
-    q: 'Quelles remises de volume sont appliquées chez Container Club ?',
-    a: 'Les paliers sont publics et automatiques sur le canal direct : −6 % dès 100 pièces cumulées dans la commande, −10 % dès 150 pièces. Ils s’appliquent au panier, sans négociation ni code.',
+    q: 'Quelles remises de volume sont appliquées ?',
+    direct:
+      'Deux paliers publics, appliqués automatiquement au panier — sans négociation ni code promo.',
+    bullets: [
+      '−6 % dès 100 pièces cumulées dans la commande (toutes références confondues).',
+      '−10 % dès 150 pièces cumulées.',
+      'Mêmes conditions pour tous les professionnels — testez avec le simulateur ci-dessus.',
+    ],
   },
   {
-    q: 'Comment se passe le paiement d’une commande par container ?',
-    a: "En 3 temps, calés sur la vie du container : 3 % à la réservation (minimum 150 €, plafonné à 500 €, déduits du total), 27 % quand le container atteint 80 % de remplissage, et le solde de 70 % avant expédition. Vous ne payez jamais la totalité d'un mobilier qui n'a pas encore de date de départ.",
+    q: "Comment se passe le paiement d'une commande par container ?",
+    direct:
+      'En 3 temps, calés sur la vie du container — vous ne payez jamais tout d’avance.',
+    bullets: [
+      '3 % à la réservation (min 150 €, plafonné à 500 €) — déduits du total, votre place est bloquée.',
+      '27 % au seuil de 80 % de remplissage — la production démarre, vous êtes prévenu 48 h avant.',
+      '70 % avant expédition — uniquement après validation du contrôle SGS en usine.',
+    ],
+  },
+  {
+    q: "Pourquoi ne pas acheter directement à l'usine moi-même ?",
+    direct:
+      "Vous pouvez — c'est notre métier. Mais en direct, l'usine impose des conditions difficiles à tenir seul :",
+    bullets: [
+      'MOQ de plusieurs centaines de pièces par référence, payées d’avance à l’international.',
+      'Statut d’importateur obligatoire : EORI, TVA à l’import, conformité UE, dédouanement, fret.',
+      'Aucun recours pratique en cas de défaut constaté à l’arrivée, sans contrôle qualité sur place.',
+    ],
+    after:
+      'Notre marge unique couvre exactement ce travail : accéder aux conditions usine dès quelques dizaines de pièces, avec contrôle SGS, garantie 2 ans et SAV en France.',
   },
   {
     q: 'Le prix affiché inclut-il le transport et la douane ?',
-    a: "Le prix est « rendu port » : achat usine, fret maritime mutualisé, dédouanement et conformité UE inclus, jusqu'à Marseille-Fos ou Le Havre. Le post-acheminement est au choix du client : enlèvement libre gratuit, votre transporteur, ou mise en relation avec nos transporteurs partenaires. Aucun frais caché.",
+    direct:
+      'Oui, jusqu’au port d’arrivée (Marseille-Fos ou Le Havre) : le prix est « rendu port », sans frais caché.',
+    bullets: [
+      'Inclus : achat usine, fret maritime mutualisé, dédouanement, taxes, conformité UE, contrôle SGS.',
+      'Ensuite, au choix : enlèvement libre gratuit au port, votre transporteur, ou mise en relation avec nos transporteurs partenaires à tarif négocié.',
+    ],
   },
-]
+] as const
+
+const METHOD_STEPS = [
+  {
+    num: '01',
+    title: 'Achat direct usine',
+    text: 'Prix FOB négocié sans agent ni bureau d’achat. Les mêmes usines que les grandes marques européennes.',
+  },
+  {
+    num: '02',
+    title: 'Fret mutualisé',
+    text: "Le container 40' HC est réparti au prorata du volume. Plus il se remplit, plus la part par chaise baisse.",
+  },
+  {
+    num: '03',
+    title: 'Douane & conformité',
+    text: 'Dédouanement, taxes et normes UE (feu, fiches techniques) traités par l’importateur officiel.',
+  },
+  {
+    num: '04',
+    title: 'Contrôle SGS',
+    text: 'Inspection indépendante avant départ, rapport consultable. Inclus dans le prix, jamais en option.',
+  },
+  {
+    num: '05',
+    title: 'Une seule marge',
+    text: 'Sourcing, logistique, SAV France et garantie 2 ans. Pas de grossiste, pas de showroom à financer.',
+    dark: true,
+  },
+] as const
+
+const TRAJET_STEPS = [
+  {
+    title: 'Usine & contrôle SGS',
+    text: 'Inspection indépendante avant chargement, rapport à l’appui.',
+  },
+  {
+    title: 'Chargement',
+    text: 'Empotage optimisé, scellé douanier, photos du manifeste.',
+  },
+  {
+    title: 'Arrivée au port',
+    text: 'Dédouanement par nos soins — importateur officiel enregistré.',
+  },
+  {
+    title: 'Votre terrasse',
+    text: 'Enlèvement port ou livraison — le mobilier entre en service.',
+  },
+] as const
+
+const ANCHORS = [
+  ['#methode', 'La méthode'],
+  ['#remises', 'Remises & paiement'],
+  ['#trajet', 'Le trajet'],
+  ['#preuves', 'Les preuves'],
+  ['#faq', 'FAQ'],
+] as const
+
+const WRAP = 'mx-auto max-w-[1240px] px-5 sm:px-10'
+const EYEBROW =
+  'mb-3.5 text-[13px] font-bold uppercase tracking-[0.14em] text-[color:var(--ember)]'
+const H2 =
+  'm-0 text-[26px] font-extrabold leading-[1.05] tracking-[-0.025em] sm:text-[33px] lg:text-[40px]'
 
 export const Route = createFileRoute('/prix')({
-  component: PrixPage,
   head: () => ({
     ...buildSeoHead({
-      title: 'Le prix prouvé — comment nos prix sont construits',
+      title: 'Le prix prouvé — d’où vient le prix de votre mobilier CHR',
       description:
-        'Mobilier CHR 2 à 3× moins cher qu’en showroom : achat direct usine, container mutualisé, une seule marge. Méthode transparente, remises volume publiques (−6 % dès 100 pièces, −10 % dès 150), paiement séquencé 3/27/70.',
+        'Un meuble CHR passe par 4 à 5 intermédiaires qui multiplient le prix usine par 2,5 à 3. Container Club achète en direct usine, mutualise le container entre pros et applique une seule marge : la méthode, les paliers de remise et les preuves.',
       path: '/prix',
     }),
     scripts: [
-      jsonLdScript(faqJsonLd(PRICE_FAQ)),
       jsonLdScript(
-        breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Le prix prouvé', path: '/prix' },
-        ]),
+        faqJsonLd(
+          FAQ.map((item) => ({
+            q: item.q,
+            a: [item.direct, ...item.bullets, 'after' in item ? item.after : '']
+              .filter(Boolean)
+              .join(' '),
+          })),
+        ),
       ),
     ],
   }),
+  component: PrixPage,
 })
 
-const COST_STEPS: ReadonlyArray<{
-  readonly icon: typeof Factory
-  readonly title: string
-  readonly text: string
-}> = [
-  {
-    icon: Factory,
-    title: '1 · Achat direct usine',
-    text: 'Prix FOB négocié en direct avec les fabricants, sans agent ni bureau d’achat intermédiaire. Les mêmes usines qui produisent pour les grandes marques européennes.',
-  },
-  {
-    icon: Ship,
-    title: '2 · Fret maritime mutualisé',
-    text: 'Le coût du container (40 pieds HC) est réparti entre tous les professionnels de la commande groupée, au prorata du volume (m³) de chacun. Plus le container se remplit, plus la part de fret par chaise baisse.',
-  },
-  {
-    icon: FileCheck,
-    title: '3 · Douane et conformité UE',
-    text: 'Dédouanement, taxes d’importation et conformité (normes feu, fiches techniques) traités par Pros Import EURL, importateur officiel enregistré en France.',
-  },
-  {
-    icon: ShieldCheck,
-    title: '4 · Contrôle qualité SGS',
-    text: 'Inspection indépendante SGS avant départ usine, rapport consultable pour chaque container livré. Le coût du contrôle est inclus dans le prix, pas facturé en option.',
-  },
-  {
-    icon: Percent,
-    title: '5 · Une seule marge, transparente',
-    text: 'Une marge unique couvre notre travail : sourcing, négociation, logistique, SAV France et garantie 2 ans. Pas de grossiste, pas de distributeur, pas de showroom à financer.',
-  },
-]
-
-// Grille RÉELLEMENT appliquée : dérivée des paramètres pricing actifs (mêmes
-// valeurs que le checkout et le moteur), plus jamais des nombres codés en dur
-// qui divergeraient au premier changement admin. Les lignes fixes (enlèvement,
-// garantie) ne dépendent pas des paramètres.
-function buildPublicRules(
-  rules: PublicPricingRules,
-): ReadonlyArray<{ readonly label: string; readonly value: string }> {
-  const pct = (fraction: number) =>
-    `−${(fraction * 100).toFixed(fraction * 100 % 1 === 0 ? 0 : 1)} %`
-  const eur = (n: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(n)
-  return [
-    {
-      label: `Remise volume — dès ${rules.tier2Qty} pièces`,
-      value: pct(rules.tier2Discount),
-    },
-    {
-      label: `Remise volume — dès ${rules.tier3Qty} pièces`,
-      value: pct(rules.tier3Discount),
-    },
-    {
-      label: 'Frais de réservation (déduits du total)',
-      value: `${(rules.reservationFeeRate * 100).toFixed(0)} % · min ${eur(rules.reservationFeeMin)} · max ${eur(rules.reservationFeeMax)}`,
-    },
-    { label: 'Acompte à 80 % de remplissage du container', value: '27 %' },
-    { label: 'Solde avant expédition', value: '70 %' },
-    { label: 'Enlèvement au port (Marseille-Fos / Le Havre)', value: 'Gratuit' },
-    { label: 'Garantie fabricant + SAV France', value: '2 ans' },
-  ]
+interface ProofStats {
+  readonly avgRating: string | null
+  readonly reviewCount: number
+  readonly containersDelivered: number
 }
 
-function PrixPage() {
-  // Hydrate les règles publiques (les mêmes qu'au checkout) puis re-render.
-  const [rules, setRules] = useState<PublicPricingRules>(getPublicPricingRules())
+function useProofStats(): ProofStats {
+  const [stats, setStats] = useState<ProofStats>({
+    avgRating: null,
+    reviewCount: 0,
+    containersDelivered: 0,
+  })
+
   useEffect(() => {
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return
     let cancelled = false
-    void refreshPublicPricingRules().then(() => {
-      if (!cancelled) setRules(getPublicPricingRules())
-    })
+
+    const load = async () => {
+      let avgRating: string | null = null
+      let reviewCount = 0
+      let containersDelivered = 0
+      try {
+        const res = await fetch(
+          `${config.url}/rest/v1/product_reviews?status=eq.published&select=*`,
+          {
+            headers: {
+              apikey: config.anonKey,
+              Authorization: `Bearer ${config.anonKey}`,
+            },
+          },
+        )
+        if (res.ok) {
+          const rows = (await res.json()) as ProductReviewRow[]
+          const aggregate = aggregateReviews(rows.map(reviewFromRow))
+          if (aggregate.count > 0) {
+            avgRating = `${aggregate.average.toFixed(1).replace('.', ',')}/5`
+            reviewCount = aggregate.count
+          }
+        }
+      } catch {
+        // pas d'avis chargés → la carte reste masquée
+      }
+      try {
+        const client = createSupabaseBrowserClient(config)
+        const delivered = await listPublishedDeliveredContainers(client)
+        containersDelivered = delivered.length
+      } catch {
+        // pas d'historique chargé → la carte reste masquée
+      }
+      if (!cancelled) {
+        setStats({ avgRating, reviewCount, containersDelivered })
+      }
+    }
+    void load()
     return () => {
       cancelled = true
     }
   }, [])
-  const publicRules = buildPublicRules(rules)
+
+  return stats
+}
+
+function PrixPage() {
+  const media = useSiteMedia()
+  const { products } = useCatalog()
+  const proof = useProofStats()
+  const [faqOpen, setFaqOpen] = useState(0)
+  // Le simulateur lit les règles publiques du module : on les rafraîchit
+  // depuis le serveur puis on force un re-render (mêmes paliers qu'au panier).
+  const [rulesVersion, setRulesVersion] = useState(0)
+  useEffect(() => {
+    void refreshPublicPricingRules().then(() => setRulesVersion((v) => v + 1))
+  }, [])
+
+  const exampleProduct = products.find((p) => p.category === 'chair')
+  const productHref = exampleProduct ? productPath(exampleProduct) : '/catalogue'
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <div className="label-eyebrow text-[color:var(--ember)]">
-          Le prix prouvé
-        </div>
-        <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-          On ne vous demande pas de nous croire. On vous montre la méthode.
-        </h1>
-
-        {/* Bloc réponse directe — citable tel quel par un moteur ou une IA. */}
-        <section className="mt-6 rounded-md border-l-4 border-[color:var(--ember)] bg-card p-5">
-          <p className="text-sm leading-7">
-            <strong>En résumé :</strong> un meuble CHR vendu en showroom passe
-            par 4 à 5 intermédiaires qui multiplient le prix usine par 2,5 à 3.
-            Container Club achète en direct usine, mutualise un container entre
-            professionnels et applique une seule marge — d'où des prix 2 à 3×
-            plus bas, à produit comparable. Chaque fiche produit affiche le
-            prix public conseillé en référence : l'écart se vérifie ligne par
-            ligne, et la qualité se vérifie dans les{' '}
-            <Link to="/qualite" className="underline underline-offset-4">
-              rapports SGS
-            </Link>{' '}
-            de chaque container.
-          </p>
-        </section>
-
-        {/* D2 : la méthode, en images — frise compacte du trajet container. */}
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            Le trajet de votre container
-          </h2>
-          <div className="mt-4">
-            <ProofTimeline compact />
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            D'où vient le prix — les 5 étapes
-          </h2>
-          <div className="mt-4 grid gap-3">
-            {COST_STEPS.map((step) => (
-              <div
-                key={step.title}
-                className="flex items-start gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-4"
-              >
-                <step.icon className="mt-0.5 h-5 w-5 flex-none text-[color:var(--ember)]" />
-                <div>
-                  <div className="text-sm font-semibold">{step.title}</div>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {step.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            Circuit classique vs Container Club
-          </h2>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-[color:var(--sand-deep)] text-left">
-                  <th className="py-2 pr-4 font-semibold">Étape</th>
-                  <th className="py-2 pr-4 font-semibold">Circuit showroom</th>
-                  <th className="py-2 font-semibold">Container Club</th>
-                </tr>
-              </thead>
-              <tbody className="text-muted-foreground">
-                <tr className="border-b border-[color:var(--sand-deep)]/60">
-                  <td className="py-2 pr-4">Intermédiaires</td>
-                  <td className="py-2 pr-4">
-                    Usine → importateur → grossiste → distributeur → showroom
-                  </td>
-                  <td className="py-2 text-foreground">
-                    Usine → vous (container mutualisé)
-                  </td>
-                </tr>
-                <tr className="border-b border-[color:var(--sand-deep)]/60">
-                  <td className="py-2 pr-4">Marges empilées</td>
-                  <td className="py-2 pr-4">4 à 5 marges successives</td>
-                  <td className="py-2 text-foreground">1 marge unique</td>
-                </tr>
-                <tr className="border-b border-[color:var(--sand-deep)]/60">
-                  <td className="py-2 pr-4">Coûts de structure</td>
-                  <td className="py-2 pr-4">
-                    Showrooms, stocks dormants, forces de vente
-                  </td>
-                  <td className="py-2 text-foreground">
-                    Plateforme en ligne, containers à la demande
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-2 pr-4">Prix final, à produit égal</td>
-                  <td className="py-2 pr-4">×2,5 à ×3 le prix usine</td>
-                  <td className="py-2 font-medium text-foreground">
-                    Prix direct pro affiché au catalogue
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            La référence « prix public conseillé » affichée sur chaque fiche
-            produit correspond au tarif constaté en circuit de distribution
-            classique pour un produit comparable. L'économie est calculée
-            produit par produit, pas sur une moyenne marketing.
-          </p>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            Les règles publiques du prix
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Les mêmes règles pour tous les professionnels du canal direct —
-            publiées ici, appliquées automatiquement au panier.
-          </p>
-          <div className="mt-4 grid gap-2">
-            {publicRules.map((rule) => (
-              <div
-                key={rule.label}
-                className="flex items-baseline justify-between gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-3"
-              >
-                <span className="text-sm text-muted-foreground">
-                  {rule.label}
-                </span>
-                <span className="text-sm font-semibold tabular-nums">
-                  {rule.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            Pourquoi on peut le prouver
-          </h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Link
-              to="/qualite"
-              className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground"
-            >
-              <ShieldCheck className="h-5 w-5 text-[color:var(--ember)]" />
-              <div className="mt-2 text-sm font-semibold">Rapports SGS</div>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Contrôle indépendant avant chaque départ, rapports consultables.
-              </p>
-            </Link>
-            <Link
-              to="/avis"
-              className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground"
-            >
-              <BadgeCheck className="h-5 w-5 text-[color:var(--ember)]" />
-              <div className="mt-2 text-sm font-semibold">
-                Avis d'achat vérifié
-              </div>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Seuls les professionnels ayant commandé peuvent noter.
-              </p>
-            </Link>
-            <Link
-              to="/livres"
-              className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-foreground"
-            >
-              <Container className="h-5 w-5 text-[color:var(--ember)]" />
-              <div className="mt-2 text-sm font-semibold">
-                Containers livrés
-              </div>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                L'historique réel des commandes groupées déjà servies.
-              </p>
-            </Link>
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl tracking-tight">
-            Questions fréquentes sur nos prix
-          </h2>
-          <div className="mt-4 space-y-4">
-            {PRICE_FAQ.map((item) => (
-              <details
-                key={item.q}
-                className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4"
-              >
-                <summary className="cursor-pointer text-sm font-semibold">
-                  {item.q}
-                </summary>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {item.a}
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        {/* D5 : la transparence prix est signée par un humain, pas par une
-            marque anonyme. */}
-        <section className="mt-10 flex items-start gap-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
-          <span
+      {/* HERO sombre : promesse + graphique */}
+      <section className="relative bg-[#332E27]">
+        <div className="absolute inset-0">
+          <img
+            src={media.prixHero.url}
+            alt={media.prixHero.alt}
+            className="h-full w-full object-cover"
+          />
+          <div
             aria-hidden
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[color:var(--foreground)] font-display text-lg font-semibold text-[color:var(--background)]"
-          >
-            AL
-          </span>
-          <div>
-            <p className="text-sm leading-7 text-[color:var(--ink-soft)]">
-              « Cette page décrit exactement comment nos prix sont construits.
-              Si un point reste flou, écrivez-moi : je réponds
-              personnellement. »
-            </p>
-            <p className="mt-2 text-xs font-semibold">Adrien Laniez</p>
-            <p className="text-xs text-muted-foreground">
-              Fondateur &amp; gérant, Pros Import EURL ·{' '}
-              <a href="/contact" className="underline">
-                contact
-              </a>
-            </p>
+            className="absolute inset-0 bg-[linear-gradient(90deg,rgba(43,38,31,.96)_0%,rgba(43,38,31,.9)_45%,rgba(43,38,31,.78)_100%)]"
+          />
+        </div>
+        <div className={`${WRAP} relative z-[1] py-16 lg:pb-[88px] lg:pt-20`}>
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="flex flex-col gap-6">
+              <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[color:var(--ember-bright)]">
+                Le prix prouvé
+              </div>
+              <h1 className="m-0 text-[34px] font-extrabold leading-[1.02] tracking-[-0.025em] text-[#F9F6F0] sm:text-[44px] lg:text-[56px]">
+                On ne vous demande pas de nous croire.{' '}
+                <span className="text-[color:var(--ember-bright)]">
+                  On vous montre la méthode.
+                </span>
+              </h1>
+              <p className="m-0 max-w-[480px] text-lg leading-[1.55] text-[rgba(244,239,231,.78)]">
+                Un meuble CHR vendu en showroom passe par 4 à 5 intermédiaires
+                qui multiplient le prix usine par 2,5 à 3. Nous achetons en
+                direct, mutualisons le container entre pros et appliquons{' '}
+                <strong className="text-[#F9F6F0]">une seule marge</strong>.
+              </p>
+              <div className="flex flex-wrap gap-3.5">
+                <Link
+                  to="/catalogue"
+                  className="rounded-[11px] bg-[color:var(--ember)] px-6 py-[15px] text-base font-bold text-white transition-colors hover:bg-[color:var(--ember-hover)]"
+                >
+                  Vérifier au catalogue →
+                </Link>
+                <a
+                  href="/qualite"
+                  className="rounded-[11px] border border-[rgba(244,239,231,.28)] bg-[rgba(244,239,231,.1)] px-6 py-[15px] text-base font-semibold text-[color:var(--sand)] transition-colors hover:bg-[rgba(244,239,231,.18)]"
+                >
+                  Rapports SGS
+                </a>
+              </div>
+            </div>
+            <PriceChart productHref={productHref} />
+          </div>
+        </div>
+      </section>
+
+      {/* SOMMAIRE ancres */}
+      <div className="sticky top-16 z-40 border-b border-[color:var(--sand-deep)] bg-[rgba(244,239,231,.9)] backdrop-blur">
+        <div className={`${WRAP} flex gap-2 overflow-x-auto py-2.5`}>
+          {ANCHORS.map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              className="whitespace-nowrap rounded-full border border-[color:var(--border-strong)] bg-white px-3.5 py-[7px] text-[13px] font-semibold text-[#4a443c] transition-colors hover:border-foreground/40"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <main>
+        {/* LA MÉTHODE */}
+        <section
+          id="methode"
+          className={`${WRAP} scroll-mt-[130px] pt-16 lg:pt-[104px]`}
+        >
+          <div className={EYEBROW}>La méthode</div>
+          <h2 className={`${H2} mb-10 max-w-[720px]`}>
+            D&apos;où vient le prix — les 5 briques, rien d&apos;autre.
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {METHOD_STEPS.map((step) => (
+              <div
+                key={step.num}
+                className={
+                  'flex flex-col gap-2.5 rounded-2xl p-5 pb-6 ' +
+                  ('dark' in step && step.dark
+                    ? 'bg-[#332E27]'
+                    : 'border border-[color:var(--sand-deep)] bg-white')
+                }
+              >
+                <div
+                  className={
+                    'text-[34px] font-black ' +
+                    ('dark' in step && step.dark
+                      ? 'text-[color:var(--ember-bright)]'
+                      : 'text-[#e0d3bd]')
+                  }
+                >
+                  {step.num}
+                </div>
+                <div
+                  className={
+                    'text-[17px] font-extrabold ' +
+                    ('dark' in step && step.dark ? 'text-[#F9F6F0]' : '')
+                  }
+                >
+                  {step.title}
+                </div>
+                <p
+                  className={
+                    'm-0 text-[13.5px] leading-[1.45] ' +
+                    ('dark' in step && step.dark
+                      ? 'text-[rgba(244,239,231,.72)]'
+                      : 'text-[color:var(--color-text-secondary)]')
+                  }
+                >
+                  {step.text}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          <Link
-            to="/catalogue"
-            className="inline-flex h-11 items-center gap-2 rounded-sm bg-foreground px-5 text-sm font-medium text-background"
-          >
-            Voir les prix au catalogue
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            to="/stock-24h"
-            className="inline-flex h-11 items-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-5 text-sm font-medium"
-          >
-            Stock disponible sous 24 h
-          </Link>
-        </div>
+        {/* REMISES & PAIEMENT */}
+        <section
+          id="remises"
+          className={`${WRAP} scroll-mt-[130px] pt-16 lg:pt-[104px]`}
+        >
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+            <VolumeSimulator key={rulesVersion} />
 
-        <ContainerNotifySection source="prix" />
+            <div className="flex flex-col rounded-[20px] bg-[#332E27] p-6 sm:p-10">
+              <div className="mb-[22px] text-[13px] font-bold uppercase tracking-[0.14em] text-[color:var(--ember-bright)]">
+                Le paiement suit le container
+              </div>
+              <div className="flex flex-1 flex-col justify-center">
+                {[
+                  {
+                    pct: '3 %',
+                    title: 'À la réservation',
+                    text: 'Min 150 €, max 500 € — déduits du total.',
+                  },
+                  {
+                    pct: '27 %',
+                    title: 'Au seuil de 80 %',
+                    text: 'La production démarre — vous êtes prévenu 48 h avant.',
+                  },
+                  {
+                    pct: '70 %',
+                    title: 'Avant expédition',
+                    text: 'Après validation du contrôle SGS en usine.',
+                  },
+                ].map((row, index) => (
+                  <div
+                    key={row.pct}
+                    className={
+                      'flex items-start gap-[18px] py-4 ' +
+                      (index < 2
+                        ? 'border-b border-[rgba(244,239,231,.12)]'
+                        : '')
+                    }
+                  >
+                    <div className="min-w-[76px] text-[26px] font-black text-[color:var(--ember-bright)]">
+                      {row.pct}
+                    </div>
+                    <div>
+                      <div className="text-base font-bold text-[#F9F6F0]">
+                        {row.title}
+                      </div>
+                      <div className="mt-[3px] text-[13.5px] text-[rgba(244,239,231,.65)]">
+                        {row.text}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-[22px] border-t border-[rgba(244,239,231,.12)] pt-[18px] text-[13.5px] leading-normal text-[rgba(244,239,231,.65)]">
+                Vous ne payez jamais la totalité d&apos;un mobilier qui
+                n&apos;a pas encore de date de départ. Enlèvement au port
+                gratuit · Garantie 2 ans + SAV France.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* LE TRAJET — photos admin ou slots « à venir » honnêtes */}
+        <section
+          id="trajet"
+          className={`${WRAP} scroll-mt-[130px] pt-16 lg:pt-[104px]`}
+        >
+          <div className={EYEBROW}>La preuve en images</div>
+          <h2 className={`${H2} mb-3 max-w-[720px]`}>
+            Le trajet de votre container, documenté à chaque étape.
+          </h2>
+          <p className="mb-10 mt-0 max-w-[640px] text-[17px] text-[color:var(--color-text-secondary)]">
+            Des photos réelles sont publiées à chaque étape du container en
+            cours — pas des visuels de banque d&apos;images.
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {TRAJET_STEPS.map((step, index) => {
+              const photo = media.trajet[index] ?? null
+              return (
+                <div
+                  key={step.title}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-[color:var(--sand-deep)] bg-white"
+                >
+                  <div className="relative h-[170px] bg-[color:var(--sand-deep)]">
+                    {photo ? (
+                      <img
+                        src={photo.url}
+                        alt={photo.alt || step.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-2 border-b border-dashed border-[color:var(--border-strong)] bg-[color:var(--sand-soft)] px-4 text-center">
+                        <Camera className="h-5 w-5 text-[color:var(--muted)]" />
+                        <span className="text-xs leading-5 text-[color:var(--muted)]">
+                          Photo publiée à cette étape du container en cours
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5 px-5 py-[18px]">
+                    <div className="text-xs font-extrabold text-[color:var(--ember)]">
+                      {index + 1}/4
+                    </div>
+                    <div className="text-[17px] font-extrabold">
+                      {step.title}
+                    </div>
+                    <p className="m-0 text-[13.5px] leading-[1.45] text-[color:var(--color-text-secondary)]">
+                      {step.text}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* LES PREUVES — chiffres réels uniquement */}
+        <section
+          id="preuves"
+          className={`${WRAP} scroll-mt-[130px] pt-16 lg:pt-[104px]`}
+        >
+          <h2 className={`${H2} mb-9 max-w-[640px]`}>
+            Pourquoi on peut le prouver.
+          </h2>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">
+              <div className="text-[38px] font-black tracking-[-0.02em] text-[color:var(--ember)]">
+                100 %
+              </div>
+              <h3 className="m-0 text-[19px] font-extrabold sm:text-[21px]">
+                des containers contrôlés SGS
+              </h3>
+              <p className="m-0 text-[15px] leading-normal text-[color:var(--color-text-secondary)]">
+                Contrôle indépendant avant chaque départ, rapports
+                consultables.
+              </p>
+              <a
+                href="/qualite"
+                className="mt-auto w-max border-b-2 border-[color:var(--ember)] pb-0.5 text-[14.5px] font-bold text-foreground"
+              >
+                Consulter →
+              </a>
+            </div>
+            {proof.avgRating && (
+              <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">
+                <div className="text-[38px] font-black tracking-[-0.02em] text-[color:var(--ember)]">
+                  {proof.avgRating}
+                </div>
+                <h3 className="m-0 text-[19px] font-extrabold sm:text-[21px]">
+                  d&apos;avis d&apos;achat vérifié
+                </h3>
+                <p className="m-0 text-[15px] leading-normal text-[color:var(--color-text-secondary)]">
+                  Seuls les professionnels ayant commandé peuvent noter (
+                  {proof.reviewCount} avis).
+                </p>
+                <a
+                  href="/avis"
+                  className="mt-auto w-max border-b-2 border-[color:var(--ember)] pb-0.5 text-[14.5px] font-bold text-foreground"
+                >
+                  Lire les avis →
+                </a>
+              </div>
+            )}
+            {proof.containersDelivered > 0 && (
+              <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">
+                <div className="text-[38px] font-black tracking-[-0.02em] text-[color:var(--ember)]">
+                  {proof.containersDelivered}
+                </div>
+                <h3 className="m-0 text-[19px] font-extrabold sm:text-[21px]">
+                  {proof.containersDelivered > 1
+                    ? 'containers livrés'
+                    : 'container livré'}
+                </h3>
+                <p className="m-0 text-[15px] leading-normal text-[color:var(--color-text-secondary)]">
+                  L&apos;historique réel des commandes groupées déjà servies.
+                </p>
+                <a
+                  href="/livres"
+                  className="mt-auto w-max border-b-2 border-[color:var(--ember)] pb-0.5 text-[14.5px] font-bold text-foreground"
+                >
+                  Voir l&apos;historique →
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section
+          id="faq"
+          className="mx-auto max-w-[900px] scroll-mt-[130px] px-5 pt-16 sm:px-10 lg:pt-[104px]"
+        >
+          <div className={EYEBROW}>Questions fréquentes</div>
+          <h2 className={`${H2} mb-9`}>Sur nos prix, précisément.</h2>
+          <div className="flex flex-col gap-3">
+            {FAQ.map((item, index) => {
+              const isOpen = faqOpen === index
+              return (
+                <div
+                  key={item.q}
+                  className="overflow-hidden rounded-[14px] border border-[color:var(--sand-deep)] bg-white"
+                >
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => setFaqOpen(isOpen ? -1 : index)}
+                    className="flex w-full items-center justify-between gap-5 px-6 py-5 text-left"
+                  >
+                    <span className="text-[15px] font-bold sm:text-[16.5px]">
+                      {item.q}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="text-[22px] leading-none text-[color:var(--ember)]"
+                    >
+                      {isOpen ? '−' : '+'}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="px-6 pb-[22px]">
+                      <p className="m-0 mb-2.5 text-[15px] font-bold leading-[1.55]">
+                        {item.direct}
+                      </p>
+                      <div className="flex flex-col gap-1.5 text-[15px] leading-normal text-[color:var(--color-text-secondary)]">
+                        {item.bullets.map((bullet) => (
+                          <div key={bullet} className="flex gap-2.5">
+                            <span className="font-extrabold text-[color:var(--ember)]">
+                              ·
+                            </span>
+                            <span>{bullet}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {'after' in item && (
+                        <p className="m-0 mt-2.5 text-[15px] leading-[1.55] text-[color:var(--color-text-secondary)]">
+                          {item.after}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* FONDATEUR + CTA */}
+        <section className={`${WRAP} py-16 lg:py-[104px]`}>
+          <div className="flex flex-col items-center gap-8 rounded-[22px] bg-[#332E27] p-8 sm:p-14 lg:flex-row lg:gap-12">
+            <div className="flex h-[88px] w-[88px] min-w-[88px] items-center justify-center rounded-full bg-[color:var(--ember)] text-[30px] font-extrabold text-white">
+              AL
+            </div>
+            <div className="flex-1">
+              <p className="m-0 text-[19px] font-semibold leading-[1.4] text-[#F9F6F0] sm:text-[23px]">
+                « Cette page décrit exactement comment nos prix sont
+                construits. Si un point reste flou, écrivez-moi : je réponds
+                personnellement. »
+              </p>
+              <div className="mt-4 text-[15px] text-[rgba(244,239,231,.65)]">
+                <strong className="text-[#F9F6F0]">Adrien Laniez</strong> ·
+                Fondateur &amp; gérant, Pros Import EURL
+              </div>
+            </div>
+            <div className="flex w-full flex-col gap-3 lg:w-auto">
+              <Link
+                to="/catalogue"
+                className="whitespace-nowrap rounded-[11px] bg-[color:var(--ember)] px-6 py-[15px] text-center text-[15.5px] font-bold text-white transition-colors hover:bg-[color:var(--ember-hover)]"
+              >
+                Voir les prix au catalogue →
+              </Link>
+              <Link
+                to="/stock-24h"
+                className="whitespace-nowrap rounded-[11px] border border-[rgba(244,239,231,.28)] bg-[rgba(244,239,231,.1)] px-6 py-[15px] text-center text-[15.5px] font-semibold text-[color:var(--sand)] transition-colors hover:bg-[rgba(244,239,231,.18)]"
+              >
+                Stock disponible sous 24 h
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

@@ -59,6 +59,7 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 > La refonte design v2 (handoff accueil) ajoute UNE migration :
 
 | 18 | `20260716120000_site_media.sql` | **Design v2** : table site_media (photos administrables de l'accueil — slides hero, gammes, bandeau), lecture publique / écriture admin, fichiers dans le bucket existant catalogue-images |
+| 19 | `20260717120000_site_media_prix_slots.sql` | **Prix prouvé v2** : nouveaux emplacements photo (fond hero + frise trajet 1-4) dans site_media |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :

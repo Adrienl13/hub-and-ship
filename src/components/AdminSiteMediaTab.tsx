@@ -39,6 +39,36 @@ const SLOTS: ReadonlyArray<{
     hint: '≥2400 px de large, cadrage cover.',
     multi: false,
   },
+  {
+    slot: 'prix-hero',
+    label: 'Prix prouvé — fond du hero',
+    hint: 'Photo container/terrasse pro. Un voile brun foncé est appliqué par-dessus.',
+    multi: false,
+  },
+  {
+    slot: 'trajet-1',
+    label: 'Trajet 1/4 — inspection SGS en usine',
+    hint: 'VRAIE photo du container en cours uniquement (slot « à venir » sinon).',
+    multi: false,
+  },
+  {
+    slot: 'trajet-2',
+    label: 'Trajet 2/4 — chargement du container',
+    hint: 'VRAIE photo du container en cours uniquement (slot « à venir » sinon).',
+    multi: false,
+  },
+  {
+    slot: 'trajet-3',
+    label: 'Trajet 3/4 — arrivée au port',
+    hint: 'VRAIE photo du container en cours uniquement (slot « à venir » sinon).',
+    multi: false,
+  },
+  {
+    slot: 'trajet-4',
+    label: 'Trajet 4/4 — terrasse équipée',
+    hint: 'VRAIE photo du container en cours uniquement (slot « à venir » sinon).',
+    multi: false,
+  },
 ]
 
 interface MediaRow {
@@ -255,7 +285,11 @@ export function AdminSiteMediaTab() {
             ? DEFAULT_SITE_MEDIA.hero
             : slot === 'collections'
               ? [DEFAULT_SITE_MEDIA.collections]
-              : [DEFAULT_SITE_MEDIA.clienteleBand]
+              : slot === 'clientele-band'
+                ? [DEFAULT_SITE_MEDIA.clienteleBand]
+                : slot === 'prix-hero'
+                  ? [DEFAULT_SITE_MEDIA.prixHero]
+                  : [] // trajet-N : pas de visuel par défaut (slot « à venir »)
 
         return (
           <section
