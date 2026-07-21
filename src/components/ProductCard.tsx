@@ -114,28 +114,36 @@ function ProductCardComponent({
         )}
       </div>
 
-      {/* Infos & contrôles sous le visuel — compact pour une grille scannable */}
+      {/* Infos & contrôles sous le visuel — zones à hauteur FIXE pour que
+          prix, sélecteur et barre MOQ s'alignent d'une carte à l'autre,
+          quelle que soit la longueur du nom. */}
       <div className="flex flex-1 flex-col p-2.5 text-foreground">
-        <div className="flex items-start justify-between gap-2">
-          <button
-            type="button"
-            onClick={onOpenDetails}
-            className="group/name flex min-w-0 items-start gap-1 text-left"
-          >
-            <span className="line-clamp-2 min-w-0 font-display text-sm font-semibold leading-tight tracking-tight">
-              {product.name}
-            </span>
-            <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover/name:text-foreground" />
-          </button>
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="group/name flex min-w-0 items-start gap-1 text-left"
+        >
+          <span className="line-clamp-2 min-h-[2.15em] min-w-0 font-display text-sm font-semibold leading-tight tracking-tight">
+            {product.name}
+          </span>
+          <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover/name:text-foreground" />
+        </button>
 
-          <div className="shrink-0 text-right">
-            <div className="font-display text-base font-semibold tabular-nums">
-              {formatEUR(product.basePriceHt)}
-            </div>
-            <div className="text-[10px] font-semibold tabular-nums text-[color:var(--ember)]">
-              -{savingsPct}%
-            </div>
-          </div>
+        <div className="mt-1.5 flex items-baseline justify-between gap-2 border-t border-[color:var(--sand-deep)] pt-1.5">
+          <span className="font-display text-base font-extrabold tabular-nums">
+            {formatEUR(product.basePriceHt)}
+            <span className="ml-0.5 text-[10px] font-semibold text-muted-foreground">
+              HT
+            </span>
+          </span>
+          <span className="flex items-baseline gap-1.5">
+            <span className="text-[11px] tabular-nums text-muted-foreground line-through">
+              {formatEUR(product.retailPriceRef)}
+            </span>
+            <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[color:var(--forest)]">
+              −{savingsPct}%
+            </span>
+          </span>
         </div>
 
         <div className="mt-2">

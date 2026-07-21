@@ -2,7 +2,6 @@ import {
   Ruler,
   Weight,
   Package,
-  Flame,
   ShieldCheck,
   TrendingDown,
   Check,
@@ -137,15 +136,6 @@ export function ProductDetailDialog({
               ))}
             </div>
 
-            {product.fireRating && (
-              <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs">
-                <Flame className="h-3.5 w-3.5 text-[color:var(--ember)]" />
-                <span>
-                  Classement feu <strong>{product.fireRating}</strong> ·
-                  conforme ERP
-                </span>
-              </div>
-            )}
           </div>
 
           {/* Right column */}

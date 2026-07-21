@@ -71,12 +71,6 @@ describe('advanced catalogue filters', () => {
     ])
   })
 
-  it('filters M1 fire rating only', () => {
-    expect(run({ ...EMPTY_ADVANCED_FILTERS, fireM1Only: true })).toEqual([
-      'cheap-stack-m1',
-    ])
-  })
-
   it('filters stackable only', () => {
     expect(run({ ...EMPTY_ADVANCED_FILTERS, stackableOnly: true })).toEqual([
       'cheap-stack-m1',
@@ -85,7 +79,7 @@ describe('advanced catalogue filters', () => {
 
   it('combines criteria', () => {
     expect(
-      run({ maxPrice: 100, maxMoq: 30, fireM1Only: true, stackableOnly: true }),
+      run({ maxPrice: 100, maxMoq: 30, stackableOnly: true }),
     ).toEqual(['cheap-stack-m1'])
   })
 })
@@ -94,7 +88,10 @@ describe('hasActiveAdvancedFilters', () => {
   it('is false for the empty preset and true when any criterion is set', () => {
     expect(hasActiveAdvancedFilters(EMPTY_ADVANCED_FILTERS)).toBe(false)
     expect(
-      hasActiveAdvancedFilters({ ...EMPTY_ADVANCED_FILTERS, fireM1Only: true }),
+      hasActiveAdvancedFilters({
+        ...EMPTY_ADVANCED_FILTERS,
+        stackableOnly: true,
+      }),
     ).toBe(true)
   })
 })

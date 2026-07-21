@@ -65,14 +65,12 @@ export function getCategoryCounts(products: Product[] = PRODUCTS) {
 export interface CatalogueAdvancedFilters {
   readonly maxPrice: number | null
   readonly maxMoq: number | null
-  readonly fireM1Only: boolean
   readonly stackableOnly: boolean
 }
 
 export const EMPTY_ADVANCED_FILTERS: CatalogueAdvancedFilters = {
   maxPrice: null,
   maxMoq: null,
-  fireM1Only: false,
   stackableOnly: false,
 }
 
@@ -88,7 +86,6 @@ export function hasActiveAdvancedFilters(
   return (
     advanced.maxPrice !== null ||
     advanced.maxMoq !== null ||
-    advanced.fireM1Only ||
     advanced.stackableOnly
   )
 }
@@ -103,7 +100,6 @@ function matchesAdvanced(
   if (advanced.maxMoq !== null && product.moqUnits > advanced.maxMoq) {
     return false
   }
-  if (advanced.fireM1Only && product.fireRating !== 'M1') return false
   if (advanced.stackableOnly && !isStackable(product)) return false
   return true
 }

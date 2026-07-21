@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { IncludedInPriceStrip } from '@/components/IncludedInPriceStrip'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { OrderSidebar } from '@/components/OrderSidebar'
 import { ProductCard } from '@/components/ProductCard'
@@ -369,6 +370,11 @@ function CataloguePage() {
               )
             })}
           </div>
+          {/* Ce que le prix contient + remise volume auto — visible AVANT la
+              grille pour installer la confiance dès l'arrivée. */}
+          <div className="mt-3">
+            <IncludedInPriceStrip />
+          </div>
           {collection && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-3">
               <p className="text-sm">
@@ -502,14 +508,6 @@ function CataloguePage() {
                     className="h-9 w-24 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     aria-label="MOQ maximum"
                   />
-                  <FilterToggle
-                    active={advanced.fireM1Only}
-                    onClick={() =>
-                      setAdvanced((a) => ({ ...a, fireM1Only: !a.fireM1Only }))
-                    }
-                  >
-                    Classé feu M1
-                  </FilterToggle>
                   <FilterToggle
                     active={advanced.stackableOnly}
                     onClick={() =>
@@ -749,7 +747,6 @@ function CatalogueComparison({
       },
       { label: 'Volume', value: (p) => `${p.cbmPerUnit.toFixed(2)} m³` },
       { label: 'Poids', value: (p) => `${p.weightKg} kg` },
-      { label: 'Classé feu', value: (p) => p.fireRating ?? '—' },
       { label: 'Empilable', value: (p) => (isStackable(p) ? 'Oui' : '—') },
       { label: 'SKU', value: (p) => p.sku },
     ]

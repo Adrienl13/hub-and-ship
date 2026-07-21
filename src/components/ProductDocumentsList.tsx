@@ -33,16 +33,6 @@ function getProductDocuments(product: Product): ProductDocument[] {
       meta: `${product.dimensions.l}x${product.dimensions.w}x${product.dimensions.h} cm · ${product.weightKg} kg`,
       gated: false,
     },
-    ...(product.fireRating
-      ? [
-          {
-            kind: 'fire' as const,
-            title: `Certificat feu ${product.fireRating}`,
-            meta: 'Document conformité ERP',
-            gated: true,
-          },
-        ]
-      : []),
     {
       kind: 'warranty',
       title: 'Garantie fournisseur',
