@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 
 import { BrandMark } from '@/components/BrandMark'
+import { CartSheet } from '@/components/CartSheet'
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -175,6 +176,9 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
               Mon compte
             </Link>
           </Button>
+          {/* Panier global : la commande est consultable et modifiable
+              depuis toutes les pages, pas seulement le catalogue. */}
+          <CartSheet />
           {onReserve ? (
             <Button
               size="sm"

@@ -42,12 +42,14 @@ describe('cart store', () => {
     expect(snapshot.fill.percent).toBe(0)
   })
 
-  it('purges the legacy demo cart (p1:50/p3:10) from persisted storage on migrate', async () => {
+  it('purges ALL legacy demo ids (p1…p6) from persisted storage on migrate v2', async () => {
+    // Incident client 07/2026 : un panier persisté contenant des ids de démo
+    // pouvait réserver des items fantômes à la place du produit choisi.
     localStorage.setItem(
       'container-club-cart',
       JSON.stringify({
         state: {
-          qtyByProduct: { p1: 50, p3: 10, p4: 20 },
+          qtyByProduct: { p1: 50, p3: 10, p4: 20, 'bistro-live-001': 24 },
           variantByProduct: {},
           preferredContainerType: null,
           containerPreferenceSource: null,
@@ -59,10 +61,12 @@ describe('cart store', () => {
     await useCartStore.persist.rehydrate()
     const qty = useCartStore.getState().qtyByProduct
 
-    // Les lignes de démo héritées disparaissent, les choix réels restent.
+    // Toutes les lignes de démo héritées disparaissent — les lignes de
+    // vrais produits (ids catalogue live) restent intactes.
     expect(qty.p1).toBeUndefined()
     expect(qty.p3).toBeUndefined()
-    expect(qty.p4).toBe(20)
+    expect(qty.p4).toBeUndefined()
+    expect(qty['bistro-live-001']).toBe(24)
   })
 
   it('normalizes chair quantities through the shared business rule', () => {

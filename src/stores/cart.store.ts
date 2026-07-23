@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -125,6 +126,16 @@ export const useCartStore = create<CartStoreState>()(
           // lien ne constitue pas un ajout au panier de l'utilisateur.
           if (!options?.silent && prevQty === 0 && nextQty > 0) {
             track(AnalyticsEvent.AddToCart, { product: productId })
+            // Confirmation explicite : sans elle, l'acheteur ne sait pas que
+            // sa quantité est déjà prise en compte (retour client 07/2026).
+            toast.success(`Ajouté à votre commande`, {
+              description: `${nextQty} × ${product.name}`,
+            })
+          }
+          if (!options?.silent && prevQty > 0 && nextQty === 0) {
+            toast(`Retiré de votre commande`, {
+              description: product.name,
+            })
           }
 
           return {
@@ -170,19 +181,20 @@ export const useCartStore = create<CartStoreState>()(
         preferredContainerType: state.preferredContainerType,
         containerPreferenceSource: state.containerPreferenceSource,
       }),
-      // v1 : purge le panier de démonstration hérité (p1:50/p3:10) que les
-      // anciennes versions écrivaient par défaut dans le localStorage de
-      // chaque visiteur — sans quoi la jauge « Votre sélection » resterait
-      // gonflée par des lignes jamais choisies.
-      version: 1,
+      // v2 : purge TOUTES les lignes héritées des produits de démonstration
+      // (ids p1..p6). L'ancienne prod pouvait réserver ces items fantômes à
+      // la place du produit réellement choisi (incident client 07/2026) —
+      // aucun id de démo ne doit survivre dans un panier persisté.
+      version: 2,
       migrate: (persisted) => {
         const state = persisted as {
           qtyByProduct?: ProductQuantitySelection
         } | null
         if (state?.qtyByProduct) {
           const qty = { ...state.qtyByProduct }
-          if (qty.p1 === 50) delete qty.p1
-          if (qty.p3 === 10) delete qty.p3
+          for (const mockId of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']) {
+            delete qty[mockId]
+          }
           state.qtyByProduct = qty
         }
         return state

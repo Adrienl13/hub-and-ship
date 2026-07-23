@@ -9,6 +9,7 @@ import {
 import { PRODUCTS } from '@/lib/products'
 
 const chair = PRODUCTS.find((product) => product.category === 'chair')!
+const armchair = PRODUCTS.find((product) => product.category === 'armchair')!
 const table = PRODUCTS.find((product) => product.category === 'table')!
 
 describe('quantity rules', () => {
@@ -39,7 +40,27 @@ describe('quantity rules', () => {
     expect(getPreviousOrderQuantity(50, rule)).toBe(0)
   })
 
-  it('keeps non-chair products editable by unit', () => {
+  it('applies the same seat rule to armchairs — start at the product MOQ, then +10', () => {
+    const rule = getQuantityRule(armchair)
+
+    expect(rule.minimum).toBe(armchair.moqUnits)
+    expect(rule.step).toBe(10)
+    expect(sanitizeOrderQuantity(1, rule)).toBe(armchair.moqUnits)
+    expect(getNextOrderQuantity(armchair.moqUnits, rule)).toBe(
+      armchair.moqUnits + 10,
+    )
+    expect(getPreviousOrderQuantity(armchair.moqUnits, rule)).toBe(0)
+  })
+
+  it('derives the chair minimum from the product MOQ, not a hardcoded 50', () => {
+    const rule = getQuantityRule({ ...chair, moqUnits: 30 })
+
+    expect(rule.minimum).toBe(30)
+    expect(sanitizeOrderQuantity(1, rule)).toBe(30)
+    expect(sanitizeOrderQuantity(31, rule)).toBe(40)
+  })
+
+  it('keeps non-seat products editable by unit', () => {
     const rule = getQuantityRule(table)
 
     expect(sanitizeOrderQuantity(1, rule)).toBe(1)

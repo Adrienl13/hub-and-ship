@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { Heart, Info } from 'lucide-react'
+import { Check, Heart, Info } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
@@ -167,6 +167,17 @@ function ProductCardComponent({
             rule={quantityRule}
             showRule={false}
           />
+          {/* Confirmation visible : la quantité est déjà comptée dans la
+              commande — sans cet état, l'acheteur doute et recommence. */}
+          <div
+            className={`mt-1.5 flex items-center gap-1 text-[11px] font-semibold ${
+              qty > 0 ? 'text-[color:var(--forest)]' : 'invisible'
+            }`}
+            aria-hidden={qty === 0}
+          >
+            <Check className="h-3 w-3" strokeWidth={3} />
+            Dans votre commande — total mis à jour
+          </div>
         </div>
       </div>
     </article>

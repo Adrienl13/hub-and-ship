@@ -5,8 +5,11 @@ import {
   Minimize2,
   FileText,
   Lock,
+  Minus,
+  Plus,
   ShieldCheck,
   RefreshCcw,
+  Trash2,
   Truck,
   ArrowRight,
 } from 'lucide-react'
@@ -29,6 +32,11 @@ import {
 } from '@/lib/container/pricing'
 import { packContainerPackages } from '@/lib/container/packing'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
+import {
+  getNextOrderQuantity,
+  getPreviousOrderQuantity,
+  getQuantityRule,
+} from '@/lib/quantity'
 import { useCartStore } from '@/stores/cart.store'
 import type { ContainerType } from '@/lib/supabase/types'
 
@@ -145,6 +153,9 @@ export function OrderSidebar({
   const setPreferredContainerType = useCartStore(
     (state) => state.setPreferredContainerType,
   )
+  // Chaque ligne du récap est directement modifiable (pas métier) ou
+  // supprimable — l'acheteur corrige sa commande sans rechercher la carte.
+  const setQty = useCartStore((state) => state.setQty)
   const activeContainerType: ContainerType =
     preferredContainerType ?? container.containerType ?? '20_hc'
   const isLargeFormat =
@@ -367,43 +378,86 @@ export function OrderSidebar({
         {hasItems ? (
           <ul className="divide-[color:var(--sand-deep)]/60 divide-y">
             <AnimatePresence initial={false}>
-              {items.map((item) => (
-                <motion.li
-                  key={`${item.product.id}:${item.variant.id}`}
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 8 }}
-                  transition={{ duration: 0.25 }}
-                  className="flex items-center justify-between gap-2 px-4 py-2 text-xs"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    {item.variant.imageUrl ? (
-                      <img
-                        src={item.variant.imageUrl}
-                        alt=""
-                        loading="lazy"
-                        className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm object-cover ring-1"
-                      />
-                    ) : (
-                      <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
-                    )}
-                    <span className="truncate">
-                      <span className="font-medium tabular-nums">
-                        {item.quantity}×{' '}
+              {items.map((item) => {
+                const rule = getQuantityRule(item.product)
+                return (
+                  <motion.li
+                    key={`${item.product.id}:${item.variant.id}`}
+                    layout
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 8 }}
+                    transition={{ duration: 0.25 }}
+                    className="px-4 py-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {item.variant.imageUrl ? (
+                          <img
+                            src={item.variant.imageUrl}
+                            alt=""
+                            loading="lazy"
+                            className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm object-cover ring-1"
+                          />
+                        ) : (
+                          <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
+                        )}
+                        <span className="truncate">
+                          {item.product.name}
+                          <span className="text-muted-foreground">
+                            {' '}
+                            · {item.variant.name}
+                          </span>
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-medium tabular-nums">
+                        {formatEUR(item.product.basePriceHt * item.quantity)}
                       </span>
-                      {item.product.name}
-                      <span className="text-muted-foreground">
-                        {' '}
-                        · {item.variant.name}
-                      </span>
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-medium tabular-nums">
-                    {formatEUR(item.product.basePriceHt * item.quantity)}
-                  </span>
-                </motion.li>
-              ))}
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2 pl-7">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          aria-label={`Réduire la quantité de ${item.product.name}`}
+                          onClick={() =>
+                            setQty(
+                              item.product.id,
+                              getPreviousOrderQuantity(item.quantity, rule),
+                            )
+                          }
+                          className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="min-w-[36px] text-center font-semibold tabular-nums">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Augmenter la quantité de ${item.product.name}`}
+                          onClick={() =>
+                            setQty(
+                              item.product.id,
+                              getNextOrderQuantity(item.quantity, rule),
+                            )
+                          }
+                          className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`Retirer ${item.product.name} de la commande`}
+                        onClick={() => setQty(item.product.id, 0)}
+                        className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] text-muted-foreground transition-colors hover:border-[color:var(--destructive)]/50 hover:text-[color:var(--destructive)]"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </motion.li>
+                )
+              })}
             </AnimatePresence>
           </ul>
         ) : (

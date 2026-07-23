@@ -13,11 +13,14 @@ export const DEFAULT_QUANTITY_RULE: QuantityRule = {
 }
 
 export function getQuantityRule(product: Product): QuantityRule {
-  if (product.category === 'chair') {
+  // Assises (chaises ET fauteuils) : la commande démarre au minimum de série
+  // du produit, puis progresse par packs de 10 — la même logique s'applique
+  // à toutes les cartes (règle métier, demande client 07/2026).
+  if (product.category === 'chair' || product.category === 'armchair') {
     return {
-      minimum: 50,
+      minimum: product.moqUnits,
       step: 10,
-      label: 'Min. 50 puis +10',
+      label: `Min. ${product.moqUnits} puis +10`,
     }
   }
 
