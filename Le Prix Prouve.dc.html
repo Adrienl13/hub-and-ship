@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  body { margin:0; background:#F4EFE7; font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; color:#1A1815; }
+  a { color:#D97A34; text-decoration:none; }
+  a:hover { color:#b9601f; }
+  h1,h2,h3 { text-wrap:balance; }
+  @keyframes growup { from { transform:scaleY(0); } to { transform:scaleY(1); } }
+  @media (max-width:1024px){
+    h1{font-size:44px !important}
+    h2{font-size:33px !important}
+    .hero-grid{grid-template-columns:1fr !important}
+    .g5{grid-template-columns:1fr !important}
+    .g4t{grid-template-columns:repeat(2,1fr) !important}
+    .g3{grid-template-columns:1fr !important}
+    .sim-grid{grid-template-columns:1fr !important}
+  }
+  @media (max-width:640px){
+    h1{font-size:34px !important}
+    h2{font-size:26px !important}
+    .wrap{padding-left:18px !important;padding-right:18px !important}
+    .nav-inner{padding:14px 18px !important}
+    .nav-l{display:none}
+    .g4t{grid-template-columns:1fr !important}
+    .chart-box{padding:24px 16px !important}
+    .founder{flex-direction:column !important}
+  }
+</style>
+</helmet>
+
+<div style="width:100%;overflow:hidden;">
+
+  <!-- NAV -->
+  <div style="position:sticky;top:0;z-index:50;background:rgba(244,239,231,.86);backdrop-filter:blur(12px);border-bottom:1px solid #e4dccd;">
+    <div class="nav-inner" style="max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div style="width:34px;height:34px;border-radius:9px;background:#1A1815;display:flex;align-items:center;justify-content:center;color:#F4EFE7;font-weight:800;font-size:19px;">C</div>
+        <span style="color:#1A1815;font-weight:700;font-size:18px;letter-spacing:-.01em;">Container Club</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:26px;">
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Catalogue</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Stock</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Partenaires</span>
+        <span class="nav-l" style="color:#1A1815;font-size:14.5px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;">Le prix prouvé</span>
+        <span style="background:#1A1815;color:#F4EFE7;font-size:14.5px;font-weight:700;padding:9px 18px;border-radius:9px;">Réserver →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO sombre : promesse + graphique de prix -->
+  <section style="background:#332E27;position:relative;">
+    <div style="position:absolute;inset:0;">
+      <image-slot id="prix-hero-bg" shape="rect" fit="cover" placeholder="Photo — container ou terrasse pro équipée (fond du hero)"></image-slot>
+      <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(43,38,31,.96) 0%,rgba(43,38,31,.9) 45%,rgba(43,38,31,.78) 100%);"></div>
+    </div>
+    <div class="wrap" style="max-width:1240px;margin:0 auto;padding:80px 40px 88px;position:relative;z-index:1;">
+      <div class="hero-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+        <div style="display:flex;flex-direction:column;gap:24px;">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E8963F;">Le prix prouvé</div>
+          <h1 style="margin:0;color:#F9F6F0;font-size:56px;line-height:1.02;font-weight:800;letter-spacing:-.025em;">On ne vous demande pas de nous croire. <span style="color:#E8963F;">On vous montre la méthode.</span></h1>
+          <p style="margin:0;color:rgba(244,239,231,.78);font-size:18px;line-height:1.55;max-width:480px;">Un meuble CHR vendu en showroom passe par 4 à 5 intermédiaires qui multiplient le prix usine par 2,5 à 3. Nous achetons en direct, mutualisons le container entre pros et appliquons <strong style="color:#F9F6F0;">une seule marge</strong>.</p>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <span style="background:#D97A34;color:#fff;font-size:16px;font-weight:700;padding:15px 26px;border-radius:11px;">Vérifier au catalogue →</span>
+            <span style="background:rgba(244,239,231,.1);border:1px solid rgba(244,239,231,.28);color:#F4EFE7;font-size:16px;font-weight:600;padding:15px 26px;border-radius:11px;">Rapports SGS</span>
+          </div>
+        </div>
+
+        <!-- Graphique : mêmes 42 € usine, deux circuits -->
+        <div class="chart-box" style="background:rgba(244,239,231,.06);border:1px solid rgba(244,239,231,.14);border-radius:20px;padding:36px 40px 28px;">
+          <div style="color:rgba(244,239,231,.6);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Même chaise, prix usine 42 € — chiffres illustratifs</div>
+          <div style="color:rgba(244,239,231,.45);font-size:12.5px;margin-bottom:20px;">Survolez ou touchez chaque segment pour voir ce qu'il contient.</div>
+          <div style="display:flex;gap:48px;align-items:flex-end;justify-content:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+              <div style="color:#F9F6F0;font-size:30px;font-weight:900;">119 €<span style="color:rgba(244,239,231,.5);font-size:14px;font-weight:600;"> HT</span></div>
+              <div style="display:flex;flex-direction:column-reverse;width:110px;border-radius:10px;overflow:hidden;transform-origin:bottom;animation:growup .9s cubic-bezier(.2,.7,.2,1) both;">
+                <div onMouseEnter="{{ sg0 }}" onClick="{{ sg0 }}" style="height:120px;background:#5f584d;display:flex;align-items:center;justify-content:center;color:rgba(244,239,231,.85);font-size:11.5px;font-weight:700;cursor:pointer;outline:{{ so0 }};outline-offset:-2px;">Usine 42 €</div>
+                <div onMouseEnter="{{ sg1 }}" onClick="{{ sg1 }}" style="height:51px;background:#77502f;display:flex;align-items:center;justify-content:center;color:rgba(244,239,231,.85);font-size:11px;font-weight:600;cursor:pointer;outline:{{ so1 }};outline-offset:-2px;">Importateur</div>
+                <div onMouseEnter="{{ sg2 }}" onClick="{{ sg2 }}" style="height:57px;background:#8f5c2f;display:flex;align-items:center;justify-content:center;color:rgba(244,239,231,.85);font-size:11px;font-weight:600;cursor:pointer;outline:{{ so2 }};outline-offset:-2px;">Grossiste</div>
+                <div onMouseEnter="{{ sg3 }}" onClick="{{ sg3 }}" style="height:54px;background:#a86730;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;cursor:pointer;outline:{{ so3 }};outline-offset:-2px;">Distributeur</div>
+                <div onMouseEnter="{{ sg4 }}" onClick="{{ sg4 }}" style="height:57px;background:#c47332;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;cursor:pointer;outline:{{ so4 }};outline-offset:-2px;">Showroom</div>
+              </div>
+              <div style="color:rgba(244,239,231,.6);font-size:13px;font-weight:600;">Circuit showroom</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+              <div style="color:#8FC96F;font-size:30px;font-weight:900;">78 €<span style="color:rgba(244,239,231,.5);font-size:14px;font-weight:600;"> HT</span></div>
+              <div style="display:flex;flex-direction:column-reverse;width:110px;border-radius:10px;overflow:hidden;transform-origin:bottom;animation:growup .9s cubic-bezier(.2,.7,.2,1) .25s both;">
+                <div onMouseEnter="{{ sg5 }}" onClick="{{ sg5 }}" style="height:120px;background:#5f584d;display:flex;align-items:center;justify-content:center;color:rgba(244,239,231,.85);font-size:11.5px;font-weight:700;cursor:pointer;outline:{{ so5 }};outline-offset:-2px;">Usine 42 €</div>
+                <div onMouseEnter="{{ sg6 }}" onClick="{{ sg6 }}" style="height:26px;background:#3e6e50;display:flex;align-items:center;justify-content:center;color:rgba(244,239,231,.9);font-size:10.5px;font-weight:600;cursor:pointer;outline:{{ so6 }};outline-offset:-2px;">Fret partagé</div>
+                <div onMouseEnter="{{ sg7 }}" onClick="{{ sg7 }}" style="height:29px;background:#4d8a5f;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:600;cursor:pointer;outline:{{ so7 }};outline-offset:-2px;">Douane + SGS</div>
+                <div onMouseEnter="{{ sg8 }}" onClick="{{ sg8 }}" style="height:49px;background:#D97A34;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;cursor:pointer;outline:{{ so8 }};outline-offset:-2px;">1 marge</div>
+              </div>
+              <div style="color:#F9F6F0;font-size:13px;font-weight:700;">Container Club</div>
+            </div>
+          </div>
+          <div style="margin-top:18px;background:rgba(244,239,231,.08);border:1px solid rgba(244,239,231,.12);border-radius:12px;padding:14px 18px;min-height:58px;display:flex;flex-direction:column;gap:4px;justify-content:center;">
+            <div style="color:#E8963F;font-size:13px;font-weight:800;">{{ segTitle }}</div>
+            <div style="color:rgba(244,239,231,.75);font-size:13px;line-height:1.45;">{{ segText }}</div>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(244,239,231,.12);display:flex;justify-content:space-between;align-items:center;gap:16px;">
+            <a href="#" style="color:#E8963F;font-size:13.5px;font-weight:700;border-bottom:2px solid rgba(232,150,63,.4);padding-bottom:2px;">Vérifier sur une vraie fiche produit →</a>
+            <span style="background:rgba(143,201,111,.14);border:1px solid rgba(143,201,111,.35);color:#8FC96F;font-size:15px;font-weight:800;padding:7px 14px;border-radius:100px;white-space:nowrap;">−34 %</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOMMAIRE ancres -->
+  <div style="position:sticky;top:70px;z-index:40;background:rgba(244,239,231,.9);backdrop-filter:blur(10px);border-bottom:1px solid #e4dccd;">
+    <div style="max-width:1240px;margin:0 auto;padding:10px 40px;display:flex;gap:8px;overflow-x:auto;">
+      <a href="#methode" style="color:#4a443c;font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid #d8cfbf;background:#fff;white-space:nowrap;">La méthode</a>
+      <a href="#remises" style="color:#4a443c;font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid #d8cfbf;background:#fff;white-space:nowrap;">Remises & paiement</a>
+      <a href="#trajet" style="color:#4a443c;font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid #d8cfbf;background:#fff;white-space:nowrap;">Le trajet</a>
+      <a href="#preuves" style="color:#4a443c;font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid #d8cfbf;background:#fff;white-space:nowrap;">Les preuves</a>
+      <a href="#faq" style="color:#4a443c;font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;border:1px solid #d8cfbf;background:#fff;white-space:nowrap;">FAQ</a>
+    </div>
+  </div>
+
+  <!-- D'OÙ VIENT LE PRIX — 5 étapes -->
+  <section id="methode" class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;scroll-margin-top:130px;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">La méthode</div>
+    <h2 style="margin:0 0 40px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:720px;">D'où vient le prix — les 5 briques, rien d'autre.</h2>
+    <div class="g5" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;">01</div>
+        <div style="font-size:17px;font-weight:800;">Achat direct usine</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Prix FOB négocié sans agent ni bureau d'achat. Les mêmes usines que les grandes marques européennes.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;">02</div>
+        <div style="font-size:17px;font-weight:800;">Fret mutualisé</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Le container 40' HC est réparti au prorata du volume. Plus il se remplit, plus la part par chaise baisse.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;">03</div>
+        <div style="font-size:17px;font-weight:800;">Douane & conformité</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Dédouanement, taxes et normes UE (feu, fiches techniques) traités par l'importateur officiel.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;">04</div>
+        <div style="font-size:17px;font-weight:800;">Contrôle SGS</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Inspection indépendante avant départ, rapport consultable. Inclus dans le prix, jamais en option.</p>
+      </div>
+      <div style="background:#332E27;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#E8963F;">05</div>
+        <div style="font-size:17px;font-weight:800;color:#F9F6F0;">Une seule marge</div>
+        <p style="margin:0;color:rgba(244,239,231,.72);font-size:13.5px;line-height:1.45;">Sourcing, logistique, SAV France et garantie 2 ans. Pas de grossiste, pas de showroom à financer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMULATEUR remise volume -->
+  <section id="remises" class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;scroll-margin-top:130px;">
+    <div class="sim-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:20px;padding:40px;display:flex;flex-direction:column;gap:22px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:12px;">Les règles publiques</div>
+          <h2 style="margin:0;font-size:34px;line-height:1.06;font-weight:800;letter-spacing:-.02em;">Les remises ne se négocient pas. Elles se déclenchent.</h2>
+        </div>
+        <p style="margin:0;color:#6b6357;font-size:16px;line-height:1.55;">Mêmes paliers pour tous les professionnels, appliqués automatiquement au panier — sans code, sans négociation. Testez avec la chaise exemple à 78 € HT :</p>
+        <div style="display:flex;gap:10px;">
+          <button onClick="{{ q0 }}" style="flex:1;padding:13px;border-radius:11px;border:{{ qb0 }};background:{{ qbg0 }};color:{{ qc0 }};font-size:15px;font-weight:700;cursor:pointer;font-family:'Archivo';">50 pièces</button>
+          <button onClick="{{ q1 }}" style="flex:1;padding:13px;border-radius:11px;border:{{ qb1 }};background:{{ qbg1 }};color:{{ qc1 }};font-size:15px;font-weight:700;cursor:pointer;font-family:'Archivo';">100 pièces</button>
+          <button onClick="{{ q2 }}" style="flex:1;padding:13px;border-radius:11px;border:{{ qb2 }};background:{{ qbg2 }};color:{{ qc2 }};font-size:15px;font-weight:700;cursor:pointer;font-family:'Archivo';">150 pièces</button>
+        </div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;background:#faf5ec;border:1px solid #efe7d8;border-radius:14px;padding:22px 24px;">
+          <div>
+            <div style="color:#8a8073;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Prix unitaire</div>
+            <div style="font-size:40px;font-weight:900;letter-spacing:-.02em;margin-top:2px;">{{ unit }} €<span style="font-size:16px;font-weight:600;color:#8a8073;"> HT</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="display:inline-block;background:{{ remBg }};color:{{ remC }};font-size:14px;font-weight:800;padding:6px 13px;border-radius:100px;">{{ remLabel }}</div>
+            <div style="color:#6b6357;font-size:13.5px;margin-top:8px;">Total commande : <strong style="color:#1A1815;">{{ total }} € HT</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#332E27;border-radius:20px;padding:40px;display:flex;flex-direction:column;gap:0;">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E8963F;margin-bottom:22px;">Le paiement suit le container</div>
+        <div style="display:flex;flex-direction:column;gap:0;flex:1;justify-content:center;">
+          <div style="display:flex;gap:18px;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(244,239,231,.12);">
+            <div style="color:#E8963F;font-size:26px;font-weight:900;min-width:76px;">3 %</div>
+            <div><div style="color:#F9F6F0;font-size:16px;font-weight:700;">À la réservation</div><div style="color:rgba(244,239,231,.65);font-size:13.5px;margin-top:3px;">Min 150 €, max 500 € — déduits du total.</div></div>
+          </div>
+          <div style="display:flex;gap:18px;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(244,239,231,.12);">
+            <div style="color:#E8963F;font-size:26px;font-weight:900;min-width:76px;">27 %</div>
+            <div><div style="color:#F9F6F0;font-size:16px;font-weight:700;">Au seuil de 80 %</div><div style="color:rgba(244,239,231,.65);font-size:13.5px;margin-top:3px;">La production démarre — vous êtes prévenu 48 h avant.</div></div>
+          </div>
+          <div style="display:flex;gap:18px;align-items:flex-start;padding:16px 0;">
+            <div style="color:#E8963F;font-size:26px;font-weight:900;min-width:76px;">70 %</div>
+            <div><div style="color:#F9F6F0;font-size:16px;font-weight:700;">Avant expédition</div><div style="color:rgba(244,239,231,.65);font-size:13.5px;margin-top:3px;">Après validation du contrôle SGS en usine.</div></div>
+          </div>
+        </div>
+        <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(244,239,231,.12);color:rgba(244,239,231,.65);font-size:13.5px;line-height:1.5;">Vous ne payez jamais la totalité d'un mobilier qui n'a pas encore de date de départ. Enlèvement au port gratuit · Garantie 2 ans + SAV France.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAJET DU CONTAINER : frise photo -->
+  <section id="trajet" class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;scroll-margin-top:130px;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">La preuve en images</div>
+    <h2 style="margin:0 0 12px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:720px;">Le trajet de votre container, documenté à chaque étape.</h2>
+    <p style="margin:0 0 40px;color:#6b6357;font-size:17px;max-width:640px;">Des photos réelles sont publiées à chaque étape du container en cours — pas des visuels de banque d'images.</p>
+    <div class="g4t" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="height:170px;background:#e4dccd;position:relative;"><image-slot id="trajet-1" shape="rect" fit="cover" placeholder="Photo — inspection SGS en usine"></image-slot></div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#D97A34;font-size:12px;font-weight:800;">1/4</div>
+          <div style="font-size:17px;font-weight:800;">Usine & contrôle SGS</div>
+          <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Inspection indépendante avant chargement, rapport à l'appui.</p>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="height:170px;background:#e4dccd;position:relative;"><image-slot id="trajet-2" shape="rect" fit="cover" placeholder="Photo — empotage du container"></image-slot></div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#D97A34;font-size:12px;font-weight:800;">2/4</div>
+          <div style="font-size:17px;font-weight:800;">Chargement</div>
+          <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Empotage optimisé, scellé douanier, photos du manifeste.</p>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="height:170px;background:#e4dccd;position:relative;"><image-slot id="trajet-3" shape="rect" fit="cover" placeholder="Photo — arrivée au port"></image-slot></div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#D97A34;font-size:12px;font-weight:800;">3/4</div>
+          <div style="font-size:17px;font-weight:800;">Arrivée au port</div>
+          <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Dédouanement par nos soins — importateur officiel enregistré.</p>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="height:170px;background:#e4dccd;position:relative;"><image-slot id="trajet-4" shape="rect" fit="cover" placeholder="Photo — terrasse équipée"></image-slot></div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="color:#D97A34;font-size:12px;font-weight:800;">4/4</div>
+          <div style="font-size:17px;font-weight:800;">Votre terrasse</div>
+          <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Enlèvement port ou livraison — le mobilier entre en service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREUVES -->
+  <section id="preuves" class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;scroll-margin-top:130px;">
+    <h2 style="margin:0 0 36px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:640px;">Pourquoi on peut le prouver.</h2>
+    <div class="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:30px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:38px;font-weight:900;letter-spacing:-.02em;color:#D97A34;">100 %</div>
+        <h3 style="margin:0;font-size:21px;font-weight:800;">des containers contrôlés SGS</h3>
+        <p style="margin:0;color:#6b6357;font-size:15px;line-height:1.5;">Contrôle indépendant avant chaque départ, rapports consultables.</p>
+        <span style="margin-top:auto;color:#1A1815;font-size:14.5px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;width:max-content;">Consulter →</span>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:30px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:38px;font-weight:900;letter-spacing:-.02em;color:#D97A34;">{{ avgRating }}</div>
+        <h3 style="margin:0;font-size:21px;font-weight:800;">d'avis d'achat vérifié</h3>
+        <p style="margin:0;color:#6b6357;font-size:15px;line-height:1.5;">Seuls les professionnels ayant commandé peuvent noter.</p>
+        <span style="margin-top:auto;color:#1A1815;font-size:14.5px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;width:max-content;">Lire les avis →</span>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:30px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:38px;font-weight:900;letter-spacing:-.02em;color:#D97A34;">{{ containersCount }}</div>
+        <h3 style="margin:0;font-size:21px;font-weight:800;">containers livrés</h3>
+        <p style="margin:0;color:#6b6357;font-size:15px;line-height:1.5;">L'historique réel des commandes groupées déjà servies.</p>
+        <span style="margin-top:auto;color:#1A1815;font-size:14.5px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;width:max-content;">Voir l'historique →</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ prix -->
+  <section id="faq" class="wrap" style="max-width:900px;margin:0 auto;padding:104px 40px 0;scroll-margin-top:130px;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Questions fréquentes</div>
+    <h2 style="margin:0 0 36px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;">Sur nos prix, précisément.</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ fT0 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;">Pourquoi le mobilier CHR coûte-t-il 2 à 3 fois plus cher en showroom ?</span>
+          <span style="color:#D97A34;font-size:22px;line-height:1;">{{ fS0 }}</span>
+        </div>
+        <div style="display:{{ fD0 }};padding:0 24px 22px;">
+          <p style="margin:0 0 10px;color:#1A1815;font-size:15px;line-height:1.55;font-weight:700;">Parce que chaque intermédiaire ajoute sa marge : le prix usine est multiplié par 2,5 à 3 avant d'arriver en showroom.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;color:#6b6357;font-size:15px;line-height:1.5;">
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span>Circuit classique : usine → importateur → grossiste → distributeur → showroom. 4 marges empilées, plus le coût des stocks et des salles d'exposition.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span>Notre circuit : usine → vous. Une seule marge, qui couvre fret, douane, contrôle SGS et SAV.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span>Vérifiable : chaque fiche produit affiche le prix public conseillé en référence, à côté du nôtre.</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ fT1 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;">Quelles remises de volume sont appliquées ?</span>
+          <span style="color:#D97A34;font-size:22px;line-height:1;">{{ fS1 }}</span>
+        </div>
+        <div style="display:{{ fD1 }};padding:0 24px 22px;">
+          <p style="margin:0 0 10px;color:#1A1815;font-size:15px;line-height:1.55;font-weight:700;">Deux paliers publics, appliqués automatiquement au panier — sans négociation ni code promo.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;color:#6b6357;font-size:15px;line-height:1.5;">
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">−6 %</strong> dès 100 pièces cumulées dans la commande (toutes références confondues).</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">−10 %</strong> dès 150 pièces cumulées.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span>Mêmes conditions pour tous les professionnels — testez avec le simulateur ci-dessus.</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ fT2 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;">Comment se passe le paiement d'une commande par container ?</span>
+          <span style="color:#D97A34;font-size:22px;line-height:1;">{{ fS2 }}</span>
+        </div>
+        <div style="display:{{ fD2 }};padding:0 24px 22px;">
+          <p style="margin:0 0 10px;color:#1A1815;font-size:15px;line-height:1.55;font-weight:700;">En 3 temps, calés sur la vie du container — vous ne payez jamais tout d'avance.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;color:#6b6357;font-size:15px;line-height:1.5;">
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">1.</span><span><strong style="color:#1A1815;">3 % à la réservation</strong> (min 150 €, plafonné à 500 €) — déduits du total, votre place est bloquée.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">2.</span><span><strong style="color:#1A1815;">27 % au seuil de 80 %</strong> de remplissage — la production démarre, vous êtes prévenu 48 h avant.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">3.</span><span><strong style="color:#1A1815;">70 % avant expédition</strong> — uniquement après validation du contrôle SGS en usine.</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ fT4 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;">Pourquoi ne pas acheter directement à l'usine moi-même ?</span>
+          <span style="color:#D97A34;font-size:22px;line-height:1;">{{ fS4 }}</span>
+        </div>
+        <div style="display:{{ fD4 }};padding:0 24px 22px;">
+          <p style="margin:0 0 10px;color:#1A1815;font-size:15px;line-height:1.55;font-weight:700;">Vous pouvez — c'est notre métier. Mais en direct, l'usine impose des conditions difficiles à tenir seul :</p>
+          <div style="display:flex;flex-direction:column;gap:6px;color:#6b6357;font-size:15px;line-height:1.5;">
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">MOQ de plusieurs centaines de pièces</strong> par référence, payées d'avance à l'international.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">Statut d'importateur</strong> obligatoire : EORI, TVA à l'import, conformité UE, dédouanement, fret.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">Aucun recours pratique</strong> en cas de défaut constaté à l'arrivée, sans contrôle qualité sur place.</span></div>
+          </div>
+          <p style="margin:10px 0 0;color:#6b6357;font-size:15px;line-height:1.55;">Notre marge unique couvre exactement ce travail : accéder aux conditions usine dès quelques dizaines de pièces, avec contrôle SGS, garantie 2 ans et SAV en France.</p>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ fT3 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;">Le prix affiché inclut-il le transport et la douane ?</span>
+          <span style="color:#D97A34;font-size:22px;line-height:1;">{{ fS3 }}</span>
+        </div>
+        <div style="display:{{ fD3 }};padding:0 24px 22px;">
+          <p style="margin:0 0 10px;color:#1A1815;font-size:15px;line-height:1.55;font-weight:700;">Oui, jusqu'au port d'arrivée (Marseille-Fos ou Le Havre) : le prix est « rendu port », sans frais caché.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;color:#6b6357;font-size:15px;line-height:1.5;">
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">Inclus :</strong> achat usine, fret maritime mutualisé, dédouanement, taxes, conformité UE, contrôle SGS.</span></div>
+            <div style="display:flex;gap:10px;"><span style="color:#D97A34;font-weight:800;">·</span><span><strong style="color:#1A1815;">Ensuite, au choix :</strong> enlèvement libre gratuit au port, votre transporteur, ou mise en relation avec nos transporteurs partenaires à tarif négocié.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FONDATEUR + CTA -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 104px;">
+    <div class="founder" style="background:#332E27;border-radius:22px;padding:56px;display:flex;align-items:center;gap:48px;">
+      <div style="width:88px;height:88px;min-width:88px;border-radius:50%;background:#D97A34;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:800;">AL</div>
+      <div style="flex:1;">
+        <p style="margin:0;color:#F9F6F0;font-size:23px;line-height:1.4;font-weight:600;">« Cette page décrit exactement comment nos prix sont construits. Si un point reste flou, écrivez-moi : je réponds personnellement. »</p>
+        <div style="margin-top:16px;color:rgba(244,239,231,.65);font-size:15px;"><strong style="color:#F9F6F0;">Adrien Laniez</strong> · Fondateur & gérant, Pros Import EURL</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <span style="background:#D97A34;color:#fff;font-size:15.5px;font-weight:700;padding:15px 26px;border-radius:11px;text-align:center;white-space:nowrap;">Voir les prix au catalogue →</span>
+        <span style="background:rgba(244,239,231,.1);border:1px solid rgba(244,239,231,.28);color:#F4EFE7;font-size:15.5px;font-weight:600;padding:15px 26px;border-radius:11px;text-align:center;white-space:nowrap;">Stock disponible sous 24 h</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER compact -->
+  <footer style="background:#332E27;color:#F4EFE7;">
+    <div style="max-width:1240px;margin:0 auto;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div style="width:30px;height:30px;border-radius:8px;background:#D97A34;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;">C</div>
+        <span style="font-weight:700;font-size:16px;">Container Club</span>
+      </div>
+      <span style="color:rgba(244,239,231,.5);font-size:13px;">© 2026 Pros Import EURL · RCS Paris 988 269 981 · TVA FR08988269981</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { qty: 0, faq: 0, seg: 8 };
+  segs = [
+    ['Prix usine (FOB)', 'Ce que l\u2019usine facture réellement, chargé au port de départ. Identique dans les deux circuits.'],
+    ['Marge importateur', 'L\u2019importateur classique achète en volume, stocke et revend aux grossistes avec sa marge.'],
+    ['Marge grossiste', 'Le grossiste distribue aux revendeurs régionaux — deuxième empilement de marge.'],
+    ['Marge distributeur', 'Le distributeur régional livre les showrooms — troisième empilement.'],
+    ['Marge showroom', 'Salle d\u2019exposition, commerciaux, stock tampon : la marge finale la plus élevée du circuit.'],
+    ['Prix usine (FOB)', 'Le même prix usine — nous achetons aux mêmes usines, sans agent ni bureau d\u2019achat.'],
+    ['Fret partagé', 'Votre part du container 40\u2019 HC, au prorata du volume. Plus il se remplit, moins vous payez.'],
+    ['Douane + contrôle SGS', 'Dédouanement, taxes, conformité UE et inspection SGS indépendante — inclus, jamais en option.'],
+    ['Notre marge unique', 'Sourcing, logistique, SAV France, garantie 2 ans. La seule marge du circuit — c\u2019est ça, le prix prouvé.'],
+  ];
+  base = 78;
+  tiers = [
+    { label: '50 pièces', n: 50, rem: 0 },
+    { label: '100 pièces', n: 100, rem: 0.06 },
+    { label: '150 pièces', n: 150, rem: 0.10 },
+  ];
+  renderVals() {
+    const v = {};
+    v.segTitle = this.segs[this.state.seg][0];
+    v.segText = this.segs[this.state.seg][1];
+    for (let k = 0; k < 9; k++) {
+      v['sg' + k] = () => this.setState({ seg: k });
+      v['so' + k] = this.state.seg === k ? '2px solid #F9F6F0' : 'none';
+    }
+    v.avgRating = '4,8/5';
+    v.containersCount = '14';
+    const t = this.tiers[this.state.qty];
+    const unit = this.base * (1 - t.rem);
+    v.unit = unit % 1 ? unit.toFixed(2).replace('.', ',') : String(unit);
+    v.total = Math.round(unit * t.n).toLocaleString('fr-FR');
+    v.remLabel = t.rem ? '−' + Math.round(t.rem * 100) + ' % appliqué' : 'Palier non atteint';
+    v.remBg = t.rem ? 'rgba(63,143,42,.12)' : '#efe7d8';
+    v.remC = t.rem ? '#3f8f2a' : '#8a8073';
+    for (let k = 0; k < 3; k++) {
+      const on = this.state.qty === k;
+      v['q' + k] = () => this.setState({ qty: k });
+      v['qb' + k] = on ? '1px solid #1A1815' : '1px solid #d8cfbf';
+      v['qbg' + k] = on ? '#1A1815' : '#fff';
+      v['qc' + k] = on ? '#F4EFE7' : '#4a443c';
+    }
+    for (let k = 0; k < 5; k++) {
+      const open = this.state.faq === k;
+      v['fD' + k] = open ? 'block' : 'none';
+      v['fS' + k] = open ? '−' : '+';
+      v['fT' + k] = () => this.setState(s => ({ faq: s.faq === k ? -1 : k }));
+    }
+    return v;
+  }
+}
+</script>
+</body>
+</html>
