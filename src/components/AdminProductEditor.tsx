@@ -330,7 +330,25 @@ export function AdminProductEditor({
   const [state, setState] = useState<EditableProduct | null>(
     isCreating ? emptyEditable() : null,
   )
-  const [variants, setVariants] = useState<EditableVariant[]>([])
+  // En création, on démarre avec un design « Standard » pré-rempli : un
+  // produit sans design est invisible au catalogue et impossible à mettre en
+  // stock — l'admin le renomme ou en ajoute d'autres, mais ne peut plus
+  // créer un produit orphelin sans le voir.
+  const [variants, setVariants] = useState<EditableVariant[]>(() =>
+    isCreating
+      ? [
+          {
+            id: buildVariantId('new'),
+            productId: 'new',
+            name: 'Standard',
+            imageUrl: null,
+            galleryUrls: [],
+            sortOrder: 0,
+            _new: true,
+          },
+        ]
+      : [],
+  )
   const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([])
   const [commitments, setCommitments] = useState<AdminSeedCommitment[]>([])
   const [pricingParameters, setPricingParameters] =
@@ -608,6 +626,18 @@ export function AdminProductEditor({
     // (filtered out of variantsPayload) must NOT carry commitments, otherwise
     // the RPC re-inserts a commitment referencing a now-deleted variant_id and
     // the whole save fails on the FK — silently, mid-screen.
+    // Un produit sans design nommé serait désactivé par le garde-fou SQL et
+    // deviendrait introuvable (catalogue ET mise en stock) — on bloque ici
+    // avec un message clair plutôt que de laisser faire silencieusement.
+    if (variantsPayload.length === 0) {
+      const message =
+        'Ajoutez au moins un design avec un nom (ex. « Standard ») : un produit sans design est invisible au catalogue et ne peut pas être mis en stock.'
+      setError(message)
+      toast.error(message)
+      setSaving(false)
+      return
+    }
+
     const savedVariantIds = new Set(variantsPayload.map((v) => v.id))
     const commitmentsPayload = commitments
       .filter((c) => savedVariantIds.has(c.variantId))

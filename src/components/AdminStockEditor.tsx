@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { AlertTriangle, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/useAuth'
 import { logAdminAction } from '@/lib/admin/audit-log'
 import {
+  createDefaultVariant,
   listVariantsForProduct,
+  updateProduct,
   type CatalogueAdminClient,
 } from '@/lib/catalogue-admin/repository'
 import type {
@@ -144,12 +147,19 @@ export function AdminStockEditor({
     [],
   )
   const [variantsLoading, setVariantsLoading] = useState(false)
+  const [creatingVariant, setCreatingVariant] = useState(false)
+  const [activatingProduct, setActivatingProduct] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [productCreatorOpen, setProductCreatorOpen] = useState(false)
 
   const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
+
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === state.product_id) ?? null,
+    [products, state.product_id],
+  )
 
   // Load the variants for the selected product whenever it changes —
   // we can't trust the embedded variants because the catalogue cache
@@ -167,6 +177,14 @@ export function AdminStockEditor({
         if (cancelled) return
         setVariants(list)
         setVariantsLoading(false)
+        // Auto-sélection : un produit n'a souvent qu'un design — le
+        // pré-choisir évite le blocage silencieux de la validation native
+        // (« Please select an item in the list ») sur un champ resté vide.
+        setState((prev) =>
+          prev.variant_id && list.some((v) => v.id === prev.variant_id)
+            ? prev
+            : { ...prev, variant_id: list[0]?.id ?? '' },
+        )
       })
       .catch((err) => {
         if (cancelled) return
@@ -185,10 +203,55 @@ export function AdminStockEditor({
     setState((prev) => ({ ...prev, [key]: value }))
   }
 
+  // Produit sans aucun design (import massif, fiche incomplète) : au lieu
+  // d'un sélecteur vide impossible à valider, on crée le design « Standard »
+  // en un clic et on le sélectionne.
+  async function handleCreateDefaultVariant(): Promise<void> {
+    if (!state.product_id || !config.isConfigured) return
+    setCreatingVariant(true)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      const variant = await createDefaultVariant(client, state.product_id)
+      setVariants([variant])
+      setField('variant_id', variant.id)
+      toast.success('Design « Standard » créé pour ce produit.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(`Création du design impossible : ${message}`)
+      toast.error(`Création du design impossible : ${message}`)
+    }
+    setCreatingVariant(false)
+  }
+
+  // Une ligne de stock sur un produit inactif est invisible sur /stock-24h
+  // (la page publique résout produit + design dans le catalogue actif) —
+  // on le dit et on propose la réactivation immédiate.
+  async function handleActivateProduct(): Promise<void> {
+    if (!state.product_id || !config.isConfigured) return
+    setActivatingProduct(true)
+    setError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      await updateProduct(client, state.product_id, { is_active: true })
+      toast.success('Produit réactivé — visible au catalogue et au stock.')
+      await onProductCreated()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(`Réactivation impossible : ${message}`)
+      toast.error(`Réactivation impossible : ${message}`)
+    }
+    setActivatingProduct(false)
+  }
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     if (!state.product_id || !state.variant_id) {
-      setError('Sélectionnez un produit et un design.')
+      setError(
+        state.product_id && variants.length === 0
+          ? 'Ce produit n’a aucun design — créez le design « Standard » ci-dessus avant d’enregistrer.'
+          : 'Sélectionnez un produit et un design.',
+      )
       return
     }
     if (!state.location.trim()) {
@@ -236,9 +299,16 @@ export function AdminStockEditor({
         target: targetId,
       })
       setSaving(false)
+      toast.success(
+        isCreating ? 'Ligne de stock créée.' : 'Ligne de stock enregistrée.',
+      )
       await onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(message)
+      // Le bandeau d'erreur est en haut d'un long formulaire — un toast rend
+      // l'échec visible même quand l'admin est scrollé plus bas.
+      toast.error(`Échec de l'enregistrement : ${message}`)
       setSaving(false)
     }
   }
@@ -261,7 +331,8 @@ export function AdminStockEditor({
                 setField('product_id', e.target.value)
                 setField('variant_id', '')
               }}
-              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+              aria-label="Produit"
+              className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-sm"
               required
             >
               <option value="">— Sélectionner —</option>
@@ -284,9 +355,12 @@ export function AdminStockEditor({
             <select
               value={state.variant_id}
               onChange={(e) => setField('variant_id', e.target.value)}
-              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+              aria-label="Design"
+              className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-sm"
               required
-              disabled={!state.product_id || variantsLoading}
+              disabled={
+                !state.product_id || variantsLoading || variants.length === 0
+              }
             >
               <option value="">
                 {variantsLoading ? 'Chargement…' : '— Sélectionner —'}
@@ -297,7 +371,57 @@ export function AdminStockEditor({
                 </option>
               ))}
             </select>
+            {/* Cul-de-sac historique : produit sans design → sélecteur vide
+                que la validation native rendait impossible à comprendre.
+                On l'explique et on débloque en un clic. */}
+            {state.product_id &&
+              !variantsLoading &&
+              variants.length === 0 && (
+                <div className="space-y-1.5 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-[11px] text-amber-900">
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Ce produit n&apos;a aucun design. Un design est requis
+                      pour la mise en stock et l&apos;affichage catalogue.
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[11px]"
+                    disabled={creatingVariant}
+                    onClick={() => void handleCreateDefaultVariant()}
+                  >
+                    {creatingVariant
+                      ? 'Création…'
+                      : 'Créer le design « Standard »'}
+                  </Button>
+                </div>
+              )}
           </Field>
+          {selectedProduct && !selectedProduct.isActive && (
+            <div className="space-y-1.5 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-[11px] text-amber-900 md:col-span-2">
+              <div className="flex items-start gap-1.5">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  Ce produit est <strong>inactif</strong> : sa ligne de stock
+                  sera enregistrée mais restera invisible sur /stock-24h tant
+                  que le produit n&apos;est pas réactivé.
+                </span>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                disabled={activatingProduct}
+                onClick={() => void handleActivateProduct()}
+              >
+                {activatingProduct ? 'Réactivation…' : 'Réactiver le produit'}
+              </Button>
+            </div>
+          )}
           {isCreating && (
             <Field label="ID stock (généré si vide)">
               <Input
@@ -350,7 +474,7 @@ export function AdminStockEditor({
               onChange={(e) =>
                 setField('condition', e.target.value as StockCondition)
               }
-              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+              className="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-sm"
             >
               {CONDITION_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -480,7 +604,9 @@ function Field({
   readonly children: React.ReactNode
 }) {
   return (
-    <div className="space-y-1.5">
+    // min-w-0 : sans lui, un <select> au contenu long déborde de sa colonne
+    // de grille et chevauche le champ voisin (formulaire illisible).
+    <div className="min-w-0 space-y-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {children}
     </div>

@@ -565,6 +565,36 @@ export async function listVariantsForProduct(
   return ((data ?? []) as ReadonlyArray<ProductVariantRow>).map(fromVariantRow)
 }
 
+/**
+ * Crée (ou récupère, idempotent) le design par défaut « Standard » d'un
+ * produit. Filet de sécurité pour les produits importés/créés sans design :
+ * sans au moins un design, un produit est invisible au catalogue public et
+ * impossible à mettre en stock — le formulaire stock propose donc cette
+ * création en un clic au lieu de laisser un sélecteur vide.
+ */
+export async function createDefaultVariant(
+  client: CatalogueAdminClient,
+  productId: string,
+): Promise<AdminProductVariant> {
+  const id = `${productId}-standard`
+  const { data, error } = await client
+    .from('product_variants')
+    .upsert(
+      {
+        id,
+        product_id: productId,
+        name: 'Standard',
+        sort_order: 0,
+      } as never,
+      { onConflict: 'id' },
+    )
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return fromVariantRow(data as ProductVariantRow)
+}
+
 export async function upsertProduct(
   client: CatalogueAdminClient,
   payload: Database['public']['Tables']['products']['Insert'],
