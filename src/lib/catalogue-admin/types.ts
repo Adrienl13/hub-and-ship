@@ -79,6 +79,10 @@ export interface AdminPricingParameters {
   readonly fxUsdEur: number
   readonly freightEur40hc: number
   readonly usefulContainerCbm40hc: number
+  /** Fret d'un 20' GP / 40' GP — null tant que l'admin n'a pas saisi sa
+   *  cotation réelle (aucune valeur inventée côté code). */
+  readonly freightEur20gp: number | null
+  readonly freightEur40gp: number | null
   readonly customsRate: number
   readonly importInsuranceRate: number
   readonly fixedImportFeeEur: number
@@ -171,6 +175,8 @@ export function fromPricingParameterRow(
     fxUsdEur: Number(row.fx_usd_eur),
     freightEur40hc: Number(row.freight_eur_40hc),
     usefulContainerCbm40hc: Number(row.useful_container_cbm_40hc),
+    freightEur20gp: row.freight_eur_20gp === null ? null : Number(row.freight_eur_20gp),
+    freightEur40gp: row.freight_eur_40gp === null ? null : Number(row.freight_eur_40gp),
     customsRate: Number(row.customs_rate),
     importInsuranceRate: Number(row.import_insurance_rate),
     fixedImportFeeEur: Number(row.fixed_import_fee_eur),

@@ -60,10 +60,20 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 
 | 18 | `20260716120000_site_media.sql` | **Design v2** : table site_media (photos administrables de l'accueil — slides hero, gammes, bandeau), lecture publique / écriture admin, fichiers dans le bucket existant catalogue-images |
 | 19 | `20260717120000_site_media_prix_slots.sql` | **Prix prouvé v2** : nouveaux emplacements photo (fond hero + frise trajet 1-4) dans site_media |
+| 20 | `20260728120000_container_freight_formats_and_base_floor.sql` | **Audit rentabilité** : fret 20' GP / 40' GP paramétrables (NULL tant que non cotés), RPC paramètres versionné mis à jour, plancher SQL sur le prix public (`base_price_ht` bloqué sous coût rendu × 1,15 quand les coûts réels existent) |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :
 select count(*) from public.site_media;  -- 0 = normal (défauts embarqués)
+
+-- AVANT la migration 20 : vérifier qu'aucun prix public actuel n'est déjà
+-- sous le plancher (sinon corriger d'abord — voir AUDIT_RENTABILITE §5b) :
+select p.id, p.sku, p.base_price_ht,
+       public.product_hard_margin_floor(p.id) as floor_ht
+from products p
+where public.product_hard_margin_floor(p.id) is not null
+  and p.base_price_ht < public.product_hard_margin_floor(p.id);
+-- 0 ligne = OK pour appliquer la 20.
 ```
 
 Procédure : ouvrir chaque fichier depuis `supabase/migrations/`, copier tout,

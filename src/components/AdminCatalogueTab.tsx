@@ -17,6 +17,7 @@ import {
 
 import { AdminPartnerPriceGrid } from '@/components/AdminPartnerPriceGrid'
 import { AdminProductEditor } from '@/components/AdminProductEditor'
+import { AdminContainerProfitSimulator } from '@/components/AdminContainerProfitSimulator'
 import { AdminStockEditor } from '@/components/AdminStockEditor'
 import { Button } from '@/components/ui/button'
 import {
@@ -163,6 +164,15 @@ function PricingParametersPanel({
   readonly onSave: (payload: PricingParameterPayload) => void
 }) {
   const [freight, setFreight] = useState(String(parameters.freightEur40hc))
+  // Fret par format (audit rentabilité) : chaîne vide = non coté (NULL en
+  // base) — le simulateur container demande alors la cotation au lieu
+  // d'inventer un chiffre.
+  const [freight20gp, setFreight20gp] = useState(
+    parameters.freightEur20gp === null ? '' : String(parameters.freightEur20gp),
+  )
+  const [freight40gp, setFreight40gp] = useState(
+    parameters.freightEur40gp === null ? '' : String(parameters.freightEur40gp),
+  )
   const [fx, setFx] = useState(String(parameters.fxUsdEur))
   const [customsPercent, setCustomsPercent] = useState(
     String(parameters.customsRate * 100),
@@ -191,6 +201,16 @@ function PricingParametersPanel({
 
   useEffect(() => {
     setFreight(String(parameters.freightEur40hc))
+    setFreight20gp(
+      parameters.freightEur20gp === null
+        ? ''
+        : String(parameters.freightEur20gp),
+    )
+    setFreight40gp(
+      parameters.freightEur40gp === null
+        ? ''
+        : String(parameters.freightEur40gp),
+    )
     setFx(String(parameters.fxUsdEur))
     setCustomsPercent(String(parameters.customsRate * 100))
     setInsurancePercent(String(parameters.importInsuranceRate * 100))
@@ -221,6 +241,14 @@ function PricingParametersPanel({
     onSave({
       fx_usd_eur: Math.max(0.0001, numberFromInput(fx)),
       freight_eur_40hc: Math.max(0, numberFromInput(freight)),
+      freight_eur_20gp:
+        freight20gp.trim() === ''
+          ? null
+          : Math.max(0, numberFromInput(freight20gp)),
+      freight_eur_40gp:
+        freight40gp.trim() === ''
+          ? null
+          : Math.max(0, numberFromInput(freight40gp)),
       customs_rate: Math.max(0, percentToRate(customsPercent)),
       import_insurance_rate: Math.max(0, percentToRate(insurancePercent)),
       fixed_import_fee_eur: Math.max(0, numberFromInput(fixedFee)),
@@ -261,6 +289,18 @@ function PricingParametersPanel({
           label="Fret 40HC (€)"
           value={freight}
           onChange={setFreight}
+          step="1"
+        />
+        <PricingInput
+          label="Fret 20' GP (€) — vide = non coté"
+          value={freight20gp}
+          onChange={setFreight20gp}
+          step="1"
+        />
+        <PricingInput
+          label="Fret 40' GP (€) — vide = non coté"
+          value={freight40gp}
+          onChange={setFreight40gp}
           step="1"
         />
         <PricingInput label="Taux USD → EUR" value={fx} onChange={setFx} />
@@ -1307,6 +1347,8 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           fx_usd_eur: version.fxUsdEur,
           freight_eur_40hc: version.freightEur40hc,
           useful_container_cbm_40hc: version.usefulContainerCbm40hc,
+          freight_eur_20gp: version.freightEur20gp,
+          freight_eur_40gp: version.freightEur40gp,
           customs_rate: version.customsRate,
           import_insurance_rate: version.importInsuranceRate,
           fixed_import_fee_eur: version.fixedImportFeeEur,
@@ -1517,6 +1559,13 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           parameters={pricingParameters}
           saving={pricingSaving}
           onSave={(payload) => void savePricingParameters(payload)}
+        />
+      )}
+
+      {pricingParameters && (
+        <AdminContainerProfitSimulator
+          products={rows}
+          parameters={pricingParameters}
         />
       )}
 
