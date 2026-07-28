@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { RevealItem, RevealStagger } from '@/components/motion-helpers'
+import { SafeImage } from '@/components/SafeImage'
+import { StockLotGallery } from '@/components/StockLotGallery'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
@@ -272,12 +274,18 @@ function StockCard({
           className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
           aria-label={`Sélectionner ${line.product.name}`}
         >
-          <img
-            src={line.product.mainImageUrl}
+          {/* Priorité à la VRAIE photo du lot (uploadée dans « Mettre au
+              stock »), puis photo du design, puis photo produit — et un
+              placeholder honnête si tout manque ou si le fichier a disparu. */}
+          <SafeImage
+            src={
+              line.imageUrl ||
+              line.variant.imageUrl ||
+              line.product.mainImageUrl
+            }
             alt={line.product.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="h-full w-full"
+            imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         </button>
 
@@ -397,6 +405,9 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
       <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
         {line.product.name}
       </h2>
+      {/* Photos réelles du lot (uploadées par l'admin) — c'est LA réassurance
+          sur l'état du stock physique, promise dans l'admin. */}
+      <StockLotGallery line={line} />
       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
         <PanelFact Icon={Clock3} text={line.readyLabel} />
         <PanelFact

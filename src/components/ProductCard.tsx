@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import { Check, Heart, Info } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
+import { SafeImage } from '@/components/SafeImage'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { DesignSelector } from '@/components/DesignSelector'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
@@ -58,12 +59,11 @@ function ProductCardComponent({
           className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
           aria-label={`Voir détails ${product.name}`}
         >
-          <img
+          <SafeImage
             src={product.mainImageUrl}
             alt={product.name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="h-full w-full"
+            imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         </button>
 
