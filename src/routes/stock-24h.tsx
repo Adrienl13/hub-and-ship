@@ -15,6 +15,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { RevealItem, RevealStagger } from '@/components/motion-helpers'
 import { SafeImage } from '@/components/SafeImage'
+import { StockDetailDialog } from '@/components/StockDetailDialog'
 import { StockLotGallery } from '@/components/StockLotGallery'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,6 +71,8 @@ function Stock24hPage() {
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
   const [selectedLineId, setSelectedLineId] = useState(lines[0]?.id ?? '')
+  // Fiche détaillée ouverte au clic sur un lot (photos complètes + infos).
+  const [detailLineId, setDetailLineId] = useState<string | null>(null)
 
   const filtered = useMemo(
     () =>
@@ -83,6 +86,7 @@ function Stock24hPage() {
   )
   const selectedLine =
     lines.find((line) => line.id === selectedLineId) ?? filtered[0] ?? null
+  const detailLine = lines.find((line) => line.id === detailLineId) ?? null
 
   const selectLine = (id: string) => {
     setSelectedLineId(id)
@@ -229,6 +233,7 @@ function Stock24hPage() {
                       line={line}
                       selected={selectedLine?.id === line.id}
                       onSelect={() => selectLine(line.id)}
+                      onOpenDetails={() => setDetailLineId(line.id)}
                     />
                   </RevealItem>
                 ))}
@@ -244,6 +249,18 @@ function Stock24hPage() {
         </section>
       </main>
 
+      <StockDetailDialog
+        line={detailLine}
+        open={detailLine !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailLineId(null)
+        }}
+        onRequest={(line) => {
+          setDetailLineId(null)
+          selectLine(line.id)
+        }}
+      />
+
       <Footer />
     </div>
   )
@@ -253,10 +270,12 @@ function StockCard({
   line,
   selected,
   onSelect,
+  onOpenDetails,
 }: {
   readonly line: StockLine
   readonly selected: boolean
   readonly onSelect: () => void
+  readonly onOpenDetails: () => void
 }) {
   return (
     <article
@@ -270,9 +289,9 @@ function StockCard({
       <div className="relative">
         <button
           type="button"
-          onClick={onSelect}
+          onClick={onOpenDetails}
           className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
-          aria-label={`Sélectionner ${line.product.name}`}
+          aria-label={`Voir la fiche de ${line.product.name}`}
         >
           {/* Priorité à la VRAIE photo du lot (uploadée dans « Mettre au
               stock »), puis photo du design, puis photo produit — et un
@@ -301,9 +320,16 @@ function StockCard({
         <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
           {CATEGORY_LABEL[line.product.category]} · {line.location}
         </div>
-        <h3 className="mt-1 line-clamp-2 font-display text-sm font-semibold leading-tight tracking-tight">
-          {line.product.name}
-        </h3>
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="mt-1 text-left"
+          aria-label={`Voir la fiche de ${line.product.name}`}
+        >
+          <h3 className="line-clamp-2 font-display text-sm font-semibold leading-tight tracking-tight underline-offset-2 hover:underline">
+            {line.product.name}
+          </h3>
+        </button>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">
           <div>
             <div className="font-display text-base font-semibold tabular-nums">

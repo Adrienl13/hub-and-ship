@@ -7,16 +7,34 @@ import type { StockLine } from '@/lib/stock'
 // vignettes cliquables. Chaîne de repli : photos du lot (admin) → photo du
 // design → photo produit. Aucune photo = placeholder honnête.
 
-export function StockLotGallery({ line }: { readonly line: StockLine }) {
-  const photos = useMemo(() => {
-    const urls = [
-      line.imageUrl,
-      ...(line.imageUrls ?? []),
-      line.variant.imageUrl,
-      line.product.mainImageUrl,
-    ].filter((url): url is string => Boolean(url && url.trim()))
-    return [...new Set(urls)]
-  }, [line])
+/** Toutes les photos affichables d'un lot, dédupliquées, par priorité :
+ *  photos du lot (admin) → design → fiche produit (+ galerie produit). */
+export function stockLinePhotos(
+  line: StockLine,
+  { includeProductGallery = false }: { includeProductGallery?: boolean } = {},
+): string[] {
+  const urls = [
+    line.imageUrl,
+    ...(line.imageUrls ?? []),
+    line.variant.imageUrl,
+    line.product.mainImageUrl,
+    ...(includeProductGallery ? line.product.galleryUrls : []),
+  ].filter((url): url is string => Boolean(url && url.trim()))
+  return [...new Set(urls)]
+}
+
+export function StockLotGallery({
+  line,
+  includeProductGallery = false,
+}: {
+  readonly line: StockLine
+  /** Inclure aussi la galerie de la fiche produit (vue détail). */
+  readonly includeProductGallery?: boolean
+}) {
+  const photos = useMemo(
+    () => stockLinePhotos(line, { includeProductGallery }),
+    [line, includeProductGallery],
+  )
 
   const [activeIndex, setActiveIndex] = useState(0)
 
