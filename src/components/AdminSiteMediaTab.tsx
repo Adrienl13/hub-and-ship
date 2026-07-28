@@ -24,7 +24,7 @@ const SLOTS: ReadonlyArray<{
   {
     slot: 'hero',
     label: 'Slides du hero (carrousel)',
-    hint: '~1600×1400, cadrage cover. Le carrousel s’adapte au nombre de slides (ordre modifiable).',
+    hint: '~1600×1400, cadrage cover. Dès qu’une slide est ajoutée, elle REMPLACE les visuels par défaut — utilisez « Ré-ajouter les visuels d’origine » pour les garder en plus.',
     multi: true,
   },
   {
@@ -212,6 +212,44 @@ export function AdminSiteMediaTab() {
     }
   }
 
+  // Dès qu'une slide personnalisée existe, les visuels par défaut ne sont
+  // plus affichés (remplacement, pas cumul) — comportement voulu mais
+  // surprenant : ce bouton ré-insère les visuels d'origine comme vraies
+  // slides, à côté des photos ajoutées par l'admin.
+  async function handleRestoreDefaults(slot: SiteMediaSlot) {
+    const client = getClient()
+    if (!client) return
+    setBusySlot(slot)
+    try {
+      const slotRows = rows.filter((r) => r.slot === slot)
+      const existingUrls = new Set(slotRows.map((r) => r.url))
+      let nextOrder = Math.max(0, ...slotRows.map((r) => r.sort_order + 1))
+      let added = 0
+      for (const item of DEFAULT_SITE_MEDIA.hero) {
+        if (existingUrls.has(item.url)) continue
+        const insert = await client.from('site_media').insert({
+          slot,
+          url: item.url,
+          alt: item.alt,
+          sort_order: nextOrder++,
+        })
+        if (insert.error) {
+          toast.error('Ré-ajout échoué : ' + insert.error.message)
+          return
+        }
+        added++
+      }
+      toast.success(
+        added > 0
+          ? `${added} visuel(s) d'origine ré-ajouté(s) au carrousel.`
+          : 'Les visuels d’origine sont déjà tous dans le carrousel.',
+      )
+      await refresh()
+    } finally {
+      setBusySlot(null)
+    }
+  }
+
   async function handleDelete(row: MediaRow) {
     const client = getClient()
     if (!client) return
@@ -303,7 +341,18 @@ export function AdminSiteMediaTab() {
                 </h3>
                 <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
               </div>
-              <div>
+              <div className="flex flex-wrap items-center gap-2">
+                {slot === 'hero' && !usingDefaults && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busySlot === slot}
+                    onClick={() => void handleRestoreDefaults(slot)}
+                    className="gap-1.5 rounded-sm"
+                  >
+                    Ré-ajouter les visuels d&apos;origine
+                  </Button>
+                )}
                 <input
                   ref={(el) => {
                     if (el) inputRefs.current[slot] = el

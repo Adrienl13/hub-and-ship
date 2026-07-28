@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { useCatalog } from '@/hooks/useCatalog'
 import { getDefaultVariant } from '@/lib/catalogue'
 import { resolveCatalogueProduct } from '@/lib/catalogue/registry'
 import { calculateOrder, formatEUR, type CartItem } from '@/lib/order'
@@ -28,12 +29,22 @@ import { useCartStore } from '@/stores/cart.store'
 function useSheetItems(): CartItem[] {
   const qtyByProduct = useCartStore((state) => state.qtyByProduct)
   const variantByProduct = useCartStore((state) => state.variantByProduct)
+  // Source RÉACTIVE : le registre module-level ne déclenche aucun re-render
+  // quand le catalogue arrive après le header (bug « icône panier vide alors
+  // que des produits sont sélectionnés »). useCatalog charge le catalogue sur
+  // toutes les pages où le header est présent et re-rend quand il est prêt.
+  const { products } = useCatalog()
+  const productById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  )
 
   return useMemo(() => {
     const items: CartItem[] = []
     for (const [productId, quantity] of Object.entries(qtyByProduct)) {
       if (!quantity || quantity <= 0) continue
-      const product = resolveCatalogueProduct(productId)
+      const product =
+        productById.get(productId) ?? resolveCatalogueProduct(productId)
       if (!product) continue
       const variantId = variantByProduct[productId]
       const variant =
@@ -42,7 +53,7 @@ function useSheetItems(): CartItem[] {
       items.push({ product, variant, quantity })
     }
     return items
-  }, [qtyByProduct, variantByProduct])
+  }, [qtyByProduct, variantByProduct, productById])
 }
 
 export function CartSheet() {
