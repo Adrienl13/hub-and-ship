@@ -61,6 +61,7 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 18 | `20260716120000_site_media.sql` | **Design v2** : table site_media (photos administrables de l'accueil — slides hero, gammes, bandeau), lecture publique / écriture admin, fichiers dans le bucket existant catalogue-images |
 | 19 | `20260717120000_site_media_prix_slots.sql` | **Prix prouvé v2** : nouveaux emplacements photo (fond hero + frise trajet 1-4) dans site_media |
 | 20 | `20260728120000_container_freight_formats_and_base_floor.sql` | **Audit rentabilité** : fret 20' GP / 40' GP paramétrables (NULL tant que non cotés), RPC paramètres versionné mis à jour, plancher SQL sur le prix public (`base_price_ht` bloqué sous coût rendu × 1,15 quand les coûts réels existent) |
+| 21 | `20260803120000_fix_admin_save_product_full_no_get_price.sql` | **Fix save produit** : réécrit `admin_save_product_full` en version propre (aucun appel à `get_price` — corrige « get_price: unknown or inactive product » à l'enregistrement d'un produit inactif) et ré-intègre le garde-fou « produit sans design = inactif » |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :
