@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { Check, Heart, Info } from 'lucide-react'
+import { Check, Heart, Info, Palette } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { SafeImage } from '@/components/SafeImage'
@@ -70,6 +70,15 @@ function ProductCardComponent({
         <span className="pointer-events-none absolute left-2 top-2 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--ink)] shadow-sm backdrop-blur">
           {CATEGORY_LABEL[product.category]}
         </span>
+
+        {/* Mise en avant multi-designs : l'acheteur voit AVANT d'ouvrir la
+            fiche qu'il a le choix des coloris (demande client 08/2026). */}
+        {product.variants.length > 1 && (
+          <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink)] shadow-sm backdrop-blur">
+            <Palette className="h-3 w-3 text-[color:var(--ember)]" />
+            {product.variants.length} coloris
+          </span>
+        )}
 
         {onToggleFavorite && (
           <button

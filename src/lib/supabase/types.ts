@@ -1060,6 +1060,7 @@ type PricingParameterRow = {
   useful_container_cbm_40hc: number
   freight_eur_20gp: number | null
   freight_eur_40gp: number | null
+  distributor_min_order_cbm: number | null
   customs_rate: number
   import_insurance_rate: number
   fixed_import_fee_eur: number
@@ -1101,6 +1102,7 @@ type PricingParameterInsert = {
   useful_container_cbm_40hc?: number
   freight_eur_20gp?: number | null
   freight_eur_40gp?: number | null
+  distributor_min_order_cbm?: number | null
   customs_rate?: number
   import_insurance_rate?: number
   fixed_import_fee_eur?: number

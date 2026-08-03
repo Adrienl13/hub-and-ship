@@ -83,6 +83,8 @@ export interface AdminPricingParameters {
    *  cotation réelle (aucune valeur inventée côté code). */
   readonly freightEur20gp: number | null
   readonly freightEur40gp: number | null
+  /** Volume minimum d'une commande distributeur (m³) — null = pas de règle. */
+  readonly distributorMinOrderCbm: number | null
   readonly customsRate: number
   readonly importInsuranceRate: number
   readonly fixedImportFeeEur: number
@@ -175,8 +177,17 @@ export function fromPricingParameterRow(
     fxUsdEur: Number(row.fx_usd_eur),
     freightEur40hc: Number(row.freight_eur_40hc),
     usefulContainerCbm40hc: Number(row.useful_container_cbm_40hc),
-    freightEur20gp: row.freight_eur_20gp === null ? null : Number(row.freight_eur_20gp),
-    freightEur40gp: row.freight_eur_40gp === null ? null : Number(row.freight_eur_40gp),
+    // `== null` couvre aussi `undefined` : ces colonnes n'existent pas tant
+    // que les migrations 20/22 ne sont pas appliquées — le front doit rester
+    // fonctionnel dans l'intervalle (null = « à renseigner »).
+    freightEur20gp:
+      row.freight_eur_20gp == null ? null : Number(row.freight_eur_20gp),
+    freightEur40gp:
+      row.freight_eur_40gp == null ? null : Number(row.freight_eur_40gp),
+    distributorMinOrderCbm:
+      row.distributor_min_order_cbm == null
+        ? null
+        : Number(row.distributor_min_order_cbm),
     customsRate: Number(row.customs_rate),
     importInsuranceRate: Number(row.import_insurance_rate),
     fixedImportFeeEur: Number(row.fixed_import_fee_eur),

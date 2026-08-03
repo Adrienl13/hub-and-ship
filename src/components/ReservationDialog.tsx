@@ -44,6 +44,9 @@ import { ValidatedInput } from '@/components/security/ValidatedInput'
 import { useReservationCreation } from '@/hooks/useReservationCreation'
 import { useSiretVerification } from '@/hooks/useSiretVerification'
 import { toast } from 'sonner'
+
+import { useChannel } from '@/hooks/useChannel'
+import { getDistributorMinimumStatus } from '@/lib/pricing/distributor-minimum'
 import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
 import {
   normalizeReferralCode,
@@ -167,7 +170,23 @@ export function ReservationDialog({
   })
 
   const emailCheck = useMemo(() => checkEmailDomain(form.email), [form.email])
-  const hasReservableItems = items.length > 0 && totals.subtotalHt > 0
+  // Minimum distributeur (miroir client du trigger SQL) : bloquer ICI évite
+  // un échec serveur incompréhensible à la dernière étape du tunnel.
+  const { channel } = useChannel()
+  const orderCbm = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) => sum + item.product.cbmPerUnit * item.quantity,
+        0,
+      ),
+    [items],
+  )
+  const distributorMinimum = getDistributorMinimumStatus({
+    channel,
+    usedCbm: orderCbm,
+  })
+  const hasReservableItems =
+    items.length > 0 && totals.subtotalHt > 0 && !distributorMinimum.blocked
   // Le parrainage B2C −100 € est retiré : le champ code devient un code
   // APPORTEUR pur attribution (décision LOT 5 — l'apporteur 8 % le remplace).
   // Aucune remise, aucun aller-retour serveur : payNow == frais de réservation,
@@ -489,6 +508,16 @@ export function ReservationDialog({
             paiement.
           </DialogDescription>
         </DialogHeader>
+
+        {distributorMinimum.blocked && (
+          <div className="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950">
+            <strong>Commande distributeur :</strong> minimum un 20&apos; GP (
+            {distributorMinimum.minCbm} m³). Votre commande fait{' '}
+            {Math.round(orderCbm * 100) / 100} m³ — il manque{' '}
+            <strong>{distributorMinimum.missingCbm} m³</strong>. Complétez la
+            commande ou contactez-nous pour un cas particulier.
+          </div>
+        )}
 
         {!hasReservableItems && (
           <EmptyReservationState onNavigate={() => onOpenChange(false)} />

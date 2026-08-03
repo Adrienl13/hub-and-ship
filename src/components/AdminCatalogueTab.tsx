@@ -173,6 +173,11 @@ function PricingParametersPanel({
   const [freight40gp, setFreight40gp] = useState(
     parameters.freightEur40gp === null ? '' : String(parameters.freightEur40gp),
   )
+  const [distributorMinCbm, setDistributorMinCbm] = useState(
+    parameters.distributorMinOrderCbm === null
+      ? ''
+      : String(parameters.distributorMinOrderCbm),
+  )
   const [fx, setFx] = useState(String(parameters.fxUsdEur))
   const [customsPercent, setCustomsPercent] = useState(
     String(parameters.customsRate * 100),
@@ -210,6 +215,11 @@ function PricingParametersPanel({
       parameters.freightEur40gp === null
         ? ''
         : String(parameters.freightEur40gp),
+    )
+    setDistributorMinCbm(
+      parameters.distributorMinOrderCbm === null
+        ? ''
+        : String(parameters.distributorMinOrderCbm),
     )
     setFx(String(parameters.fxUsdEur))
     setCustomsPercent(String(parameters.customsRate * 100))
@@ -249,6 +259,10 @@ function PricingParametersPanel({
         freight40gp.trim() === ''
           ? null
           : Math.max(0, numberFromInput(freight40gp)),
+      distributor_min_order_cbm:
+        distributorMinCbm.trim() === ''
+          ? null
+          : Math.max(0, numberFromInput(distributorMinCbm)),
       customs_rate: Math.max(0, percentToRate(customsPercent)),
       import_insurance_rate: Math.max(0, percentToRate(insurancePercent)),
       fixed_import_fee_eur: Math.max(0, numberFromInput(fixedFee)),
@@ -301,6 +315,12 @@ function PricingParametersPanel({
           label="Fret 40' GP (€) — vide = non coté"
           value={freight40gp}
           onChange={setFreight40gp}
+          step="1"
+        />
+        <PricingInput
+          label="Min. distributeur (m³) — vide = sans règle"
+          value={distributorMinCbm}
+          onChange={setDistributorMinCbm}
           step="1"
         />
         <PricingInput label="Taux USD → EUR" value={fx} onChange={setFx} />
@@ -1349,6 +1369,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           useful_container_cbm_40hc: version.usefulContainerCbm40hc,
           freight_eur_20gp: version.freightEur20gp,
           freight_eur_40gp: version.freightEur40gp,
+          distributor_min_order_cbm: version.distributorMinOrderCbm,
           customs_rate: version.customsRate,
           import_insurance_rate: version.importInsuranceRate,
           fixed_import_fee_eur: version.fixedImportFeeEur,

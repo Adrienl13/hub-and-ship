@@ -19,6 +19,7 @@ const PARAMS: AdminPricingParameters = {
   usefulContainerCbm40hc: 66,
   freightEur20gp: 3000,
   freightEur40gp: null,
+  distributorMinOrderCbm: 28,
   customsRate: 0,
   importInsuranceRate: 0,
   fixedImportFeeEur: 0,

@@ -24,6 +24,7 @@ import { ProductGallery } from '@/components/ProductGallery'
 import { ProductDocumentsList } from '@/components/ProductDocumentsList'
 import { ProductReviews } from '@/components/ProductReviews'
 import { QuantityStepper } from '@/components/QuantityStepper'
+import { ColorRequestCta } from '@/components/ColorRequestCta'
 import { DesignSelector } from '@/components/DesignSelector'
 import { getQuantityRule } from '@/lib/quantity'
 
@@ -183,6 +184,9 @@ export function ProductDetailDialog({
                   <span className="text-muted-foreground">
                     — {moqStatus.label}
                   </span>
+                </div>
+                <div className="mt-2">
+                  <ColorRequestCta product={product} />
                 </div>
               </div>
             )}

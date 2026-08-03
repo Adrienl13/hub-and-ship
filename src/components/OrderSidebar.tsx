@@ -25,6 +25,7 @@ import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
+import { getDistributorMinimumStatus } from '@/lib/pricing/distributor-minimum'
 import {
   CONTAINER_USABLE_CBM,
   getRemainingCbm,
@@ -156,6 +157,11 @@ export function OrderSidebar({
   // Chaque ligne du récap est directement modifiable (pas métier) ou
   // supprimable — l'acheteur corrige sa commande sans rechercher la carte.
   const setQty = useCartStore((state) => state.setQty)
+  // Règle distributeur : minimum un 20' GP — miroir client du trigger SQL.
+  const distributorMinimum = getDistributorMinimumStatus({
+    channel,
+    usedCbm,
+  })
   const activeContainerType: ContainerType =
     preferredContainerType ?? container.containerType ?? '20_hc'
   const isLargeFormat =
@@ -529,12 +535,23 @@ export function OrderSidebar({
       {showVolumeDiscounts && <TieredPricingViz items={items} />}
       <DeliveryInfoBox compact />
 
+      {/* Minimum distributeur : la règle est affichée AVANT le clic (le
+          trigger SQL la bloquerait de toute façon — autant l'expliquer). */}
+      {distributorMinimum.blocked && (
+        <div className="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-950">
+          <strong>Commande distributeur :</strong> minimum un 20&apos; GP (
+          {distributorMinimum.minCbm} m³). Il vous manque{' '}
+          <strong>{distributorMinimum.missingCbm} m³</strong> — complétez la
+          commande ou contactez-nous pour un cas particulier.
+        </div>
+      )}
+
       {/* Actions */}
       <div className="space-y-2">
         <Button
           className="h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)] disabled:opacity-50"
           onClick={onReserve}
-          disabled={!hasItems}
+          disabled={!hasItems || distributorMinimum.blocked}
         >
           Confirmer ma réservation
           <ArrowRight className="h-4 w-4" />

@@ -11,10 +11,27 @@ import {
 import { ContactForm } from '@/components/ContactForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { CONTACT_TOPICS, type ContactTopic } from '@/lib/contact'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 export const Route = createFileRoute('/contact')({
   component: ContactPage,
+  // Pré-remplissage depuis une fiche produit (« Demander un coloris ») :
+  // /contact?topic=produit&message=… — champs optionnels, validés ici pour
+  // que le <select> ne reçoive jamais une valeur hors enum.
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { topic?: ContactTopic; message?: string } => {
+    const topic = CONTACT_TOPICS.find((t) => t === search.topic)
+    const message =
+      typeof search.message === 'string' && search.message.trim()
+        ? search.message.slice(0, 3000)
+        : undefined
+    return {
+      ...(topic ? { topic } : {}),
+      ...(message ? { message } : {}),
+    }
+  },
   head: () => ({
     ...buildSeoHead({
       title: 'Contact',
@@ -34,6 +51,7 @@ export const Route = createFileRoute('/contact')({
 })
 
 function ContactPage() {
+  const { topic, message } = Route.useSearch()
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
@@ -48,7 +66,7 @@ function ContactPage() {
           programme revendeur ? Choisissez le canal le plus adapté.
         </p>
 
-        <ContactForm />
+        <ContactForm initialTopic={topic} initialMessage={message} />
 
         <section className="mt-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
           <div className="flex items-center gap-2">

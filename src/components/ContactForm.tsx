@@ -32,8 +32,20 @@ const EMPTY_FORM: FormState = {
 const inputClass =
   'h-10 rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]'
 
-export function ContactForm() {
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
+export function ContactForm({
+  initialTopic,
+  initialMessage,
+}: {
+  /** Sujet pré-sélectionné (déjà validé contre CONTACT_TOPICS par la route). */
+  readonly initialTopic?: string
+  /** Message pré-rempli (ex. demande de coloris depuis une fiche produit). */
+  readonly initialMessage?: string
+} = {}) {
+  const [form, setForm] = useState<FormState>({
+    ...EMPTY_FORM,
+    topic: initialTopic ?? EMPTY_FORM.topic,
+    message: initialMessage ?? EMPTY_FORM.message,
+  })
   const [submitting, setSubmitting] = useState(false)
 
   const update = (key: keyof FormState) => (value: string) =>

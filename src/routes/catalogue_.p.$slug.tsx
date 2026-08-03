@@ -7,6 +7,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
+import { ColorRequestCta } from '@/components/ColorRequestCta'
 import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -235,11 +236,11 @@ function ProductPage() {
           </section>
         )}
 
-        {product.variants.length > 1 && (
-          <section className="mt-8">
-            <h2 className="font-display text-xl tracking-tight">
-              Coloris & variantes
-            </h2>
+        <section className="mt-8">
+          <h2 className="font-display text-xl tracking-tight">
+            Coloris & variantes
+          </h2>
+          {product.variants.length > 1 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {product.variants.map((variant) => (
                 <span
@@ -250,8 +251,13 @@ function ProductPage() {
                 </span>
               ))}
             </div>
-          </section>
-        )}
+          )}
+          {/* Personnalisation : s'affiche même mono-design — c'est
+              précisément là que la demande de coloris a le plus de valeur. */}
+          <div className="mt-3">
+            <ColorRequestCta product={product} />
+          </div>
+        </section>
 
         <ContainerNotifySection source="produit" />
       </main>
