@@ -19,6 +19,7 @@ import { Route as PrixRouteImport } from './routes/prix'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartenairesRouteImport } from './routes/partenaires'
 import { Route as PartenaireRouteImport } from './routes/partenaire'
+import { Route as FournisseurMobilierChrRouteImport } from './routes/fournisseur-mobilier-chr'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CatalogueRouteImport } from './routes/catalogue'
@@ -37,6 +38,7 @@ import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
 import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
+import { Route as CatalogueChaisesBistrotParisiennesRouteImport } from './routes/catalogue_.chaises-bistrot-parisiennes'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
@@ -104,6 +106,11 @@ const PartenairesRoute = PartenairesRouteImport.update({
 const PartenaireRoute = PartenaireRouteImport.update({
   id: '/partenaire',
   path: '/partenaire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FournisseurMobilierChrRoute = FournisseurMobilierChrRouteImport.update({
+  id: '/fournisseur-mobilier-chr',
+  path: '/fournisseur-mobilier-chr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -196,6 +203,12 @@ const CatalogueChaisesRestaurantRoute =
   CatalogueChaisesRestaurantRouteImport.update({
     id: '/catalogue_/chaises-restaurant',
     path: '/catalogue/chaises-restaurant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CatalogueChaisesBistrotParisiennesRoute =
+  CatalogueChaisesBistrotParisiennesRouteImport.update({
+    id: '/catalogue_/chaises-bistrot-parisiennes',
+    path: '/catalogue/chaises-bistrot-parisiennes',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -295,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -315,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -342,6 +357,7 @@ export interface FileRoutesByTo {
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -362,6 +378,7 @@ export interface FileRoutesByTo {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -390,6 +407,7 @@ export interface FileRoutesById {
   '/catalogue': typeof CatalogueRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -410,6 +428,7 @@ export interface FileRoutesById {
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
+  '/catalogue_/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
   '/guides/$slug': typeof GuidesSlugRoute
@@ -439,6 +458,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/contact'
     | '/faq'
+    | '/fournisseur-mobilier-chr'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -459,6 +479,7 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/chaises-bistrot-parisiennes'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
     | '/guides/$slug'
@@ -486,6 +507,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/contact'
     | '/faq'
+    | '/fournisseur-mobilier-chr'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -506,6 +528,7 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue/chaises-bistrot-parisiennes'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
     | '/guides/$slug'
@@ -533,6 +556,7 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/contact'
     | '/faq'
+    | '/fournisseur-mobilier-chr'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -553,6 +577,7 @@ export interface FileRouteTypes {
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
+    | '/catalogue_/chaises-bistrot-parisiennes'
     | '/catalogue_/chaises-restaurant'
     | '/catalogue_/tables-restaurant'
     | '/guides/$slug'
@@ -581,6 +606,7 @@ export interface RootRouteChildren {
   CatalogueRoute: typeof CatalogueRoute
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
+  FournisseurMobilierChrRoute: typeof FournisseurMobilierChrRoute
   PartenaireRoute: typeof PartenaireRoute
   PartenairesRoute: typeof PartenairesRoute
   PartnerRoute: typeof PartnerRouteWithChildren
@@ -601,6 +627,7 @@ export interface RootRouteChildren {
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  CatalogueChaisesBistrotParisiennesRoute: typeof CatalogueChaisesBistrotParisiennesRoute
   CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
   CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
@@ -686,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/partenaire'
       fullPath: '/partenaire'
       preLoaderRoute: typeof PartenaireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fournisseur-mobilier-chr': {
+      id: '/fournisseur-mobilier-chr'
+      path: '/fournisseur-mobilier-chr'
+      fullPath: '/fournisseur-mobilier-chr'
+      preLoaderRoute: typeof FournisseurMobilierChrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -812,6 +846,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogue/chaises-restaurant'
       fullPath: '/catalogue/chaises-restaurant'
       preLoaderRoute: typeof CatalogueChaisesRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue_/chaises-bistrot-parisiennes': {
+      id: '/catalogue_/chaises-bistrot-parisiennes'
+      path: '/catalogue/chaises-bistrot-parisiennes'
+      fullPath: '/catalogue/chaises-bistrot-parisiennes'
+      preLoaderRoute: typeof CatalogueChaisesBistrotParisiennesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
@@ -997,6 +1038,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogueRoute: CatalogueRoute,
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
+  FournisseurMobilierChrRoute: FournisseurMobilierChrRoute,
   PartenaireRoute: PartenaireRoute,
   PartenairesRoute: PartenairesRoute,
   PartnerRoute: PartnerRouteWithChildren,
@@ -1017,6 +1059,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,
+  CatalogueChaisesBistrotParisiennesRoute:
+    CatalogueChaisesBistrotParisiennesRoute,
   CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,
   CatalogueTablesRestaurantRoute: CatalogueTablesRestaurantRoute,
   GuidesSlugRoute: GuidesSlugRoute,

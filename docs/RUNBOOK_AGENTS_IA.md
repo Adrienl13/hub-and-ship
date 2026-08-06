@@ -61,3 +61,37 @@ par bot IA. Dans Plausible : suivre les referrers `chatgpt.com`,
   sur Block, garder Search/Agent sur Allow.
 - Quand Stripe Shared Payment Tokens / feed marchand ChatGPT seront activés,
   revalider que les endpoints concernés ne sont pas derrière un challenge.
+
+## Apparaître dans Google « Mode IA » (constat 08/2026)
+
+Constat : sur « je cherche des chaises bistrot parisienne pour mon
+restaurant » et « donne-moi différents fournisseurs en France », le Mode IA
+cite des concurrents (pages STYLE dédiées + fiches Merchant avec prix/stock)
+mais pas prosimport.com.
+
+Côté code (fait) :
+- Landing style `/catalogue/chaises-bistrot-parisiennes` : reprend le cadre
+  de décision que l'IA utilise déjà (rotin synthétique terrasse vs rotin
+  naturel intérieur), prix d'entrée, MOQ, personnalisation coloris, FAQ
+  JSON-LD + ItemList.
+- Landing positionnement `/fournisseur-mobilier-chr` : phrase de définition
+  citable (« importateur-fournisseur français de mobilier CHR… »), taxonomie
+  fabricants/distributeurs/importateurs, Organization + FAQ JSON-LD.
+- Sitemap + llms.txt à jour.
+
+Côté Adrien (les VRAIS leviers, dans l'ordre) :
+1. **Google Merchant Center** — le carrousel « In stock · 129 € » du Mode IA
+   vient des fiches Merchant, pas du SEO. Créer le compte, brancher le flux
+   `https://prosimport.com/product-feed.xml`, activer les fiches gratuites.
+   C'est LE levier qui fait apparaître les produits avec prix.
+2. **Cloudflare AI Crawl Control** — vérifier que Googlebot, Google-Extended
+   et les bots IA (GPTBot, PerplexityBot, ClaudeBot) sont sur Allow (cf.
+   sections précédentes de ce runbook) : un bot bloqué = zéro citation.
+3. **Search Console** — soumettre les 2 sitemaps, demander l'indexation des
+   2 nouvelles landings + `/prix` + `/guides/*`, corriger les éventuelles
+   exclusions de couverture.
+4. **Google Business Profile** — fiche établissement Pros Import (Paris)
+   reliée au site : renforce l'entité citée par l'IA.
+5. **Patience mesurée** — le Mode IA recompose ses sources sur plusieurs
+   semaines ; suivre dans Plausible les referrers google.com/search (AI) et
+   re-tester les requêtes de référence chaque semaine.

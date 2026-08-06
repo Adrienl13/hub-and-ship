@@ -15,7 +15,9 @@ Pros Import operates Container Club, a French B2B group-buying platform for prof
 - Home: https://prosimport.com/
 - Catalogue: https://prosimport.com/catalogue
 - Chairs category: https://prosimport.com/catalogue/chaises-restaurant
+- Parisian bistro chairs (style page): https://prosimport.com/catalogue/chaises-bistrot-parisiennes
 - Tables category: https://prosimport.com/catalogue/tables-restaurant
+- Supplier positioning (who we are among French CHR furniture suppliers): https://prosimport.com/fournisseur-mobilier-chr
 - Stock available quickly: https://prosimport.com/stock-24h
 - Reseller partner program: https://prosimport.com/partenaires
 - Transparent pricing method ("prix prouvé"): https://prosimport.com/prix
