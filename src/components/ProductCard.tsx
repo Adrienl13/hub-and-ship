@@ -59,9 +59,11 @@ function ProductCardComponent({
           className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
           aria-label={`Voir détails ${product.name}`}
         >
+          {/* L'image suit le design sélectionné : choisir un coloris doit se
+              VOIR immédiatement (retour client 08/2026). */}
           <SafeImage
-            src={product.mainImageUrl}
-            alt={product.name}
+            src={variant?.imageUrl || product.mainImageUrl}
+            alt={`${product.name}${variant ? ` — ${variant.name}` : ''}`}
             className="h-full w-full"
             imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
@@ -162,6 +164,7 @@ function ProductCardComponent({
             onChange={onVariantChange}
             showLabel={false}
             fallbackImageUrl={product.mainImageUrl}
+            customizeProduct={product}
           />
         </div>
 

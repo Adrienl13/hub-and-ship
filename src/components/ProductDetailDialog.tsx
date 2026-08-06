@@ -175,6 +175,7 @@ export function ProductDetailDialog({
                   onChange={onVariantChange}
                   size="lg"
                   fallbackImageUrl={product.mainImageUrl}
+                  customizeProduct={product}
                 />
                 <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
                   <span className="font-medium">MOQ {variant.name} :</span>{' '}

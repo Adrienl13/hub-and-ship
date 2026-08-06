@@ -16,6 +16,7 @@ import { useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { normalizePackshotFile } from '@/lib/images/normalize-packshot'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -77,6 +78,10 @@ async function uploadImage(
       error: `Fichier trop volumineux (${formatBytes(file.size)} > 5 MB).`,
     }
   }
+  // Packshot sur fond blanc → recadrage + canevas carré blanc à marge
+  // constante, automatiquement : toutes les photos produit/design/stock
+  // ont le même cadre (les photos d'ambiance passent telles quelles).
+  file = await normalizePackshotFile(file)
   const config = getSupabasePublicConfig()
   if (!config.isConfigured) {
     return { ok: false, error: 'Supabase non configuré.' }
