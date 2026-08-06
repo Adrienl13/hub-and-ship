@@ -5,24 +5,35 @@
 > factures et mentions légales restent **Pros Import EURL** (société
 > officielle). « Terrassea est une marque de Pros Import EURL. »
 
-## Fait côté code (ce commit)
+## Stratégie en DEUX temps (décision 08/2026)
+
+**Phase 1 — maintenant** : la marque Terrassea est visible partout, mais le
+site reste servi sur **prosimport.com**. Tu peux tout déployer sans risque :
+aucune redirection ne s'active tant que le flip n'est pas fait.
+
+**Phase 2 — le jour J** (site terminé, terrassea.com branché dans
+Cloudflare) : `bash scripts/flip-domaine-terrassea.sh` bascule TOUTES les
+URLs de service + active les 301 prosimport → terrassea, puis gate, commit,
+push, deploy, et les étapes infra ci-dessous.
+
+## Fait côté code
 
 - Marque « Terrassea » partout (header, hero, emails, SEO, PDF devis) ;
   mentions légales Pros Import EURL conservées (footer, CGV, contact, devis).
-- `SITE_URL` → https://terrassea.com : canonicals, OG, sitemaps, llms.txt,
-  robots, feed Merchant, liens partenaires/QR.
+- `SITE_URL` reste https://prosimport.com en phase 1 ; le flip script le
+  bascule (canonicals, OG, sitemaps, llms.txt, robots, feed Merchant, liens
+  partenaires/QR, emails) en une commande.
 - JSON-LD Organization : `name` Terrassea, `legalName` Pros Import EURL,
   `alternateName` [Container Club, Container Club Terrassea] et `sameAs`
   prosimport.com — Google relie l'entité historique, le SEO/GEO accumulé
   est transféré, pas perdu.
-- Redirection 301 automatique : le worker redirige `prosimport.com`,
-  `www.prosimport.com` et `www.terrassea.com` vers `terrassea.com` (chemin +
-  query conservés) — il suffit que les anciens domaines restent routés sur
-  le worker.
+- Redirection 301 pilotée par UN hôte canonique dans `src/start.ts` : en
+  phase 1, www.prosimport.com et les hôtes terrassea → prosimport.com ; après
+  le flip, prosimport.com et www → terrassea.com (chemin + query conservés).
 - Email public affiché : adrienlaniez1@gmail.com (contact, formulaires,
   devis). L'EXPÉDITEUR des emails transactionnels reste `BREVO_FROM` (env).
 
-## À faire par Adrien, dans l'ordre
+## À faire par Adrien LE JOUR J, dans l'ordre (après le flip script)
 
 1. **Cloudflare — domaine** : ajouter terrassea.com à la zone, puis dans le
    worker `container-club` → Settings → Domains & Routes : ajouter

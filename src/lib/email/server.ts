@@ -6,7 +6,7 @@
 
 const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email'
 const FALLBACK_SENDER_NAME = 'Terrassea'
-const FALLBACK_SENDER_EMAIL = 'contact@terrassea.com'
+const FALLBACK_SENDER_EMAIL = 'contact@prosimport.com'
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.BREVO_API_KEY)

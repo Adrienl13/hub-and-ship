@@ -4,16 +4,20 @@ import {
   createStart,
 } from '@tanstack/react-start'
 
-const CANONICAL_HOST = 'terrassea.com'
-const WWW_HOST = `www.${CANONICAL_HOST}`
-// Rebranding 08/2026 : l'ancien domaine reste routé sur ce worker et fait
-// une redirection permanente vers terrassea.com (même chemin + query) — le
-// SEO/GEO accumulé sur prosimport.com est transféré, jamais perdu.
-const LEGACY_HOSTS = new Set([
-  WWW_HOST,
+// Rebranding Terrassea en deux temps : la marque est déjà Terrassea, mais le
+// site reste servi sur prosimport.com jusqu'à la bascule finale. LE JOUR J :
+// exécuter scripts/flip-domaine-terrassea.sh (change ce host + toutes les
+// URLs) — tous les hôtes connus non canoniques passent alors en 301.
+const CANONICAL_HOST: string = 'prosimport.com'
+const KNOWN_HOSTS = [
   'prosimport.com',
   'www.prosimport.com',
-])
+  'terrassea.com',
+  'www.terrassea.com',
+]
+const LEGACY_HOSTS = new Set(
+  KNOWN_HOSTS.filter((host) => host !== CANONICAL_HOST),
+)
 
 const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "default-src 'self'",

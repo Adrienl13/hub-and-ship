@@ -262,7 +262,7 @@ function SelectionsManager() {
     const url =
       typeof window !== 'undefined'
         ? `${window.location.origin}${path}`
-        : `https://terrassea.com${path}`
+        : `https://prosimport.com${path}`
     try {
       await navigator.clipboard.writeText(url)
       toast.success('Lien copié', { description: url })

@@ -6,7 +6,7 @@ import qrcode from 'qrcode-generator'
  * later drives the 8% commission (LOT 5).
  */
 
-const DEFAULT_DOMAIN = 'https://terrassea.com'
+const DEFAULT_DOMAIN = 'https://prosimport.com'
 
 function appOrigin(): string {
   const configured = import.meta.env.VITE_APP_URL

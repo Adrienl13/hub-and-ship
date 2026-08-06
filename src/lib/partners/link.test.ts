@@ -57,7 +57,7 @@ describe('partner link context', () => {
     const storage = createStorage()
     const context = capturePartnerLinkContextFromUrl({
       storage,
-      url: new URL('https://terrassea.com/p/chr-conseil?selection=terrasse'),
+      url: new URL('https://prosimport.com/p/chr-conseil?selection=terrasse'),
       now: new Date('2026-06-07T08:00:00.000Z'),
     })
 
@@ -66,7 +66,7 @@ describe('partner link context', () => {
 
     const campaign = capturePartnerLinkContextFromUrl({
       storage,
-      url: new URL('https://terrassea.com/catalogue?partner=reseau-chr-sud'),
+      url: new URL('https://prosimport.com/catalogue?partner=reseau-chr-sud'),
       now: new Date('2026-06-07T09:00:00.000Z'),
     })
 

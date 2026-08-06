@@ -89,7 +89,7 @@ function ReservationDocumentPage() {
                 Pros Import — Terrassea
               </h1>
               <p className="mt-0.5 text-xs text-neutral-500">
-                terrassea.com · Pros Import EURL · SIRET 98826998100011
+                prosimport.com · Pros Import EURL · SIRET 98826998100011
               </p>
             </div>
             <div className="text-right text-xs text-neutral-600">

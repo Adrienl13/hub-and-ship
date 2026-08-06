@@ -437,7 +437,7 @@ function ShareLinkCard({
     sharePath && typeof window !== 'undefined'
       ? `${window.location.origin}${sharePath}`
       : sharePath
-        ? `https://terrassea.com${sharePath}`
+        ? `https://prosimport.com${sharePath}`
         : null
 
   async function copy(): Promise<void> {

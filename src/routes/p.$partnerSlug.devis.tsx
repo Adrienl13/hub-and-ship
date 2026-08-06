@@ -240,7 +240,7 @@ function PartnerQuotePage() {
               partenaires ne figurent pas sur ce document.
             </p>
             <p className="mt-2">
-              Pros Import — Terrassea · terrassea.com · Réservation et
+              Pros Import — Terrassea · prosimport.com · Réservation et
               suivi sur la page partenaire.
             </p>
           </footer>

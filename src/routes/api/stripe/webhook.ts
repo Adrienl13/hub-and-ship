@@ -89,7 +89,7 @@ async function handleWebhook(request: Request): Promise<Response> {
           ? await createAccountAccessLink({
               client: getSupabaseAdmin() as unknown as MagicLinkAdminClient,
               email: customerEmail,
-              redirectTo: 'https://terrassea.com/account/reservations',
+              redirectTo: 'https://prosimport.com/account/reservations',
             })
           : null
         await notifyPaymentConfirmed({

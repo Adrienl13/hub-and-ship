@@ -23,7 +23,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
             Le présent site, accessible à l'adresse{' '}
-            <Strong>https://terrassea.com</Strong> (ci-après le « Site »), est
+            <Strong>https://prosimport.com</Strong> (ci-après le « Site »), est
             édité par :
           </P>
           <UL>

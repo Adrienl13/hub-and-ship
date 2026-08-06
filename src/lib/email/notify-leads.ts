@@ -23,7 +23,7 @@ import {
   type StockRequestEmailInput,
 } from '@/lib/email/templates'
 
-const SITE_URL = 'https://terrassea.com'
+const SITE_URL = 'https://prosimport.com'
 
 export async function notifyPartnerRequest(
   input: Omit<PartnerRequestEmailInput, 'adminUrl'>,

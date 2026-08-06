@@ -10,9 +10,9 @@ describe('AI visibility public files', () => {
   it('publishes a concise llms.txt for generative search engines', () => {
     expect(llms).toContain('Pros Import')
     expect(llms).toContain('Terrassea')
-    expect(llms).toContain('https://terrassea.com/catalogue')
-    expect(llms).toContain('https://terrassea.com/partenaires')
-    expect(llms).toContain('https://terrassea.com/qualite')
+    expect(llms).toContain('https://prosimport.com/catalogue')
+    expect(llms).toContain('https://prosimport.com/partenaires')
+    expect(llms).toContain('https://prosimport.com/qualite')
   })
 
   it('keeps sensitive partner and import data out of the AI summary', () => {
@@ -24,7 +24,7 @@ describe('AI visibility public files', () => {
   })
 
   it('advertises the AI summary from robots.txt without opening private surfaces', () => {
-    expect(robots).toContain('LLM-Summary: https://terrassea.com/llms.txt')
+    expect(robots).toContain('LLM-Summary: https://prosimport.com/llms.txt')
     expect(robots).toContain('Disallow: /account')
     expect(robots).toContain('Disallow: /admin')
     expect(robots).toContain('Disallow: /api')

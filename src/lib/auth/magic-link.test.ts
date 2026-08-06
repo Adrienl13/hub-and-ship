@@ -49,7 +49,7 @@ describe('createAccountAccessLink', () => {
     const link = await createAccountAccessLink({
       client,
       email: 'pro@resto.fr',
-      redirectTo: 'https://terrassea.com/account/reservations',
+      redirectTo: 'https://prosimport.com/account/reservations',
     })
     expect(link).toBe(LINK)
     expect(calls).toEqual(['generate:pro@resto.fr'])
@@ -60,7 +60,7 @@ describe('createAccountAccessLink', () => {
     const link = await createAccountAccessLink({
       client,
       email: 'guest@hotel.fr',
-      redirectTo: 'https://terrassea.com/account/reservations',
+      redirectTo: 'https://prosimport.com/account/reservations',
     })
     expect(link).toBe(LINK)
     expect(calls).toEqual([
@@ -79,7 +79,7 @@ describe('createAccountAccessLink', () => {
       createAccountAccessLink({
         client: failing.client,
         email: 'x@y.fr',
-        redirectTo: 'https://terrassea.com/account',
+        redirectTo: 'https://prosimport.com/account',
       }),
     ).resolves.toBeNull()
 
@@ -95,7 +95,7 @@ describe('createAccountAccessLink', () => {
       createAccountAccessLink({
         client: throwing,
         email: 'x@y.fr',
-        redirectTo: 'https://terrassea.com/account',
+        redirectTo: 'https://prosimport.com/account',
       }),
     ).resolves.toBeNull()
   })

@@ -206,7 +206,7 @@ function InvoicePage() {
               débits.
             </p>
             <p className="mt-2">
-              Pros Import EURL — Terrassea · terrassea.com ·
+              Pros Import EURL — Terrassea · prosimport.com ·
               adrienlaniez1@gmail.com
             </p>
           </footer>

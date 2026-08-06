@@ -1,7 +1,9 @@
 import { productPath } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 
-export const SITE_URL = 'https://terrassea.com'
+// Domaine ACTUEL de service. La marque est déjà Terrassea ; l'URL bascule sur
+// terrassea.com au dernier moment via scripts/flip-domaine-terrassea.sh.
+export const SITE_URL = 'https://prosimport.com'
 // D6 : une seule marque visible. « Terrassea » reste une marque déposée de
 // Pros Import (legal-content) et un site partenaire, mais ne compose plus
 // les titres SEO ni le nom de marque produit.
@@ -132,8 +134,14 @@ export function organizationJsonLd() {
       addressCountry: 'FR',
     },
     areaServed: 'FR',
-    // Domaine historique (301 vers terrassea.com) + réseau social principal.
-    sameAs: ['https://prosimport.com', 'https://www.instagram.com/terrassea'],
+    // Les DEUX domaines (actuel + futur/historique selon la phase du
+    // rebranding) + le réseau social principal : l'entité reste reliée quel
+    // que soit le sens de la bascule. NE PAS toucher au flip.
+    sameAs: [
+      'https://prosimport.com',
+      'https://terrassea.com',
+      'https://www.instagram.com/terrassea',
+    ],
     taxID: 'FR08988269981',
     vatID: 'FR08988269981',
     identifier: [

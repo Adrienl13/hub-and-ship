@@ -25,7 +25,7 @@ const partner: PartnerRequestEmailInput = {
   message: 'Premier contact.',
   clientCompanyName: null,
   projectType: null,
-  adminUrl: 'https://terrassea.com/admin?tab=partners',
+  adminUrl: 'https://prosimport.com/admin?tab=partners',
 }
 
 const stock: StockRequestEmailInput = {
@@ -36,7 +36,7 @@ const stock: StockRequestEmailInput = {
   requestedQuantity: 24,
   estimatedTotalHt: 2136,
   customerNote: 'Besoin terrasse urgent.',
-  adminUrl: 'https://terrassea.com/admin?tab=stock-requests',
+  adminUrl: 'https://prosimport.com/admin?tab=stock-requests',
 }
 
 describe('partner request emails', () => {
@@ -76,7 +76,7 @@ const payment: PaymentConfirmedEmailInput = {
   containerReference: 'CONT-20HC-A',
   customerEmail: 'buyer@resto.fr',
   amountPaid: 240,
-  accountUrl: 'https://terrassea.com/account/reservations',
+  accountUrl: 'https://prosimport.com/account/reservations',
 }
 
 describe('payment confirmed emails', () => {
@@ -101,7 +101,7 @@ describe('invoice email', () => {
       number: 'FAC-000001',
       reference: 'CC-1',
       totalTtc: 1200,
-      invoiceUrl: 'https://terrassea.com/account/reservations/r1/facture/i1',
+      invoiceUrl: 'https://prosimport.com/account/reservations/r1/facture/i1',
     })
     expect(email.subject).toContain('FAC-000001')
     expect(email.html).toMatch(/1\s*200/) // EUR uses a narrow no-break space

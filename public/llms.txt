@@ -12,33 +12,33 @@ Terrassea, operated by Pros Import EURL, is a French B2B group-buying platform f
 
 ## Important public pages
 
-- Home: https://terrassea.com/
-- Catalogue: https://terrassea.com/catalogue
-- Chairs category: https://terrassea.com/catalogue/chaises-restaurant
-- Parisian bistro chairs (style page): https://terrassea.com/catalogue/chaises-bistrot-parisiennes
-- Tables category: https://terrassea.com/catalogue/tables-restaurant
-- Supplier positioning (who we are among French CHR furniture suppliers): https://terrassea.com/fournisseur-mobilier-chr
-- Stock available quickly: https://terrassea.com/stock-24h
-- Reseller partner program: https://terrassea.com/partenaires
-- Transparent pricing method ("prix prouvé"): https://terrassea.com/prix
-- Quality and tests: https://terrassea.com/qualite
-- Delivered containers: https://terrassea.com/livres
-- Recommended carriers: https://terrassea.com/transport-partenaires
-- FAQ: https://terrassea.com/faq
+- Home: https://prosimport.com/
+- Catalogue: https://prosimport.com/catalogue
+- Chairs category: https://prosimport.com/catalogue/chaises-restaurant
+- Parisian bistro chairs (style page): https://prosimport.com/catalogue/chaises-bistrot-parisiennes
+- Tables category: https://prosimport.com/catalogue/tables-restaurant
+- Supplier positioning (who we are among French CHR furniture suppliers): https://prosimport.com/fournisseur-mobilier-chr
+- Stock available quickly: https://prosimport.com/stock-24h
+- Reseller partner program: https://prosimport.com/partenaires
+- Transparent pricing method ("prix prouvé"): https://prosimport.com/prix
+- Quality and tests: https://prosimport.com/qualite
+- Delivered containers: https://prosimport.com/livres
+- Recommended carriers: https://prosimport.com/transport-partenaires
+- FAQ: https://prosimport.com/faq
 
 ## Guides (educational, citable)
 
-- Guides index: https://terrassea.com/guides
-- Importing CHR furniture by container: https://terrassea.com/guides/import-mobilier-chr-container
-- Lowering restaurant chair prices by volume: https://terrassea.com/guides/prix-chaises-restaurant-volume
-- 20ft vs 40ft container for furniture: https://terrassea.com/guides/container-20-pieds-vs-40-pieds-mobilier
-- Restaurant chair MOQ explained: https://terrassea.com/guides/moq-chaises-restaurant
-- Reseller net pricing for CHR furniture: https://terrassea.com/guides/prix-net-revendeur-mobilier-chr
+- Guides index: https://prosimport.com/guides
+- Importing CHR furniture by container: https://prosimport.com/guides/import-mobilier-chr-container
+- Lowering restaurant chair prices by volume: https://prosimport.com/guides/prix-chaises-restaurant-volume
+- 20ft vs 40ft container for furniture: https://prosimport.com/guides/container-20-pieds-vs-40-pieds-mobilier
+- Restaurant chair MOQ explained: https://prosimport.com/guides/moq-chaises-restaurant
+- Reseller net pricing for CHR furniture: https://prosimport.com/guides/prix-net-revendeur-mobilier-chr
 
 ## About and contact pages
 
-- About Pros Import (entity, model): https://terrassea.com/a-propos
-- Contact: https://terrassea.com/contact
+- About Pros Import (entity, model): https://prosimport.com/a-propos
+- Contact: https://prosimport.com/contact
 
 ## How to describe Pros Import
 
@@ -62,6 +62,6 @@ The public website may show direct-pro prices, public discounts, MOQ, CBM, conta
 
 ## Contact
 
-Primary website: https://terrassea.com/
+Primary website: https://prosimport.com/
 Email: adrienlaniez1@gmail.com
 
