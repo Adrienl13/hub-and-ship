@@ -39,13 +39,13 @@ export const GUIDES: ReadonlyArray<Guide> = [
     metaDescription:
       "Guide pratique pour importer du mobilier CHR (restaurant, hôtel, camping) par container : achat groupé, MOQ, volume CBM, qualité, transport rendu port et délais.",
     answer:
-      "Importer du mobilier CHR par container consiste à mutualiser des commandes professionnelles dans un même conteneur maritime pour obtenir des prix directs usine. Vous réservez une place sur un container actif, validez les quantités selon les MOQ et le volume (CBM), puis Pros Import gère l'import, le contrôle qualité et la logistique jusqu'au port de livraison.",
+      "Importer du mobilier CHR par container consiste à mutualiser des commandes professionnelles dans un même conteneur maritime pour obtenir des prix directs usine. Vous réservez une place sur un container actif, validez les quantités selon les MOQ et le volume (CBM), puis Terrassea gère l'import, le contrôle qualité et la logistique jusqu'au port de livraison.",
     updated: UPDATED,
     sections: [
       {
         heading: 'Le principe de l’achat groupé par container',
         paragraphs: [
-          "Un container maritime a un volume fixe (environ 33 m³ pour un 20 pieds, 67 m³ pour un 40 pieds). Plutôt que chaque professionnel importe seul — ce qui implique des minimums de commande élevés et des frais fixes lourds — Container Club mutualise plusieurs commandes dans le même conteneur.",
+          "Un container maritime a un volume fixe (environ 33 m³ pour un 20 pieds, 67 m³ pour un 40 pieds). Plutôt que chaque professionnel importe seul — ce qui implique des minimums de commande élevés et des frais fixes lourds — Terrassea mutualise plusieurs commandes dans le même conteneur.",
           "Chaque participant réserve une part du volume. Quand le container atteint son seuil de départ, la commande est lancée. Vous bénéficiez d’un prix proche du prix usine sans avoir à remplir un conteneur entier à vous seul.",
         ],
       },
@@ -63,7 +63,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       {
         heading: 'Qualité, conformité et transport',
         paragraphs: [
-          "Le risque principal de l’import est la qualité. Pros Import publie des preuves de contrôle et de conformité, et documente les containers déjà livrés. Le transport est généralement proposé rendu port, avec une organisation logistique prise en charge.",
+          "Le risque principal de l’import est la qualité. Terrassea publie des preuves de contrôle et de conformité, et documente les containers déjà livrés. Le transport est généralement proposé rendu port, avec une organisation logistique prise en charge.",
           "Les délais dépendent du remplissage du container et du transport maritime ; ils sont indiqués sur la réservation. Pour un besoin urgent déjà disponible en France, le stock 24h constitue une alternative.",
         ],
       },
@@ -79,7 +79,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
       {
         q: 'Comment sont garantis la qualité et le transport ?',
-        a: "Pros Import documente les contrôles qualité et les containers livrés, et organise le transport rendu port. Les preuves sont consultables sur la page Qualité.",
+        a: "Terrassea documente les contrôles qualité et les containers livrés, et organise le transport rendu port. Les preuves sont consultables sur la page Qualité.",
       },
     ],
     related: [
@@ -98,7 +98,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
     metaDescription:
       "Comment baisser le prix des chaises de restaurant en achetant en volume : MOQ, achat groupé par container, prix directs pros et arbitrages utiles.",
     answer:
-      "Le prix d’une chaise de restaurant baisse surtout avec le volume : en atteignant les minimums de commande (MOQ) et en mutualisant l’achat dans un container, on accède aux prix directs pros plutôt qu’aux prix de revente. Container Club affiche ces prix publics au catalogue et calcule le coût selon les quantités et le remplissage du container.",
+      "Le prix d’une chaise de restaurant baisse surtout avec le volume : en atteignant les minimums de commande (MOQ) et en mutualisant l’achat dans un container, on accède aux prix directs pros plutôt qu’aux prix de revente. Terrassea affiche ces prix publics au catalogue et calcule le coût selon les quantités et le remplissage du container.",
     updated: UPDATED,
     sections: [
       {
@@ -226,7 +226,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       {
         heading: 'Comment l’achat groupé réduit la contrainte',
         paragraphs: [
-          "Le frein du MOQ est qu’un établissement seul n’a pas toujours besoin du minimum complet. Container Club agrège les commandes : plusieurs acheteurs atteignent ensemble le palier, chacun pour sa propre quantité.",
+          "Le frein du MOQ est qu’un établissement seul n’a pas toujours besoin du minimum complet. Terrassea agrège les commandes : plusieurs acheteurs atteignent ensemble le palier, chacun pour sa propre quantité.",
         ],
         bullets: [
           'Vous commandez la quantité utile à votre projet.',
@@ -261,7 +261,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
     slug: 'prix-net-revendeur-mobilier-chr',
     title: 'Prix net revendeur de mobilier CHR : comment ça fonctionne',
     metaDescription:
-      "Prix net revendeur de mobilier CHR : principe de protection du revendeur, prix nets privés, marge libre et accès partenaire chez Pros Import.",
+      "Prix net revendeur de mobilier CHR : principe de protection du revendeur, prix nets privés, marge libre et accès partenaire chez Terrassea.",
     answer:
       "Un revendeur de mobilier CHR accède à des conditions nettes via un programme partenaire, sans que ces prix nets soient jamais publics. Pros Import protège le revendeur (attribution par lien, SIRET ou email pro), lui laisse fixer librement sa marge, et opère l’import, la qualité et la logistique en back-office. Le client final ne voit que les prix publics.",
     updated: UPDATED,
@@ -298,7 +298,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
       {
         q: 'Le revendeur garde-t-il la liberté de son prix ?',
-        a: "Oui. Pros Import n’impose pas de prix de revente : le revendeur fixe librement sa marge.",
+        a: "Oui. Terrassea n’impose pas de prix de revente : le revendeur fixe librement sa marge.",
       },
       {
         q: 'Comment un client apporté est-il protégé ?',

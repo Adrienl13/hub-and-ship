@@ -25,7 +25,7 @@ export function Footer() {
             <div className="flex items-center gap-2.5">
               <BrandMark className="h-8 w-8" inverse />
               <span className="font-display text-base font-semibold tracking-tight">
-                Container Club
+                Terrassea
               </span>
             </div>
             <p className="text-[color:var(--sand)]/65 mt-4 max-w-xs text-xs leading-relaxed">
@@ -168,7 +168,7 @@ export function Footer() {
                   href="/a-propos"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
-                  À propos de Pros Import
+                  À propos de Terrassea
                 </a>
               </li>
               <li>
@@ -181,10 +181,10 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:contact@prosimport.com"
+                  href="mailto:adrienlaniez1@gmail.com"
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
-                  contact@prosimport.com
+                  adrienlaniez1@gmail.com
                 </a>
               </li>
               <li className="text-[color:var(--sand)]/65">

@@ -703,7 +703,7 @@ export function ReservationDialog({
             <StatusBox
               tone="info"
               title="Aucune facturation transport en V1"
-              text="Container Club facture uniquement le prix rendu port. Le transport post-port est organisé et payé directement par le client."
+              text="Terrassea facture uniquement le prix rendu port. Le transport post-port est organisé et payé directement par le client."
             />
 
             <DialogActions onBack={goBack} nextDisabled={!deliveryValid} />
@@ -727,7 +727,7 @@ export function ReservationDialog({
               <p className="text-foreground/80 text-xs leading-5">
                 Vous serez redirigé vers la page de paiement sécurisée pour
                 régler les frais de réservation. Aucun numéro de carte n'est
-                saisi sur Container Club.
+                saisi sur Terrassea.
               </p>
               <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
                 Montant à régler aujourd'hui :{' '}
@@ -735,7 +735,7 @@ export function ReservationDialog({
                   {formatEUR(checkoutPayNow)}
                 </strong>{' '}
                 (frais de réservation non-remboursables sauf annulation
-                Container Club).
+                Terrassea).
               </div>
             </div>
 
@@ -764,7 +764,7 @@ export function ReservationDialog({
               />
               <Reassure
                 Icon={RefreshCcw}
-                t="Frais remboursés à 100% si Container Club annule le container"
+                t="Frais remboursés à 100% si Terrassea annule le container"
               />
               <Reassure
                 Icon={ShieldCheck}
@@ -772,7 +772,7 @@ export function ReservationDialog({
               />
               <Reassure
                 Icon={Truck}
-                t="Transport post-port non facturé par Container Club"
+                t="Transport post-port non facturé par Terrassea"
               />
             </div>
 
@@ -1022,7 +1022,7 @@ function PartnerCodePanel({
         </Button>
       </div>
       <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-        Un partenaire Container Club vous a recommandé ? Indiquez son code : il
+        Un partenaire Terrassea vous a recommandé ? Indiquez son code : il
         sera crédité de sa commission. Aucun impact sur votre prix.
       </p>
     </div>

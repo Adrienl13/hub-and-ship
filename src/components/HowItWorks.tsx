@@ -12,7 +12,7 @@ const STEPS: ReadonlyArray<{
   {
     n: '01',
     title: 'Réservation',
-    desc: 'Vous engagez votre commande avec 3% de frais (min 150€, max 500€). Non-remboursables sauf si Container Club annule.',
+    desc: 'Vous engagez votre commande avec 3% de frais (min 150€, max 500€). Non-remboursables sauf si Terrassea annule.',
     Icon: ClipboardCheck,
   },
   {

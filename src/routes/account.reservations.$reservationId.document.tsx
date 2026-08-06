@@ -17,7 +17,7 @@ export const Route = createFileRoute(
   head: () =>
     buildSeoHead({
       title: 'Récapitulatif de réservation',
-      description: 'Récapitulatif imprimable de votre réservation Container Club.',
+      description: 'Récapitulatif imprimable de votre réservation Terrassea.',
       path: '/account/reservations',
       noindex: true,
     }),
@@ -86,10 +86,10 @@ function ReservationDocumentPage() {
                 Récapitulatif de réservation
               </div>
               <h1 className="mt-1 font-display text-2xl font-semibold">
-                Pros Import — Container Club
+                Pros Import — Terrassea
               </h1>
               <p className="mt-0.5 text-xs text-neutral-500">
-                prosimport.com · Pros Import EURL · SIRET 98826998100011
+                terrassea.com · Pros Import EURL · SIRET 98826998100011
               </p>
             </div>
             <div className="text-right text-xs text-neutral-600">

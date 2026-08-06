@@ -125,7 +125,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
             currency: 'eur',
             unit_amount: unitAmount,
             product_data: {
-              name: `Réservation Container Club ${reservation.container_reference}`,
+              name: `Réservation Terrassea ${reservation.container_reference}`,
               description: `Frais de réservation · ${reservation.reference}`,
             },
           },

@@ -1,5 +1,5 @@
 // ============================================================
-// Container Club — devis PDF (print-to-PDF)
+// Terrassea — devis PDF (print-to-PDF)
 // ============================================================
 
 import { CATEGORY_LABEL } from './products'
@@ -83,7 +83,7 @@ export function buildQuoteHTML(q: QuoteData): string {
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Devis ${ref} — Container Club</title>
+<title>Devis ${ref} — Terrassea</title>
 <style>
   @page { size: A4; margin: 14mm 12mm; }
   * { box-sizing: border-box; }
@@ -191,7 +191,7 @@ export function buildQuoteHTML(q: QuoteData): string {
       <div class="brand">
         <div class="logo">C</div>
         <div>
-          <h1>Container Club</h1>
+          <h1>Terrassea</h1>
           <div class="sub">Pré-commande B2B · Importateur officiel France</div>
         </div>
       </div>
@@ -238,7 +238,7 @@ export function buildQuoteHTML(q: QuoteData): string {
       <div class="notes">
         <h4>Échéancier de paiement</h4>
         <ul>
-          <li>Réservation : 3 % (min 150 €, max 500 €), non-remboursables sauf annulation Container Club.</li>
+          <li>Réservation : 3 % (min 150 €, max 500 €), non-remboursables sauf annulation Terrassea.</li>
           <li>Acompte 27 % complémentaire à 80 % de remplissage.</li>
           <li>Solde 70 % avant expédition usine après contrôle qualité SGS.</li>
         </ul>
@@ -270,7 +270,7 @@ export function buildQuoteHTML(q: QuoteData): string {
     </div>
 
     <footer>
-      <div>Container Club — édité par Pros Import EURL · contact@prosimport.com</div>
+      <div>Terrassea — édité par Pros Import EURL · adrienlaniez1@gmail.com</div>
       <div>RCS Paris 988 269 981 · TVA FR08988269981</div>
     </footer>
   </div>

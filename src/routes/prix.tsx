@@ -148,7 +148,7 @@ export const Route = createFileRoute('/prix')({
     ...buildSeoHead({
       title: 'Le prix prouvé — d’où vient le prix de votre mobilier CHR',
       description:
-        'Un meuble CHR passe par 4 à 5 intermédiaires qui multiplient le prix usine par 2,5 à 3. Container Club achète en direct usine, mutualise le container entre pros et applique une seule marge : la méthode, les paliers de remise et les preuves.',
+        'Un meuble CHR passe par 4 à 5 intermédiaires qui multiplient le prix usine par 2,5 à 3. Terrassea achète en direct usine, mutualise le container entre pros et applique une seule marge : la méthode, les paliers de remise et les preuves.',
       path: '/prix',
     }),
     scripts: [

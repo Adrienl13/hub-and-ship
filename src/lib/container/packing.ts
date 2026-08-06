@@ -194,7 +194,7 @@ export function getVisualPackageSpec(
   }
 
   if (product.category === 'table') {
-    // Flat disassembled package (real Container Club spec: a 70×70 cm
+    // Flat disassembled package (real Terrassea spec: a 70×70 cm
     // bistro top with its leg bundle = 72 × 17 × 74 cm). Footprint
     // tracks the product's own top dimensions; the height is the
     // disassembled package height, not the assembled 73 cm.

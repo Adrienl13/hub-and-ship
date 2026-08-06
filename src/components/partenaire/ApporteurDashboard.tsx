@@ -51,7 +51,7 @@ export function ApporteurDashboard({ data }: { readonly data: PartnerSpaceData }
       ) : (
         <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-4 text-sm text-muted-foreground">
           Aucun code apporteur actif n&apos;est encore rattaché à votre compte.
-          Contactez votre référent Container Club.
+          Contactez votre référent Terrassea.
         </div>
       )}
 

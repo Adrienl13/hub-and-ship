@@ -11,7 +11,7 @@ export const Route = createFileRoute('/a-propos')({
     ...buildSeoHead({
       title: 'À propos de Pros Import',
       description:
-        "Pros Import opère Container Club : une centrale d'import française de mobilier outdoor CHR par container (achat groupé), pour restaurants, hôtels, campings et revendeurs.",
+        "Pros Import opère Terrassea : une centrale d'import française de mobilier outdoor CHR par container (achat groupé), pour restaurants, hôtels, campings et revendeurs.",
       path: '/a-propos',
     }),
     scripts: [
@@ -37,7 +37,7 @@ function AProposPage() {
         </h1>
 
         <p className="mt-5 text-sm leading-7 text-[color:var(--ink-soft)]">
-          Pros Import (Pros Import EURL) opère <strong>Container Club</strong>,
+          Pros Import (Pros Import EURL) opère <strong>Terrassea</strong>,
           une plateforme B2B française d’achat groupé de mobilier outdoor
           professionnel importé par container. Nous mutualisons les commandes de
           restaurants, hôtels, campings, beach clubs et revendeurs pour donner

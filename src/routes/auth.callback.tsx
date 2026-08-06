@@ -24,7 +24,7 @@ export const Route = createFileRoute('/auth/callback')({
   validateSearch: callbackSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Validation connexion — Container Club' },
+      { title: 'Validation connexion — Terrassea' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),

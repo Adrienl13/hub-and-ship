@@ -17,6 +17,6 @@ Disallow: /partenaire
 # over the /partenaire prefix above.
 Allow: /partenaires
 
-Sitemap: https://prosimport.com/sitemap.xml
-Sitemap: https://prosimport.com/sitemap-products.xml
-LLM-Summary: https://prosimport.com/llms.txt
+Sitemap: https://terrassea.com/sitemap.xml
+Sitemap: https://terrassea.com/sitemap-products.xml
+LLM-Summary: https://terrassea.com/llms.txt

@@ -45,7 +45,7 @@ function NotFoundComponent() {
     <html lang="fr">
       <head>
         <HeadContent />
-        <title>Page introuvable — Container Club</title>
+        <title>Page introuvable — Terrassea</title>
       </head>
       <body className="bg-background text-foreground">
         <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -86,18 +86,18 @@ export const Route = createRootRoute({
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       {
         title:
-          'Container Club — Mobilier outdoor pro mutualisé par container',
+          'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'description',
         content:
           "Réservez votre place sur le prochain container : mobilier outdoor pour pros (restaurants, hôtels, campings) à prix usine grâce à l'achat groupé. Importation officielle France.",
       },
-      { name: 'author', content: 'Pros Import — Container Club' },
+      { name: 'author', content: 'Pros Import — Terrassea' },
       {
         property: 'og:title',
         content:
-          'Container Club — Mobilier outdoor pro mutualisé par container',
+          'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         property: 'og:description',
@@ -110,7 +110,7 @@ export const Route = createRootRoute({
       {
         name: 'twitter:title',
         content:
-          'Container Club — Mobilier outdoor pro mutualisé par container',
+          'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'twitter:description',

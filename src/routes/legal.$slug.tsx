@@ -34,7 +34,7 @@ export const Route = createFileRoute('/legal/$slug')({
     const slug = params?.slug
     const doc = slug && isValidSlug(slug) ? getLegalDoc(slug) : undefined
     if (!doc) {
-      return { meta: [{ title: 'Document légal — Container Club' }] }
+      return { meta: [{ title: 'Document légal — Terrassea' }] }
     }
     return {
       ...buildSeoHead({

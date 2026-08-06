@@ -4,8 +4,16 @@ import {
   createStart,
 } from '@tanstack/react-start'
 
-const CANONICAL_HOST = 'prosimport.com'
+const CANONICAL_HOST = 'terrassea.com'
 const WWW_HOST = `www.${CANONICAL_HOST}`
+// Rebranding 08/2026 : l'ancien domaine reste routé sur ce worker et fait
+// une redirection permanente vers terrassea.com (même chemin + query) — le
+// SEO/GEO accumulé sur prosimport.com est transféré, jamais perdu.
+const LEGACY_HOSTS = new Set([
+  WWW_HOST,
+  'prosimport.com',
+  'www.prosimport.com',
+])
 
 const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "default-src 'self'",
@@ -34,7 +42,7 @@ export function getCanonicalRedirectLocation(
   requestUrl: string,
 ): string | null {
   const url = new URL(requestUrl)
-  if (url.hostname !== WWW_HOST) {
+  if (!LEGACY_HOSTS.has(url.hostname)) {
     return null
   }
 

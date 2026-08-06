@@ -191,7 +191,7 @@ export function PriceChart({
             delayed
           />
           <div className="text-[13px] font-bold text-[#F9F6F0]">
-            Container Club
+            Terrassea
           </div>
         </div>
       </div>

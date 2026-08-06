@@ -17,13 +17,13 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Mentions légales',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Mentions légales du site Container Club, édité par Pros Import EURL — éditeur, hébergeur, propriété intellectuelle.',
+      'Mentions légales du site Terrassea, édité par Pros Import EURL — éditeur, hébergeur, propriété intellectuelle.',
     content: (
       <>
         <LegalSection id="editeur" title="1. Éditeur du site">
           <P>
             Le présent site, accessible à l'adresse{' '}
-            <Strong>https://prosimport.com</Strong> (ci-après le « Site »), est
+            <Strong>https://terrassea.com</Strong> (ci-après le « Site »), est
             édité par :
           </P>
           <UL>
@@ -51,7 +51,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>TVA intracommunautaire :</Strong> FR08988269981
             </LI>
             <LI>
-              <Strong>Email :</Strong> contact@prosimport.com
+              <Strong>Email :</Strong> adrienlaniez1@gmail.com
             </LI>
           </UL>
         </LegalSection>
@@ -90,7 +90,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             L'ensemble des éléments du Site (textes, photographies,
             illustrations, logos, graphismes, mise en page, code source,
-            structure de base de données, marque « Container Club » et «
+            structure de base de données, marque « Terrassea » et «
             Terrassea ») est protégé par le Code de la propriété intellectuelle
             et appartient à Pros Import EURL ou à ses partenaires concédants.
           </P>
@@ -141,14 +141,14 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Conditions générales de vente',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Conditions générales de vente B2B de Container Club : pré-commande groupée, MOQ, échéancier de paiement, livraison, garanties.',
+      'Conditions générales de vente B2B de Terrassea : pré-commande groupée, MOQ, échéancier de paiement, livraison, garanties.',
     content: (
       <>
         <LegalSection id="preambule" title="1. Préambule">
           <P>
             Les présentes Conditions Générales de Vente (« CGV ») régissent les
             ventes conclues entre Pros Import EURL, exploitant la marque{' '}
-            <Strong>Container Club</Strong>, et tout professionnel (personne
+            <Strong>Terrassea</Strong>, et tout professionnel (personne
             morale ou personne physique agissant dans le cadre de son activité
             commerciale) souhaitant participer à une opération d'achat groupé
             via le Site (l'« Acheteur »).
@@ -165,7 +165,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="objet" title="2. Objet">
           <P>
-            Container Club organise des campagnes de pré-commande groupée de
+            Terrassea organise des campagnes de pré-commande groupée de
             mobilier outdoor professionnel. Chaque container réunit plusieurs
             Acheteurs autour d'un objectif de remplissage de 80 % minimum
             permettant de déclencher la production usine et l'expédition vers la
@@ -386,13 +386,13 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Conditions générales d’utilisation',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Conditions générales d’utilisation du site Container Club — accès, compte, comportements interdits, responsabilité éditeur.',
+      'Conditions générales d’utilisation du site Terrassea — accès, compte, comportements interdits, responsabilité éditeur.',
     content: (
       <>
         <LegalSection id="objet" title="1. Objet">
           <P>
             Les présentes Conditions Générales d'Utilisation (« CGU ») régissent
-            l'accès et l'usage du site Container Club, édité par Pros Import
+            l'accès et l'usage du site Terrassea, édité par Pros Import
             SAS. Elles complètent les{' '}
             <a href="/legal/cgv" className="underline">
               Conditions Générales de Vente
@@ -406,7 +406,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             Le Site est accessible gratuitement à toute personne disposant d'un
             accès à Internet. Tous les frais nécessaires à l'accès aux services
             (matériel informatique, connexion Internet, etc.) sont à la charge
-            de l'utilisateur. Container Club met en œuvre les moyens
+            de l'utilisateur. Terrassea met en œuvre les moyens
             raisonnables pour assurer une disponibilité du Site satisfaisante,
             sans garantie d'absence d'interruption.
           </P>
@@ -465,7 +465,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="responsabilite" title="6. Responsabilité">
           <P>
-            Container Club ne saurait être tenu responsable des dommages
+            Terrassea ne saurait être tenu responsable des dommages
             résultant d'une mauvaise utilisation du Site, d'une indisponibilité
             temporaire, ou de la présence de virus en dépit des précautions
             prises. L'utilisateur reconnaît disposer de la compétence et des
@@ -476,7 +476,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="modification" title="7. Modification des CGU">
           <P>
-            Container Club peut modifier les présentes CGU à tout moment. La
+            Terrassea peut modifier les présentes CGU à tout moment. La
             version applicable est celle en vigueur lors de l'utilisation du
             Site. Les modifications substantielles sont notifiées par email aux
             titulaires de comptes actifs.
@@ -500,7 +500,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Politique de confidentialité',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Politique de confidentialité Container Club — RGPD, données collectées, durée, sous-traitants, vos droits.',
+      'Politique de confidentialité Terrassea — RGPD, données collectées, durée, sous-traitants, vos droits.',
     content: (
       <>
         <LegalSection id="responsable" title="1. Responsable du traitement">
@@ -520,7 +520,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         </LegalSection>
 
         <LegalSection id="donnees" title="2. Données collectées">
-          <P>Container Club collecte les catégories de données suivantes :</P>
+          <P>Terrassea collecte les catégories de données suivantes :</P>
           <UL>
             <LI>
               <Strong>Identification :</Strong> nom complet, fonction, raison
@@ -540,7 +540,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Données de paiement :</Strong> traitées exclusivement par
-              Stripe (cf. sous-traitants). Container Club ne stocke jamais le
+              Stripe (cf. sous-traitants). Terrassea ne stocke jamais le
               numéro de carte bancaire (PAN).
             </LI>
             <LI>
@@ -631,7 +631,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               Données de paiement : <Strong>13 mois maximum</Strong> côté
-              Container Club ; durée conforme aux règles propres de Stripe pour
+              Terrassea ; durée conforme aux règles propres de Stripe pour
               les tokens.
             </LI>
             <LI>
@@ -727,7 +727,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Politique cookies',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Politique cookies de Container Club — types de traceurs, consentement, comment paramétrer ou refuser.',
+      'Politique cookies de Terrassea — types de traceurs, consentement, comment paramétrer ou refuser.',
     content: (
       <>
         <LegalSection id="definition" title="1. Qu'est-ce qu'un cookie ?">
@@ -768,7 +768,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <P>
             <Strong>
-              Container Club n'utilise actuellement aucun cookie publicitaire ni
+              Terrassea n'utilise actuellement aucun cookie publicitaire ni
               aucun traceur de réseau social.
             </Strong>
           </P>
@@ -787,7 +787,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               anti-bots, strictement nécessaire.
             </LI>
             <LI>
-              <Strong>cc_consent</Strong> (Container Club, 6 mois) — mémorise
+              <Strong>cc_consent</Strong> (Terrassea, 6 mois) — mémorise
               vos choix de consentement cookies.
             </LI>
             <LI>
@@ -827,12 +827,12 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
     title: 'Politique de remboursement',
     updatedAt: '19 mai 2026',
     metaDescription:
-      'Politique de remboursement Container Club — cas, conditions, délais, modalités.',
+      'Politique de remboursement Terrassea — cas, conditions, délais, modalités.',
     content: (
       <>
         <LegalSection id="principe" title="1. Principe général">
           <P>
-            Container Club applique une politique de remboursement transparente
+            Terrassea applique une politique de remboursement transparente
             et alignée sur ses CGV. Les remboursements sont effectués sur le
             moyen de paiement original utilisé pour la réservation initiale.
           </P>
@@ -844,7 +844,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         >
           <UL>
             <LI>
-              <Strong>Annulation du container par Container Club</Strong> (seuil
+              <Strong>Annulation du container par Terrassea</Strong> (seuil
               80 % non atteint, force majeure, défaillance partenaire usine) —
               remboursement de l'intégralité des sommes versées, y compris les
               frais de réservation.
@@ -856,7 +856,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Refus du SIRET au stade de l'acompte 27 %</Strong> —
-              Container Club n'autorisant que les Acheteurs professionnels.
+              Terrassea n'autorisant que les Acheteurs professionnels.
             </LI>
             <LI>
               <Strong>Défaut majeur non corrigeable</Strong> détecté avant
@@ -876,7 +876,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <UL>
             <LI>
-              <Strong>Remboursés intégralement</Strong> si Container Club annule
+              <Strong>Remboursés intégralement</Strong> si Terrassea annule
               le container ou ne tient pas ses engagements contractuels.
             </LI>
             <LI>
@@ -901,7 +901,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="retard" title="5. Geste commercial en cas de retard">
           <P>
             En cas de retard de livraison supérieur à 7 jours par rapport à la
-            date annoncée et imputable à Container Club, un avoir commercial
+            date annoncée et imputable à Terrassea, un avoir commercial
             automatique de <Strong>2 % du sous-total HT</Strong> est appliqué
             sur la prochaine commande. Au-delà de 30 jours de retard, l'Acheteur
             peut résilier la commande et bénéficier d'un remboursement intégral.
@@ -931,7 +931,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </Strong>{' '}
             de 14 jours prévu par les articles L221-18 et suivants du Code de la
             consommation — celui-ci est réservé aux consommateurs particuliers.
-            Container Club étant strictement réservé aux professionnels (cf.
+            Terrassea étant strictement réservé aux professionnels (cf.
             CGV), ce droit ne s'applique pas.
           </P>
         </LegalSection>

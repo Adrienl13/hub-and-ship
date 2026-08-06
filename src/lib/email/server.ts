@@ -5,7 +5,7 @@
 // (skipped) rather than an error.
 
 const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email'
-const FALLBACK_SENDER_NAME = 'Container Club'
+const FALLBACK_SENDER_NAME = 'Terrassea'
 const FALLBACK_SENDER_EMAIL = 'contact@terrassea.com'
 
 export function isEmailConfigured(): boolean {

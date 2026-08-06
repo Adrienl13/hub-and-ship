@@ -1,4 +1,4 @@
-// Marque Container Club (D6) : carré container — nervures verticales en
+// Marque Terrassea (D6) : carré container — nervures verticales en
 // haut/bas comme la tôle ondulée d'un container — et « C » géométrique tracé
 // en arc, déclinable sur fond encre (défaut) ou fond sable (`inverse`).
 // La même géométrie est dupliquée en dur dans public/favicon.svg : toute
@@ -18,7 +18,7 @@ export function BrandMark({
       viewBox="0 0 32 32"
       className={className}
       role="img"
-      aria-label="Container Club"
+      aria-label="Terrassea"
     >
       <rect width="32" height="32" rx="7" fill={plate} />
       <g stroke={glyph} strokeOpacity="0.28" strokeWidth="1.6">

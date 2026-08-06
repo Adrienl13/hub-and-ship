@@ -31,14 +31,14 @@ export const Route = createFileRoute('/')({
     ...buildSeoHead({
       title: 'Mobilier outdoor pro direct usine par container',
       description:
-        'Container Club mutualise les commandes de mobilier outdoor pour restaurants, hôtels et campings : prix usine, container partagé, contrôle qualité et stock disponible.',
+        'Terrassea mutualise les commandes de mobilier outdoor pour restaurants, hôtels et campings : prix usine, container partagé, contrôle qualité et stock disponible.',
       path: '/',
     }),
     scripts: [
       jsonLdScript({
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'Container Club',
+        name: 'Terrassea',
         url: SITE_URL,
       }),
     ],

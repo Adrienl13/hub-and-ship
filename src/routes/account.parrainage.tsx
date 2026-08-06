@@ -15,7 +15,7 @@ export const Route = createFileRoute('/account/parrainage')({
     buildSeoHead({
       title: 'Le parrainage devient le programme apporteur',
       description:
-        'Le parrainage Container Club évolue : recommandez des professionnels et touchez 8 % de commission sur le CA encaissé pendant 12 mois.',
+        'Le parrainage Terrassea évolue : recommandez des professionnels et touchez 8 % de commission sur le CA encaissé pendant 12 mois.',
       path: '/account/parrainage',
       noindex: true,
     }),

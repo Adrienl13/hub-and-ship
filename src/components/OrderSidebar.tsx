@@ -576,7 +576,7 @@ export function OrderSidebar({
         {[
           {
             Icon: RefreshCcw,
-            t: 'Remboursement 100% si Container Club annule',
+            t: 'Remboursement 100% si Terrassea annule',
           },
           { Icon: Lock, t: 'Paiement Stripe sécurisé · 3D Secure' },
           {

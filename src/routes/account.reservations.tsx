@@ -33,7 +33,7 @@ export const Route = createFileRoute('/account/reservations')({
   component: AccountReservationsPage,
   head: () => ({
     meta: [
-      { title: 'Mes réservations — Container Club' },
+      { title: 'Mes réservations — Terrassea' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),
@@ -292,7 +292,7 @@ function AccountTopBar() {
             C
           </span>
           <span className="font-display text-base font-semibold tracking-tight">
-            Container Club
+            Terrassea
           </span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">

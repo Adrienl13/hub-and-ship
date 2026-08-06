@@ -248,10 +248,10 @@ function ReferentRecap({ channel }: { readonly channel: SalesChannel }) {
         </p>
         <p className="mt-3">
           Le détail de vos conditions et votre calendrier de containers sont
-          suivis avec votre référent Container Club.
+          suivis avec votre référent Terrassea.
         </p>
         <Button asChild className="mt-4 gap-1.5">
-          <a href="mailto:contact@prosimport.com?subject=Espace%20partenaire">
+          <a href="mailto:adrienlaniez1@gmail.com?subject=Espace%20partenaire">
             <Mail className="h-4 w-4" />
             Contactez votre référent
           </a>
@@ -437,7 +437,7 @@ function ShareLinkCard({
     sharePath && typeof window !== 'undefined'
       ? `${window.location.origin}${sharePath}`
       : sharePath
-        ? `https://prosimport.com${sharePath}`
+        ? `https://terrassea.com${sharePath}`
         : null
 
   async function copy(): Promise<void> {

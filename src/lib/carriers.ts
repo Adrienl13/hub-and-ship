@@ -1,7 +1,7 @@
 /**
  * Transporteurs partenaires recommandés.
  *
- * V1: liste statique éditée dans le code. Container Club ne facture rien
+ * V1: liste statique éditée dans le code. Terrassea ne facture rien
  * sur le transport post-port — le client contacte directement le partenaire.
  *
  * V2 (futur): table Supabase `carrier_partners` + admin CRUD.
@@ -146,7 +146,7 @@ export function findCarrierBySlug(slug: string): Carrier | undefined {
 
 export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   {
-    q: 'Container Club touche-t-il une commission sur les transporteurs ?',
+    q: 'Terrassea touche-t-il une commission sur les transporteurs ?',
     a: "Non. Aucun pourcentage, aucun apporteur d'affaires, aucune rétrocession. La liste est éditoriale : on ne référence que les transporteurs qu'on connaît et qu'on recommanderait à un confrère. Vous contactez directement le partenaire, négociez et payez en direct.",
   },
   {
@@ -155,7 +155,7 @@ export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: "Et si je n'arrive pas à trouver de transporteur ?",
-    a: "Écrivez-nous (contact@prosimport.com) en précisant votre code postal de livraison, le volume (m³) et la date d'arrivée prévue. On vous met en relation directement avec un partenaire qui couvre votre zone.",
+    a: "Écrivez-nous (adrienlaniez1@gmail.com) en précisant votre code postal de livraison, le volume (m³) et la date d'arrivée prévue. On vous met en relation directement avec un partenaire qui couvre votre zone.",
   },
   {
     q: 'Les prix indiqués sont-ils fermes ?',

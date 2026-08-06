@@ -317,7 +317,7 @@ function PartnerTrustPanel() {
     <div>
       <h3 className="text-lg font-extrabold">Pourquoi les pros nous font confiance</h3>
       <p className="mt-2.5 text-[14.5px] text-[color:var(--ink-soft)]">
-        Container Club est la marque de Pros Import EURL, importateur officiel
+        Terrassea est la marque de Pros Import EURL, importateur officiel
         français. Chaque container est contrôlé par SGS avant expédition,
         dédouané par nos soins, et couvert par une garantie 2 ans avec SAV en
         France.

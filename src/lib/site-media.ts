@@ -81,7 +81,7 @@ export const DEFAULT_SITE_MEDIA: SiteMediaSet = {
   prixHero: fallback(
     'prix-hero',
     '/images/home/collage-terrasses.webp',
-    'Terrasses de professionnels équipées par Container Club',
+    'Terrasses de professionnels équipées par Terrassea',
   ),
   trajet: [null, null, null, null],
 }

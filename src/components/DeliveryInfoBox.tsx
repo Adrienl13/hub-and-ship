@@ -107,7 +107,7 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
               Le transport final varie fortement selon votre zone, votre quai,
-              votre volume et vos habitudes logistiques. Container Club ne prend
+              votre volume et vos habitudes logistiques. Terrassea ne prend
               pas de marge cachée dessus.
             </p>
           </div>

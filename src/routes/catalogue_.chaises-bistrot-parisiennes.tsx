@@ -101,7 +101,7 @@ function ChaisesBistrotParisiennesPage() {
     <SeoLandingPage
       eyebrow="Chaises bistrot parisiennes"
       title="La chaise bistrot parisienne, au prix import direct."
-      description="Pour équiper un restaurant en chaises bistrot parisiennes, deux familles existent : le rotin synthétique tressé sur aluminium (terrasses à usage intensif) et le rotin naturel (charme des salles intérieures). Pros Import importe les modèles terrasse en direct usine, par container mutualisé entre professionnels — mêmes codes visuels, sans la marge de distribution."
+      description="Pour équiper un restaurant en chaises bistrot parisiennes, deux familles existent : le rotin synthétique tressé sur aluminium (terrasses à usage intensif) et le rotin naturel (charme des salles intérieures). Terrassea importe les modèles terrasse en direct usine, par container mutualisé entre professionnels — mêmes codes visuels, sans la marge de distribution."
       proofPoints={[
         'Dès 60-80 € HT l’unité en container, MOQ 50 puis +10',
         'Tressage polyrotin S-PE résistant UV, structure aluminium empilable',

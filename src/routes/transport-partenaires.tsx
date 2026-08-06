@@ -98,7 +98,7 @@ function HeroSection({ carrierCount }: { readonly carrierCount: number }) {
           Transporteurs partenaires recommandés.
         </h1>
         <p className="mt-4 max-w-3xl text-base text-[color:var(--ink-soft)]">
-          Container Club facture uniquement <strong>le prix rendu port</strong>{' '}
+          Terrassea facture uniquement <strong>le prix rendu port</strong>{' '}
           (Marseille-Fos ou Le Havre). Pour acheminer votre mobilier depuis le
           quai jusqu'à votre établissement, voici les transporteurs avec
           lesquels nos clients travaillent.{' '}
@@ -319,7 +319,7 @@ function ContactCta() {
             asChild
             className="hover:bg-foreground/90 h-11 rounded-sm bg-foreground px-5 text-background"
           >
-            <a href="mailto:contact@prosimport.com?subject=Demande%20de%20mise%20en%20relation%20transporteur">
+            <a href="mailto:adrienlaniez1@gmail.com?subject=Demande%20de%20mise%20en%20relation%20transporteur">
               Demander une mise en relation
               <ArrowRight className="h-4 w-4" />
             </a>

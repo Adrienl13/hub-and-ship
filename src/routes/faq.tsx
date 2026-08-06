@@ -26,7 +26,7 @@ export const Route = createFileRoute('/faq')({
     ...buildSeoHead({
       title: 'FAQ achat groupé mobilier outdoor',
       description:
-        'Foire aux questions Container Club : seuil 80 %, MOQ par design, échéancier de paiement, douane, livraison, garanties et SAV.',
+        'Foire aux questions Terrassea : seuil 80 %, MOQ par design, échéancier de paiement, douane, livraison, garanties et SAV.',
       path: '/faq',
     }),
     scripts: [

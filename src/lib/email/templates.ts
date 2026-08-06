@@ -5,10 +5,10 @@
 // Branded contact surface (the sending domain is authenticated in Brevo and
 // receives via Cloudflare Email Routing). Single source of truth for footers
 // and text signatures so we never leak a personal address.
-const CONTACT_EMAIL = 'contact@prosimport.com'
-const SITE_URL = 'https://prosimport.com'
-const SITE_LABEL = 'prosimport.com'
-const TEXT_SIGNATURE = `Container Club — Pros Import EURL
+const CONTACT_EMAIL = 'adrienlaniez1@gmail.com'
+const SITE_URL = 'https://terrassea.com'
+const SITE_LABEL = 'terrassea.com'
+const TEXT_SIGNATURE = `Terrassea — Pros Import EURL
 ${SITE_LABEL} · ${CONTACT_EMAIL}`
 
 export interface ReservationEmailInput {
@@ -72,14 +72,14 @@ function shell({
 <tr><td align="center">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e3d8c4;border-radius:6px;overflow:hidden;">
 <tr><td style="padding:24px 32px;border-bottom:1px solid #e3d8c4;">
-<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#c25e2a;font-weight:600;">Container Club</div>
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#c25e2a;font-weight:600;">Terrassea</div>
 <div style="font-size:22px;font-weight:600;margin-top:4px;font-family:Georgia,serif;">${escape(title)}</div>
 </td></tr>
 <tr><td style="padding:24px 32px;">
 ${body}
 </td></tr>
 <tr><td style="padding:16px 32px;border-top:1px solid #e3d8c4;font-size:11px;color:#666;line-height:1.5;">
-Container Club — édité par Pros Import EURL · 60 Rue François Ier, 75008 Paris<br>
+Terrassea — édité par Pros Import EURL · 60 Rue François Ier, 75008 Paris<br>
 <a href="${SITE_URL}" style="color:#c25e2a;text-decoration:none;">${SITE_LABEL}</a> · <a href="mailto:${CONTACT_EMAIL}" style="color:#666;text-decoration:none;">${CONTACT_EMAIL}</a><br>
 RCS Paris 988 269 981 · SIRET 98826998100011 · TVA FR08988269981
 </td></tr>
@@ -115,7 +115,7 @@ export function buildReservationCreatedEmailToUser(
   const preheader = `Votre place sur le container ${input.containerReference} est sécurisée. Détails et prochaines étapes ci-dessous.`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation <strong>${escape(input.reference)}</strong> pour le container <strong>${escape(input.containerReference)}</strong> est bien enregistrée.</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Un membre Container Club vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}). À réception, votre place est verrouillée.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}). À réception, votre place est verrouillée.</p>
 ${renderLines(input.lines)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;border-top:2px solid #1a1a1a;padding-top:8px;">
 ${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
@@ -133,7 +133,7 @@ ${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td>
 
 Votre réservation ${input.reference} pour le container ${input.containerReference} est bien enregistrée.
 
-Un membre Container Club vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}).
+Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}).
 
 Récapitulatif :
 ${input.lines.map((l) => `- ${l.productName} (${l.variantName}) · ${l.quantity} unités · ${formatEur(l.subtotalHt)}`).join('\n')}
@@ -157,7 +157,7 @@ ${TEXT_SIGNATURE}
 export function buildReservationCreatedEmailToAdmin(
   input: ReservationEmailInput,
 ): { subject: string; html: string; text: string } {
-  const subject = `[Container Club] Nouvelle résa ${input.reference} — ${input.contactCompany}`
+  const subject = `[Terrassea] Nouvelle résa ${input.reference} — ${input.contactCompany}`
   const preheader = `${input.contactCompany} (${input.siret}) a réservé pour ${formatEur(input.totalHt)} HT sur ${input.containerReference}.`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle réservation à traiter sous 24h.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
@@ -230,7 +230,7 @@ ${amountLine}
 </p>${
     input.accountLinkIsMagic
       ? `
-<p style="font-size:12px;line-height:1.6;margin:12px 0 0;text-align:center;color:#999;">Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.</p>`
+<p style="font-size:12px;line-height:1.6;margin:12px 0 0;text-align:center;color:#999;">Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur terrassea.com.</p>`
       : ''
   }`
   const text = `Bonjour,
@@ -238,7 +238,7 @@ ${amountLine}
 Nous confirmons la réception de votre paiement pour la réservation ${input.reference} (container ${input.containerReference}). Votre place est verrouillée.
 ${input.amountPaid ? `Montant réglé : ${formatEur(input.amountPaid)}\n` : ''}
 Voir votre réservation (connexion automatique) : ${input.accountUrl}
-${input.accountLinkIsMagic ? 'Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.\n' : ''}
+${input.accountLinkIsMagic ? 'Lien à usage unique — ensuite, connectez-vous avec votre email sur terrassea.com.\n' : ''}
 ${TEXT_SIGNATURE}`
   return {
     subject,
@@ -373,10 +373,10 @@ export function buildPartnerRequestConfirmationEmail(
   input: PartnerRequestEmailInput,
 ): { subject: string; html: string; text: string } {
   const subject = 'Votre demande partenaire est bien reçue'
-  const preheader = 'Pros Import revient vers vous rapidement.'
+  const preheader = 'Terrassea revient vers vous rapidement.'
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre demande pour <strong>${escape(input.companyName)}</strong>. Notre équipe l'étudie et revient vers vous sous 48 h ouvrées.</p>
-<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">Pros Import protège les revendeurs : prix nets privés, marge libre, attribution de vos clients. Vous pourrez bientôt accéder à votre espace partenaire.</p>`
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">Terrassea protège les revendeurs : prix nets privés, marge libre, attribution de vos clients. Vous pourrez bientôt accéder à votre espace partenaire.</p>`
   const text = `Bonjour ${input.contactName},
 
 Nous avons bien reçu votre demande pour ${input.companyName}. Notre équipe revient vers vous sous 48 h ouvrées.
@@ -483,7 +483,7 @@ export function buildReservationCancelledEmailToUser(
 ${reasonBlock}
 ${refundBlock}
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Si vous souhaitez rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email — on revient vers vous rapidement.</p>
-<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Merci pour votre confiance,<br>L'équipe Container Club</p>`
+<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Merci pour votre confiance,<br>L'équipe Terrassea</p>`
 
   const reasonText = input.cancellationReason
     ? `\nMotif : ${input.cancellationReason}\n`
@@ -499,11 +499,11 @@ ${reasonText}${refundText}
 Pour rebondir sur un autre container ou clarifier l'annulation, répondez simplement à cet email.
 
 Merci pour votre confiance,
-L'équipe Container Club
+L'équipe Terrassea
 
-Container Club — Pros Import EURL
+Terrassea — Pros Import EURL
 60 Rue François Ier, 75008 Paris
-contact@prosimport.com`
+adrienlaniez1@gmail.com`
 
   return {
     subject,
@@ -566,7 +566,7 @@ export function buildContactConfirmationEmail(input: ContactEmailInput): {
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.name)},</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre message (<strong>${escape(input.topicLabel)}</strong>). Notre équipe vous répond sous <strong>24 h ouvrées</strong>, directement à cette adresse.</p>
 <p style="font-size:13px;line-height:1.7;margin:0 0 16px;padding:12px;background:#f6f2ea;border-radius:4px;white-space:pre-wrap;color:#666;">${escape(input.message)}</p>
-<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">En attendant : le catalogue et les prix directs sont sur <a href="https://prosimport.com/catalogue" style="color:#1a1a1a;">prosimport.com/catalogue</a>, et la méthode de prix sur <a href="https://prosimport.com/prix" style="color:#1a1a1a;">prosimport.com/prix</a>.</p>`
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">En attendant : le catalogue et les prix directs sont sur <a href="https://terrassea.com/catalogue" style="color:#1a1a1a;">terrassea.com/catalogue</a>, et la méthode de prix sur <a href="https://terrassea.com/prix" style="color:#1a1a1a;">terrassea.com/prix</a>.</p>`
   const text = `Bonjour ${input.name},
 
 Nous avons bien reçu votre message (${input.topicLabel}). Notre équipe vous répond sous 24 h ouvrées, directement à cette adresse.

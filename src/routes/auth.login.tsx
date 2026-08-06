@@ -31,7 +31,7 @@ export const Route = createFileRoute('/auth/login')({
   validateSearch: loginSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Connexion — Container Club' },
+      { title: 'Connexion — Terrassea' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),
@@ -132,8 +132,8 @@ function LoginPage() {
             <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 mb-5 rounded-md border p-3 text-xs leading-5">
               La connexion est momentanément indisponible. Merci de réessayer
               dans quelques minutes, ou écrivez-nous à{' '}
-              <a className="underline" href="mailto:contact@prosimport.com">
-                contact@prosimport.com
+              <a className="underline" href="mailto:adrienlaniez1@gmail.com">
+                adrienlaniez1@gmail.com
               </a>
               .
             </div>

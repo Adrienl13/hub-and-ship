@@ -86,7 +86,7 @@ export const PARTNER_STATUS_CARDS: ReadonlyArray<PartnerStatusCard> = [
       'Lien et QR code de suivi personnels — chaque vente vous est attribuée',
       'Corner démo fourni après validation (2–3 chaises + 2 tables)',
       'Tableau de bord : clients apportés, réservations, commissions en temps réel',
-      'Zéro stock, zéro facturation, zéro SAV — Container Club facture le client final',
+      'Zéro stock, zéro facturation, zéro SAV — Terrassea facture le client final',
     ],
     excluded: [
       'Tarif d’achat préférentiel (vous n’achetez pas)',
@@ -291,6 +291,6 @@ export const PARTNER_FAQ: ReadonlyArray<PartnerFaqItem> = [
   },
   {
     q: 'Qui gère le SAV et la garantie ?',
-    a: 'Container Club, intégralement. Garantie 2 ans, pièces et SAV traités en France. En statut apporteur, vous n’avez aucune obligation après la mise en relation.',
+    a: 'Terrassea, intégralement. Garantie 2 ans, pièces et SAV traités en France. En statut apporteur, vous n’avez aucune obligation après la mise en relation.',
   },
 ]

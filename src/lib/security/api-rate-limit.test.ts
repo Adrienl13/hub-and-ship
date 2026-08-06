@@ -8,7 +8,7 @@ import {
 } from '@/lib/security/api-rate-limit'
 
 function req(ip: string): Request {
-  return new Request('https://prosimport.com/api/contact', {
+  return new Request('https://terrassea.com/api/contact', {
     method: 'POST',
     headers: { 'cf-connecting-ip': ip },
   })

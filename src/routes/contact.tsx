@@ -36,7 +36,7 @@ export const Route = createFileRoute('/contact')({
     ...buildSeoHead({
       title: 'Contact',
       description:
-        'Contacter Pros Import / Container Club : import de mobilier CHR par container, achat groupé, programme revendeur et stock disponible sous 24h.',
+        'Contacter Terrassea (Pros Import EURL) : import de mobilier CHR par container, achat groupé, programme revendeur et stock disponible sous 24h.',
       path: '/contact',
     }),
     scripts: [
@@ -59,7 +59,7 @@ function ContactPage() {
       <main className="mx-auto max-w-3xl px-6 py-10">
         <div className="label-eyebrow text-[color:var(--ember)]">Contact</div>
         <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-          Parler à Pros Import
+          Parler à Terrassea
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-muted-foreground">
           Une question sur un produit, un container, une réservation ou le
@@ -72,10 +72,10 @@ function ContactPage() {
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[color:var(--ember)]" />
             <a
-              href="mailto:contact@prosimport.com"
+              href="mailto:adrienlaniez1@gmail.com"
               className="text-sm font-medium underline"
             >
-              contact@prosimport.com
+              adrienlaniez1@gmail.com
             </a>
           </div>
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

@@ -20,7 +20,7 @@ export const Route = createFileRoute(
   head: () =>
     buildSeoHead({
       title: 'Facture',
-      description: 'Facture Container Club.',
+      description: 'Facture Terrassea.',
       path: '/account/reservations',
       noindex: true,
     }),
@@ -206,8 +206,8 @@ function InvoicePage() {
               débits.
             </p>
             <p className="mt-2">
-              Pros Import EURL — Container Club · prosimport.com ·
-              contact@prosimport.com
+              Pros Import EURL — Terrassea · terrassea.com ·
+              adrienlaniez1@gmail.com
             </p>
           </footer>
         </article>

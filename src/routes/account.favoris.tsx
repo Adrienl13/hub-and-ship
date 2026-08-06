@@ -15,7 +15,7 @@ export const Route = createFileRoute('/account/favoris')({
   head: () =>
     buildSeoHead({
       title: 'Mes favoris',
-      description: 'Vos produits favoris Container Club.',
+      description: 'Vos produits favoris Terrassea.',
       path: '/account/favoris',
       noindex: true,
     }),

@@ -63,7 +63,7 @@ export const Route = createFileRoute('/p/$partnerSlug')({
       ...buildSeoHead({
         title: `Sélection partenaire ${partnerName}`,
         description:
-          'Sélection partenaire Pros Import : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
+          'Sélection partenaire Terrassea : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
         path: buildPartnerSharePath({ slug }),
         image: PRODUCTS[0]?.mainImageUrl,
         // Espace d'URL non borné (n'importe quel slug matche) : ces pages
@@ -124,7 +124,7 @@ function PartnerSharePage() {
                 Sélection partenaire
               </div>
               <h1 className="mt-3 max-w-3xl font-display text-4xl tracking-tight sm:text-5xl">
-                {partnerName} vous ouvre son accès Pros Import.
+                {partnerName} vous ouvre son accès Terrassea.
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-[color:var(--ink-soft)]">
                 Vous consultez une page co-brandée : le projet reste rattaché au

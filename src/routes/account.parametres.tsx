@@ -32,7 +32,7 @@ export const Route = createFileRoute('/account/parametres')({
   head: () =>
     buildSeoHead({
       title: 'Paramètres du compte',
-      description: 'Gérez votre profil Pros Import — Container Club.',
+      description: 'Gérez votre profil Pros Import — Terrassea.',
       path: '/account/parametres',
       noindex: true,
     }),
@@ -123,7 +123,7 @@ function AccountSettings() {
         config,
       ) as unknown as RgpdClient
       const data = await exportMyAccountData(client)
-      downloadJson(data, 'mes-donnees-prosimport.json')
+      downloadJson(data, 'mes-donnees-terrassea.json')
       toast.success('Export téléchargé.')
     } catch (err) {
       toast.error(

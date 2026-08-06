@@ -260,7 +260,7 @@ const STEPS = [
   {
     num: '04',
     title: 'Expédition + douane',
-    text: '30 jours de transit maritime + dédouanement géré par Pros Import.',
+    text: '30 jours de transit maritime + dédouanement géré par Terrassea.',
   },
   {
     num: '05',
@@ -344,7 +344,7 @@ export function DeliverySection() {
       </h2>
       <p className="mb-9 mt-0 max-w-[680px] text-[17px] text-[color:var(--color-text-secondary)]">
         Le transport final varie selon votre zone, votre quai et vos habitudes
-        logistiques. Container Club ne prend aucune marge cachée dessus.
+        logistiques. Terrassea ne prend aucune marge cachée dessus.
       </p>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">

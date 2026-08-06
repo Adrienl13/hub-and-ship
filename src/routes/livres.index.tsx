@@ -28,7 +28,7 @@ export const Route = createFileRoute('/livres/')({
     ...buildSeoHead({
       title: 'Containers livrés',
       description:
-        'Historique transparent des containers livrés par Container Club : pros servis, articles, économies, ponctualité.',
+        'Historique transparent des containers livrés par Terrassea : pros servis, articles, économies, ponctualité.',
       path: '/livres',
     }),
     scripts: [

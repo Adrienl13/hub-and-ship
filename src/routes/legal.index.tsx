@@ -51,7 +51,7 @@ export const Route = createFileRoute('/legal/')({
     ...buildSeoHead({
       title: 'Documents légaux',
       description:
-        'Tous les documents légaux de Container Club : mentions légales, CGV, CGU, confidentialité, cookies, politique de remboursement.',
+        'Tous les documents légaux de Terrassea : mentions légales, CGV, CGU, confidentialité, cookies, politique de remboursement.',
       path: '/legal',
     }),
   }),
@@ -76,7 +76,7 @@ function LegalHub() {
           className="mb-8 flex items-center gap-1.5 text-xs text-muted-foreground"
         >
           <Link to="/" className="hover:text-foreground">
-            Container Club
+            Terrassea
           </Link>
           <ChevronRight className="h-3 w-3" />
           <span className="text-foreground">Légal</span>

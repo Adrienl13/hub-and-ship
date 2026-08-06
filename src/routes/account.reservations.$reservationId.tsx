@@ -82,7 +82,7 @@ export const Route = createFileRoute('/account/reservations/$reservationId')({
   validateSearch: reservationSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Détail réservation — Container Club' },
+      { title: 'Détail réservation — Terrassea' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),
@@ -698,7 +698,7 @@ function DocumentsCard({
         )}
       </ul>
       <a
-        href="mailto:contact@prosimport.com"
+        href="mailto:adrienlaniez1@gmail.com"
         className="mt-3 inline-block text-xs text-foreground underline"
       >
         Demander un document

@@ -175,7 +175,7 @@ export const Route = createFileRoute('/admin')({
   validateSearch: adminSearchSchema,
   head: () => ({
     meta: [
-      { title: 'Administration — Container Club' },
+      { title: 'Administration — Terrassea' },
       { name: 'robots', content: 'noindex,nofollow' },
     ],
   }),
@@ -388,7 +388,7 @@ function AdminTopBar() {
             C
           </span>
           <span className="font-display text-base font-semibold tracking-tight">
-            Container Club
+            Terrassea
           </span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">

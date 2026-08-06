@@ -59,7 +59,7 @@ export function LegalLayout({
           className="mb-8 flex items-center gap-1.5 text-xs text-muted-foreground"
         >
           <Link to="/" className="hover:text-foreground">
-            Container Club
+            Terrassea
           </Link>
           <ChevronRight className="h-3 w-3" />
           <Link to="/legal" className="hover:text-foreground">

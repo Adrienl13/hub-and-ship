@@ -29,7 +29,7 @@ function resolveOrigin(request: Request): string {
   try {
     return new URL(request.url).origin
   } catch {
-    return 'https://prosimport.com'
+    return 'https://terrassea.com'
   }
 }
 

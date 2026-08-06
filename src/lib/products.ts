@@ -1,5 +1,5 @@
 // ============================================================
-// Container Club — catalogue, variantes, container courant
+// Terrassea — catalogue, variantes, container courant
 // ============================================================
 
 export type ProductCategory = 'chair' | 'armchair' | 'table' | 'bench'

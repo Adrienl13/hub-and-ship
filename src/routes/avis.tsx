@@ -50,7 +50,7 @@ export const Route = createFileRoute('/avis')({
     const base = buildSeoHead({
       title: 'Avis clients vérifiés',
       description:
-        'Les avis de professionnels (restaurants, hôtels, campings) ayant commandé leur mobilier outdoor via Container Club — achat vérifié.',
+        'Les avis de professionnels (restaurants, hôtels, campings) ayant commandé leur mobilier outdoor via Terrassea — achat vérifié.',
       path: '/avis',
     })
     if (stats.count === 0) return base

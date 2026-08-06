@@ -158,7 +158,7 @@ function PartnerQuotePage() {
                 {partnerName}
               </h1>
               <p className="mt-0.5 text-xs text-neutral-500">
-                Sélection préparée via Pros Import — Container Club
+                Sélection préparée via Pros Import — Terrassea
               </p>
             </div>
             <div className="text-right text-xs text-neutral-600">
@@ -240,7 +240,7 @@ function PartnerQuotePage() {
               partenaires ne figurent pas sur ce document.
             </p>
             <p className="mt-2">
-              Pros Import — Container Club · prosimport.com · Réservation et
+              Pros Import — Terrassea · terrassea.com · Réservation et
               suivi sur la page partenaire.
             </p>
           </footer>

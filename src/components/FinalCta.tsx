@@ -22,7 +22,7 @@ export function FinalCta({ onReserve }: { onReserve: () => void }) {
             <div className="text-foreground/75 mt-5 flex flex-wrap gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Remboursement si Container Club annule
+                Remboursement si Terrassea annule
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-1.5">
                 <FileBadge className="h-3.5 w-3.5" />

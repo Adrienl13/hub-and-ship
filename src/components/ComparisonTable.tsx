@@ -69,7 +69,7 @@ export function ComparisonTable() {
                   Critère
                 </th>
                 <th className="w-[22%] bg-[color:var(--foreground)] px-4 py-4 font-medium text-[color:var(--background)]">
-                  Container Club
+                  Terrassea
                 </th>
                 <th className="w-[22%] px-4 py-4 font-medium text-muted-foreground">
                   Grossistes pro

@@ -25,7 +25,7 @@ export const Route = createFileRoute('/partenaires')({
     ...buildSeoHead({
       title: 'Programme partenaires — apporteurs, revendeurs, distributeurs',
       description:
-        'Devenez partenaire Container Club : apporteur d’affaires (8% de commission sur CA encaissé), revendeur agréé, grand compte ou distributeur exclusif. Candidature en 2 minutes, réponse sous 48 h.',
+        'Devenez partenaire Terrassea : apporteur d’affaires (8% de commission sur CA encaissé), revendeur agréé, grand compte ou distributeur exclusif. Candidature en 2 minutes, réponse sous 48 h.',
       path: '/partenaires',
     }),
     scripts: [

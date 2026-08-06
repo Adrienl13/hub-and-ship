@@ -48,7 +48,7 @@ export async function buildProductFeed(
       <g:availability>preorder</g:availability>
       <g:availability_date>${xmlEscape(availabilityDate)}</g:availability_date>
       <g:condition>new</g:condition>
-      <g:brand>Container Club</g:brand>
+      <g:brand>Terrassea</g:brand>
       <g:identifier_exists>no</g:identifier_exists>
       <g:product_type>${xmlEscape(CATEGORY_LABEL[product.category])}</g:product_type>
       <g:min_handling_time>30</g:min_handling_time>
@@ -60,7 +60,7 @@ export async function buildProductFeed(
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
-    <title>Container Club — mobilier outdoor professionnel</title>
+    <title>Terrassea — mobilier outdoor professionnel</title>
     <link>${absoluteUrl('/catalogue')}</link>
     <description>Mobilier CHR en direct usine par container mutualisé. Prix HT professionnels, MOQ par produit, contrôle qualité SGS.</description>
 ${items}

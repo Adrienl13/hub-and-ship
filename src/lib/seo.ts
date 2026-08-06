@@ -1,11 +1,11 @@
 import { productPath } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 
-export const SITE_URL = 'https://prosimport.com'
+export const SITE_URL = 'https://terrassea.com'
 // D6 : une seule marque visible. « Terrassea » reste une marque déposée de
 // Pros Import (legal-content) et un site partenaire, mais ne compose plus
 // les titres SEO ni le nom de marque produit.
-export const SITE_NAME = 'Container Club'
+export const SITE_NAME = 'Terrassea'
 
 export interface SeoInput {
   readonly title: string
@@ -111,15 +111,15 @@ export function organizationJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': `${SITE_URL}/#organization`,
-    name: 'Container Club',
+    name: 'Terrassea',
     legalName: 'Pros Import EURL',
-    // Ancien nom composite conservé ici (invisible) pour que Google relie
-    // l'entité historique à la marque unifiée.
-    alternateName: 'Container Club Terrassea',
+    // Anciens noms conservés (invisibles) pour que Google relie l'entité
+    // historique Container Club / prosimport.com à la marque Terrassea.
+    alternateName: ['Container Club', 'Container Club Terrassea'],
     url: SITE_URL,
-    email: 'contact@prosimport.com',
+    email: 'adrienlaniez1@gmail.com',
     description:
-      "Club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
+      "Terrassea, marque de Pros Import EURL : club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
     founder: {
       '@type': 'Person',
       name: 'Adrien Laniez',
@@ -132,7 +132,8 @@ export function organizationJsonLd() {
       addressCountry: 'FR',
     },
     areaServed: 'FR',
-    sameAs: ['https://terrassea.com'],
+    // Domaine historique (301 vers terrassea.com) + réseau social principal.
+    sameAs: ['https://prosimport.com', 'https://www.instagram.com/terrassea'],
     taxID: 'FR08988269981',
     vatID: 'FR08988269981',
     identifier: [
@@ -168,7 +169,7 @@ export function articleJsonLd({
     datePublished,
     dateModified: dateModified ?? datePublished,
     inLanguage: 'fr-FR',
-    author: { '@type': 'Organization', name: 'Pros Import' },
+    author: { '@type': 'Organization', name: 'Terrassea' },
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
@@ -214,7 +215,7 @@ export function productJsonLd(product: Product, options?: { url?: string }) {
     category: CATEGORY_LABEL[product.category],
     brand: {
       '@type': 'Brand',
-      name: 'Container Club',
+      name: 'Terrassea',
     },
     additionalProperty: [
       {

@@ -1,5 +1,5 @@
 // ============================================================
-// Container Club — logique métier (panier, MOQ, container)
+// Terrassea — logique métier (panier, MOQ, container)
 // ============================================================
 
 import { getActiveSalesChannel } from './pricing/channel-state'

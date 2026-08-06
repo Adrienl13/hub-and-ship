@@ -24,7 +24,7 @@ export const Route = createFileRoute('/livres/$slug')({
     if (!container) {
       return {
         meta: [
-          { title: 'Container livré — Container Club' },
+          { title: 'Container livré — Terrassea' },
           { name: 'robots', content: 'noindex,follow' },
         ],
       }
@@ -82,7 +82,7 @@ function LivreDetailPage() {
       } else {
         setContainer(fallback)
         if (typeof document !== 'undefined') {
-          document.title = `${fallback.reference} — Container Club`
+          document.title = `${fallback.reference} — Terrassea`
         }
       }
       setLoading(false)
@@ -98,7 +98,7 @@ function LivreDetailPage() {
         } else {
           setContainer(data)
           if (typeof document !== 'undefined') {
-            document.title = `${data.reference} — Container Club`
+            document.title = `${data.reference} — Terrassea`
           }
         }
       })

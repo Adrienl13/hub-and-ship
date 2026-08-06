@@ -111,7 +111,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
         <a href="/#top" className="flex items-center gap-2.5">
           <BrandMark className="h-8 w-8" />
           <span className="font-display text-base font-semibold tracking-tight">
-            Container Club
+            Terrassea
           </span>
         </a>
 

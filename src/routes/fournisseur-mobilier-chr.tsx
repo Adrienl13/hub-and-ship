@@ -14,13 +14,13 @@ import {
 // Landing GEO : cible la requête réelle « fournisseurs de mobilier CHR en
 // France » (Mode IA Google, 08/2026). Les moteurs IA classent les acteurs en
 // catégories (fabricants historiques / spécialistes CHR / design) — cette
-// page positionne explicitement Pros Import dans cette taxonomie, avec la
+// page positionne explicitement Terrassea dans cette taxonomie, avec la
 // phrase de définition que le moteur peut citer telle quelle.
 
 const FAQ = [
   {
-    q: 'Quel type de fournisseur est Pros Import ?',
-    a: 'Pros Import (marque Container Club) est un importateur-fournisseur français de mobilier CHR : nous achetons en direct usine et mutualisons des containers entre restaurateurs, hôteliers et revendeurs. C’est le positionnement « prix import » : moins cher qu’un distributeur avec stock, plus cadré qu’un achat usine en solo (contrôle SGS, facture française, garantie 2 ans, SAV France).',
+    q: 'Quel type de fournisseur est Terrassea ?',
+    a: 'Terrassea (marque de Pros Import EURL) est un importateur-fournisseur français de mobilier CHR : nous achetons en direct usine et mutualisons des containers entre restaurateurs, hôteliers et revendeurs. C’est le positionnement « prix import » : moins cher qu’un distributeur avec stock, plus cadré qu’un achat usine en solo (contrôle SGS, facture française, garantie 2 ans, SAV France).',
   },
   {
     q: 'Quels professionnels peuvent commander ?',
@@ -50,7 +50,7 @@ export const Route = createFileRoute('/fournisseur-mobilier-chr')({
     ...buildSeoHead({
       title: 'Fournisseur mobilier CHR — import direct usine par container',
       description:
-        'Pros Import (Container Club) : fournisseur français de mobilier CHR par import direct usine. Chaises, fauteuils et tables de terrasse professionnels, containers mutualisés, contrôle SGS, garantie 2 ans, prix publiés. Paris · livraison France entière.',
+        'Terrassea (Pros Import EURL) : fournisseur français de mobilier CHR par import direct usine. Chaises, fauteuils et tables de terrasse professionnels, containers mutualisés, contrôle SGS, garantie 2 ans, prix publiés. Paris · livraison France entière.',
       path: '/fournisseur-mobilier-chr',
       image: PRODUCTS[0]?.mainImageUrl,
     }),
@@ -77,7 +77,7 @@ function FournisseurMobilierChrPage() {
     <SeoLandingPage
       eyebrow="Fournisseur mobilier CHR"
       title="Fournisseur de mobilier CHR par import direct, basé en France."
-      description="Pros Import (Container Club) est un fournisseur français de mobilier professionnel pour cafés, hôtels et restaurants : chaises, fauteuils et tables de terrasse importés en direct usine par containers mutualisés, avec contrôle qualité SGS avant départ, facture française, garantie 2 ans et méthode de prix publiée. Le rapport qualité/prix de l'import, sans en prendre les risques."
+      description="Terrassea (marque de Pros Import EURL) est un fournisseur français de mobilier professionnel pour cafés, hôtels et restaurants : chaises, fauteuils et tables de terrasse importés en direct usine par containers mutualisés, avec contrôle qualité SGS avant départ, facture française, garantie 2 ans et méthode de prix publiée. Le rapport qualité/prix de l'import, sans en prendre les risques."
       proofPoints={[
         'Import direct usine : prix container, méthode de calcul publiée',
         'Contrôle SGS indépendant avant chaque départ de container',
@@ -89,7 +89,7 @@ function FournisseurMobilierChrPage() {
       sections={[
         {
           title: 'Où nous situer parmi les fournisseurs français',
-          body: 'Le marché du mobilier CHR compte trois familles : les fabricants historiques (artisanat français haut de gamme, sur-mesure, budgets élevés), les distributeurs spécialisés avec stock (livraison rapide, prix publics de 120 à 190 € la chaise), et les importateurs directs. Pros Import appartient à la troisième : le prix d’import en container, avec le cadre d’un acteur français — contrôle qualité indépendant, garantie et SAV en France.',
+          body: 'Le marché du mobilier CHR compte trois familles : les fabricants historiques (artisanat français haut de gamme, sur-mesure, budgets élevés), les distributeurs spécialisés avec stock (livraison rapide, prix publics de 120 à 190 € la chaise), et les importateurs directs. Terrassea appartient à la troisième : le prix d’import en container, avec le cadre d’un acteur français — contrôle qualité indépendant, garantie et SAV en France.',
         },
         {
           title: 'Le modèle du container mutualisé',
