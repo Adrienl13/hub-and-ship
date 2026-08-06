@@ -56,7 +56,10 @@ import {
   readPartnerLinkContext,
   type PartnerLinkContext,
 } from '@/lib/partners/link'
-import { refreshPublicPricingRules } from '@/lib/pricing/public-rules'
+import {
+  getPublicPricingRules,
+  refreshPublicPricingRules,
+} from '@/lib/pricing/public-rules'
 import { buildReservationDraft } from '@/lib/reservations/draft'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import { useCartStore } from '@/stores/cart.store'
@@ -184,9 +187,14 @@ export function ReservationDialog({
   const distributorMinimum = getDistributorMinimumStatus({
     channel,
     usedCbm: orderCbm,
+    minCbm: getPublicPricingRules().distributorMinOrderCbm,
   })
-  const hasReservableItems =
-    items.length > 0 && totals.subtotalHt > 0 && !distributorMinimum.blocked
+  const hasReservableItems = items.length > 0 && totals.subtotalHt > 0
+  // État dédié (PAS l'état panier-vide : la commande existe, elle est juste
+  // trop petite pour le canal) : récap conservé + explication + retour au
+  // catalogue. Le trigger SQL reste le garde réel côté serveur.
+  const blockedForMinimum = hasReservableItems && distributorMinimum.blocked
+  const showSteps = hasReservableItems && !blockedForMinimum
   // Le parrainage B2C −100 € est retiré : le champ code devient un code
   // APPORTEUR pur attribution (décision LOT 5 — l'apporteur 8 % le remplace).
   // Aucune remise, aucun aller-retour serveur : payNow == frais de réservation,
@@ -280,6 +288,21 @@ export function ReservationDialog({
     // session, le RPC de réservation validera contre les valeurs LIVE — un
     // cache périmé ferait rejeter un checkout légitime (tolérance 0,05 €).
     await refreshPublicPricingRules()
+
+    // Ceinture + bretelles : re-vérifie le minimum distributeur avec les
+    // règles fraîches — le trigger SQL rejetterait de toute façon, mais avec
+    // un message moins lisible qu'ici.
+    const freshMinimum = getDistributorMinimumStatus({
+      channel,
+      usedCbm: orderCbm,
+      minCbm: getPublicPricingRules().distributorMinOrderCbm,
+    })
+    if (freshMinimum.blocked) {
+      toast.error('Volume minimum distributeur', {
+        description: `Minimum ${freshMinimum.minCbm} m³ — il manque ${freshMinimum.missingCbm} m³. Complétez la commande au catalogue.`,
+      })
+      return
+    }
 
     const draftResult = buildReservationDraft({
       siret: form.siret,
@@ -488,19 +511,20 @@ export function ReservationDialog({
           <div className="label-eyebrow text-[color:var(--ember)]">
             {!hasReservableItems
               ? 'Commande à composer'
-              : step < 5
-                ? `Étape ${step} / 4 - Réservation`
-                : 'Confirmation'}
+              : blockedForMinimum
+                ? 'Commande à compléter'
+                : step < 5
+                  ? `Étape ${step} / 4 - Réservation`
+                  : 'Confirmation'}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
             {!hasReservableItems && 'Composez votre commande avant de réserver'}
-            {hasReservableItems &&
-              step === 1 &&
-              'Identification professionnelle'}
-            {hasReservableItems && step === 2 && 'Coordonnées de contact'}
-            {hasReservableItems && step === 3 && 'Mode de livraison'}
-            {hasReservableItems && step === 4 && 'Récapitulatif et paiement'}
-            {hasReservableItems && step === 5 && 'Réservation préparée'}
+            {blockedForMinimum && 'Volume minimum distributeur'}
+            {showSteps && step === 1 && 'Identification professionnelle'}
+            {showSteps && step === 2 && 'Coordonnées de contact'}
+            {showSteps && step === 3 && 'Mode de livraison'}
+            {showSteps && step === 4 && 'Récapitulatif et paiement'}
+            {showSteps && step === 5 && 'Réservation préparée'}
           </DialogTitle>
           <DialogDescription className="sr-only">
             Formulaire de réservation en plusieurs étapes pour vérifier la
@@ -509,21 +533,36 @@ export function ReservationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {distributorMinimum.blocked && (
-          <div className="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950">
-            <strong>Commande distributeur :</strong> minimum un 20&apos; GP (
-            {distributorMinimum.minCbm} m³). Votre commande fait{' '}
-            {Math.round(orderCbm * 100) / 100} m³ — il manque{' '}
-            <strong>{distributorMinimum.missingCbm} m³</strong>. Complétez la
-            commande ou contactez-nous pour un cas particulier.
-          </div>
+        {/* Commande réelle mais sous le minimum du canal : on GARDE le récap
+            (dire « aucun produit sélectionné » serait faux) et on explique. */}
+        {blockedForMinimum && (
+          <>
+            <div className="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950">
+              <strong>Commande distributeur :</strong> minimum{' '}
+              {distributorMinimum.minCbm} m³ (un 20&apos; GP). Votre commande
+              fait {Math.round(orderCbm * 100) / 100} m³ — il manque{' '}
+              <strong>{distributorMinimum.missingCbm} m³</strong>. Complétez la
+              commande ou contactez-nous pour un cas particulier.
+            </div>
+            <SummaryCard
+              totals={totals}
+              referralApplication={referralApplication}
+              partnerContext={partnerContext}
+            />
+            <Button
+              className="h-11 w-full rounded-sm"
+              onClick={() => onOpenChange(false)}
+            >
+              Compléter ma commande au catalogue
+            </Button>
+          </>
         )}
 
         {!hasReservableItems && (
           <EmptyReservationState onNavigate={() => onOpenChange(false)} />
         )}
 
-        {hasReservableItems && step < 5 && (
+        {showSteps && step < 5 && (
           <>
             <StepIndicator step={step} />
             <SummaryCard
@@ -534,7 +573,7 @@ export function ReservationDialog({
           </>
         )}
 
-        {hasReservableItems && step === 1 && (
+        {showSteps && step === 1 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -564,7 +603,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {hasReservableItems && step === 2 && (
+        {showSteps && step === 2 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -622,7 +661,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {hasReservableItems && step === 3 && (
+        {showSteps && step === 3 && (
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -671,7 +710,7 @@ export function ReservationDialog({
           </form>
         )}
 
-        {hasReservableItems && step === 4 && (
+        {showSteps && step === 4 && (
           <div className="space-y-4">
             <PartnerCodePanel
               value={form.referralCode}
@@ -761,7 +800,7 @@ export function ReservationDialog({
           </div>
         )}
 
-        {hasReservableItems && step === 5 && createdReservation && (
+        {showSteps && step === 5 && createdReservation && (
           <div className="space-y-4">
             <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">

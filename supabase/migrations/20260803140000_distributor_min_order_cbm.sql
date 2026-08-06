@@ -17,12 +17,26 @@
 
 -- ---------------------------------------------------------------------------
 -- 1. Colonne + valeur initiale.
+--    NULL est la valeur « règle désactivée par l'admin » : l'amorçage à 28
+--    (volume utile d'un 20' GP, = CONTAINER_USABLE_CBM['20_dv'] côté front)
+--    ne s'applique donc QUE si la colonne vient d'être créée — rejouer la
+--    migration ne ré-active jamais un seuil volontairement effacé.
 -- ---------------------------------------------------------------------------
-alter table public.pricing_parameters
-  add column if not exists distributor_min_order_cbm numeric null;
-
 do $$
+declare
+  v_column_created boolean := false;
 begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'pricing_parameters'
+      and column_name = 'distributor_min_order_cbm'
+  ) then
+    alter table public.pricing_parameters
+      add column distributor_min_order_cbm numeric null;
+    v_column_created := true;
+  end if;
+
   if not exists (
     select 1 from pg_constraint
     where conname = 'pricing_parameters_distributor_min_chk'
@@ -32,14 +46,13 @@ begin
         distributor_min_order_cbm is null or distributor_min_order_cbm >= 0
       );
   end if;
-end $$;
 
--- Volume utile d'un 20' GP — même valeur que CONTAINER_USABLE_CBM['20_dv']
--- côté front. Uniquement si jamais renseigné (rejouable sans écraser un
--- ajustement admin).
-update public.pricing_parameters
-set distributor_min_order_cbm = 28
-where is_active and distributor_min_order_cbm is null;
+  if v_column_created then
+    update public.pricing_parameters
+    set distributor_min_order_cbm = 28
+    where is_active;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 2. Garde serveur sur les réservations distributeur.
@@ -90,6 +103,51 @@ drop trigger if exists reservations_enforce_distributor_minimum
 create trigger reservations_enforce_distributor_minimum
   before insert on public.reservations
   for each row execute function public.enforce_distributor_order_minimum();
+
+-- ---------------------------------------------------------------------------
+-- 2 bis. Le front doit afficher le MÊME seuil que le trigger (miroir vivant,
+--        pas de constante codée en dur) : get_public_pricing_rules() expose la
+--        valeur active. C'est une condition commerciale publique (un minimum
+--        de commande), pas une marge ni un coût. Fallback null = pas de règle
+--        (cohérent avec une base sans donnée : le trigger ne bloque pas non
+--        plus).
+-- ---------------------------------------------------------------------------
+create or replace function public.get_public_pricing_rules()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select coalesce(
+    (
+      select jsonb_build_object(
+        'tier2_qty', p.tier2_qty,
+        'tier2_discount', p.tier2_discount,
+        'tier3_qty', p.tier3_qty,
+        'tier3_discount', p.tier3_discount,
+        'reservation_fee_rate', p.reservation_fee_rate,
+        'reservation_fee_min', p.reservation_fee_min,
+        'reservation_fee_max', p.reservation_fee_max,
+        'distributor_min_order_cbm', p.distributor_min_order_cbm
+      )
+      from public.pricing_parameters p
+      where p.is_active
+      order by p.effective_from desc
+      limit 1
+    ),
+    jsonb_build_object(
+      'tier2_qty', 100, 'tier2_discount', 0.06,
+      'tier3_qty', 150, 'tier3_discount', 0.10,
+      'reservation_fee_rate', 0.03,
+      'reservation_fee_min', 150, 'reservation_fee_max', 500,
+      'distributor_min_order_cbm', null
+    )
+  );
+$$;
+
+revoke execute on function public.get_public_pricing_rules() from public;
+grant execute on function public.get_public_pricing_rules() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 3. RPC de sauvegarde versionnée : porte la nouvelle colonne.

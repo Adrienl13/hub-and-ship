@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
 import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
 import { getDistributorMinimumStatus } from '@/lib/pricing/distributor-minimum'
+import { getPublicPricingRules } from '@/lib/pricing/public-rules'
 import {
   CONTAINER_USABLE_CBM,
   getRemainingCbm,
@@ -157,10 +158,12 @@ export function OrderSidebar({
   // Chaque ligne du récap est directement modifiable (pas métier) ou
   // supprimable — l'acheteur corrige sa commande sans rechercher la carte.
   const setQty = useCartStore((state) => state.setQty)
-  // Règle distributeur : minimum un 20' GP — miroir client du trigger SQL.
+  // Règle distributeur : seuil VIVANT des règles publiques (même source que
+  // le trigger SQL) — null tant que non hydraté/désactivé = aucun blocage.
   const distributorMinimum = getDistributorMinimumStatus({
     channel,
     usedCbm,
+    minCbm: getPublicPricingRules().distributorMinOrderCbm,
   })
   const activeContainerType: ContainerType =
     preferredContainerType ?? container.containerType ?? '20_hc'

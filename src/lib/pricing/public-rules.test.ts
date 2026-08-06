@@ -25,6 +25,7 @@ describe('public pricing rules module', () => {
       reservationFeeRate: 0.03,
       reservationFeeMin: 150,
       reservationFeeMax: 500,
+      distributorMinOrderCbm: null,
     })
   })
 
@@ -46,6 +47,9 @@ describe('public pricing rules module', () => {
       reservationFeeRate: 0.025,
       reservationFeeMin: 100,
       reservationFeeMax: 600,
+      // Absent du payload → null : l'UI ne bloque jamais sur une valeur
+      // qu'elle n'a pas reçue du serveur.
+      distributorMinOrderCbm: null,
     })
   })
 

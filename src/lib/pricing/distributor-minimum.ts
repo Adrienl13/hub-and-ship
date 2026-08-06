@@ -1,14 +1,12 @@
-import { CONTAINER_USABLE_CBM } from '@/lib/container/pricing'
 import type { SalesChannel } from '@/lib/supabase/types'
 
 // Minimum de commande distributeur (règle métier 08/2026) : les prix
 // distributeur ne sont viables qu'au volume — une commande doit remplir au
-// moins un 20' GP utile. La valeur de référence côté serveur vit dans
-// pricing_parameters.distributor_min_order_cbm (trigger bloquant à l'insert
-// de la réservation) ; ce module porte le miroir d'affichage côté client.
-
-/** Défaut commercial : volume utile d'un 20' GP (= 20' Dry Van). */
-export const DISTRIBUTOR_MIN_ORDER_CBM_DEFAULT = CONTAINER_USABLE_CBM['20_dv']
+// moins un 20' GP utile (valeur pilotée par l'admin). La source de vérité est
+// pricing_parameters.distributor_min_order_cbm : trigger SQL bloquant à
+// l'insert de la réservation côté serveur, et get_public_pricing_rules() côté
+// client. AUCUNE constante codée en dur ici : un seuil que l'UI ne connaît
+// pas (null) ne bloque rien — le trigger reste le seul garde.
 
 export interface DistributorMinimumStatus {
   /** true quand la règle s'applique au canal ET que le volume est insuffisant. */
@@ -20,12 +18,12 @@ export interface DistributorMinimumStatus {
 export function getDistributorMinimumStatus({
   channel,
   usedCbm,
-  minCbm = DISTRIBUTOR_MIN_ORDER_CBM_DEFAULT,
+  minCbm,
 }: {
   readonly channel: SalesChannel
   readonly usedCbm: number
-  /** Seuil actif (m³). null = règle désactivée côté admin. */
-  readonly minCbm?: number | null
+  /** Seuil actif (m³) depuis les règles publiques — null = règle désactivée. */
+  readonly minCbm: number | null
 }): DistributorMinimumStatus {
   const effectiveMin = minCbm ?? 0
   const applies = channel === 'distributeur' && effectiveMin > 0

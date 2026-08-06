@@ -185,11 +185,12 @@ export function ProductDetailDialog({
                     — {moqStatus.label}
                   </span>
                 </div>
-                <div className="mt-2">
-                  <ColorRequestCta product={product} />
-                </div>
               </div>
             )}
+
+            {/* Personnalisation coloris : pour TOUTES les catégories, tables
+                comprises (le configurateur table ne couvre pas les coloris). */}
+            <ColorRequestCta product={product} />
 
             {/* Caractéristiques */}
             <div>

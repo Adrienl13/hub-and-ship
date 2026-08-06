@@ -23,6 +23,9 @@ export interface PublicPricingRules {
   readonly reservationFeeRate: number
   readonly reservationFeeMin: number
   readonly reservationFeeMax: number
+  /** Volume minimum d'une commande distributeur (m³) — null = pas de règle.
+   *  MIROIR VIVANT du trigger SQL : jamais de constante codée en dur ici. */
+  readonly distributorMinOrderCbm: number | null
 }
 
 // Grille historique — doit rester alignée avec le fallback SQL de
@@ -35,6 +38,9 @@ export const DEFAULT_PUBLIC_PRICING_RULES: PublicPricingRules = {
   reservationFeeRate: 0.03,
   reservationFeeMin: 150,
   reservationFeeMax: 500,
+  // null tant que le serveur n'a pas hydraté : le trigger SQL reste le seul
+  // garde — l'UI ne doit jamais bloquer sur une valeur qu'elle ne connaît pas.
+  distributorMinOrderCbm: null,
 }
 
 let currentRules: PublicPricingRules = DEFAULT_PUBLIC_PRICING_RULES
@@ -74,6 +80,10 @@ export function setPublicPricingRules(raw: unknown): PublicPricingRules {
       record.reservation_fee_max,
       defaults.reservationFeeMax,
     ),
+    distributorMinOrderCbm: (() => {
+      const parsed = finiteOr(record.distributor_min_order_cbm, -1)
+      return parsed >= 0 ? parsed : null
+    })(),
   }
 
   const coherent =
