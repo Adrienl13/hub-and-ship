@@ -35,6 +35,13 @@ push, deploy, et les étapes infra ci-dessous.
 
 ## À faire par Adrien LE JOUR J, dans l'ordre (après le flip script)
 
+0. **⚠️ D'ABORD sauver le site actuel de terrassea.com** : le site existant
+   (« terrasse hub ») doit être déplacé vers **terrasseahub.com** AVANT de
+   brancher terrassea.com sur le worker — sinon il devient inaccessible.
+   Étapes : enregistrer terrasseahub.com, y re-pointer l'hébergement du site
+   existant, vérifier qu'il répond sur la nouvelle URL, et seulement ensuite
+   passer à l'étape 1. (Aucune de nos redirections ne touche
+   terrasseahub.com — les deux sites vivront côte à côte.)
 1. **Cloudflare — domaine** : ajouter terrassea.com à la zone, puis dans le
    worker `container-club` → Settings → Domains & Routes : ajouter
    `terrassea.com` et `www.terrassea.com` en custom domains. NE PAS retirer

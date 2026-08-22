@@ -28,9 +28,16 @@ export function Footer() {
                 Terrassea
               </span>
             </div>
-            <p className="text-[color:var(--sand)]/65 mt-4 max-w-xs text-xs leading-relaxed">
+            {/* Transparence marque/société : l'acheteur doit comprendre QUI
+                contracte (demande Adrien 08/2026, pré-lancement pub). */}
+            <p className="text-[color:var(--sand)]/50 mt-1.5 text-[11px]">
+              Une marque de Pros Import EURL
+            </p>
+            <p className="text-[color:var(--sand)]/65 mt-3 max-w-xs text-xs leading-relaxed">
               Le club d'achat groupé des pros de la terrasse. Mobilier outdoor
-              direct usine, importation officielle France.
+              direct usine, importation officielle France. Vos commandes et
+              factures sont contractées avec Pros Import EURL, société
+              française basée à Paris.
             </p>
           </div>
           <div>
