@@ -79,6 +79,7 @@ export async function handleContactMessage(
       phone: draftResult.draft.phone,
       topicLabel: CONTACT_TOPIC_LABEL[draftResult.draft.topic],
       message: draftResult.draft.message,
+      attribution: draftResult.draft.attribution,
     })
     return jsonResponse({ ok: true }, { status: 201 })
   } catch (error) {

@@ -78,6 +78,17 @@ function ContainerClubPage() {
 
   const [detailId, setDetailId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
+  const navigate = Route.useNavigate()
+
+  // Panier vide → le dialogue de réservation serait un cul-de-sac : on
+  // emmène d'abord vers le catalogue pour composer la sélection.
+  const handleReserve = () => {
+    if (totalUnits > 0) {
+      setReserveOpen(true)
+      return
+    }
+    void navigate({ to: '/catalogue' })
+  }
 
   const detailProduct: Product | null = useMemo(
     () => productsArray.find((p) => p.id === detailId) ?? null,
@@ -106,7 +117,7 @@ function ContainerClubPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
-      <Header onReserve={() => setReserveOpen(true)} />
+      <Header onReserve={handleReserve} />
 
       <Hero
         fillPercent={fill.percent}
@@ -133,14 +144,14 @@ function ContainerClubPage() {
         totalSeries={currentContainer.totalSeries}
         professionalsEngaged={currentContainer.professionalsEngaged}
         hasSelection={totalUnits > 0}
-        onReserve={() => setReserveOpen(true)}
+        onReserve={handleReserve}
         onDownloadPdf={handlePdf}
         onOpenProduct={setDetailId}
       />
 
       <DeliverySection />
       <HomeFaqSection />
-      <FinalCtaSection onReserve={() => setReserveOpen(true)} />
+      <FinalCtaSection onReserve={handleReserve} />
       <NewsletterSection />
       <Footer />
 
@@ -148,7 +159,7 @@ function ContainerClubPage() {
         totalItems={totalUnits}
         fillPercent={fill.percent}
         subtotalHt={totals.totalHt}
-        onReserve={() => setReserveOpen(true)}
+        onReserve={handleReserve}
         container={currentContainer}
       />
 

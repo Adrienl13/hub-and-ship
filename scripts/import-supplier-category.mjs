@@ -9,8 +9,8 @@
 //
 // Usage :
 //   node scripts/import-supplier-category.mjs \
-//     --manifest lion-design.json \
-//     --photos ./photos-lion \
+//     --manifest fournisseur-a.json \
+//     --photos ./photos-fournisseur-a \
 //     --prefix LNG \
 //     --collection-dir lounge-series \
 //     --collection-label "Lounge" \
@@ -18,7 +18,7 @@
 //
 // Manifest : tableau JSON d'objets :
 //   {
-//     "supplierRef": "ZF9123C",          // sert UNIQUEMENT au mapping photos
+//     "supplierRef": "REF-0123",          // sert UNIQUEMENT au mapping photos
 //     "name": "Salon lounge RIVIERA - corde plate écru",
 //     "category": "armchair",             // chair | armchair | table | bench
 //     "variantName": "corde plate écru",
@@ -34,7 +34,7 @@
 //     "fireRating": "M2"                  // optionnel
 //   }
 //
-// Photos : fichiers nommés <supplierRef>-<NN>.<ext> (ex. ZF9123C-01.jpg) ;
+// Photos : fichiers nommés <supplierRef>-<NN>.<ext> (ex. REF-0123-01.jpg) ;
 // la première (-01) devient l'image principale. Converties/copées en WebP vers
 // public/catalogue/<collection-dir>/<PREFIX>-<NNN>-<NN>.webp (sharp requis
 // pour la conversion des .jpg/.png ; les .webp sont copiés tels quels).

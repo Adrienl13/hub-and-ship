@@ -80,7 +80,7 @@ export const Route = createFileRoute('/catalogue')({
     ...buildSeoHead({
       title: 'Catalogue mobilier outdoor professionnel',
       description:
-        'Catalogue visuel de mobilier outdoor CHR : cartes portrait plein cadre, chaises, fauteuils, tables et bancs à réserver par container groupé.',
+        'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 2 ans inclus.',
       path: '/catalogue',
       image: PRODUCTS[0]?.mainImageUrl,
     }),
@@ -306,7 +306,7 @@ function CataloguePage() {
                 Catalogue complet
               </div>
               <h1 className="mt-2 font-display text-4xl tracking-tight md:text-5xl">
-                Cartes portrait plein cadre.
+                Le mobilier de votre terrasse, au prix container.
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
                 Une vision produit plus nette pour choisir vite : photos plein

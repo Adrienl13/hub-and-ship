@@ -90,8 +90,8 @@ function LegalHub() {
             Transparence légale & protection.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[color:var(--ink-soft)]">
-            Tous les documents légaux régissant l'utilisation du site Container
-            Club et les relations commerciales avec Pros Import EURL. Adaptés au
+            Tous les documents légaux régissant l'utilisation du site Terrassea
+             et les relations commerciales avec Pros Import EURL. Adaptés au
             modèle B2B de pré-commande groupée, conformes au droit français.
           </p>
         </header>

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHANNEL_COEFFICIENTS,
-  channelCoefficientFromMargins,
   resolveChannelUnitPrice,
   violatesGoldenRule,
   worstDirectUnitPrice,
 } from './channel'
+import { channelCoefficientFromMargins } from './channel-economics'
 import { computeCommissionAmount } from './commission'
 import { getCustomerDiscountStatus } from './customer-discounts'
 import { maxSafeRfaPercent } from './container-profit'

@@ -300,9 +300,11 @@ export const CURRENT_CONTAINER: ContainerSummary = {
   // A stale date here would show a false "clôture imminente" urgency badge.
   expectedCloseAt: null,
   status: 'open',
-  seriesReached: 3,
+  // Fallback HONNÊTE : aucun engagement inventé — les vrais compteurs
+  // arrivent de Supabase ; à zéro, les composants se masquent d'eux-mêmes.
+  seriesReached: 0,
   totalSeries: 5,
-  professionalsEngaged: 12,
+  professionalsEngaged: 0,
 }
 
 export interface PastContainerTestimonial {

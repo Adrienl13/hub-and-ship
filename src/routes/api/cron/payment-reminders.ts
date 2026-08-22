@@ -37,6 +37,20 @@ function methodNotAllowed(): Response {
   )
 }
 
+// Comparaison en temps constant (pas de node:crypto sur Workers) : le temps
+// de réponse ne doit pas révéler combien de caractères du secret matchent.
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const encoder = new TextEncoder()
+  const aBytes = encoder.encode(a)
+  const bBytes = encoder.encode(b)
+  let diff = aBytes.length ^ bBytes.length
+  const length = Math.max(aBytes.length, bBytes.length)
+  for (let index = 0; index < length; index += 1) {
+    diff |= (aBytes[index] ?? 0) ^ (bBytes[index] ?? 0)
+  }
+  return diff === 0
+}
+
 export async function handlePaymentReminders(
   request: Request,
 ): Promise<Response> {
@@ -49,7 +63,7 @@ export async function handlePaymentReminders(
       { status: 503 },
     )
   }
-  if (request.headers.get('x-cron-secret') !== secret) {
+  if (!timingSafeEqualStr(request.headers.get('x-cron-secret') ?? '', secret)) {
     return jsonResponse({ ok: false, error: 'Forbidden' }, { status: 403 })
   }
 

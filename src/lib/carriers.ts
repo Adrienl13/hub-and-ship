@@ -151,7 +151,7 @@ export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: 'Quand dois-je organiser le transport ?',
-    a: "Idéalement dès que le container atteint 80 % de remplissage (clôture commande) — vous avez ~6 à 8 semaines avant l'arrivée au port. Les transporteurs locaux préfèrent un préavis de 10 jours minimum.",
+    a: "Idéalement dès que le container atteint 80 % de remplissage (clôture commande) — vous avez ~10 à 12 semaines avant l'arrivée au port. Les transporteurs locaux préfèrent un préavis de 10 jours minimum.",
   },
   {
     q: "Et si je n'arrive pas à trouver de transporteur ?",

@@ -523,6 +523,26 @@ export interface ContactEmailInput {
   readonly phone: string | null
   readonly topicLabel: string
   readonly message: string
+  /** Attribution first-touch (campagnes payantes / lien partenaire). */
+  readonly attribution?: {
+    readonly utm_source: string | null
+    readonly utm_medium: string | null
+    readonly utm_campaign: string | null
+    readonly partner_ref: string | null
+  } | null
+}
+
+function attributionLine(
+  attribution: ContactEmailInput['attribution'],
+): string {
+  if (!attribution) return ''
+  const parts = [
+    attribution.utm_source && `source ${attribution.utm_source}`,
+    attribution.utm_medium && `medium ${attribution.utm_medium}`,
+    attribution.utm_campaign && `campagne ${attribution.utm_campaign}`,
+    attribution.partner_ref && `partenaire ${attribution.partner_ref}`,
+  ].filter(Boolean)
+  return parts.join(' · ')
 }
 
 export function buildContactAdminEmail(input: ContactEmailInput): {
@@ -539,6 +559,7 @@ ${detailRow('Nom', input.name)}
 ${input.company ? detailRow('Société', input.company) : ''}
 ${detailRow('Email', input.email)}
 ${input.phone ? detailRow('Téléphone', input.phone) : ''}
+${attributionLine(input.attribution) ? detailRow('Source', attributionLine(input.attribution)) : ''}
 </table>
 <p style="font-size:13px;line-height:1.7;margin:0;padding:12px;background:#f6f2ea;border-radius:4px;white-space:pre-wrap;">${escape(input.message)}</p>`
   const text = `Nouveau message via le formulaire de contact.
@@ -546,7 +567,7 @@ ${input.phone ? detailRow('Téléphone', input.phone) : ''}
 Sujet : ${input.topicLabel}
 Nom : ${input.name}
 ${input.company ? `Société : ${input.company}\n` : ''}Email : ${input.email}
-${input.phone ? `Téléphone : ${input.phone}\n` : ''}
+${input.phone ? `Téléphone : ${input.phone}\n` : ''}${attributionLine(input.attribution) ? `Source : ${attributionLine(input.attribution)}\n` : ''}
 Message :
 ${input.message}`
   return {

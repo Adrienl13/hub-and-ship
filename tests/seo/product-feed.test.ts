@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import { PRODUCTS } from '@/lib/products'
 import { buildProductFeed } from '@/routes/product-feed[.]xml'
 
 describe('Google Merchant product feed (C7)', () => {
-  it('emits a valid Merchant feed without price-distorting attributes', async () => {
-    const xml = await buildProductFeed('2026-10-11')
+  it('emits a valid Merchant feed without price-distorting attributes', () => {
+    const xml = buildProductFeed(PRODUCTS, '2026-10-11')
 
     // image_link doit être ABSOLU (Merchant rejette les chemins relatifs).
     const imageLinks = [...xml.matchAll(/<g:image_link>([^<]+)<\/g:image_link>/g)]
@@ -26,6 +27,6 @@ describe('Google Merchant product feed (C7)', () => {
 
     // Prix HT professionnel en EUR, jamais les prix nets partenaires.
     expect(xml).toMatch(/<g:price>\d+\.\d{2} EUR<\/g:price>/)
-    expect(xml).toContain('<g:brand>Container Club</g:brand>')
+    expect(xml).toContain('<g:brand>Terrassea</g:brand>')
   })
 })

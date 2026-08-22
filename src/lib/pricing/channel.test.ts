@@ -2,15 +2,17 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHANNEL_COEFFICIENTS,
-  CHANNEL_MARGIN_RATES,
   MAX_DIRECT_DISCOUNT_PERCENT,
   WORST_DIRECT_PRICE_FACTOR,
   channelAllowsVolumeDiscounts,
-  channelCoefficientFromMargins,
   resolveChannelUnitPrice,
   violatesGoldenRule,
   worstDirectUnitPrice,
 } from './channel'
+import {
+  CHANNEL_MARGIN_RATES,
+  channelCoefficientFromMargins,
+} from './channel-economics'
 
 describe('channel pricing constants', () => {
   it('derives the max direct discount from the v2 grid (10%)', () => {
@@ -41,7 +43,7 @@ describe('channel pricing constants', () => {
     ).toBe(CHANNEL_COEFFICIENTS.distributeur)
   })
 
-  it('reproduces the pricing_parameters control values (SKU témoin ZF2000C)', () => {
+  it('reproduces the pricing_parameters control values (SKU témoin)', () => {
     // Control row: landed ~33.78 → direct 64.18, reseller 47.29, distrib 43.23.
     // The stored landed cost is itself rounded, so compare within one cent.
     const landed = 33.78

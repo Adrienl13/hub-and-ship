@@ -6,7 +6,7 @@ import type {
   AdminPricingParameters,
   AdminProduct,
 } from '@/lib/catalogue-admin/types'
-import { channelCoefficientFromMargins } from '@/lib/pricing/channel'
+import { channelCoefficientFromMargins } from '@/lib/pricing/channel-economics'
 import {
   computeContainerProfit,
   freightForFormat,

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AnalyticsEvent, track } from '@/lib/analytics'
+import { getAttributionFields } from '@/lib/analytics/attribution'
 import {
   buildContactMessageDraft,
   CONTACT_TOPIC_LABEL,
@@ -78,6 +79,9 @@ export function ContactForm({
           phone: form.phone,
           topic: form.topic || undefined,
           message: form.message,
+          // Attribution first-touch : un lead payé qui convertit par le
+          // formulaire de contact reste rattaché à sa campagne.
+          attribution: getAttributionFields(Date.now()),
         }),
       })
       const payload = (await response.json().catch(() => null)) as {

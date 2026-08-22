@@ -7,15 +7,15 @@ import {
   slugifyProductName,
 } from './product-slug'
 
-const CHAIR = { name: 'Chaise Bistrot Rotin Naturel', sku: 'ZF2000C' }
+const CHAIR = { name: 'Chaise Bistrot Rotin Naturel', sku: 'TSA-CHR-001' }
 const TABLE = { name: 'Table Ronde Ø70 émaillée', sku: 'TB-104' }
 
 describe('productSlug', () => {
   it('builds an accent-free, sku-suffixed slug', () => {
-    expect(productSlug(CHAIR)).toBe('chaise-bistrot-rotin-naturel-zf2000c')
+    expect(productSlug(CHAIR)).toBe('chaise-bistrot-rotin-naturel-tsa-chr-001')
     expect(productSlug(TABLE)).toBe('table-ronde-70-emaillee-tb-104')
     expect(productPath(CHAIR)).toBe(
-      '/catalogue/p/chaise-bistrot-rotin-naturel-zf2000c',
+      '/catalogue/p/chaise-bistrot-rotin-naturel-tsa-chr-001',
     )
   })
 
@@ -30,15 +30,15 @@ describe('findProductBySlug', () => {
 
   it('resolves an exact slug', () => {
     expect(
-      findProductBySlug(products, 'chaise-bistrot-rotin-naturel-zf2000c'),
+      findProductBySlug(products, 'chaise-bistrot-rotin-naturel-tsa-chr-001'),
     ).toBe(CHAIR)
   })
 
   it('keeps old links working after a rename (sku suffix match)', () => {
-    expect(findProductBySlug(products, 'ancien-nom-produit-zf2000c')).toBe(
+    expect(findProductBySlug(products, 'ancien-nom-produit-tsa-chr-001')).toBe(
       CHAIR,
     )
-    expect(findProductBySlug(products, 'zf2000c')).toBe(CHAIR)
+    expect(findProductBySlug(products, 'tsa-chr-001')).toBe(CHAIR)
   })
 
   it('returns null for an unknown slug', () => {

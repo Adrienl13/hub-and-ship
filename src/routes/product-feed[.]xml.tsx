@@ -7,8 +7,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { productPath } from '@/lib/catalogue/product-slug'
-import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import { CATEGORY_LABEL } from '@/lib/products'
+import { loadLiveCatalogProducts } from '@/lib/catalogue/server-catalog'
+import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { absoluteUrl } from '@/lib/seo'
 
 function xmlEscape(value: string): string {
@@ -29,10 +29,10 @@ function defaultAvailabilityDate(now: Date = new Date()): string {
   return date.toISOString().slice(0, 10)
 }
 
-export async function buildProductFeed(
+export function buildProductFeed(
+  products: ReadonlyArray<Product>,
   availabilityDate: string = defaultAvailabilityDate(),
-): Promise<string> {
-  const products = await loadCatalogProducts()
+): string {
   const items = products
     .map((product) => {
       const link = absoluteUrl(productPath(product))
@@ -72,14 +72,29 @@ ${items}
 export const Route = createFileRoute('/product-feed.xml')({
   server: {
     handlers: {
-      GET: async () =>
-        new Response(await buildProductFeed(), {
+      GET: async () => {
+        // Jamais le catalogue mock ici : un feed est ingéré par Merchant et
+        // les surfaces IA — mieux vaut un 503 (retenter plus tard) que des
+        // produits fictifs annoncés publiquement.
+        const products = await loadLiveCatalogProducts()
+        if (!products) {
+          return new Response('Catalogue indisponible, réessayez plus tard.', {
+            status: 503,
+            headers: {
+              'content-type': 'text/plain; charset=utf-8',
+              'retry-after': '600',
+              'cache-control': 'no-store',
+            },
+          })
+        }
+        return new Response(buildProductFeed(products), {
           status: 200,
           headers: {
             'content-type': 'application/xml; charset=utf-8',
             'cache-control': 'public, max-age=3600',
           },
-        }),
+        })
+      },
     },
   },
 })

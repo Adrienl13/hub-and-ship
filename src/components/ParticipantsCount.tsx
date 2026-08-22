@@ -1,6 +1,9 @@
 import { Users } from 'lucide-react'
 
 export function ParticipantsCount({ count }: { count: number }) {
+  // Zéro engagement (fallback honnête ou container tout neuf) : ne rien
+  // afficher plutôt qu'un « 0 pros engagés » démobilisant.
+  if (count <= 0) return null
   const visibleAvatars = Math.min(4, Math.max(0, count))
 
   return (

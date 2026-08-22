@@ -21,6 +21,17 @@ export const CONTACT_TOPIC_LABEL: Record<ContactTopic, string> = {
   autre: 'Autre question',
 }
 
+// Attribution first-touch (utm/partner_ref) : mêmes champs que les
+// réservations et demandes stock — un lead payé qui convertit par contact
+// doit rester traçable jusqu'à la campagne (readiness publicité 08/2026).
+const attributionFieldSchema = z
+  .string()
+  .trim()
+  .max(120)
+  .optional()
+  .nullable()
+  .transform((value) => (value ? value : null))
+
 const contactMessageSchema = z.object({
   name: z.string().trim().min(2, 'Votre nom est obligatoire').max(140),
   email: z.string().trim().email('Email invalide').max(254),
@@ -32,9 +43,24 @@ const contactMessageSchema = z.object({
     .trim()
     .min(10, 'Votre message est trop court (10 caractères minimum)')
     .max(3000, 'Votre message est trop long (3000 caractères maximum)'),
+  attribution: z
+    .object({
+      utm_source: attributionFieldSchema,
+      utm_medium: attributionFieldSchema,
+      utm_campaign: attributionFieldSchema,
+      partner_ref: attributionFieldSchema,
+    })
+    .optional(),
 })
 
 export type ContactMessageInput = z.input<typeof contactMessageSchema>
+
+export interface ContactAttribution {
+  readonly utm_source: string | null
+  readonly utm_medium: string | null
+  readonly utm_campaign: string | null
+  readonly partner_ref: string | null
+}
 
 export interface ContactMessageDraft {
   readonly name: string
@@ -43,6 +69,7 @@ export interface ContactMessageDraft {
   readonly phone: string | null
   readonly topic: ContactTopic
   readonly message: string
+  readonly attribution: ContactAttribution | null
 }
 
 function emptyToNull(value: string | undefined): string | null {
@@ -63,6 +90,14 @@ export function buildContactMessageDraft(
     }
   }
 
+  const attribution = parsed.data.attribution
+  const hasAttribution =
+    attribution &&
+    (attribution.utm_source ||
+      attribution.utm_medium ||
+      attribution.utm_campaign ||
+      attribution.partner_ref)
+
   return {
     ok: true,
     draft: {
@@ -72,6 +107,14 @@ export function buildContactMessageDraft(
       phone: emptyToNull(parsed.data.phone),
       topic: parsed.data.topic ?? 'autre',
       message: parsed.data.message,
+      attribution: hasAttribution
+        ? {
+            utm_source: attribution.utm_source ?? null,
+            utm_medium: attribution.utm_medium ?? null,
+            utm_campaign: attribution.utm_campaign ?? null,
+            partner_ref: attribution.partner_ref ?? null,
+          }
+        : null,
     },
   }
 }

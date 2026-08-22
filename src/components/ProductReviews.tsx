@@ -97,7 +97,7 @@ export function ProductReviews({ product }: { product: Product }) {
         </div>
       ) : reviews.length === 0 ? (
         <div className="rounded-sm bg-[color:var(--sand-soft)] px-2.5 py-3 text-[11px] text-muted-foreground">
-          Soyez informé : les avis sont publiés uniquement par des
+          À savoir : les avis sont publiés uniquement par des
           professionnels ayant réellement commandé ce produit, après validation.
         </div>
       ) : (

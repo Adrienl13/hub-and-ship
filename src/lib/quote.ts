@@ -189,7 +189,7 @@ export function buildQuoteHTML(q: QuoteData): string {
   <div class="doc">
     <header>
       <div class="brand">
-        <div class="logo">C</div>
+        <div class="logo">T</div>
         <div>
           <h1>Terrassea</h1>
           <div class="sub">Pré-commande B2B · Importateur officiel France</div>
@@ -253,7 +253,7 @@ export function buildQuoteHTML(q: QuoteData): string {
 
       <div class="summary">
         <div class="row strike"><span>Équivalent retail FR</span><span class="v">${eur(t.retailReference)}</span></div>
-        <div class="row muted"><span>Sous-total club HT</span><span class="v">${eur(t.subtotalHt)}</span></div>
+        <div class="row muted"><span>Sous-total HT</span><span class="v">${eur(t.subtotalHt)}</span></div>
         ${t.volumeDiscountAmount > 0 ? `<div class="row muted"><span>Remise volume −${t.volumeDiscountPercent}%</span><span class="v">−${eur(t.volumeDiscountAmount)}</span></div>` : ''}
         <div class="row muted"><span>Éco-participation</span><span class="v">${eur(t.ecoContributionTotal)}</span></div>
         <div class="row total"><span>Total HT</span><span class="v">${eur(t.totalHt)}</span></div>

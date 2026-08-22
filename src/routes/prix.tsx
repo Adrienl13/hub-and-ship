@@ -90,7 +90,7 @@ const METHOD_STEPS = [
   {
     num: '02',
     title: 'Fret mutualisé',
-    text: "Le container 40' HC est réparti au prorata du volume. Plus il se remplit, plus la part par chaise baisse.",
+    text: "Le container est réparti au prorata du volume. Plus il se remplit, plus la part par chaise baisse.",
   },
   {
     num: '03',

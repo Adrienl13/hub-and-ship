@@ -75,7 +75,17 @@ export async function markReservationReserved({
       reservationId,
       error,
     })
+    return
   }
+
+  // Trace de conversion côté serveur : seul signal fiable qu'un acompte a été
+  // encaissé (les analytics client peuvent être bloqués par le navigateur).
+  console.info('stripe webhook: reservation paid', {
+    reservationId,
+    sessionId: session.id,
+    amountTotal: session.amount_total,
+    currency: session.currency,
+  })
 }
 
 export async function markReservationCancelled({
