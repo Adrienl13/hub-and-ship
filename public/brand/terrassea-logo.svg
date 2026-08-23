@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-label="Terrassea">
+  <!-- Plaque laiton TERRASSEA — recréation vectorielle du logo officiel
+       (plaque ovale or brossé, deux vis, T bleu roi et vague bleue).
+       Asset maître : header, footer, devis PDF et favicon en dérivent. -->
+  <defs>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9edbe"/>
+      <stop offset=".25" stop-color="#dcb64a"/>
+      <stop offset=".55" stop-color="#bb8f2c"/>
+      <stop offset=".8" stop-color="#8a6416"/>
+      <stop offset="1" stop-color="#6f4f10"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4de96"/>
+      <stop offset=".35" stop-color="#e7c566"/>
+      <stop offset=".65" stop-color="#dab34b"/>
+      <stop offset="1" stop-color="#c49b34"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".18" stop-color="#ffffff" stop-opacity=".5"/>
+      <stop offset=".38" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".62" stop-color="#ffffff" stop-opacity=".26"/>
+      <stop offset=".82" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="screw" cx=".35" cy=".3" r=".95">
+      <stop offset="0" stop-color="#f6e3a1"/>
+      <stop offset=".6" stop-color="#cba43d"/>
+      <stop offset="1" stop-color="#7c5a13"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="320" cy="150" rx="308" ry="138" fill="url(#rim)"/>
+  <ellipse cx="320" cy="150" rx="296" ry="126" fill="#a67c1e"/>
+  <ellipse cx="320" cy="150" rx="290" ry="120" fill="url(#face)"/>
+  <ellipse cx="320" cy="150" rx="290" ry="120" fill="url(#sheen)"/>
+
+  <g>
+    <circle cx="72" cy="150" r="17" fill="url(#screw)" stroke="#7c5a13" stroke-width="2"/>
+    <line x1="62" y1="145" x2="82" y2="155" stroke="#6b4c0e" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="568" cy="150" r="17" fill="url(#screw)" stroke="#7c5a13" stroke-width="2"/>
+    <line x1="558" y1="156" x2="578" y2="146" stroke="#6b4c0e" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+
+  <text x="136" y="174" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="94" fill="#1d3fa8">T</text>
+  <text x="200" y="174" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="64" letter-spacing="4" fill="#26272b" textLength="280" lengthAdjust="spacingAndGlyphs">ERRASSEA</text>
+
+  <path d="M 150 210 C 252 190 330 228 494 202" fill="none" stroke="#1d3fa8" stroke-width="10" stroke-linecap="round"/>
+</svg>

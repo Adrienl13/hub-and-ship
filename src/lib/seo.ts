@@ -123,6 +123,8 @@ export function organizationJsonLd() {
     // historique Container Club / prosimport.com à la marque Terrassea.
     alternateName: ['Container Club', 'Container Club Terrassea'],
     url: SITE_URL,
+    logo: `${SITE_URL}/brand/terrassea-logo.svg`,
+    image: `${SITE_URL}/brand/terrassea-logo.svg`,
     email: 'adrienlaniez1@gmail.com',
     description:
       "Terrassea, marque de Pros Import EURL : club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",

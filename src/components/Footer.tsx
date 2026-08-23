@@ -1,6 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
 
-import { BrandMark } from '@/components/BrandMark'
 import { ContainerNotifyForm } from '@/components/ContainerNotifyForm'
 
 export function Footer() {
@@ -22,11 +21,12 @@ export function Footer() {
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2.5">
-              <BrandMark className="h-8 w-8" inverse />
-              <span className="font-display text-base font-semibold tracking-tight">
-                Terrassea
-              </span>
+            <div className="flex items-center">
+              <img
+                src="/brand/terrassea-logo.svg"
+                alt="Terrassea"
+                className="h-12 w-auto"
+              />
             </div>
             {/* Transparence marque/société : l'acheteur doit comprendre QUI
                 contracte (demande Adrien 08/2026, pré-lancement pub). */}

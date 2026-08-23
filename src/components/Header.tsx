@@ -11,7 +11,6 @@ import {
   X,
 } from 'lucide-react'
 
-import { BrandMark } from '@/components/BrandMark'
 import { CartSheet } from '@/components/CartSheet'
 import { Button } from '@/components/ui/button'
 import { useChannel } from '@/hooks/useChannel'
@@ -107,12 +106,13 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        {/* Logo */}
-        <a href="/#top" className="flex items-center gap-2.5">
-          <BrandMark className="h-8 w-8" />
-          <span className="font-display text-base font-semibold tracking-tight">
-            Terrassea
-          </span>
+        {/* Logo — plaque laiton officielle (public/brand/terrassea-logo.svg) */}
+        <a href="/#top" className="flex items-center">
+          <img
+            src="/brand/terrassea-logo.svg"
+            alt="Terrassea"
+            className="h-11 w-auto"
+          />
         </a>
 
         {/* Nav desktop */}

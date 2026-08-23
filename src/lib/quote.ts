@@ -101,11 +101,6 @@ export function buildQuoteHTML(q: QuoteData): string {
     border-bottom: 1.5px solid #1a1a1c; padding-bottom: 14px; margin-bottom: 22px;
   }
   .brand { display: flex; align-items: center; gap: 10px; }
-  .logo {
-    width: 34px; height: 34px; border-radius: 4px; background: #1a1a1c;
-    color: #f4ede1; display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 16px;
-  }
   .brand h1 { margin: 0; font-size: 16px; letter-spacing: -0.02em; font-weight: 600; }
   .brand .sub { font-size: 9px; color: #5a544a; text-transform: uppercase; letter-spacing: 0.10em; }
   .ref { text-align: right; }
@@ -189,7 +184,10 @@ export function buildQuoteHTML(q: QuoteData): string {
   <div class="doc">
     <header>
       <div class="brand">
-        <div class="logo">T</div>
+        <!-- Plaque laiton Terrassea inlinée : le devis s'ouvre dans une
+             fenêtre d'impression, un chemin relatif n'y est pas fiable.
+             Source de vérité : public/brand/terrassea-logo.svg. -->
+        <svg viewBox="0 0 640 300" style="width:76px;height:36px" role="img" aria-label="Terrassea"><defs><linearGradient id="qlr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9edbe"/><stop offset=".55" stop-color="#bb8f2c"/><stop offset="1" stop-color="#6f4f10"/></linearGradient><linearGradient id="qlf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4de96"/><stop offset=".65" stop-color="#dab34b"/><stop offset="1" stop-color="#c49b34"/></linearGradient></defs><ellipse cx="320" cy="150" rx="308" ry="138" fill="url(#qlr)"/><ellipse cx="320" cy="150" rx="290" ry="120" fill="url(#qlf)"/><circle cx="72" cy="150" r="17" fill="#cba43d" stroke="#7c5a13" stroke-width="2"/><circle cx="568" cy="150" r="17" fill="#cba43d" stroke="#7c5a13" stroke-width="2"/><text x="136" y="174" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="94" fill="#1d3fa8">T</text><text x="200" y="174" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="64" letter-spacing="4" fill="#26272b" textLength="280" lengthAdjust="spacingAndGlyphs">ERRASSEA</text><path d="M 150 210 C 252 190 330 228 494 202" fill="none" stroke="#1d3fa8" stroke-width="10" stroke-linecap="round"/></svg>
         <div>
           <h1>Terrassea</h1>
           <div class="sub">Pré-commande B2B · Importateur officiel France</div>
