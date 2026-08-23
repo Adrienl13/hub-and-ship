@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { formatProductDimensions } from '@/lib/products'
 import type { Product } from '@/lib/products'
 
 type ProductDocumentKind = 'technical' | 'fire' | 'warranty' | 'quality'
@@ -30,7 +31,7 @@ function getProductDocuments(product: Product): ProductDocument[] {
     {
       kind: 'technical',
       title: 'Fiche technique',
-      meta: `${product.dimensions.l}x${product.dimensions.w}x${product.dimensions.h} cm · ${product.weightKg} kg`,
+      meta: `${formatProductDimensions(product)} · ${product.weightKg} kg`,
       gated: false,
     },
     {

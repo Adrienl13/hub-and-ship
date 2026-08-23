@@ -64,6 +64,8 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 21 | `20260803120000_fix_admin_save_product_full_no_get_price.sql` | **Fix save produit** : réécrit `admin_save_product_full` en version propre (aucun appel à `get_price` — corrige « get_price: unknown or inactive product » à l'enregistrement d'un produit inactif) et ré-intègre le garde-fou « produit sans design = inactif » |
 | 22 | `20260803140000_distributor_min_order_cbm.sql` | **Minimum distributeur** : `pricing_parameters.distributor_min_order_cbm` (initialisé à 28 m³ = un 20' GP utile, vide = règle désactivée), trigger BEFORE INSERT sur reservations bloquant toute commande distributeur sous le seuil (bypass admin), RPC paramètres ré-émis (porte la colonne entre versions) — appliquer APRÈS la 20 |
 | 23 | `20260822120000_prelaunch_hardening.sql` | **Durcissement pré-lancement** : policy INSERT public de `stock_requests` resserrée (statut `new` uniquement, `internal_note` interdite), bornes de longueur sur `subscribe_container_notification`, SKU public « ZF2000C » re-stampé en `TSA-CHR-001` (référence usine visible dans URLs/feed) et SKU témoin du moteur re-pointé sur l'id produit |
+| 24 | `20260823100000_admin_delete_product.sql` | **Suppression définitive produit** : RPC `admin_delete_product` (admin only) — refuse avec message clair si des lignes de réservation référencent le produit, purge partner_prices, cascade designs/avis/stock/coûts |
+| 25 | `20260823110000_product_table_shape.sql` | **Tables rondes** : colonne `products.table_shape` (`rectangular`/`round`, round ⇒ L = l = diamètre), `admin_save_product_full` ré-émis pour la persister — appliquer APRÈS la 21 (même corps + le champ) |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :

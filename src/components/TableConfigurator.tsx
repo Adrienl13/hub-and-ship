@@ -50,6 +50,9 @@ const FOOT_FINISHES: Array<{
 ]
 
 function defaultShapeForProduct(product: Product): TableShapeId {
+  // La fiche produit connaît désormais la forme réelle du plateau : elle
+  // prime sur l'heuristique par longueur.
+  if (product.tableShape === 'round') return 'round-80'
   if (product.dimensions.l >= 140) return 'rect-160'
   return 'round-80'
 }

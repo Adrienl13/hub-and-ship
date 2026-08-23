@@ -67,6 +67,7 @@ function makeProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
     name: 'Chaise de terrasse CANNES',
     description: '',
     dimensions: { l: 50, w: 50, h: 90 },
+    tableShape: null,
     cbmPerUnit: 0.2,
     weightKg: 5,
     moqUnits: 50,

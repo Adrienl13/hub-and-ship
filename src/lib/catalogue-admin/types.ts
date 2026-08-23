@@ -1,5 +1,5 @@
 import type { ProductCategory } from '@/lib/products'
-import type { Database, FireRatingDb } from '@/lib/supabase/types'
+import type { Database, FireRatingDb, TableShapeDb } from '@/lib/supabase/types'
 
 export type ProductRow = Database['public']['Tables']['products']['Row']
 export type ProductInsert = Database['public']['Tables']['products']['Insert']
@@ -28,6 +28,8 @@ export interface AdminProduct {
   readonly name: string
   readonly description: string
   readonly dimensions: { l: number; w: number; h: number }
+  /** Forme du plateau (tables) : 'round' ⇒ l = w = diamètre. null = rectangulaire. */
+  readonly tableShape: TableShapeDb | null
   readonly cbmPerUnit: number
   readonly weightKg: number
   readonly moqUnits: number
@@ -120,6 +122,7 @@ export function fromProductRow(
       w: row.dim_width_cm,
       h: row.dim_height_cm,
     },
+    tableShape: row.table_shape ?? null,
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,

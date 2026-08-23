@@ -12,6 +12,7 @@ import {
   Power,
   PowerOff,
   ShieldCheck,
+  Trash2,
   TriangleAlert,
 } from 'lucide-react'
 
@@ -38,6 +39,7 @@ import {
   applyReprice,
   checkPricingControl,
   getActivePricingParameters,
+  hardDeleteProduct,
   listAdminContainers,
   listPricingParameterVersions,
   listProducts,
@@ -1205,6 +1207,34 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     setBusyId(null)
   }
 
+  // Suppression DÉFINITIVE — réservée aux lignes jamais vendues (la RPC
+  // refuse si des réservations référencent le produit). Confirmation native :
+  // le geste est rare et irréversible, pas besoin d'un dialogue dédié.
+  async function deleteProduct(row: AdminProduct): Promise<void> {
+    if (!isConfigured) return
+    const confirmed = window.confirm(
+      `Supprimer définitivement « ${row.name} » (${row.sku}) ?\n\n` +
+        'Ses designs, avis et lots de stock 24h partent avec. ' +
+        'Impossible si le produit apparaît dans une réservation — ' +
+        'dans ce cas, désactivez-le.',
+    )
+    if (!confirmed) return
+    setBusyId(row.id)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      await hardDeleteProduct(client, row.id)
+      await logAdminAction(client, auth.user?.id ?? null, {
+        action: 'product.delete',
+        target: row.id,
+        extra: { sku: row.sku, name: row.name },
+      })
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setBusyId(null)
+  }
+
   async function importProductCollection({
     products,
     startSortOrder,
@@ -1814,6 +1844,20 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                         </>
                       )}
                     </Button>
+                    {!row.isActive && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5 rounded-sm border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
+                        disabled={busy}
+                        title="Suppression définitive (refusée si le produit apparaît dans une réservation)"
+                        onClick={() => void deleteProduct(row)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Supprimer
+                      </Button>
+                    )}
                   </div>
                 </article>
               )

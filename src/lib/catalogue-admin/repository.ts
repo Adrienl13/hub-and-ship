@@ -631,6 +631,21 @@ export async function reactivateProduct(
   await updateProduct(client, id, { is_active: true })
 }
 
+/**
+ * Suppression DÉFINITIVE d'un produit (RPC gardée côté SQL) : refusée avec un
+ * message clair si des lignes de réservation le référencent — dans ce cas la
+ * désactivation reste le seul geste possible.
+ */
+export async function hardDeleteProduct(
+  client: CatalogueAdminClient,
+  id: string,
+): Promise<void> {
+  const { error } = (await client.rpc('admin_delete_product', {
+    p_product_id: id,
+  } as never)) as RpcResult<unknown>
+  if (error) throw new Error(error.message)
+}
+
 export async function upsertVariant(
   client: CatalogueAdminClient,
   payload: Database['public']['Tables']['product_variants']['Insert'],

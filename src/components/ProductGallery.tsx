@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Images, Maximize2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { formatProductDimensions } from '@/lib/products'
 import type { DesignVariant, Product } from '@/lib/products'
 
 const GALLERY_LABELS = ['Vue produit', 'Ambiance', 'Matière', 'Détail']
@@ -101,8 +102,7 @@ export function ProductGallery({
             <div>
               <div className="text-xs font-medium">{product.sku}</div>
               <div className="mt-0.5 text-[11px] text-white/80">
-                {product.dimensions.l}x{product.dimensions.w}x
-                {product.dimensions.h} cm
+                {formatProductDimensions(product)}
               </div>
             </div>
             <span className="inline-flex items-center gap-1 rounded-sm bg-white/15 px-2 py-1 text-[11px] backdrop-blur">

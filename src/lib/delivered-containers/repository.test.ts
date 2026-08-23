@@ -118,6 +118,29 @@ describe('getDeliveredContainerBySlug', () => {
     expect(container?.gallery[0]?.caption).toBe('Inspection')
     expect(container?.testimonial.longQuote).toBe('Long quote')
   })
+
+  // Bug prod 08/2026 : un container paramétré SANS slug est listé via le slug
+  // dérivé de sa référence, mais la fiche ne cherchait que la colonne slug →
+  // « erreur » au clic. La résolution doit couvrir le slug dérivé.
+  it('resolves a published container whose slug column is empty (derived slug)', async () => {
+    const row = makeRow({ slug: null })
+    const chain: Record<string, unknown> = {
+      select: () => chain,
+      eq: () => chain,
+      // Fin de chaîne de la requête liste (.not) → lignes publiées.
+      not: () => Promise.resolve({ data: [row], error: null }),
+      // Fin de chaîne de la requête directe (.maybeSingle) → pas de match.
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    }
+    const client = {
+      from: () => chain,
+    } as unknown as DeliveredContainersClient
+
+    const container = await getDeliveredContainerBySlug(client, 'cc-2025-014')
+    expect(container).not.toBeNull()
+    expect(container?.reference).toBe('CC-2025-014')
+    expect(container?.slug).toBe('cc-2025-014')
+  })
 })
 
 describe('computeStats', () => {

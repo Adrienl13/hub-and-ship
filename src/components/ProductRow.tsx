@@ -1,6 +1,10 @@
 import { memo, useMemo } from 'react'
 import { Info } from 'lucide-react'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  type Product,
+} from '@/lib/products'
 import { getMoqStatus, formatEUR } from '@/lib/order'
 import { getQuantityRule } from '@/lib/quantity'
 import { Button } from '@/components/ui/button'
@@ -74,8 +78,8 @@ function ProductRowComponent({
                 <Info className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover/name:opacity-100" />
               </button>
               <div className="label-eyebrow mt-0.5 text-muted-foreground">
-                {CATEGORY_LABEL[product.category]} · {product.dimensions.l}×
-                {product.dimensions.w}×{product.dimensions.h} cm ·{' '}
+                {CATEGORY_LABEL[product.category]} ·{' '}
+                {formatProductDimensions(product)} ·{' '}
                 {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
               </div>
             </div>

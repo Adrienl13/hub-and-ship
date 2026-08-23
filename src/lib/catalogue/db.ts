@@ -136,6 +136,7 @@ function productFromRow(
       w: row.dim_width_cm,
       h: row.dim_height_cm,
     },
+    tableShape: row.table_shape ?? null,
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,

@@ -23,6 +23,9 @@ export interface Product {
   description: string
   /** cm */
   dimensions: { l: number; w: number; h: number }
+  /** Forme du plateau (tables uniquement). 'round' ⇒ l = w = diamètre.
+   *  Absent/null = rectangulaire ou non applicable. */
+  tableShape?: 'rectangular' | 'round' | null
   /** m³ par unité (carton ou unité finie) */
   cbmPerUnit: number
   weightKg: number
@@ -50,6 +53,22 @@ export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   armchair: 'Fauteuil',
   table: 'Table',
   bench: 'Banc',
+}
+
+/**
+ * Dimensions lisibles, forme du plateau comprise : une table ronde s'écrit
+ * « Ø 80 × H 75 cm », tout le reste « L × l × H cm ». Point d'entrée UNIQUE
+ * pour l'affichage (cartes, fiches, devis, JSON-LD) — ne pas recomposer les
+ * dimensions à la main.
+ */
+export function formatProductDimensions(
+  product: Pick<Product, 'dimensions' | 'tableShape'>,
+): string {
+  const { l, w, h } = product.dimensions
+  if (product.tableShape === 'round') {
+    return `Ø ${l} × H ${h} cm`
+  }
+  return `${l} × ${w} × ${h} cm`
 }
 
 export const PRODUCTS: Product[] = [

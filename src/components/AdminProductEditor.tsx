@@ -9,7 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
-import type { Database, FireRatingDb, Json } from '@/lib/supabase/types'
+import type {
+  Database,
+  FireRatingDb,
+  Json,
+  TableShapeDb,
+} from '@/lib/supabase/types'
 import type { ProductCategory } from '@/lib/products'
 import {
   getActivePricingParameters,
@@ -60,6 +65,8 @@ interface EditableProduct {
   dim_length_cm: string
   dim_width_cm: string
   dim_height_cm: string
+  /** Tables uniquement : '' = rectangulaire, 'round' = plateau rond (Ø). */
+  table_shape: '' | TableShapeDb
   cbm_per_unit: string
   weight_kg: string
   fire_rating: '' | FireRatingDb
@@ -91,6 +98,7 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
     dim_length_cm: String(detail.dimensions.l),
     dim_width_cm: String(detail.dimensions.w),
     dim_height_cm: String(detail.dimensions.h),
+    table_shape: detail.tableShape ?? '',
     cbm_per_unit: detail.cbmPerUnit.toString(),
     weight_kg: detail.weightKg.toString(),
     fire_rating: detail.fireRating ?? '',
@@ -120,6 +128,7 @@ function emptyEditable(): EditableProduct {
     dim_length_cm: '0',
     dim_width_cm: '0',
     dim_height_cm: '0',
+    table_shape: '',
     cbm_per_unit: '0.05',
     weight_kg: '0',
     fire_rating: '',
@@ -293,8 +302,16 @@ function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
     retail_price_ref: Math.max(0, parseNumber(state.retail_price_ref)),
     eco_contribution: Math.max(0, parseNumber(state.eco_contribution)),
     dim_length_cm: Math.max(0, Math.round(parseNumber(state.dim_length_cm))),
-    dim_width_cm: Math.max(0, Math.round(parseNumber(state.dim_width_cm))),
+    // Table ronde : la largeur EST le diamètre (une seule saisie côté UI).
+    dim_width_cm:
+      state.category === 'table' && state.table_shape === 'round'
+        ? Math.max(0, Math.round(parseNumber(state.dim_length_cm)))
+        : Math.max(0, Math.round(parseNumber(state.dim_width_cm))),
     dim_height_cm: Math.max(0, Math.round(parseNumber(state.dim_height_cm))),
+    table_shape:
+      state.category === 'table' && state.table_shape
+        ? state.table_shape
+        : null,
     cbm_per_unit: Math.max(0.0001, parseNumber(state.cbm_per_unit, 0.01)),
     weight_kg: Math.max(0, parseNumber(state.weight_kg)),
     fire_rating: state.fire_rating === '' ? null : state.fire_rating,
@@ -1001,21 +1018,56 @@ export function AdminProductEditor({
       </Fieldset>
 
       <Fieldset title="Dimensions & logistique">
+        {state.category === 'table' && (
+          <Field label="Forme du plateau">
+            <div className="flex gap-2">
+              {(
+                [
+                  ['', 'Rectangulaire / carrée'],
+                  ['round', 'Ronde (Ø)'],
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={label}
+                  type="button"
+                  size="sm"
+                  variant={state.table_shape === value ? 'default' : 'outline'}
+                  className="h-8 rounded-sm"
+                  onClick={() => setField('table_shape', value)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </Field>
+        )}
         <div className="grid gap-3 md:grid-cols-2">
-          <Field label="L (cm)">
-            <Input
-              type="number"
-              value={state.dim_length_cm}
-              onChange={(e) => setField('dim_length_cm', e.target.value)}
-            />
-          </Field>
-          <Field label="l (cm)">
-            <Input
-              type="number"
-              value={state.dim_width_cm}
-              onChange={(e) => setField('dim_width_cm', e.target.value)}
-            />
-          </Field>
+          {state.category === 'table' && state.table_shape === 'round' ? (
+            <Field label="Ø Diamètre (cm)">
+              <Input
+                type="number"
+                value={state.dim_length_cm}
+                onChange={(e) => setField('dim_length_cm', e.target.value)}
+              />
+            </Field>
+          ) : (
+            <>
+              <Field label="L (cm)">
+                <Input
+                  type="number"
+                  value={state.dim_length_cm}
+                  onChange={(e) => setField('dim_length_cm', e.target.value)}
+                />
+              </Field>
+              <Field label="l (cm)">
+                <Input
+                  type="number"
+                  value={state.dim_width_cm}
+                  onChange={(e) => setField('dim_width_cm', e.target.value)}
+                />
+              </Field>
+            </>
+          )}
           <Field label="H (cm)">
             <Input
               type="number"

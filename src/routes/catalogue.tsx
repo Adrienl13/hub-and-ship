@@ -41,7 +41,12 @@ import {
   encodeCartSelection,
 } from '@/lib/catalogue/share-cart'
 import { AnalyticsEvent, track } from '@/lib/analytics'
-import { CATEGORY_LABEL, PRODUCTS, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  PRODUCTS,
+  type Product,
+} from '@/lib/products'
 import {
   COLLECTIONS,
   countByCollection,
@@ -743,7 +748,7 @@ function CatalogueComparison({
       { label: 'MOQ', value: (p) => `${p.moqUnits} u.` },
       {
         label: 'Dimensions',
-        value: (p) => `${p.dimensions.l}×${p.dimensions.w}×${p.dimensions.h} cm`,
+        value: (p) => formatProductDimensions(p),
       },
       { label: 'Volume', value: (p) => `${p.cbmPerUnit.toFixed(2)} m³` },
       { label: 'Poids', value: (p) => `${p.weightKg} kg` },

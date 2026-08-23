@@ -1,5 +1,9 @@
 import { productPath } from '@/lib/catalogue/product-slug'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  type Product,
+} from '@/lib/products'
 
 // Domaine ACTUEL de service. La marque est déjà Terrassea ; l'URL bascule sur
 // terrassea.com au dernier moment via scripts/flip-domaine-terrassea.sh.
@@ -239,7 +243,7 @@ export function productJsonLd(product: Product, options?: { url?: string }) {
       {
         '@type': 'PropertyValue',
         name: 'Dimensions',
-        value: `${product.dimensions.l} x ${product.dimensions.w} x ${product.dimensions.h} cm`,
+        value: formatProductDimensions(product),
       },
     ],
     offers: {

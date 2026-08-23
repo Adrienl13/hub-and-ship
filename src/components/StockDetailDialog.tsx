@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { StockLotGallery } from '@/components/StockLotGallery'
-import { CATEGORY_LABEL } from '@/lib/products'
+import { CATEGORY_LABEL, formatProductDimensions } from '@/lib/products'
 import { STOCK_CONDITION_LABEL, type StockLine } from '@/lib/stock'
 import { formatEUR } from '@/lib/order'
 
@@ -71,7 +71,7 @@ export function StockDetailDialog({
                 {
                   Icon: Ruler,
                   k: 'Dimensions',
-                  v: `${product.dimensions.l}×${product.dimensions.w}×${product.dimensions.h} cm`,
+                  v: formatProductDimensions(product),
                 },
                 { Icon: Weight, k: 'Poids', v: `${product.weightKg} kg` },
                 {

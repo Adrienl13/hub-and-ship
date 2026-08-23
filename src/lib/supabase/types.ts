@@ -95,6 +95,7 @@ export type QualityReportType =
   | 'other'
 export type ProductCategoryDb = 'chair' | 'armchair' | 'table' | 'bench'
 export type FireRatingDb = 'M1' | 'M2'
+export type TableShapeDb = 'rectangular' | 'round'
 export type CarrierSpecialtyDb =
   | 'national'
   | 'regional_sud_est'
@@ -880,6 +881,7 @@ type ProductRow = {
   gallery_urls: string[]
   features: string[]
   fire_rating: FireRatingDb | null
+  table_shape: TableShapeDb | null
   is_active: boolean
   sort_order: number
   created_at: string
@@ -909,6 +911,7 @@ type ProductInsert = {
   gallery_urls?: string[]
   features?: string[]
   fire_rating?: FireRatingDb | null
+  table_shape?: TableShapeDb | null
   is_active?: boolean
   sort_order?: number
   created_at?: string
@@ -1287,6 +1290,10 @@ export interface Database {
       admin_save_product_full: {
         Args: { payload: Json }
         Returns: void
+      }
+      admin_delete_product: {
+        Args: { p_product_id: string }
+        Returns: Json
       }
       create_reservation_with_items: {
         Args: { payload: Json }

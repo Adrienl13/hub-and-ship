@@ -17,7 +17,11 @@ import {
 } from '@/lib/catalogue/product-slug'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { formatEUR } from '@/lib/order'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  type Product,
+} from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -201,7 +205,7 @@ function ProductPage() {
           <Spec
             icon={Ruler}
             label="Dimensions"
-            value={`${product.dimensions.l} × ${product.dimensions.w} × ${product.dimensions.h} cm`}
+            value={formatProductDimensions(product)}
           />
           <Spec
             icon={Box}

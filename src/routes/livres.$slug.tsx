@@ -93,12 +93,15 @@ function LivreDetailPage() {
     void getDeliveredContainerBySlug(client, slug)
       .then((data) => {
         if (cancelled) return
-        if (!data) {
+        // La liste affiche les containers de démonstration quand la base n'a
+        // encore rien de publié : la fiche doit résoudre ces cartes-là aussi.
+        const resolved = data ?? getFallbackDeliveredContainerBySlug(slug)
+        if (!resolved) {
           setIsNotFound(true)
         } else {
-          setContainer(data)
+          setContainer(resolved)
           if (typeof document !== 'undefined') {
-            document.title = `${data.reference} — Terrassea`
+            document.title = `${resolved.reference} — Terrassea`
           }
         }
       })

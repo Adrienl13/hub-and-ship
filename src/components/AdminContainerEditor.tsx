@@ -174,6 +174,19 @@ function emptyState(): EditableState {
   }
 }
 
+// Slug URL dérivé de la référence quand le champ est laissé vide : chaque
+// container publié doit être atteignable sur /livres/{slug} (un slug null
+// rendait la fiche introuvable au clic depuis la liste).
+function slugFromReference(reference: string): string | null {
+  const slug = reference
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+  return slug || null
+}
+
 function toUpdate(state: EditableState): ContainerUpdate {
   return {
     reference: state.reference.trim(),
@@ -182,7 +195,7 @@ function toUpdate(state: EditableState): ContainerUpdate {
     status: state.status,
     container_type: state.container_type,
     expected_close_at: state.expected_close_at.trim() || null,
-    slug: state.slug.trim() || null,
+    slug: state.slug.trim() || slugFromReference(state.reference),
     origin_port: state.origin_port.trim() || null,
     total_items: parseNumberOrNull(state.total_items),
     professionals_served: parseNumberOrNull(state.professionals_served),

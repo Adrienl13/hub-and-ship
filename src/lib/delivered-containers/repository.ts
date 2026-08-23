@@ -280,11 +280,30 @@ export async function getDeliveredContainerBySlug(
     throw new Error(error.message)
   }
 
-  if (!data) return null
-  const row = data as ContainerRow
-  if (row.status !== 'delivered') return null
-  if (!row.published_at) return null
-  return toDeliveredContainer(row)
+  if (data) {
+    const row = data as ContainerRow
+    if (row.status !== 'delivered') return null
+    if (!row.published_at) return null
+    return toDeliveredContainer(row)
+  }
+
+  // La liste publie des cartes même quand la colonne slug est vide (slug
+  // dérivé de la référence) : la fiche doit résoudre ces liens-là aussi,
+  // sinon un container paramétré sans slug affiche « erreur » au clic.
+  const { data: rows, error: listError } = await client
+    .from('containers')
+    .select('*')
+    .eq('status', 'delivered')
+    .not('published_at', 'is', null)
+
+  if (listError) {
+    throw new Error(listError.message)
+  }
+
+  const match = ((rows ?? []) as ReadonlyArray<ContainerRow>).find(
+    (row) => (row.slug ?? row.reference.toLowerCase()) === slug,
+  )
+  return match ? toDeliveredContainer(match) : null
 }
 
 export interface DeliveredContainersStats {

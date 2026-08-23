@@ -16,7 +16,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  type Product,
+} from '@/lib/products'
 import { productSlug } from '@/lib/catalogue/product-slug'
 import { getMoqStatus, formatEUR } from '@/lib/order'
 import { TableConfigurator } from '@/components/TableConfigurator'
@@ -109,7 +113,7 @@ export function ProductDetailDialog({
                 {
                   Icon: Ruler,
                   k: 'Dimensions',
-                  v: `${product.dimensions.l}×${product.dimensions.w}×${product.dimensions.h} cm`,
+                  v: formatProductDimensions(product),
                 },
                 { Icon: Weight, k: 'Poids', v: `${product.weightKg} kg` },
                 {
