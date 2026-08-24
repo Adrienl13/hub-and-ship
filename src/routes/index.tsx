@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 import { Hero } from '@/components/Hero'
 import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { CataloguePreview } from '@/components/home/CataloguePreview'
+import { TerraceConfigurator } from '@/components/TerraceConfigurator'
 import {
   ClienteleBand,
   DeliverySection,
@@ -133,6 +134,11 @@ function ContainerClubPage() {
       <PillarsSection />
       <DualPathSection />
       <ProcessSection />
+
+      {/* Le meilleur argument commercial dès l'accueil : « X couverts →
+          voici votre mobilier, votre prix et votre économie » — avec ajout
+          direct au panier, sans passer par le catalogue. */}
+      <TerraceConfigurator products={productsArray} />
 
       <CataloguePreview
         products={productsArray}

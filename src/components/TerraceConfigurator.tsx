@@ -112,12 +112,26 @@ export function TerraceConfigurator({
     // mix charge le design par défaut de chaque produit, modifiable ensuite.
     setLineQty(chair.id, getDefaultVariant(chair).id, mix.chairUnits)
     setLineQty(table.id, getDefaultVariant(table).id, mix.tableUnits)
-    toast.success(
-      `Mix ${mix.covers} couverts chargé : ${mix.chairUnits} chaises + ${mix.tableUnits} tables.`,
-    )
-    document
-      .getElementById('catalogue')
-      ?.scrollIntoView({ behavior: 'smooth' })
+    // Sur /catalogue on scrolle vers la grille ; ailleurs (accueil), on
+    // confirme avec un raccourci direct vers la finalisation — celui qui a
+    // trouvé son bonheur n'a plus rien à chercher.
+    const catalogueAnchor = document.getElementById('catalogue')
+    if (catalogueAnchor) {
+      toast.success(
+        `Mix ${mix.covers} couverts ajouté : ${mix.chairUnits} chaises + ${mix.tableUnits} tables.`,
+      )
+      catalogueAnchor.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      toast.success(
+        `Mix ${mix.covers} couverts ajouté à votre commande : ${mix.chairUnits} chaises + ${mix.tableUnits} tables.`,
+        {
+          action: {
+            label: 'Finaliser',
+            onClick: () => window.location.assign('/catalogue'),
+          },
+        },
+      )
+    }
   }
 
   const step = 10
@@ -289,7 +303,7 @@ export function TerraceConfigurator({
                 onClick={applyMix}
                 className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-[color:var(--foreground)] px-6 text-sm font-medium text-[color:var(--background)] transition-colors hover:bg-[color:var(--ink-soft)]"
               >
-                Charger ce mix dans ma commande
+                Ajouter ce mix à ma commande
                 <ArrowRight className="h-4 w-4" />
               </button>
               <p className="mt-2 text-center text-[11px] text-muted-foreground">
