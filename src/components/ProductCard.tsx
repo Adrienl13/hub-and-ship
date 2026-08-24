@@ -56,16 +56,18 @@ function ProductCardComponent({
         <button
           type="button"
           onClick={onOpenDetails}
-          className="block aspect-square w-full overflow-hidden bg-[color:var(--sand)] text-left"
+          className="block aspect-square w-full overflow-hidden bg-white text-left"
           aria-label={`Voir détails ${product.name}`}
         >
           {/* L'image suit le design sélectionné : choisir un coloris doit se
-              VOIR immédiatement (retour client 08/2026). */}
+              VOIR immédiatement (retour client 08/2026). object-contain sur
+              fond blanc : une photo non carrée s'affiche ENTIÈRE au lieu
+              d'être recadrée (bug « photo coupée » signalé 08/2026). */}
           <SafeImage
             src={variant?.imageUrl || product.mainImageUrl}
             alt={`${product.name}${variant ? ` — ${variant.name}` : ''}`}
             className="h-full w-full"
-            imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            imgClassName="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
           />
         </button>
 
