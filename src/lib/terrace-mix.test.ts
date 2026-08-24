@@ -14,8 +14,12 @@ const smallTable = tables.find((t) => t.dimensions.l < 140)!
 const largeTable = tables.find((t) => t.dimensions.l >= 140)!
 
 describe('coversPerTable', () => {
-  it('reads the real table dimensions: bistro formats seat 4, 140cm+ seats 6', () => {
-    expect(coversPerTable(smallTable)).toBe(4)
+  it('reads the real table dimensions: bistro seats 2, 140x80 seats 4, 150cm+ seats 6', () => {
+    // Règle métier (Adrien 08/2026) : un guéridon bistrot = 2 chaises.
+    expect(coversPerTable(smallTable)).toBe(2)
+    expect(
+      coversPerTable({ ...smallTable, dimensions: { l: 140, w: 80, h: 75 } }),
+    ).toBe(4)
     expect(coversPerTable(largeTable)).toBe(6)
   })
 })
@@ -26,7 +30,8 @@ describe('buildTerraceMix', () => {
 
     expect(mix.chairUnits).toBe(50)
     expect(mix.chairAdjusted).toBe(true)
-    expect(mix.tableUnits).toBe(10)
+    // Guéridon bistrot 80×80 = 2 couverts → 20 tables pour 40 couverts.
+    expect(mix.tableUnits).toBe(20)
   })
 
   it('respects the +10 chair step above the minimum (72 couverts → 80 chaises)', () => {

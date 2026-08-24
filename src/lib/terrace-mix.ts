@@ -31,13 +31,19 @@ export function isDiningTable(product: Product): boolean {
 }
 
 /**
- * Couverts par table, déduits des dimensions réelles du plateau : un
- * 140 cm+ de long assoit 6, les formats bistrot (rond 60/70/80, carré)
- * assoient 4. Même règle que les fiches produit (« 6 couverts » sur les
- * 160×80, « 2 à 4 couverts » sur les rondes 80).
+ * Couverts par table, déduits des dimensions réelles du plateau (règle
+ * métier CHR validée par Adrien 08/2026 : un guéridon bistrot = 2 chaises) :
+ *   - < 90 cm  (guéridons 56/70/80, ronds ou carrés)  → 2 couverts
+ *   - 90–149 cm (ensembles repas 140×80)              → 4 couverts
+ *   - ≥ 150 cm  (grandes tables 160×90)               → 6 couverts
+ * Volontairement conservateur : mieux vaut proposer une table de plus que
+ * promettre des couverts qui ne tiennent pas en service.
  */
 export function coversPerTable(table: Product): number {
-  return table.dimensions.l >= 140 ? 6 : 4
+  const length = table.dimensions.l
+  if (length >= 150) return 6
+  if (length >= 90) return 4
+  return 2
 }
 
 function cheapestOf(
