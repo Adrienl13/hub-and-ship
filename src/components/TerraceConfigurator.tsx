@@ -3,18 +3,82 @@ import { ArrowRight, Minus, Plus, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Reveal } from '@/components/motion-helpers'
+import { getDefaultVariant } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import type { Product } from '@/lib/products'
 import {
+  COVERS_PRESETS,
   DEFAULT_COVERS,
   MAX_COVERS,
   MIN_COVERS,
   buildTerraceMix,
   coversPerTable,
+  isDiningTable,
+  isSeating,
   pickDefaultChair,
   pickDefaultTable,
 } from '@/lib/terrace-mix'
 import { useCartStore } from '@/stores/cart.store'
+
+// Sélecteur VISUEL de produit : vignettes photo défilables — le visiteur
+// voit le mobilier qu'il choisit (retour Adrien 08/2026 : les <select>
+// texte n'étaient pas parlants).
+function ProductPicker({
+  label,
+  products,
+  selectedId,
+  onSelect,
+}: {
+  readonly label: string
+  readonly products: ReadonlyArray<Product>
+  readonly selectedId: string
+  readonly onSelect: (id: string) => void
+}) {
+  return (
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div
+        role="listbox"
+        aria-label={label}
+        className="mt-1.5 flex gap-2 overflow-x-auto pb-1.5"
+      >
+        {products.map((product) => {
+          const selected = product.id === selectedId
+          return (
+            <button
+              key={product.id}
+              type="button"
+              role="option"
+              aria-selected={selected}
+              title={product.name}
+              onClick={() => onSelect(product.id)}
+              className={`w-[104px] shrink-0 rounded-sm border bg-card p-1.5 text-left transition-all ${
+                selected
+                  ? 'border-foreground ring-1 ring-foreground'
+                  : 'border-[color:var(--sand-deep)] hover:border-foreground/40'
+              }`}
+            >
+              <span className="flex h-16 w-full items-center justify-center overflow-hidden rounded-[3px] bg-white">
+                <img
+                  src={product.mainImageUrl}
+                  alt=""
+                  loading="lazy"
+                  className="max-h-full w-auto object-contain"
+                />
+              </span>
+              <span className="mt-1 block truncate text-[10px] leading-tight text-foreground">
+                {product.name.replace(/^(Chaise|Fauteuil|Table) de \w+ /, '')}
+              </span>
+              <span className="block text-[10px] font-semibold tabular-nums text-muted-foreground">
+                {formatEUR(product.basePriceHt)} HT
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 // D4 — le configurateur de terrasse : le visiteur donne son nombre de
 // couverts, le site répond par un mix chaises + tables chiffré et l'économie
@@ -24,18 +88,14 @@ export function TerraceConfigurator({
 }: {
   readonly products: ReadonlyArray<Product>
 }) {
-  const chairs = useMemo(
-    () => products.filter((p) => p.category === 'chair'),
-    [products],
-  )
-  const tables = useMemo(
-    () => products.filter((p) => p.category === 'table'),
-    [products],
-  )
+  // Assises = chaises ET fauteuils ; tables = vraies tables uniquement
+  // (jamais les piètements vendus seuls, pourtant en catégorie « table »).
+  const chairs = useMemo(() => products.filter(isSeating), [products])
+  const tables = useMemo(() => products.filter(isDiningTable), [products])
   const [covers, setCovers] = useState(DEFAULT_COVERS)
   const [chairId, setChairId] = useState<string | null>(null)
   const [tableId, setTableId] = useState<string | null>(null)
-  const setQty = useCartStore((state) => state.setQty)
+  const setLineQty = useCartStore((state) => state.setLineQty)
 
   const chair =
     chairs.find((p) => p.id === chairId) ?? pickDefaultChair(products)
@@ -48,9 +108,10 @@ export function TerraceConfigurator({
   if (!chair || !table || !mix) return null
 
   const applyMix = () => {
-    // setQty émet déjà l'événement add_to_cart du funnel (0 → n).
-    setQty(chair.id, mix.chairUnits)
-    setQty(table.id, mix.tableUnits)
+    // setLineQty émet déjà l'événement add_to_cart du funnel (0 → n) ; le
+    // mix charge le design par défaut de chaque produit, modifiable ensuite.
+    setLineQty(chair.id, getDefaultVariant(chair).id, mix.chairUnits)
+    setLineQty(table.id, getDefaultVariant(table).id, mix.tableUnits)
     toast.success(
       `Mix ${mix.covers} couverts chargé : ${mix.chairUnits} chaises + ${mix.tableUnits} tables.`,
     )
@@ -89,12 +150,33 @@ export function TerraceConfigurator({
                 container.
               </p>
 
-              <div className="mt-6 flex items-center gap-3">
+              {/* Tailles typiques en UN clic — le curseur ne sert plus qu'à
+                  affiner (retour Adrien : « personne ne va cliquer jusqu'à
+                  40 pour enfin avoir la combinaison »). */}
+              <div className="mt-5 flex flex-wrap gap-2">
+                {COVERS_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    aria-pressed={covers === preset}
+                    onClick={() => setCovers(preset)}
+                    className={`h-9 rounded-full border px-4 text-sm font-medium tabular-nums transition-colors ${
+                      covers === preset
+                        ? 'border-foreground bg-[color:var(--foreground)] text-[color:var(--background)]'
+                        : 'border-[color:var(--sand-deep)] bg-card hover:border-foreground/40'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => adjustCovers(-step)}
                   aria-label="Moins de couverts"
-                  className="flex h-11 w-11 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
+                  className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
@@ -112,41 +194,25 @@ export function TerraceConfigurator({
                   type="button"
                   onClick={() => adjustCovers(step)}
                   aria-label="Plus de couverts"
-                  className="flex h-11 w-11 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
+                  className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs text-muted-foreground">
-                  Assise
-                  <select
-                    value={chair.id}
-                    onChange={(event) => setChairId(event.target.value)}
-                    className="mt-1 h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-                  >
-                    {chairs.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} — {formatEUR(p.basePriceHt)} HT
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block text-xs text-muted-foreground">
-                  Table ({coversPerTable(table)} couverts)
-                  <select
-                    value={table.id}
-                    onChange={(event) => setTableId(event.target.value)}
-                    className="mt-1 h-11 w-full rounded-sm border border-[color:var(--sand-deep)] bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-                  >
-                    {tables.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} — {formatEUR(p.basePriceHt)} HT
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="mt-5 space-y-4">
+                <ProductPicker
+                  label="Assise"
+                  products={chairs}
+                  selectedId={chair.id}
+                  onSelect={setChairId}
+                />
+                <ProductPicker
+                  label={`Table (${coversPerTable(table)} couverts par table)`}
+                  products={tables}
+                  selectedId={table.id}
+                  onSelect={setTableId}
+                />
               </div>
             </div>
 
@@ -212,8 +278,8 @@ export function TerraceConfigurator({
                 </div>
                 {mix.totals.savings > 0 && (
                   <div className="mt-3 inline-flex items-center rounded-sm bg-[color:var(--forest-bg)] px-2.5 py-1 text-xs font-semibold text-[color:var(--forest)]">
-                    Économie −{formatEUR(mix.totals.savings)} (
-                    {mix.totals.savingsPercent}%)
+                    Économie −{formatEUR(mix.totals.savings)} (−
+                    {Math.round(mix.totals.savingsPercent)}%)
                   </div>
                 )}
               </div>

@@ -11,6 +11,25 @@ export const MIN_COVERS = 10
 export const MAX_COVERS = 400
 export const DEFAULT_COVERS = 40
 
+/** Tailles de terrasse typiques — sélection en UN clic (petit café → grande
+ *  brasserie). Le curseur reste disponible pour affiner. */
+export const COVERS_PRESETS = [20, 40, 60, 80, 120, 200] as const
+
+/** Assises proposables au configurateur : chaises ET fauteuils. */
+export function isSeating(product: Product): boolean {
+  return product.category === 'chair' || product.category === 'armchair'
+}
+
+/**
+ * Vraies tables uniquement : la catégorie « table » contient aussi les
+ * piètements (vendus seuls) — un piètement n'assoit personne, il n'a rien à
+ * faire dans le sélecteur de tables du configurateur.
+ */
+export function isDiningTable(product: Product): boolean {
+  if (product.category !== 'table') return false
+  return !/pi[èe]tement|pied de table/i.test(product.name)
+}
+
 /**
  * Couverts par table, déduits des dimensions réelles du plateau : un
  * 140 cm+ de long assoit 6, les formats bistrot (rond 60/70/80, carré)
@@ -42,7 +61,7 @@ export function pickDefaultChair(
 export function pickDefaultTable(
   products: ReadonlyArray<Product>,
 ): Product | null {
-  return cheapestOf(products, 'table')
+  return cheapestOf(products.filter(isDiningTable), 'table')
 }
 
 export interface TerraceMix {
