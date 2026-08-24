@@ -16,6 +16,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 
+import { AdminPackshotBatchNormalizer } from '@/components/AdminPackshotBatchNormalizer'
 import { AdminPartnerPriceGrid } from '@/components/AdminPartnerPriceGrid'
 import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { AdminContainerProfitSimulator } from '@/components/AdminContainerProfitSimulator'
@@ -1574,6 +1575,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
             ? 'Import en cours…'
             : 'Importer piètements de table'}
         </Button>
+        <AdminPackshotBatchNormalizer onDone={() => void refresh()} />
         <Button
           type="button"
           size="sm"

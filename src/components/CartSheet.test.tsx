@@ -39,7 +39,7 @@ describe('CartSheet — résolution réactive des produits', () => {
 
   it('affiche le badge dès que le catalogue arrive APRÈS le rendu', async () => {
     useCartStore.setState({
-      qtyByProduct: { [DB_PRODUCT.id]: 50 },
+      qtyByLine: { [`${DB_PRODUCT.id}::__default__`]: 50 },
       variantByProduct: {},
     })
 

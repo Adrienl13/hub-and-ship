@@ -224,7 +224,6 @@ export function Footer() {
             © 2026 Pros Import EURL · 60 Rue François Ier, 75008 Paris · RCS
             Paris 988 269 981 · SIRET 98826998100011
           </span>
-          <span>TVA FR08988269981</span>
         </div>
       </div>
     </footer>

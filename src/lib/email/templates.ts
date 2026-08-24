@@ -81,7 +81,7 @@ ${body}
 <tr><td style="padding:16px 32px;border-top:1px solid #e3d8c4;font-size:11px;color:#666;line-height:1.5;">
 Terrassea — édité par Pros Import EURL · 60 Rue François Ier, 75008 Paris<br>
 <a href="${SITE_URL}" style="color:#c25e2a;text-decoration:none;">${SITE_LABEL}</a> · <a href="mailto:${CONTACT_EMAIL}" style="color:#666;text-decoration:none;">${CONTACT_EMAIL}</a><br>
-RCS Paris 988 269 981 · SIRET 98826998100011 · TVA FR08988269981
+RCS Paris 988 269 981 · SIRET 98826998100011
 </td></tr>
 </table>
 </td></tr>

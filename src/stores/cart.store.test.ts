@@ -6,7 +6,19 @@ import {
   clearCatalogueRegistry,
   registerCatalogueProducts,
 } from '@/lib/catalogue/registry'
-import { createCartSnapshot, useCart, useCartStore } from '@/stores/cart.store'
+import {
+  cartLineKey,
+  createCartSnapshot,
+  useCart,
+  useCartStore,
+} from '@/stores/cart.store'
+
+/** Somme des quantités de toutes les lignes (designs) d'un produit. */
+function totalFor(productId: string): number {
+  return Object.entries(useCartStore.getState().qtyByLine)
+    .filter(([key]) => key.startsWith(`${productId}::`))
+    .reduce((sum, [, qty]) => sum + qty, 0)
+}
 
 describe('cart store', () => {
   beforeEach(() => {
@@ -22,21 +34,19 @@ describe('cart store', () => {
     const dbProduct: Product = { ...table, id: 'bistro-bis-001', sku: 'BIS-001' }
     // Not registered yet → cannot resolve → no-op (proves the mechanism).
     useCartStore.getState().setQty('bistro-bis-001', 12)
-    expect(
-      useCartStore.getState().qtyByProduct['bistro-bis-001'],
-    ).toBeUndefined()
+    expect(totalFor('bistro-bis-001')).toBe(0)
 
     // Registered (as the catalog store does on load) → now addable.
     registerCatalogueProducts([dbProduct])
     useCartStore.getState().setQty('bistro-bis-001', 12)
-    expect(useCartStore.getState().qtyByProduct['bistro-bis-001']).toBe(12)
+    expect(totalFor('bistro-bis-001')).toBe(12)
   })
 
   it('starts from an EMPTY cart — no demo pre-fill inflating the hero gauge', () => {
-    const { qtyByProduct, variantByProduct } = useCartStore.getState()
-    const snapshot = createCartSnapshot({ qtyByProduct, variantByProduct })
+    const { qtyByLine } = useCartStore.getState()
+    const snapshot = createCartSnapshot({ qtyByLine })
 
-    expect(qtyByProduct).toEqual({})
+    expect(qtyByLine).toEqual({})
     expect(snapshot.items).toHaveLength(0)
     expect(snapshot.totalUnits).toBe(0)
     expect(snapshot.fill.percent).toBe(0)
@@ -59,35 +69,58 @@ describe('cart store', () => {
     )
 
     await useCartStore.persist.rehydrate()
-    const qty = useCartStore.getState().qtyByProduct
 
     // Toutes les lignes de démo héritées disparaissent — les lignes de
-    // vrais produits (ids catalogue live) restent intactes.
-    expect(qty.p1).toBeUndefined()
-    expect(qty.p3).toBeUndefined()
-    expect(qty.p4).toBeUndefined()
-    expect(qty['bistro-live-001']).toBe(24)
+    // vrais produits (ids catalogue live) restent intactes, converties au
+    // format ligne (produit, design) de la v3.
+    expect(totalFor('p1')).toBe(0)
+    expect(totalFor('p3')).toBe(0)
+    expect(totalFor('p4')).toBe(0)
+    expect(totalFor('bistro-live-001')).toBe(24)
   })
 
   it('normalizes chair quantities through the shared business rule', () => {
     useCartStore.getState().setQty('p1', 51)
 
-    expect(useCartStore.getState().qtyByProduct.p1).toBe(60)
+    expect(totalFor('p1')).toBe(60)
   })
 
   it('keeps table quantities editable by unit', () => {
     useCartStore.getState().setQty('p3', 11)
 
-    expect(useCartStore.getState().qtyByProduct.p3).toBe(11)
+    expect(totalFor('p3')).toBe(11)
   })
 
-  it('updates variants without changing quantities', () => {
+  it('keeps one cart line PER design of the same product (bug usine 08/2026)', () => {
+    // Deux designs du même produit = deux lignes distinctes : la seconde
+    // sélection ne doit plus écraser la première.
+    const p1 = PRODUCTS.find((p) => p.id === 'p1')!
+    const [designA, designB] = p1.variants
+    useCartStore.getState().setVariant('p1', designA!.id)
+    useCartStore.getState().setQty('p1', 50)
+    useCartStore.getState().setVariant('p1', designB!.id)
+    useCartStore.getState().setQty('p1', 60)
+
+    const { qtyByLine } = useCartStore.getState()
+    expect(qtyByLine[cartLineKey('p1', designA!.id)]).toBe(50)
+    expect(qtyByLine[cartLineKey('p1', designB!.id)]).toBe(60)
+
+    const snapshot = createCartSnapshot({ qtyByLine })
+    const p1Items = snapshot.items.filter((item) => item.product.id === 'p1')
+    expect(p1Items).toHaveLength(2)
+    expect(snapshot.totalUnits).toBe(110)
+  })
+
+  it('updates variants without touching the other designs quantities', () => {
+    const p1 = PRODUCTS.find((p) => p.id === 'p1')!
+    const designA = p1.variants[0]!
+    useCartStore.getState().setVariant('p1', designA.id)
     useCartStore.getState().setQty('p1', 50)
     useCartStore.getState().setVariant('p1', 'v1c')
     const state = useCartStore.getState()
 
     expect(state.variantByProduct.p1).toBe('v1c')
-    expect(state.qtyByProduct.p1).toBe(50)
+    expect(state.qtyByLine[cartLineKey('p1', designA.id)]).toBe(50)
   })
 
   it('persists cart selections for full page navigation', () => {
@@ -97,7 +130,12 @@ describe('cart store', () => {
       localStorage.getItem('container-club-cart') ?? '{}',
     )
 
-    expect(persisted.state.qtyByProduct.p1).toBe(60)
+    const total = Object.entries(
+      (persisted.state.qtyByLine ?? {}) as Record<string, number>,
+    )
+      .filter(([key]) => key.startsWith('p1::'))
+      .reduce((sum, [, qty]) => sum + qty, 0)
+    expect(total).toBe(60)
   })
 
   it('automatically opens a 40 foot container when the cart exceeds the active 20 foot capacity', async () => {

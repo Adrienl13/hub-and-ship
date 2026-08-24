@@ -157,7 +157,7 @@ export function OrderSidebar({
   )
   // Chaque ligne du récap est directement modifiable (pas métier) ou
   // supprimable — l'acheteur corrige sa commande sans rechercher la carte.
-  const setQty = useCartStore((state) => state.setQty)
+  const setLineQty = useCartStore((state) => state.setLineQty)
   // Règle distributeur : seuil VIVANT des règles publiques (même source que
   // le trigger SQL) — null tant que non hydraté/désactivé = aucun blocage.
   const distributorMinimum = getDistributorMinimumStatus({
@@ -429,8 +429,9 @@ export function OrderSidebar({
                           type="button"
                           aria-label={`Réduire la quantité de ${item.product.name}`}
                           onClick={() =>
-                            setQty(
+                            setLineQty(
                               item.product.id,
+                              item.variant.id,
                               getPreviousOrderQuantity(item.quantity, rule),
                             )
                           }
@@ -445,8 +446,9 @@ export function OrderSidebar({
                           type="button"
                           aria-label={`Augmenter la quantité de ${item.product.name}`}
                           onClick={() =>
-                            setQty(
+                            setLineQty(
                               item.product.id,
+                              item.variant.id,
                               getNextOrderQuantity(item.quantity, rule),
                             )
                           }
@@ -458,7 +460,9 @@ export function OrderSidebar({
                       <button
                         type="button"
                         aria-label={`Retirer ${item.product.name} de la commande`}
-                        onClick={() => setQty(item.product.id, 0)}
+                        onClick={() =>
+                          setLineQty(item.product.id, item.variant.id, 0)
+                        }
                         className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] text-muted-foreground transition-colors hover:border-[color:var(--destructive)]/50 hover:text-[color:var(--destructive)]"
                       >
                         <Trash2 className="h-3 w-3" />

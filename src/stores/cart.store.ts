@@ -18,8 +18,30 @@ import type { ContainerType } from '@/lib/supabase/types'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 
 export type ProductVariantSelection = Record<string, string>
-export type ProductQuantitySelection = Record<string, number>
+/** Quantités par LIGNE `${productId}::${variantId}` — deux designs du même
+ *  produit sont deux lignes de commande distinctes (essentiel pour la
+ *  commande usine : chaque coloris est fabriqué séparément). */
+export type LineQuantitySelection = Record<string, number>
 export type ContainerPreferenceSource = 'manual' | 'auto'
+
+/** Sentinelle utilisée quand le design n'est pas connu au moment de l'écriture
+ *  (migration d'un ancien panier) : résolue en design par défaut à la lecture. */
+const DEFAULT_VARIANT_KEY = '__default__'
+
+export function cartLineKey(productId: string, variantId: string): string {
+  return `${productId}::${variantId}`
+}
+
+function parseLineKey(key: string): { productId: string; variantId: string } {
+  const separator = key.indexOf('::')
+  if (separator === -1) {
+    return { productId: key, variantId: DEFAULT_VARIANT_KEY }
+  }
+  return {
+    productId: key.slice(0, separator),
+    variantId: key.slice(separator + 2),
+  }
+}
 
 export interface CartSnapshot {
   items: CartItem[]
@@ -30,13 +52,24 @@ export interface CartSnapshot {
 
 interface CartStoreState {
   variantByProduct: ProductVariantSelection
-  qtyByProduct: ProductQuantitySelection
+  qtyByLine: LineQuantitySelection
   /** User-chosen container format (null = use the active DB container).
    *  Persisted across reloads so distributors don't lose their pick. */
   preferredContainerType: ContainerType | null
   containerPreferenceSource: ContainerPreferenceSource | null
+  /** Quantité pour le design ACTUELLEMENT sélectionné du produit (celui de
+   *  variantByProduct). C'est le geste des cards catalogue : « je choisis un
+   *  design, je mets une quantité ». */
   setQty: (
     productId: string,
+    quantity: number,
+    options?: { readonly silent?: boolean },
+  ) => void
+  /** Quantité d'une ligne précise (panier latéral, sidebar) : ne dépend pas
+   *  du design sélectionné dans le catalogue. */
+  setLineQty: (
+    productId: string,
+    variantId: string,
     quantity: number,
     options?: { readonly silent?: boolean },
   ) => void
@@ -63,32 +96,63 @@ function createDefaultVariantByProduct(
 // Le panier démarre VIDE : l'ancien panier de démonstration (50 chaises +
 // 10 tables pré-remplies) gonflait artificiellement la jauge « Remplissage »
 // du hero pour chaque nouveau visiteur — une fausse preuve sociale (audit D7).
-function createDefaultQtyByProduct(): ProductQuantitySelection {
+function createDefaultQtyByLine(): LineQuantitySelection {
   return {}
 }
 
+function resolveVariant(product: Product, variantId: string) {
+  if (variantId === DEFAULT_VARIANT_KEY) return getDefaultVariant(product)
+  return (
+    product.variants.find((item) => item.id === variantId) ??
+    getDefaultVariant(product)
+  )
+}
+
+function selectedVariantId(
+  product: Product,
+  variantByProduct: ProductVariantSelection,
+): string {
+  return variantByProduct[product.id] ?? getDefaultVariant(product).id
+}
+
 export function createCartSnapshot({
-  qtyByProduct,
-  variantByProduct,
+  qtyByLine,
   products = PRODUCTS,
   capacityCbm = CURRENT_CONTAINER.capacityCbm,
 }: {
-  qtyByProduct: ProductQuantitySelection
-  variantByProduct: ProductVariantSelection
+  qtyByLine: LineQuantitySelection
   products?: Product[]
   capacityCbm?: number
 }): CartSnapshot {
-  const items = products.flatMap((product) => {
-    const quantity = qtyByProduct[product.id] ?? 0
-    if (quantity <= 0) return []
+  const productById = new Map(products.map((product) => [product.id, product]))
 
-    const variantId =
-      variantByProduct[product.id] ?? getDefaultVariant(product).id
-    const variant =
-      product.variants.find((item) => item.id === variantId) ??
-      getDefaultVariant(product)
+  // Une ligne par (produit, design résolu) — la sentinelle __default__ et
+  // l'id réel du design par défaut fusionnent sur la même ligne.
+  const lines = new Map<string, CartItem>()
+  for (const [key, quantity] of Object.entries(qtyByLine)) {
+    if (!quantity || quantity <= 0) continue
+    const { productId, variantId } = parseLineKey(key)
+    const product = productById.get(productId)
+    if (!product) continue
+    const variant = resolveVariant(product, variantId)
+    const resolvedKey = cartLineKey(product.id, variant.id)
+    const existing = lines.get(resolvedKey)
+    if (existing) {
+      existing.quantity += quantity
+    } else {
+      lines.set(resolvedKey, { product, variant, quantity })
+    }
+  }
 
-    return [{ product, variant, quantity }]
+  // Ordre stable : celui du catalogue, puis l'ordre des designs du produit.
+  const items = [...lines.values()].sort((a, b) => {
+    const productOrder =
+      products.indexOf(a.product) - products.indexOf(b.product)
+    if (productOrder !== 0) return productOrder
+    return (
+      a.product.variants.indexOf(a.variant) -
+      b.product.variants.indexOf(b.variant)
+    )
   })
 
   const totals = calculateOrder(items)
@@ -103,48 +167,68 @@ export function createCartSnapshot({
   }
 }
 
+function writeLineQty(
+  previous: CartStoreState,
+  productId: string,
+  variantId: string,
+  quantity: number,
+  options?: { readonly silent?: boolean },
+): Partial<CartStoreState> | CartStoreState {
+  // Résout via le registre du catalogue live (mock en secours) : sans
+  // cela, seuls les 6 produits de démo étaient ajoutables au panier.
+  const product = resolveCatalogueProduct(productId)
+  if (!product) return previous
+
+  const variant = resolveVariant(product, variantId)
+  const key = cartLineKey(productId, variant.id)
+  const nextQty = sanitizeOrderQuantity(quantity, getQuantityRule(product))
+  const prevQty = previous.qtyByLine[key] ?? 0
+
+  // silent = restauration programmatique (lien partagé) : ouvrir un
+  // lien ne constitue pas un ajout au panier de l'utilisateur.
+  if (!options?.silent && prevQty === 0 && nextQty > 0) {
+    track(AnalyticsEvent.AddToCart, { product: productId })
+    // Confirmation explicite : sans elle, l'acheteur ne sait pas que
+    // sa quantité est déjà prise en compte (retour client 07/2026).
+    toast.success(`Ajouté à votre commande`, {
+      description: `${nextQty} × ${product.name} — ${variant.name}`,
+    })
+  }
+  if (!options?.silent && prevQty > 0 && nextQty === 0) {
+    toast(`Retiré de votre commande`, {
+      description: `${product.name} — ${variant.name}`,
+    })
+  }
+
+  const qtyByLine = { ...previous.qtyByLine }
+  if (nextQty <= 0) {
+    delete qtyByLine[key]
+    // Purge aussi l'éventuelle ligne sentinelle héritée du même produit.
+    delete qtyByLine[cartLineKey(productId, DEFAULT_VARIANT_KEY)]
+  } else {
+    qtyByLine[key] = nextQty
+  }
+  return { qtyByLine }
+}
+
 export const useCartStore = create<CartStoreState>()(
   persist(
     (set) => ({
       variantByProduct: createDefaultVariantByProduct(),
-      qtyByProduct: createDefaultQtyByProduct(),
+      qtyByLine: createDefaultQtyByLine(),
       preferredContainerType: null,
       containerPreferenceSource: null,
       setQty: (productId, quantity, options) =>
         set((previous) => {
-          // Résout via le registre du catalogue live (mock en secours) : sans
-          // cela, seuls les 6 produits de démo étaient ajoutables au panier.
           const product = resolveCatalogueProduct(productId)
           if (!product) return previous
-
-          const nextQty = sanitizeOrderQuantity(
-            quantity,
-            getQuantityRule(product),
-          )
-          const prevQty = previous.qtyByProduct[productId] ?? 0
-          // silent = restauration programmatique (lien partagé) : ouvrir un
-          // lien ne constitue pas un ajout au panier de l'utilisateur.
-          if (!options?.silent && prevQty === 0 && nextQty > 0) {
-            track(AnalyticsEvent.AddToCart, { product: productId })
-            // Confirmation explicite : sans elle, l'acheteur ne sait pas que
-            // sa quantité est déjà prise en compte (retour client 07/2026).
-            toast.success(`Ajouté à votre commande`, {
-              description: `${nextQty} × ${product.name}`,
-            })
-          }
-          if (!options?.silent && prevQty > 0 && nextQty === 0) {
-            toast(`Retiré de votre commande`, {
-              description: product.name,
-            })
-          }
-
-          return {
-            qtyByProduct: {
-              ...previous.qtyByProduct,
-              [productId]: nextQty,
-            },
-          }
+          const variantId = selectedVariantId(product, previous.variantByProduct)
+          return writeLineQty(previous, productId, variantId, quantity, options)
         }),
+      setLineQty: (productId, variantId, quantity, options) =>
+        set((previous) =>
+          writeLineQty(previous, productId, variantId, quantity, options),
+        ),
       setVariant: (productId, variantId) =>
         set((previous) => ({
           variantByProduct: {
@@ -160,14 +244,14 @@ export const useCartStore = create<CartStoreState>()(
       resetCart: () =>
         set({
           variantByProduct: createDefaultVariantByProduct(),
-          qtyByProduct: createDefaultQtyByProduct(),
+          qtyByLine: createDefaultQtyByLine(),
           preferredContainerType: null,
           containerPreferenceSource: null,
         }),
       clearCart: () =>
         set({
           variantByProduct: {},
-          qtyByProduct: {},
+          qtyByLine: {},
           preferredContainerType: null,
           containerPreferenceSource: null,
         }),
@@ -177,25 +261,35 @@ export const useCartStore = create<CartStoreState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         variantByProduct: state.variantByProduct,
-        qtyByProduct: state.qtyByProduct,
+        qtyByLine: state.qtyByLine,
         preferredContainerType: state.preferredContainerType,
         containerPreferenceSource: state.containerPreferenceSource,
       }),
-      // v2 : purge TOUTES les lignes héritées des produits de démonstration
-      // (ids p1..p6). L'ancienne prod pouvait réserver ces items fantômes à
-      // la place du produit réellement choisi (incident client 07/2026) —
-      // aucun id de démo ne doit survivre dans un panier persisté.
-      version: 2,
+      // v3 : le panier passe de « une quantité par produit » à « une quantité
+      // par (produit, design) » — deux designs du même produit ne s'écrasent
+      // plus (bug commande usine 08/2026). Les anciens paniers migrent vers la
+      // ligne du design qui était sélectionné (ou le design par défaut).
+      version: 3,
       migrate: (persisted) => {
         const state = persisted as {
-          qtyByProduct?: ProductQuantitySelection
+          qtyByProduct?: Record<string, number>
+          qtyByLine?: LineQuantitySelection
+          variantByProduct?: ProductVariantSelection
         } | null
-        if (state?.qtyByProduct) {
-          const qty = { ...state.qtyByProduct }
-          for (const mockId of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']) {
-            delete qty[mockId]
+        if (!state) return state
+        if (!state.qtyByLine) state.qtyByLine = {}
+        if (state.qtyByProduct) {
+          for (const [productId, quantity] of Object.entries(
+            state.qtyByProduct,
+          )) {
+            // v2 purgeait les produits de démo — on ne les ressuscite pas.
+            if (/^p[1-6]$/.test(productId)) continue
+            if (!quantity || quantity <= 0) continue
+            const variantId =
+              state.variantByProduct?.[productId] ?? DEFAULT_VARIANT_KEY
+            state.qtyByLine[cartLineKey(productId, variantId)] = quantity
           }
-          state.qtyByProduct = qty
+          delete state.qtyByProduct
         }
         return state
       },
@@ -217,7 +311,7 @@ export interface UseCartOptions {
 
 export function useCart(options: UseCartOptions = {}) {
   const variantByProduct = useCartStore((state) => state.variantByProduct)
-  const qtyByProduct = useCartStore((state) => state.qtyByProduct)
+  const qtyByLine = useCartStore((state) => state.qtyByLine)
   const preferredContainerType = useCartStore(
     (state) => state.preferredContainerType,
   )
@@ -225,6 +319,7 @@ export function useCart(options: UseCartOptions = {}) {
     (state) => state.containerPreferenceSource,
   )
   const setQty = useCartStore((state) => state.setQty)
+  const setLineQty = useCartStore((state) => state.setLineQty)
   const setVariant = useCartStore((state) => state.setVariant)
   const setPreferredContainerType = useCartStore(
     (state) => state.setPreferredContainerType,
@@ -245,13 +340,32 @@ export function useCart(options: UseCartOptions = {}) {
   const snapshot = useMemo(
     () =>
       createCartSnapshot({
-        qtyByProduct,
-        variantByProduct,
+        qtyByLine,
         products,
         capacityCbm: effectiveCapacityCbm,
       }),
-    [qtyByProduct, variantByProduct, products, effectiveCapacityCbm],
+    [qtyByLine, products, effectiveCapacityCbm],
   )
+
+  // Quantité du design SÉLECTIONNÉ de chaque produit — c'est la valeur des
+  // steppers du catalogue : changer de design affiche la quantité de CE
+  // design (0 s'il n'est pas encore au panier), sans toucher aux autres
+  // lignes du même produit.
+  const qtyByProduct = useMemo(() => {
+    const map: Record<string, number> = {}
+    const catalog = products ?? PRODUCTS
+    for (const product of catalog) {
+      const variantId = selectedVariantId(product, variantByProduct)
+      const direct = qtyByLine[cartLineKey(product.id, variantId)] ?? 0
+      const legacy =
+        variantId === getDefaultVariant(product).id
+          ? (qtyByLine[cartLineKey(product.id, DEFAULT_VARIANT_KEY)] ?? 0)
+          : 0
+      const total = direct + legacy
+      if (total > 0) map[product.id] = total
+    }
+    return map
+  }, [qtyByLine, variantByProduct, products])
 
   useEffect(() => {
     const usedCbm = snapshot.fill.usedCbm
@@ -280,9 +394,11 @@ export function useCart(options: UseCartOptions = {}) {
     ...snapshot,
     variantByProduct,
     qtyByProduct,
+    qtyByLine,
     preferredContainerType,
     containerPreferenceSource,
     setQty,
+    setLineQty,
     setVariant,
     setPreferredContainerType,
   }

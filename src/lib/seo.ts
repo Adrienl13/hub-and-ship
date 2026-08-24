@@ -148,8 +148,8 @@ export function organizationJsonLd() {
       'https://terrassea.com',
       'https://www.instagram.com/terrassea',
     ],
-    taxID: 'FR08988269981',
-    vatID: 'FR08988269981',
+    // Numéro de TVA volontairement absent (demande Adrien 08/2026) — il
+    // reste uniquement sur les mentions légales (obligation LCEN).
     identifier: [
       {
         '@type': 'PropertyValue',

@@ -269,7 +269,7 @@ export function buildQuoteHTML(q: QuoteData): string {
 
     <footer>
       <div>Terrassea — édité par Pros Import EURL · adrienlaniez1@gmail.com</div>
-      <div>RCS Paris 988 269 981 · TVA FR08988269981</div>
+      <div>RCS Paris 988 269 981</div>
     </footer>
   </div>
 </body>

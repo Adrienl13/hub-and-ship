@@ -136,6 +136,7 @@ function CataloguePage() {
     variantByProduct,
     qtyByProduct,
     setQty,
+    setLineQty,
     setVariant,
   } = useCart({
     products: productsArray,
@@ -224,10 +225,13 @@ function CataloguePage() {
     for (const entry of entries) {
       const product = productsArray.find((p) => p.id === entry.productId)
       if (!product) continue
-      if (product.variants.some((v) => v.id === entry.variantId)) {
-        setVariant(entry.productId, entry.variantId)
-      }
-      setQty(entry.productId, entry.qty, { silent: true })
+      // Ligne par (produit, design) : un lien peut porter plusieurs designs
+      // du même produit — chacun devient sa propre ligne de panier.
+      const variantId = product.variants.some((v) => v.id === entry.variantId)
+        ? entry.variantId
+        : getDefaultVariant(product).id
+      setVariant(entry.productId, variantId)
+      setLineQty(entry.productId, variantId, entry.qty, { silent: true })
       applied += 1
     }
     // Ne jamais annoncer un succès trompeur : des produits du lien ont pu
@@ -243,16 +247,16 @@ function CataloguePage() {
     } else {
       toast.success('Sélection chargée depuis le lien partagé.')
     }
-  }, [productsArray, setQty, setVariant])
+  }, [productsArray, setLineQty, setVariant])
 
   async function shareSelection(): Promise<void> {
-    const entries = productsArray
-      .filter((p) => (qtyByProduct[p.id] ?? 0) > 0)
-      .map((p) => ({
-        productId: p.id,
-        variantId: variantByProduct[p.id] ?? getDefaultVariant(p).id,
-        qty: qtyByProduct[p.id] ?? 0,
-      }))
+    // Le lien embarque TOUTES les lignes (produit, design) — pas seulement le
+    // design sélectionné à l'écran.
+    const entries = items.map((item) => ({
+      productId: item.product.id,
+      variantId: item.variant.id,
+      qty: item.quantity,
+    }))
     if (entries.length === 0) {
       toast.message('Ajoutez des produits avant de partager.')
       return

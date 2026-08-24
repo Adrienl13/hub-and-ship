@@ -27,8 +27,7 @@ import { useCartStore } from '@/stores/cart.store'
 // catalogue live — la même source d'identité que le panier lui-même.
 
 function useSheetItems(): CartItem[] {
-  const qtyByProduct = useCartStore((state) => state.qtyByProduct)
-  const variantByProduct = useCartStore((state) => state.variantByProduct)
+  const qtyByLine = useCartStore((state) => state.qtyByLine)
   // Source RÉACTIVE : le registre module-level ne déclenche aucun re-render
   // quand le catalogue arrive après le header (bug « icône panier vide alors
   // que des produits sont sélectionnés »). useCatalog charge le catalogue sur
@@ -40,25 +39,27 @@ function useSheetItems(): CartItem[] {
   )
 
   return useMemo(() => {
+    // Une ligne par (produit, design) : deux designs du même produit sont
+    // deux lignes distinctes — comme sur le bon de commande usine.
     const items: CartItem[] = []
-    for (const [productId, quantity] of Object.entries(qtyByProduct)) {
+    for (const [key, quantity] of Object.entries(qtyByLine)) {
       if (!quantity || quantity <= 0) continue
+      const [productId = '', variantId = ''] = key.split('::')
       const product =
         productById.get(productId) ?? resolveCatalogueProduct(productId)
       if (!product) continue
-      const variantId = variantByProduct[productId]
       const variant =
         product.variants.find((v) => v.id === variantId) ??
         getDefaultVariant(product)
       items.push({ product, variant, quantity })
     }
     return items
-  }, [qtyByProduct, variantByProduct, productById])
+  }, [qtyByLine, productById])
 }
 
 export function CartSheet() {
   const items = useSheetItems()
-  const setQty = useCartStore((state) => state.setQty)
+  const setLineQty = useCartStore((state) => state.setLineQty)
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
   const totals = useMemo(() => calculateOrder(items), [items])
 
@@ -127,8 +128,9 @@ export function CartSheet() {
                             type="button"
                             aria-label="Réduire la quantité"
                             onClick={() =>
-                              setQty(
+                              setLineQty(
                                 item.product.id,
+                                item.variant.id,
                                 getPreviousOrderQuantity(item.quantity, rule),
                               )
                             }
@@ -143,8 +145,9 @@ export function CartSheet() {
                             type="button"
                             aria-label="Augmenter la quantité"
                             onClick={() =>
-                              setQty(
+                              setLineQty(
                                 item.product.id,
+                                item.variant.id,
                                 getNextOrderQuantity(item.quantity, rule),
                               )
                             }
@@ -160,7 +163,9 @@ export function CartSheet() {
                           <button
                             type="button"
                             aria-label={`Retirer ${item.product.name}`}
-                            onClick={() => setQty(item.product.id, 0)}
+                            onClick={() =>
+                              setLineQty(item.product.id, item.variant.id, 0)
+                            }
                             className="flex h-7 w-7 items-center justify-center rounded-md border border-[color:var(--sand-deep)] text-[color:var(--destructive)] hover:bg-[color:var(--sand-soft)]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
