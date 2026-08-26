@@ -29,6 +29,7 @@ export const AnalyticsEvent = {
   PartnerRequest: 'partner_request_submit',
   StockRequest: 'stock_request_submit',
   ContactSubmit: 'contact_submit',
+  CustomColorwayRequest: 'custom_colorway_request',
   ReviewSubmit: 'review_submit',
   ShareSelection: 'share_selection',
   QuotePdf: 'quote_pdf',

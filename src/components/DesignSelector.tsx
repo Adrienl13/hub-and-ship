@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { Check, ImageOff, Palette } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
 
+import { CustomColorwayDialog } from '@/components/CustomColorwayDialog'
 import type { DesignVariant, Product } from '@/lib/products'
 
 function initials(name: string): string {
@@ -91,13 +92,15 @@ export function DesignSelector({
   /** Used when a variant has no `imageUrl` yet — typically the product's
    * main image, so the selector stays visual instead of greying out. */
   fallbackImageUrl?: string
-  /** Pastille « personnalisation » en fin de rangée : ouvre /contact
-   *  pré-rempli avec la référence — le coloris rêvé se demande en un clic,
-   *  même quand il n'est pas en photo. */
+  /** Pastille « personnalisation » en fin de rangée : ouvre le dialogue de
+   *  coloris sur mesure SANS quitter la fiche — la photo du design regardé
+   *  reste sous les yeux pendant que la demande se décrit (retour Adrien
+   *  08/2026 : la redirection /contact faisait perdre le produit de vue). */
   customizeProduct?: Product
 }) {
   const selected = variants.find((v) => v.id === selectedVariantId)
   const thumbDimensions = size === 'lg' ? 'h-12 w-12' : 'h-10 w-10'
+  const [customizeOpen, setCustomizeOpen] = useState(false)
 
   return (
     <div>
@@ -116,12 +119,9 @@ export function DesignSelector({
           />
         ))}
         {customizeProduct && (
-          <Link
-            to="/contact"
-            search={{
-              topic: 'produit',
-              message: `Bonjour, je suis intéressé par ${customizeProduct.name} (réf. ${customizeProduct.sku}) dans un coloris ou tressage différent de ceux affichés. Coloris souhaité : `,
-            }}
+          <button
+            type="button"
+            onClick={() => setCustomizeOpen(true)}
             title="Demander un autre coloris (nuancier Pantone/RAL)"
             aria-label={`Demander un autre coloris pour ${customizeProduct.name}`}
             className={`${thumbDimensions} ring-foreground/15 flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-sm border border-dashed border-[color:var(--ember)]/50 bg-[color:var(--ember)]/5 ring-1 transition-all hover:scale-[1.03] hover:bg-[color:var(--ember)]/10`}
@@ -130,13 +130,21 @@ export function DesignSelector({
             <span className="text-[7px] font-bold uppercase tracking-wide text-[color:var(--ember)]">
               Perso
             </span>
-          </Link>
+          </button>
         )}
       </div>
       {selected && showSelectedName && (
         <div className="text-foreground/80 mt-1 text-xs">
           Sélectionné : <span className="font-medium">{selected.name}</span>
         </div>
+      )}
+      {customizeProduct && customizeOpen && (
+        <CustomColorwayDialog
+          product={customizeProduct}
+          variant={selected}
+          open={customizeOpen}
+          onOpenChange={setCustomizeOpen}
+        />
       )}
     </div>
   )
