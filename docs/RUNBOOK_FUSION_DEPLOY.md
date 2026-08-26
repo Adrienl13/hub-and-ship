@@ -66,6 +66,7 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 23 | `20260822120000_prelaunch_hardening.sql` | **Durcissement pré-lancement** : policy INSERT public de `stock_requests` resserrée (statut `new` uniquement, `internal_note` interdite), bornes de longueur sur `subscribe_container_notification`, SKU public « ZF2000C » re-stampé en `TSA-CHR-001` (référence usine visible dans URLs/feed) et SKU témoin du moteur re-pointé sur l'id produit |
 | 24 | `20260823100000_admin_delete_product.sql` | **Suppression définitive produit** : RPC `admin_delete_product` (admin only) — refuse avec message clair si des lignes de réservation référencent le produit, purge partner_prices, cascade designs/avis/stock/coûts |
 | 25 | `20260823110000_product_table_shape.sql` | **Tables rondes** : colonne `products.table_shape` (`rectangular`/`round`, round ⇒ L = l = diamètre), `admin_save_product_full` ré-émis pour la persister — appliquer APRÈS la 21 (même corps + le champ) |
+| 26 | `20260826100000_partner_floor_inactive_product.sql` | **Fix save produit inactif (bis)** : le trigger `product_partner_prices_enforce_floor` (créé en prod hors repo) appelait `get_price` pour remplir `formula_price_ht` → « get_price: unknown or inactive product » en sauvant une fiche brouillon avec prix partenaire. Ré-émis : plancher de marge toujours vérifié, mais `formula_price_ht` laissé vide sur produit inactif (rempli au premier reprice après activation) |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :
