@@ -98,10 +98,14 @@ function HeroSection({ carrierCount }: { readonly carrierCount: number }) {
           Transporteurs partenaires recommandés.
         </h1>
         <p className="mt-4 max-w-3xl text-base text-[color:var(--ink-soft)]">
-          Terrassea facture uniquement <strong>le prix rendu port</strong>{' '}
-          (Marseille-Fos ou Le Havre). Pour acheminer votre mobilier depuis le
-          quai jusqu'à votre établissement, voici les transporteurs avec
-          lesquels nos clients travaillent.{' '}
+          Le plus simple :{' '}
+          <strong>
+            Terrassea organise la livraison jusqu'à votre terrasse
+          </strong>{' '}
+          (tarif confirmé sous 24 h, à choisir lors de la réservation). Si
+          vous préférez gérer le transport vous-même depuis notre zone de
+          stockage de Fos-sur-Mer, voici les transporteurs avec lesquels nos
+          clients travaillent.{' '}
           <strong>Aucune commission de notre part — contact direct.</strong>
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs">
@@ -126,8 +130,8 @@ function ProcessSection() {
   const steps = [
     {
       Icon: Ship,
-      title: '1. Arrivée au port',
-      desc: 'Container dédouané à Marseille-Fos ou Le Havre. Vous recevez la confirmation 5 à 7 jours avant.',
+      title: '1. Arrivée en zone de stockage',
+      desc: 'Container dédouané puis mis à disposition dans notre zone de stockage de Fos-sur-Mer. Vous recevez la confirmation 5 à 7 jours avant.',
     },
     {
       Icon: Phone,
@@ -137,7 +141,7 @@ function ProcessSection() {
     {
       Icon: Truck,
       title: '3. Enlèvement et livraison',
-      desc: 'Le transporteur retire la marchandise au quai et la livre sous 3 à 10 jours selon la destination.',
+      desc: 'Le transporteur retire la marchandise en zone de stockage et la livre sous 3 à 10 jours selon la destination.',
     },
   ] as const
 

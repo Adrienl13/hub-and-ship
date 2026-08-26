@@ -9,6 +9,7 @@ export type Json =
 export type UserRole = 'buyer' | 'admin' | 'super_admin'
 export type CompanyRiskFlag = 'normal' | 'review' | 'blocked'
 export type DeliveryMode =
+  | 'door_delivery'
   | 'pickup_at_port'
   | 'self_arranged'
   | 'partner_carrier_needed'

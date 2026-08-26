@@ -73,10 +73,10 @@ const FAQ = [
   {
     q: 'Le prix affiché inclut-il le transport et la douane ?',
     direct:
-      'Oui, jusqu’au port d’arrivée (Marseille-Fos ou Le Havre) : le prix est « rendu port », sans frais caché.',
+      'Oui, jusqu’à notre zone de stockage (Fos-sur-Mer) : fret, douane et taxes sont dans le prix, sans frais caché.',
     bullets: [
       'Inclus : achat usine, fret maritime mutualisé, dédouanement, taxes, conformité UE, contrôle SGS.',
-      'Ensuite, au choix : enlèvement libre gratuit au port, votre transporteur, ou mise en relation avec nos transporteurs partenaires à tarif négocié.',
+      'Ensuite, le plus simple : nous organisons la livraison jusqu’à votre terrasse (tarif confirmé sous 24 h selon votre ville). Sinon : enlèvement gratuit en zone de stockage ou votre propre transporteur.',
     ],
   },
 ] as const
@@ -125,7 +125,7 @@ const TRAJET_STEPS = [
   },
   {
     title: 'Votre terrasse',
-    text: 'Enlèvement port ou livraison — le mobilier entre en service.',
+    text: 'Livraison organisée par nos soins ou enlèvement en zone de stockage — le mobilier entre en service.',
   },
 ] as const
 
@@ -424,8 +424,9 @@ function PrixPage() {
               </div>
               <div className="mt-[22px] border-t border-[rgba(244,239,231,.12)] pt-[18px] text-[13.5px] leading-normal text-[rgba(244,239,231,.65)]">
                 Vous ne payez jamais la totalité d&apos;un mobilier qui
-                n&apos;a pas encore de date de départ. Enlèvement au port
-                gratuit · Garantie 2 ans + SAV France.
+                n&apos;a pas encore de date de départ. Livraison jusqu&apos;à
+                votre terrasse ou enlèvement gratuit en zone de stockage ·
+                Garantie 2 ans + SAV France.
               </div>
             </div>
           </div>

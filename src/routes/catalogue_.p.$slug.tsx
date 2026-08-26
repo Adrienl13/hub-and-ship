@@ -174,9 +174,10 @@ function ProductPage() {
                 </div>
               )}
               <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-                Prix rendu port (Marseille-Fos / Le Havre) : achat usine, fret
-                mutualisé, douane et contrôle SGS inclus. Remises volume : −6 %
-                dès 100 pièces, −10 % dès 150.{' '}
+                Prix rendu zone de stockage (Fos-sur-Mer) : achat usine, fret
+                mutualisé, douane et contrôle SGS inclus. Livraison jusqu'à
+                votre terrasse en option. Remises volume : −6 % dès 100
+                pièces, −10 % dès 150.{' '}
                 <Link to="/prix" className="underline underline-offset-2">
                   Voir la méthode de prix
                 </Link>
@@ -215,7 +216,7 @@ function ProductPage() {
           <Spec
             icon={ContainerIcon}
             label="Logistique"
-            value="Container mutualisé, rendu port, enlèvement gratuit"
+            value="Container mutualisé · livraison jusqu'à votre terrasse ou enlèvement gratuit (Fos-sur-Mer)"
           />
           <Spec
             icon={ShieldCheck}

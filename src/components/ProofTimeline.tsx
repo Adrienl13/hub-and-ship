@@ -28,7 +28,7 @@ const STEPS = [
   {
     Icon: Sofa,
     title: 'Votre terrasse',
-    text: 'Enlèvement port ou livraison — le mobilier entre en service.',
+    text: 'Livraison par nos soins ou enlèvement en zone de stockage — le mobilier entre en service.',
   },
 ] as const
 

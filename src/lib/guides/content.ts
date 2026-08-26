@@ -37,9 +37,9 @@ export const GUIDES: ReadonlyArray<Guide> = [
     slug: 'import-mobilier-chr-container',
     title: 'Importer du mobilier CHR par container : comment ça marche',
     metaDescription:
-      "Guide pratique pour importer du mobilier CHR (restaurant, hôtel, camping) par container : achat groupé, MOQ, volume CBM, qualité, transport rendu port et délais.",
+      "Guide pratique pour importer du mobilier CHR (restaurant, hôtel, camping) par container : achat groupé, MOQ, volume CBM, qualité, livraison jusqu'à l'établissement et délais.",
     answer:
-      "Importer du mobilier CHR par container consiste à mutualiser des commandes professionnelles dans un même conteneur maritime pour obtenir des prix directs usine. Vous réservez une place sur un container actif, validez les quantités selon les MOQ et le volume (CBM), puis Terrassea gère l'import, le contrôle qualité et la logistique jusqu'au port de livraison.",
+      "Importer du mobilier CHR par container consiste à mutualiser des commandes professionnelles dans un même conteneur maritime pour obtenir des prix directs usine. Vous réservez une place sur un container actif, validez les quantités selon les MOQ et le volume (CBM), puis Terrassea gère l'import, le contrôle qualité et la logistique — jusqu'à la livraison à votre établissement si vous le souhaitez.",
     updated: UPDATED,
     sections: [
       {
@@ -63,7 +63,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       {
         heading: 'Qualité, conformité et transport',
         paragraphs: [
-          "Le risque principal de l’import est la qualité. Terrassea publie des preuves de contrôle et de conformité, et documente les containers déjà livrés. Le transport est généralement proposé rendu port, avec une organisation logistique prise en charge.",
+          "Le risque principal de l’import est la qualité. Terrassea publie des preuves de contrôle et de conformité, et documente les containers déjà livrés. Pour le transport, Terrassea propose la livraison jusqu'à l'établissement (organisée de bout en bout), ou l'enlèvement en zone de stockage à Fos-sur-Mer.",
           "Les délais dépendent du remplissage du container et du transport maritime ; ils sont indiqués sur la réservation. Pour un besoin urgent déjà disponible en France, le stock 24h constitue une alternative.",
         ],
       },
@@ -79,7 +79,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
       {
         q: 'Comment sont garantis la qualité et le transport ?',
-        a: "Terrassea documente les contrôles qualité et les containers livrés, et organise le transport rendu port. Les preuves sont consultables sur la page Qualité.",
+        a: "Terrassea documente les contrôles qualité et les containers livrés, et peut organiser le transport jusqu'à votre établissement (ou l'enlèvement en zone de stockage à Fos-sur-Mer). Les preuves sont consultables sur la page Qualité.",
       },
     ],
     related: [

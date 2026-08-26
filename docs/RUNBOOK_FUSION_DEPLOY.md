@@ -67,6 +67,7 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 24 | `20260823100000_admin_delete_product.sql` | **Suppression définitive produit** : RPC `admin_delete_product` (admin only) — refuse avec message clair si des lignes de réservation référencent le produit, purge partner_prices, cascade designs/avis/stock/coûts |
 | 25 | `20260823110000_product_table_shape.sql` | **Tables rondes** : colonne `products.table_shape` (`rectangular`/`round`, round ⇒ L = l = diamètre), `admin_save_product_full` ré-émis pour la persister — appliquer APRÈS la 21 (même corps + le champ) |
 | 26 | `20260826100000_partner_floor_inactive_product.sql` | **Fix save produit inactif (bis)** : le trigger `product_partner_prices_enforce_floor` (créé en prod hors repo) appelait `get_price` pour remplir `formula_price_ht` → « get_price: unknown or inactive product » en sauvant une fiche brouillon avec prix partenaire. Ré-émis : plancher de marge toujours vérifié, mais `formula_price_ht` laissé vide sur produit inactif (rempli au premier reprice après activation) |
+| 27 | `20260826110000_delivery_mode_door_delivery.sql` | **Livraison jusqu'à la terrasse** : valeur `door_delivery` ajoutée à l'enum `delivery_mode` — option prioritaire du tunnel de réservation (Terrassea organise le transport post-zone de stockage). L'enlèvement est reformulé « zone de stockage Fos-sur-Mer » côté UI ; la valeur `pickup_at_port` reste inchangée en base |
 
 ```sql
 -- Après la migration 18 : la table et ses politiques existent :

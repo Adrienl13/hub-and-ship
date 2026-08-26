@@ -4,6 +4,7 @@ import { normalizeReferralCode } from '@/lib/pricing/referral'
 import { validateSiretFormat } from './siret'
 
 export const deliveryModeSchema = z.enum([
+  'door_delivery',
   'pickup_at_port',
   'self_arranged',
   'partner_carrier_needed',

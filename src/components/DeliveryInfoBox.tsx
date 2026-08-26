@@ -3,16 +3,28 @@ import { ArrowRight, Handshake, PackageCheck, Truck } from 'lucide-react'
 
 import { Reveal } from '@/components/motion-helpers'
 
+// Ordre = priorité commerciale : la livraison clé en main d'abord — les
+// pros veulent du direct et simple. L'enlèvement se fait en ZONE DE
+// STOCKAGE (Fos-sur-Mer en priorité), jamais « au port » (décision 08/2026).
 const OPTIONS = [
   {
-    Icon: PackageCheck,
-    title: 'Enlèvement libre au port',
+    Icon: Truck,
+    title: "Livraison jusqu'à votre terrasse",
+    recommended: true,
     description:
-      'Vous récupérez la marchandise au Havre ou à Marseille-Fos avec votre organisation habituelle.',
+      'On s’occupe de tout : transport organisé par Terrassea jusqu’à votre établissement. Tarif confirmé sous 24 h selon votre ville.',
+  },
+  {
+    Icon: PackageCheck,
+    title: 'Enlèvement en zone de stockage',
+    recommended: false,
+    description:
+      'Gratuit, à Fos-sur-Mer — Le Havre et Paris ouvriront selon la demande. Votre transporteur habituel y est le bienvenu.',
   },
   {
     Icon: Handshake,
     title: 'Transporteur recommandé',
+    recommended: false,
     description:
       'Nous fournissons une liste de transporteurs présélectionnés à contacter directement.',
   },
@@ -21,7 +33,7 @@ const OPTIONS = [
 function DeliveryOptions({ compact = false }: { compact?: boolean }) {
   return (
     <div className={compact ? 'space-y-2.5' : 'space-y-4'}>
-      {OPTIONS.map(({ Icon, title, description }) => (
+      {OPTIONS.map(({ Icon, title, description, recommended }) => (
         <div
           key={title}
           className={
@@ -37,13 +49,18 @@ function DeliveryOptions({ compact = false }: { compact?: boolean }) {
           />
           <div>
             <h3
-              className={
+              className={`flex flex-wrap items-center gap-1.5 ${
                 compact
                   ? 'text-xs font-medium'
                   : 'font-display text-base font-semibold tracking-tight'
-              }
+              }`}
             >
               {title}
+              {recommended && (
+                <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--forest)]">
+                  Recommandé
+                </span>
+              )}
             </h3>
             <p
               className={
@@ -69,11 +86,12 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
           <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ember)]" />
           <div>
             <div className="label-eyebrow text-[color:var(--ember)]">
-              Livraison rendue port
+              Et pour la livraison ?
             </div>
             <p className="mt-1 leading-5 text-muted-foreground">
-              Le prix inclut l'arrivée au port. Le transport final est organisé
-              et payé directement côté client.
+              On peut livrer jusqu'à votre terrasse — ou vous venez enlever en
+              zone de stockage. Le transport ne bloque jamais votre
+              réservation.
             </p>
           </div>
         </div>
@@ -103,12 +121,14 @@ export function DeliveryInfoBox({ compact = false }: { compact?: boolean }) {
               Comment la livraison fonctionne
             </div>
             <h2 className="mt-2 font-display text-3xl tracking-tight">
-              Notre prix s'arrête au port d'arrivée.
+              Jusqu'à votre terrasse, si vous voulez.
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-              Le transport final varie fortement selon votre zone, votre quai,
-              votre volume et vos habitudes logistiques. Terrassea ne prend
-              pas de marge cachée dessus.
+              Le prix affiché couvre le mobilier rendu en zone de stockage
+              (Fos-sur-Mer). Pour la suite, le plus simple : on s'occupe du
+              transport jusqu'à votre établissement, au tarif confirmé sous
+              24 h — sans marge cachée, et sans jamais bloquer votre
+              réservation.
             </p>
           </div>
 

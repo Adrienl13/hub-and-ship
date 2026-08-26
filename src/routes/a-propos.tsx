@@ -50,7 +50,7 @@ function AProposPage() {
             {
               Icon: Ship,
               title: 'Opérateur d’import',
-              text: "Nous gérons l’import, le contrôle qualité et le transport rendu port — pas une simple marketplace.",
+              text: "Nous gérons l’import, le contrôle qualité et le transport jusqu’à votre établissement — pas une simple marketplace.",
             },
             {
               Icon: PackageCheck,

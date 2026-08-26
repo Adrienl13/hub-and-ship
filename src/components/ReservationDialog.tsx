@@ -67,6 +67,7 @@ import { checkEmailDomain } from '@/lib/validation/email'
 
 type ReservationStep = 1 | 2 | 3 | 4 | 5
 type DeliveryMode =
+  | 'door_delivery'
   | 'pickup_at_port'
   | 'self_arranged'
   | 'partner_carrier_needed'
@@ -99,27 +100,34 @@ interface StoredConfirmation {
   }
 }
 
+// Ordre = priorité commerciale (décision Adrien 08/2026) : la livraison
+// clé en main d'abord — les pros veulent du direct et simple, et un lead ne
+// doit jamais se perdre sur la question du transport. L'enlèvement se fait
+// en ZONE DE STOCKAGE (Fos-sur-Mer en priorité), pas au port.
 const DELIVERY_OPTIONS: ReadonlyArray<{
   value: DeliveryMode
   title: string
   description: string
+  recommended?: boolean
 }> = [
   {
-    value: 'pickup_at_port',
-    title: 'Enlèvement libre au port',
+    value: 'door_delivery',
+    title: "Livraison jusqu'à votre terrasse",
     description:
-      'Gratuit. Vous récupérez la marchandise à Marseille-Fos ou au Havre.',
+      'On s’occupe de tout : transport organisé par Terrassea jusqu’à votre établissement. Tarif confirmé sous 24 h selon votre ville — rien à payer tant qu’il n’est pas validé.',
+    recommended: true,
+  },
+  {
+    value: 'pickup_at_port',
+    title: 'Enlèvement en zone de stockage',
+    description:
+      'Gratuit. Vous récupérez la marchandise dans notre zone de stockage de Fos-sur-Mer (Le Havre et Paris ouvriront selon la demande).',
   },
   {
     value: 'self_arranged',
     title: "J'ai déjà mon transporteur",
     description:
-      "Nous transmettrons les informations d'arrivée et de dédouanement.",
-  },
-  {
-    value: 'partner_carrier_needed',
-    title: 'Me mettre en relation',
-    description: 'Nous vous enverrons une liste de transporteurs recommandés.',
+      "Nous lui transmettons l'adresse de la zone de stockage et les créneaux d'enlèvement.",
   },
 ] as const
 
@@ -168,7 +176,8 @@ export function ReservationDialog({
     email: '',
     phone: '',
     referralCode: '',
-    deliveryMode: 'pickup_at_port' as DeliveryMode,
+    // Livraison clé en main pré-sélectionnée : c'est l'option prioritaire.
+    deliveryMode: 'door_delivery' as DeliveryMode,
     deliveryNote: '',
   })
 
@@ -683,7 +692,14 @@ export function ReservationDialog({
                 >
                   <RadioGroupItem value={option.value} className="mt-0.5" />
                   <span>
-                    <span className="block font-medium">{option.title}</span>
+                    <span className="flex flex-wrap items-center gap-1.5 font-medium">
+                      {option.title}
+                      {option.recommended && (
+                        <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[color:var(--forest)]">
+                          Recommandé
+                        </span>
+                      )}
+                    </span>
                     <span className="mt-1 block text-xs leading-5 text-muted-foreground">
                       {option.description}
                     </span>
@@ -697,13 +713,13 @@ export function ReservationDialog({
               id="deliveryNote"
               value={form.deliveryNote}
               onChange={(value) => setForm({ ...form, deliveryNote: value })}
-              hint="Ex : transporteur habituel, contraintes d'enlèvement, contact logistique."
+              hint="Ex : ville de livraison, accès / contraintes de déchargement, contact logistique."
             />
 
             <StatusBox
               tone="info"
-              title="Aucune facturation transport en V1"
-              text="Terrassea facture uniquement le prix rendu port. Le transport post-port est organisé et payé directement par le client."
+              title="Le transport ne bloque jamais votre réservation"
+              text="Votre réservation porte sur le mobilier, rendu zone de stockage. Si vous choisissez la livraison jusqu'à votre terrasse, nous vous confirmons le tarif transport sous 24 h — il ne s'ajoute qu'une fois validé par vous."
             />
 
             <DialogActions onBack={goBack} nextDisabled={!deliveryValid} />

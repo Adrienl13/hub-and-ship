@@ -36,7 +36,7 @@ const FAQ = [
   },
   {
     q: 'Livrez-vous partout en France ?',
-    a: 'Oui. Les containers arrivent à Marseille-Fos ou au Havre ; l’enlèvement au port est gratuit, et nous mettons en relation avec des transporteurs partenaires pour une livraison sur site partout en France.',
+    a: 'Oui, partout en France : nous organisons la livraison jusqu’à votre établissement (tarif confirmé sous 24 h selon la ville). Vous pouvez aussi enlever gratuitement la marchandise dans notre zone de stockage de Fos-sur-Mer — Le Havre et Paris ouvriront selon la demande.',
   },
 ] as const
 

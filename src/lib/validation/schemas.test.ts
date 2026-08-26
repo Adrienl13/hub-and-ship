@@ -35,6 +35,25 @@ describe('validation schemas', () => {
     expect(result.referralCode).toBe('CONTAINER-PIERRE-X7K9-2026')
   })
 
+  it('accepts the door delivery mode (livraison jusqu’à la terrasse)', () => {
+    const result = reservationCheckoutSchema.parse({
+      siret: validSiret,
+      contact: {
+        name: 'Marc Test',
+        company: 'Restaurant Test',
+        email: 'marc@restaurant-test.fr',
+        phone: '0612345678',
+      },
+      delivery: {
+        deliveryMode: 'door_delivery',
+        deliveryNote: 'Livraison à Lyon 6e, accès quai possible',
+      },
+      cgvAccepted: true,
+    })
+
+    expect(result.delivery.deliveryMode).toBe('door_delivery')
+  })
+
   it('rejects checkout without accepted B2B terms', () => {
     expect(() =>
       reservationCheckoutSchema.parse({

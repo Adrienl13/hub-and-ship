@@ -264,8 +264,8 @@ const STEPS = [
   },
   {
     num: '05',
-    title: 'Rendu port',
-    text: 'Enlèvement libre, votre transporteur, ou mise en relation recommandée.',
+    title: 'Jusqu’à votre terrasse',
+    text: 'Livraison organisée par Terrassea jusqu’à votre établissement — ou enlèvement en zone de stockage (Fos-sur-Mer).',
     dark: true,
   },
 ] as const
@@ -340,29 +340,34 @@ export function DeliverySection() {
     <section className={`${WRAP} pt-16 lg:pt-[104px]`}>
       <div className={EYEBROW}>Comment la livraison fonctionne</div>
       <h2 className={`${H2} mb-3 max-w-[760px] lg:text-[40px]`}>
-        Notre prix s&apos;arrête au port d&apos;arrivée.
+        Jusqu&apos;à votre terrasse, si vous voulez.
       </h2>
       <p className="mb-9 mt-0 max-w-[680px] text-[17px] text-[color:var(--color-text-secondary)]">
-        Le transport final varie selon votre zone, votre quai et vos habitudes
-        logistiques. Terrassea ne prend aucune marge cachée dessus.
+        Le prix affiché couvre le mobilier rendu en zone de stockage. Pour la
+        suite, le plus simple : on s&apos;en occupe — sans marge cachée, et
+        sans jamais bloquer votre réservation.
       </p>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">
+        <div className="flex flex-col gap-2.5 rounded-[18px] border-2 border-[color:var(--ember)] bg-white p-8">
+          <span className="w-max rounded-sm bg-[color:var(--forest-bg)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--forest)]">
+            Recommandé
+          </span>
           <h3 className="m-0 text-[19px] font-extrabold sm:text-[22px]">
-            Enlèvement libre au port
+            Livraison jusqu&apos;à votre terrasse
           </h3>
           <p className="m-0 text-[15.5px] leading-normal text-[color:var(--color-text-secondary)]">
-            Vous récupérez la marchandise au Havre ou à Marseille-Fos avec
-            votre organisation habituelle.
+            On s&apos;occupe de tout : transport organisé par Terrassea
+            jusqu&apos;à votre établissement. Tarif confirmé sous 24 h selon
+            votre ville — rien à payer tant qu&apos;il n&apos;est pas validé.
           </p>
         </div>
         <div className="flex flex-col gap-2.5 rounded-[18px] border border-[color:var(--sand-deep)] bg-white p-8">
           <h3 className="m-0 text-[19px] font-extrabold sm:text-[22px]">
-            Transporteur recommandé
+            Enlèvement en zone de stockage
           </h3>
           <p className="m-0 text-[15.5px] leading-normal text-[color:var(--color-text-secondary)]">
-            Nous fournissons une liste de transporteurs présélectionnés à
-            contacter directement.
+            Gratuit, à Fos-sur-Mer — Le Havre et Paris ouvriront selon la
+            demande. Votre transporteur habituel y est le bienvenu.
           </p>
           <a
             href="/transport-partenaires"

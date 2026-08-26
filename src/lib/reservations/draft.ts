@@ -19,6 +19,7 @@ export interface ReservationContactInput {
 
 export interface ReservationDeliveryInput {
   readonly deliveryMode:
+    | 'door_delivery'
     | 'pickup_at_port'
     | 'self_arranged'
     | 'partner_carrier_needed'

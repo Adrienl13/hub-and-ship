@@ -22,7 +22,7 @@ export const FAQ = [
   },
   {
     q: 'Comment se passe la livraison ? Combien ça coûte ?',
-    a: "Le prix affiché est un prix rendu port : il inclut la marchandise, l'importation, la douane et l'acheminement jusqu'au port d'arrivée (Marseille-Fos ou Le Havre selon le container).\n\nÀ partir du port, trois possibilités : vous enlevez vous-même la marchandise, vous mandatez votre propre transporteur, ou nous vous mettons en relation avec des transporteurs partenaires recommandés. Le transport entre le port et votre établissement est contractualisé et réglé directement par vos soins — ce qui vous laisse libre de choisir l'option la moins chère pour votre zone.\n\nVous savez donc à l'avance ce qui est inclus (jusqu'au port) et ce qui reste à votre main (le dernier kilomètre), sans frais cachés.",
+    a: "Le prix affiché inclut la marchandise, l'importation, la douane et l'acheminement jusqu'à notre zone de stockage de Fos-sur-Mer (Le Havre et Paris ouvriront selon la demande).\n\nPour la suite, le plus simple : nous organisons la livraison jusqu'à votre terrasse. Vous choisissez cette option à la réservation, et nous vous confirmons le tarif transport sous 24 h selon votre ville — il ne s'ajoute qu'une fois validé par vous. Vous pouvez aussi enlever gratuitement la marchandise en zone de stockage, ou y envoyer votre propre transporteur.\n\nDans tous les cas, la question du transport ne bloque jamais votre réservation : vous savez à l'avance ce qui est inclus, sans frais cachés.",
   },
   {
     q: 'Quelle garantie sur les produits ? Et le SAV ?',
@@ -42,7 +42,7 @@ export const FAQ = [
   },
   {
     q: 'Combien de temps entre ma réservation et la réception de la marchandise ?',
-    a: "Le délai dépend d'abord du remplissage du container. Tant que le seuil de départ n'est pas atteint, la collecte se poursuit — c'est la phase la plus variable, et vous en suivez l'avancement en temps réel.\n\nUne fois le container lancé, comptez environ 45 jours de production en usine, puis environ 30 jours de transit maritime, auxquels s'ajoute le dédouanement. Soit, en règle générale, de l'ordre de 3 mois entre le lancement du container et sa mise à disposition au port.\n\nNous communiquons une date de clôture estimée et vous tenons informé à chaque étape : lancement, fin de production, embarquement, arrivée au port.",
+    a: "Le délai dépend d'abord du remplissage du container. Tant que le seuil de départ n'est pas atteint, la collecte se poursuit — c'est la phase la plus variable, et vous en suivez l'avancement en temps réel.\n\nUne fois le container lancé, comptez environ 45 jours de production en usine, puis environ 30 jours de transit maritime, auxquels s'ajoute le dédouanement. Soit, en règle générale, de l'ordre de 3 mois entre le lancement du container et sa mise à disposition en zone de stockage.\n\nNous communiquons une date de clôture estimée et vous tenons informé à chaque étape : lancement, fin de production, embarquement, arrivée, mise à disposition ou livraison.",
   },
   {
     q: 'Et si un produit arrive abîmé ou non conforme ?',

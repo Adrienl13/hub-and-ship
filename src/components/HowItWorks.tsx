@@ -35,8 +35,8 @@ const STEPS: ReadonlyArray<{
   },
   {
     n: '05',
-    title: 'Rendu port',
-    desc: 'Enlèvement libre au port, transporteur déjà choisi, ou mise en relation avec des transporteurs recommandés.',
+    title: 'Jusqu’à votre terrasse',
+    desc: 'Livraison organisée par Terrassea jusqu’à votre établissement, ou enlèvement gratuit en zone de stockage (Fos-sur-Mer).',
     Icon: Anchor,
   },
 ]
