@@ -15,8 +15,10 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { ProofTimeline } from '@/components/ProofTimeline'
 import { QualityReportCard } from '@/components/QualityReportCard'
+import type { CardAccessState } from '@/components/QualityReportCard'
+import { ReportAccessRequestDialog } from '@/components/ReportAccessRequestDialog'
 import { useAuth } from '@/hooks/useAuth'
-import { getReportFileUrl } from '@/lib/quality-reports/access'
+import { getMyReportAccess, getReportFileUrl } from '@/lib/quality-reports/access'
 import { listPublishedQualityReports } from '@/lib/quality-reports/repository'
 import {
   ORGANIZATION_LABEL,
@@ -86,8 +88,13 @@ function QualitePage() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [openingReportId, setOpeningReportId] = useState<string | null>(null)
+  // Accès aux PDF sur AUTORISATION admin : l'état pilote le bouton des cartes
+  // (demander l'accès / validation en cours / télécharger).
+  const [accessState, setAccessState] = useState<CardAccessState>('anonymous')
+  const [accessDialogOpen, setAccessDialogOpen] = useState(false)
 
   const fetchReportFileUrl = useServerFn(getReportFileUrl)
+  const fetchMyReportAccess = useServerFn(getMyReportAccess)
 
   useEffect(() => {
     let cancelled = false
@@ -135,11 +142,32 @@ function QualitePage() {
 
   const isAuthenticated = auth.status === 'authenticated'
 
+  // Résout le statut d'autorisation du visiteur (anonyme → formulaire ;
+  // demande en attente → bouton neutralisé ; approuvée → téléchargement).
+  useEffect(() => {
+    let cancelled = false
+    if (auth.status !== 'authenticated') {
+      setAccessState('anonymous')
+      return
+    }
+    void fetchMyReportAccess({})
+      .then((result) => {
+        if (cancelled) return
+        setAccessState(result.authenticated ? result.status : 'anonymous')
+      })
+      .catch(() => {
+        if (!cancelled) setAccessState('none')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [auth.status, fetchMyReportAccess])
+
   async function handleOpenFile(report: QualityReportListItem): Promise<void> {
     if (!isAuthenticated) {
       toast.message('Connectez-vous pour télécharger', {
         description:
-          'Les rapports complets sont réservés aux pros connectés (lecture vérifiée).',
+          'L’accès validé est rattaché à votre email : connectez-vous avec cette adresse.',
         action: {
           label: 'Se connecter',
           onClick: () => {
@@ -167,6 +195,20 @@ function QualitePage() {
         case 'auth_required':
           toast.error('Session expirée', {
             description: 'Reconnectez-vous pour accéder au rapport.',
+          })
+          break
+        case 'access_required':
+          setAccessDialogOpen(true)
+          toast.message('Accès sur autorisation', {
+            description:
+              'Demandez l’accès aux rapports — validation par notre équipe sous 24 h ouvrées.',
+          })
+          break
+        case 'access_pending':
+          setAccessState('pending')
+          toast.message('Demande en cours de validation', {
+            description:
+              'Vous recevrez un email dès que votre accès sera approuvé.',
           })
           break
         case 'no_file':
@@ -214,8 +256,8 @@ function QualitePage() {
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[color:var(--ink-soft)]">
               Pros Import construit un dossier de preuve par produit et par
               container : contrôles fournisseur, inspection avant chargement,
-              traçabilité documentaire et rapports complets accessibles aux pros
-              connectés quand ils sont publiés.
+              traçabilité documentaire et rapports complets accessibles sur
+              autorisation (demande validée par notre équipe).
             </p>
 
             <QualityCommitmentGrid />
@@ -302,8 +344,10 @@ function QualitePage() {
                   key={report.id}
                   report={report}
                   isAuthenticated={isAuthenticated}
+                  accessStatus={accessState}
                   opening={openingReportId === report.id}
                   onOpenFile={() => void handleOpenFile(report)}
+                  onRequestAccess={() => setAccessDialogOpen(true)}
                 />
               ))}
             </div>
@@ -312,6 +356,15 @@ function QualitePage() {
       </main>
 
       <Footer />
+
+      {accessDialogOpen && (
+        <ReportAccessRequestDialog
+          open={accessDialogOpen}
+          onOpenChange={setAccessDialogOpen}
+          initialEmail={auth.user?.email ?? undefined}
+          onSubmitted={(status) => setAccessState(status)}
+        />
+      )}
 
       <Suspense fallback={null}>
         {reserveOpen && (
@@ -394,8 +447,8 @@ function TestedStandardsSection() {
 
         <p className="mt-4 text-xs text-muted-foreground">
           Essais réalisés par SGS-CSTC Standards Technical Services (laboratoire
-          de Shunde), avril 2026 · rapports complets consultables sur connexion
-          pro dans le coffre ci-dessous.
+          de Shunde), avril 2026 · rapports complets sur demande d&apos;accès
+          validée, dans le coffre ci-dessous.
         </p>
       </div>
     </section>
@@ -420,7 +473,7 @@ function QualityCommitmentGrid() {
       Icon: LockKeyhole,
       label: 'Accès pro',
       value: 'PDF sécurisé',
-      desc: 'Rapports complets réservés aux comptes connectés.',
+      desc: 'Rapports complets sur autorisation : demande vérifiée (SIREN) puis validée par notre équipe.',
     },
   ] as const
 

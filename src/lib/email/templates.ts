@@ -663,3 +663,83 @@ ${TEXT_SIGNATURE}`
     text,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Report access requests (rapports de tests sur autorisation admin)
+// ---------------------------------------------------------------------------
+
+export interface ReportAccessRequestEmailInput {
+  readonly firstName: string
+  readonly lastName: string
+  readonly email: string
+  readonly phone: string
+  readonly siren: string
+  readonly adminUrl: string
+}
+
+export function buildReportAccessAdminEmail(
+  input: ReportAccessRequestEmailInput,
+): { subject: string; html: string; text: string } {
+  const fullName = `${input.firstName} ${input.lastName}`
+  const subject = `Demande d'accès aux rapports de tests — ${fullName}`
+  const preheader = `${input.email} · SIREN ${input.siren}`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Un professionnel demande l'accès aux rapports de tests &amp; certifications.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${detailRow('Nom', fullName)}
+${detailRow('Email', input.email)}
+${detailRow('Téléphone', input.phone)}
+${detailRow('SIREN', input.siren)}
+</table>
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.adminUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Valider ou refuser dans l'admin</a>
+</p>`
+  const text = `Demande d'accès aux rapports de tests.
+
+Nom : ${fullName}
+Email : ${input.email}
+Téléphone : ${input.phone}
+SIREN : ${input.siren}
+
+Admin : ${input.adminUrl}`
+  return {
+    subject,
+    html: shell({ title: "Demande d'accès rapports", preheader, body }),
+    text,
+  }
+}
+
+export interface ReportAccessDecisionEmailInput {
+  readonly firstName: string
+  readonly email: string
+  /** Page où télécharger une fois connecté avec le même email. */
+  readonly qualityUrl: string
+}
+
+export function buildReportAccessApprovedEmail(
+  input: ReportAccessDecisionEmailInput,
+): { subject: string; html: string; text: string } {
+  const subject = 'Votre accès aux rapports de tests est validé'
+  const preheader =
+    'Connectez-vous avec cette adresse email pour consulter les rapports.'
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.firstName)},</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre demande d'accès aux rapports de tests &amp; certifications (SGS, essais EN 581 / EN 1022, analyses matériaux) est <strong>validée</strong>.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Pour les consulter : connectez-vous (ou créez votre compte) avec <strong>cette même adresse email</strong>, puis ouvrez la page Qualité &amp; Tests.</p>
+<p style="margin:24px 0 0;text-align:center;">
+<a href="${escape(input.qualityUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Consulter les rapports</a>
+</p>
+<p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Une question sur un essai ou une norme ? Répondez simplement à cet email.</p>`
+  const text = `Bonjour ${input.firstName},
+
+Votre demande d'accès aux rapports de tests & certifications est validée.
+
+Connectez-vous (ou créez votre compte) avec cette même adresse email, puis ouvrez la page Qualité & Tests : ${input.qualityUrl}
+
+Une question ? Répondez simplement à cet email.
+
+${TEXT_SIGNATURE}`
+  return {
+    subject,
+    html: shell({ title: 'Accès validé', preheader, body }),
+    text,
+  }
+}

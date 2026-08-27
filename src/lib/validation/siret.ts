@@ -50,6 +50,44 @@ export function cleanSiret(siret: string): string {
   return siret.replace(/\s/g, '')
 }
 
+/**
+ * SIREN = 9 chiffres + clé de Luhn (le SIRET est un SIREN + NIC). Utilisé
+ * par la demande d'accès aux rapports de tests, où l'on identifie
+ * l'entreprise sans exiger l'établissement précis.
+ */
+export function validateSirenFormat(siren: string): BasicSiretValidation {
+  const cleaned = cleanSiret(siren)
+
+  if (!/^\d{9}$/.test(cleaned)) {
+    return {
+      valid: false,
+      cleaned,
+      reason: 'Le SIREN doit contenir exactement 9 chiffres',
+    }
+  }
+
+  // Luhn : on double un chiffre sur deux en partant de la droite.
+  let sum = 0
+  for (let index = 0; index < cleaned.length; index += 1) {
+    let digit = Number.parseInt(cleaned[index]!, 10)
+    if ((cleaned.length - index) % 2 === 0) {
+      digit *= 2
+      if (digit > 9) digit -= 9
+    }
+    sum += digit
+  }
+
+  if (sum % 10 !== 0) {
+    return {
+      valid: false,
+      cleaned,
+      reason: 'Numéro SIREN invalide (clé de contrôle incorrecte)',
+    }
+  }
+
+  return { valid: true, cleaned }
+}
+
 export function validateSiretFormat(siret: string): BasicSiretValidation {
   const cleaned = cleanSiret(siret)
 

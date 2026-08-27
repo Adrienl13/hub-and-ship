@@ -42,6 +42,7 @@ import { Route as CatalogueChaisesBistrotParisiennesRouteImport } from './routes
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
+import { Route as ApiReportAccessRouteImport } from './routes/api/report-access'
 import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
@@ -226,6 +227,11 @@ const ApiStockRequestsRoute = ApiStockRequestsRouteImport.update({
   path: '/api/stock-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReportAccessRoute = ApiReportAccessRouteImport.update({
+  id: '/api/report-access',
+  path: '/api/report-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPartnerRequestsRoute = ApiPartnerRequestsRouteImport.update({
   id: '/api/partner-requests',
   path: '/api/partner-requests',
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByTo {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/login': typeof AuthLoginRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -525,6 +535,7 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
     | '/auth/login'
@@ -624,6 +636,7 @@ export interface RootRouteChildren {
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   ApiContactRoute: typeof ApiContactRoute
   ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
+  ApiReportAccessRoute: typeof ApiReportAccessRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -876,6 +889,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStockRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/report-access': {
+      id: '/api/report-access'
+      path: '/api/report-access'
+      fullPath: '/api/report-access'
+      preLoaderRoute: typeof ApiReportAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/partner-requests': {
       id: '/api/partner-requests'
       path: '/api/partner-requests'
@@ -1056,6 +1076,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   ApiContactRoute: ApiContactRoute,
   ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
+  ApiReportAccessRoute: ApiReportAccessRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthLoginRoute: AuthLoginRoute,

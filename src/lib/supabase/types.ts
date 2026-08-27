@@ -859,6 +859,42 @@ type QualityReportInsert = {
 
 type QualityReportUpdate = Partial<QualityReportInsert>
 
+export type ReportAccessStatus = 'pending' | 'approved' | 'rejected'
+
+type ReportAccessRequestRow = {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  siren: string
+  user_id: string | null
+  status: ReportAccessStatus
+  admin_note: string | null
+  decided_at: string | null
+  decided_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+type ReportAccessRequestInsert = {
+  id?: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  siren: string
+  user_id?: string | null
+  status?: ReportAccessStatus
+  admin_note?: string | null
+  decided_at?: string | null
+  decided_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type ReportAccessRequestUpdate = Partial<ReportAccessRequestInsert>
+
 type ProductRow = {
   id: string
   sku: string
@@ -1211,6 +1247,11 @@ export interface Database {
         Row: QualityReportRow
         Insert: QualityReportInsert
         Update: QualityReportUpdate
+      }
+      report_access_requests: {
+        Row: ReportAccessRequestRow
+        Insert: ReportAccessRequestInsert
+        Update: ReportAccessRequestUpdate
       }
       products: {
         Row: ProductRow

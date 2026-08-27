@@ -29,10 +29,68 @@ export type GetReportFileUrlResult =
   | { ok: true; url: string; expiresIn: number }
   | {
       ok: false
-      reason: 'auth_required' | 'not_found' | 'no_file' | 'storage_unavailable'
+      reason:
+        | 'auth_required'
+        | 'access_required'
+        | 'access_pending'
+        | 'not_found'
+        | 'no_file'
+        | 'storage_unavailable'
     }
 
 const SIGNED_URL_TTL_SECONDS = 60
+
+export type ReportAccessState = 'none' | 'pending' | 'approved' | 'rejected'
+
+/** Statut de la demande d'accès du compte (par user_id OU email). */
+async function resolveAccessStatus(
+  userId: string,
+  userEmail: string | null,
+): Promise<ReportAccessState> {
+  const admin = getSupabaseAdmin()
+  let query = admin
+    .from('report_access_requests')
+    .select('status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  query = userEmail
+    ? query.or(`user_id.eq.${userId},email.ilike.${userEmail}`)
+    : query.eq('user_id', userId)
+
+  const { data, error } = await query.maybeSingle()
+  if (error) {
+    console.error('resolveAccessStatus: read failed', error)
+    return 'none'
+  }
+  return (data?.status as ReportAccessState | undefined) ?? 'none'
+}
+
+export type GetMyReportAccessResult =
+  | { readonly authenticated: false }
+  | { readonly authenticated: true; readonly status: ReportAccessState }
+
+/** Statut d'accès du visiteur courant, pour l'état des cartes sur /qualite. */
+export const getMyReportAccess = createServerFn({ method: 'POST' }).handler(
+  async (): Promise<GetMyReportAccessResult> => {
+    const request = getRequest()
+    const cookieEntries = parseCookieHeader(request.headers.get('cookie'))
+    try {
+      const sessionClient = createSupabaseServerClient({
+        cookies: { getAll: () => cookieEntries },
+      })
+      const { data: userData } = await sessionClient.auth.getUser()
+      if (!userData.user) return { authenticated: false }
+      const status = await resolveAccessStatus(
+        userData.user.id,
+        userData.user.email ?? null,
+      )
+      return { authenticated: true, status }
+    } catch {
+      return { authenticated: false }
+    }
+  },
+)
 
 export const getReportFileUrl = createServerFn({ method: 'POST' })
   .inputValidator(inputSchema)
@@ -43,12 +101,14 @@ export const getReportFileUrl = createServerFn({ method: 'POST' })
     const cookieEntries = parseCookieHeader(request.headers.get('cookie'))
 
     let userId: string | null = null
+    let userEmail: string | null = null
     try {
       const sessionClient = createSupabaseServerClient({
         cookies: { getAll: () => cookieEntries },
       })
       const { data: userData } = await sessionClient.auth.getUser()
       userId = userData.user?.id ?? null
+      userEmail = userData.user?.email ?? null
     } catch (error) {
       // Supabase env missing in this runtime — treat as "auth not wired up"
       // rather than crashing the public page.
@@ -58,6 +118,17 @@ export const getReportFileUrl = createServerFn({ method: 'POST' })
 
     if (!userId) {
       return { ok: false, reason: 'auth_required' }
+    }
+
+    // 1bis) Être connecté ne suffit plus (décision 27/08/2026) : le compte
+    //       doit avoir une demande d'accès APPROUVÉE par l'admin — rattachée
+    //       au compte ou à l'email du compte.
+    const approval = await resolveAccessStatus(userId, userEmail)
+    if (approval === 'pending') {
+      return { ok: false, reason: 'access_pending' }
+    }
+    if (approval !== 'approved') {
+      return { ok: false, reason: 'access_required' }
     }
 
     // 2) Read the report row via the admin client (bypassing RLS) so we

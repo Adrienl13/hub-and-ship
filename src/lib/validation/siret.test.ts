@@ -52,3 +52,24 @@ describe('validateSiretFormat', () => {
     })
   })
 })
+
+describe('validateSirenFormat', () => {
+  it('accepts a valid SIREN (9 digits + Luhn), with spaces', async () => {
+    const { validateSirenFormat } = await import('./siret')
+    expect(validateSirenFormat('552 100 554')).toEqual({
+      valid: true,
+      cleaned: '552100554',
+    })
+    expect(validateSirenFormat('988269981').valid).toBe(true)
+  })
+
+  it('rejects wrong length and bad checksum', async () => {
+    const { validateSirenFormat } = await import('./siret')
+    expect(validateSirenFormat('12345678').valid).toBe(false)
+    expect(validateSirenFormat('123456789')).toEqual({
+      valid: false,
+      cleaned: '123456789',
+      reason: 'Numéro SIREN invalide (clé de contrôle incorrecte)',
+    })
+  })
+})

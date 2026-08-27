@@ -13,11 +13,23 @@ import {
   type QualityReportListItem,
 } from '@/lib/quality-reports/types'
 
+/** Où en est le visiteur vis-à-vis de l'autorisation d'accès aux PDF. */
+export type CardAccessState =
+  | 'anonymous'
+  | 'none'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+
 export interface QualityReportCardProps {
   readonly report: QualityReportListItem
   readonly isAuthenticated: boolean
+  /** Les PDF ne s'ouvrent qu'avec une demande d'accès APPROUVÉE par l'admin. */
+  readonly accessStatus: CardAccessState
   readonly opening: boolean
   readonly onOpenFile: () => void
+  /** Ouvre le formulaire de demande d'accès (prénom/nom/email/tél/SIREN). */
+  readonly onRequestAccess: () => void
 }
 
 function formatIssuedAt(iso: string): string {
@@ -35,8 +47,10 @@ function formatIssuedAt(iso: string): string {
 export function QualityReportCard({
   report,
   isAuthenticated,
+  accessStatus,
   opening,
   onOpenFile,
+  onRequestAccess,
 }: QualityReportCardProps) {
   const visibleHighlights = report.highlights.slice(0, 3)
   const extraHighlightsCount = Math.max(
@@ -142,27 +156,53 @@ export function QualityReportCard({
         )}
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={isAuthenticated ? 'default' : 'outline'}
-            className="h-9 w-full gap-1.5 rounded-sm"
-            disabled={opening || !report.hasFile}
-            onClick={onOpenFile}
-          >
-            {isAuthenticated ? (
+          {/* Accès sur AUTORISATION (décision 08/2026) : sans demande
+              approuvée, le bouton mène au formulaire — jamais au fichier. */}
+          {!report.hasFile ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-9 w-full gap-1.5 rounded-sm"
+              disabled
+            >
               <FileText className="h-3.5 w-3.5" />
-            ) : (
+              Bientôt disponible
+            </Button>
+          ) : accessStatus === 'approved' && isAuthenticated ? (
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 w-full gap-1.5 rounded-sm"
+              disabled={opening}
+              onClick={onOpenFile}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              {opening ? 'Ouverture…' : 'Voir le rapport complet'}
+            </Button>
+          ) : accessStatus === 'pending' ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-9 w-full gap-1.5 rounded-sm"
+              disabled
+            >
               <Lock className="h-3.5 w-3.5" />
-            )}
-            {!report.hasFile
-              ? 'Bientôt disponible'
-              : opening
-                ? 'Ouverture…'
-                : isAuthenticated
-                  ? 'Voir le rapport complet'
-                  : 'Se connecter pour télécharger'}
-          </Button>
+              Demande en cours de validation
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-9 w-full gap-1.5 rounded-sm"
+              onClick={onRequestAccess}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Demander l&apos;accès au rapport
+            </Button>
+          )}
         </div>
       </div>
     </article>

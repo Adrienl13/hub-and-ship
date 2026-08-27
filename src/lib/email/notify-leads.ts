@@ -15,11 +15,14 @@ import {
   buildPartnerRequestConfirmationEmail,
   buildPaymentConfirmedAdminEmail,
   buildPaymentConfirmedEmailToUser,
+  buildReportAccessAdminEmail,
+  buildReportAccessApprovedEmail,
   buildStockRequestAdminEmail,
   buildStockRequestConfirmationEmail,
   type ContactEmailInput,
   type PartnerRequestEmailInput,
   type PaymentConfirmedEmailInput,
+  type ReportAccessRequestEmailInput,
   type StockRequestEmailInput,
 } from '@/lib/email/templates'
 
@@ -116,6 +119,39 @@ export async function notifyStockRequest(
       replyTo: getAdminNotificationEmail(),
     })
   }
+}
+
+export async function notifyReportAccessRequest(
+  input: Omit<ReportAccessRequestEmailInput, 'adminUrl'>,
+): Promise<void> {
+  const admin = buildReportAccessAdminEmail({
+    ...input,
+    adminUrl: `${SITE_URL}/admin?tab=quality`,
+  })
+  await sendEmail({
+    to: getAdminNotificationEmail(),
+    subject: admin.subject,
+    html: admin.html,
+    text: admin.text,
+    replyTo: input.email,
+  })
+}
+
+export async function notifyReportAccessApproved(input: {
+  readonly firstName: string
+  readonly email: string
+}): Promise<void> {
+  const message = buildReportAccessApprovedEmail({
+    ...input,
+    qualityUrl: `${SITE_URL}/qualite`,
+  })
+  await sendEmail({
+    to: input.email,
+    subject: message.subject,
+    html: message.html,
+    text: message.text,
+    replyTo: getAdminNotificationEmail(),
+  })
 }
 
 export async function notifyContactMessage(
