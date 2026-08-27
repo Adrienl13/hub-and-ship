@@ -11,6 +11,7 @@ import { ColorRequestCta } from '@/components/ColorRequestCta'
 import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { QualityBadgeDetail } from '@/components/QualityBadge'
 import {
   findProductBySlug,
   productPath,
@@ -199,6 +200,8 @@ function ProductPage() {
                 Poser une question
               </Link>
             </div>
+
+            <QualityBadgeDetail className="mt-4" />
           </div>
         </div>
 

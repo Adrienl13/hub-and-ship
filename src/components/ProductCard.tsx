@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import { Check, Heart, Info, Palette } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
+import { QualityBadgePill } from '@/components/QualityBadge'
 import { SafeImage } from '@/components/SafeImage'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { DesignSelector } from '@/components/DesignSelector'
@@ -71,8 +72,13 @@ function ProductCardComponent({
           />
         </button>
 
-        <span className="pointer-events-none absolute left-2 top-2 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--ink)] shadow-sm backdrop-blur">
-          {CATEGORY_LABEL[product.category]}
+        <span className="pointer-events-none absolute left-2 top-2 flex flex-col items-start gap-1">
+          <span className="rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--ink)] shadow-sm backdrop-blur">
+            {CATEGORY_LABEL[product.category]}
+          </span>
+          {/* Réassurance qualité dès la carte : essais SGS EN 581 (détail et
+              rapports sur /qualite). */}
+          <QualityBadgePill className="shadow-sm" />
         </span>
 
         {/* Mise en avant multi-designs : l'acheteur voit AVANT d'ouvrir la

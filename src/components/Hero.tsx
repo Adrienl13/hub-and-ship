@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 
 import { CountdownBadge } from '@/components/CountdownBadge'
+import { QualityBadgeLink } from '@/components/QualityBadge'
 import { AnimatedNumber } from '@/components/motion-helpers'
 import { CURRENT_CONTAINER, type ContainerSummary } from '@/lib/products'
 import type { SiteMediaItem } from '@/lib/site-media'
@@ -198,11 +199,10 @@ export function Hero({
           </div>
 
           <div className="mt-1.5 flex flex-wrap gap-2.5">
-            {[
-              'Importateur officiel FR',
-              'Contrôle SGS',
-              'Garantie 2 ans',
-            ].map((label) => (
+            {/* La pastille SGS est cliquable : elle mène aux rapports réels
+                (essais EN 581 / EN 1022, REACH) sur /qualite. */}
+            <QualityBadgeLink />
+            {['Importateur officiel FR', 'Garantie 2 ans'].map((label) => (
               <span
                 key={label}
                 className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border-strong)] px-3.5 py-2 text-[12.5px] font-semibold text-[#4a443c]"

@@ -30,6 +30,7 @@ import { ProductReviews } from '@/components/ProductReviews'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { ColorRequestCta } from '@/components/ColorRequestCta'
 import { DesignSelector } from '@/components/DesignSelector'
+import { QualityBadgeDetail } from '@/components/QualityBadge'
 import { getQuantityRule } from '@/lib/quantity'
 
 export function ProductDetailDialog({
@@ -196,6 +197,9 @@ export function ProductDetailDialog({
             {/* Personnalisation coloris : pour TOUTES les catégories, tables
                 comprises (le configurateur table ne couvre pas les coloris). */}
             <ColorRequestCta product={product} />
+
+            {/* Réassurance : essais SGS réels, cliquable vers les rapports. */}
+            <QualityBadgeDetail />
 
             {/* Caractéristiques */}
             <div>
