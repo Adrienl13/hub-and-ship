@@ -224,6 +224,11 @@ function QualitePage() {
 
         <QualityMethodSection />
 
+        {/* Normes réellement passées (rapports SGS avril 2026, cartes dans le
+            coffre ci-dessous) : l'acheteur CHR voit en un coup d'œil que le
+            mobilier tient l'usage collectif — pas une promesse, un essai. */}
+        <TestedStandardsSection />
+
         {/* D2 : la version visuelle du dossier de preuve — les slots se
             rempliront des photos réelles de chaque container. */}
         <ProofTimeline />
@@ -320,6 +325,80 @@ function QualitePage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+// Les trois référentiels passés en laboratoire SGS-CSTC (avril 2026) sur
+// les chaises aluminium tressage PE et textilène — source : rapports du
+// coffre documentaire ci-dessous. Ne rien promettre ici qui ne soit pas
+// couvert par un rapport réel.
+const TESTED_STANDARDS = [
+  {
+    code: 'EN 581-1:2017',
+    name: 'Sécurité générale du mobilier d’extérieur',
+    desc: 'Exigences fondamentales de sécurité des sièges et tables utilisés en extérieur : points de cisaillement, stabilité de conception, sécurité d’usage.',
+  },
+  {
+    code: 'EN 581-2:2015/AC:2016',
+    name: 'Résistance mécanique — niveau collectivités',
+    desc: 'Essais de charge et d’endurance des assises au niveau « contract » : l’usage intensif d’une terrasse de restaurant, pas un usage domestique.',
+  },
+  {
+    code: 'EN 1022:2023',
+    name: 'Stabilité des sièges',
+    desc: 'La chaise ne bascule pas, même assise en bord ou en appui : essais de stabilité avant, arrière et latérale.',
+  },
+] as const
+
+function TestedStandardsSection() {
+  return (
+    <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
+      <div className="mx-auto max-w-7xl px-6 py-14">
+        <div className="mb-8 max-w-2xl">
+          <div className="label-eyebrow text-[color:var(--ember)]">
+            Tests & certifications
+          </div>
+          <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
+            Testé en laboratoire pour l&apos;usage collectivités.
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
+            Nos chaises aluminium (tressage résine et textilène) ont passé les
+            essais de type en laboratoire SGS-CSTC en avril 2026 — conformes
+            sur les trois référentiels, avec une campagne d&apos;analyses
+            matériaux en complément. Les rapports sont dans le coffre
+            documentaire ci-dessous.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {TESTED_STANDARDS.map(({ code, name, desc }) => (
+            <article
+              key={code}
+              className="rounded-md border border-[color:var(--sand-deep)] bg-card p-5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-lg font-semibold tabular-nums">
+                  {code}
+                </span>
+                <span className="rounded-sm bg-[color:var(--forest-bg)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--forest)]">
+                  Conforme
+                </span>
+              </div>
+              <h3 className="mt-2 text-sm font-semibold">{name}</h3>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                {desc}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <p className="mt-4 text-xs text-muted-foreground">
+          Essais réalisés par SGS-CSTC Standards Technical Services (laboratoire
+          de Shunde), avril 2026 · rapports complets consultables sur connexion
+          pro dans le coffre ci-dessous.
+        </p>
+      </div>
+    </section>
   )
 }
 

@@ -79,7 +79,10 @@ export const REPORT_TYPE_LABEL: Record<QualityReportType, string> = {
   fire_rating: 'Tenue au feu',
   material_test: 'Test matériau',
   reach_compliance: 'Conformité REACH',
-  load_test: 'Test de charge',
+  // Les essais EN 581-1/-2 + EN 1022 (sécurité, résistance mécanique niveau
+  // contract, stabilité) sont rangés sous ce type — libellé aligné sur les
+  // rapports SGS d'avril 2026.
+  load_test: 'Résistance & stabilité (EN 581)',
   eco_certification: 'Certification éco-responsable',
   other: 'Autre rapport',
 }
