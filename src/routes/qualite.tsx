@@ -381,10 +381,10 @@ function QualitePage() {
   )
 }
 
-// Les trois référentiels passés en laboratoire SGS-CSTC (avril 2026) sur
-// les chaises aluminium tressage PE et textilène — source : rapports du
-// coffre documentaire ci-dessous. Ne rien promettre ici qui ne soit pas
-// couvert par un rapport réel.
+// Les référentiels passés en laboratoire SGS-CSTC (campagnes 2022 → 2026)
+// sur les gammes tressage PE, textilène et ensembles bistrot chaise +
+// table — source : rapports du coffre documentaire ci-dessous. Ne rien
+// promettre ici qui ne soit pas couvert par un rapport réel.
 const TESTED_STANDARDS = [
   {
     code: 'EN 581-1:2017',
@@ -393,8 +393,13 @@ const TESTED_STANDARDS = [
   },
   {
     code: 'EN 581-2:2015/AC:2016',
-    name: 'Résistance mécanique — niveau collectivités',
+    name: 'Résistance mécanique — sièges, niveau collectivités',
     desc: 'Essais de charge et d’endurance des assises au niveau « contract » : l’usage intensif d’une terrasse de restaurant, pas un usage domestique.',
+  },
+  {
+    code: 'EN 581-3:2017',
+    name: 'Résistance mécanique — tables',
+    desc: 'Charge verticale et horizontale sur le plateau, endurance et stabilité : la table de bistrot testée comme l’assise.',
   },
   {
     code: 'EN 1022:2023',
@@ -415,15 +420,16 @@ function TestedStandardsSection() {
             Testé en laboratoire pour l&apos;usage collectivités.
           </h2>
           <p className="mt-3 text-sm leading-6 text-[color:var(--ink-soft)]">
-            Nos chaises aluminium (tressage résine et textilène) ont passé les
-            essais de type en laboratoire SGS-CSTC en avril 2026 — conformes
-            sur les trois référentiels, avec une campagne d&apos;analyses
-            matériaux en complément. Les rapports sont dans le coffre
-            documentaire ci-dessous.
+            Chaises (tressage résine PE, textilène) et ensembles bistrot
+            chaise + table passent les essais de type en laboratoire SGS-CSTC
+            depuis 2022 — dernière campagne en avril 2026 — conformes sur les
+            référentiels EN 581 et EN 1022, avec des analyses matériaux en
+            complément (vieillissement UV, traction, composants HPL / résine /
+            Teslin). Les rapports sont dans le coffre documentaire ci-dessous.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TESTED_STANDARDS.map(({ code, name, desc }) => (
             <article
               key={code}
@@ -446,9 +452,9 @@ function TestedStandardsSection() {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Essais réalisés par SGS-CSTC Standards Technical Services (laboratoire
-          de Shunde), avril 2026 · rapports complets sur demande d&apos;accès
-          validée, dans le coffre ci-dessous.
+          Essais réalisés par SGS-CSTC Standards Technical Services
+          (laboratoires de Shunde et Canton), campagnes 2022 – 2026 · rapports
+          complets sur demande d&apos;accès validée, dans le coffre ci-dessous.
         </p>
       </div>
     </section>
