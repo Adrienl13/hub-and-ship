@@ -56,6 +56,27 @@ export const Route = createFileRoute('/qualite')({
           { name: 'Qualité & Tests', path: '/qualite' },
         ]),
       ),
+      // Normes réellement testées, en données structurées : les moteurs IA
+      // (Google AI Mode, assistants) citent plus volontiers une page dont
+      // les certifications sont machine-lisibles — ne lister ici QUE ce
+      // qu'un rapport du coffre couvre.
+      jsonLdScript({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Mobilier CHR Terrassea — essais et conformité en laboratoire (SGS-CSTC, campagnes 2022-2026)',
+        itemListElement: [
+          'EN 581-1:2017 — sécurité générale du mobilier d’extérieur — conforme (chaises et ensembles bistrot)',
+          'EN 581-2:2015/AC:2016 — résistance mécanique des sièges, niveau contract/collectivités — conforme',
+          'EN 581-3:2017 — résistance mécanique des tables — conforme (ensemble bistrot chaise + table)',
+          'EN 1022 — stabilité des sièges — conforme',
+          'REACH (CE) n° 1907/2006 — conformité chimique des matériaux : plateau HPL, résine tressée PE, toile textilène Teslin',
+          'ISO 4892-3:2024 — vieillissement UV de la résine tressée PE (rapport détaillé) · ASTM D638-22 — traction, conforme',
+        ].map((name, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name,
+        })),
+      }),
     ],
   }),
 })
@@ -423,9 +444,10 @@ function TestedStandardsSection() {
             Chaises (tressage résine PE, textilène) et ensembles bistrot
             chaise + table passent les essais de type en laboratoire SGS-CSTC
             depuis 2022 — dernière campagne en avril 2026 — conformes sur les
-            référentiels EN 581 et EN 1022, avec des analyses matériaux en
-            complément (vieillissement UV, traction, composants HPL / résine /
-            Teslin). Les rapports sont dans le coffre documentaire ci-dessous.
+            référentiels EN 581 et EN 1022. En complément : conformité
+            chimique <strong>REACH</strong> des matériaux (plateau HPL, résine
+            PE, toile Teslin) et essais de vieillissement UV / traction. Les
+            rapports sont dans le coffre documentaire ci-dessous.
           </p>
         </div>
 
