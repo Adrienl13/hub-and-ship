@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Clock,
   Handshake,
+  Instagram,
   Mail,
   MapPin,
   Package,
@@ -85,6 +86,20 @@ function ContactPage() {
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
             Pros Import EURL · 60 Rue François Ier, 75008 Paris
+          </p>
+          <p className="mt-2 flex items-center gap-2 text-xs">
+            <Instagram className="h-3.5 w-3.5 text-[color:var(--ember)]" />
+            <a
+              href="https://www.instagram.com/terrassea_france/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline underline-offset-2"
+            >
+              @terrassea_france
+            </a>
+            <span className="text-muted-foreground">
+              — les coulisses : usine, containers, arrivages
+            </span>
           </p>
         </section>
 

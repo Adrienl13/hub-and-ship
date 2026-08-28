@@ -146,7 +146,7 @@ export function organizationJsonLd() {
     sameAs: [
       'https://prosimport.com',
       'https://terrassea.com',
-      'https://www.instagram.com/terrassea',
+      'https://www.instagram.com/terrassea_france/',
     ],
     // Numéro de TVA volontairement absent (demande Adrien 08/2026) — il
     // reste uniquement sur les mentions légales (obligation LCEN).

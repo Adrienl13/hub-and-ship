@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react'
+import { Instagram, ShieldCheck } from 'lucide-react'
 
 import { ContainerNotifyForm } from '@/components/ContainerNotifyForm'
 
@@ -39,6 +39,17 @@ export function Footer() {
               factures sont contractées avec Pros Import EURL, société
               française basée à Paris.
             </p>
+            {/* Le compte est VIVANT (coulisses usine, containers, arrivages) :
+                on vend le contenu, pas juste une icône. */}
+            <a
+              href="https://www.instagram.com/terrassea_france/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[color:var(--sand)]/80 mt-4 inline-flex items-center gap-2 rounded-sm border border-[color:var(--sand)]/25 px-3 py-2 text-xs font-medium transition-colors hover:border-[color:var(--sand)]/60 hover:text-[color:var(--sand)]"
+            >
+              <Instagram className="h-4 w-4 text-[color:var(--ember-bright)]" />
+              @terrassea_france — les coulisses de l'import
+            </a>
           </div>
           <div>
             <div className="label-eyebrow text-[color:var(--sand)]/55">
