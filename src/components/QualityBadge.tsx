@@ -6,18 +6,9 @@ import { Link } from '@tanstack/react-router'
 // (essais SGS EN 581 / EN 1022, conformité REACH — voir /qualite). Un seul
 // composant pour garder le message identique partout.
 
-/** Pastille compacte, non interactive — pour les cartes produit où le clic
- *  appartient déjà à la carte. */
-export function QualityBadgePill({ className }: { className?: string }) {
-  return (
-    <span
-      className={`pointer-events-none inline-flex items-center gap-1 rounded-sm bg-[color:var(--forest-bg)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--forest)] ${className ?? ''}`}
-    >
-      <ShieldCheck className="h-3 w-3" />
-      Testé SGS · EN 581
-    </span>
-  )
-}
+// NB : pas de variante « pastille sur carte produit » — tous les produits
+// étant testés, la répéter sur chaque photo gâchait le visuel (retiré à la
+// demande d'Adrien, 08/2026).
 
 /** Lien-pastille cliquable vers la page Qualité — pour hero, landings… */
 export function QualityBadgeLink({ className }: { className?: string }) {
