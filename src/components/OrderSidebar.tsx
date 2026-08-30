@@ -411,11 +411,19 @@ export function OrderSidebar({
                         ) : (
                           <span className="ring-foreground/15 h-5 w-5 shrink-0 rounded-sm bg-[color:var(--sand-soft)] ring-1" />
                         )}
-                        <span className="truncate">
-                          {item.product.name}
-                          <span className="text-muted-foreground">
-                            {' '}
-                            · {item.variant.name}
+                        <span className="min-w-0">
+                          <span className="block truncate">
+                            {item.product.name}
+                            <span className="text-muted-foreground">
+                              {' '}
+                              · {item.variant.name}
+                            </span>
+                          </span>
+                          {/* Détail du prix ICI et nulle part ailleurs : les
+                              fiches n'affichent plus de montant (design v3). */}
+                          <span className="block text-[11px] tabular-nums text-muted-foreground">
+                            {item.quantity} ×{' '}
+                            {formatEUR(item.product.basePriceHt)} HT
                           </span>
                         </span>
                       </div>
@@ -571,7 +579,7 @@ export function OrderSidebar({
           disabled={!hasItems}
         >
           <FileText className="h-3.5 w-3.5" />
-          Télécharger le devis PDF
+          Devis PDF détaillé
         </Button>
       </div>
 

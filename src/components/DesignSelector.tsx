@@ -99,7 +99,6 @@ export function DesignSelector({
   customizeProduct?: Product
 }) {
   const selected = variants.find((v) => v.id === selectedVariantId)
-  const thumbDimensions = size === 'lg' ? 'h-12 w-12' : 'h-10 w-10'
   const [customizeOpen, setCustomizeOpen] = useState(false)
 
   return (
@@ -124,12 +123,10 @@ export function DesignSelector({
             onClick={() => setCustomizeOpen(true)}
             title="Demander un autre coloris (nuancier Pantone/RAL)"
             aria-label={`Demander un autre coloris pour ${customizeProduct.name}`}
-            className={`${thumbDimensions} ring-foreground/15 flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-sm border border-dashed border-[color:var(--ember)]/50 bg-[color:var(--ember)]/5 ring-1 transition-all hover:scale-[1.03] hover:bg-[color:var(--ember)]/10`}
+            className={`${size === 'lg' ? 'h-12' : 'h-10'} flex shrink-0 items-center gap-1 self-center rounded-full border border-dashed border-[color:var(--ember)]/60 bg-[color:var(--ember)]/5 px-2.5 text-[11px] font-bold text-[color:var(--ember)] transition-all hover:scale-[1.03] hover:bg-[color:var(--ember)]/10`}
           >
-            <Palette className="h-3.5 w-3.5 text-[color:var(--ember)]" />
-            <span className="text-[7px] font-bold uppercase tracking-wide text-[color:var(--ember)]">
-              Perso
-            </span>
+            <Palette className="h-3.5 w-3.5" />
+            ＋ Votre couleur
           </button>
         )}
       </div>

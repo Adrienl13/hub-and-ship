@@ -46,6 +46,12 @@ const SLOTS: ReadonlyArray<{
     multi: false,
   },
   {
+    slot: 'catalogue-perso',
+    label: 'Catalogue — bannière « Personnalisation incluse »',
+    hint: 'Photo du même modèle en plusieurs coloris (~1200×900, cadrage cover).',
+    multi: false,
+  },
+  {
     slot: 'trajet-1',
     label: 'Trajet 1/4 — inspection SGS en usine',
     hint: 'VRAIE photo du container en cours uniquement (slot « à venir » sinon).',

@@ -24,6 +24,7 @@ export type SortKey =
   | 'price-desc'
   | 'cbm-asc'
   | 'popular'
+  | 'series'
 
 export const PAGE_SIZE_OPTIONS = [30, 60, 90] as const
 export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number]
@@ -147,6 +148,16 @@ export function filterAndSortProducts({
         b.variants.reduce((sum, variant) => sum + variant.unitsCommitted, 0) -
         a.variants.reduce((sum, variant) => sum + variant.unitsCommitted, 0),
     )
+  } else if (sort === 'series') {
+    // « Séries presque complètes » : avancement MOQ de la meilleure variante,
+    // décroissant — l'acheteur voit d'abord ce qui va se confirmer (et peut
+    // faire basculer une série en y ajoutant sa commande).
+    const seriesProgress = (product: Product) =>
+      product.moqUnits > 0
+        ? Math.max(0, ...product.variants.map((v) => v.unitsCommitted)) /
+          product.moqUnits
+        : 0
+    list = [...list].sort((a, b) => seriesProgress(b) - seriesProgress(a))
   }
 
   return list

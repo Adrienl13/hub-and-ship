@@ -10,6 +10,7 @@ export type SiteMediaSlot =
   | 'collections'
   | 'clientele-band'
   | 'prix-hero'
+  | 'catalogue-perso'
   | 'trajet-1'
   | 'trajet-2'
   | 'trajet-3'
@@ -30,6 +31,9 @@ export interface SiteMediaSet {
   readonly clienteleBand: SiteMediaItem
   /** Fond du hero « Le prix prouvé » (voile brun par-dessus). */
   readonly prixHero: SiteMediaItem
+  /** Bannière « Personnalisation incluse » du catalogue (même modèle en
+   *  plusieurs coloris — handoff design 08/2026). */
+  readonly cataloguePerso: SiteMediaItem
   /**
    * Frise « le trajet du container » — index 0..3. `null` = pas encore de
    * vraie photo : le site affiche un slot « à venir » honnête, JAMAIS un
@@ -83,6 +87,11 @@ export const DEFAULT_SITE_MEDIA: SiteMediaSet = {
     '/images/home/collage-terrasses.webp',
     'Terrasses de professionnels équipées par Terrassea',
   ),
+  cataloguePerso: fallback(
+    'catalogue-perso',
+    '/images/home/fauteuils-tresses-dessus.webp',
+    'Le même fauteuil tressé en plusieurs coloris, vu du dessus',
+  ),
   trajet: [null, null, null, null],
 }
 
@@ -133,6 +142,7 @@ export async function loadSiteMedia(): Promise<SiteMediaSet> {
     const collections = data.find((r) => r.slot === 'collections')
     const band = data.find((r) => r.slot === 'clientele-band')
     const prixHero = data.find((r) => r.slot === 'prix-hero')
+    const cataloguePerso = data.find((r) => r.slot === 'catalogue-perso')
     const trajet = ([1, 2, 3, 4] as const).map((n) => {
       const row = data.find((r) => r.slot === `trajet-${n}`)
       return row ? itemFromRow(row) : null
@@ -147,6 +157,9 @@ export async function loadSiteMedia(): Promise<SiteMediaSet> {
         ? itemFromRow(band)
         : DEFAULT_SITE_MEDIA.clienteleBand,
       prixHero: prixHero ? itemFromRow(prixHero) : DEFAULT_SITE_MEDIA.prixHero,
+      cataloguePerso: cataloguePerso
+        ? itemFromRow(cataloguePerso)
+        : DEFAULT_SITE_MEDIA.cataloguePerso,
       trajet,
     }
   } catch {

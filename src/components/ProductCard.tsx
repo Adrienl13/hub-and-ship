@@ -1,14 +1,20 @@
 import { memo, useMemo } from 'react'
-import { Check, Heart, Info, Palette } from 'lucide-react'
+import { Check, Info } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { SafeImage } from '@/components/SafeImage'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { DesignSelector } from '@/components/DesignSelector'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
-import { formatEUR, getMoqStatus } from '@/lib/order'
+import { getMoqStatus } from '@/lib/order'
 import { getQuantityRule } from '@/lib/quantity'
 
+// Fiche catalogue v3 (handoff design 08/2026, validé) : AUCUN prix sur la
+// fiche — seulement le badge « −X % vs prix public » et « Prix détaillé au
+// panier ». Les montants (PU, sous-total, remise, acompte) ne vivent que
+// dans le panneau panier (#panier) et le devis. Pas non plus de ligne de
+// confirmation sur la fiche : le feedback est dans le panier et la barre
+// de commande fixe.
 function ProductCardComponent({
   product,
   variantId,
@@ -16,10 +22,6 @@ function ProductCardComponent({
   onQtyChange,
   onVariantChange,
   onOpenDetails,
-  compareSelected,
-  onToggleCompare,
-  isFavorite,
-  onToggleFavorite,
 }: {
   product: Product
   variantId: string
@@ -27,10 +29,6 @@ function ProductCardComponent({
   onQtyChange: (value: number) => void
   onVariantChange: (id: string) => void
   onOpenDetails?: () => void
-  compareSelected?: boolean
-  onToggleCompare?: () => void
-  isFavorite?: boolean
-  onToggleFavorite?: () => void
 }) {
   const variant = useMemo(
     () =>
@@ -71,68 +69,21 @@ function ProductCardComponent({
           />
         </button>
 
-        {/* Pas de pastille SGS ici : TOUS les produits sont testés, la
-            répéter sur chaque photo gâche le visuel (retour Adrien 08/2026).
-            La réassurance vit dans le hero, la fiche détail et /qualite. */}
         <span className="pointer-events-none absolute left-2 top-2 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[color:var(--ink)] shadow-sm backdrop-blur">
           {CATEGORY_LABEL[product.category]}
         </span>
 
-        {/* Mise en avant multi-designs : l'acheteur voit AVANT d'ouvrir la
-            fiche qu'il a le choix des coloris (demande client 08/2026). */}
-        {product.variants.length > 1 && (
-          <span className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-sm bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-[color:var(--ink)] shadow-sm backdrop-blur">
-            <Palette className="h-3 w-3 text-[color:var(--ember)]" />
-            {product.variants.length} coloris
+        {/* Série confirmée = signal fort : la production est acquise. */}
+        {moqStatus.status === 'reached' && (
+          <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-sm bg-[color:var(--forest)] px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            Série confirmée
+            <Check className="h-3 w-3" strokeWidth={3} />
           </span>
-        )}
-
-        {onToggleFavorite && (
-          <button
-            type="button"
-            onClick={onToggleFavorite}
-            aria-pressed={isFavorite}
-            aria-label={
-              isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'
-            }
-            className="absolute bottom-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 backdrop-blur transition-colors hover:bg-white"
-          >
-            <Heart
-              className={`h-4 w-4 ${
-                isFavorite
-                  ? 'fill-[color:var(--ember)] text-[color:var(--ember)]'
-                  : 'text-[color:var(--ink)]/60'
-              }`}
-            />
-          </button>
-        )}
-
-        {onToggleCompare && (
-          <button
-            type="button"
-            onClick={onToggleCompare}
-            aria-pressed={compareSelected}
-            className={`absolute right-2 top-2 inline-flex h-7 items-center gap-1.5 rounded-sm border px-2 text-[11px] font-medium backdrop-blur ${
-              compareSelected
-                ? 'border-[color:var(--ember)] bg-[color:var(--ember)] text-white'
-                : 'border-white/70 bg-white/70 text-[color:var(--ink)] hover:bg-white/90'
-            }`}
-          >
-            <span
-              className={`inline-block h-3 w-3 rounded-[2px] border ${
-                compareSelected
-                  ? 'border-white bg-white'
-                  : 'border-[color:var(--ink)]/50 bg-transparent'
-              }`}
-            />
-            Comparer
-          </button>
         )}
       </div>
 
       {/* Infos & contrôles sous le visuel — zones à hauteur FIXE pour que
-          prix, sélecteur et barre MOQ s'alignent d'une carte à l'autre,
-          quelle que soit la longueur du nom. */}
+          nom, sélecteur et barre de série s'alignent d'une carte à l'autre. */}
       <div className="flex flex-1 flex-col p-2.5 text-foreground">
         <button
           type="button"
@@ -145,20 +96,13 @@ function ProductCardComponent({
           <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover/name:text-foreground" />
         </button>
 
-        <div className="mt-1.5 flex items-baseline justify-between gap-2 border-t border-[color:var(--sand-deep)] pt-1.5">
-          <span className="font-display text-base font-extrabold tabular-nums">
-            {formatEUR(product.basePriceHt)}
-            <span className="ml-0.5 text-[10px] font-semibold text-muted-foreground">
-              HT
-            </span>
+        {/* Prix volontairement absent : badge économie + renvoi panier. */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[color:var(--sand-deep)] pt-1.5">
+          <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-[color:var(--forest)]">
+            −{savingsPct} % vs prix public
           </span>
-          <span className="flex items-baseline gap-1.5">
-            <span className="text-[11px] tabular-nums text-muted-foreground line-through">
-              {formatEUR(product.retailPriceRef)}
-            </span>
-            <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[color:var(--forest)]">
-              −{savingsPct}%
-            </span>
+          <span className="text-[11px] text-muted-foreground">
+            Prix détaillé au panier
           </span>
         </div>
 
@@ -174,7 +118,16 @@ function ProductCardComponent({
         </div>
 
         <div className="mt-2">
-          <MoqProgressBar label={`MOQ ${variant?.name}`} status={moqStatus} />
+          <MoqProgressBar
+            label={`Série ${Math.min(totalCommitted, product.moqUnits)}/${product.moqUnits}`}
+            status={
+              // Libellé compact du prototype : « Série complète » (le compte
+              // détaillé est déjà dans le label de gauche).
+              moqStatus.status === 'reached'
+                ? { ...moqStatus, label: 'Série complète' }
+                : moqStatus
+            }
+          />
         </div>
 
         <div className="mt-auto pt-2.5">
@@ -182,19 +135,8 @@ function ProductCardComponent({
             value={qty}
             onChange={onQtyChange}
             rule={quantityRule}
-            showRule={false}
+            showRule
           />
-          {/* Confirmation visible : la quantité est déjà comptée dans la
-              commande — sans cet état, l'acheteur doute et recommence. */}
-          <div
-            className={`mt-1.5 flex items-center gap-1 text-[11px] font-semibold ${
-              qty > 0 ? 'text-[color:var(--forest)]' : 'invisible'
-            }`}
-            aria-hidden={qty === 0}
-          >
-            <Check className="h-3 w-3" strokeWidth={3} />
-            Dans votre commande — total mis à jour
-          </div>
         </div>
       </div>
     </article>

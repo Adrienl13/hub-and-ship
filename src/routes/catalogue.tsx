@@ -9,13 +9,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ArrowUpDown, Layers3, Search, X } from 'lucide-react'
+import { ArrowUpDown, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { CatalogueCommandBar } from '@/components/CatalogueCommandBar'
+import { CataloguePersoBanner } from '@/components/CataloguePersoBanner'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { IncludedInPriceStrip } from '@/components/IncludedInPriceStrip'
-import { MobileStickyBar } from '@/components/MobileStickyBar'
 import { OrderSidebar } from '@/components/OrderSidebar'
 import { ProductCard } from '@/components/ProductCard'
 import { TerraceConfigurator } from '@/components/TerraceConfigurator'
@@ -23,15 +24,12 @@ import { Button } from '@/components/ui/button'
 import {
   CATEGORY_FILTERS,
   EMPTY_ADVANCED_FILTERS,
-  PAGE_SIZE_OPTIONS,
   filterAndSortProducts,
   getCategoryCounts,
   getDefaultVariant,
   hasActiveAdvancedFilters,
-  isStackable,
   type CatalogueAdvancedFilters,
   type CatalogueFilter,
-  type PageSizeOption,
   type SortKey,
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
@@ -41,12 +39,7 @@ import {
   encodeCartSelection,
 } from '@/lib/catalogue/share-cart'
 import { AnalyticsEvent, track } from '@/lib/analytics'
-import {
-  CATEGORY_LABEL,
-  formatProductDimensions,
-  PRODUCTS,
-  type Product,
-} from '@/lib/products'
+import { PRODUCTS, type Product } from '@/lib/products'
 import {
   COLLECTIONS,
   countByCollection,
@@ -55,7 +48,7 @@ import {
   type CollectionKey,
 } from '@/lib/collections'
 import { useCatalog } from '@/hooks/useCatalog'
-import { useFavorites } from '@/hooks/useFavorites'
+import { useSiteMedia } from '@/hooks/useSiteMedia'
 import { buildReservedLoadItems } from '@/lib/container/reserved-load'
 import {
   breadcrumbJsonLd,
@@ -119,9 +112,13 @@ const LazyReservationDialog = lazy(() =>
   })),
 )
 
+// Pagination progressive du handoff design v3 : « Afficher plus » par 12,
+// avec compteur « Vous voyez X références sur N ».
+const GRID_PAGE_SIZE = 12
+
 function CataloguePage() {
   const { products, currentContainer } = useCatalog()
-  const favorites = useFavorites()
+  const media = useSiteMedia()
   const productsArray = useMemo(() => [...products], [products])
   const reservedItems = useMemo(
     () => buildReservedLoadItems(productsArray),
@@ -158,11 +155,8 @@ function CataloguePage() {
   const [advanced, setAdvanced] = useState<CatalogueAdvancedFilters>(
     EMPTY_ADVANCED_FILTERS,
   )
-  const [compareIds, setCompareIds] = useState<ReadonlySet<string>>(new Set())
-  const [compareOpen, setCompareOpen] = useState(false)
   const deferredSearch = useDeferredValue(search)
-  const [pageSize, setPageSize] = useState<PageSizeOption>(30)
-  const [visibleCount, setVisibleCount] = useState<number>(pageSize)
+  const [visibleCount, setVisibleCount] = useState<number>(GRID_PAGE_SIZE)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
 
@@ -198,20 +192,6 @@ function CataloguePage() {
     () => productsArray.find((product) => product.id === detailId) ?? null,
     [detailId, productsArray],
   )
-  const compareProducts = useMemo(
-    () => productsArray.filter((product) => compareIds.has(product.id)),
-    [productsArray, compareIds],
-  )
-
-  function toggleCompare(id: string): void {
-    setCompareIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else if (next.size < 4) next.add(id)
-      return next
-    })
-  }
-
   // Reconstruct the cart from a shared ?panier= link, once products are loaded.
   const sharedApplied = useRef(false)
   useEffect(() => {
@@ -273,9 +253,11 @@ function CataloguePage() {
     }
   }
 
+  // Pagination remise à zéro à chaque changement de filtre/tri/recherche
+  // (exigence handoff) — le tri reste stable pendant la configuration.
   useEffect(() => {
-    setVisibleCount(pageSize)
-  }, [deferredSearch, filter, pageSize, sort, advanced, collection])
+    setVisibleCount(GRID_PAGE_SIZE)
+  }, [deferredSearch, filter, sort, advanced, collection])
 
   const handlePdf = () => {
     track(AnalyticsEvent.QuotePdf, { items: items.length })
@@ -436,7 +418,7 @@ function CataloguePage() {
                   })}
                 </div>
 
-                <div className="grid min-w-0 gap-2 md:grid-cols-[1fr_auto_auto] md:items-center">
+                <div className="grid min-w-0 gap-2 md:grid-cols-[1fr_auto] md:items-center">
                   <label className="relative block min-w-0 text-xs text-muted-foreground">
                     <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
                     <input
@@ -457,28 +439,11 @@ function CataloguePage() {
                       className="h-11 min-w-0 flex-1 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
                     >
                       <option value="default">Tri par défaut</option>
+                      <option value="popular">Popularité</option>
+                      <option value="series">Séries presque complètes</option>
                       <option value="price-asc">Prix croissant</option>
                       <option value="price-desc">Prix décroissant</option>
                       <option value="cbm-asc">Volume CBM</option>
-                      <option value="popular">Popularité</option>
-                    </select>
-                  </label>
-                  <label className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                    <Layers3 className="h-3 w-3" />
-                    <select
-                      value={pageSize}
-                      onChange={(event) =>
-                        setPageSize(
-                          Number(event.target.value) as PageSizeOption,
-                        )
-                      }
-                      className="h-11 min-w-0 flex-1 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                    >
-                      {PAGE_SIZE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option} / page
-                        </option>
-                      ))}
                     </select>
                   </label>
                 </div>
@@ -541,11 +506,9 @@ function CataloguePage() {
 
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span>
-                    {filtered.length} référence{filtered.length > 1 ? 's' : ''}{' '}
-                    trouvée
-                    {filtered.length > 1 ? 's' : ''} · {visibleProducts.length}{' '}
-                    affichée
-                    {visibleProducts.length > 1 ? 's' : ''}
+                    Vous voyez {visibleProducts.length} référence
+                    {visibleProducts.length > 1 ? 's' : ''} sur{' '}
+                    {filtered.length}
                   </span>
                   {totalUnits > 0 && (
                     <button
@@ -558,6 +521,12 @@ function CataloguePage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* La personnalisation est un argument d'achat : bannière en
+                tête de grille (handoff v3), photo administrable. */}
+            <div className="mt-4">
+              <CataloguePersoBanner media={media.cataloguePerso} />
             </div>
 
             {filtered.length === 0 ? (
@@ -581,10 +550,6 @@ function CataloguePage() {
                         setVariant(product.id, variantId)
                       }
                       onOpenDetails={() => setDetailId(product.id)}
-                      compareSelected={compareIds.has(product.id)}
-                      onToggleCompare={() => toggleCompare(product.id)}
-                      isFavorite={favorites.isFavorite(product.id)}
-                      onToggleFavorite={() => favorites.toggle(product.id)}
                     />
                   )
                 })}
@@ -592,23 +557,28 @@ function CataloguePage() {
             )}
 
             {remainingProducts > 0 && (
-              <div className="mt-5 text-center">
+              <div className="mt-5 space-y-2 text-center">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 rounded-sm border-[color:var(--sand-deep)]"
+                  className="h-11 w-full rounded-sm border-[color:var(--sand-deep)] sm:w-auto sm:px-8"
                   onClick={() =>
-                    setVisibleCount((current) => current + pageSize)
+                    setVisibleCount((current) => current + GRID_PAGE_SIZE)
                   }
                 >
-                  Charger {Math.min(pageSize, remainingProducts)} référence
-                  {Math.min(pageSize, remainingProducts) > 1 ? 's' : ''} de plus
+                  Afficher plus
                 </Button>
+                <div className="text-xs text-muted-foreground">
+                  Vous voyez {visibleProducts.length} référence
+                  {visibleProducts.length > 1 ? 's' : ''} sur {filtered.length}
+                </div>
               </div>
             )}
           </div>
 
-          <aside className="lg:col-span-3">
+          {/* #panier : cible des ancres natives de la barre de commande —
+              l'accès permanent au panier (exigence handoff). */}
+          <aside id="panier" className="scroll-mt-24 lg:col-span-3">
             <OrderSidebar
               items={items}
               reservedItems={reservedItems}
@@ -630,48 +600,17 @@ function CataloguePage() {
 
       <Footer />
 
-      <MobileStickyBar
-        totalItems={totalUnits}
-        fillPercent={fill.percent}
-        subtotalHt={totals.totalHt}
+      {/* Spacer : la barre de commande fixe ne doit jamais recouvrir le
+          bas du footer quand le panier est actif. */}
+      {totalUnits > 0 && <div aria-hidden className="h-20 sm:h-16" />}
+
+      <CatalogueCommandBar
+        totalUnits={totalUnits}
+        totalHt={totals.totalHt}
+        payNow={totals.payNow}
+        onDownloadPdf={handlePdf}
         onReserve={() => setReserveOpen(true)}
-        container={currentContainer}
       />
-
-      {compareIds.size > 0 && (
-        <div className="fixed inset-x-0 bottom-4 z-30 hidden justify-center px-4 lg:flex">
-          <div className="shadow-paper flex items-center gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card px-4 py-2">
-            <span className="text-sm font-medium">
-              {compareIds.size} produit{compareIds.size > 1 ? 's' : ''} à
-              comparer
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              disabled={compareIds.size < 2}
-              onClick={() => setCompareOpen(true)}
-              className="h-8 rounded-sm bg-foreground px-3 text-xs text-background"
-            >
-              Comparer
-            </Button>
-            <button
-              type="button"
-              onClick={() => setCompareIds(new Set())}
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-            >
-              Effacer
-            </button>
-          </div>
-        </div>
-      )}
-
-      {compareOpen && (
-        <CatalogueComparison
-          products={compareProducts}
-          onClose={() => setCompareOpen(false)}
-          onRemove={toggleCompare}
-        />
-      )}
 
       <Suspense fallback={null}>
         {detailProduct && (
@@ -730,109 +669,6 @@ function FilterToggle({
   )
 }
 
-function CatalogueComparison({
-  products,
-  onClose,
-  onRemove,
-}: {
-  readonly products: ReadonlyArray<Product>
-  readonly onClose: () => void
-  readonly onRemove: (id: string) => void
-}) {
-  const rows: ReadonlyArray<{ label: string; value: (p: Product) => string }> =
-    [
-      { label: 'Catégorie', value: (p) => CATEGORY_LABEL[p.category] },
-      { label: 'Prix direct pro HT', value: (p) => `${formatEUR(p.basePriceHt)}` },
-      { label: 'Prix retail réf.', value: (p) => formatEUR(p.retailPriceRef) },
-      {
-        label: 'Économie',
-        value: (p) =>
-          `${Math.round((1 - p.basePriceHt / p.retailPriceRef) * 100)}%`,
-      },
-      { label: 'MOQ', value: (p) => `${p.moqUnits} u.` },
-      {
-        label: 'Dimensions',
-        value: (p) => formatProductDimensions(p),
-      },
-      { label: 'Volume', value: (p) => `${p.cbmPerUnit.toFixed(2)} m³` },
-      { label: 'Poids', value: (p) => `${p.weightKg} kg` },
-      { label: 'Empilable', value: (p) => (isStackable(p) ? 'Oui' : '—') },
-      { label: 'SKU', value: (p) => p.sku },
-    ]
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[88vh] w-full max-w-4xl overflow-auto rounded-md border border-[color:var(--sand-deep)] bg-background p-5"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold">Comparateur</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Fermer"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr>
-                <th className="w-32 py-2 text-left text-[11px] uppercase tracking-wide text-muted-foreground" />
-                {products.map((p) => (
-                  <th
-                    key={p.id}
-                    className="min-w-[160px] border-b border-[color:var(--sand-deep)] p-2 text-left align-top"
-                  >
-                    <div className="flex items-start gap-2">
-                      <img
-                        src={p.mainImageUrl}
-                        alt={p.name}
-                        className="h-12 w-12 shrink-0 rounded-sm object-cover"
-                      />
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">
-                          {p.name}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => onRemove(p.id)}
-                          className="text-[11px] text-muted-foreground underline hover:text-red-700"
-                        >
-                          Retirer
-                        </button>
-                      </div>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.label} className="border-b border-[color:var(--sand-deep)]/60">
-                  <td className="py-2 pr-3 text-xs font-medium text-muted-foreground">
-                    {row.label}
-                  </td>
-                  {products.map((p) => (
-                    <td key={p.id} className="py-2 pr-3 tabular-nums">
-                      {row.value(p)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-}
+// NB : le comparateur et les favoris ont été retirés des fiches lors de la
+// refonte v3 (handoff design 08/2026 — fidélité au prototype validé). Le
+// code vit dans l'historique git si le besoin revient.
