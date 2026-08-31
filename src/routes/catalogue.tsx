@@ -116,9 +116,10 @@ const LazyReservationDialog = lazy(() =>
   })),
 )
 
-// Pagination progressive du handoff design v3 : « Afficher plus » par 12,
+// Pagination progressive : 36 références d'emblée (retour validation
+// 08/2026 — 12 faisait trop « vitrine »), puis « Afficher plus » par 36,
 // avec compteur « Vous voyez X références sur N ».
-const GRID_PAGE_SIZE = 12
+const GRID_PAGE_SIZE = 36
 
 function CataloguePage() {
   const { products, currentContainer } = useCatalog()

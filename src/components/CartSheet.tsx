@@ -10,10 +10,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { useCatalog } from '@/hooks/useCatalog'
-import { getDefaultVariant } from '@/lib/catalogue'
-import { resolveCatalogueProduct } from '@/lib/catalogue/registry'
-import { calculateOrder, formatEUR, type CartItem } from '@/lib/order'
+import { useCartLines } from '@/hooks/useCartLines'
+import { calculateOrder, formatEUR } from '@/lib/order'
 import {
   getNextOrderQuantity,
   getPreviousOrderQuantity,
@@ -22,43 +20,12 @@ import {
 import { useCartStore } from '@/stores/cart.store'
 
 // « Ma commande » — panneau latéral accessible depuis le header sur TOUTES
-// les pages : chaque ligne est modifiable (quantité par pas métier,
-// suppression), le total suit. Les produits sont résolus via le registre du
-// catalogue live — la même source d'identité que le panier lui-même.
-
-function useSheetItems(): CartItem[] {
-  const qtyByLine = useCartStore((state) => state.qtyByLine)
-  // Source RÉACTIVE : le registre module-level ne déclenche aucun re-render
-  // quand le catalogue arrive après le header (bug « icône panier vide alors
-  // que des produits sont sélectionnés »). useCatalog charge le catalogue sur
-  // toutes les pages où le header est présent et re-rend quand il est prêt.
-  const { products } = useCatalog()
-  const productById = useMemo(
-    () => new Map(products.map((product) => [product.id, product])),
-    [products],
-  )
-
-  return useMemo(() => {
-    // Une ligne par (produit, design) : deux designs du même produit sont
-    // deux lignes distinctes — comme sur le bon de commande usine.
-    const items: CartItem[] = []
-    for (const [key, quantity] of Object.entries(qtyByLine)) {
-      if (!quantity || quantity <= 0) continue
-      const [productId = '', variantId = ''] = key.split('::')
-      const product =
-        productById.get(productId) ?? resolveCatalogueProduct(productId)
-      if (!product) continue
-      const variant =
-        product.variants.find((v) => v.id === variantId) ??
-        getDefaultVariant(product)
-      items.push({ product, variant, quantity })
-    }
-    return items
-  }, [qtyByLine, productById])
-}
+// les pages : l'APERÇU rapide. La vue complète (grandes photos, récap,
+// réservation) vit sur la page dédiée /panier, vers laquelle le CTA mène.
+// Les lignes viennent de useCartLines — même source que /panier.
 
 export function CartSheet() {
-  const items = useSheetItems()
+  const items = useCartLines()
   const setLineQty = useCartStore((state) => state.setLineQty)
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
   const totals = useMemo(() => calculateOrder(items), [items])
@@ -201,11 +168,11 @@ export function CartSheet() {
                 asChild
                 className="h-11 w-full rounded-[9px] text-sm font-bold"
               >
-                <Link to="/catalogue">Finaliser ma réservation</Link>
+                <Link to="/panier">Voir mon panier complet</Link>
               </Button>
               <p className="text-center text-[11px] text-muted-foreground">
-                Vérification finale, devis PDF et paiement sécurisé au
-                catalogue.
+                Récapitulatif détaillé, devis PDF et réservation sur la page
+                panier.
               </p>
             </div>
           </>

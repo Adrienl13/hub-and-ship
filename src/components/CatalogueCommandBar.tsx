@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { ArrowRight, FileText, ShoppingBag } from 'lucide-react'
 
 import { formatEUR } from '@/lib/order'
@@ -49,15 +50,15 @@ export function CatalogueCommandBar({
             <FileText className="h-4 w-4" />
             Devis PDF
           </button>
-          {/* Ancre NATIVE vers le panneau panier (#panier) — accès direct,
-              pas de scrollIntoView (exigence handoff). */}
-          <a
-            href="#panier"
+          {/* Vue complète : la page /panier (l'ancre #panier vers la sidebar
+              s'avérait peu fiable en prod — retour validation 08/2026). */}
+          <Link
+            to="/panier"
             className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-sm border border-[color:var(--sand)]/30 px-4 text-sm font-medium transition-colors hover:border-[color:var(--sand)]/70 sm:flex-none"
           >
             <ShoppingBag className="h-4 w-4" />
             Voir mon panier
-          </a>
+          </Link>
           <button
             type="button"
             onClick={onReserve}

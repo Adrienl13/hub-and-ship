@@ -19,6 +19,7 @@ import { Route as PrixRouteImport } from './routes/prix'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartenairesRouteImport } from './routes/partenaires'
 import { Route as PartenaireRouteImport } from './routes/partenaire'
+import { Route as PanierRouteImport } from './routes/panier'
 import { Route as FournisseurMobilierChrRouteImport } from './routes/fournisseur-mobilier-chr'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -107,6 +108,11 @@ const PartenairesRoute = PartenairesRouteImport.update({
 const PartenaireRoute = PartenaireRouteImport.update({
   id: '/partenaire',
   path: '/partenaire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanierRoute = PanierRouteImport.update({
+  id: '/panier',
+  path: '/panier',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FournisseurMobilierChrRoute = FournisseurMobilierChrRouteImport.update({
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
+  '/panier': typeof PanierRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
+  '/panier': typeof PanierRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/fournisseur-mobilier-chr': typeof FournisseurMobilierChrRoute
+  '/panier': typeof PanierRoute
   '/partenaire': typeof PartenaireRoute
   '/partenaires': typeof PartenairesRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/fournisseur-mobilier-chr'
+    | '/panier'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/fournisseur-mobilier-chr'
+    | '/panier'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/fournisseur-mobilier-chr'
+    | '/panier'
     | '/partenaire'
     | '/partenaires'
     | '/partner'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
   FournisseurMobilierChrRoute: typeof FournisseurMobilierChrRoute
+  PanierRoute: typeof PanierRoute
   PartenaireRoute: typeof PartenaireRoute
   PartenairesRoute: typeof PartenairesRoute
   PartnerRoute: typeof PartnerRouteWithChildren
@@ -726,6 +739,13 @@ declare module '@tanstack/react-router' {
       path: '/partenaire'
       fullPath: '/partenaire'
       preLoaderRoute: typeof PartenaireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panier': {
+      id: '/panier'
+      path: '/panier'
+      fullPath: '/panier'
+      preLoaderRoute: typeof PanierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fournisseur-mobilier-chr': {
@@ -1059,6 +1079,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
   FournisseurMobilierChrRoute: FournisseurMobilierChrRoute,
+  PanierRoute: PanierRoute,
   PartenaireRoute: PartenaireRoute,
   PartenairesRoute: PartenairesRoute,
   PartnerRoute: PartnerRouteWithChildren,
