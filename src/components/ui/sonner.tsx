@@ -6,6 +6,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      // Les barres de commande fixes (catalogue, accueil mobile) occupent le
+      // bas de l'écran : les toasts remontent au-dessus au lieu de recouvrir
+      // les boutons Confirmer / Devis (retour validation desktop 08/2026).
+      offset={{ bottom: 84 }}
+      mobileOffset={{ bottom: 96 }}
       toastOptions={{
         classNames: {
           toast:

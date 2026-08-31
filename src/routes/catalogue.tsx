@@ -13,7 +13,11 @@ import { ArrowUpDown, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { CatalogueCommandBar } from '@/components/CatalogueCommandBar'
-import { CataloguePersoBanner } from '@/components/CataloguePersoBanner'
+import {
+  CataloguePersoDialog,
+  PersoSidebarReminder,
+  usePersoIntroAutoOpen,
+} from '@/components/CataloguePersoBanner'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { IncludedInPriceStrip } from '@/components/IncludedInPriceStrip'
@@ -159,6 +163,10 @@ function CataloguePage() {
   const [visibleCount, setVisibleCount] = useState<number>(GRID_PAGE_SIZE)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
+  // Personnalisation : fenêtre à la première visite + rappel latéral qui
+  // peut la rouvrir (validation Adrien 08/2026 — la bannière alourdissait).
+  const [persoOpen, setPersoOpen] = useState(false)
+  usePersoIntroAutoOpen(() => setPersoOpen(true))
 
   const categoryCounts = useMemo(
     () => getCategoryCounts(productsArray),
@@ -523,12 +531,6 @@ function CataloguePage() {
               </div>
             </div>
 
-            {/* La personnalisation est un argument d'achat : bannière en
-                tête de grille (handoff v3), photo administrable. */}
-            <div className="mt-4">
-              <CataloguePersoBanner media={media.cataloguePerso} />
-            </div>
-
             {filtered.length === 0 ? (
               <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-16 text-center text-sm text-muted-foreground">
                 Aucun produit ne correspond à ces filtres.
@@ -578,7 +580,8 @@ function CataloguePage() {
 
           {/* #panier : cible des ancres natives de la barre de commande —
               l'accès permanent au panier (exigence handoff). */}
-          <aside id="panier" className="scroll-mt-24 lg:col-span-3">
+          <aside id="panier" className="scroll-mt-24 space-y-3 lg:col-span-3">
+            <PersoSidebarReminder onOpen={() => setPersoOpen(true)} />
             <OrderSidebar
               items={items}
               reservedItems={reservedItems}
@@ -610,6 +613,12 @@ function CataloguePage() {
         payNow={totals.payNow}
         onDownloadPdf={handlePdf}
         onReserve={() => setReserveOpen(true)}
+      />
+
+      <CataloguePersoDialog
+        media={media.cataloguePerso}
+        open={persoOpen}
+        onOpenChange={setPersoOpen}
       />
 
       <Suspense fallback={null}>

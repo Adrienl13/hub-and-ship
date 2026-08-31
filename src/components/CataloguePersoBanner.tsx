@@ -1,12 +1,24 @@
-import { Palette } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Palette, X } from 'lucide-react'
 
 import { SafeImage } from '@/components/SafeImage'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { SiteMediaItem } from '@/lib/site-media'
 
-// Bannière « Personnalisation incluse » en tête de grille (handoff design
-// 08/2026, validé) : la personnalisation est un ARGUMENT du catalogue, pas
-// une option cachée — photo du même modèle en plusieurs coloris, 3 étapes,
-// renvoi vers le bouton « ＋ Votre couleur » présent sur chaque fiche.
+// « Personnalisation incluse » — v2 allégée (retour validation Adrien
+// 08/2026) : la grande bannière écrasait la grille. À la place :
+//   1. une FENÊTRE qui s'affiche à l'arrivée sur le catalogue, UNE seule
+//      fois par visiteur (localStorage, jamais bloquante) ;
+//   2. un RAPPEL compact sur le côté (sidebar) qui peut la rouvrir à tout
+//      moment.
+// Le message reste identique au prototype validé.
+
+const SEEN_KEY = 'terrassea-perso-intro-v1'
 
 const STEPS = [
   '1 · Choisissez le modèle',
@@ -14,35 +26,60 @@ const STEPS = [
   '3 · Prix + visuel sous 24 h',
 ] as const
 
-export function CataloguePersoBanner({
+function markSeen(): void {
+  try {
+    localStorage.setItem(SEEN_KEY, '1')
+  } catch {
+    // stockage indisponible (navigation privée) : la fenêtre reviendra,
+    // tant pis — ne jamais casser la page pour ça.
+  }
+}
+
+function hasSeen(): boolean {
+  try {
+    return localStorage.getItem(SEEN_KEY) === '1'
+  } catch {
+    return true
+  }
+}
+
+export function CataloguePersoDialog({
   media,
+  open,
+  onOpenChange,
 }: {
   readonly media: SiteMediaItem
+  readonly open: boolean
+  readonly onOpenChange: (open: boolean) => void
 }) {
   return (
-    <section
-      aria-label="Personnalisation incluse"
-      className="mb-4 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) markSeen()
+        onOpenChange(next)
+      }}
     >
-      <div className="grid md:grid-cols-[minmax(220px,340px)_1fr]">
+      <DialogContent className="overflow-hidden rounded-md border-[color:var(--sand-deep)] p-0 sm:max-w-lg">
         <SafeImage
           src={media.url}
           alt={media.alt}
-          className="h-full max-h-[210px] w-full md:max-h-none"
-          imgClassName="h-full max-h-[210px] w-full object-cover md:max-h-none"
+          loading="eager"
+          className="h-44 w-full sm:h-52"
+          imgClassName="h-44 w-full object-cover sm:h-52"
         />
-        <div className="p-5 sm:p-6">
+        <div className="p-5 pt-4 sm:p-6 sm:pt-4">
           <div className="label-eyebrow text-[color:var(--ember)]">
             Personnalisation incluse
           </div>
-          <h2 className="mt-1.5 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+          <DialogTitle className="mt-1.5 font-display text-xl font-semibold tracking-tight sm:text-2xl">
             Le même modèle, dans vos couleurs.
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          </DialogTitle>
+          <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">
             Tressage, textilène, laquage : si le coloris de votre terrasse
             n&apos;est pas au catalogue, la série part en production à votre
             couleur. Dès 50 pièces, sans surcoût.
-          </p>
+          </DialogDescription>
           <div className="mt-3 flex flex-wrap gap-2">
             {STEPS.map((step) => (
               <span
@@ -53,15 +90,69 @@ export function CataloguePersoBanner({
               </span>
             ))}
           </div>
-          <p className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            → Cliquez
-            <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-[color:var(--ember)]/60 px-2.5 py-1 text-[11px] font-bold text-[color:var(--ember)]">
-              <Palette className="h-3 w-3" />＋ Votre couleur
-            </span>
-            sur n&apos;importe quelle fiche.
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              markSeen()
+              onOpenChange(false)
+            }}
+            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-foreground text-sm font-medium text-background transition-colors hover:bg-[color:var(--ink-soft)]"
+          >
+            <Palette className="h-4 w-4" />
+            Compris — je repère « ＋ Votre couleur » sur les fiches
+          </button>
         </div>
-      </div>
-    </section>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/** Ouvre la fenêtre automatiquement à la première visite du catalogue. */
+export function usePersoIntroAutoOpen(onOpen: () => void): void {
+  useEffect(() => {
+    if (hasSeen()) return
+    // Petit délai : la grille se peint d'abord, la fenêtre n'interrompt
+    // jamais le premier rendu.
+    const timer = window.setTimeout(onOpen, 900)
+    return () => window.clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+}
+
+/** Rappel compact côté sidebar — rouvre la fenêtre au clic. */
+export function PersoSidebarReminder({
+  onOpen,
+}: {
+  readonly onOpen: () => void
+}) {
+  const [dismissed, setDismissed] = useState(false)
+  if (dismissed) return null
+
+  return (
+    <div className="relative rounded-md border border-dashed border-[color:var(--ember)]/50 bg-[color:var(--ember)]/5 p-3 pr-8">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="block w-full text-left"
+        aria-label="Voir comment personnaliser les coloris"
+      >
+        <span className="flex items-center gap-1.5 text-xs font-bold text-[color:var(--ember)]">
+          <Palette className="h-3.5 w-3.5" />
+          Vos couleurs, sans surcoût
+        </span>
+        <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">
+          Le même modèle, dans vos coloris dès 50 pièces — cliquez «&nbsp;＋
+          Votre couleur&nbsp;» sur une fiche.
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        aria-label="Masquer ce rappel"
+        className="absolute right-2 top-2 text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
   )
 }
