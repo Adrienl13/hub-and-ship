@@ -118,15 +118,23 @@ export function DesignSelector({
           />
         ))}
         {customizeProduct && (
+          // Pastille « Votre couleur » : MÊME format carré que les vignettes
+          // de designs — la rangée reste homogène (retour validation
+          // 08/2026 : le chip rectangulaire cassait l'alignement).
           <button
             type="button"
             onClick={() => setCustomizeOpen(true)}
-            title="Demander un autre coloris (nuancier Pantone/RAL)"
+            title="＋ Votre couleur — demander un autre coloris (nuancier Pantone/RAL)"
             aria-label={`Demander un autre coloris pour ${customizeProduct.name}`}
-            className={`${size === 'lg' ? 'h-12' : 'h-10'} flex shrink-0 items-center gap-1 self-center rounded-full border border-dashed border-[color:var(--ember)]/60 bg-[color:var(--ember)]/5 px-2.5 text-[11px] font-bold text-[color:var(--ember)] transition-all hover:scale-[1.03] hover:bg-[color:var(--ember)]/10`}
+            className={`${size === 'lg' ? 'h-12 w-12' : 'h-10 w-10'} relative flex shrink-0 items-center justify-center rounded-sm border border-dashed border-[color:var(--ember)]/60 bg-[color:var(--ember)]/5 text-[color:var(--ember)] transition-all hover:scale-[1.03] hover:bg-[color:var(--ember)]/10`}
           >
-            <Palette className="h-3.5 w-3.5" />
-            ＋ Votre couleur
+            <Palette className="h-4 w-4" />
+            <span
+              aria-hidden
+              className="absolute right-0.5 top-0 text-[11px] font-bold leading-none"
+            >
+              ＋
+            </span>
           </button>
         )}
       </div>

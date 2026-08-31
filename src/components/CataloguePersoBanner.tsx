@@ -98,8 +98,17 @@ export function CataloguePersoDialog({
             }}
             className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-foreground text-sm font-medium text-background transition-colors hover:bg-[color:var(--ink-soft)]"
           >
-            <Palette className="h-4 w-4" />
-            Compris — je repère « ＋ Votre couleur » sur les fiches
+            Compris — je repère la pastille
+            <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-dashed border-[color:var(--ember)]/70 bg-background/10 text-[color:var(--ember)]">
+              <Palette className="h-3.5 w-3.5" />
+              <span
+                aria-hidden
+                className="absolute right-0 top-[-1px] text-[9px] font-bold leading-none"
+              >
+                ＋
+              </span>
+            </span>
+            sur les fiches
           </button>
         </div>
       </DialogContent>
@@ -141,8 +150,8 @@ export function PersoSidebarReminder({
           Vos couleurs, sans surcoût
         </span>
         <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">
-          Le même modèle, dans vos coloris dès 50 pièces — cliquez «&nbsp;＋
-          Votre couleur&nbsp;» sur une fiche.
+          Le même modèle, dans vos coloris dès 50 pièces — cliquez la pastille
+          orange en fin de rangée de coloris, sur n&apos;importe quelle fiche.
         </span>
       </button>
       <button
