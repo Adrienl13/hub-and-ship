@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { Ship } from 'lucide-react'
 
 import { DeliveredContainerCard } from '@/components/DeliveredContainerCard'
 import { Footer } from '@/components/Footer'
@@ -9,8 +10,10 @@ import {
   computeStats,
   listFallbackDeliveredContainers,
   listPublishedDeliveredContainers,
+  listPublishedShippingContainers,
   type DeliveredContainersListItem,
   type DeliveredContainersStats,
+  type ShippingContainerListItem,
 } from '@/lib/delivered-containers/repository'
 import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -58,6 +61,9 @@ function LivresPage() {
   const [containers, setContainers] = useState<
     ReadonlyArray<DeliveredContainersListItem>
   >([])
+  const [shipping, setShipping] = useState<
+    ReadonlyArray<ShippingContainerListItem>
+  >([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
@@ -73,10 +79,18 @@ function LivresPage() {
     }
 
     const client = createSupabaseBrowserClient(config)
-    void listPublishedDeliveredContainers(client)
-      .then((data) => {
+    void Promise.all([
+      listPublishedDeliveredContainers(client),
+      // Les containers EN MER prouvent que les commandes continuent — un
+      // échec de cette liste ne doit jamais casser la page (fallback []).
+      listPublishedShippingContainers(client).catch(
+        () => [] as ReadonlyArray<ShippingContainerListItem>,
+      ),
+    ])
+      .then(([delivered, inTransit]) => {
         if (cancelled) return
-        setContainers(data)
+        setContainers(delivered)
+        setShipping(inTransit)
         setError(null)
       })
       .catch(() => {
@@ -117,6 +131,27 @@ function LivresPage() {
             <StatsGrid stats={stats} loading={loading} />
           </div>
         </section>
+
+        {/* Les commandes CONTINUENT : containers chargés, en mer — l'ETA
+            sans le manifeste (les volumes détaillés ne sont publiés qu'à
+            la livraison). */}
+        {!loading && shipping.length > 0 && (
+          <section className="mx-auto max-w-7xl px-6 pt-10">
+            <div className="mb-4 max-w-2xl">
+              <div className="label-eyebrow text-[color:var(--ember)]">
+                En ce moment, sur l&apos;eau
+              </div>
+              <h2 className="mt-1 font-display text-2xl tracking-tight">
+                Les commandes continuent.
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {shipping.map((c) => (
+                <ShippingContainerCard key={c.id} container={c} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto max-w-7xl px-6 py-16">
           {loading ? (
@@ -166,6 +201,51 @@ function LivresPage() {
         )}
       </Suspense>
     </div>
+  )
+}
+
+function formatEtaMonth(iso: string | null): string | null {
+  if (!iso) return null
+  const date = new Date(`${iso}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
+
+function ShippingContainerCard({
+  container,
+}: {
+  readonly container: ShippingContainerListItem
+}) {
+  const eta = formatEtaMonth(container.etaDate)
+  return (
+    <article className="border-[color:var(--ember)]/40 relative overflow-hidden rounded-md border bg-card p-5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ember)]">
+          <span
+            aria-hidden
+            className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--ember)]"
+          />
+          En mer
+        </span>
+        <Ship className="text-[color:var(--ember)]/60 h-5 w-5" />
+      </div>
+      <h3 className="mt-3 font-display text-xl font-semibold tracking-tight">
+        Container {container.reference}
+      </h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Chargé, contrôlé et expédié — en route vers {container.port}.
+      </p>
+      {eta && (
+        <p className="mt-3 text-sm">
+          <span className="font-semibold">Arrivée estimée :</span>{' '}
+          <span className="capitalize">{eta}</span>
+        </p>
+      )}
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+        La documentation complète (photos, contrôles, délais constatés) sera
+        publiée ici à la livraison.
+      </p>
+    </article>
   )
 }
 

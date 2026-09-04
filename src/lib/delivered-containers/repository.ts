@@ -266,6 +266,42 @@ export async function listPublishedDeliveredContainers(
   return rows.map((row) => toListItem(row))
 }
 
+/** Container chargé et EN MER — la preuve que les commandes continuent. */
+export interface ShippingContainerListItem {
+  readonly id: string
+  readonly reference: string
+  readonly port: string
+  readonly originPort: string | null
+  /** Pour un container `shipping`, delivered_at porte l'ARRIVÉE ESTIMÉE. */
+  readonly etaDate: string | null
+  readonly photoUrl: string | null
+}
+
+export async function listPublishedShippingContainers(
+  client: DeliveredContainersClient,
+): Promise<ReadonlyArray<ShippingContainerListItem>> {
+  const { data, error } = await client
+    .from('containers')
+    .select('*')
+    .eq('status', 'shipping')
+    .not('published_at', 'is', null)
+    .order('delivered_at', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const rows = (data ?? []) as ReadonlyArray<ContainerRow>
+  return rows.map((row) => ({
+    id: row.id,
+    reference: row.reference,
+    port: row.port,
+    originPort: row.origin_port,
+    etaDate: row.delivered_at,
+    photoUrl: row.photo_url,
+  }))
+}
+
 export async function getDeliveredContainerBySlug(
   client: DeliveredContainersClient,
   slug: string,
