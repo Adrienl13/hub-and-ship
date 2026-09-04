@@ -48,10 +48,15 @@ function ProductCardComponent({
   const quantityRule = getQuantityRule(product)
 
   return (
+    // PAS de content-visibility/contain-intrinsic-size ici : la valeur
+    // « 520px » fixait aussi une LARGEUR intrinsèque de 520 px que Safari
+    // iOS appliquait aux cartes hors écran — la grille mobile débordait
+    // (bug signalé 08/2026, invisible sur Chrome). La pagination à 36
+    // cartes rend l'optimisation inutile ; min-w-0/max-w-full verrouillent
+    // la carte dans sa colonne quel que soit le moteur.
     <article
       data-catalog-item-mode="portrait-card"
-      className="shadow-paper group flex flex-col overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '520px' }}
+      className="shadow-paper group flex min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
     >
       {/* Visuel produit plein, non recouvert */}
       <div className="relative">
