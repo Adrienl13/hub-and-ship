@@ -44,7 +44,6 @@ function ProductRowComponent({
     <article
       data-catalog-item-mode="desktop-row"
       className="hover:border-foreground/30 group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors"
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '168px' }}
     >
       <div className="flex gap-4">
         {/* Visual */}

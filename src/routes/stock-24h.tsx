@@ -284,7 +284,6 @@ function StockCard({
           ? 'border-[color:var(--ember)] ring-2 ring-[color:var(--ember)]/40'
           : 'border-[color:var(--sand-deep)]'
       }`}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '420px' }}
     >
       <div className="relative">
         <button
