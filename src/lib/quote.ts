@@ -244,7 +244,7 @@ export function buildQuoteHTML(q: QuoteData): string {
         <ul>
           <li>Importation officielle, dédouanement, TVA autoliquidée.</li>
           <li>Contrôle qualité SGS indépendant avant chargement.</li>
-          <li>Garantie commerciale 2 ans, SAV France, éco-participation.</li>
+          <li>Garantie commerciale 1 an, SAV France, éco-participation.</li>
           <li>Devis valable 14 jours. Prix HT, TVA 20 % en sus.</li>
         </ul>
       </div>

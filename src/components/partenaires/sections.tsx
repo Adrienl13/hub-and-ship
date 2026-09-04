@@ -99,7 +99,7 @@ export function PartnerHero({ onApply }: { readonly onApply: () => void }) {
             <div className="col-span-2 border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-6 py-3.5">
               <p className="mono text-[10.5px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
                 Pros Import EURL · importateur officiel · contrôle SGS ·
-                garantie 2 ans
+                garantie 1 an
               </p>
             </div>
           </dl>

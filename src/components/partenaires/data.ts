@@ -291,6 +291,6 @@ export const PARTNER_FAQ: ReadonlyArray<PartnerFaqItem> = [
   },
   {
     q: 'Qui gère le SAV et la garantie ?',
-    a: 'Terrassea, intégralement. Garantie 2 ans, pièces et SAV traités en France. En statut apporteur, vous n’avez aucune obligation après la mise en relation.',
+    a: 'Terrassea, intégralement. Garantie 1 an, pièces et SAV traités en France. En statut apporteur, vous n’avez aucune obligation après la mise en relation.',
   },
 ]

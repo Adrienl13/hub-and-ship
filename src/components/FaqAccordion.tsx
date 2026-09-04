@@ -26,7 +26,7 @@ export const FAQ = [
   },
   {
     q: 'Quelle garantie sur les produits ? Et le SAV ?',
-    a: "Tous les produits bénéficient d'une garantie commerciale de 2 ans sur les pièces et la structure, assurée par Terrassea en France — pas besoin de contacter une usine à l'étranger.\n\nLe SAV est joignable par email, avec une réponse sous 48h ouvrées. En cas de besoin, des pièces détachées sont disponibles et nous organisons la prise en charge selon les cas (réparation, remplacement de pièce, solution adaptée).\n\nL'éco-participation Eco-mobilier est incluse dans le prix : la fin de vie et le recyclage du mobilier sont déjà couverts. Vous avez un interlocuteur français, des factures françaises et une garantie française.",
+    a: "Tous les produits bénéficient d'une garantie commerciale de 1 an sur les pièces et la structure, assurée par Terrassea en France — pas besoin de contacter une usine à l'étranger.\n\nLe SAV est joignable par email, avec une réponse sous 48h ouvrées. En cas de besoin, des pièces détachées sont disponibles et nous organisons la prise en charge selon les cas (réparation, remplacement de pièce, solution adaptée).\n\nL'éco-participation Eco-mobilier est incluse dans le prix : la fin de vie et le recyclage du mobilier sont déjà couverts. Vous avez un interlocuteur français, des factures françaises et une garantie française.",
   },
   {
     q: 'Puis-je annuler ma réservation ? Sous quelles conditions ?',
@@ -46,7 +46,7 @@ export const FAQ = [
   },
   {
     q: 'Et si un produit arrive abîmé ou non conforme ?',
-    a: "Le contrôle SGS avant expédition réduit fortement ce risque, mais s'il subsiste un souci, vous êtes couvert. À la réception, vérifiez la marchandise et signalez tout produit endommagé ou non conforme à notre SAV, photos à l'appui.\n\nNous organisons alors la prise en charge : envoi de pièces détachées, remplacement ou solution adaptée selon le cas, dans le cadre de la garantie 2 ans.\n\nVous n'êtes jamais seul face à une usine à l'autre bout du monde : l'interlocuteur, c'est nous, en France.",
+    a: "Le contrôle SGS avant expédition réduit fortement ce risque, mais s'il subsiste un souci, vous êtes couvert. À la réception, vérifiez la marchandise et signalez tout produit endommagé ou non conforme à notre SAV, photos à l'appui.\n\nNous organisons alors la prise en charge : envoi de pièces détachées, remplacement ou solution adaptée selon le cas, dans le cadre de la garantie 1 an.\n\nVous n'êtes jamais seul face à une usine à l'autre bout du monde : l'interlocuteur, c'est nous, en France.",
   },
 ]
 

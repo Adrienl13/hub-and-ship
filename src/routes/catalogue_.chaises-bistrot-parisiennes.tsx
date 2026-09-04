@@ -66,7 +66,7 @@ export const Route = createFileRoute('/catalogue_/chaises-bistrot-parisiennes')(
       ...buildSeoHead({
         title: 'Chaises bistrot parisiennes pour restaurant — prix container',
         description:
-          'Chaises bistrot parisiennes professionnelles en rotin synthétique tressé : achat direct usine par container, dès 50 unités, contrôle SGS, garantie 2 ans, coloris personnalisables. L’alternative import aux distributeurs classiques.',
+          'Chaises bistrot parisiennes professionnelles en rotin synthétique tressé : achat direct usine par container, dès 50 unités, contrôle SGS, garantie 1 an, coloris personnalisables. L’alternative import aux distributeurs classiques.',
         path: '/catalogue/chaises-bistrot-parisiennes',
         image: STATIC_BISTROT[0]?.mainImageUrl,
       }),
@@ -106,7 +106,7 @@ function ChaisesBistrotParisiennesPage() {
         'Dès 60-80 € HT l’unité en container, MOQ 50 puis +10',
         'Tressage polyrotin S-PE résistant UV, structure aluminium empilable',
         'Coloris et motifs personnalisables (nuancier Pantone/RAL)',
-        'Contrôle SGS avant départ · Garantie 2 ans · SAV France',
+        'Contrôle SGS avant départ · Garantie 1 an · SAV France',
       ]}
       products={products}
       showcaseImages={[

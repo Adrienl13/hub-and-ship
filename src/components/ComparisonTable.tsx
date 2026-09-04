@@ -7,7 +7,7 @@ const ROWS = [
   ['Rotin garanti UV 5 ans', 'yes', 'unknown', 'Variable'],
   ['Certification M1/M2', 'yes', 'no', 'Variable'],
   ['Rapport SGS disponible', 'yes', 'no', 'Variable'],
-  ['Garantie', '2 ans FR', '1 an', 'Variable'],
+  ['Garantie', '1 an FR · SAV France', '1 an', 'Variable'],
   ['Origine transparente', 'yes', 'no', 'Variable'],
   ['SAV France', 'yes', 'Partiel', 'yes'],
   ['Conformité REACH', 'yes', 'unknown', 'Variable'],

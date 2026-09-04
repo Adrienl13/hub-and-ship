@@ -20,7 +20,7 @@ import {
 const FAQ = [
   {
     q: 'Quel type de fournisseur est Terrassea ?',
-    a: 'Terrassea (marque de Pros Import EURL) est un importateur-fournisseur français de mobilier CHR : nous achetons en direct usine et mutualisons des containers entre restaurateurs, hôteliers et revendeurs. C’est le positionnement « prix import » : moins cher qu’un distributeur avec stock, plus cadré qu’un achat usine en solo (contrôle SGS, facture française, garantie 2 ans, SAV France).',
+    a: 'Terrassea (marque de Pros Import EURL) est un importateur-fournisseur français de mobilier CHR : nous achetons en direct usine et mutualisons des containers entre restaurateurs, hôteliers et revendeurs. C’est le positionnement « prix import » : moins cher qu’un distributeur avec stock, plus cadré qu’un achat usine en solo (contrôle SGS, facture française, garantie 1 an, SAV France).',
   },
   {
     q: 'Quels professionnels peuvent commander ?',
@@ -32,7 +32,7 @@ const FAQ = [
   },
   {
     q: 'Comment sont garantis les prix et la qualité ?',
-    a: 'La méthode de prix est publiée (page « Le prix prouvé ») : coût usine + fret + douane + marge affichée. Chaque container passe un contrôle qualité SGS indépendant avant départ, et les produits sont garantis 2 ans avec un SAV basé en France.',
+    a: 'La méthode de prix est publiée (page « Le prix prouvé ») : coût usine + fret + douane + marge affichée. Chaque container passe un contrôle qualité SGS indépendant avant départ, et les produits sont garantis 1 an avec un SAV basé en France.',
   },
   {
     q: 'Livrez-vous partout en France ?',
@@ -50,7 +50,7 @@ export const Route = createFileRoute('/fournisseur-mobilier-chr')({
     ...buildSeoHead({
       title: 'Fournisseur mobilier CHR — import direct usine par container',
       description:
-        'Terrassea (Pros Import EURL) : fournisseur français de mobilier CHR par import direct usine. Chaises, fauteuils et tables de terrasse professionnels, containers mutualisés, contrôle SGS, garantie 2 ans, prix publiés. Paris · livraison France entière.',
+        'Terrassea (Pros Import EURL) : fournisseur français de mobilier CHR par import direct usine. Chaises, fauteuils et tables de terrasse professionnels, containers mutualisés, contrôle SGS, garantie 1 an, prix publiés. Paris · livraison France entière.',
       path: '/fournisseur-mobilier-chr',
       image: PRODUCTS[0]?.mainImageUrl,
     }),
@@ -77,11 +77,11 @@ function FournisseurMobilierChrPage() {
     <SeoLandingPage
       eyebrow="Fournisseur mobilier CHR"
       title="Fournisseur de mobilier CHR par import direct, basé en France."
-      description="Terrassea (marque de Pros Import EURL) est un fournisseur français de mobilier professionnel pour cafés, hôtels et restaurants : chaises, fauteuils et tables de terrasse importés en direct usine par containers mutualisés, avec contrôle qualité SGS avant départ, facture française, garantie 2 ans et méthode de prix publiée. Le rapport qualité/prix de l'import, sans en prendre les risques."
+      description="Terrassea (marque de Pros Import EURL) est un fournisseur français de mobilier professionnel pour cafés, hôtels et restaurants : chaises, fauteuils et tables de terrasse importés en direct usine par containers mutualisés, avec contrôle qualité SGS avant départ, facture française, garantie 1 an et méthode de prix publiée. Le rapport qualité/prix de l'import, sans en prendre les risques."
       proofPoints={[
         'Import direct usine : prix container, méthode de calcul publiée',
         'Contrôle SGS indépendant avant chaque départ de container',
-        'Facture française, garantie 2 ans, SAV France (Pros Import EURL, Paris)',
+        'Facture française, garantie 1 an, SAV France (Pros Import EURL, Paris)',
         'Stock en France retirable sous 24 h pour les besoins urgents',
         'Programme revendeurs & agenceurs avec prix nets dédiés',
       ]}

@@ -187,7 +187,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             TVA française à 20 % est appliquée à la facturation finale et figure
             distinctement sur la facture. Les prix incluent : importation
             officielle, dédouanement, contrôle qualité SGS, garantie commerciale
-            2 ans, éco-participation. Ils excluent : les frais de livraison
+            1 an, éco-participation. Ils excluent : les frais de livraison
             (forfaitaires par zone, indiqués à la commande) et toute prestation
             d'installation.
           </P>
@@ -300,7 +300,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               articles 1641 et suivants du Code civil ;
             </LI>
             <LI>
-              d'une <Strong>garantie commerciale de 2 ans</Strong> consentie par
+              d'une <Strong>garantie commerciale de 1 an</Strong> consentie par
               Pros Import EURL, couvrant les défauts de pièces et de structure
               dans le cadre d'un usage normal et professionnel.
             </LI>

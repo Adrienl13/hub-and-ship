@@ -82,7 +82,7 @@ const CLUB: ReadonlyArray<Segment> = [
     height: 49,
     color: '#D97A34',
     title: 'Notre marge unique',
-    text: "Sourcing, logistique, SAV France, garantie 2 ans. La seule marge du circuit — c'est ça, le prix prouvé.",
+    text: "Sourcing, logistique, SAV France, garantie 1 an. La seule marge du circuit — c'est ça, le prix prouvé.",
     lightText: true,
   },
 ]

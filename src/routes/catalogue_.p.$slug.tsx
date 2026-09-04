@@ -55,7 +55,7 @@ export const Route = createFileRoute('/catalogue_/p/$slug')({
     return {
       ...buildSeoHead({
         title: `${product.name} — prix direct pro`,
-        description: `${product.name} : ${formatEUR(product.basePriceHt)} HT en direct usine (réf. distribution ${formatEUR(product.retailPriceRef)}). MOQ ${product.moqUnits} unités, contrôle SGS, garantie 2 ans, livraison par container mutualisé.`,
+        description: `${product.name} : ${formatEUR(product.basePriceHt)} HT en direct usine (réf. distribution ${formatEUR(product.retailPriceRef)}). MOQ ${product.moqUnits} unités, contrôle SGS, garantie 1 an, livraison par container mutualisé.`,
         path,
         image: product.mainImageUrl,
       }),
@@ -224,7 +224,7 @@ function ProductPage() {
           <Spec
             icon={ShieldCheck}
             label="Qualité"
-            value="Contrôle SGS avant départ · Garantie 2 ans · SAV France"
+            value="Contrôle SGS avant départ · Garantie 1 an · SAV France"
           />
         </section>
 

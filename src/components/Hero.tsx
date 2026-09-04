@@ -179,7 +179,7 @@ export function Hero({
             Pré-commande groupée par container 20&apos; entre professionnels.
             Jusqu&apos;à{' '}
             <strong className="font-bold text-foreground">−40%</strong> vs
-            retail français. Import, douane et garantie 2 ans inclus.
+            retail français. Import, douane et garantie 1 an inclus.
           </p>
 
           <div className="flex flex-wrap gap-3.5">
@@ -202,7 +202,7 @@ export function Hero({
             {/* La pastille SGS est cliquable : elle mène aux rapports réels
                 (essais EN 581 / EN 1022, REACH) sur /qualite. */}
             <QualityBadgeLink />
-            {['Importateur officiel FR', 'Garantie 2 ans'].map((label) => (
+            {['Importateur officiel FR', 'Garantie 1 an'].map((label) => (
               <span
                 key={label}
                 className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border-strong)] px-3.5 py-2 text-[12.5px] font-semibold text-[#4a443c]"

@@ -784,7 +784,7 @@ export function ReservationDialog({
               />
               <Reassure
                 Icon={ShieldCheck}
-                t="Importation officielle - garantie 2 ans"
+                t="Importation officielle - garantie 1 an"
               />
               <Reassure
                 Icon={Truck}

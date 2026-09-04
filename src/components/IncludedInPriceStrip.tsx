@@ -11,7 +11,7 @@ export function IncludedInPriceStrip() {
   const items = [
     'Fret maritime & dédouanement',
     'Contrôle SGS avant départ',
-    'Garantie 2 ans + SAV France',
+    'Garantie 1 an + SAV France',
     `Remise auto : −${Math.round(rules.tier2Discount * 100)} % ≥${rules.tier2Qty} pcs · −${Math.round(rules.tier3Discount * 100)} % ≥${rules.tier3Qty} pcs`,
   ]
 

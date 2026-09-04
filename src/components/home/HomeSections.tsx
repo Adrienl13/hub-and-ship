@@ -137,7 +137,7 @@ export function ClienteleBand({ media }: { media: SiteMediaItem }) {
                 sans compromis sur la qualité.
               </h2>
               <p className="mt-5 text-[17px] leading-normal text-[rgba(244,239,231,.82)]">
-                Un mobilier robuste, garanti 2 ans et contrôlé SGS avant
+                Un mobilier robuste, garanti 1 an et contrôlé SGS avant
                 expédition — pensé pour l&apos;exigence d&apos;un usage
                 professionnel intensif.
               </p>
@@ -162,7 +162,7 @@ const PILLARS = [
   },
   {
     title: 'Tout est géré',
-    text: 'Import, douane, conformité, contrôle SGS, facture française et garantie 2 ans centralisés chez nous.',
+    text: 'Import, douane, conformité, contrôle SGS, facture française et garantie 1 an centralisés chez nous.',
   },
 ] as const
 
@@ -402,7 +402,7 @@ const FAQ = [
   },
   {
     q: 'Quelle garantie sur les produits, et le SAV ?',
-    a: "Garantie commerciale 2 ans sur pièces et structure, assurée en France. SAV par email sous 48h ouvrées, pièces détachées disponibles. L'éco-participation Eco-mobilier est incluse dans le prix.",
+    a: "Garantie commerciale 1 an sur pièces et structure, assurée en France. SAV par email sous 48h ouvrées, pièces détachées disponibles. L'éco-participation Eco-mobilier est incluse dans le prix.",
   },
   {
     q: 'Comment vérifiez-vous la qualité avant expédition ?',

@@ -20,7 +20,7 @@ const VALUE_PROPS = [
     Icon: ShieldCheck,
     title: 'Tout est géré',
     description:
-      'Importation, douane, conformité, contrôle SGS, facture française et garantie 2 ans restent centralisés chez Terrassea.',
+      'Importation, douane, conformité, contrôle SGS, facture française et garantie 1 an restent centralisés chez Terrassea.',
   },
 ] as const
 

@@ -82,7 +82,7 @@ export const Route = createFileRoute('/catalogue')({
     ...buildSeoHead({
       title: 'Catalogue mobilier outdoor professionnel',
       description:
-        'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 2 ans inclus.',
+        'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 1 an inclus.',
       path: '/catalogue',
       image: PRODUCTS[0]?.mainImageUrl,
     }),

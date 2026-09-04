@@ -319,7 +319,7 @@ function PartnerTrustPanel() {
       <p className="mt-2.5 text-[14.5px] text-[color:var(--ink-soft)]">
         Terrassea est la marque de Pros Import EURL, importateur officiel
         français. Chaque container est contrôlé par SGS avant expédition,
-        dédouané par nos soins, et couvert par une garantie 2 ans avec SAV en
+        dédouané par nos soins, et couvert par une garantie 1 an avec SAV en
         France.
       </p>
       <div className="mt-4.5 grid gap-3">

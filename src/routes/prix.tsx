@@ -68,7 +68,7 @@ const FAQ = [
       'Aucun recours pratique en cas de défaut constaté à l’arrivée, sans contrôle qualité sur place.',
     ],
     after:
-      'Notre marge unique couvre exactement ce travail : accéder aux conditions usine dès quelques dizaines de pièces, avec contrôle SGS, garantie 2 ans et SAV en France.',
+      'Notre marge unique couvre exactement ce travail : accéder aux conditions usine dès quelques dizaines de pièces, avec contrôle SGS, garantie 1 an et SAV en France.',
   },
   {
     q: 'Le prix affiché inclut-il le transport et la douane ?',
@@ -105,7 +105,7 @@ const METHOD_STEPS = [
   {
     num: '05',
     title: 'Une seule marge',
-    text: 'Sourcing, logistique, SAV France et garantie 2 ans. Pas de grossiste, pas de showroom à financer.',
+    text: 'Sourcing, logistique, SAV France et garantie 1 an. Pas de grossiste, pas de showroom à financer.',
     dark: true,
   },
 ] as const
@@ -426,7 +426,7 @@ function PrixPage() {
                 Vous ne payez jamais la totalité d&apos;un mobilier qui
                 n&apos;a pas encore de date de départ. Livraison jusqu&apos;à
                 votre terrasse ou enlèvement gratuit en zone de stockage ·
-                Garantie 2 ans + SAV France.
+                Garantie 1 an + SAV France.
               </div>
             </div>
           </div>
