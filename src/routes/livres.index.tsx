@@ -15,7 +15,6 @@ import {
   type DeliveredContainersStats,
   type ShippingContainerListItem,
 } from '@/lib/delivered-containers/repository'
-import { formatEUR } from '@/lib/order'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCart } from '@/stores/cart.store'
@@ -256,6 +255,11 @@ function StatsGrid({
   readonly stats: DeliveredContainersStats
   readonly loading: boolean
 }) {
+  // « Économies cumulées » (€) et « Ponctualité » retirées (décision Adrien
+  // 08/2026) : le cumul en euros permet d'estimer le chiffre d'affaires
+  // (veille concurrentielle), et un taux de ponctualité global devient un
+  // mauvais signal au premier retard maritime. L'économie moyenne en %
+  // reste : c'est l'argument client sans le renseignement business.
   const items: ReadonlyArray<{ label: string; value: string }> = loading
     ? []
     : [
@@ -266,21 +270,13 @@ function StatsGrid({
         { label: 'Pros servis', value: stats.totalPros.toString() },
         { label: 'Articles livrés', value: stats.totalArticles.toString() },
         {
-          label: 'Économies cumulées',
-          value: formatEUR(stats.totalSavings),
-        },
-        {
-          label: 'Ponctualité',
-          value: `${stats.onTimeRate}%`,
-        },
-        {
           label: 'Économie moyenne',
           value: `${stats.avgSavingsPercent}%`,
         },
       ]
 
   return (
-    <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+    <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
       {(loading ? Array.from({ length: 6 }) : items).map((it, i) => (
         <div
           key={i}
