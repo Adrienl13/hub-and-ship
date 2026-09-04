@@ -300,7 +300,7 @@ function CataloguePage() {
 
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
-          <div className="mx-auto grid max-w-7xl gap-6 px-6 py-10 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 py-10 md:grid-cols-[1fr_auto] md:items-end">
             <div className="max-w-3xl">
               <div className="label-eyebrow text-[color:var(--ember)]">
                 Catalogue complet
@@ -398,7 +398,7 @@ function CataloguePage() {
           )}
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-12">
+        <section className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-12">
           <div className="min-w-0 lg:col-span-9">
             <div className="bg-background/95 sticky top-16 z-20 min-w-0 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur">
               <div className="flex min-w-0 flex-col gap-3">
@@ -427,7 +427,7 @@ function CataloguePage() {
                   })}
                 </div>
 
-                <div className="grid min-w-0 gap-2 md:grid-cols-[1fr_auto] md:items-center">
+                <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-[1fr_auto] md:items-center">
                   <label className="relative block min-w-0 text-xs text-muted-foreground">
                     <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
                     <input
@@ -581,7 +581,7 @@ function CataloguePage() {
 
           {/* #panier : cible des ancres natives de la barre de commande —
               l'accès permanent au panier (exigence handoff). */}
-          <aside id="panier" className="scroll-mt-24 space-y-3 lg:col-span-3">
+          <aside id="panier" className="min-w-0 scroll-mt-24 space-y-3 lg:col-span-3">
             <PersoSidebarReminder onOpen={() => setPersoOpen(true)} />
             <OrderSidebar
               items={items}

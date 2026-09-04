@@ -173,7 +173,7 @@ function PanierPage() {
             </Button>
           </div>
         ) : (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
             {/* Lignes */}
             <div className="space-y-4">
               <ul className="divide-y divide-[color:var(--sand-deep)]/70 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">

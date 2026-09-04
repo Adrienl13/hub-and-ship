@@ -110,7 +110,7 @@ function Stock24hPage() {
 
       <main>
         <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
-          <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1fr_360px] lg:items-end">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-10 lg:grid-cols-[1fr_360px] lg:items-end">
             <div className="max-w-3xl">
               <div className="label-eyebrow text-[color:var(--ember)]">
                 Stock disponible sous 24h
@@ -139,8 +139,13 @@ function Stock24hPage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-12">
-          <div className="lg:col-span-8">
+        {/* grid-cols-1 explicite obligatoire : sans template, la colonne
+            implicite est « auto » et WebKit/Safari la dimensionne sur le
+            min-content des rangées de filtres overflow-x-auto (405 px
+            mesurés sur iPhone) → toute la page débordait. minmax(0,1fr)
+            verrouille la colonne à la largeur de l'écran. */}
+        <section className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-12">
+          <div className="min-w-0 lg:col-span-8">
             <div className="bg-background/95 sticky top-16 z-20 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur">
               <div className="flex flex-col gap-3">
                 <div className="flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
@@ -170,7 +175,7 @@ function Stock24hPage() {
                   })}
                 </div>
 
-                <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
                   <label className="relative block text-xs text-muted-foreground">
                     <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
                     <input
@@ -241,7 +246,7 @@ function Stock24hPage() {
             )}
           </div>
 
-          <aside className="lg:col-span-4">
+          <aside className="min-w-0 lg:col-span-4">
             <div id="stock-request-panel" className="sticky top-24 scroll-mt-20">
               <StockRequestPanel line={selectedLine} />
             </div>
