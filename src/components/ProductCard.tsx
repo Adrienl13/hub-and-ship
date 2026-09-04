@@ -36,9 +36,13 @@ function ProductCardComponent({
       product.variants[0],
     [product.variants, variantId],
   )
-  const savingsPct = Math.round(
-    (1 - product.basePriceHt / product.retailPriceRef) * 100,
-  )
+  // Un produit sans prix public de référence (fiche en cours de complétion)
+  // affichait « −-Infinity % » : le badge n'apparaît que si la comparaison
+  // a un sens (bug mobile signalé 08/2026).
+  const savingsPct =
+    product.retailPriceRef > product.basePriceHt && product.basePriceHt > 0
+      ? Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100)
+      : null
   const totalCommitted = (variant?.unitsCommitted ?? 0) + qty
   const moqStatus = getMoqStatus(totalCommitted, product.moqUnits)
   const quantityRule = getQuantityRule(product)
@@ -98,9 +102,11 @@ function ProductCardComponent({
 
         {/* Prix volontairement absent : badge économie + renvoi panier. */}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[color:var(--sand-deep)] pt-1.5">
-          <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-[color:var(--forest)]">
-            −{savingsPct} % vs prix public
-          </span>
+          {savingsPct !== null && (
+            <span className="rounded-sm bg-[color:var(--forest-bg)] px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-[color:var(--forest)]">
+              −{savingsPct} % vs prix public
+            </span>
+          )}
           <span className="text-[11px] text-muted-foreground">
             Prix détaillé au panier
           </span>

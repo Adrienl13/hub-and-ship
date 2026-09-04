@@ -61,10 +61,16 @@ export function ProductDetailDialog({
 
   if (!product || !variant) return null
 
-  const savingsPct = Math.round(
-    (1 - product.basePriceHt / product.retailPriceRef) * 100,
-  )
-  const savingsEur = product.retailPriceRef - product.basePriceHt
+  // Fiches sans prix public de référence : aucune comparaison affichée
+  // (sinon « −Infinity % » / économie négative — bug mobile 08/2026).
+  const hasRetailRef =
+    product.retailPriceRef > product.basePriceHt && product.basePriceHt > 0
+  const savingsPct = hasRetailRef
+    ? Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100)
+    : null
+  const savingsEur = hasRetailRef
+    ? product.retailPriceRef - product.basePriceHt
+    : null
   const moqStatus = getMoqStatus(variant.unitsCommitted + qty, product.moqUnits)
   const totalLine = product.basePriceHt * qty
   const lineCbm = product.cbmPerUnit * qty
@@ -78,9 +84,11 @@ export function ProductDetailDialog({
             <span className="label-eyebrow text-foreground/70 rounded-sm bg-muted px-2 py-0.5">
               {CATEGORY_LABEL[product.category]}
             </span>
-            <span className="label-eyebrow bg-[color:var(--ember)]/10 rounded-sm px-2 py-0.5 text-[color:var(--ember)]">
-              −{savingsPct}% vs retail
-            </span>
+            {savingsPct !== null && (
+              <span className="label-eyebrow bg-[color:var(--ember)]/10 rounded-sm px-2 py-0.5 text-[color:var(--ember)]">
+                −{savingsPct}% vs retail
+              </span>
+            )}
             <span className="label-eyebrow text-muted-foreground">
               {product.sku}
             </span>
@@ -152,18 +160,22 @@ export function ProductDetailDialog({
                 <div className="font-display text-3xl font-semibold tabular-nums">
                   {formatEUR(product.basePriceHt)}
                 </div>
-                <div className="text-sm tabular-nums text-muted-foreground line-through">
-                  {formatEUR(product.retailPriceRef)}
+                {savingsEur !== null && (
+                  <div className="text-sm tabular-nums text-muted-foreground line-through">
+                    {formatEUR(product.retailPriceRef)}
+                  </div>
+                )}
+              </div>
+              {savingsEur !== null && (
+                <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <TrendingDown className="h-3 w-3 text-[color:var(--ember)]" />
+                  Économie{' '}
+                  <span className="font-medium text-[color:var(--ember)]">
+                    {formatEUR(savingsEur)}
+                  </span>{' '}
+                  par unité
                 </div>
-              </div>
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <TrendingDown className="h-3 w-3 text-[color:var(--ember)]" />
-                Économie{' '}
-                <span className="font-medium text-[color:var(--ember)]">
-                  {formatEUR(savingsEur)}
-                </span>{' '}
-                par unité
-              </div>
+              )}
             </div>
 
             {product.category === 'table' ? (

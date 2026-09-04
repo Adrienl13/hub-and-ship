@@ -106,7 +106,7 @@ function StatusCard({
 
       <ul className="mt-4 flex-1 text-sm">
         {card.included.map((item) => (
-          <li key={item} className="relative py-1.5 pl-6.5">
+          <li key={item} className="relative py-1.5 pl-7">
             <Check
               className="absolute left-0 top-2 h-3.5 w-3.5 text-[color:var(--forest)]"
               strokeWidth={3}
@@ -120,7 +120,7 @@ function StatusCard({
         {card.excluded.map((item) => (
           <li
             key={item}
-            className="relative border-t-0 py-1.5 pl-6.5 text-[color:var(--ink-soft)]"
+            className="relative border-t-0 py-1.5 pl-7 text-[color:var(--ink-soft)]"
           >
             <Minus
               className="absolute left-0 top-2 h-3.5 w-3.5 text-[color:var(--stamp)]"
