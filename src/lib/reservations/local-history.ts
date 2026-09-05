@@ -1,6 +1,14 @@
+import type { ReservationStatus } from '@/lib/supabase/types'
 import type { ReservationDraft } from './draft'
 
 export const LOCAL_RESERVATION_HISTORY_KEY = 'container-club-local-reservations'
+export const LOCAL_RESERVATION_FEE_PAID_LABEL = 'Frais de réservation réglés'
+
+// Les frais sont réglés dès que le webhook Stripe a sorti la réservation de
+// 'pending_reservation_fee' — sauf annulation.
+export function isReservationFeeSettled(status: string): boolean {
+  return status !== 'pending_reservation_fee' && status !== 'cancelled'
+}
 
 export interface LocalReservationRecord {
   readonly id: string
@@ -100,4 +108,51 @@ export function saveReservationDraftToLocalHistory({
   })
 
   return record
+}
+
+/**
+ * Répercute le statut serveur (retour Stripe) sur l'enregistrement local :
+ * 'reserved' + montant réglé dès que les frais sont soldés. Le statut local
+ * n'a pas de valeur 'cancelled' : dans ce cas on ne touche qu'au montant.
+ * No-op (null) si la réservation n'est pas dans l'historique local.
+ */
+export function applyPaymentStatusToLocalHistory({
+  storage,
+  reservationId,
+  status,
+  paidAmount,
+  now = new Date(),
+}: {
+  readonly storage: ReservationHistoryStorage
+  readonly reservationId: string
+  readonly status: ReservationStatus
+  readonly paidAmount: number
+  readonly now?: Date
+}): LocalReservationRecord | null {
+  const records = readLocalReservationHistory(storage)
+  const index = records.findIndex(
+    (entry) => entry.id === reservationId || entry.draft.id === reservationId,
+  )
+  const current = records[index]
+  if (!current) return null
+
+  const settled = isReservationFeeSettled(status)
+  const next: LocalReservationRecord = {
+    ...current,
+    status: settled ? 'reserved' : current.status,
+    paidAmount,
+    nextActionLabel: settled
+      ? LOCAL_RESERVATION_FEE_PAID_LABEL
+      : current.nextActionLabel,
+    updatedAt: now.toISOString(),
+  }
+
+  writeLocalReservationHistory({
+    storage,
+    records: records.map((entry, position) =>
+      position === index ? next : entry,
+    ),
+  })
+
+  return next
 }

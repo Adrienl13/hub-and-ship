@@ -168,12 +168,6 @@ export function ProductGallery({
         })}
       </div>
 
-      {!hasMultipleImages && (
-        <div className="rounded-sm border border-dashed border-[color:var(--sand-deep)] bg-card px-3 py-2 text-xs text-muted-foreground">
-          Galerie fournisseur à compléter : vue matière, vue usage et détail
-          empilage.
-        </div>
-      )}
     </section>
   )
 }

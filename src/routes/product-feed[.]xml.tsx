@@ -7,7 +7,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { productPath } from '@/lib/catalogue/product-slug'
-import { loadLiveCatalogProducts } from '@/lib/catalogue/server-catalog'
+import {
+  hasPublicImage,
+  loadLiveCatalogProducts,
+} from '@/lib/catalogue/server-catalog'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { absoluteUrl } from '@/lib/seo'
 
@@ -33,7 +36,9 @@ export function buildProductFeed(
   products: ReadonlyArray<Product>,
   availabilityDate: string = defaultAvailabilityDate(),
 ): string {
+  // Une fiche sans photo serait refusée par Merchant (image_link vide).
   const items = products
+    .filter(hasPublicImage)
     .map((product) => {
       const link = absoluteUrl(productPath(product))
       // image_link DOIT être absolu (Merchant rejette les chemins relatifs).

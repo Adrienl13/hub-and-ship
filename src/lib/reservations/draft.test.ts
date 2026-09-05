@@ -22,6 +22,9 @@ const baseInput = {
   cgvAccepted: true,
   cgvVersion: '2026-05-18',
   containerReference: 'CC-2026-001',
+  // Container réel (id présent) → la référence porte son libellé ; sans id
+  // (repli « à affecter ») le préfixe neutre RSV est utilisé.
+  containerId: '00000000-0000-0000-0000-000000000001',
   now: new Date('2026-05-18T10:00:00.000Z'),
   sequence: 12,
   // id fixe → jeton d'unicité de la référence déterministe pour les tests.
@@ -74,6 +77,23 @@ describe('reservation draft builder', () => {
     expect(a.ok && b.ok).toBe(true)
     if (!a.ok || !b.ok) return
     expect(a.draft.reference).not.toBe(b.draft.reference)
+  })
+
+  it('uses a neutral RSV prefix when no real container is open', () => {
+    const result = buildReservationDraft({
+      ...baseInput,
+      containerReference: 'À affecter',
+      containerId: undefined,
+      items: [
+        { product: chair, variant: getDefaultVariant(chair), quantity: 50 },
+      ],
+    })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.draft.reference).toBe('RSV-20260518-0012-0A1B2C')
+    expect(result.draft.containerReference).toBe('À affecter')
+    expect(result.draft.containerId).toBeNull()
   })
 
   it('builds a server-side reservation draft with locked line snapshots', () => {

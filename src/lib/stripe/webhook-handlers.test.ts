@@ -4,6 +4,7 @@ import type Stripe from 'stripe'
 import {
   markReservationCancelled,
   markReservationReserved,
+  releaseCheckoutSession,
   type ReservationUpdateBuilder,
   type WebhookReservationClient,
 } from './webhook-handlers'
@@ -93,6 +94,26 @@ describe('stripe webhook reservation handlers', () => {
       status: 'cancelled',
       cancellation_reason: 'stripe_payment_failed',
       cancelled_at: '2026-06-05T12:00:00.000Z',
+    })
+    expect(state.eqCalls).toEqual([
+      ['id', '00000000-0000-4000-8000-000000000abc'],
+      ['status', 'pending_reservation_fee'],
+      ['stripe_checkout_session_id', 'cs_test_current'],
+    ])
+  })
+
+  it('releases an expired checkout session without cancelling the reservation', async () => {
+    const state = createClient()
+
+    await releaseCheckoutSession({
+      client: state.client,
+      session: checkoutSession(),
+      now: new Date('2026-06-06T12:00:00.000Z'),
+    })
+
+    expect(state.payload).toEqual({
+      stripe_checkout_session_id: null,
+      updated_at: '2026-06-06T12:00:00.000Z',
     })
     expect(state.eqCalls).toEqual([
       ['id', '00000000-0000-4000-8000-000000000abc'],

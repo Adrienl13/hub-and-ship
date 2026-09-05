@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { getAvailableStockLines } from './stock'
 import {
   LOCAL_STOCK_REQUESTS_KEY,
+  SOLD_OUT_STOCK_LINE_MESSAGE,
   buildStockRequestDraft,
   readLocalStockRequests,
   saveStockRequestToLocalHistory,
@@ -59,6 +60,28 @@ describe('stock request drafts', () => {
     })
 
     expect(result.ok && result.draft.requestedQuantity).toBe(9)
+  })
+
+  // Lot épuisé encore actif : jamais de brouillon à 0 unité (refusé ensuite
+  // par l'API et la contrainte SQL, lead perdu en silence).
+  it('rejects a sold-out stock line instead of drafting a zero-unit request', () => {
+    const line = getAvailableStockLines()[0]
+    if (!line) throw new Error('Missing stock fixture')
+
+    const result = buildStockRequestDraft({
+      line: { ...line, availableUnits: 0 },
+      companyName: 'Hotel Demo',
+      contactEmail: 'direction@hotel-demo.fr',
+      contactPhone: '+33 6 12 34 56 78',
+      requestedQuantity: 5,
+    })
+
+    expect(result).toEqual({
+      ok: false,
+      issues: [
+        { path: 'requestedQuantity', message: SOLD_OUT_STOCK_LINE_MESSAGE },
+      ],
+    })
   })
 
   it('maps drafts to Supabase insert payloads', () => {

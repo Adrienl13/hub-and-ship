@@ -22,6 +22,7 @@ function createDraft() {
     cgvAccepted: true,
     cgvVersion: '2026-05-18',
     containerReference: 'CC-2026-001',
+    containerId: '00000000-0000-0000-0000-000000000001',
     now: new Date('2026-05-18T10:00:00.000Z'),
     items: [
       {

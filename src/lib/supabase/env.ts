@@ -36,10 +36,17 @@ export function getSupabasePublicConfig(
   if (!url) missing.push('VITE_SUPABASE_URL')
   if (!anonKey) missing.push('VITE_SUPABASE_ANON_KEY')
 
+  // Le bundle prod a déjà été livré sans VITE_APP_URL : le repli localhost
+  // envoyait les liens magiques vers http://localhost:5173. En production le
+  // repli est le domaine de service (le flip de domaine le réécrit).
+  const appUrlFallback = import.meta.env.PROD
+    ? 'https://prosimport.com'
+    : 'http://localhost:5173'
+
   return {
     url,
     anonKey,
-    appUrl: cleanEnv(env.VITE_APP_URL) || 'http://localhost:5173',
+    appUrl: cleanEnv(env.VITE_APP_URL) || appUrlFallback,
     isConfigured: missing.length === 0,
     missing,
   }

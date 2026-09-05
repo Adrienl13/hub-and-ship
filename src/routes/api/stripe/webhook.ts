@@ -31,6 +31,7 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import {
   markReservationCancelled,
   markReservationReserved,
+  releaseCheckoutSession,
   type WebhookReservationClient,
 } from '@/lib/stripe/webhook-handlers'
 
@@ -107,7 +108,15 @@ async function handleWebhook(request: Request): Promise<Response> {
       }
       break
     }
-    case 'checkout.session.expired':
+    case 'checkout.session.expired': {
+      // Abandon de la page Stripe : la réservation reste payable (relances
+      // J+1/J+3, bouton « Retenter »), seule la session est détachée.
+      await releaseCheckoutSession({
+        client: getSupabaseAdmin() as unknown as WebhookReservationClient,
+        session: event.data.object,
+      })
+      break
+    }
     case 'checkout.session.async_payment_failed': {
       await markReservationCancelled({
         client: getSupabaseAdmin() as unknown as WebhookReservationClient,

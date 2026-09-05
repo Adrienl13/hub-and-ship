@@ -238,8 +238,12 @@ export function buildReservationDraft(
     ok: true,
     draft: {
       id: reservationId,
+      // Sans container ouvert (containerId absent), la référence porte un
+      // préfixe neutre au lieu du libellé du container de repli.
       reference: createReservationReference({
-        containerReference: input.containerReference,
+        containerReference: input.containerId
+          ? input.containerReference
+          : 'RSV',
         now: input.now,
         sequence: input.sequence,
         token: reservationId,

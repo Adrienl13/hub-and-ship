@@ -40,6 +40,10 @@ export function Hero({
   slides: ReadonlyArray<SiteMediaItem>
 }) {
   const count = Math.max(1, slides.length)
+  // Sans id, le container vient du repli statique : aucun container n'est
+  // ouvert en base. On le dit tel quel plutôt que d'afficher une référence
+  // « ouverte » qui n'existe pas.
+  const isUpcoming = !container.id
   const [index, setIndex] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
   const touchStartX = useRef<number | null>(null)
@@ -156,14 +160,17 @@ export function Hero({
           <div className="inline-flex w-max max-w-full items-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-3.5 py-[7px]">
             <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-[#7BB661] shadow-[0_0_0_3px_rgba(123,182,97,.22)]" />
             <span className="truncate text-[12.5px] font-semibold text-[#4a443c]">
-              Container {container.reference} ouvert · Clôture estimée{' '}
-              {formatDate(container.expectedCloseAt)}
+              {isUpcoming
+                ? 'Prochain container en préparation · réservations ouvertes'
+                : `Container ${container.reference} ouvert · Clôture estimée ${formatDate(container.expectedCloseAt)}`}
             </span>
-            <CountdownBadge
-              target={container.expectedCloseAt}
-              withIcon={false}
-              className="hidden shrink-0 items-center rounded-full bg-[color:var(--ember-soft)] px-2 py-0.5 text-[11px] font-bold text-[color:var(--ember)] sm:inline-flex"
-            />
+            {!isUpcoming && (
+              <CountdownBadge
+                target={container.expectedCloseAt}
+                withIcon={false}
+                className="hidden shrink-0 items-center rounded-full bg-[color:var(--ember-soft)] px-2 py-0.5 text-[11px] font-bold text-[color:var(--ember)] sm:inline-flex"
+              />
+            )}
           </div>
 
           <h1 className="m-0 text-[38px] font-extrabold leading-[0.96] tracking-[-0.03em] text-foreground sm:text-[50px] lg:text-[66px]">
@@ -217,15 +224,19 @@ export function Hero({
         <div className="relative z-[2] m-5 flex flex-col gap-3.5 rounded-2xl border border-white/60 bg-white/90 p-5 shadow-[0_20px_40px_-18px_rgba(26,24,21,.45)] backdrop-blur-md sm:m-7 lg:absolute lg:bottom-8 lg:right-8 lg:m-0 lg:w-[280px]">
           <div className="flex items-center justify-between">
             <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[color:var(--muted)]">
-              Container en cours
+              {isUpcoming ? 'Prochain container' : 'Container en cours'}
             </span>
             <span className="inline-flex items-center gap-[5px] text-xs font-bold text-[color:var(--forest)]">
               <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--forest)]" />
-              {container.status === 'open' ? 'Ouvert' : 'Clôturé'}
+              {isUpcoming
+                ? 'Réservations ouvertes'
+                : container.status === 'open'
+                  ? 'Ouvert'
+                  : 'Clôturé'}
             </span>
           </div>
           <div className="text-[22px] font-extrabold text-foreground">
-            {container.reference}
+            {isUpcoming ? 'En préparation' : container.reference}
           </div>
           <div className="flex flex-col gap-[7px]">
             <div className="flex items-baseline justify-between">

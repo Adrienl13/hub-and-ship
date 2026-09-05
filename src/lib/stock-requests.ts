@@ -5,6 +5,8 @@ import type { Database, Json, StockRequestStatus } from '@/lib/supabase/types'
 
 export const LOCAL_STOCK_REQUESTS_KEY = 'container-club-stock-requests'
 
+export const SOLD_OUT_STOCK_LINE_MESSAGE = "Ce lot n'a plus d'unité disponible"
+
 export type StockRequestInsertPayload =
   Database['public']['Tables']['stock_requests']['Insert']
 
@@ -148,6 +150,20 @@ export function buildStockRequestDraft(
     parsed.data.requestedQuantity,
     input.line.availableUnits,
   )
+
+  // Lot épuisé : un brouillon à 0 serait refusé plus loin (API zod positive,
+  // CHECK SQL requested_quantity > 0) sans message lisible pour le client.
+  if (input.line.availableUnits <= 0 || requestedQuantity <= 0) {
+    return {
+      ok: false,
+      issues: [
+        {
+          path: 'requestedQuantity',
+          message: SOLD_OUT_STOCK_LINE_MESSAGE,
+        },
+      ],
+    }
+  }
 
   return {
     ok: true,

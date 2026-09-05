@@ -224,7 +224,11 @@ export function productJsonLd(product: Product, options?: { url?: string }) {
     ...(url ? { '@id': `${url}#product`, url } : {}),
     name: product.name,
     sku: product.sku,
-    image: [product.mainImageUrl, ...product.galleryUrls],
+    // schema.org attend des URL absolues ; une fiche sans photo n'émet pas
+    // d'image vide.
+    image: [product.mainImageUrl, ...product.galleryUrls]
+      .filter((url) => Boolean(url))
+      .map(absoluteUrl),
     description: product.description,
     category: CATEGORY_LABEL[product.category],
     brand: {
@@ -272,13 +276,15 @@ export function itemListJsonLd({
   readonly path: string
   readonly products: ReadonlyArray<Product>
 }) {
+  // Une fiche sans photo (en cours de complétion) n'est pas annoncée.
+  const listed = products.filter((product) => Boolean(product.mainImageUrl))
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name,
     url: absoluteUrl(path),
-    numberOfItems: products.length,
-    itemListElement: products.map((product, index) => ({
+    numberOfItems: listed.length,
+    itemListElement: listed.map((product, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: productJsonLd(product, { url: productPath(product) }),

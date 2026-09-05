@@ -88,6 +88,46 @@ export async function markReservationReserved({
   })
 }
 
+// Session Checkout expirée (24 h par défaut chez Stripe) : la réservation
+// reste en attente de paiement — on détache seulement la session pour que
+// « Retenter le paiement » et les relances J+1/J+3 en régénèrent une. Annuler
+// ici rendait les relances inopérantes et perdait la place du client.
+export async function releaseCheckoutSession({
+  client,
+  session,
+  now = new Date(),
+}: {
+  readonly client: WebhookReservationClient
+  readonly session: Stripe.Checkout.Session
+  readonly now?: Date
+}): Promise<void> {
+  const reservationId = getReservationId(session)
+  if (!reservationId) {
+    console.warn(
+      'stripe webhook: session expired without reservation_id metadata',
+      { sessionId: session.id },
+    )
+    return
+  }
+
+  const { error } = await client
+    .from('reservations')
+    .update({
+      stripe_checkout_session_id: null,
+      updated_at: now.toISOString(),
+    })
+    .eq('id', reservationId)
+    .eq('status', 'pending_reservation_fee')
+    .eq('stripe_checkout_session_id', session.id)
+
+  if (error) {
+    console.error('stripe webhook: failed to release checkout session', {
+      reservationId,
+      error,
+    })
+  }
+}
+
 export async function markReservationCancelled({
   client,
   session,

@@ -87,7 +87,13 @@ export function useAuth() {
         }
       }
 
-      const base = `${config.appUrl.replace(/\/$/, '')}/auth/callback`
+      // L'origine réelle du navigateur prime sur VITE_APP_URL : un bundle
+      // construit sans cette variable renvoyait les liens vers localhost.
+      const origin =
+        typeof window !== 'undefined' && window.location?.origin
+          ? window.location.origin
+          : config.appUrl
+      const base = `${origin.replace(/\/$/, '')}/auth/callback`
       const redirectTo = options.returnTo
         ? `${base}?returnTo=${encodeURIComponent(options.returnTo)}`
         : base

@@ -43,7 +43,8 @@ import {
   encodeCartSelection,
 } from '@/lib/catalogue/share-cart'
 import { AnalyticsEvent, track } from '@/lib/analytics'
-import { PRODUCTS, type Product } from '@/lib/products'
+import type { Product } from '@/lib/products'
+import { loadLiveCatalogProducts } from '@/lib/catalogue/server-catalog'
 import {
   COLLECTIONS,
   countByCollection,
@@ -78,30 +79,45 @@ export const Route = createFileRoute('/catalogue')({
       ? { panier: search.panier }
       : {}),
   }),
-  head: () => ({
-    ...buildSeoHead({
-      title: 'Catalogue mobilier outdoor professionnel',
-      description:
-        'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 1 an inclus.',
-      path: '/catalogue',
-      image: PRODUCTS[0]?.mainImageUrl,
-    }),
-    scripts: [
-      jsonLdScript(
-        breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Catalogue', path: '/catalogue' },
-        ]),
-      ),
-      jsonLdScript(
-        itemListJsonLd({
-          name: 'Catalogue mobilier outdoor professionnel',
-          path: '/catalogue',
-          products: PRODUCTS,
-        }),
-      ),
-    ],
-  }),
+  // Produits RÉELS pour le JSON-LD et l'image de partage (la fixture de dev
+  // annonçait à Google des modèles inexistants). Chargés côté serveur
+  // seulement : la grille client a son propre store, inutile de refaire la
+  // requête à chaque navigation.
+  loader: async () => {
+    if (typeof window !== 'undefined') {
+      return { products: [] as ReadonlyArray<Product> }
+    }
+    const products = await loadLiveCatalogProducts()
+    return { products: (products ?? []).slice(0, 24) }
+  },
+  head: ({ loaderData }) => {
+    const products = loaderData?.products ?? []
+    return {
+      ...buildSeoHead({
+        title: 'Catalogue mobilier outdoor professionnel',
+        description:
+          'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 1 an inclus.',
+        path: '/catalogue',
+        image:
+          products[0]?.mainImageUrl || '/images/home/hero-salon-vue-mer.webp',
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Catalogue', path: '/catalogue' },
+          ]),
+        ),
+        jsonLdScript(
+          itemListJsonLd({
+            name: 'Catalogue mobilier outdoor professionnel',
+            path: '/catalogue',
+            products,
+          }),
+        ),
+      ],
+    }
+  },
   component: CataloguePage,
 })
 

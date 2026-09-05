@@ -37,6 +37,10 @@ import { AnalyticsEvent, track } from '@/lib/analytics'
 import { formatEUR } from '@/lib/order'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
+// Repli humain quand la demande ne peut pas être enregistrée (mailto du
+// panneau + consigne du toast d'échec).
+const STOCK_CONTACT_EMAIL = 'adrienlaniez1@gmail.com'
+
 export const Route = createFileRoute('/stock-24h')({
   // Head STATIQUE : plus d'ItemList ni d'og:image dérivés de la fixture — les
   // crawlers ne doivent jamais voir un inventaire que la page (DB-first)
@@ -404,18 +408,25 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
     setSubmitting(false)
 
     if (!creation.ok) {
-      toast.error('Demande stock non enregistrée', {
-        description: creation.error,
+      // Site configuré mais rien d'enregistré (API + insert navigateur KO) :
+      // pas de faux succès, on oriente vers l'email et on garde le formulaire.
+      toast.error('Demande non enregistrée', {
+        description: `Votre demande n'a pas pu être transmise. Écrivez-nous à ${STOCK_CONTACT_EMAIL} (bouton « Envoyer un email » ci-dessous) pour être rappelé.`,
       })
       return
     }
 
     track(AnalyticsEvent.StockRequest, { persisted: creation.persisted })
-    toast.success('Demande stock préparée', {
-      description: creation.persisted
-        ? `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`
-        : `${form.company} · ${requestedQuantity} ${line.product.name} · conservé sur cet appareil, rappel manuel conseillé.`,
-    })
+    if (creation.persisted) {
+      toast.success('Demande stock préparée', {
+        description: `${form.company} · ${requestedQuantity} ${line.product.name} · enregistré dans Supabase.`,
+      })
+    } else {
+      // Dev local sans Supabase : message neutre, rien n'a été transmis.
+      toast.message('Demande stock conservée sur cet appareil', {
+        description: `${form.company} · ${requestedQuantity} ${line.product.name} · Supabase non configuré, aucune demande envoyée.`,
+      })
+    }
     setForm({ company: '', email: '', phone: '', quantity: '' })
   }
 
@@ -523,7 +534,7 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
         {submitting ? 'Enregistrement...' : 'Être rappelé'}
       </Button>
       <a
-        href={`mailto:adrienlaniez1@gmail.com?subject=Stock 24h - ${encodeURIComponent(
+        href={`mailto:${STOCK_CONTACT_EMAIL}?subject=Stock 24h - ${encodeURIComponent(
           line.product.name,
         )}`}
         className="hover:border-foreground/40 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors"

@@ -39,7 +39,8 @@ const STEPS: ReadonlyArray<Pick<TimelineStep, 'key' | 'label' | 'description'>> 
     {
       key: 'transit',
       label: 'Transport',
-      description: 'Acheminement maritime puis livraison rendue au port.',
+      description:
+        'Acheminement maritime puis mise à disposition en zone de stockage (Fos-sur-Mer) ou livraison à votre établissement selon l’option choisie.',
     },
     {
       key: 'delivered',

@@ -1,4 +1,6 @@
 interface ImportMetaEnv {
+  /** Fourni par Vite : true dans un build de production. */
+  readonly PROD: boolean
   readonly VITE_SUPABASE_URL?: string
   readonly VITE_SUPABASE_ANON_KEY?: string
   readonly VITE_APP_URL?: string

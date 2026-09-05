@@ -309,8 +309,12 @@ export interface ContainerSummary {
   readonly containerType?: '20_dv' | '20_hc' | '40_gp' | '40_hc'
 }
 
+// Repli quand AUCUN container n'est ouvert en base (ou en dev sans Supabase).
+// Pas d'id ⇒ les composants savent que c'est un container « à affecter » et
+// n'affichent ni référence réelle ni « Ouvert » : l'ancienne valeur
+// CC-2026-001 coïncidait avec un container LIVRÉ (constat pré-lancement).
 export const CURRENT_CONTAINER: ContainerSummary = {
-  reference: 'CC-2026-001',
+  reference: 'À affecter',
   port: 'Marseille-Fos',
   capacityCbm: 28,
   thresholdPercent: 80,

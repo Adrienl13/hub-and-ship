@@ -2,7 +2,9 @@
 // allows anon SELECT on active rows) and falls back to the in-repo
 // fixture when Supabase isn't configured or the table is empty — so
 // the catalogue keeps rendering during local dev and in any future
-// degraded mode.
+// degraded mode. Only lots with at least one free unit are exposed: a
+// sold-out line stays `is_active` for the admin but has nothing to offer
+// publicly (it rendered « 0 libre » and a request nobody could persist).
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -28,6 +30,10 @@ interface UseStockLinesResult {
 // Le mapping row→StockLine vit dans lib/stock.ts (stockLineFromRow), partagé
 // avec la route API /api/stock-requests.
 
+function hasAvailableUnits(row: StockLineRow): boolean {
+  return row.available_units > 0
+}
+
 export function useStockLines(): UseStockLinesResult {
   const { products } = useCatalog()
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -49,10 +55,17 @@ export function useStockLines(): UseStockLinesResult {
       .from('stock_lines')
       .select('*')
       .eq('is_active', true)
+      .gt('available_units', 0)
       .order('priority', { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return
-        setRows(error || !data ? null : (data as ReadonlyArray<StockLineRow>))
+        // Garde côté client : jamais de lot à 0 unité dans la grille, même
+        // si le filtre serveur venait à sauter.
+        setRows(
+          error || !data
+            ? null
+            : (data as ReadonlyArray<StockLineRow>).filter(hasAvailableUnits),
+        )
         setLoading(false)
       })
     return () => {

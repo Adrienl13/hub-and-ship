@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, PackageCheck, Ship } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { SafeImage } from '@/components/SafeImage'
 import { Button } from '@/components/ui/button'
 import { productSlug } from '@/lib/catalogue/product-slug'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
@@ -163,12 +164,11 @@ export function SeoLandingPage({
                 key={product.id}
                 className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card"
               >
-                <img
+                <SafeImage
                   src={product.mainImageUrl}
                   alt={product.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-40 w-full object-cover"
+                  className="h-40 w-full"
+                  imgClassName="h-40 w-full object-cover"
                 />
                 <div className="space-y-3 p-4">
                   <div>

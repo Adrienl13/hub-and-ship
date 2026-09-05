@@ -56,9 +56,14 @@ import {
 } from '@/lib/account/invoices'
 import { formatEUR } from '@/lib/order'
 import {
+  applyPaymentStatusToLocalHistory,
   readLocalReservationHistory,
   type LocalReservationRecord,
 } from '@/lib/reservations/local-history'
+import {
+  getReservationPaymentStatus,
+  pollReservationPaymentStatus,
+} from '@/lib/reservations/payment-status'
 import {
   claimMyReservationsInSupabase,
   listMyReservationsFromSupabase,
@@ -113,7 +118,13 @@ function AccountReservationDetailPage() {
   const [localLoaded, setLocalLoaded] = useState(false)
   const [remoteLoaded, setRemoteLoaded] = useState(false)
   const [retryingPayment, setRetryingPayment] = useState(false)
+  // Retour Stripe : tant que le statut serveur n'est pas synchronisé, la page
+  // ne doit pas proposer « Retenter le paiement » à quelqu'un qui vient de
+  // payer (bug invité pré-lancement : l'historique local restait « pending »).
+  const [paymentSyncing, setPaymentSyncing] = useState(Boolean(sessionId))
+  const [paymentJustSettled, setPaymentJustSettled] = useState(false)
   const startCheckout = useServerFn(createCheckoutSession)
+  const fetchPaymentStatus = useServerFn(getReservationPaymentStatus)
   const reservations = mergeAccountReservations({
     remoteReservations,
     localRecords,
@@ -131,15 +142,42 @@ function AccountReservationDetailPage() {
   // reload/bookmark doesn't re-emit the event — the UI state is already read.
   useEffect(() => {
     if (!sessionId && !canceled) return
-    if (sessionId) {
-      track(AnalyticsEvent.ReservationPaid, { reservation: reservationId })
-    } else {
+    if (!sessionId) {
       track(AnalyticsEvent.CheckoutCancel, { reservation: reservationId })
-    }
-    if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', window.location.pathname)
+      return
     }
-  }, [sessionId, canceled, reservationId])
+
+    track(AnalyticsEvent.ReservationPaid, { reservation: reservationId })
+    // Le webhook Stripe peut arriver quelques secondes après la redirection :
+    // on interroge le statut serveur (couple uuid + session id = jeton), puis
+    // on répercute sur l'historique local avant de nettoyer l'URL.
+    let cancelled = false
+    setPaymentSyncing(true)
+    void (async () => {
+      const result = await pollReservationPaymentStatus({
+        fetchStatus: () =>
+          fetchPaymentStatus({ data: { reservationId, sessionId } }),
+        isCancelled: () => cancelled,
+      })
+      if (cancelled) return
+      if (result?.found) {
+        applyPaymentStatusToLocalHistory({
+          storage: window.localStorage,
+          reservationId,
+          status: result.status,
+          paidAmount: result.paidAmount,
+        })
+        setLocalRecords(readLocalReservationHistory(window.localStorage))
+        setPaymentJustSettled(result.status !== 'pending_reservation_fee')
+      }
+      setPaymentSyncing(false)
+      window.history.replaceState(null, '', window.location.pathname)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId, canceled, reservationId, fetchPaymentStatus])
 
   useEffect(() => {
     if (auth.status === 'loading') {
@@ -251,9 +289,11 @@ function AccountReservationDetailPage() {
   const paymentConfirmedByStatus =
     reservation.status !== 'pending_reservation_fee' &&
     reservation.status !== 'cancelled'
-  const showPaymentConfirmed = Boolean(sessionId && paymentConfirmedByStatus)
-  const showPaymentSyncing = Boolean(sessionId && !paymentConfirmedByStatus)
-  const canRetryPayment = reservation.status === 'pending_reservation_fee'
+  const showPaymentConfirmed =
+    paymentConfirmedByStatus && (Boolean(sessionId) || paymentJustSettled)
+  const showPaymentSyncing = paymentSyncing && !paymentConfirmedByStatus
+  const canRetryPayment =
+    reservation.status === 'pending_reservation_fee' && !paymentSyncing
 
   return (
     <main className="min-h-screen bg-background text-foreground">

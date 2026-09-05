@@ -595,7 +595,10 @@ export function OrderSidebar({
             Icon: ShieldCheck,
             t: 'Contrôle qualité SGS indépendant avant départ',
           },
-          { Icon: Truck, t: 'Transport post-port organisé côté client' },
+          {
+            Icon: Truck,
+            t: 'Livraison jusqu’à votre terrasse ou enlèvement en zone de stockage (Fos-sur-Mer)',
+          },
         ].map(({ Icon, t }) => (
           <li key={t} className="flex items-start gap-2">
             <Icon

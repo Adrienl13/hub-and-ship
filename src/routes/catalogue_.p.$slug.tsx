@@ -12,10 +12,12 @@ import { ContainerNotifySection } from '@/components/ContainerNotifyForm'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { QualityBadgeDetail } from '@/components/QualityBadge'
+import { SafeImage } from '@/components/SafeImage'
 import {
   findProductBySlug,
   productPath,
 } from '@/lib/catalogue/product-slug'
+import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { formatEUR } from '@/lib/order'
 import {
@@ -52,10 +54,15 @@ export const Route = createFileRoute('/catalogue_/p/$slug')({
     }
     const { product } = loaderData
     const path = productPath(product)
+    // Le prix public de référence n'est cité que s'il a un sens (fiche
+    // complète et supérieur au prix pro) — sinon « réf. distribution 0 € ».
+    const retailNote = hasMeaningfulRetail(product)
+      ? ` (réf. distribution ${formatEUR(product.retailPriceRef)})`
+      : ''
     return {
       ...buildSeoHead({
         title: `${product.name} — prix direct pro`,
-        description: `${product.name} : ${formatEUR(product.basePriceHt)} HT en direct usine (réf. distribution ${formatEUR(product.retailPriceRef)}). MOQ ${product.moqUnits} unités, contrôle SGS, garantie 1 an, livraison par container mutualisé.`,
+        description: `${product.name} : ${formatEUR(product.basePriceHt)} HT en direct usine${retailNote}. MOQ ${product.moqUnits} unités, contrôle SGS, garantie 1 an, livraison par container mutualisé.`,
         path,
         image: product.mainImageUrl,
       }),
@@ -96,8 +103,17 @@ function Spec({
   )
 }
 
+// Même garde que ProductCard : un prix public nul ou inférieur au prix pro
+// (fiche en cours de complétion) ne doit pas s'afficher barré — le client
+// lirait un prix pro PLUS CHER que le prix public.
+function hasMeaningfulRetail(product: Product): boolean {
+  return (
+    product.basePriceHt > 0 && product.retailPriceRef > product.basePriceHt
+  )
+}
+
 function savingsPercent(product: Product): number {
-  if (product.retailPriceRef <= 0) return 0
+  if (!hasMeaningfulRetail(product)) return 0
   return Math.round(
     (1 - product.basePriceHt / product.retailPriceRef) * 100,
   )
@@ -106,6 +122,16 @@ function savingsPercent(product: Product): number {
 function ProductPage() {
   const { product } = Route.useLoaderData()
   const savings = savingsPercent(product)
+  const showRetail = hasMeaningfulRetail(product)
+  // Depuis une fiche (entrée SEO), « Réserver » pré-remplit le panier au MOQ
+  // au lieu de renvoyer vers 112 cartes à parcourir.
+  const preselection = encodeCartSelection([
+    {
+      productId: product.id,
+      variantId: product.variants[0]?.id ?? '',
+      qty: product.moqUnits,
+    },
+  ])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -122,10 +148,12 @@ function ProductPage() {
 
         <div className="mt-4 grid gap-8 md:grid-cols-[1.1fr_1fr]">
           <div>
-            <img
+            <SafeImage
               src={product.mainImageUrl}
               alt={product.name}
-              className="w-full rounded-md border border-[color:var(--sand-deep)] object-cover"
+              loading="eager"
+              className="aspect-square w-full rounded-md border border-[color:var(--sand-deep)]"
+              imgClassName="w-full rounded-md border border-[color:var(--sand-deep)] object-cover"
             />
             {product.galleryUrls.length > 0 && (
               <div className="mt-2 grid grid-cols-4 gap-2">
@@ -163,12 +191,14 @@ function ProductPage() {
                   {formatEUR(product.basePriceHt)} HT
                 </span>
               </div>
-              <div className="mt-1 flex items-baseline justify-between text-xs text-muted-foreground">
-                <span>Prix public conseillé (réf. distribution)</span>
-                <span className="tabular-nums line-through">
-                  {formatEUR(product.retailPriceRef)}
-                </span>
-              </div>
+              {showRetail && (
+                <div className="mt-1 flex items-baseline justify-between text-xs text-muted-foreground">
+                  <span>Prix public conseillé (réf. distribution)</span>
+                  <span className="tabular-nums line-through">
+                    {formatEUR(product.retailPriceRef)}
+                  </span>
+                </div>
+              )}
               {savings > 0 && (
                 <div className="mt-2 inline-flex rounded-sm bg-[color:var(--ember)]/10 px-2 py-1 text-xs font-semibold text-[color:var(--ember)]">
                   −{savings} % vs circuit classique
@@ -188,6 +218,7 @@ function ProductPage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 to="/catalogue"
+                search={{ panier: preselection }}
                 className="inline-flex h-11 items-center gap-2 rounded-sm bg-foreground px-5 text-sm font-medium text-background"
               >
                 Réserver sur le container

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
+import { accountReservationFromLocalRecord } from '@/lib/account/reservations'
 import { getDefaultVariant } from '@/lib/catalogue'
 import { PRODUCTS } from '@/lib/products'
 import { buildReservationDraft } from './draft'
 import {
+  LOCAL_RESERVATION_FEE_PAID_LABEL,
   LOCAL_RESERVATION_HISTORY_KEY,
+  applyPaymentStatusToLocalHistory,
+  isReservationFeeSettled,
   readLocalReservationHistory,
   saveReservationDraftToLocalHistory,
 } from './local-history'
@@ -112,5 +116,160 @@ describe('local reservation history', () => {
     const storage = createMemoryStorage('{bad json')
 
     expect(readLocalReservationHistory(storage)).toEqual([])
+  })
+})
+
+describe('isReservationFeeSettled', () => {
+  it('is false while pending or cancelled, true otherwise', () => {
+    expect(isReservationFeeSettled('pending_reservation_fee')).toBe(false)
+    expect(isReservationFeeSettled('cancelled')).toBe(false)
+    expect(isReservationFeeSettled('reserved')).toBe(true)
+    expect(isReservationFeeSettled('deposit_called')).toBe(true)
+  })
+})
+
+describe('applyPaymentStatusToLocalHistory', () => {
+  const now = new Date('2026-06-05T12:00:00.000Z')
+
+  it('marks the matching record as reserved and paid (Stripe return)', () => {
+    const storage = createMemoryStorage()
+    const draft = createDraft()
+    saveReservationDraftToLocalHistory({ storage, draft, persisted: true })
+
+    const updated = applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: draft.id,
+      status: 'reserved',
+      paidAmount: draft.payment.reservationFee,
+      now,
+    })
+
+    expect(updated).toMatchObject({
+      id: draft.id,
+      status: 'reserved',
+      paidAmount: draft.payment.reservationFee,
+      nextActionLabel: LOCAL_RESERVATION_FEE_PAID_LABEL,
+      updatedAt: '2026-06-05T12:00:00.000Z',
+    })
+
+    // Le storage est bien réécrit : une relecture voit le paiement.
+    const records = readLocalReservationHistory(storage)
+    expect(records).toHaveLength(1)
+    expect(records[0]?.status).toBe('reserved')
+    expect(records[0]?.paidAmount).toBe(draft.payment.reservationFee)
+
+    // ...et le merge compte le montant comme "déjà réglé".
+    const account = accountReservationFromLocalRecord(records[0]!)
+    expect(account.status).toBe('reserved')
+    expect(account.paidAmount).toBeGreaterThan(0)
+  })
+
+  it('treats any post-payment status as settled', () => {
+    const storage = createMemoryStorage()
+    const draft = createDraft()
+    saveReservationDraftToLocalHistory({ storage, draft, persisted: true })
+
+    const updated = applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: draft.id,
+      status: 'deposit_called',
+      paidAmount: 150,
+      now,
+    })
+
+    expect(updated?.status).toBe('reserved')
+    expect(updated?.paidAmount).toBe(150)
+  })
+
+  it('keeps the pending status when the server still says pending', () => {
+    const storage = createMemoryStorage()
+    const draft = createDraft()
+    saveReservationDraftToLocalHistory({ storage, draft, persisted: true })
+
+    const updated = applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: draft.id,
+      status: 'pending_reservation_fee',
+      paidAmount: 0,
+      now,
+    })
+
+    expect(updated?.status).toBe('pending_reservation_fee')
+    expect(updated?.paidAmount).toBe(0)
+    expect(updated?.nextActionLabel).toBe(
+      'Reservation enregistree, paiement a finaliser',
+    )
+  })
+
+  it('is a no-op when the reservation is not in the local history', () => {
+    const draft = createDraft()
+    const storage = createMemoryStorage()
+    saveReservationDraftToLocalHistory({ storage, draft, persisted: true })
+    const before = storage.getItem(LOCAL_RESERVATION_HISTORY_KEY)
+
+    const updated = applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: '00000000-0000-4000-8000-00000000dead',
+      status: 'reserved',
+      paidAmount: 150,
+      now,
+    })
+
+    expect(updated).toBeNull()
+    expect(storage.getItem(LOCAL_RESERVATION_HISTORY_KEY)).toBe(before)
+  })
+
+  it('matches legacy local-reference records through their draft uuid', () => {
+    const draft = createDraft()
+    const storage = createMemoryStorage(
+      JSON.stringify([
+        {
+          id: `local-${draft.reference}`,
+          status: 'pending_reservation_fee',
+          draft,
+          paidAmount: 0,
+          nextActionLabel: 'Legacy record',
+          updatedAt: draft.cgvAcceptedAt,
+        },
+      ]),
+    )
+
+    const updated = applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: draft.id,
+      status: 'reserved',
+      paidAmount: 150,
+      now,
+    })
+
+    expect(updated?.id).toBe(`local-${draft.reference}`)
+    expect(updated?.status).toBe('reserved')
+  })
+
+  it('only rewrites the targeted record', () => {
+    const storage = createMemoryStorage()
+    const first = createDraft(1)
+    const second = createDraft(2)
+    saveReservationDraftToLocalHistory({ storage, draft: first, persisted: true })
+    saveReservationDraftToLocalHistory({
+      storage,
+      draft: second,
+      persisted: true,
+    })
+
+    applyPaymentStatusToLocalHistory({
+      storage,
+      reservationId: second.id,
+      status: 'reserved',
+      paidAmount: 150,
+      now,
+    })
+
+    const records = readLocalReservationHistory(storage)
+    expect(records).toHaveLength(2)
+    expect(records.find((r) => r.id === first.id)?.status).toBe(
+      'pending_reservation_fee',
+    )
+    expect(records.find((r) => r.id === second.id)?.status).toBe('reserved')
   })
 })

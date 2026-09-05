@@ -7,7 +7,14 @@ import { setPublicPricingRules } from '@/lib/pricing/public-rules'
 import type { Database } from '@/lib/supabase/types'
 import type { DesignVariant, Product, ProductCategory } from '@/lib/products'
 
-type ProductRow = Database['public']['Tables']['products']['Row']
+// Le catalogue public lit la VUE products_public (migration 30) : mêmes
+// colonnes que products SANS les colonnes de coût (fob_usd, qty_per_container,
+// is_loss_leader, table_price_modifier_rate), que la clé anon ne doit jamais
+// pouvoir lire — anonymisation fournisseur oblige.
+type ProductRow = Omit<
+  Database['public']['Tables']['products']['Row'],
+  'fob_usd' | 'qty_per_container' | 'is_loss_leader' | 'table_price_modifier_rate'
+>
 type VariantRow = Database['public']['Tables']['product_variants']['Row']
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 type CommitmentRow =
@@ -35,7 +42,7 @@ export interface DbCatalog {
 
 interface CatalogueDbClient {
   from: {
-    (table: 'products'): {
+    (table: 'products_public'): {
       select: (columns: '*') => {
         eq: (
           column: 'is_active',
@@ -201,7 +208,7 @@ export async function fetchCatalogFromDb(
     rulesResult,
   ] = await Promise.all([
     client
-      .from('products')
+      .from('products_public')
       .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true }),

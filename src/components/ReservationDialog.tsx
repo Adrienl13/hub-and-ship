@@ -204,6 +204,11 @@ export function ReservationDialog({
   // catalogue. Le trigger SQL reste le garde réel côté serveur.
   const blockedForMinimum = hasReservableItems && distributorMinimum.blocked
   const showSteps = hasReservableItems && !blockedForMinimum
+  // L'écran de confirmation ne dépend PAS du panier live : il est vidé dès la
+  // création de la réservation (clearCart), donc conditionner l'étape 5 aux
+  // items affichait « Aucun produit sélectionné » à un client qui venait de
+  // réserver (cas Stripe absent ou en erreur — bug pré-lancement 09/2026).
+  const showConfirmation = step === 5 && createdReservation !== null
   // Le parrainage B2C −100 € est retiré : le champ code devient un code
   // APPORTEUR pur attribution (décision LOT 5 — l'apporteur 8 % le remplace).
   // Aucune remise, aucun aller-retour serveur : payNow == frais de réservation,
@@ -518,22 +523,26 @@ export function ReservationDialog({
       <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-2xl">
         <DialogHeader>
           <div className="label-eyebrow text-[color:var(--ember)]">
-            {!hasReservableItems
-              ? 'Commande à composer'
-              : blockedForMinimum
-                ? 'Commande à compléter'
-                : step < 5
-                  ? `Étape ${step} / 4 - Réservation`
-                  : 'Confirmation'}
+            {showConfirmation
+              ? 'Confirmation'
+              : !hasReservableItems
+                ? 'Commande à composer'
+                : blockedForMinimum
+                  ? 'Commande à compléter'
+                  : `Étape ${step} / 4 - Réservation`}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {!hasReservableItems && 'Composez votre commande avant de réserver'}
-            {blockedForMinimum && 'Volume minimum distributeur'}
+            {showConfirmation && 'Réservation préparée'}
+            {!showConfirmation &&
+              !hasReservableItems &&
+              'Composez votre commande avant de réserver'}
+            {!showConfirmation &&
+              blockedForMinimum &&
+              'Volume minimum distributeur'}
             {showSteps && step === 1 && 'Identification professionnelle'}
             {showSteps && step === 2 && 'Coordonnées de contact'}
             {showSteps && step === 3 && 'Mode de livraison'}
             {showSteps && step === 4 && 'Récapitulatif et paiement'}
-            {showSteps && step === 5 && 'Réservation préparée'}
           </DialogTitle>
           <DialogDescription className="sr-only">
             Formulaire de réservation en plusieurs étapes pour vérifier la
@@ -544,7 +553,7 @@ export function ReservationDialog({
 
         {/* Commande réelle mais sous le minimum du canal : on GARDE le récap
             (dire « aucun produit sélectionné » serait faux) et on explique. */}
-        {blockedForMinimum && (
+        {!showConfirmation && blockedForMinimum && (
           <>
             <div className="rounded-sm border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-950">
               <strong>Commande distributeur :</strong> minimum{' '}
@@ -567,7 +576,7 @@ export function ReservationDialog({
           </>
         )}
 
-        {!hasReservableItems && (
+        {!showConfirmation && !hasReservableItems && (
           <EmptyReservationState onNavigate={() => onOpenChange(false)} />
         )}
 
@@ -788,7 +797,7 @@ export function ReservationDialog({
               />
               <Reassure
                 Icon={Truck}
-                t="Transport post-port non facturé par Terrassea"
+                t="Livraison terrasse sur devis ou enlèvement gratuit en zone de stockage"
               />
             </div>
 
@@ -816,7 +825,7 @@ export function ReservationDialog({
           </div>
         )}
 
-        {showSteps && step === 5 && createdReservation && (
+        {showConfirmation && createdReservation && (
           <div className="space-y-4">
             <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">

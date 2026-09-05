@@ -12,6 +12,8 @@ import {
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
+// `persisted:false` n'existe plus qu'en dev local (Supabase non configuré) :
+// en site configuré, un échec de persistance remonte en `ok:false`.
 export type StockRequestCreationResult =
   | {
       readonly ok: true
@@ -130,12 +132,14 @@ export function useStockRequestCreation() {
         saveLocal()
         return { ok: true, persisted: true, request }
       } catch (error) {
+        // Site configuré, route serveur ET insert navigateur KO : rien n'est
+        // enregistré et personne n'est prévenu. On le dit (ok:false) au lieu
+        // d'un « succès » local qui perdait le lead en silence. La copie
+        // locale reste une trace pour l'appareil, pas une persistance.
         saveLocal()
         return {
-          ok: true,
-          persisted: false,
-          request: { localId: draft.localId, status: draft.status },
-          fallbackReason:
+          ok: false,
+          error:
             error instanceof Error
               ? error.message
               : 'Création demande stock impossible',

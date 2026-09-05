@@ -124,7 +124,10 @@ export function ProductDetailDialog({
                   k: 'Dimensions',
                   v: formatProductDimensions(product),
                 },
-                { Icon: Weight, k: 'Poids', v: `${product.weightKg} kg` },
+                // Fiche en cours de complétion : ne pas afficher « 0 kg ».
+                ...(product.weightKg > 0
+                  ? [{ Icon: Weight, k: 'Poids', v: `${product.weightKg} kg` }]
+                  : []),
                 {
                   Icon: Package,
                   k: 'Volume',
