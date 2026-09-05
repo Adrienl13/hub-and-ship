@@ -40,10 +40,10 @@ import {
 import { sendInvoiceEmail } from '@/lib/email/invoice-email'
 import { sendReservationCancelled } from '@/lib/email/reservation-cancelled'
 import {
-  ADMIN_DEMO_STOCK_REQUESTS,
-  createAdminDashboardSnapshot,
-} from '@/lib/admin/dashboard'
-import { CURRENT_CONTAINER } from '@/lib/products'
+  loadAdminOverview,
+  type AdminOverviewClient,
+  type AdminOverviewKpis,
+} from '@/lib/admin/overview'
 import { formatEUR } from '@/lib/order'
 import {
   listAllStockRequests,
@@ -244,8 +244,6 @@ function AdminPage() {
     })
   }
 
-  const snapshot = useMemo(() => createAdminDashboardSnapshot(), [])
-
   return (
     <main className="min-h-screen bg-background text-foreground">
       <AdminTopBar />
@@ -315,7 +313,7 @@ function AdminPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <AdminCommandCenter onNavigate={setActiveTab} />
-            <Overview snapshot={snapshot} />
+            <Overview onNavigate={setActiveTab} />
           </div>
         )}
         {activeTab === 'stock-requests' && (
@@ -430,58 +428,139 @@ function AdminAccessBox({
           : 'Aperçu local'}
       </div>
       <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
-        Les données locales permettent de piloter les tests avant activation
-        Supabase/RLS.
+        Les actions (statuts, catalogue, containers) exigent une session
+        administrateur : sans elle, la base les refuse.
       </p>
     </div>
   )
 }
 
+// KPIs calculés sur la base réelle (plus aucune fixture de démo en prod).
 function Overview({
-  snapshot,
+  onNavigate,
 }: {
-  readonly snapshot: ReturnType<typeof createAdminDashboardSnapshot>
+  readonly onNavigate: (tab: AdminTab) => void
 }) {
+  const config = useMemo(() => getSupabasePublicConfig(), [])
+  const [kpis, setKpis] = useState<AdminOverviewKpis | null>(null)
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>(
+    'loading',
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    if (!config.isConfigured) {
+      setState('error')
+      return
+    }
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as unknown as AdminOverviewClient
+        const next = await loadAdminOverview(client)
+        if (!cancelled) {
+          setKpis(next)
+          setState('loaded')
+        }
+      } catch {
+        if (!cancelled) setState('error')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [config])
+
+  if (state === 'error') {
+    return (
+      <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-4 text-sm">
+        Indicateurs indisponibles : connectez-vous avec un compte
+        administrateur pour lire les réservations, le stock et les containers.
+      </div>
+    )
+  }
+
+  if (state === 'loading' || !kpis) {
+    return (
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-28 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+          />
+        ))}
+      </div>
+    )
+  }
+
+  const container = kpis.openContainer
+
   return (
     <div className="space-y-6">
-      <AdminWarning />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <Kpi
           Icon={ShoppingCart}
           label="Réservations actives"
-          value={`${snapshot.kpis.activeReservations}`}
-          detail={formatEUR(snapshot.kpis.revenueHt)}
+          value={`${kpis.activeReservations}`}
+          detail={`${formatEUR(kpis.committedHt)} HT engagés`}
         />
         <Kpi
           Icon={Ship}
-          label="Remplissage estimé"
-          value={`${snapshot.kpis.fillPercent.toFixed(0)}%`}
-          detail={`${snapshot.kpis.reservedCbm.toFixed(1)} / ${CURRENT_CONTAINER.capacityCbm} m³`}
+          label={
+            container
+              ? `Remplissage ${container.reference}`
+              : 'Container ouvert'
+          }
+          value={container ? `${container.fillPercent.toFixed(0)}%` : 'Aucun'}
+          detail={
+            container
+              ? `${kpis.reservedCbm.toFixed(1)} / ${container.capacityCbm} m³`
+              : `${kpis.reservedCbm.toFixed(1)} m³ réservés sans container ouvert`
+          }
         />
         <Kpi
           Icon={PackageCheck}
-          label="Demandes stock (demo)"
-          value={`${snapshot.kpis.newStockRequests}`}
+          label="Demandes stock"
+          value={`${kpis.newStockRequests}`}
           detail="À traiter"
-        />
-        <Kpi
-          Icon={Handshake}
-          label="Partenaires"
-          value="Beta"
-          detail="Candidatures + deals"
         />
         <Kpi
           Icon={Boxes}
           label="Unités stock 24h"
-          value={`${snapshot.kpis.stockAvailableUnits}`}
-          detail={`${snapshot.kpis.productReferences} références catalogue`}
+          value={`${kpis.stockAvailableUnits}`}
+          detail="Disponibles à l'enlèvement"
+        />
+        <Kpi
+          Icon={Handshake}
+          label="Références actives"
+          value={`${kpis.activeProductReferences}`}
+          detail="Visibles au catalogue"
         />
       </div>
 
-      <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-xs text-muted-foreground">
-        Les listes complètes (réservations + demandes stock) sont désormais
-        servies par Supabase dans les onglets dédiés.
-      </div>
+      {!container && (
+        <div className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ember)]" />
+            <span>
+              Aucun container au statut « ouvert » : le site affiche un
+              container générique et les nouvelles réservations ne sont
+              rattachées à aucun container réel.
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-9 rounded-sm"
+            onClick={() => onNavigate('containers')}
+          >
+            Ouvrir un container
+            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
@@ -628,8 +707,8 @@ function StockRequestsAdminPanel({
   if (!isConfigured) {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
-        Supabase non configuré : seules les demandes stock locales (démo) sont
-        consultables côté navigation publique.
+        Supabase non configuré : les demandes stock ne sont pas disponibles
+        dans cet environnement.
       </div>
     )
   }
@@ -1488,19 +1567,6 @@ function StatusPill({ label }: { readonly label: string }) {
     </span>
   )
 }
-
-function AdminWarning() {
-  return (
-    <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/75 flex items-start gap-2 rounded-md border p-3 text-xs leading-5">
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-      KPIs basés sur les fixtures démo. Les onglets Réservations, Demandes
-      stock, Catalogue et Transporteurs lisent les données Supabase en direct.
-    </div>
-  )
-}
-
-// Re-export legacy symbols used elsewhere if any (kept for compatibility).
-export { ADMIN_DEMO_STOCK_REQUESTS }
 
 // Lay-out wrapper for the dashboard panels (kept for shape parity)
 export function AdminDashboardLayout({

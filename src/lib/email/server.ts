@@ -69,6 +69,12 @@ export async function sendEmail(
 ): Promise<SendEmailResult> {
   const apiKey = process.env.BREVO_API_KEY
   if (!apiKey) {
+    // Visible dans les logs Cloudflare : un site en prod sans BREVO_API_KEY
+    // perd ses notifications en silence sinon.
+    console.warn('sendEmail: skipped, BREVO_API_KEY not configured', {
+      to: input.to,
+      subject: input.subject,
+    })
     return { ok: false, skipped: true, reason: 'not_configured' }
   }
 

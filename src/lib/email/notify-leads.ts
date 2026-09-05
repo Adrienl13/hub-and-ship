@@ -7,6 +7,7 @@
 import {
   getAdminNotificationEmail,
   sendEmail,
+  type SendEmailResult,
 } from '@/lib/email/server'
 import {
   buildContactAdminEmail,
@@ -28,6 +29,16 @@ import {
 
 const SITE_URL = 'https://prosimport.com'
 
+/** Trace un échec d'email admin pour un lead déjà persisté en base (le lead
+ *  n'est pas perdu, mais l'admin doit le voir dans les logs Cloudflare). */
+function logAdminEmailFailure(kind: string, result: SendEmailResult): void {
+  if (result.ok) return
+  console.error(`notify ${kind}: admin email not sent`, {
+    reason: result.reason,
+    skipped: result.skipped,
+  })
+}
+
 export async function notifyPartnerRequest(
   input: Omit<PartnerRequestEmailInput, 'adminUrl'>,
 ): Promise<void> {
@@ -37,13 +48,16 @@ export async function notifyPartnerRequest(
   }
 
   const admin = buildPartnerRequestAdminEmail(full)
-  await sendEmail({
-    to: getAdminNotificationEmail(),
-    subject: admin.subject,
-    html: admin.html,
-    text: admin.text,
-    replyTo: input.contactEmail,
-  })
+  logAdminEmailFailure(
+    'partner request',
+    await sendEmail({
+      to: getAdminNotificationEmail(),
+      subject: admin.subject,
+      html: admin.html,
+      text: admin.text,
+      replyTo: input.contactEmail,
+    }),
+  )
 
   if (input.contactEmail) {
     const confirmation = buildPartnerRequestConfirmationEmail(full)
@@ -101,13 +115,16 @@ export async function notifyStockRequest(
   }
 
   const admin = buildStockRequestAdminEmail(full)
-  await sendEmail({
-    to: getAdminNotificationEmail(),
-    subject: admin.subject,
-    html: admin.html,
-    text: admin.text,
-    replyTo: input.contactEmail,
-  })
+  logAdminEmailFailure(
+    'stock request',
+    await sendEmail({
+      to: getAdminNotificationEmail(),
+      subject: admin.subject,
+      html: admin.html,
+      text: admin.text,
+      replyTo: input.contactEmail,
+    }),
+  )
 
   if (input.contactEmail) {
     const confirmation = buildStockRequestConfirmationEmail(full)
@@ -128,13 +145,16 @@ export async function notifyReportAccessRequest(
     ...input,
     adminUrl: `${SITE_URL}/admin?tab=quality`,
   })
-  await sendEmail({
-    to: getAdminNotificationEmail(),
-    subject: admin.subject,
-    html: admin.html,
-    text: admin.text,
-    replyTo: input.email,
-  })
+  logAdminEmailFailure(
+    'report access',
+    await sendEmail({
+      to: getAdminNotificationEmail(),
+      subject: admin.subject,
+      html: admin.html,
+      text: admin.text,
+      replyTo: input.email,
+    }),
+  )
 }
 
 export async function notifyReportAccessApproved(input: {
@@ -154,24 +174,37 @@ export async function notifyReportAccessApproved(input: {
   })
 }
 
+// Un message de contact n'existe QUE par email (aucune table en base) : si
+// l'email admin ne part pas — Brevo absent ou en erreur — le lead serait perdu
+// en silence derrière un « Message envoyé ». On lève donc une erreur pour que
+// /api/contact réponde 503 et que l'UI propose l'adresse mail directe.
 export async function notifyContactMessage(
   input: ContactEmailInput,
 ): Promise<void> {
   const admin = buildContactAdminEmail(input)
-  await sendEmail({
+  const adminResult = await sendEmail({
     to: getAdminNotificationEmail(),
     subject: admin.subject,
     html: admin.html,
     text: admin.text,
     replyTo: input.email,
   })
+  if (!adminResult.ok) {
+    throw new Error(`contact admin email not sent: ${adminResult.reason}`)
+  }
 
+  // L'accusé de réception au demandeur est secondaire : l'admin a le lead.
   const confirmation = buildContactConfirmationEmail(input)
-  await sendEmail({
+  const confirmationResult = await sendEmail({
     to: input.email,
     subject: confirmation.subject,
     html: confirmation.html,
     text: confirmation.text,
     replyTo: getAdminNotificationEmail(),
   })
+  if (!confirmationResult.ok) {
+    console.error('notify contact: confirmation email not sent', {
+      reason: confirmationResult.reason,
+    })
+  }
 }
