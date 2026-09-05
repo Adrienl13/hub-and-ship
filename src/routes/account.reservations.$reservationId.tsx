@@ -27,7 +27,7 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
-import { AnalyticsEvent, track } from '@/lib/analytics'
+import { AnalyticsEvent, track, trackEcommerce } from '@/lib/analytics'
 import {
   ACCOUNT_RESERVATION_STATUS_LABEL,
   accountReservationFromMyReservation,
@@ -169,7 +169,21 @@ function AccountReservationDetailPage() {
           paidAmount: result.paidAmount,
         })
         setLocalRecords(readLocalReservationHistory(window.localStorage))
-        setPaymentJustSettled(result.status !== 'pending_reservation_fee')
+        const settled = result.status !== 'pending_reservation_fee'
+        setPaymentJustSettled(settled)
+        if (settled && result.paidAmount > 0) {
+          // Conversion réelle (frais encaissés), confirmée côté serveur —
+          // c'est l'événement à déclarer comme conversion dans GA4 / Ads.
+          track(AnalyticsEvent.ReservationFeePaid, {
+            reservation: reservationId,
+            value: result.paidAmount,
+          })
+          trackEcommerce('purchase', {
+            currency: 'EUR',
+            value: result.paidAmount,
+            transaction_id: reservationId,
+          })
+        }
       }
       setPaymentSyncing(false)
       window.history.replaceState(null, '', window.location.pathname)

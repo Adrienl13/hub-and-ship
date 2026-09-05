@@ -756,9 +756,11 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               consentement.
             </LI>
             <LI>
-              <Strong>Cookies de mesure d'audience anonymisée</Strong> —
-              analytics sans identification individuelle. Soumis à consentement
-              si non strictement anonymisés.
+              <Strong>Cookies de mesure d'audience</Strong> — Google
+              Analytics 4 (chargé via Google Tag Manager) pour mesurer la
+              fréquentation et le parcours d'achat. Refusés par défaut, déposés
+              uniquement après votre consentement ; Plausible, sans cookie,
+              peut compléter cette mesure de façon anonyme.
             </LI>
             <LI>
               <Strong>Cookies tiers (paiement)</Strong> — Stripe utilise ses
@@ -791,6 +793,10 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               vos choix de consentement cookies.
             </LI>
             <LI>
+              <Strong>_ga, _ga_*</Strong> (Google Analytics, 13 mois) — mesure
+              d'audience, déposés uniquement après acceptation.
+            </LI>
+            <LI>
               <Strong>__stripe_mid</Strong> (Stripe, 1 an) — détection de fraude
               sur la page de paiement.
             </LI>
@@ -802,7 +808,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             Lors de votre première visite, un bandeau vous permet d'accepter, de
             refuser ou de paramétrer les cookies non essentiels. Vous pouvez
             modifier vos choix à tout moment via le lien « Gérer mes cookies »
-            présent en bas de chaque page (en cours de mise en place).
+            présent en bas de chaque page.
           </P>
         </LegalSection>
 

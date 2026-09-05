@@ -15,7 +15,7 @@ import { getContainerUsableCbm } from '@/lib/container/pricing'
 import { CURRENT_CONTAINER, PRODUCTS, type Product } from '@/lib/products'
 import { getQuantityRule, sanitizeOrderQuantity } from '@/lib/quantity'
 import type { ContainerType } from '@/lib/supabase/types'
-import { AnalyticsEvent, track } from '@/lib/analytics'
+import { AnalyticsEvent, track, trackEcommerce } from '@/lib/analytics'
 
 export type ProductVariantSelection = Record<string, string>
 /** Quantités par LIGNE `${productId}::${variantId}` — deux designs du même
@@ -187,7 +187,27 @@ function writeLineQty(
   // silent = restauration programmatique (lien partagé) : ouvrir un
   // lien ne constitue pas un ajout au panier de l'utilisateur.
   if (!options?.silent && prevQty === 0 && nextQty > 0) {
-    track(AnalyticsEvent.AddToCart, { product: productId })
+    const lineValue = Math.round(product.basePriceHt * nextQty * 100) / 100
+    track(AnalyticsEvent.AddToCart, {
+      product: productId,
+      sku: product.sku,
+      quantity: nextQty,
+      value: lineValue,
+    })
+    trackEcommerce('add_to_cart', {
+      currency: 'EUR',
+      value: lineValue,
+      items: [
+        {
+          item_id: product.sku,
+          item_name: product.name,
+          item_variant: variant.name,
+          item_category: product.category,
+          price: product.basePriceHt,
+          quantity: nextQty,
+        },
+      ],
+    })
     // Confirmation explicite : sans elle, l'acheteur ne sait pas que
     // sa quantité est déjà prise en compte (retour client 07/2026).
     toast.success(`Ajouté à votre commande`, {

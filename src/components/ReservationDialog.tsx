@@ -21,7 +21,7 @@ import { Link } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { sendReservationConfirmation } from '@/lib/email/reservation-confirmation'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
-import { AnalyticsEvent, track } from '@/lib/analytics'
+import { AnalyticsEvent, track, trackEcommerce } from '@/lib/analytics'
 import {
   Dialog,
   DialogContent,
@@ -364,6 +364,24 @@ export function ReservationDialog({
 
     track(AnalyticsEvent.ReservationSubmit, {
       persisted: creation.persisted,
+      reference: creation.reservation.reference,
+      value: draftResult.draft.payment.payNow,
+      total_ht: draftResult.draft.totals.totalHt,
+      lines: draftResult.draft.lines.length,
+    })
+    // GA4 : la réservation est le « début de commande » ; la valeur suivie
+    // est le montant réglé aujourd'hui (frais de réservation).
+    trackEcommerce('begin_checkout', {
+      currency: 'EUR',
+      value: draftResult.draft.payment.payNow,
+      items: draftResult.draft.lines.map((line) => ({
+        item_id: line.sku,
+        item_name: line.productName,
+        item_variant: line.variantName,
+        item_category: line.category,
+        price: line.unitPriceHt,
+        quantity: line.quantity,
+      })),
     })
 
     // Le panier est devenu une réservation : on le VIDE pour qu'un retour au

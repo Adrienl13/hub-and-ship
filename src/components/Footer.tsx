@@ -1,6 +1,7 @@
 import { Instagram, ShieldCheck } from 'lucide-react'
 
 import { ContainerNotifyForm } from '@/components/ContainerNotifyForm'
+import { openCookieSettings } from '@/components/CookieConsentBanner'
 
 export function Footer() {
   return (
@@ -113,6 +114,15 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
+                >
+                  Gérer mes cookies
+                </button>
+              </li>
               <li className="pt-1">
                 <a
                   href="/legal"
