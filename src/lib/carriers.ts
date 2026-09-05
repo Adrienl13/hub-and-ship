@@ -151,7 +151,7 @@ export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: 'Quand dois-je organiser le transport ?',
-    a: "Idéalement dès que le container atteint 80 % de remplissage (clôture commande) — vous avez ~10 à 12 semaines avant l'arrivée au port. Les transporteurs locaux préfèrent un préavis de 10 jours minimum.",
+    a: "Idéalement dès que le container atteint 80 % de remplissage (clôture commande) — vous avez ~10 à 12 semaines avant l'arrivée en zone de stockage (Fos-sur-Mer). Les transporteurs locaux préfèrent un préavis de 10 jours minimum.",
   },
   {
     q: "Et si je n'arrive pas à trouver de transporteur ?",
@@ -163,6 +163,6 @@ export const CARRIER_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: 'Puis-je organiser moi-même mon transport ?',
-    a: "Bien sûr. Sélectionnez « J'ai déjà mon transporteur » au moment de la réservation — on vous communiquera les coordonnées et la documentation douanière dès l'arrivée du container au port.",
+    a: "Bien sûr. Sélectionnez « J'ai déjà mon transporteur » au moment de la réservation — on vous communiquera les coordonnées et la documentation douanière dès la mise à disposition du container en zone de stockage.",
   },
 ]

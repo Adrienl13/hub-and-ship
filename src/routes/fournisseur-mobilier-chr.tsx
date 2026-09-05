@@ -94,7 +94,7 @@ function FournisseurMobilierChrPage() {
         },
         {
           title: 'Le modèle du container mutualisé',
-          body: 'Un container de 20 ou 40 pieds est ouvert à la réservation ; chaque professionnel y réserve ses séries (dès 50 assises ou 20 tables). Quand le container atteint son seuil, la production démarre, le contrôle SGS valide la marchandise avant départ, et chacun récupère sa commande au port ou par transporteur partenaire.',
+          body: 'Un container de 20 ou 40 pieds est ouvert à la réservation ; chaque professionnel y réserve ses séries (dès 50 assises ou 20 tables). Quand le container atteint son seuil, la production démarre, le contrôle SGS valide la marchandise avant départ, et chacun reçoit sa commande sur sa terrasse ou l’enlève en zone de stockage (Fos-sur-Mer).',
         },
         {
           title: 'Pour les revendeurs et agenceurs',

@@ -303,7 +303,7 @@ const TRUST_ITEMS: ReadonlyArray<{ tag: string; text: string }> = [
     text: '988 269 981 00011 — RCS Paris · Importation et douane incluses',
   },
   {
-    tag: '2 ANS',
+    tag: '1 AN',
     text: 'Garantie fabricant + SAV France sur l’ensemble du catalogue',
   },
   {

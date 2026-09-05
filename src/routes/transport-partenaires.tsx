@@ -92,7 +92,7 @@ function HeroSection({ carrierCount }: { readonly carrierCount: number }) {
     <section className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]">
       <div className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
         <div className="label-eyebrow text-[color:var(--ember)]">
-          Logistique post-port
+          Logistique depuis la zone de stockage
         </div>
         <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
           Transporteurs partenaires recommandés.

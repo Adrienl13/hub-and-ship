@@ -102,7 +102,8 @@ function AProposPage() {
               <p className="mt-3 text-sm leading-7 text-[color:var(--ink-soft)]">
                 « Chaque container est suivi de bout en bout : sélection usine,
                 négociation, contrôle SGS avant chargement, dédouanement et
-                livraison au port. Vous savez qui importe votre mobilier, et
+                mise à disposition en zone de stockage ou livraison sur votre
+                terrasse. Vous savez qui importe votre mobilier, et
                 vous pouvez me joindre directement — c&apos;est aussi ça, le
                 club. »
               </p>

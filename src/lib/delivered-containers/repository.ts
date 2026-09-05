@@ -140,16 +140,16 @@ export function getFallbackDeliveredContainerBySlug(
     timeline: [
       {
         date: item.deliveredAt,
-        label: 'Arrivée portuaire',
+        label: 'Arrivée en zone de stockage',
         description:
-          'Container livré et réceptionné au port, avec suivi des délais réels.',
+          'Container dédouané et réceptionné en zone de stockage, avec suivi des délais réels.',
         status: item.actualDays <= item.plannedDays ? 'done' : 'delay',
       },
       {
         date: item.deliveredAt,
         label: 'Réception client',
         description:
-          'Les professionnels participants récupèrent ou organisent leur transport post-port.',
+          'Les professionnels participants sont livrés sur leur terrasse ou enlèvent leur commande en zone de stockage.',
         status: 'done',
       },
     ],
