@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import { PRODUCTS, type Product } from '@/lib/products'
+import type { Product } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -30,8 +30,6 @@ function bistrotChairs(products: ReadonlyArray<Product>): Product[] {
     ? bistrot
     : products.filter((product) => product.category === 'chair')
 }
-
-const STATIC_BISTROT = bistrotChairs(PRODUCTS)
 
 const FAQ = [
   {
@@ -62,35 +60,40 @@ export const Route = createFileRoute('/catalogue_/chaises-bistrot-parisiennes')(
       const products = await loadCatalogProducts()
       return { products: bistrotChairs(products) }
     },
-    head: () => ({
-      ...buildSeoHead({
-        title: 'Chaises bistrot parisiennes pour restaurant — prix container',
-        description:
-          'Chaises bistrot parisiennes professionnelles en rotin synthétique tressé : achat direct usine par container, dès 50 unités, contrôle SGS, garantie 1 an, coloris personnalisables. L’alternative import aux distributeurs classiques.',
-        path: '/catalogue/chaises-bistrot-parisiennes',
-        image: STATIC_BISTROT[0]?.mainImageUrl,
-      }),
-      scripts: [
-        jsonLdScript(
-          breadcrumbJsonLd([
-            { name: 'Accueil', path: '/' },
-            { name: 'Catalogue', path: '/catalogue' },
-            {
-              name: 'Chaises bistrot parisiennes',
+    // JSON-LD et image de partage depuis les produits RÉELS du loader (jamais
+    // la fixture de dev).
+    head: ({ loaderData }) => {
+      const products = loaderData?.products ?? []
+      return {
+        ...buildSeoHead({
+          title: 'Chaises bistrot parisiennes pour restaurant — prix container',
+          description:
+            'Chaises bistrot parisiennes professionnelles en rotin synthétique tressé : achat direct usine par container, dès 50 unités, contrôle SGS, garantie 1 an, coloris personnalisables. L’alternative import aux distributeurs classiques.',
+          path: '/catalogue/chaises-bistrot-parisiennes',
+          image: products[0]?.mainImageUrl,
+        }),
+        scripts: [
+          jsonLdScript(
+            breadcrumbJsonLd([
+              { name: 'Accueil', path: '/' },
+              { name: 'Catalogue', path: '/catalogue' },
+              {
+                name: 'Chaises bistrot parisiennes',
+                path: '/catalogue/chaises-bistrot-parisiennes',
+              },
+            ]),
+          ),
+          jsonLdScript(
+            itemListJsonLd({
+              name: 'Chaises bistrot parisiennes professionnelles',
               path: '/catalogue/chaises-bistrot-parisiennes',
-            },
-          ]),
-        ),
-        jsonLdScript(
-          itemListJsonLd({
-            name: 'Chaises bistrot parisiennes professionnelles',
-            path: '/catalogue/chaises-bistrot-parisiennes',
-            products: STATIC_BISTROT,
-          }),
-        ),
-        jsonLdScript(faqJsonLd(FAQ)),
-      ],
-    }),
+              products,
+            }),
+          ),
+          jsonLdScript(faqJsonLd(FAQ)),
+        ],
+      }
+    },
     component: ChaisesBistrotParisiennesPage,
   },
 )

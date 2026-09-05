@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import { PRODUCTS } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -46,13 +45,15 @@ export const Route = createFileRoute('/fournisseur-mobilier-chr')({
     // Vitrine transverse : les meilleures ventes de chaque catégorie.
     return { products: products.slice(0, 8) }
   },
-  head: () => ({
+  head: ({ loaderData }) => ({
     ...buildSeoHead({
       title: 'Fournisseur mobilier CHR — import direct usine par container',
       description:
         'Terrassea (Pros Import EURL) : fournisseur français de mobilier CHR par import direct usine. Chaises, fauteuils et tables de terrasse professionnels, containers mutualisés, contrôle SGS, garantie 1 an, prix publiés. Paris · livraison France entière.',
       path: '/fournisseur-mobilier-chr',
-      image: PRODUCTS[0]?.mainImageUrl,
+      // Image de partage = un produit RÉEL (la fixture pointait vers une photo
+      // externe de démo).
+      image: loaderData?.products[0]?.mainImageUrl,
     }),
     scripts: [
       jsonLdScript(

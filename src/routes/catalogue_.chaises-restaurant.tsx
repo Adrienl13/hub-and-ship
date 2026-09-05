@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import { PRODUCTS } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -10,10 +9,6 @@ import {
   itemListJsonLd,
   jsonLdScript,
 } from '@/lib/seo'
-
-const CHAIR_PRODUCTS = PRODUCTS.filter(
-  (product) => product.category === 'chair',
-)
 
 const FAQ = [
   {
@@ -38,35 +33,40 @@ export const Route = createFileRoute('/catalogue_/chaises-restaurant')({
     const filtered = products.filter((p) => p.category === 'chair')
     return { products: filtered }
   },
-  head: () => ({
-    ...buildSeoHead({
-      title: 'Chaises restaurant terrasse pro par container',
-      description:
-        'Chaises de restaurant et terrasse professionnelle : modèles empilables, MOQ 50 unités, achat groupé par container, prix usine et contrôle qualité avant expédition.',
-      path: '/catalogue/chaises-restaurant',
-      image: CHAIR_PRODUCTS[0]?.mainImageUrl,
-    }),
-    scripts: [
-      jsonLdScript(
-        breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Catalogue', path: '/catalogue' },
-          {
-            name: 'Chaises restaurant',
+  // JSON-LD et image de partage depuis les produits RÉELS du loader : la
+  // fixture de dev annonçait à Google des modèles et prix inexistants.
+  head: ({ loaderData }) => {
+    const products = loaderData?.products ?? []
+    return {
+      ...buildSeoHead({
+        title: 'Chaises restaurant terrasse pro par container',
+        description:
+          'Chaises de restaurant et terrasse professionnelle : modèles empilables, MOQ 50 unités, achat groupé par container, prix usine et contrôle qualité avant expédition.',
+        path: '/catalogue/chaises-restaurant',
+        image: products[0]?.mainImageUrl,
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Catalogue', path: '/catalogue' },
+            {
+              name: 'Chaises restaurant',
+              path: '/catalogue/chaises-restaurant',
+            },
+          ]),
+        ),
+        jsonLdScript(
+          itemListJsonLd({
+            name: 'Chaises restaurant terrasse professionnelle',
             path: '/catalogue/chaises-restaurant',
-          },
-        ]),
-      ),
-      jsonLdScript(
-        itemListJsonLd({
-          name: 'Chaises restaurant terrasse professionnelle',
-          path: '/catalogue/chaises-restaurant',
-          products: CHAIR_PRODUCTS,
-        }),
-      ),
-      jsonLdScript(faqJsonLd(FAQ)),
-    ],
-  }),
+            products,
+          }),
+        ),
+        jsonLdScript(faqJsonLd(FAQ)),
+      ],
+    }
+  },
   component: ChaisesRestaurantPage,
 })
 

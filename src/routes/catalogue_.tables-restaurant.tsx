@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import { PRODUCTS } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -10,10 +9,6 @@ import {
   itemListJsonLd,
   jsonLdScript,
 } from '@/lib/seo'
-
-const TABLE_PRODUCTS = PRODUCTS.filter(
-  (product) => product.category === 'table',
-)
 
 const FAQ = [
   {
@@ -38,32 +33,40 @@ export const Route = createFileRoute('/catalogue_/tables-restaurant')({
     const filtered = products.filter((p) => p.category === 'table')
     return { products: filtered }
   },
-  head: () => ({
-    ...buildSeoHead({
-      title: 'Tables restaurant outdoor pro par container',
-      description:
-        'Tables outdoor pour restaurant, brasserie et hôtel : plateaux HPL, pieds aluminium, MOQ 20 unités, achat groupé container et prix HT direct usine.',
-      path: '/catalogue/tables-restaurant',
-      image: TABLE_PRODUCTS[0]?.mainImageUrl,
-    }),
-    scripts: [
-      jsonLdScript(
-        breadcrumbJsonLd([
-          { name: 'Accueil', path: '/' },
-          { name: 'Catalogue', path: '/catalogue' },
-          { name: 'Tables restaurant', path: '/catalogue/tables-restaurant' },
-        ]),
-      ),
-      jsonLdScript(
-        itemListJsonLd({
-          name: 'Tables restaurant outdoor professionnelles',
-          path: '/catalogue/tables-restaurant',
-          products: TABLE_PRODUCTS,
-        }),
-      ),
-      jsonLdScript(faqJsonLd(FAQ)),
-    ],
-  }),
+  // JSON-LD et image de partage depuis les produits RÉELS du loader (jamais
+  // la fixture de dev).
+  head: ({ loaderData }) => {
+    const products = loaderData?.products ?? []
+    return {
+      ...buildSeoHead({
+        title: 'Tables restaurant outdoor pro par container',
+        description:
+          'Tables outdoor pour restaurant, brasserie et hôtel : plateaux HPL, pieds aluminium, MOQ 20 unités, achat groupé container et prix HT direct usine.',
+        path: '/catalogue/tables-restaurant',
+        image: products[0]?.mainImageUrl,
+      }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Catalogue', path: '/catalogue' },
+            {
+              name: 'Tables restaurant',
+              path: '/catalogue/tables-restaurant',
+            },
+          ]),
+        ),
+        jsonLdScript(
+          itemListJsonLd({
+            name: 'Tables restaurant outdoor professionnelles',
+            path: '/catalogue/tables-restaurant',
+            products,
+          }),
+        ),
+        jsonLdScript(faqJsonLd(FAQ)),
+      ],
+    }
+  },
   component: TablesRestaurantPage,
 })
 

@@ -34,7 +34,7 @@ import {
   type PublicSelection,
 } from '@/lib/partners/selections'
 import { formatEUR } from '@/lib/order'
-import { CATEGORY_LABEL, PRODUCTS } from '@/lib/products'
+import { CATEGORY_LABEL } from '@/lib/products'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -65,7 +65,7 @@ export const Route = createFileRoute('/p/$partnerSlug')({
         description:
           'Sélection partenaire Terrassea : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
         path: buildPartnerSharePath({ slug }),
-        image: PRODUCTS[0]?.mainImageUrl,
+        image: '/images/home/hero-salon-vue-mer.webp',
         // Espace d'URL non borné (n'importe quel slug matche) : ces pages
         // co-brandées se partagent par lien direct, elles n'ont pas à être
         // indexées (contenu catalogue dupliqué par partenaire + usurpation).
