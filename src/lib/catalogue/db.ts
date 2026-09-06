@@ -5,7 +5,12 @@
 
 import { setPublicPricingRules } from '@/lib/pricing/public-rules'
 import type { Database } from '@/lib/supabase/types'
-import type { DesignVariant, Product, ProductCategory } from '@/lib/products'
+import type {
+  DesignVariant,
+  Product,
+  ProductCategory,
+  TableTopShape,
+} from '@/lib/products'
 
 // Le catalogue public lit la VUE products_public (migration 30) : mêmes
 // colonnes que products SANS les colonnes de coût (fob_usd, qty_per_container,
@@ -124,7 +129,17 @@ function variantFromRow(
     imageUrl: row.image_url ?? undefined,
     galleryUrls: [...(row.gallery_urls ?? [])],
     unitsCommitted,
+    minOrderUnits: row.min_order_units ?? null,
   }
+}
+
+function toTopShapes(
+  values: ReadonlyArray<string> | null | undefined,
+): ReadonlyArray<TableTopShape> {
+  return (values ?? []).filter(
+    (value): value is TableTopShape =>
+      value === 'rectangular' || value === 'round',
+  )
 }
 
 function productFromRow(
@@ -144,6 +159,7 @@ function productFromRow(
       h: row.dim_height_cm,
     },
     tableShape: row.table_shape ?? null,
+    compatibleTopShapes: toTopShapes(row.compatible_top_shapes),
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,

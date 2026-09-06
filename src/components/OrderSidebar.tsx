@@ -388,7 +388,7 @@ export function OrderSidebar({
           <ul className="divide-[color:var(--sand-deep)]/60 divide-y">
             <AnimatePresence initial={false}>
               {items.map((item) => {
-                const rule = getQuantityRule(item.product)
+                const rule = getQuantityRule(item.product, item.variant)
                 return (
                   <motion.li
                     key={`${item.product.id}:${item.variant.id}`}

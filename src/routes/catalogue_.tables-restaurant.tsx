@@ -30,7 +30,13 @@ export const Route = createFileRoute('/catalogue_/tables-restaurant')({
   // pointer vers des slugs qui existent réellement en base, pas vers le mock.
   loader: async () => {
     const products = await loadCatalogProducts()
-    const filtered = products.filter((p) => p.category === 'table')
+    // Tables complètes + piètements + plateaux : tout ce qui compose une table.
+    const filtered = products.filter(
+      (p) =>
+        p.category === 'table' ||
+        p.category === 'table_base' ||
+        p.category === 'table_top',
+    )
     return { products: filtered }
   },
   // JSON-LD et image de partage depuis les produits RÉELS du loader (jamais

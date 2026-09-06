@@ -34,7 +34,12 @@ import { BISTRO_PRODUCTS } from '@/lib/bistro-products'
 import { ROPE_PRODUCTS } from '@/lib/rope-products'
 import { TABLE_BASE_PRODUCTS } from '@/lib/table-base-products'
 import { TESLIN_PRODUCTS } from '@/lib/teslin-products'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  CATEGORY_LABEL_PLURAL,
+  PRODUCT_CATEGORIES,
+  type Product,
+} from '@/lib/products'
 import {
   applyPriceAdjustment,
   applyReprice,
@@ -90,10 +95,10 @@ const CATEGORY_FILTERS: ReadonlyArray<{
   readonly label: string
 }> = [
   { id: 'all', label: 'Tous types' },
-  { id: 'chair', label: 'Chaises' },
-  { id: 'armchair', label: 'Fauteuils' },
-  { id: 'table', label: 'Tables' },
-  { id: 'bench', label: 'Bancs' },
+  ...PRODUCT_CATEGORIES.map((id) => ({
+    id,
+    label: CATEGORY_LABEL_PLURAL[id],
+  })),
 ]
 
 const COLLECTION_FILTERS: ReadonlyArray<{
@@ -725,10 +730,10 @@ const ADJUST_CATEGORY_OPTIONS: ReadonlyArray<{
   readonly label: string
 }> = [
   { id: '', label: 'Tous types' },
-  { id: 'chair', label: 'Chaises' },
-  { id: 'armchair', label: 'Fauteuils' },
-  { id: 'table', label: 'Tables' },
-  { id: 'bench', label: 'Bancs' },
+  ...PRODUCT_CATEGORIES.map((id) => ({
+    id,
+    label: CATEGORY_LABEL_PLURAL[id],
+  })),
 ]
 
 const ADJUST_COLLECTION_OPTIONS: ReadonlyArray<{

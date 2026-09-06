@@ -181,7 +181,7 @@ export function buildReservationDraft(
   }
 
   for (const item of input.items) {
-    const rule = getQuantityRule(item.product)
+    const rule = getQuantityRule(item.product, item.variant)
     const sanitized = sanitizeOrderQuantity(item.quantity, rule)
 
     if (item.quantity !== sanitized) {

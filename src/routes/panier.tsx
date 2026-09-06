@@ -178,7 +178,7 @@ function PanierPage() {
             <div className="space-y-4">
               <ul className="divide-y divide-[color:var(--sand-deep)]/70 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
                 {items.map((item) => {
-                  const rule = getQuantityRule(item.product)
+                  const rule = getQuantityRule(item.product, item.variant)
                   return (
                     <li
                       key={`${item.product.id}:${item.variant.id}`}

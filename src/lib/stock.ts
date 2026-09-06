@@ -1,6 +1,9 @@
 import {
   CATEGORY_LABEL,
+  CATEGORY_LABEL_PLURAL,
   PRODUCTS,
+  PRODUCT_CATEGORIES,
+  emptyCategoryCounts,
   type Product,
   type ProductCategory,
 } from '@/lib/products'
@@ -65,11 +68,11 @@ export const STOCK_FILTERS: ReadonlyArray<{
   readonly label: string
 }> = [
   { id: 'all', label: 'Tout' },
-  { id: 'chair', label: 'Chaises' },
-  { id: 'armchair', label: 'Fauteuils' },
-  { id: 'table', label: 'Tables' },
-  { id: 'bench', label: 'Bancs' },
-] as const
+  ...PRODUCT_CATEGORIES.map((id) => ({
+    id,
+    label: CATEGORY_LABEL_PLURAL[id],
+  })),
+]
 
 export const AVAILABLE_STOCK: ReadonlyArray<AvailableStockItem> = [
   {
@@ -259,7 +262,7 @@ export function getStockCategoryCounts(
       acc[line.product.category] += 1
       return acc
     },
-    { all: 0, chair: 0, armchair: 0, table: 0, bench: 0 },
+    { all: 0, ...emptyCategoryCounts() },
   )
 }
 

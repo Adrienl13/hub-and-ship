@@ -22,18 +22,13 @@ import type {
   TimelineStatus,
   TimelineStep,
 } from '@/lib/delivered-containers/types'
-import type { ProductCategory } from '@/lib/products'
+import { PRODUCT_CATEGORIES, type ProductCategory } from '@/lib/products'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 type ContainerInsert = Database['public']['Tables']['containers']['Insert']
 type ContainerUpdate = Database['public']['Tables']['containers']['Update']
 
-const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = [
-  'chair',
-  'armchair',
-  'table',
-  'bench',
-]
+const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = PRODUCT_CATEGORIES
 const TIMELINE_STATUS_VALUES: ReadonlyArray<TimelineStatus> = ['done', 'delay']
 
 interface EditableState {

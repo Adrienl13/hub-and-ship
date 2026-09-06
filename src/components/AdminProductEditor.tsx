@@ -15,7 +15,11 @@ import type {
   Json,
   TableShapeDb,
 } from '@/lib/supabase/types'
-import type { ProductCategory } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  PRODUCT_CATEGORIES,
+  type ProductCategory,
+} from '@/lib/products'
 import {
   getActivePricingParameters,
   getProductWithVariants,
@@ -35,12 +39,7 @@ import type {
   AdminSeedCommitment,
 } from '@/lib/catalogue-admin/types'
 
-const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = [
-  'chair',
-  'armchair',
-  'table',
-  'bench',
-]
+const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = PRODUCT_CATEGORIES
 type ProductUpdate = Database['public']['Tables']['products']['Update']
 type ProductEditorPayload = ProductUpdate & {
   readonly partner_net_price_ht: number | null
@@ -65,8 +64,10 @@ interface EditableProduct {
   dim_length_cm: string
   dim_width_cm: string
   dim_height_cm: string
-  /** Tables uniquement : '' = rectangulaire, 'round' = plateau rond (Ø). */
+  /** Tables et plateaux : '' = rectangulaire, 'round' = plateau rond (Ø). */
   table_shape: '' | TableShapeDb
+  /** Piètements : formes de plateau acceptées (vide = tous). */
+  compatible_top_shapes: TableShapeDb[]
   cbm_per_unit: string
   weight_kg: string
   fire_rating: '' | FireRatingDb
@@ -99,6 +100,7 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
     dim_width_cm: String(detail.dimensions.w),
     dim_height_cm: String(detail.dimensions.h),
     table_shape: detail.tableShape ?? '',
+    compatible_top_shapes: [...detail.compatibleTopShapes],
     cbm_per_unit: detail.cbmPerUnit.toString(),
     weight_kg: detail.weightKg.toString(),
     fire_rating: detail.fireRating ?? '',
@@ -129,6 +131,7 @@ function emptyEditable(): EditableProduct {
     dim_width_cm: '0',
     dim_height_cm: '0',
     table_shape: '',
+    compatible_top_shapes: [],
     cbm_per_unit: '0.05',
     weight_kg: '0',
     fire_rating: '',
@@ -284,6 +287,11 @@ function buildPricingPreviewRows(
   })
 }
 
+/** Catégories qui portent une forme de plateau. */
+function hasTopShape(category: ProductCategory): boolean {
+  return category === 'table' || category === 'table_top'
+}
+
 function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
   return {
     sku: state.sku.trim(),
@@ -304,14 +312,16 @@ function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
     dim_length_cm: Math.max(0, Math.round(parseNumber(state.dim_length_cm))),
     // Table ronde : la largeur EST le diamètre (une seule saisie côté UI).
     dim_width_cm:
-      state.category === 'table' && state.table_shape === 'round'
+      hasTopShape(state.category) && state.table_shape === 'round'
         ? Math.max(0, Math.round(parseNumber(state.dim_length_cm)))
         : Math.max(0, Math.round(parseNumber(state.dim_width_cm))),
     dim_height_cm: Math.max(0, Math.round(parseNumber(state.dim_height_cm))),
     table_shape:
-      state.category === 'table' && state.table_shape
+      hasTopShape(state.category) && state.table_shape
         ? state.table_shape
         : null,
+    compatible_top_shapes:
+      state.category === 'table_base' ? state.compatible_top_shapes : [],
     cbm_per_unit: Math.max(0.0001, parseNumber(state.cbm_per_unit, 0.01)),
     weight_kg: Math.max(0, parseNumber(state.weight_kg)),
     fire_rating: state.fire_rating === '' ? null : state.fire_rating,
@@ -361,6 +371,7 @@ export function AdminProductEditor({
             imageUrl: null,
             galleryUrls: [],
             sortOrder: 0,
+            minOrderUnits: null,
             _new: true,
           },
         ]
@@ -547,6 +558,7 @@ export function AdminProductEditor({
         imageUrl: null,
         galleryUrls: [],
         sortOrder: prev.length,
+        minOrderUnits: null,
         _new: true,
       },
     ])
@@ -637,6 +649,7 @@ export function AdminProductEditor({
         image_url: v.imageUrl?.trim() || null,
         gallery_urls: v.galleryUrls.filter((url) => url.trim()),
         sort_order: v.sortOrder,
+        min_order_units: v.minOrderUnits,
       }))
     // Only keep commitments tied to a design that is actually being saved.
     // Designs that were removed (CASCADE-deleted by the RPC) or left unnamed
@@ -750,7 +763,7 @@ export function AdminProductEditor({
             >
               {CATEGORY_VALUES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {CATEGORY_LABEL[c]} ({c})
                 </option>
               ))}
             </select>
@@ -1018,7 +1031,7 @@ export function AdminProductEditor({
       </Fieldset>
 
       <Fieldset title="Dimensions & logistique">
-        {state.category === 'table' && (
+        {hasTopShape(state.category) && (
           <Field label="Forme du plateau">
             <div className="flex gap-2">
               {(
@@ -1041,8 +1054,43 @@ export function AdminProductEditor({
             </div>
           </Field>
         )}
+        {state.category === 'table_base' && (
+          <Field label="Plateaux compatibles (vide = tous)">
+            <div className="flex gap-2">
+              {(
+                [
+                  ['rectangular', 'Rectangulaire / carré'],
+                  ['round', 'Rond'],
+                ] as const
+              ).map(([value, label]) => {
+                const checked = state.compatible_top_shapes.includes(value)
+                return (
+                  <Button
+                    key={value}
+                    type="button"
+                    size="sm"
+                    variant={checked ? 'default' : 'outline'}
+                    className="h-8 rounded-sm"
+                    onClick={() =>
+                      setField(
+                        'compatible_top_shapes',
+                        checked
+                          ? state.compatible_top_shapes.filter(
+                              (shape) => shape !== value,
+                            )
+                          : [...state.compatible_top_shapes, value],
+                      )
+                    }
+                  >
+                    {label}
+                  </Button>
+                )
+              })}
+            </div>
+          </Field>
+        )}
         <div className="grid gap-3 md:grid-cols-2">
-          {state.category === 'table' && state.table_shape === 'round' ? (
+          {hasTopShape(state.category) && state.table_shape === 'round' ? (
             <Field label="Ø Diamètre (cm)">
               <Input
                 type="number"
@@ -1136,7 +1184,7 @@ export function AdminProductEditor({
               key={variant.id}
               className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3"
             >
-              <div className="grid gap-2 md:grid-cols-[1fr_100px_auto]">
+              <div className="grid gap-2 md:grid-cols-[1fr_100px_120px_auto]">
                 <Field label="Nom du design">
                   <Input
                     value={variant.name}
@@ -1154,6 +1202,23 @@ export function AdminProductEditor({
                       updateVariant(i, {
                         ...variant,
                         sortOrder: Number(e.target.value),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Min. par commande">
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="règle produit"
+                    value={variant.minOrderUnits ?? ''}
+                    onChange={(e) =>
+                      updateVariant(i, {
+                        ...variant,
+                        minOrderUnits:
+                          e.target.value.trim() === ''
+                            ? null
+                            : Math.max(1, Math.round(Number(e.target.value))),
                       })
                     }
                   />

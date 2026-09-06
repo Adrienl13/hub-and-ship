@@ -27,7 +27,10 @@ const VALID_PRODUCT_CATEGORIES: ReadonlySet<ProductCategory> = new Set([
   'chair',
   'armchair',
   'table',
+  'table_base',
+  'table_top',
   'bench',
+  'lounge',
 ])
 
 function asHighlights(value: Json | null | undefined): QualityHighlight[] {

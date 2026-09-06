@@ -1,6 +1,8 @@
 import {
   CATEGORY_LABEL,
   PRODUCTS,
+  PRODUCT_CATEGORIES,
+  emptyCategoryCounts,
   type Product,
   type ProductCategory,
 } from '@/lib/products'
@@ -11,10 +13,7 @@ export const CATEGORY_FILTERS: Array<{
   label: string
 }> = [
   { id: 'all', label: 'Tous' },
-  { id: 'chair', label: 'Chaise' },
-  { id: 'armchair', label: 'Fauteuil' },
-  { id: 'table', label: 'Table' },
-  { id: 'bench', label: 'Banc' },
+  ...PRODUCT_CATEGORIES.map((id) => ({ id, label: CATEGORY_LABEL[id] })),
 ]
 
 export type CatalogueFilter = 'all' | ProductCategory
@@ -59,7 +58,7 @@ export function getCategoryCounts(products: Product[] = PRODUCTS) {
       acc[product.category] += 1
       return acc
     },
-    { all: 0, chair: 0, armchair: 0, table: 0, bench: 0 },
+    { all: 0, ...emptyCategoryCounts() },
   )
 }
 

@@ -2,7 +2,29 @@
 // Terrassea — catalogue, variantes, container courant
 // ============================================================
 
-export type ProductCategory = 'chair' | 'armchair' | 'table' | 'bench'
+// table_base = piètement, table_top = plateau (composables ensemble),
+// table = table complète / ensemble repas, lounge = salon / canapé / lounge.
+export type ProductCategory =
+  | 'chair'
+  | 'armchair'
+  | 'table'
+  | 'table_base'
+  | 'table_top'
+  | 'bench'
+  | 'lounge'
+
+/** Ordre d'affichage des catégories (filtres, admin). */
+export const PRODUCT_CATEGORIES: ReadonlyArray<ProductCategory> = [
+  'chair',
+  'armchair',
+  'table',
+  'table_base',
+  'table_top',
+  'bench',
+  'lounge',
+]
+
+export type TableTopShape = 'rectangular' | 'round'
 
 export interface DesignVariant {
   id: string
@@ -13,6 +35,9 @@ export interface DesignVariant {
   galleryUrls?: string[]
   /** Unités déjà engagées par d'autres pros (simulé) */
   unitsCommitted: number
+  /** Minimum de commande par acheteur propre à ce coloris (plateaux de
+   *  teinte spéciale). Absent = règle du produit. */
+  minOrderUnits?: number | null
 }
 
 export interface Product {
@@ -25,7 +50,9 @@ export interface Product {
   dimensions: { l: number; w: number; h: number }
   /** Forme du plateau (tables uniquement). 'round' ⇒ l = w = diamètre.
    *  Absent/null = rectangulaire ou non applicable. */
-  tableShape?: 'rectangular' | 'round' | null
+  tableShape?: TableTopShape | null
+  /** Piètements : formes de plateau compatibles. Vide/absent = tous. */
+  compatibleTopShapes?: ReadonlyArray<TableTopShape>
   /** m³ par unité (carton ou unité finie) */
   cbmPerUnit: number
   weightKg: number
@@ -52,7 +79,33 @@ export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   chair: 'Chaise',
   armchair: 'Fauteuil',
   table: 'Table',
+  table_base: 'Piètement',
+  table_top: 'Plateau',
   bench: 'Banc',
+  lounge: 'Salon & lounge',
+}
+
+/** Libellé pluriel (filtres, compteurs). */
+export const CATEGORY_LABEL_PLURAL: Record<ProductCategory, string> = {
+  chair: 'Chaises',
+  armchair: 'Fauteuils',
+  table: 'Tables',
+  table_base: 'Piètements',
+  table_top: 'Plateaux',
+  bench: 'Bancs',
+  lounge: 'Salons & lounge',
+}
+
+export function emptyCategoryCounts(): Record<ProductCategory, number> {
+  return {
+    chair: 0,
+    armchair: 0,
+    table: 0,
+    table_base: 0,
+    table_top: 0,
+    bench: 0,
+    lounge: 0,
+  }
 }
 
 /**

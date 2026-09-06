@@ -25,7 +25,14 @@ export type QualityReportType =
   | 'eco_certification'
   | 'other'
 
-export type ProductCategory = 'chair' | 'armchair' | 'table' | 'bench'
+export type ProductCategory =
+  | 'chair'
+  | 'armchair'
+  | 'table'
+  | 'table_base'
+  | 'table_top'
+  | 'bench'
+  | 'lounge'
 
 export interface QualityHighlight {
   readonly label: string
@@ -110,7 +117,10 @@ export const PRODUCT_CATEGORY_LABEL: Record<ProductCategory, string> = {
   chair: 'Chaises',
   armchair: 'Fauteuils',
   table: 'Tables',
+  table_base: 'Piètements',
+  table_top: 'Plateaux',
   bench: 'Banquettes',
+  lounge: 'Salons & lounge',
 }
 
 export const ORGANIZATIONS: ReadonlyArray<QualityReportOrganization> = [
@@ -139,5 +149,8 @@ export const PRODUCT_CATEGORIES: ReadonlyArray<ProductCategory> = [
   'chair',
   'armchair',
   'table',
+  'table_base',
+  'table_top',
   'bench',
+  'lounge',
 ]

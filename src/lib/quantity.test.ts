@@ -13,6 +13,27 @@ const armchair = PRODUCTS.find((product) => product.category === 'armchair')!
 const table = PRODUCTS.find((product) => product.category === 'table')!
 
 describe('quantity rules', () => {
+  it('lets a colour impose its own minimum (special table-top tints)', () => {
+    const rule = getQuantityRule(table, {
+      ...table.variants[0]!,
+      minOrderUnits: 40,
+    })
+
+    expect(rule.minimum).toBe(40)
+    expect(rule.step).toBe(1)
+    expect(sanitizeOrderQuantity(12, rule)).toBe(40)
+    expect(sanitizeOrderQuantity(41, rule)).toBe(41)
+
+    // Assises : le minimum coloris ne descend jamais sous le MOQ du produit
+    // et garde les paliers de 10.
+    const chairRule = getQuantityRule(chair, {
+      ...chair.variants[0]!,
+      minOrderUnits: 30,
+    })
+    expect(chairRule.minimum).toBe(chair.moqUnits)
+    expect(chairRule.step).toBe(10)
+  })
+
   it('requires a minimum of 50 units for chairs', () => {
     const rule = getQuantityRule(chair)
 

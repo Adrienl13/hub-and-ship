@@ -68,7 +68,7 @@ export function CartSheet() {
           <>
             <ul className="-mx-1 flex-1 space-y-2 overflow-y-auto px-1 py-2">
               {items.map((item) => {
-                const rule = getQuantityRule(item.product)
+                const rule = getQuantityRule(item.product, item.variant)
                 return (
                   <li
                     key={`${item.product.id}:${item.variant.id}`}

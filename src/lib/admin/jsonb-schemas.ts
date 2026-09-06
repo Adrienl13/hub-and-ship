@@ -10,7 +10,15 @@
 
 import { z } from 'zod'
 
-const productCategorySchema = z.enum(['chair', 'armchair', 'table', 'bench'])
+const productCategorySchema = z.enum([
+  'chair',
+  'armchair',
+  'table',
+  'table_base',
+  'table_top',
+  'bench',
+  'lounge',
+])
 
 export const timelineStepSchema = z.object({
   date: z.string().min(1, 'Date requise'),

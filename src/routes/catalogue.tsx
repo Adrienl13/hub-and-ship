@@ -126,6 +126,11 @@ const LazyProductDetailDialog = lazy(() =>
     default: module.ProductDetailDialog,
   })),
 )
+const LazyTableComposerDialog = lazy(() =>
+  import('@/components/TableComposerDialog').then((module) => ({
+    default: module.TableComposerDialog,
+  })),
+)
 const LazyReservationDialog = lazy(() =>
   import('@/components/ReservationDialog').then((module) => ({
     default: module.ReservationDialog,
@@ -179,6 +184,8 @@ function CataloguePage() {
   const deferredSearch = useDeferredValue(search)
   const [visibleCount, setVisibleCount] = useState<number>(GRID_PAGE_SIZE)
   const [detailId, setDetailId] = useState<string | null>(null)
+  // « Composer ma table » (piètement + plateau) : produit de départ.
+  const [composeId, setComposeId] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
   // Personnalisation : fenêtre à la première visite + rappel latéral qui
   // peut la rouvrir (validation Adrien 08/2026 — la bannière alourdissait).
@@ -216,6 +223,10 @@ function CataloguePage() {
   const detailProduct: Product | null = useMemo(
     () => productsArray.find((product) => product.id === detailId) ?? null,
     [detailId, productsArray],
+  )
+  const composeProduct: Product | null = useMemo(
+    () => productsArray.find((product) => product.id === composeId) ?? null,
+    [composeId, productsArray],
   )
   // Reconstruct the cart from a shared ?panier= link, once products are loaded.
   const sharedApplied = useRef(false)
@@ -569,6 +580,7 @@ function CataloguePage() {
                         setVariant(product.id, variantId)
                       }
                       onOpenDetails={() => setDetailId(product.id)}
+                      onCompose={() => setComposeId(product.id)}
                     />
                   )
                 })}
@@ -653,6 +665,20 @@ function CataloguePage() {
             onVariantChange={(variantId) =>
               setVariant(detailProduct.id, variantId)
             }
+            onCompose={() => {
+              setDetailId(null)
+              setComposeId(detailProduct.id)
+            }}
+          />
+        )}
+
+        {composeProduct && (
+          <LazyTableComposerDialog
+            open
+            onOpenChange={(value) => !value && setComposeId(null)}
+            products={productsArray}
+            initialProduct={composeProduct}
+            initialVariantId={variantByProduct[composeProduct.id]}
           />
         )}
 

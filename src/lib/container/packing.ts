@@ -193,7 +193,12 @@ export function getVisualPackageSpec(
     }
   }
 
-  if (product.category === 'table') {
+  // Piètements et plateaux voyagent à plat comme une table démontée.
+  if (
+    product.category === 'table' ||
+    product.category === 'table_base' ||
+    product.category === 'table_top'
+  ) {
     // Flat disassembled package (real Terrassea spec: a 70×70 cm
     // bistro top with its leg bundle = 72 × 17 × 74 cm). Footprint
     // tracks the product's own top dimensions; the height is the
@@ -208,7 +213,8 @@ export function getVisualPackageSpec(
     }
   }
 
-  if (product.category === 'bench') {
+  // Salons / lounge : colis volumineux non gerbables, même gabarit qu'un banc.
+  if (product.category === 'bench' || product.category === 'lounge') {
     const length = clamp(product.dimensions.l / 100, 1.2, 1.9)
     const width = clamp(product.dimensions.w / 100, 0.5, 0.72)
     const height = round3(clamp(unitCbm / (length * width), 0.32, 0.62))
@@ -325,8 +331,16 @@ function sortPackagesForPacking(
 }
 
 function packingTier(category: ProductCategory): number {
-  if (category === 'chair' || category === 'bench') return 0
-  if (category === 'table') return 1
+  if (category === 'chair' || category === 'bench' || category === 'lounge') {
+    return 0
+  }
+  if (
+    category === 'table' ||
+    category === 'table_base' ||
+    category === 'table_top'
+  ) {
+    return 1
+  }
   return 2
 }
 

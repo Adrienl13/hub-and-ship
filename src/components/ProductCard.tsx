@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react'
-import { Check, Info } from 'lucide-react'
+import { Check, Info, Layers3 } from 'lucide-react'
 
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { SafeImage } from '@/components/SafeImage'
@@ -8,6 +8,7 @@ import { DesignSelector } from '@/components/DesignSelector'
 import { CATEGORY_LABEL, type Product } from '@/lib/products'
 import { getMoqStatus } from '@/lib/order'
 import { getQuantityRule } from '@/lib/quantity'
+import { isComposable } from '@/lib/table-composer'
 
 // Fiche catalogue v3 (handoff design 08/2026, validé) : AUCUN prix sur la
 // fiche — seulement le badge « −X % vs prix public » et « Prix détaillé au
@@ -22,6 +23,7 @@ function ProductCardComponent({
   onQtyChange,
   onVariantChange,
   onOpenDetails,
+  onCompose,
 }: {
   product: Product
   variantId: string
@@ -29,6 +31,8 @@ function ProductCardComponent({
   onQtyChange: (value: number) => void
   onVariantChange: (id: string) => void
   onOpenDetails?: () => void
+  /** Piètements et plateaux : ouvre « Composer ma table ». */
+  onCompose?: () => void
 }) {
   const variant = useMemo(
     () =>
@@ -45,7 +49,7 @@ function ProductCardComponent({
       : null
   const totalCommitted = (variant?.unitsCommitted ?? 0) + qty
   const moqStatus = getMoqStatus(totalCommitted, product.moqUnits)
-  const quantityRule = getQuantityRule(product)
+  const quantityRule = getQuantityRule(product, variant)
 
   return (
     // PAS de content-visibility/contain-intrinsic-size ici : la valeur
@@ -140,6 +144,22 @@ function ProductCardComponent({
             }
           />
         </div>
+
+        {/* Piètement ou plateau : la table se compose en deux temps, avec une
+            seule quantité pour les deux lignes. Le stepper reste disponible
+            pour commander l'élément seul. */}
+        {onCompose && isComposable(product) && (
+          <button
+            type="button"
+            onClick={onCompose}
+            className="mt-2 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 text-xs font-semibold text-[color:var(--ember)] transition-colors hover:bg-[color:var(--ember)]/15"
+          >
+            <Layers3 className="h-3.5 w-3.5" />
+            {product.category === 'table_base'
+              ? 'Composer avec un plateau'
+              : 'Composer avec un piètement'}
+          </button>
+        )}
 
         <div className="mt-auto pt-2.5">
           <QuantityStepper

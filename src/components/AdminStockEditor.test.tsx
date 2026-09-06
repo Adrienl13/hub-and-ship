@@ -68,6 +68,7 @@ function makeProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
     description: '',
     dimensions: { l: 50, w: 50, h: 90 },
     tableShape: null,
+    compatibleTopShapes: [],
     cbmPerUnit: 0.2,
     weightKg: 5,
     moqUnits: 50,
@@ -97,6 +98,7 @@ const VARIANT: AdminProductVariant = {
   imageUrl: null,
   galleryUrls: [],
   sortOrder: 0,
+  minOrderUnits: null,
 }
 
 function renderEditor(product: AdminProduct) {

@@ -58,7 +58,10 @@ describe('available stock catalogue', () => {
       chair: 2,
       armchair: 1,
       table: 2,
+      table_base: 0,
+      table_top: 0,
       bench: 0,
+      lounge: 0,
     })
   })
 })

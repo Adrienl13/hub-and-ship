@@ -94,7 +94,14 @@ export type QualityReportType =
   | 'load_test'
   | 'eco_certification'
   | 'other'
-export type ProductCategoryDb = 'chair' | 'armchair' | 'table' | 'bench'
+export type ProductCategoryDb =
+  | 'chair'
+  | 'armchair'
+  | 'table'
+  | 'table_base'
+  | 'table_top'
+  | 'bench'
+  | 'lounge'
 export type FireRatingDb = 'M1' | 'M2'
 export type TableShapeDb = 'rectangular' | 'round'
 export type CarrierSpecialtyDb =
@@ -919,6 +926,7 @@ type ProductRow = {
   features: string[]
   fire_rating: FireRatingDb | null
   table_shape: TableShapeDb | null
+  compatible_top_shapes: string[]
   is_active: boolean
   sort_order: number
   created_at: string
@@ -949,6 +957,7 @@ type ProductInsert = {
   features?: string[]
   fire_rating?: FireRatingDb | null
   table_shape?: TableShapeDb | null
+  compatible_top_shapes?: string[]
   is_active?: boolean
   sort_order?: number
   created_at?: string
@@ -964,6 +973,7 @@ type ProductVariantRow = {
   image_url: string | null
   gallery_urls: string[]
   sort_order: number
+  min_order_units: number | null
   created_at: string
 }
 
@@ -974,6 +984,7 @@ type ProductVariantInsert = {
   image_url?: string | null
   gallery_urls?: string[]
   sort_order?: number
+  min_order_units?: number | null
   created_at?: string
 }
 

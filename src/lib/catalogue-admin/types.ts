@@ -30,6 +30,8 @@ export interface AdminProduct {
   readonly dimensions: { l: number; w: number; h: number }
   /** Forme du plateau (tables) : 'round' ⇒ l = w = diamètre. null = rectangulaire. */
   readonly tableShape: TableShapeDb | null
+  /** Piètements : formes de plateau compatibles (vide = tous). */
+  readonly compatibleTopShapes: ReadonlyArray<TableShapeDb>
   readonly cbmPerUnit: number
   readonly weightKg: number
   readonly moqUnits: number
@@ -57,6 +59,8 @@ export interface AdminProductVariant {
   readonly imageUrl: string | null
   readonly galleryUrls: ReadonlyArray<string>
   readonly sortOrder: number
+  /** Minimum de commande par acheteur propre à ce coloris (null = produit). */
+  readonly minOrderUnits: number | null
 }
 
 export interface AdminProductDetail extends AdminProduct {
@@ -123,6 +127,10 @@ export function fromProductRow(
       h: row.dim_height_cm,
     },
     tableShape: row.table_shape ?? null,
+    compatibleTopShapes: (row.compatible_top_shapes ?? []).filter(
+      (value): value is TableShapeDb =>
+        value === 'rectangular' || value === 'round',
+    ),
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,
@@ -159,6 +167,7 @@ export function fromVariantRow(row: ProductVariantRow): AdminProductVariant {
     imageUrl: row.image_url,
     galleryUrls: row.gallery_urls ?? [],
     sortOrder: row.sort_order,
+    minOrderUnits: row.min_order_units ?? null,
   }
 }
 

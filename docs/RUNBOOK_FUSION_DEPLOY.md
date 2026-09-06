@@ -72,6 +72,9 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 29 | `20260830100000_site_media_catalogue_perso_slot.sql` | **Catalogue v3** : slot `catalogue-perso` ajouté à la contrainte de `site_media` (photo de la fenêtre « Personnalisation incluse », administrable) — sans effet tant que la branche catalogue-v3 n'est pas déployée |
 | 30 | `20260905100000_products_public_view.sql` | **Anonymisation des coûts (étape 1, appliquée)** : vue `products_public` (security_invoker, colonnes de `products` sans `fob_usd` / `qty_per_container` / `is_loss_leader` / `table_price_modifier_rate`). Le catalogue public la lit désormais |
 | 32 | `20260905120000_pricing_readiness_view_security_invoker.sql` | **Sécurité (appliquée)** : la vue `product_pricing_readiness` (fob_usd) passe en `security_invoker` — un client connecté ne peut plus la lire, seul l'admin (RLS de `product_pricing_inputs`). Advisor Supabase niveau ERROR corrigé |
+| 33a | `20260906100000_product_category_composer_values.sql` | **Composer ma table + lounge (appliquée)** : valeurs d'enum `table_base` (piètement), `table_top` (plateau), `lounge` (salon) |
+| 33b | `20260906101000_table_composer_columns.sql` | **Composer ma table (appliquée)** : `products.compatible_top_shapes`, `product_variants.min_order_units` (minimum par coloris), vue `products_public` étendue, `admin_save_product_full` ré-émise |
+| 34 | `20260906120000_recategorize_lounge_tables.sql` | **Reclassement des produits (⚠️ à appliquer APRÈS le déploiement de la branche composer)** : salons → lounge, TBA → table_base, tables/chaises mal classées corrigées |
 | 31 | `20260905110000_products_revoke_anon_cost_columns.sql` | **Anonymisation des coûts (étape 2, ⚠️ PAS ENCORE APPLIQUÉE)** : `revoke select on products from anon`. À appliquer **après** le déploiement du bundle qui lit `products_public` (sinon le catalogue anonyme casse). Une seule instruction SQL, exécutable dans l'éditeur SQL Supabase |
 
 ```sql

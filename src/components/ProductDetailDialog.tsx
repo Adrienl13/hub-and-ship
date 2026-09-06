@@ -6,6 +6,7 @@ import {
   TrendingDown,
   Check,
   ArrowUpRight,
+  Layers3,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
@@ -23,11 +24,12 @@ import {
 } from '@/lib/products'
 import { productSlug } from '@/lib/catalogue/product-slug'
 import { getMoqStatus, formatEUR } from '@/lib/order'
-import { TableConfigurator } from '@/components/TableConfigurator'
+import { isComposable } from '@/lib/table-composer'
 import { ProductGallery } from '@/components/ProductGallery'
 import { ProductDocumentsList } from '@/components/ProductDocumentsList'
 import { ProductReviews } from '@/components/ProductReviews'
 import { QuantityStepper } from '@/components/QuantityStepper'
+import { Button } from '@/components/ui/button'
 import { ColorRequestCta } from '@/components/ColorRequestCta'
 import { DesignSelector } from '@/components/DesignSelector'
 import { QualityBadgeDetail } from '@/components/QualityBadge'
@@ -41,6 +43,7 @@ export function ProductDetailDialog({
   variantId,
   onQtyChange,
   onVariantChange,
+  onCompose,
 }: {
   product: Product | null
   open: boolean
@@ -49,6 +52,8 @@ export function ProductDetailDialog({
   variantId: string
   onQtyChange: (n: number) => void
   onVariantChange: (id: string) => void
+  /** Piètements et plateaux : ouvre « Composer ma table ». */
+  onCompose?: () => void
 }) {
   const variant = useMemo(
     () =>
@@ -74,7 +79,7 @@ export function ProductDetailDialog({
   const moqStatus = getMoqStatus(variant.unitsCommitted + qty, product.moqUnits)
   const totalLine = product.basePriceHt * qty
   const lineCbm = product.cbmPerUnit * qty
-  const quantityRule = getQuantityRule(product)
+  const quantityRule = getQuantityRule(product, variant)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -181,32 +186,40 @@ export function ProductDetailDialog({
               )}
             </div>
 
-            {product.category === 'table' ? (
-              <TableConfigurator
-                product={product}
-                variantId={variantId}
-                onVariantChange={onVariantChange}
+            <div>
+              <DesignSelector
+                variants={product.variants}
+                selectedVariantId={variantId}
+                onChange={onVariantChange}
+                size="lg"
+                fallbackImageUrl={product.mainImageUrl}
+                customizeProduct={product}
               />
-            ) : (
-              <div>
-                <DesignSelector
-                  variants={product.variants}
-                  selectedVariantId={variantId}
-                  onChange={onVariantChange}
-                  size="lg"
-                  fallbackImageUrl={product.mainImageUrl}
-                  customizeProduct={product}
-                />
-                <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
-                  <span className="font-medium">MOQ {variant.name} :</span>{' '}
-                  <span className="tabular-nums">
-                    {variant.unitsCommitted + qty} / {product.moqUnits}
-                  </span>{' '}
-                  <span className="text-muted-foreground">
-                    — {moqStatus.label}
-                  </span>
-                </div>
+              <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-2.5 text-xs">
+                <span className="font-medium">MOQ {variant.name} :</span>{' '}
+                <span className="tabular-nums">
+                  {variant.unitsCommitted + qty} / {product.moqUnits}
+                </span>{' '}
+                <span className="text-muted-foreground">
+                  — {moqStatus.label}
+                </span>
               </div>
+            </div>
+
+            {/* Piètement ou plateau : composer la table en deux temps (une
+                seule quantité pour les deux lignes). */}
+            {onCompose && isComposable(product) && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCompose}
+                className="h-10 w-full rounded-sm border-[color:var(--ember)]/40 text-[color:var(--ember)]"
+              >
+                <Layers3 className="mr-1.5 h-4 w-4" />
+                {product.category === 'table_base'
+                  ? 'Composer avec un plateau'
+                  : 'Composer avec un piètement'}
+              </Button>
             )}
 
             {/* Personnalisation coloris : pour TOUTES les catégories, tables

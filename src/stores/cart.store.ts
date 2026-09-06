@@ -181,7 +181,10 @@ function writeLineQty(
 
   const variant = resolveVariant(product, variantId)
   const key = cartLineKey(productId, variant.id)
-  const nextQty = sanitizeOrderQuantity(quantity, getQuantityRule(product))
+  const nextQty = sanitizeOrderQuantity(
+    quantity,
+    getQuantityRule(product, variant),
+  )
   const prevQty = previous.qtyByLine[key] ?? 0
 
   // silent = restauration programmatique (lien partagé) : ouvrir un
