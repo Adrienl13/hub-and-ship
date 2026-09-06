@@ -25,6 +25,15 @@ export const PRODUCT_CATEGORIES: ReadonlyArray<ProductCategory> = [
 ]
 
 export type TableTopShape = 'rectangular' | 'round'
+export type ProductVisibility = 'public' | 'on_request'
+
+/** Listé au catalogue, dans les pages SEO, le feed et les sélections du
+ *  composeur (un produit « sur demande » reste réservable par lien direct). */
+export function isPubliclyListed(
+  product: Pick<Product, 'visibility'>,
+): boolean {
+  return product.visibility !== 'on_request'
+}
 
 export interface DesignVariant {
   id: string
@@ -53,6 +62,9 @@ export interface Product {
   tableShape?: TableTopShape | null
   /** Piètements : formes de plateau compatibles. Vide/absent = tous. */
   compatibleTopShapes?: ReadonlyArray<TableTopShape>
+  /** 'on_request' = produit de projet (plateau découpé sur mesure, prix
+   *  négocié) : réservable par lien direct, jamais listé publiquement. */
+  visibility?: ProductVisibility
   /** m³ par unité (carton ou unité finie) */
   cbmPerUnit: number
   weightKg: number

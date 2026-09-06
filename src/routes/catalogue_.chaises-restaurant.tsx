@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
+import { isPubliclyListed } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -30,7 +31,9 @@ export const Route = createFileRoute('/catalogue_/chaises-restaurant')({
   // pointer vers des slugs qui existent réellement en base, pas vers le mock.
   loader: async () => {
     const products = await loadCatalogProducts()
-    const filtered = products.filter((p) => p.category === 'chair')
+    const filtered = products.filter(
+      (p) => p.category === 'chair' && isPubliclyListed(p),
+    )
     return { products: filtered }
   },
   // JSON-LD et image de partage depuis les produits RÉELS du loader : la

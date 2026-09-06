@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
+import { isPubliclyListed } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -43,7 +44,7 @@ export const Route = createFileRoute('/fournisseur-mobilier-chr')({
   loader: async () => {
     const products = await loadCatalogProducts()
     // Vitrine transverse : les meilleures ventes de chaque catégorie.
-    return { products: products.slice(0, 8) }
+    return { products: products.filter(isPubliclyListed).slice(0, 8) }
   },
   head: ({ loaderData }) => ({
     ...buildSeoHead({

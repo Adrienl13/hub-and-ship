@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Layers3, RefreshCcw } from 'lucide-react'
+import { Check, Layers3, RefreshCcw, Ruler } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { CustomTableTopDialog } from '@/components/CustomTableTopDialog'
 import { DesignSelector } from '@/components/DesignSelector'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { SafeImage } from '@/components/SafeImage'
@@ -160,19 +161,22 @@ function PickPanel({
   candidates,
   emptyLabel,
   onPick,
+  onCustom,
 }: {
   readonly step: string
   readonly title: string
   readonly candidates: ReadonlyArray<Product>
   readonly emptyLabel: string
   readonly onPick: (product: Product) => void
+  /** Plateaux : carte « sur mesure » en fin de liste (découpe à la demande). */
+  readonly onCustom?: () => void
 }) {
   return (
     <section className="min-w-0 rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3">
       <div className="label-eyebrow text-[color:var(--ember)]">
         {step} · {title}
       </div>
-      {candidates.length === 0 ? (
+      {candidates.length === 0 && !onCustom ? (
         <p className="mt-2 text-xs text-muted-foreground">{emptyLabel}</p>
       ) : (
         <div className="mt-2 grid max-h-72 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
@@ -183,6 +187,19 @@ function PickPanel({
               onPick={() => onPick(product)}
             />
           ))}
+          {onCustom && (
+            <button
+              type="button"
+              onClick={onCustom}
+              className="flex min-h-[9rem] min-w-0 flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-[color:var(--ember)]/50 bg-[color:var(--ember)]/[0.06] p-3 text-center text-xs font-semibold text-[color:var(--ember)] transition-colors hover:bg-[color:var(--ember)]/10"
+            >
+              <Ruler className="h-5 w-5" />
+              Autre dimension ?
+              <span className="font-normal text-muted-foreground">
+                Plateau découpé sur mesure, tarif sous 24 h
+              </span>
+            </button>
+          )}
         </div>
       )}
     </section>
@@ -218,6 +235,7 @@ export function TableComposerDialog({
     startsWithBase ? null : (initialVariantId ?? null),
   )
   const [quantity, setQuantity] = useState(0)
+  const [customOpen, setCustomOpen] = useState(false)
 
   // Réouverture sur un autre produit : repartir de celui-ci.
   useEffect(() => {
@@ -342,9 +360,30 @@ export function TableComposerDialog({
                 setTopId(product.id)
                 setTopVariantId(null)
               }}
+              onCustom={() => setCustomOpen(true)}
             />
           )}
         </div>
+
+        {top && (
+          <div className="px-5 pb-3 text-[11px] text-muted-foreground">
+            Autre dimension ?{' '}
+            <button
+              type="button"
+              onClick={() => setCustomOpen(true)}
+              className="font-medium text-[color:var(--ember)] underline-offset-2 hover:underline"
+            >
+              Demander un plateau sur mesure
+            </button>
+          </div>
+        )}
+
+        <CustomTableTopDialog
+          open={customOpen}
+          onOpenChange={setCustomOpen}
+          base={base}
+          baseVariant={baseVariant}
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-5 py-4">
           <div className="min-w-0">

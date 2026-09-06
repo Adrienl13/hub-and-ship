@@ -2,6 +2,7 @@ import { productPath } from '@/lib/catalogue/product-slug'
 import {
   CATEGORY_LABEL,
   formatProductDimensions,
+  isPubliclyListed,
   type Product,
 } from '@/lib/products'
 
@@ -276,8 +277,11 @@ export function itemListJsonLd({
   readonly path: string
   readonly products: ReadonlyArray<Product>
 }) {
-  // Une fiche sans photo (en cours de complétion) n'est pas annoncée.
-  const listed = products.filter((product) => Boolean(product.mainImageUrl))
+  // Une fiche sans photo (en cours de complétion) ou « sur demande » (projet
+  // sur mesure) n'est pas annoncée.
+  const listed = products.filter(
+    (product) => Boolean(product.mainImageUrl) && isPubliclyListed(product),
+  )
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',

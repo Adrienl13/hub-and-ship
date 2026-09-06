@@ -3,6 +3,7 @@ import {
   PRODUCTS,
   PRODUCT_CATEGORIES,
   emptyCategoryCounts,
+  isPubliclyListed,
   type Product,
   type ProductCategory,
 } from '@/lib/products'
@@ -122,6 +123,8 @@ export function filterAndSortProducts({
 }) {
   const query = search.trim().toLocaleLowerCase('fr-FR')
   let list = products.filter((product) => {
+    // Produit de projet (sur mesure) : réservable par lien, jamais listé.
+    if (!isPubliclyListed(product)) return false
     const categoryMatch = filter === 'all' || product.category === filter
     const collectionMatch =
       collection === null || collectionOf(product) === collection

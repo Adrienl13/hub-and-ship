@@ -32,6 +32,8 @@ export interface AdminProduct {
   readonly tableShape: TableShapeDb | null
   /** Piètements : formes de plateau compatibles (vide = tous). */
   readonly compatibleTopShapes: ReadonlyArray<TableShapeDb>
+  /** on_request = produit de projet (sur mesure), réservable par lien direct. */
+  readonly visibility: 'public' | 'on_request'
   readonly cbmPerUnit: number
   readonly weightKg: number
   readonly moqUnits: number
@@ -131,6 +133,7 @@ export function fromProductRow(
       (value): value is TableShapeDb =>
         value === 'rectangular' || value === 'round',
     ),
+    visibility: row.visibility === 'on_request' ? 'on_request' : 'public',
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,

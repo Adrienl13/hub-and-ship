@@ -37,6 +37,7 @@ export const AnalyticsEvent = {
   StockRequest: 'stock_request_submit',
   ContactSubmit: 'contact_submit',
   CustomColorwayRequest: 'custom_colorway_request',
+  CustomTableTopRequest: 'custom_table_top_request',
   ReviewSubmit: 'review_submit',
   ShareSelection: 'share_selection',
   QuotePdf: 'quote_pdf',

@@ -4,7 +4,7 @@
 // render even when the DB blips.
 
 import { fetchCatalogFromDb } from '@/lib/catalogue/db'
-import { PRODUCTS, type Product } from '@/lib/products'
+import { PRODUCTS, isPubliclyListed, type Product } from '@/lib/products'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -36,7 +36,8 @@ export async function loadLiveCatalogProducts(): Promise<ReadonlyArray<Product> 
 }
 
 /** Fiche annonçable aux moteurs : une photo principale est indispensable
- *  (Merchant refuse un item sans image, Google ignore un Product sans photo). */
+ *  (Merchant refuse un item sans image, Google ignore un Product sans photo)
+ *  et un produit « sur demande » (projet sur mesure) n'est jamais listé. */
 export function hasPublicImage(product: Product): boolean {
-  return Boolean(product.mainImageUrl)
+  return Boolean(product.mainImageUrl) && isPubliclyListed(product)
 }

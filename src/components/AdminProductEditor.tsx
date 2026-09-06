@@ -31,6 +31,8 @@ import {
   type PartnerChannel,
 } from '@/lib/catalogue-admin/repository'
 import { computeLandedCostHt } from '@/lib/pricing/product-profit'
+import { encodeCartSelection } from '@/lib/catalogue/share-cart'
+import { SITE_URL } from '@/lib/seo'
 import type {
   AdminContainerOption,
   AdminPricingParameters,
@@ -68,6 +70,8 @@ interface EditableProduct {
   table_shape: '' | TableShapeDb
   /** Piètements : formes de plateau acceptées (vide = tous). */
   compatible_top_shapes: TableShapeDb[]
+  /** on_request = produit de projet (sur mesure), réservable par lien. */
+  visibility: 'public' | 'on_request'
   cbm_per_unit: string
   weight_kg: string
   fire_rating: '' | FireRatingDb
@@ -101,6 +105,7 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
     dim_height_cm: String(detail.dimensions.h),
     table_shape: detail.tableShape ?? '',
     compatible_top_shapes: [...detail.compatibleTopShapes],
+    visibility: detail.visibility,
     cbm_per_unit: detail.cbmPerUnit.toString(),
     weight_kg: detail.weightKg.toString(),
     fire_rating: detail.fireRating ?? '',
@@ -132,6 +137,7 @@ function emptyEditable(): EditableProduct {
     dim_height_cm: '0',
     table_shape: '',
     compatible_top_shapes: [],
+    visibility: 'public',
     cbm_per_unit: '0.05',
     weight_kg: '0',
     fire_rating: '',
@@ -322,6 +328,7 @@ function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
         : null,
     compatible_top_shapes:
       state.category === 'table_base' ? state.compatible_top_shapes : [],
+    visibility: state.visibility,
     cbm_per_unit: Math.max(0.0001, parseNumber(state.cbm_per_unit, 0.01)),
     weight_kg: Math.max(0, parseNumber(state.weight_kg)),
     fire_rating: state.fire_rating === '' ? null : state.fire_rating,
@@ -790,6 +797,31 @@ export function AdminProductEditor({
               <span>{state.is_active ? 'Visible catalogue' : 'Masqué'}</span>
             </label>
           </Field>
+          <Field label="Visibilité">
+            <select
+              value={state.visibility}
+              onChange={(e) =>
+                setField(
+                  'visibility',
+                  e.target.value === 'on_request' ? 'on_request' : 'public',
+                )
+              }
+              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+            >
+              <option value="public">Catalogue public</option>
+              <option value="on_request">
+                Sur demande (lien direct uniquement)
+              </option>
+            </select>
+          </Field>
+          {state.visibility === 'on_request' && productId && (
+            <Field label="Lien client (panier pré-rempli)">
+              <ClientCartLink
+                productId={productId}
+                variantId={variants[0]?.id ?? ''}
+              />
+            </Field>
+          )}
           <Field label="Ordre">
             <Input
               type="number"
@@ -1548,6 +1580,50 @@ function RepeatableStringList({
         <Plus className="h-3.5 w-3.5" />
         Ajouter
       </Button>
+    </div>
+  )
+}
+
+// Produit « sur demande » (plateau sur mesure à prix négocié) : l'admin
+// envoie ce lien au client ; le panier s'ouvre pré-rempli à la quantité
+// convenue et la réservation suit le tunnel normal.
+function ClientCartLink({
+  productId,
+  variantId,
+}: {
+  readonly productId: string
+  readonly variantId: string
+}) {
+  const [quantity, setQuantity] = useState('1')
+  const qty = Math.max(1, Math.round(parseNumber(quantity, 1)))
+  const url = `${SITE_URL}/catalogue?panier=${encodeCartSelection([
+    { productId, variantId, qty },
+  ])}`
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min={1}
+          className="w-24"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          aria-label="Quantité convenue"
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-9 rounded-sm"
+          onClick={() => {
+            void navigator.clipboard?.writeText(url)
+            toast.success('Lien copié', { description: url })
+          }}
+        >
+          Copier le lien
+        </Button>
+      </div>
+      <p className="break-all text-[11px] text-muted-foreground">{url}</p>
     </div>
   )
 }

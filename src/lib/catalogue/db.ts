@@ -160,6 +160,7 @@ function productFromRow(
     },
     tableShape: row.table_shape ?? null,
     compatibleTopShapes: toTopShapes(row.compatible_top_shapes),
+    visibility: row.visibility === 'on_request' ? 'on_request' : 'public',
     cbmPerUnit: Number(row.cbm_per_unit),
     weightKg: Number(row.weight_kg),
     moqUnits: row.moq_units,

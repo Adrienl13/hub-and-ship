@@ -927,6 +927,7 @@ type ProductRow = {
   fire_rating: FireRatingDb | null
   table_shape: TableShapeDb | null
   compatible_top_shapes: string[]
+  visibility: 'public' | 'on_request'
   is_active: boolean
   sort_order: number
   created_at: string
@@ -958,6 +959,7 @@ type ProductInsert = {
   fire_rating?: FireRatingDb | null
   table_shape?: TableShapeDb | null
   compatible_top_shapes?: string[]
+  visibility?: 'public' | 'on_request'
   is_active?: boolean
   sort_order?: number
   created_at?: string

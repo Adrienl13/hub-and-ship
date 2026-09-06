@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
-import type { Product } from '@/lib/products'
+import { isPubliclyListed, type Product } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -58,7 +58,7 @@ export const Route = createFileRoute('/catalogue_/chaises-bistrot-parisiennes')(
   {
     loader: async () => {
       const products = await loadCatalogProducts()
-      return { products: bistrotChairs(products) }
+      return { products: bistrotChairs(products.filter(isPubliclyListed)) }
     },
     // JSON-LD et image de partage depuis les produits RÉELS du loader (jamais
     // la fixture de dev).

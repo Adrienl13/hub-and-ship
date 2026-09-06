@@ -9,7 +9,12 @@
 //   (variant.minOrderUnits) : la quantité de l'ensemble démarre au plus
 //   contraignant des deux minimums.
 
-import type { DesignVariant, Product, TableTopShape } from '@/lib/products'
+import {
+  isPubliclyListed,
+  type DesignVariant,
+  type Product,
+  type TableTopShape,
+} from '@/lib/products'
 import { getQuantityRule, type QuantityRule } from '@/lib/quantity'
 
 export const TABLE_TOP_SHAPE_LABEL: Record<TableTopShape, string> = {
@@ -42,11 +47,16 @@ export function isCompatibleTop(base: Product, top: Product): boolean {
   return accepted.includes(topShapeOf(top))
 }
 
+// Les produits « sur demande » (plateaux découpés pour un projet) ne sont
+// jamais proposés dans les listes : ils arrivent par lien direct.
 export function compatibleTops(
   base: Product,
   products: ReadonlyArray<Product>,
 ): Product[] {
-  return products.filter((candidate) => isCompatibleTop(base, candidate))
+  return products.filter(
+    (candidate) =>
+      isPubliclyListed(candidate) && isCompatibleTop(base, candidate),
+  )
 }
 
 export function compatibleBases(
@@ -54,7 +64,10 @@ export function compatibleBases(
   products: ReadonlyArray<Product>,
 ): Product[] {
   return products.filter(
-    (candidate) => isTableBase(candidate) && isCompatibleTop(candidate, top),
+    (candidate) =>
+      isPubliclyListed(candidate) &&
+      isTableBase(candidate) &&
+      isCompatibleTop(candidate, top),
   )
 }
 

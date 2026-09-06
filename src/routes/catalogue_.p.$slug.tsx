@@ -65,6 +65,8 @@ export const Route = createFileRoute('/catalogue_/p/$slug')({
         description: `${product.name} : ${formatEUR(product.basePriceHt)} HT en direct usine${retailNote}. MOQ ${product.moqUnits} unités, contrôle SGS, garantie 1 an, livraison par container mutualisé.`,
         path,
         image: product.mainImageUrl,
+        // Produit de projet (sur mesure) : accessible par lien, pas indexé.
+        noindex: product.visibility === 'on_request',
       }),
       scripts: [
         jsonLdScript(productJsonLd(product, { url: path })),

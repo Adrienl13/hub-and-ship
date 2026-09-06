@@ -51,6 +51,17 @@ describe('table composer compatibility', () => {
     expect(isCompatibleTop(anyBase, chair)).toBe(false)
   })
 
+  it('never lists on-request (made-to-measure) products', () => {
+    const projectTop = product({
+      id: 'top-project',
+      category: 'table_top',
+      visibility: 'on_request',
+    })
+    expect(
+      compatibleTops(anyBase, [rectTop, projectTop]).map((p) => p.id),
+    ).toEqual(['top-rect'])
+  })
+
   it('lists compatible tops and bases from the catalogue', () => {
     const catalogue = [roundBase, anyBase, roundTop, rectTop, chair]
     expect(compatibleTops(roundBase, catalogue).map((p) => p.id)).toEqual([

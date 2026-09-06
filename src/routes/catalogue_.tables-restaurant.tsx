@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { SeoLandingPage } from '@/components/SeoLandingPage'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
+import { isPubliclyListed } from '@/lib/products'
 import {
   breadcrumbJsonLd,
   buildSeoHead,
@@ -33,9 +34,10 @@ export const Route = createFileRoute('/catalogue_/tables-restaurant')({
     // Tables complètes + piètements + plateaux : tout ce qui compose une table.
     const filtered = products.filter(
       (p) =>
-        p.category === 'table' ||
-        p.category === 'table_base' ||
-        p.category === 'table_top',
+        isPubliclyListed(p) &&
+        (p.category === 'table' ||
+          p.category === 'table_base' ||
+          p.category === 'table_top'),
     )
     return { products: filtered }
   },
