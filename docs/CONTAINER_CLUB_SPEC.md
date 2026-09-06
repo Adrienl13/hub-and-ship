@@ -117,7 +117,7 @@ Container Club est une plateforme B2B de pré-commande groupée mensuelle de mob
 
 **Le prix d'un grossiste pro avec la qualité d'un revendeur premium.**
 
-Pas de communication agressive sur "le moins cher" car les volumes pros ont déjà des grossistes agressifs. Le positionnement est qualité/prix : rapports SGS, certifications M1/M2, garantie 2 ans, SAV France, importateur déclaré, conformité produit assumée.
+Pas de communication agressive sur "le moins cher" car les volumes pros ont déjà des grossistes agressifs. Le positionnement est qualité/prix : rapports SGS, certifications M1/M2, garantie commerciale 1 an, SAV France, importateur déclaré, conformité produit assumée.
 
 ### 1.3 Concurrents identifiés
 
@@ -2289,10 +2289,10 @@ export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   },
   hidden_defect: {
     type: 'hidden_defect',
-    maxDaysAfterDelivery: 730, // 2 ans = garantie légale
+    maxDaysAfterDelivery: 365, // 1 an = garantie commerciale (règle unique, cf. CGV)
     requiresPhotos: true,
     description:
-      'Vice caché découvert après usage normal (garantie légale 2 ans)',
+      'Vice caché découvert après usage normal (garantie commerciale 1 an)',
   },
 }
 
@@ -2722,10 +2722,10 @@ export const CLAIM_RULES: Record<ClaimType, ClaimRules> = {
   },
   hidden_defect: {
     type: 'hidden_defect',
-    maxDaysAfterDelivery: 730, // 2 ans = garantie légale
+    maxDaysAfterDelivery: 365, // 1 an = garantie commerciale (règle unique, cf. CGV)
     requiresPhotos: true,
     description:
-      'Vice caché découvert après usage normal (garantie légale 2 ans)',
+      'Vice caché découvert après usage normal (garantie commerciale 1 an)',
   },
 }
 
@@ -2775,7 +2775,7 @@ Architecture verticale (mobile-first), 9 sections :
 - 3 chips réassurance horizontales :
   - 🇫🇷 Importateur officiel français
   - ✓ Contrôle qualité SGS systématique
-  - 🛡️ Garantie 2 ans + SAV France
+  - 🛡️ Garantie 1 an + SAV France
 - Photo container ports (lifestyle, pas générique)
 - CTA principal "Explorer le catalogue" + CTA secondaire "Comment ça marche"
 
@@ -2796,7 +2796,7 @@ Prix HT/unité           │ €€        │ €€         │ €€€     
 Rotin garanti UV 5 ans  │ ✅        │ ❓         │ Variable   │
 Certification M1/M2     │ ✅        │ ❌         │ Variable   │
 Rapport SGS disponible  │ ✅        │ ❌         │ Variable   │
-Garantie                │ 2 ans FR  │ 1 an       │ Variable   │
+Garantie                │ 1 an FR   │ Variable   │ Variable   │
 Origine transparente    │ ✅        │ ❌         │ Variable   │
 SAV France              │ ✅        │ Partiel    │ ✅         │
 Conformité REACH        │ ✅        │ ❓         │ Variable   │
@@ -3849,7 +3849,7 @@ officiel (Terrassea SAS, France), gère douane, TVA autoliquidée et SAV.
 - Importateur officiel français (vs marketplaces sans intermédiaire)
 - Qualité contrôlée SGS systématique (vs grossistes pro)
 - Conformité M1/M2 et REACH (vs sourcing direct Asie)
-- Garantie 2 ans avec SAV France
+- Garantie 1 an avec SAV France
 - Prix au niveau des grossistes pro avec qualité premium
 
 ## Tarification
@@ -3940,7 +3940,7 @@ Validé section 6.7, implémenté techniquement dans `claims` :
 | Vice apparent     | 48h ouvrées             | Obligatoires | Remplacement ou remboursement                                      |
 | Dommage transport | 48h ouvrées             | Obligatoires | Remplacement (recours transporteur)                                |
 | Non-conformité    | 14 jours                | Obligatoires | Remplacement ou échange                                            |
-| Vice caché        | 2 ans (garantie légale) | Obligatoires | Au choix Container Club : remplacement ou remboursement au prorata |
+| Vice caché        | 1 an (garantie commerciale) | Obligatoires | Au choix Container Club : remplacement ou remboursement au prorata |
 
 ### 18.4 Clauses CGV essentielles à intégrer
 

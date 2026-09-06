@@ -264,7 +264,7 @@
 - **Vue matérialisée `product_ratings`** : ratings agrégés pour SEO
 - **Table `product_documents`** : rapports SGS, certificats (auth gated)
 - **Table `callback_requests`** : demandes rappel commercial avec créneaux
-- **Table `claims`** : SAV avec 4 types (48h vices apparents / 14j non-conformité / 2 ans vices cachés)
+- **Table `claims`** : SAV avec 4 types (48h vices apparents / 14j non-conformité / 1 an vices cachés — garantie commerciale 1 an, règle unique)
 - **Auto-ouverture containers** : 3 modes (manual/semi_auto/full_auto) configurables
 - **Section 18 protection juridique** : 10 articles CGV blindés B2B
 - **Tableau comparatif générique** Container Club vs concurrents (sans noms)
