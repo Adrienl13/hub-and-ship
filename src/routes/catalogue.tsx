@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ArrowUpDown, Search, X } from 'lucide-react'
+import { ArrowUpDown, Ruler, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { CatalogueCommandBar } from '@/components/CatalogueCommandBar'
@@ -126,6 +126,11 @@ const LazyProductDetailDialog = lazy(() =>
     default: module.ProductDetailDialog,
   })),
 )
+const LazyCustomTableTopDialog = lazy(() =>
+  import('@/components/CustomTableTopDialog').then((module) => ({
+    default: module.CustomTableTopDialog,
+  })),
+)
 const LazyTableComposerDialog = lazy(() =>
   import('@/components/TableComposerDialog').then((module) => ({
     default: module.TableComposerDialog,
@@ -186,6 +191,8 @@ function CataloguePage() {
   const [detailId, setDetailId] = useState<string | null>(null)
   // « Composer ma table » (piètement + plateau) : produit de départ.
   const [composeId, setComposeId] = useState<string | null>(null)
+  // Demande de plateau sur mesure depuis le bandeau du filtre Plateaux.
+  const [customTopOpen, setCustomTopOpen] = useState(false)
   const [reserveOpen, setReserveOpen] = useState(false)
   // Personnalisation : fenêtre à la première visite + rappel latéral qui
   // peut la rouvrir (validation Adrien 08/2026 — la bannière alourdissait).
@@ -559,6 +566,35 @@ function CataloguePage() {
               </div>
             </div>
 
+            {/* Filtre Plateaux : rappel « découpe à la demande » — le direct
+                usine permet d'autres dimensions que les formats listés. */}
+            {filter === 'table_top' && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] p-4 text-sm">
+                <div className="flex min-w-0 items-start gap-2">
+                  <Ruler className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ember)]" />
+                  <div className="min-w-0">
+                    <div className="font-medium">
+                      Une autre dimension ? On découpe à la demande.
+                    </div>
+                    <div className="text-xs leading-5 text-muted-foreground">
+                      En direct usine, nos plateaux se découpent aux dimensions
+                      de votre projet (rond, carré, rectangulaire). Les formats
+                      ci-dessous sont les plus courants ; pour le reste,
+                      demandez un tarif : réponse sous 24 h ouvrées.
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-sm border-[color:var(--ember)]/40 text-[color:var(--ember)]"
+                  onClick={() => setCustomTopOpen(true)}
+                >
+                  Demander un plateau sur mesure
+                </Button>
+              </div>
+            )}
+
             {filtered.length === 0 ? (
               <div className="rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-16 text-center text-sm text-muted-foreground">
                 Aucun produit ne correspond à ces filtres.
@@ -669,6 +705,13 @@ function CataloguePage() {
               setDetailId(null)
               setComposeId(detailProduct.id)
             }}
+          />
+        )}
+
+        {customTopOpen && (
+          <LazyCustomTableTopDialog
+            open
+            onOpenChange={setCustomTopOpen}
           />
         )}
 

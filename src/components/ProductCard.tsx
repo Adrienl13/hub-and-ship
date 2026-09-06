@@ -5,10 +5,26 @@ import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { SafeImage } from '@/components/SafeImage'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { DesignSelector } from '@/components/DesignSelector'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import {
+  CATEGORY_LABEL,
+  formatProductDimensions,
+  type Product,
+} from '@/lib/products'
 import { getMoqStatus } from '@/lib/order'
 import { getQuantityRule } from '@/lib/quantity'
-import { isComposable } from '@/lib/table-composer'
+import {
+  TABLE_TOP_SHAPE_LABEL,
+  isComposable,
+  topShapeOf,
+} from '@/lib/table-composer'
+
+function showsDimensions(product: Product): boolean {
+  return (
+    product.category === 'table_top' ||
+    product.category === 'table_base' ||
+    product.category === 'table'
+  )
+}
 
 // Fiche catalogue v3 (handoff design 08/2026, validé) : AUCUN prix sur la
 // fiche — seulement le badge « −X % vs prix public » et « Prix détaillé au
@@ -108,6 +124,16 @@ function ProductCardComponent({
           </span>
           <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover/name:text-foreground" />
         </button>
+
+        {/* Plateaux, piètements et tables : la dimension est le critère de
+            choix n° 1, elle se lit sans ouvrir la fiche. */}
+        {showsDimensions(product) && (
+          <div className="mt-1 text-[11px] tabular-nums text-muted-foreground">
+            {formatProductDimensions(product)}
+            {product.category === 'table_top' &&
+              ` · ${TABLE_TOP_SHAPE_LABEL[topShapeOf(product)]}`}
+          </div>
+        )}
 
         {/* Prix volontairement absent : badge économie + renvoi panier. */}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[color:var(--sand-deep)] pt-1.5">
