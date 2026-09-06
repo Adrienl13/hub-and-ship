@@ -59,7 +59,7 @@ const GTM_SCRIPTS =
             "gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});",
             "try{var c=JSON.parse(localStorage.getItem('cc_consent')||'null');",
             'if(c&&c.analytics===true&&Date.now()-c.decidedAt<15552000000){',
-            "gtag('consent','update',{analytics_storage:'granted'})}}catch(e){}",
+            "gtag('consent','update',{analytics_storage:'granted',ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'})}}catch(e){}",
           ].join(''),
         },
         {

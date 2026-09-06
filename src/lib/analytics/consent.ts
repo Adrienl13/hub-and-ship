@@ -57,14 +57,16 @@ export function writeStoredConsent(
   return record
 }
 
-/** Paramètres Consent Mode v2 correspondant à la décision. Seule la mesure
- *  d'audience est concernée : aucun cookie publicitaire (politique cookies). */
+/** Paramètres Consent Mode v2 correspondant à la décision. Un seul choix
+ *  couvre la mesure d'audience (GA4) ET les conversions publicitaires
+ *  (Google Ads, pixel Meta) — la politique cookies les annonce ensemble. */
 export function buildConsentUpdate(analytics: boolean): Record<string, string> {
+  const value = analytics ? 'granted' : 'denied'
   return {
-    analytics_storage: analytics ? 'granted' : 'denied',
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
+    analytics_storage: value,
+    ad_storage: value,
+    ad_user_data: value,
+    ad_personalization: value,
   }
 }
 

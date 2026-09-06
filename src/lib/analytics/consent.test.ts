@@ -40,13 +40,18 @@ describe('cookie consent storage', () => {
     expect(parseStoredConsent(null, 0)).toBeNull()
   })
 
-  it('only ever grants analytics storage (no advertising cookies)', () => {
+  it('grants analytics and advertising storage together, denies both otherwise', () => {
     expect(buildConsentUpdate(true)).toEqual({
       analytics_storage: 'granted',
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+    })
+    expect(buildConsentUpdate(false)).toEqual({
+      analytics_storage: 'denied',
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied',
     })
-    expect(buildConsentUpdate(false).analytics_storage).toBe('denied')
   })
 })

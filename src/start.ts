@@ -27,9 +27,9 @@ const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "img-src 'self' https: data: blob:",
   "font-src 'self' https://fonts.gstatic.com data:",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://plausible.io https://www.googletagmanager.com https://*.google-analytics.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://plausible.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net",
-  'frame-src https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com',
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://plausible.io https://www.googletagmanager.com https://*.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://connect.facebook.net",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://plausible.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com https://www.facebook.com",
+  'frame-src https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://td.doubleclick.net https://www.facebook.com',
   "form-action 'self' https://checkout.stripe.com",
 ].join('; ')
 

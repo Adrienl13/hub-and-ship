@@ -54,12 +54,12 @@ export function CookieConsentBanner() {
       className="shadow-paper fixed bottom-4 left-4 z-[60] max-w-sm rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-sm text-foreground"
     >
       <div className="font-display text-base font-semibold">
-        Mesure d&apos;audience
+        Cookies de mesure et de publicité
       </div>
       <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-        Nous utilisons Google Analytics pour comprendre comment le site est
-        utilisé et améliorer le catalogue. Aucun cookie publicitaire. Vous
-        pouvez refuser sans conséquence sur votre réservation.{' '}
+        Google Analytics nous aide à comprendre l&apos;usage du site ; les
+        cookies Google Ads et Meta mesurent nos campagnes. Vous pouvez refuser
+        sans conséquence sur votre réservation.{' '}
         <a href="/legal/cookies" className="underline underline-offset-2">
           Politique cookies
         </a>
