@@ -768,12 +768,15 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               politique.
             </LI>
           </UL>
-          <P>
-            <Strong>
-              Terrassea n'utilise actuellement aucun cookie publicitaire ni
-              aucun traceur de réseau social.
-            </Strong>
-          </P>
+          <UL>
+            <LI>
+              <Strong>Cookies publicitaires et de mesure de campagnes</Strong>{' '}
+              — Google Ads (conversions) et pixel Meta (Facebook / Instagram),
+              chargés via Google Tag Manager. Refusés par défaut, déposés
+              uniquement après votre consentement ; ils servent à mesurer nos
+              campagnes, jamais à vendre vos données.
+            </LI>
+          </UL>
         </LegalSection>
 
         <LegalSection id="liste" title="3. Liste détaillée des cookies déposés">
@@ -795,6 +798,11 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             <LI>
               <Strong>_ga, _ga_*</Strong> (Google Analytics, 13 mois) — mesure
               d'audience, déposés uniquement après acceptation.
+            </LI>
+            <LI>
+              <Strong>_gcl_au</Strong> (Google Ads, 3 mois) et{' '}
+              <Strong>_fbp</Strong> (Meta, 3 mois) — mesure des campagnes
+              publicitaires, déposés uniquement après acceptation.
             </LI>
             <LI>
               <Strong>__stripe_mid</Strong> (Stripe, 1 an) — détection de fraude

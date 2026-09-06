@@ -61,11 +61,34 @@ réservation (colonnes `utm_*` en base) — indépendamment de Google.
 
 Consent Mode v2 est actif : tout est « denied » au chargement, un bandeau
 propose Accepter / Refuser, la décision est mémorisée 6 mois (`cc_consent`)
-et modifiable via « Gérer mes cookies » (pied de page). Sans acceptation,
-GA4 ne dépose aucun cookie ; les cookies publicitaires restent refusés dans
-tous les cas (la politique cookies l'annonce). Pour activer le remarketing
-Google Ads un jour : mettre à jour la politique cookies ET
-`buildConsentUpdate` (src/lib/analytics/consent.ts).
+et modifiable via « Gérer mes cookies » (pied de page). Un seul choix couvre
+la mesure d'audience (GA4) et les conversions publicitaires (Google Ads,
+Meta) — la politique cookies le dit. Sans acceptation, aucun de ces tags ne
+dépose de cookie (Google garde des pings sans cookie, modélisés).
+
+## 3 bis. Google Ads et pixel Meta (sans toucher au code)
+
+Tout se fait dans GTM ; le code envoie déjà les événements et le
+consentement.
+
+- **Google Ads** : Admin GA4 → Liens Google Ads → importer les conversions
+  GA4 (`reservation_fee_paid` en priorité, puis `contact_submit`,
+  `stock_request_submit`). Alternative directe : tag « Google Ads
+  Conversion Tracking » dans GTM (ID + libellé de conversion), déclencheur
+  *Custom Event* `reservation_fee_paid`, valeur `{{DL - value}}` (variable
+  Data Layer `value`), devise EUR. Remarketing : tag « Google Ads
+  Remarketing » sur *All Pages* — respecte automatiquement le consentement.
+- **Pixel Meta** : dans GTM, tag « Custom HTML » avec le code du pixel
+  (`fbq('init','<PIXEL_ID>'); fbq('track','PageView')`) sur *All Pages*,
+  **avec « Paramètres de consentement supplémentaires » = ad_storage**
+  (onglet Consentement du tag) pour qu'il ne se charge qu'après acceptation.
+  Puis un tag Custom HTML par événement :
+  `fbq('track','Purchase',{value:{{DL - value}},currency:'EUR'})` sur
+  `reservation_fee_paid`, `fbq('track','Lead')` sur `contact_submit` /
+  `stock_request_submit` / `partner_request_submit`, `fbq('track','AddToCart')`
+  sur `add_to_cart`, `fbq('track','InitiateCheckout')` sur `begin_checkout`.
+- Les domaines Google Ads / Facebook sont déjà autorisés par la politique
+  de sécurité du site (CSP) : rien à changer côté code.
 
 ## 4. Google Business Profile, Search Console, Ads
 
