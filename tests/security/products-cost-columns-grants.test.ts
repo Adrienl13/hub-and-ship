@@ -27,7 +27,7 @@ const MIGRATIONS_DIR = join(ROOT, 'supabase', 'migrations')
 
 const ANON_GRANT_MIGRATION = '20260907100000_products_anon_column_grants.sql'
 const AUTHENTICATED_GRANT_MIGRATION =
-  '20260908100000_products_authenticated_column_grants.sql'
+  '20260907110000_products_authenticated_column_grants.sql'
 const ANON_REVOKE_MIGRATION = '20260905110000_products_revoke_anon_cost_columns.sql'
 const PRICING_INPUTS_MIGRATION = '20260706110000_admin_pricing_engine_parity.sql'
 

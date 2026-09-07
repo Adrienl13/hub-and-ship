@@ -22,6 +22,13 @@
 --
 -- Toute colonne ajoutée à `products` doit être ajoutée aux DEUX listes
 -- (anon et authenticated) : docs/RUNBOOK_SECURITY_GRANTS.md.
+--
+-- ROLLBACK D'URGENCE (filet de sécurité, uniquement si un chemin applicatif
+-- non détecté casse après application ; restaure l'ancien accès complet de
+-- authenticated, y compris aux 4 colonnes de coût) :
+--   grant select on table public.products to authenticated;
+-- Retour au modèle sécurisé après correction du runtime : rejouer les deux
+-- instructions revoke/grant ci-dessous (idempotentes).
 
 revoke select on table public.products from authenticated;
 

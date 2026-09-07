@@ -54,6 +54,31 @@ Point de vigilance : l'admin n'est **pas** un rôle Postgres. C'est un utilisate
 
 Toujours : **déployer le code** qui sélectionne des colonnes explicites, **puis** appliquer la migration de grant. Dans l'autre sens, l'ancien bundle (qui fait `*`) casse jusqu'au déploiement. Migrations 31, 37 et 38 suivent cette règle (voir `RUNBOOK_FUSION_DEPLOY.md`).
 
+## 4 bis. Rollback d'urgence de la migration 38 (`20260907110000_products_authenticated_column_grants.sql`)
+
+Uniquement si un chemin applicatif critique non détecté casse après application (symptôme : erreur `42501 permission denied for table products` dans un écran connecté). Restaure l'ancien accès complet de `authenticated`, **y compris aux 4 colonnes de coût** :
+
+```sql
+grant select on table public.products to authenticated;
+```
+
+Retour au modèle sécurisé après correction du runtime (projection explicite déployée) :
+
+```sql
+revoke select on table public.products from authenticated;
+grant select (
+  id, sku, category, name, description,
+  dim_length_cm, dim_width_cm, dim_height_cm,
+  cbm_per_unit, weight_kg, moq_units,
+  base_price_ht, retail_price_ref, eco_contribution,
+  main_image_url, gallery_urls, features, fire_rating,
+  is_active, sort_order, created_at, updated_at,
+  table_shape, compatible_top_shapes, visibility
+) on table public.products to authenticated;
+```
+
+puis `bun run security:grants` avec le compte de test non admin.
+
 ## 5. Comptes de test
 
 Les contrôles `authenticated` exigent un compte **de test non admin** (jamais un vrai client) et, pour les chemins admin, un compte admin de test. Création : `docs/COMPTES_TEST.md` (Dashboard Supabase → Authentication → Add user, « Auto Confirm User »). Les identifiants restent dans l'environnement (`.env.local`, secrets CI), jamais dans le repo.
