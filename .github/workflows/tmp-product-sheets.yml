@@ -1,6 +1,9 @@
 name: tmp-product-sheets
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/tmp-product-sheets]
+    paths-ignore: ['tmp-sheets/*.jpg']
 permissions:
   contents: write
 jobs:
