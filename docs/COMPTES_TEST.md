@@ -145,3 +145,7 @@ delete from public.companies
   where legal_name in ('CHR Direct Test','Revendeur Test SARL',
                        'Distributeur Test SAS');
 ```
+
+## Contrôle des grants (lot 0.5 Studio)
+
+Le script `bun run security:grants` et le test `tests/integration/products-access.integration.test.ts` utilisent le compte **Client direct** (`direct.test@prosimport.com`, non admin) et, facultativement, le compte **Admin** de test pour vérifier que les coûts fournisseur restent invisibles et que le catalogue reste lisible. Renseigne `TEST_BUYER_EMAIL` / `TEST_BUYER_PASSWORD` (et `TEST_ADMIN_*`) dans `.env.local` ou dans les secrets CI — jamais dans le repo, jamais avec un vrai compte client.
