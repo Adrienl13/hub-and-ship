@@ -28,6 +28,8 @@ import {
   SEAT_KINDS,
   SEAT_MATERIALS,
   STUDIO_ROLES,
+  type CurationSet,
+  type DiagnosticPair,
   type FulfillmentContext,
   type FulfillmentOption,
   type SeatKind,
@@ -86,8 +88,15 @@ export const STUDIO_PROFILE_PUBLIC_COLUMNS = [
 ] as const
 export const MODEL_FAMILY_PUBLIC_COLUMNS = ['id', 'label', 'status'] as const
 
+/** Colonnes des surfaces publiques du lot 2 (jeux curés actifs, paires
+ *  diagnostiques vérifiées). Jamais notes, created_by, verified_by. */
+export const CURATION_SET_PUBLIC_COLUMNS = ['id', 'label', 'product_ids'] as const
+export const DIAGNOSTIC_PAIR_PUBLIC_COLUMNS = ['id', 'product_a_id', 'product_b_id', 'axis'] as const
+
 export const VARIANT_SELECT =
   'id, product_id, name, image_url, gallery_urls, sort_order, created_at, min_order_units'
+export const CURATION_SET_SELECT: string = CURATION_SET_PUBLIC_COLUMNS.join(', ')
+export const DIAGNOSTIC_PAIR_SELECT: string = DIAGNOSTIC_PAIR_PUBLIC_COLUMNS.join(', ')
 export const FULFILLMENT_OPTION_SELECT: string = FULFILLMENT_OPTION_COLUMNS.join(', ')
 export const STOCK_SELECT =
   'id, product_id, variant_id, available_units, stock_price_ht'
@@ -109,6 +118,8 @@ export type StudioDbTable =
   | 'product_variants'
   | 'studio_fulfillment_options_public'
   | 'stock_lines'
+  | 'studio_curation_sets_public'
+  | 'studio_diagnostic_pairs_public'
 
 export interface StudioDbClient {
   from(table: StudioDbTable): {
@@ -119,12 +130,18 @@ export interface StudioDbClient {
 export interface StudioCatalog {
   readonly products: ReadonlyArray<StudioProduct>
   readonly context: FulfillmentContext
+  /** Jeux curés ACTIFS déclarés en base (lot 2 : infrastructure). */
+  readonly curationSets: ReadonlyArray<CurationSet>
+  /** Paires diagnostiques VÉRIFIÉES (lot 2 : vides par défaut). */
+  readonly diagnosticPairs: ReadonlyArray<DiagnosticPair>
   readonly source: 'db' | 'unconfigured'
 }
 
 const EMPTY_CATALOG: StudioCatalog = {
   products: [],
   context: { stock: [], options: [] },
+  curationSets: [],
+  diagnosticPairs: [],
   source: 'unconfigured',
 }
 
@@ -210,6 +227,24 @@ function optionFromRow(row: Record<string, unknown>): FulfillmentOption | null {
   }
 }
 
+function curationSetFromRow(row: Record<string, unknown>): CurationSet | null {
+  const id = asNullableString(row.id)
+  if (!id) return null
+  const productIds = Array.isArray(row.product_ids)
+    ? row.product_ids.filter((value): value is string => typeof value === 'string' && value.length > 0)
+    : []
+  return { id, label: asString(row.label, id), productIds }
+}
+
+function diagnosticPairFromRow(row: Record<string, unknown>): DiagnosticPair | null {
+  const id = asNullableString(row.id)
+  const productAId = asNullableString(row.product_a_id)
+  const productBId = asNullableString(row.product_b_id)
+  const axis = asNullableString(row.axis)
+  if (!id || !productAId || !productBId || !axis || productAId === productBId) return null
+  return { id, productAId, productBId, axis }
+}
+
 function stockFromRow(row: Record<string, unknown>): StockAvailability {
   return {
     stockLineId: asString(row.id),
@@ -223,7 +258,7 @@ function stockFromRow(row: Record<string, unknown>): StockAvailability {
 export async function fetchStudioCatalog(
   client: StudioDbClient,
 ): Promise<StudioCatalog> {
-  const [productsResult, variantsResult, optionsResult, stockResult] =
+  const [productsResult, variantsResult, optionsResult, stockResult, setsResult, pairsResult] =
     await Promise.all([
       client
         .from('studio_products')
@@ -243,12 +278,24 @@ export async function fetchStudioCatalog(
         .select(STOCK_SELECT)
         .eq('is_active', true)
         .gt('available_units', 0),
+      client.from('studio_curation_sets_public').select(CURATION_SET_SELECT),
+      client.from('studio_diagnostic_pairs_public').select(DIAGNOSTIC_PAIR_SELECT),
     ])
 
   if (productsResult.error) throw new Error(productsResult.error.message)
   if (variantsResult.error) throw new Error(variantsResult.error.message)
   if (optionsResult.error) throw new Error(optionsResult.error.message)
   if (stockResult.error) throw new Error(stockResult.error.message)
+  // Surfaces du lot 2 : leur absence (migration pas encore appliquée) ne
+  // doit pas priver la découverte ; on dégrade en listes vides.
+  const curationSets = setsResult.error
+    ? []
+    : (setsResult.data ?? []).map(curationSetFromRow).filter((set): set is CurationSet => set !== null)
+  const diagnosticPairs = pairsResult.error
+    ? []
+    : (pairsResult.data ?? [])
+        .map(diagnosticPairFromRow)
+        .filter((pair): pair is DiagnosticPair => pair !== null)
 
   const variantsByProduct = new Map<string, DesignVariant[]>()
   for (const row of variantsResult.data ?? []) {
@@ -273,6 +320,8 @@ export async function fetchStudioCatalog(
   return {
     products,
     context: { stock, options },
+    curationSets,
+    diagnosticPairs,
     source: 'db',
   }
 }

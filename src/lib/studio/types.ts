@@ -166,6 +166,27 @@ export interface FulfillmentContext {
 }
 
 // ---------------------------------------------------------------------------
+// Curation et paires diagnostiques (lot 2 : infrastructure seulement)
+// ---------------------------------------------------------------------------
+
+/** Jeu curé lu par la vue publique studio_curation_sets_public (jeux actifs
+ *  seulement). Aucun jeu n'est inventé : sans ligne en base, pas de jeu. */
+export interface CurationSet {
+  readonly id: string
+  readonly label: string
+  readonly productIds: ReadonlyArray<string>
+}
+
+/** Paire diagnostique EXPLICITE (vérifiée), lue par la vue publique
+ *  studio_diagnostic_pairs_public. Vide par défaut : aucun duel sans paire. */
+export interface DiagnosticPair {
+  readonly id: string
+  readonly productAId: string
+  readonly productBId: string
+  readonly axis: string
+}
+
+// ---------------------------------------------------------------------------
 // Raisons commerciales et états projet
 // ---------------------------------------------------------------------------
 

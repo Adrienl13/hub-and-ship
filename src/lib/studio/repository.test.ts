@@ -165,7 +165,14 @@ describe('repository Studio', () => {
     expect(catalog.context).not.toHaveProperty('productionOpen')
 
     const tables = calls.map((call) => call.table)
-    expect(tables).toEqual(['studio_products', 'product_variants', 'studio_fulfillment_options_public', 'stock_lines'])
+    expect(tables).toEqual([
+      'studio_products',
+      'product_variants',
+      'studio_fulfillment_options_public',
+      'stock_lines',
+      'studio_curation_sets_public',
+      'studio_diagnostic_pairs_public',
+    ])
     expect(tables).not.toContain('containers')
     expect(tables).not.toContain('studio_fulfillment_options')
     expect(tables).not.toContain('studio_product_profiles')
@@ -196,6 +203,69 @@ describe('repository Studio', () => {
     expect(catalog.products.map((product) => product.id)).toEqual(['p2'])
     expect(catalog.products[0]?.studio).toMatchObject({ studioRole: 'catalog_only', seatKind: null, dataQuality: {} })
     expect(catalog.context.options).toEqual([])
+  })
+
+  it('lit les jeux curés actifs et les paires vérifiées avec des colonnes explicites ; paires vides par défaut', async () => {
+    const calls: Call[] = []
+    const client = fakeClient(
+      {
+        studio_products: [productRow],
+        product_variants: [{ id: 'bis-001-std', product_id: 'bis-001', name: 'Standard', image_url: null, gallery_urls: null, sort_order: 0, min_order_units: null }],
+        studio_fulfillment_options_public: [],
+        stock_lines: [],
+        studio_curation_sets_public: [
+          { id: 'pilot', label: 'Jeu pilote', product_ids: ['bis-001', 42, ''] },
+          { id: null, label: 'invalide', product_ids: [] },
+        ],
+        studio_diagnostic_pairs_public: [
+          { id: 'pair-1', product_a_id: 'bis-001', product_b_id: 'bis-002', axis: 'openness' },
+          { id: 'pair-same', product_a_id: 'bis-001', product_b_id: 'bis-001', axis: 'openness' },
+          { id: 'pair-bad', product_a_id: 'bis-001', product_b_id: null, axis: 'openness' },
+        ],
+      },
+      calls,
+    )
+    const catalog = await fetchStudioCatalog(client)
+    expect(catalog.curationSets).toEqual([{ id: 'pilot', label: 'Jeu pilote', productIds: ['bis-001'] }])
+    expect(catalog.diagnosticPairs).toEqual([
+      { id: 'pair-1', productAId: 'bis-001', productBId: 'bis-002', axis: 'openness' },
+    ])
+    expect(calls.find((call) => call.table === 'studio_curation_sets_public')?.columns).toBe('id, label, product_ids')
+    expect(calls.find((call) => call.table === 'studio_diagnostic_pairs_public')?.columns).toBe('id, product_a_id, product_b_id, axis')
+    for (const call of calls) {
+      expect(call.columns).not.toContain('*')
+      expect(call.columns).not.toMatch(/notes|created_by|verified_by/)
+    }
+  })
+
+  it("se dégrade en listes vides si les surfaces du lot 2 n'existent pas encore", async () => {
+    const client = {
+      from(table: StudioDbTable) {
+        return {
+          select() {
+            const builder = {
+              eq: () => builder,
+              gt: () => builder,
+              order: () => builder,
+              limit: () => builder,
+              then<R>(onFulfilled: (value: { data: ReadonlyArray<Row> | null; error: { message: string } | null }) => R) {
+                const missing = table === 'studio_curation_sets_public' || table === 'studio_diagnostic_pairs_public'
+                return Promise.resolve(
+                  missing
+                    ? { data: null, error: { message: 'relation does not exist' } }
+                    : { data: table === 'studio_products' ? [productRow] : table === 'product_variants' ? [{ id: 'bis-001-std', product_id: 'bis-001', name: 'Standard', image_url: null, gallery_urls: null, sort_order: 0, min_order_units: null }] : [], error: null },
+                ).then(onFulfilled)
+              },
+            }
+            return builder
+          },
+        }
+      },
+    } as unknown as StudioDbClient
+    const catalog = await fetchStudioCatalog(client)
+    expect(catalog.products).toHaveLength(1)
+    expect(catalog.curationSets).toEqual([])
+    expect(catalog.diagnosticPairs).toEqual([])
   })
 
   it("ne conserve aucune métadonnée interne de data_quality même si elle arrivait", async () => {
