@@ -30,11 +30,16 @@ Point de vigilance : l'admin n'est **pas** un rôle Postgres. C'est un utilisate
    create or replace view public.products_public with (security_invoker = true) as
      select <liste complète incluant <col>> from public.products;
    grant select on public.products_public to anon, authenticated;
+   -- depuis le lot 1 Studio : la vue studio_products liste aussi les colonnes
+   create or replace view public.studio_products with (security_invoker = true) as
+     select p.<liste complète incluant <col>>, <colonnes de profil> from public.products_public p
+     left join public.studio_product_profiles sp on sp.product_id = p.id;
+   grant select on public.studio_products to anon, authenticated;
    ```
    Sans le `grant select (<col>)`, la vue `products_public` (security_invoker) échoue en 42501 pour tout le monde : **c'est exactement l'incident du 07/09**.
 4. Colonne interne — ne rien accorder ; ne pas l'ajouter à la vue ; la lire uniquement via une fonction `security definer` gardée par `is_admin()`, ou la mettre dans `product_pricing_inputs`.
 5. Côté admin : `catalogue-admin/repository.ts` utilise `PUBLIC_PRODUCT_SELECT` ; une colonne publique ajoutée à la liste est donc automatiquement lue. Ne jamais réintroduire `select('*')` sur `products` (test `tests/security/products-cost-columns-grants.test.ts`).
-6. Lancer `bun run test:security` (parité liste ↔ migrations, vue sans colonne de coût, absence de `select('*')`).
+6. Lancer `bun run test:security` (parité liste ↔ migrations, vues `products_public` et `studio_products` sans colonne de coût, absence de `select('*')`), puis `bun run security:grants` et `bun run security:studio` après application.
 
 ## 3. Vérifier après chaque migration touchant `products`
 

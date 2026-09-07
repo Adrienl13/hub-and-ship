@@ -79,6 +79,7 @@ replace`, seeds `on conflict do nothing`) — les rejouer est sans danger.
 | 36 | `20260907090000_complete_a_faire_products.sql` | **Fiches « A faire » complétées (appliquée)** : les 12 produits créés avec le nom provisoire « A faire » reçoivent nom, description, caractéristiques, forme de plateau, dimensions et poids (estimations signalées dans la migration, à confirmer depuis l'admin) ; SKU provisoire « A faire » → `BIS-070` |
 | 37 | `20260907100000_products_anon_column_grants.sql` | **Correctif catalogue public (appliquée en urgence le 07/09)** : `grant select (colonnes non sensibles) on products to anon`. La vue `products_public` étant en `security_invoker`, la révocation globale de la migration 31 rendait la vue et `product_variants` illisibles pour les visiteurs non connectés (catalogue vide, fiches en 404). Les colonnes de coût restent refusées à anon |
 | 38 | `20260907110000_products_authenticated_column_grants.sql` | **Hardening coûts internes, lot 0.5 Studio (⚠️ à appliquer APRÈS le déploiement du commit « sélections explicites admin »)** : `authenticated` ne lit plus `products` que colonne par colonne (même liste que 37) ; les 4 colonnes de coût héritées deviennent illisibles pour tout compte connecté non admin. Appliquée avant le déploiement, elle casserait l'onglet catalogue admin (ancien `select('*')`). Vérification : `bun run security:grants` (voir `RUNBOOK_SECURITY_GRANTS.md`) |
+| 39 | `20260907120000_studio_foundation.sql` | **Studio Projet, fondation lot 1 (⚠️ PAS ENCORE APPLIQUÉE — après déploiement du bundle lot 1)** : tables `studio_model_families`, `studio_product_profiles`, `studio_fulfillment_options` (RLS lecture publique, écriture admin), vue `studio_products` (security_invoker, colonnes publiques explicites, aucune colonne de coût), peuplement idempotent des profils et d'une option de production standard par produit. Additive uniquement. Vérification : `bun run security:studio`. Détails et rollback : `RUNBOOK_STUDIO.md` |
 | 31 | `20260905110000_products_revoke_anon_cost_columns.sql` | **Anonymisation des coûts (étape 2, appliquée après le déploiement du bundle `products_public`)** : `revoke select on products from anon`. Le catalogue anonyme lit exclusivement la vue |
 
 ```sql
@@ -212,3 +213,8 @@ bun run deploy
   `update referral_program_settings set is_active = true;`
 - Les migrations sont additives : aucun drop, aucune donnée modifiée hors le
   kill switch ci-dessus. Un rollback code = redéployer le commit précédent.
+
+
+## Garde-fou de déploiement (depuis le lot 1 Studio)
+
+`bun run deploy` exécute d'abord `scripts/check-deploy-env.mjs` : le build est refusé si `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY` ne sont résolues ni par le shell ni par `.env`, `.env.local`, `.env.production`, `.env.production.local` (ordre de priorité de Vite en mode production). Les valeurs ne sont jamais affichées, seuls les noms manquants. Cause : le 07/09/2026, un build livré sans ces variables a servi le catalogue mock (6 produits) à la place du catalogue réel. Le développement local (`bun run dev`) et le fallback mock sans Supabase ne sont pas concernés. Test manuel : `bun run check:deploy-env`.
