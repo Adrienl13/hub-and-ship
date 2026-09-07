@@ -74,7 +74,8 @@ describe('GET /studio/preview', () => {
     expect(cookie).toContain('HttpOnly')
     expect(cookie).toContain('Secure')
     expect(cookie).toContain('SameSite=Lax')
-    expect(cookie).toContain('Path=/studio')
+    expect(response.headers.getSetCookie()[0]).toContain('Path=/;')
+    expect(response.headers.getSetCookie()[1]).toBe('studio_preview=; Path=/studio; Max-Age=0; HttpOnly; SameSite=Lax; Secure')
     expect(cookie).not.toContain(SECRET)
 
     const token = cookie.split(';')[0]?.split('=')[1] ?? ''
@@ -96,7 +97,10 @@ describe('GET /studio/preview', () => {
       rateLimit: allow,
     })
     expect(response.status).toBe(302)
-    expect(response.headers.get('set-cookie')).toContain('Max-Age=0')
+    expect(response.headers.getSetCookie()).toEqual([
+      'studio_preview=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax',
+      'studio_preview=; Path=/studio; Max-Age=0; HttpOnly; SameSite=Lax',
+    ])
   })
 
   it('respecte le limiteur de débit avant toute comparaison', async () => {

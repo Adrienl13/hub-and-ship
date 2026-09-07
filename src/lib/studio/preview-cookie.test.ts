@@ -59,10 +59,10 @@ describe('jeton de preview Studio', () => {
 })
 
 describe('cookie de preview Studio', () => {
-  it('est HttpOnly, SameSite=Lax, limité à /studio, 7 jours, Secure en prod', () => {
+  it('est HttpOnly, SameSite=Lax, envoyé aux server functions, 7 jours, Secure en prod', () => {
     const header = buildStudioPreviewSetCookie('tok', { secure: true })
     expect(header).toBe(
-      `${STUDIO_PREVIEW_COOKIE}=tok; Path=/studio; Max-Age=${STUDIO_PREVIEW_TTL_SECONDS}; HttpOnly; SameSite=Lax; Secure`,
+      `${STUDIO_PREVIEW_COOKIE}=tok; Path=/; Max-Age=${STUDIO_PREVIEW_TTL_SECONDS}; HttpOnly; SameSite=Lax; Secure`,
     )
     expect(STUDIO_PREVIEW_TTL_SECONDS).toBe(7 * 24 * 3600)
   })
@@ -72,6 +72,8 @@ describe('cookie de preview Studio', () => {
     const clear = buildStudioPreviewClearCookie({ secure: true })
     expect(clear).toContain(`${STUDIO_PREVIEW_COOKIE}=;`)
     expect(clear).toContain('Max-Age=0')
+    expect(clear).toContain('Path=/;')
+    expect(buildStudioPreviewClearCookie({ secure: true }, '/studio')).toContain('Path=/studio;')
   })
 
   it("lit le jeton dans un en-tête Cookie parmi d'autres cookies", () => {

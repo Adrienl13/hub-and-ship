@@ -13,7 +13,8 @@ import { timingSafeEqualStr } from '@/lib/security/timing-safe-equal'
 
 export const STUDIO_PREVIEW_COOKIE = 'studio_preview'
 export const STUDIO_PREVIEW_TTL_SECONDS = 7 * 24 * 60 * 60
-export const STUDIO_PREVIEW_COOKIE_PATH = '/studio'
+// Les vérifications createServerFn passent par /_serverFn/, hors /studio.
+export const STUDIO_PREVIEW_COOKIE_PATH = '/'
 
 function base64UrlEncode(bytes: ArrayBuffer): string {
   let binary = ''
@@ -80,16 +81,24 @@ export interface PreviewCookieOptions {
 }
 
 /** Valeur d'en-tête Set-Cookie : HttpOnly, SameSite=Lax (navigation de
- *  premier niveau vers /studio après redirection), Path restreint à /studio,
+ *  premier niveau vers /studio après redirection), Path=/ pour les server functions,
  *  Secure en production. */
 export function buildStudioPreviewSetCookie(
   token: string,
   options: PreviewCookieOptions,
 ): string {
+  return serializeStudioPreviewCookie(token, options, STUDIO_PREVIEW_COOKIE_PATH)
+}
+
+function serializeStudioPreviewCookie(
+  token: string,
+  options: PreviewCookieOptions,
+  path: '/' | '/studio',
+): string {
   const maxAge = options.maxAgeSeconds ?? STUDIO_PREVIEW_TTL_SECONDS
   const parts = [
     `${STUDIO_PREVIEW_COOKIE}=${token}`,
-    `Path=${STUDIO_PREVIEW_COOKIE_PATH}`,
+    `Path=${path}`,
     `Max-Age=${maxAge}`,
     'HttpOnly',
     'SameSite=Lax',
@@ -98,8 +107,11 @@ export function buildStudioPreviewSetCookie(
   return parts.join('; ')
 }
 
-export function buildStudioPreviewClearCookie(options: PreviewCookieOptions): string {
-  return buildStudioPreviewSetCookie('', { ...options, maxAgeSeconds: 0 })
+export function buildStudioPreviewClearCookie(
+  options: PreviewCookieOptions,
+  path: '/' | '/studio' = STUDIO_PREVIEW_COOKIE_PATH,
+): string {
+  return serializeStudioPreviewCookie('', { ...options, maxAgeSeconds: 0 }, path)
 }
 
 /** Extrait le jeton de preview d'un en-tête Cookie brut. */

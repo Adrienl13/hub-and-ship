@@ -71,14 +71,18 @@ function notFound(): Response {
   })
 }
 
-function redirect(location: string, setCookie: string): Response {
+function redirect(location: string, setCookie: string, secure: boolean): Response {
+  const headers = new Headers({
+    Location: location,
+    'cache-control': 'no-store',
+  })
+  headers.append('Set-Cookie', setCookie)
+  // Retire aussi l'ancien scope : évite deux jetons homonymes et une
+  // preview encore active après clear chez les utilisateurs déjà connectés.
+  headers.append('Set-Cookie', buildStudioPreviewClearCookie({ secure }, '/studio'))
   return new Response(null, {
     status: 302,
-    headers: {
-      Location: location,
-      'Set-Cookie': setCookie,
-      'cache-control': 'no-store',
-    },
+    headers,
   })
 }
 
@@ -92,7 +96,7 @@ export async function handleStudioPreviewRequest(
 
   // Déconnexion explicite de la preview (utile en test) : pas de secret requis.
   if (url.searchParams.get('clear') === '1') {
-    return redirect('/', buildStudioPreviewClearCookie({ secure: deps.secure }))
+    return redirect('/', buildStudioPreviewClearCookie({ secure: deps.secure }), deps.secure)
   }
 
   if (!deps.secret) return notFound()
@@ -111,5 +115,5 @@ export async function handleStudioPreviewRequest(
     deps.secret,
     deps.nowSeconds + STUDIO_PREVIEW_TTL_SECONDS,
   )
-  return redirect('/studio', buildStudioPreviewSetCookie(token, { secure: deps.secure }))
+  return redirect('/studio', buildStudioPreviewSetCookie(token, { secure: deps.secure }), deps.secure)
 }

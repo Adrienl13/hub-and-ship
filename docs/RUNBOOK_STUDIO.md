@@ -32,7 +32,7 @@ Objectif : voir `/studio` en production sans l'ouvrir au public, sans redéploye
 
 1. Générer un secret d'au moins 16 caractères (32 recommandés) : `openssl rand -base64 32`.
 2. Le poser côté serveur uniquement : Cloudflare → Worker `container-club` → Variables → `STUDIO_PREVIEW_KEY` (secret). **Jamais** dans une variable `VITE_*`, jamais dans Git.
-3. Ouvrir `https://prosimport.com/studio/preview?key=<secret>` : le serveur compare la clé en temps constant, pose le cookie `studio_preview` (HMAC-SHA256 signé avec le secret, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/studio`, 7 jours) et redirige vers `/studio`.
+3. Ouvrir `https://prosimport.com/studio/preview?key=<secret>` : le serveur compare la clé en temps constant, pose le cookie `studio_preview` (HMAC-SHA256 signé avec le secret, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, 7 jours) et redirige vers `/studio`.
 4. Toute autre réponse est un 404 : secret non configuré, clé fausse, méthode POST, plus de 10 tentatives par 10 minutes et par IP.
 
 Ce que la preview ne fait pas : elle n'accorde aucun accès admin, aucune session Supabase, aucune donnée supplémentaire. Elle ne fait qu'exister les routes `/studio`.
@@ -40,7 +40,11 @@ Ce que la preview ne fait pas : elle n'accorde aucun accès admin, aucune sessio
 ### Révoquer
 
 - Tous les cookies de preview : changer `STUDIO_PREVIEW_KEY` (ou le supprimer). Les jetons signés avec l'ancien secret deviennent invalides immédiatement.
-- Son propre navigateur : `https://prosimport.com/studio/preview?clear=1`.
+- Son propre navigateur : `https://prosimport.com/studio/preview?clear=1`. Supprime le cookie `Path=/` et l’ancien cookie `Path=/studio`.
+
+Le scope `/` est nécessaire aux vérifications TanStack `/_serverFn/` lors de la navigation `/studio` → `/studio/assises`. Il n’accorde aucun accès supplémentaire : signature HMAC, HttpOnly, Secure en production, SameSite=Lax et TTL de 7 jours restent inchangés. Après ce hotfix, rouvrir le lien d’accès preview pour renouveler le cookie ; cette ouverture efface aussi l’ancien scope `/studio`.
+
+Régression locale avec flag OFF et clé factice en mémoire, sans modifier de secret : `bunx playwright test --config tests/e2e/studio-preview.config.ts`.
 
 ## 3. Migrations du lot 1
 
