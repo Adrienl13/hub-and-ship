@@ -35,6 +35,7 @@ import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as StudioPreviewRouteImport } from './routes/studio_.preview'
+import { Route as StudioAssisesRouteImport } from './routes/studio.assises'
 import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
@@ -56,6 +57,7 @@ import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as CataloguePSlugRouteImport } from './routes/catalogue_.p.$slug'
+import { Route as ApiStudioEventsRouteImport } from './routes/api/studio/events'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiCronPaymentRemindersRouteImport } from './routes/api/cron/payment-reminders'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
@@ -193,6 +195,11 @@ const StudioPreviewRoute = StudioPreviewRouteImport.update({
   path: '/studio/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioAssisesRoute = StudioAssisesRouteImport.update({
+  id: '/assises',
+  path: '/assises',
+  getParentRoute: () => StudioRoute,
+} as any)
 const PartnerSelectionsRoute = PartnerSelectionsRouteImport.update({
   id: '/selections',
   path: '/selections',
@@ -301,6 +308,11 @@ const CataloguePSlugRoute = CataloguePSlugRouteImport.update({
   path: '/catalogue/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStudioEventsRoute = ApiStudioEventsRouteImport.update({
+  id: '/api/studio/events',
+  path: '/api/studio/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -370,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio/assises': typeof StudioAssisesRoute
   '/studio/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
@@ -379,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/studio/events': typeof ApiStudioEventsRoute
   '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
@@ -423,6 +437,7 @@ export interface FileRoutesByTo {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio/assises': typeof StudioAssisesRoute
   '/studio/preview': typeof StudioPreviewRoute
   '/account': typeof AccountIndexRoute
   '/guides': typeof GuidesIndexRoute
@@ -432,6 +447,7 @@ export interface FileRoutesByTo {
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/studio/events': typeof ApiStudioEventsRoute
   '/catalogue/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
@@ -478,6 +494,7 @@ export interface FileRoutesById {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio/assises': typeof StudioAssisesRoute
   '/studio_/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
@@ -487,6 +504,7 @@ export interface FileRoutesById {
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/studio/events': typeof ApiStudioEventsRoute
   '/catalogue_/p/$slug': typeof CataloguePSlugRoute
   '/p/$partnerSlug/devis': typeof PPartnerSlugDevisRoute
   '/account/reservations/$reservationId/document': typeof AccountReservationsReservationIdDocumentRoute
@@ -534,6 +552,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio/assises'
     | '/studio/preview'
     | '/account/'
     | '/guides/'
@@ -543,6 +562,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
+    | '/api/studio/events'
     | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
@@ -587,6 +607,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio/assises'
     | '/studio/preview'
     | '/account'
     | '/guides'
@@ -596,6 +617,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
+    | '/api/studio/events'
     | '/catalogue/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
@@ -641,6 +663,7 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio/assises'
     | '/studio_/preview'
     | '/account/'
     | '/guides/'
@@ -650,6 +673,7 @@ export interface FileRouteTypes {
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
+    | '/api/studio/events'
     | '/catalogue_/p/$slug'
     | '/p/$partnerSlug/devis'
     | '/account/reservations/$reservationId/document'
@@ -702,6 +726,7 @@ export interface RootRouteChildren {
   LivresIndexRoute: typeof LivresIndexRoute
   ApiCronPaymentRemindersRoute: typeof ApiCronPaymentRemindersRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiStudioEventsRoute: typeof ApiStudioEventsRoute
   CataloguePSlugRoute: typeof CataloguePSlugRoute
 }
 
@@ -889,6 +914,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio/assises': {
+      id: '/studio/assises'
+      path: '/assises'
+      fullPath: '/studio/assises'
+      preLoaderRoute: typeof StudioAssisesRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/partner/selections': {
       id: '/partner/selections'
       path: '/selections'
@@ -1036,6 +1068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CataloguePSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/studio/events': {
+      id: '/api/studio/events'
+      path: '/api/studio/events'
+      fullPath: '/api/studio/events'
+      preLoaderRoute: typeof ApiStudioEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -1086,10 +1125,12 @@ const PartnerRouteWithChildren =
   PartnerRoute._addFileChildren(PartnerRouteChildren)
 
 interface StudioRouteChildren {
+  StudioAssisesRoute: typeof StudioAssisesRoute
   StudioIndexRoute: typeof StudioIndexRoute
 }
 
 const StudioRouteChildren: StudioRouteChildren = {
+  StudioAssisesRoute: StudioAssisesRoute,
   StudioIndexRoute: StudioIndexRoute,
 }
 
@@ -1185,6 +1226,7 @@ const rootRouteChildren: RootRouteChildren = {
   LivresIndexRoute: LivresIndexRoute,
   ApiCronPaymentRemindersRoute: ApiCronPaymentRemindersRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiStudioEventsRoute: ApiStudioEventsRoute,
   CataloguePSlugRoute: CataloguePSlugRoute,
 }
 export const routeTree = rootRouteImport

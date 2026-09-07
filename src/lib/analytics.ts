@@ -42,6 +42,11 @@ export const AnalyticsEvent = {
   ShareSelection: 'share_selection',
   QuotePdf: 'quote_pdf',
   NotifySignup: 'notify_signup',
+  /** Miroir marketing MINIMAL du Studio (lot 2). Les événements métier
+   *  détaillés vont dans studio_events côté serveur, pas ici. */
+  StudioStarted: 'studio_started',
+  /** Réservé : émis seulement quand un état « projet terminé » existera. */
+  StudioProjectCompleted: 'project_completed',
 } as const
 
 export type AnalyticsEventName =

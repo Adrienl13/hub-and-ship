@@ -1,4 +1,4 @@
-// Layout des routes Studio Projet (lot 1 : fondation invisible).
+// Layout des routes Studio Projet (lot 1 : accès ; lot 2 : coque).
 //
 // Accès : flag public VITE_STUDIO_ENABLED, sinon cookie de preview signé
 // vérifié côté serveur ; à défaut notFound() (404 brandée de __root).
@@ -33,7 +33,7 @@ function StudioLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-[color:var(--sand-soft)] text-foreground">
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="w-full flex-1 overflow-x-hidden">
         <Outlet />
       </main>
       <Footer />

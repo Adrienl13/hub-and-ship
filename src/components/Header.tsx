@@ -17,12 +17,16 @@ import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useIsPartner } from '@/hooks/useIsPartner'
 import { SALES_CHANNEL_LABEL } from '@/lib/pricing/channel'
+import { isStudioEnabled } from '@/lib/studio/flags'
 
 // Navigation primaire : les 4 destinations business. Tout l'éditorial vit
 // dans « Ressources » pour garder un header respirable (et scannable par
 // un nouveau visiteur en une seconde).
+// « Studio » n'apparaît que sous le flag public de build VITE_STUDIO_ENABLED :
+// une session preview accède au Studio par son URL, jamais par ce lien.
 const PRIMARY_LINKS: ReadonlyArray<readonly [string, string]> = [
   ['Catalogue', '/catalogue'],
+  ...(isStudioEnabled() ? ([['Studio', '/studio']] as const) : []),
   ['Stock', '/stock-24h'],
   ['Partenaires', '/partenaires'],
   ['Le prix prouvé', '/prix'],
