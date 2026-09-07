@@ -46,7 +46,7 @@ Ce que la preview ne fait pas : elle n'accorde aucun accès admin, aucune sessio
 
 | # | Fichier | Statut |
 |---|---|---|
-| 39 | `supabase/migrations/20260907120000_studio_foundation.sql` | **non appliquée** (à appliquer après déploiement du bundle du lot 1) |
+| 39 | `supabase/migrations/20260907120000_studio_foundation.sql` | **APPLIQUÉE en production — Lot 1 production verified** |
 
 Contenu : tables internes `studio_model_families`, `studio_product_profiles`, `studio_fulfillment_options` ; surfaces publiques `studio_product_profiles_public`, `studio_fulfillment_options_public`, `studio_model_families_public` et `studio_products` ; fonction `studio_public_data_quality()` ; peuplement idempotent des profils (rôle par catégorie, sous-type et matière estimés, prix public reconnu, `model_family_id` jamais renseigné) et d'une option `standard_production` **non confirmée** (`seed_moq`) par produit public actif au MOQ de la fiche. Auto-vérification en fin de migration (colonnes internes absentes des surfaces publiques, aucun droit anon sur les tables, projection de qualité étanche, aucune option semée confirmée).
 
@@ -123,7 +123,7 @@ Une paire n'existe que si elle est **mesurée** : deux assises éloignées sur u
 
 ### `?set=pilot`
 
-`/studio/assises?set=<id>` (`id` = `[a-z0-9][a-z0-9_-]{0,39}`) restreint la découverte aux `product_ids` du jeu **actif** de ce nom, s'il existe et s'il contient au moins une assise discovery_ready. Sinon : message « Le jeu « … » n'est pas disponible : découverte sur toutes les assises » et découverte complète. Le jeu pilote sera créé au lot 3 à partir de métriques objectives (aucun étiquetage de style) : `insert into studio_curation_sets (id, label, product_ids, criteria, status) values ('pilot', …, '{…}', '{"version":…,"method":…}', 'active')`.
+**Preview uniquement** : avec une source d’accès `preview`, `/studio/assises?set=<id>` (`id` = `[a-z0-9][a-z0-9_-]{0,39}`) restreint la découverte aux `product_ids` du jeu **actif** de ce nom, s'il existe et s'il contient au moins une assise discovery_ready. Sinon : message « Le jeu « … » n'est pas disponible : découverte sur toutes les assises » et découverte complète. En accès public par flag (`source = flag`), le paramètre `set` est ignoré : découverte complète, sans filtre ni message de jeu curé. Un identifiant invalide est également ignoré. Le jeu pilote sera créé au lot 3 à partir de métriques objectives (aucun étiquetage de style) : `insert into studio_curation_sets (id, label, product_ids, criteria, status) values ('pilot', …, '{…}', '{"version":…,"method":…}', 'active')`.
 
 ## 4. Contrôles
 
@@ -171,7 +171,7 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 
 `src/lib/studio/engine/` : `nextCard(state, catalogue, version)`, fonctions pures, `ALGORITHM_VERSION = 'v0.1'` porté par chaque carte et chaque événement.
 
-- Entrée : uniquement les assises `discovery_ready` (rôle `seat`, active, image principale), projetées en `{id, material, seatKind, familyId}`. **Le prix n'entre jamais dans le moteur** (test : deux catalogues identiques à prix différents → même séquence). `familyId` n'est transmis que pour une famille vérifiée (aucune au lot 2).
+- Entrée : uniquement les assises `discovery_ready` (rôle `seat`, active, image principale), projetées en `{id, material, seatKind, familyId}`. **Le prix n'entre jamais dans le moteur** (test : deux catalogues identiques à prix différents → même séquence). `familyId` n'est transmis que pour une famille vérifiée (preuve fournie par la projection SQL publique de la migration 39).
 - Ordre initial : round-robin par matière puis par sous-type, mélange seedé par `sessionId` (FNV-1a + mulberry32, aucun `Math.random`).
 - Signaux : j'aime +1 / pas pour moi −1 sur matière, sous-type, famille vérifiée ; passer = vu, poids 0 ; bonus de nouveauté (+0,5 par matière ou sous-type jamais montré) ; malus de répétition (−1 si les 3 dernières cartes partagent la matière ou la famille) ; exploration ε = 0,2 seedée par `sessionId` + position.
 - Déterministe : même session + même historique = même carte.
@@ -183,3 +183,5 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 
 - Événements métier : `studio_started`, `card_liked`, `card_disliked`, `card_passed`, `undo`, `favorite_added`, `favorite_removed`, `finalists_viewed`, `seat_selected`, `quantity_changed`, `project_completed` (réservé, jamais émis au lot 2 : aucun état correspondant n'existe). Envoi groupé par `POST /api/studio/events` (zod strict, origin-check, 60 lots / 10 min par IP, ≤ 20 événements par lot, aucune PII), écrit avec le client admin côté serveur uniquement. Un échec est silencieux pour l'utilisateur.
 - Miroir marketing minimal (`src/lib/analytics.ts`) : `studio_started` seulement ; `project_completed` réservé. Soumis au consentement existant (Consent Mode / Plausible inchangés).
+
+Dans le Lot 2, `SUPABASE_SERVICE_ROLE_KEY` sert à ingérer côté serveur les événements Studio. Le Lot 2 ne fait aucune réservation. Les favoris connectés sont sérialisés par compte et produit ; les lots d’événements sont envoyés dans leur ordre, sans chevauchement. Une référence persistée absente du catalogue reste visible et retirable, avec état « Devis manuel » et montant à vérifier.
