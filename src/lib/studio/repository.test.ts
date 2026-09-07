@@ -4,6 +4,7 @@ import { INTERNAL_PRODUCT_COST_COLUMNS, PUBLIC_PRODUCT_COLUMNS } from '@/lib/cat
 import {
   FULFILLMENT_OPTION_SELECT,
   STOCK_SELECT,
+  STUDIO_INTERNAL_COLUMNS,
   STUDIO_PRODUCT_SELECT,
   VARIANT_SELECT,
   fetchStudioCatalog,
@@ -90,17 +91,33 @@ const productRow: Row = {
   },
 }
 
+const optionBase = {
+  product_id: 'bis-001',
+  variant_id: null,
+  min_quantity: 50,
+  max_quantity: null,
+  price_basis: 'container',
+  source: 'seed_moq',
+  is_active: true,
+  available_from: null,
+  expires_at: null,
+}
+
 describe('repository Studio', () => {
-  it('lit studio_products avec des colonnes explicites, jamais *, jamais une colonne de coût', () => {
-    expect(STUDIO_PRODUCT_SELECT).not.toContain('*')
-    for (const column of PUBLIC_PRODUCT_COLUMNS) expect(STUDIO_PRODUCT_SELECT).toContain(column)
-    for (const hidden of INTERNAL_PRODUCT_COST_COLUMNS) expect(STUDIO_PRODUCT_SELECT).not.toContain(hidden)
-    for (const projection of [VARIANT_SELECT, FULFILLMENT_OPTION_SELECT, STOCK_SELECT]) {
+  it('lit des surfaces publiques avec des colonnes explicites, jamais *, jamais une colonne de coût ni interne', () => {
+    for (const projection of [STUDIO_PRODUCT_SELECT, VARIANT_SELECT, FULFILLMENT_OPTION_SELECT, STOCK_SELECT]) {
       expect(projection).not.toContain('*')
+      for (const hidden of INTERNAL_PRODUCT_COST_COLUMNS) expect(projection).not.toContain(hidden)
+      for (const internal of STUDIO_INTERNAL_COLUMNS) {
+        expect(projection.split(/,\s*/), internal).not.toContain(internal)
+      }
     }
+    for (const column of PUBLIC_PRODUCT_COLUMNS) expect(STUDIO_PRODUCT_SELECT).toContain(column)
+    expect(FULFILLMENT_OPTION_SELECT).toContain('is_confirmed')
+    expect(FULFILLMENT_OPTION_SELECT).not.toContain('confirmed_by')
   })
 
-  it('assemble produits, variantes, options, stock réel et signal de production', async () => {
+  it('assemble produits, variantes, options publiques et stock réel ; aucun signal container', async () => {
     const calls: Call[] = []
     const client = fakeClient(
       {
@@ -108,14 +125,16 @@ describe('repository Studio', () => {
         product_variants: [
           { id: 'bis-001-std', product_id: 'bis-001', name: 'Standard', image_url: '/v.webp', gallery_urls: [], sort_order: 0, min_order_units: null },
         ],
-        studio_fulfillment_options: [
-          { id: 'opt-1', product_id: 'bis-001', variant_id: null, mode: 'standard_production', min_quantity: 50, max_quantity: null, price_basis: 'container', is_active: true, confirmed_by: null, available_from: null, expires_at: null },
-          { id: 'opt-2', product_id: 'bis-001', variant_id: null, mode: 'stock', min_quantity: null, max_quantity: null, price_basis: 'stock', is_active: true, confirmed_by: null, available_from: null, expires_at: null },
+        studio_fulfillment_options_public: [
+          { ...optionBase, id: 'opt-1', mode: 'standard_production', is_confirmed: false },
+          { ...optionBase, id: 'opt-2', mode: 'grouped_production', source: 'admin', min_quantity: 10, max_quantity: 40, is_confirmed: true },
+          { ...optionBase, id: 'opt-3', mode: 'stock', price_basis: 'stock', is_confirmed: true },
+          // Une valeur non booléenne ne confirme jamais.
+          { ...optionBase, id: 'opt-4', mode: 'standard_production', source: 'admin', is_confirmed: 'true' },
         ],
         stock_lines: [
           { id: 'stock-1', product_id: 'bis-001', variant_id: 'bis-001-std', available_units: 12, stock_price_ht: '70' },
         ],
-        containers: [{ id: 'c1' }],
       },
       calls,
     )
@@ -135,15 +154,26 @@ describe('repository Studio', () => {
     expect(product.variants[0]?.unitsCommitted).toBe(0)
 
     // Une option « stock » déclarée en base est ignorée : le stock vient de stock_lines.
-    expect(catalog.context.options.map((option) => option.id)).toEqual(['opt-1'])
+    expect(catalog.context.options.map((option) => [option.id, option.isConfirmed, option.source])).toEqual([
+      ['opt-1', false, 'seed_moq'],
+      ['opt-2', true, 'admin'],
+      ['opt-4', false, 'admin'],
+    ])
     expect(catalog.context.stock).toEqual([
       { stockLineId: 'stock-1', productId: 'bis-001', variantId: 'bis-001-std', availableUnits: 12, stockPriceHt: 70 },
     ])
-    expect(catalog.context.productionOpen).toBe(true)
+    expect(catalog.context).not.toHaveProperty('productionOpen')
 
+    const tables = calls.map((call) => call.table)
+    expect(tables).toEqual(['studio_products', 'product_variants', 'studio_fulfillment_options_public', 'stock_lines'])
+    expect(tables).not.toContain('containers')
+    expect(tables).not.toContain('studio_fulfillment_options')
+    expect(tables).not.toContain('studio_product_profiles')
     const productCall = calls.find((call) => call.table === 'studio_products')
     expect(productCall?.columns).toBe(STUDIO_PRODUCT_SELECT)
     expect(productCall?.filters).toEqual([['is_active', true]])
+    const optionCall = calls.find((call) => call.table === 'studio_fulfillment_options_public')
+    expect(optionCall?.columns).toBe(FULFILLMENT_OPTION_SELECT)
     const stockCall = calls.find((call) => call.table === 'stock_lines')
     expect(stockCall?.filters).toEqual([['is_active', true], ['available_units>', 0]])
   })
@@ -157,15 +187,30 @@ describe('repository Studio', () => {
           { ...productRow, id: 'p2', sku: 'X-2', studio_role: null, seat_kind: 'bizarre', data_quality: null },
         ],
         product_variants: [{ id: 'p2-std', product_id: 'p2', name: 'Standard', image_url: null, gallery_urls: null, sort_order: 0, min_order_units: null }],
-        studio_fulfillment_options: [],
+        studio_fulfillment_options_public: [],
         stock_lines: [],
-        containers: [],
       },
       calls,
     )
     const catalog = await fetchStudioCatalog(client)
     expect(catalog.products.map((product) => product.id)).toEqual(['p2'])
     expect(catalog.products[0]?.studio).toMatchObject({ studioRole: 'catalog_only', seatKind: null, dataQuality: {} })
-    expect(catalog.context.productionOpen).toBe(false)
+    expect(catalog.context.options).toEqual([])
+  })
+
+  it("ne conserve aucune métadonnée interne de data_quality même si elle arrivait", async () => {
+    const client = fakeClient(
+      {
+        studio_products: [
+          { ...productRow, data_quality: { price: { status: 'verified', source: 'admin_input', by: 'uuid-admin', note: 'secret' } } },
+        ],
+        product_variants: [{ id: 'bis-001-std', product_id: 'bis-001', name: 'Standard', image_url: null, gallery_urls: null, sort_order: 0, min_order_units: null }],
+        studio_fulfillment_options_public: [],
+        stock_lines: [],
+      },
+      [],
+    )
+    const catalog = await fetchStudioCatalog(client)
+    expect(JSON.stringify(catalog.products[0]?.studio.dataQuality)).not.toMatch(/uuid-admin|secret|"by"|"note"/)
   })
 })

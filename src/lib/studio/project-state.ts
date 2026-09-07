@@ -2,12 +2,13 @@
 // raisons structurées par ligne. Aucun état n'interdit la découverte, la
 // sélection, la construction, la sauvegarde ni l'envoi d'une demande.
 //
-//   reservation_ready      : toutes les lignes ont une voie automatique
-//                            (stock, production ouverte, regroupement
-//                            confirmé) et tous les produits sont
-//                            reservation-ready ;
-//   auto_quote_ready       : devis ferme possible, mais une condition de
-//                            réservation manque (ex. production non ouverte) ;
+//   reservation_ready      : toutes les lignes sont quote-ready ET servies
+//                            par une voie CONFIRMÉE (stock réel couvrant la
+//                            quantité, production standard confirmée par un
+//                            admin, regroupement confirmé par un admin) ;
+//   auto_quote_ready       : devis ferme possible, mais aucune voie confirmée
+//                            (ex. série standard connue, production non
+//                            confirmée : production_unconfirmed) ;
 //   feasibility_review     : une quantité ou un stock demande une étude
 //                            (below_moq, stock_insufficient, no_fulfillment_path) ;
 //   manual_quote_required  : une donnée ou une personnalisation exige un
@@ -105,11 +106,14 @@ export function computeProjectState(
     return { state: 'feasibility_review', lines: perLine, reasons: all }
   }
 
+  // Règle absolue : reservation_ready = quote-ready + voie CONFIRMÉE pour
+  // chaque ligne. `confirmed` n'est vrai que pour du stock réel couvrant la
+  // quantité ou une option explicitement confirmée par un admin.
   const everyLineReservable = lines.every(
     (line) =>
       line.readiness.reservation.ready &&
       line.fulfillment.mode !== 'manual_review' &&
-      !line.fulfillment.reasons.includes('production_not_open'),
+      line.fulfillment.confirmed,
   )
   if (everyLineReservable) {
     return { state: 'reservation_ready', lines: perLine, reasons: all }

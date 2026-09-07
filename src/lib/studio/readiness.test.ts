@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { option, seat, stock, variant } from './fixtures.test-helpers'
+import { confirmedOption, option, seat, stock, variant } from './fixtures.test-helpers'
 import { computeReadiness, describeFulfillmentPaths, isReadyFor } from './readiness'
 
 const codes = (issues: ReadonlyArray<{ code: string }>) => issues.map((issue) => issue.code)
+const NO_PATH = {
+  code: 'no_fulfillment_path',
+  detail: 'ni stock disponible, ni production standard confirmée, ni regroupement confirmé',
+}
 
 describe('readiness : niveaux emboîtés et raisons', () => {
   it('un produit complet avec stock est prêt à tous les niveaux', () => {
-    const readiness = computeReadiness(seat('a'), {
-      stock: [stock('a', 10)],
-      options: [],
-      productionOpen: false,
-    })
+    const readiness = computeReadiness(seat('a'), { stock: [stock('a', 10)], options: [] })
     expect(readiness.discovery.ready).toBe(true)
     expect(readiness.project.ready).toBe(true)
     expect(readiness.quote.ready).toBe(true)
@@ -43,10 +43,8 @@ describe('readiness : niveaux emboîtés et raisons', () => {
     const readiness = computeReadiness(seat('p'), {
       stock: [],
       options: [option('p', 'standard_production')],
-      productionOpen: true,
     })
     expect(readiness.quote.ready).toBe(true)
-    expect(readiness.reservation.ready).toBe(true)
   })
 
   it('Quote Ready ≠ Reservation Ready : prix indicatif, sur demande, photo de design manquante', () => {
@@ -72,45 +70,6 @@ describe('readiness : niveaux emboîtés et raisons', () => {
     expect(codes(retail.quote.issues)).toEqual(['retail_below_base'])
   })
 
-  it("reservation_ready ne dépend pas d'un container ouvert : le stock suffit", () => {
-    const withStock = computeReadiness(seat('s'), {
-      stock: [stock('s', 3)],
-      options: [option('s', 'standard_production')],
-      productionOpen: false,
-    })
-    expect(withStock.reservation.ready).toBe(true)
-    expect(describeFulfillmentPaths(seat('s'), withStock ? { stock: [stock('s', 3)], options: [], productionOpen: false } : { stock: [], options: [], productionOpen: false })).toEqual(['stock'])
-  })
-
-  it("sans stock, sans production ouverte, sans regroupement confirmé : quote_ready mais pas reservation_ready", () => {
-    const readiness = computeReadiness(seat('w'), {
-      stock: [],
-      options: [option('w', 'standard_production'), option('w', 'grouped_production')],
-      productionOpen: false,
-    })
-    expect(readiness.quote.ready).toBe(true)
-    expect(readiness.reservation.ready).toBe(false)
-    expect(readiness.reservation.issues).toEqual([
-      { code: 'no_fulfillment_path', detail: 'ni stock disponible, ni production ouverte, ni regroupement confirmé' },
-    ])
-  })
-
-  it('un regroupement confirmé par un admin ouvre la réservation sans container', () => {
-    const readiness = computeReadiness(seat('g'), {
-      stock: [],
-      options: [option('g', 'grouped_production', { confirmedBy: 'admin' })],
-      productionOpen: false,
-    })
-    expect(readiness.reservation.ready).toBe(true)
-    expect(
-      describeFulfillmentPaths(seat('g'), {
-        stock: [],
-        options: [option('g', 'grouped_production', { confirmedBy: 'admin' })],
-        productionOpen: false,
-      }),
-    ).toEqual(['grouped_production'])
-  })
-
   it('une provenance heuristique marquée verified est lue comme estimée (jamais quote-ready)', () => {
     const readiness = computeReadiness(
       seat('h', { dataQuality: { price: { status: 'verified', source: 'name_heuristic' } } }),
@@ -118,5 +77,60 @@ describe('readiness : niveaux emboîtés et raisons', () => {
     // La fixture ne passe pas par parseDataQuality : on vérifie ici le contrat
     // du niveau quote sur une entrée déjà normalisée.
     expect(readiness.quote.ready).toBe(true)
+  })
+})
+
+describe('readiness : la réservation exige une voie CONFIRMÉE pour ce produit', () => {
+  it("cas A — option seed_moq non confirmée (même avec n'importe quel container ouvert) : quote_ready, PAS reservation_ready", () => {
+    const readiness = computeReadiness(seat('w'), {
+      stock: [],
+      options: [option('w', 'standard_production')],
+    })
+    expect(readiness.quote.ready).toBe(true)
+    expect(readiness.reservation.ready).toBe(false)
+    expect(readiness.reservation.issues).toEqual([NO_PATH])
+    expect(describeFulfillmentPaths(seat('w'), { stock: [], options: [option('w', 'standard_production')] })).toEqual([])
+  })
+
+  it('cas B — standard_production confirmée par un admin pour ce produit → reservation_ready', () => {
+    const context = { stock: [], options: [confirmedOption('b', 'standard_production')] }
+    const readiness = computeReadiness(seat('b'), context)
+    expect(readiness.reservation.ready).toBe(true)
+    expect(describeFulfillmentPaths(seat('b'), context)).toEqual(['standard_production'])
+  })
+
+  it('cas C — le stock réel suffit, sans aucune option', () => {
+    const context = { stock: [stock('s', 3)], options: [] }
+    expect(computeReadiness(seat('s'), context).reservation.ready).toBe(true)
+    expect(describeFulfillmentPaths(seat('s'), context)).toEqual(['stock'])
+  })
+
+  it('cas E — un regroupement confirmé par un admin ouvre la réservation', () => {
+    const context = { stock: [], options: [confirmedOption('g', 'grouped_production')] }
+    expect(computeReadiness(seat('g'), context).reservation.ready).toBe(true)
+    expect(describeFulfillmentPaths(seat('g'), context)).toEqual(['grouped_production'])
+  })
+
+  it('un regroupement NON confirmé ne suffit pas', () => {
+    const readiness = computeReadiness(seat('u'), {
+      stock: [],
+      options: [option('u', 'standard_production'), option('u', 'grouped_production')],
+    })
+    expect(readiness.quote.ready).toBe(true)
+    expect(readiness.reservation.ready).toBe(false)
+    expect(readiness.reservation.issues).toEqual([NO_PATH])
+  })
+
+  it("la confirmation d'un autre produit ne compte pas", () => {
+    const readiness = computeReadiness(seat('x'), {
+      stock: [stock('y', 50)],
+      options: [confirmedOption('y', 'standard_production'), confirmedOption('y', 'grouped_production')],
+    })
+    expect(readiness.reservation.ready).toBe(false)
+  })
+
+  it("un produit sur demande n'a pas de raison no_fulfillment_path en plus (déjà manuel)", () => {
+    const readiness = computeReadiness(seat('o', { visibility: 'on_request' }))
+    expect(codes(readiness.reservation.issues)).toEqual(['on_request_product'])
   })
 })

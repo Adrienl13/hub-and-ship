@@ -33,6 +33,10 @@ function isSource(value: unknown): value is DataQualitySource {
  * Normalise une entrée : statut/provenance inconnus → pending/none ; une
  * provenance heuristique (préfixe SKU, nom, valeur modale, catégorie,
  * pipeline) est plafonnée à `estimated` même si le JSON dit `verified`.
+ *
+ * Liste blanche : seuls status, source et updatedAt sont conservés. Toute
+ * autre clé (`by`, `note`, métadonnée future) est ignorée côté client, en
+ * plus de la projection faite en base par studio_public_data_quality().
  */
 export function normalizeDataQualityEntry(raw: unknown): DataQualityEntry {
   if (!raw || typeof raw !== 'object') return PENDING
@@ -49,8 +53,6 @@ export function normalizeDataQualityEntry(raw: unknown): DataQualityEntry {
     status,
     source,
     updatedAt: typeof record.updatedAt === 'string' ? record.updatedAt : null,
-    by: typeof record.by === 'string' ? record.by : null,
-    note: typeof record.note === 'string' ? record.note : null,
   }
 }
 

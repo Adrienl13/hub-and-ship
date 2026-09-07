@@ -5,26 +5,41 @@
 --   toucher à products / product_variants : familles de design (candidates,
 --   à vérifier), profil Studio par produit (rôle, sous-type, matière, qualité
 --   de données granulaire avec provenance), options de fulfillment déclarées ;
--- - une vue studio_products (security_invoker) = colonnes publiques de
---   products_public + profil ; aucune colonne de coût, aucun
---   product_pricing_inputs, aucune marge ;
+-- - une SURFACE PUBLIQUE MINIMALE (principe du lot 0.5) : les tables studio_*
+--   sont INTERNES (aucun grant à anon ; authenticated sous RLS is_admin(),
+--   pattern product_pricing_inputs). Le public lit uniquement des vues
+--   dédiées à colonnes explicites : studio_product_profiles_public,
+--   studio_fulfillment_options_public (booléen is_confirmed, jamais
+--   confirmed_by), studio_model_families_public, et studio_products
+--   (security_invoker sur products_public + profil public). Aucune note
+--   interne, aucun UUID auth.users, aucune colonne de coût, aucune marge ;
+--   data_quality est projetée par studio_public_data_quality() qui ne garde
+--   que status / source / updatedAt (jamais by, note ni métadonnée future) ;
 -- - un peuplement initial IDEMPOTENT et PRUDENT : rôle dérivé de la
 --   catégorie, sous-type et matière estimés par heuristique (jamais
 --   « verified »), model_family_id JAMAIS renseigné (jamais déduit du nom),
 --   aucun style_tags ; le prix public existant est reconnu comme vérité
---   commerciale (source catalogue_public_price) sauf produit sur demande.
+--   commerciale (source catalogue_public_price) sauf produit sur demande ;
+--   une option standard_production « seed_moq » par produit public actif,
+--   NON confirmée (confirmed_by null) : elle documente la série standard,
+--   elle n'est JAMAIS une disponibilité confirmée.
 --
 -- Ce qu'elle ne fait pas : aucune suppression, renommage ou modification de
 -- colonne existante ; aucune modification de prix, MOQ, stock, panier,
 -- réservation ; aucune donnée Studio ne rend un produit public (la vue
 -- respecte la RLS de products via products_public).
 --
--- ⚠️ À appliquer APRÈS le déploiement du bundle du lot 1 (le code lit la vue
--- avec des colonnes explicites ; l'ancien bundle ne la référence pas, donc
--- l'ordre inverse ne casse rien, mais la règle reste : code puis migration).
+-- ⚠️ À appliquer APRÈS le déploiement du bundle du lot 1 (le code lit les
+-- vues avec des colonnes explicites ; l'ancien bundle ne les référence pas,
+-- donc l'ordre inverse ne casse rien, mais la règle reste : code puis
+-- migration).
 --
 -- Rollback (aucune donnée existante n'est touchée) :
 --   drop view if exists public.studio_products;
+--   drop view if exists public.studio_fulfillment_options_public;
+--   drop view if exists public.studio_product_profiles_public;
+--   drop view if exists public.studio_model_families_public;
+--   drop function if exists public.studio_public_data_quality(jsonb);
 --   drop table if exists public.studio_fulfillment_options;
 --   drop table if exists public.studio_product_profiles;
 --   drop table if exists public.studio_model_families;
@@ -102,6 +117,10 @@ create table if not exists public.studio_fulfillment_options (
   source text not null default 'admin'
     check (source in ('seed_moq', 'admin')),
   is_active boolean not null default true,
+  -- Confirmation ADMIN explicite de la voie. NULL = information de série
+  -- (devis, faisabilité), jamais une voie de réservation. Un container
+  -- ouvert « global » ne confirme rien : la confirmation est par option.
+  -- Jamais exposé au public : la vue publique projette is_confirmed.
   confirmed_by uuid references auth.users (id) on delete set null,
   available_from date,
   expires_at timestamptz,
@@ -135,8 +154,12 @@ create trigger studio_fulfillment_options_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- 4. RLS et grants : lecture publique (données descriptives, non sensibles),
---    écriture admin uniquement (is_admin()), pattern des tables catalogue.
+-- 4. Tables studio_* = INTERNES. Aucun grant à anon (toute lecture directe
+--    est refusée, colonne par colonne comprise). authenticated reçoit les
+--    grants de table mais la SEULE policy est is_admin() : un compte connecté
+--    non admin obtient zéro ligne et aucune écriture (pattern
+--    product_pricing_inputs, lot 0.5). Le public lit UNIQUEMENT les vues de
+--    la section 5.
 -- ---------------------------------------------------------------------------
 alter table public.studio_model_families enable row level security;
 alter table public.studio_product_profiles enable row level security;
@@ -146,43 +169,148 @@ revoke all on table public.studio_model_families from anon, public, authenticate
 revoke all on table public.studio_product_profiles from anon, public, authenticated;
 revoke all on table public.studio_fulfillment_options from anon, public, authenticated;
 
-grant select on table public.studio_model_families to anon, authenticated;
-grant select on table public.studio_product_profiles to anon, authenticated;
-grant select on table public.studio_fulfillment_options to anon, authenticated;
-grant insert, update, delete on table public.studio_model_families to authenticated;
-grant insert, update, delete on table public.studio_product_profiles to authenticated;
-grant insert, update, delete on table public.studio_fulfillment_options to authenticated;
+grant select, insert, update, delete on table public.studio_model_families to authenticated;
+grant select, insert, update, delete on table public.studio_product_profiles to authenticated;
+grant select, insert, update, delete on table public.studio_fulfillment_options to authenticated;
 
 drop policy if exists "Studio families are public" on public.studio_model_families;
-create policy "Studio families are public"
-  on public.studio_model_families for select using (true);
 drop policy if exists "Admins manage studio families" on public.studio_model_families;
 create policy "Admins manage studio families"
   on public.studio_model_families for all
   using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "Studio profiles are public" on public.studio_product_profiles;
-create policy "Studio profiles are public"
-  on public.studio_product_profiles for select using (true);
 drop policy if exists "Admins manage studio profiles" on public.studio_product_profiles;
 create policy "Admins manage studio profiles"
   on public.studio_product_profiles for all
   using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "Studio fulfillment options are public" on public.studio_fulfillment_options;
-create policy "Studio fulfillment options are public"
-  on public.studio_fulfillment_options for select using (is_active = true);
 drop policy if exists "Admins manage studio fulfillment options" on public.studio_fulfillment_options;
 create policy "Admins manage studio fulfillment options"
   on public.studio_fulfillment_options for all
   using (public.is_admin()) with check (public.is_admin());
 
 -- ---------------------------------------------------------------------------
--- 5. Vue studio_products : colonnes publiques EXPLICITES + profil.
---    security_invoker : la RLS de products (actifs seulement pour anon)
---    s'applique ; les grants colonne par colonne des migrations 37/38
---    doivent couvrir chaque colonne listée (docs/RUNBOOK_SECURITY_GRANTS.md).
+-- 5. Surfaces publiques : vues dédiées à colonnes EXPLICITES.
+--
+--    Les vues *_public sont volontairement en mode « owner » (pas de
+--    security_invoker) : elles lisent les tables internes avec les droits du
+--    propriétaire et n'exposent que les colonnes listées, filtrées ; un rôle
+--    public n'a AUCUN droit sur les tables sous-jacentes. security_barrier
+--    empêche une fonction utilisateur d'être évaluée avant le filtre.
+--    Toute nouvelle colonne interne est donc invisible par défaut : il faut
+--    l'ajouter explicitement à une vue pour la publier.
+--
+--    studio_products reste en security_invoker sur products_public (RLS de
+--    products : actifs seulement pour anon ; grants colonne par colonne des
+--    migrations 37/38) et joint la vue publique des profils.
 -- ---------------------------------------------------------------------------
+
+-- Projection publique de data_quality : par champ, uniquement status /
+-- source / updatedAt. `by`, `note` et toute métadonnée future restent
+-- internes. Liste blanche : une clé non listée n'est jamais publiée.
+create or replace function public.studio_public_data_quality(quality jsonb)
+returns jsonb
+language sql
+immutable
+strict
+parallel safe
+set search_path = ''
+as $$
+  select coalesce(
+    (
+      select jsonb_object_agg(
+        entry.key,
+        jsonb_strip_nulls(jsonb_build_object(
+          'status', entry.value -> 'status',
+          'source', entry.value -> 'source',
+          'updatedAt', entry.value -> 'updatedAt'
+        ))
+      )
+      from jsonb_each(
+        case when jsonb_typeof(quality) = 'object' then quality else '{}'::jsonb end
+      ) as entry
+      where jsonb_typeof(entry.value) = 'object'
+    ),
+    '{}'::jsonb
+  );
+$$;
+
+comment on function public.studio_public_data_quality(jsonb) is
+  'Studio : projection publique de data_quality (status, source, updatedAt par champ). Jamais by ni note.';
+
+revoke all on function public.studio_public_data_quality(jsonb) from public;
+grant execute on function public.studio_public_data_quality(jsonb) to anon, authenticated;
+
+-- 5a. Profils : rôle, sous-type, matière, famille, traits calculés, qualité
+--     projetée. Ni notes, ni updated_by. Produits actifs seulement.
+create or replace view public.studio_product_profiles_public
+with (security_barrier = true) as
+select
+  sp.product_id,
+  sp.studio_role,
+  sp.seat_kind,
+  sp.material,
+  sp.model_family_id,
+  sp.visual_traits,
+  public.studio_public_data_quality(sp.data_quality) as data_quality
+from public.studio_product_profiles sp
+where exists (
+  select 1 from public.products p where p.id = sp.product_id and p.is_active
+);
+
+comment on view public.studio_product_profiles_public is
+  'Studio : surface publique des profils (colonnes explicites, data_quality projetée). Table interne : studio_product_profiles.';
+
+-- 5b. Options de fulfillment : is_confirmed (booléen commercial) remplace
+--     confirmed_by ; ni note. Options actives seulement.
+create or replace view public.studio_fulfillment_options_public
+with (security_barrier = true) as
+select
+  o.id,
+  o.product_id,
+  o.variant_id,
+  o.mode,
+  o.min_quantity,
+  o.max_quantity,
+  o.price_basis,
+  o.source,
+  o.is_active,
+  (o.confirmed_by is not null) as is_confirmed,
+  o.available_from,
+  o.expires_at
+from public.studio_fulfillment_options o
+where o.is_active = true;
+
+comment on view public.studio_fulfillment_options_public is
+  'Studio : surface publique des voies de fulfillment. is_confirmed = confirmation admin explicite ; confirmed_by reste interne.';
+
+-- 5c. Familles : identifiant et libellé des familles VÉRIFIÉES uniquement.
+--     Ni notes, ni created_by, ni candidates en cours de travail.
+create or replace view public.studio_model_families_public
+with (security_barrier = true) as
+select
+  f.id,
+  f.label,
+  f.status
+from public.studio_model_families f
+where f.status = 'verified';
+
+comment on view public.studio_model_families_public is
+  'Studio : familles de design vérifiées (id, label, status). Table interne : studio_model_families.';
+
+revoke all on public.studio_product_profiles_public from public;
+revoke all on public.studio_fulfillment_options_public from public;
+revoke all on public.studio_model_families_public from public;
+grant select on public.studio_product_profiles_public to anon, authenticated;
+grant select on public.studio_fulfillment_options_public to anon, authenticated;
+grant select on public.studio_model_families_public to anon, authenticated;
+
+-- 5d. studio_products : colonnes publiques EXPLICITES de products_public +
+--     profil public. security_invoker : la RLS de products s'applique ; les
+--     grants colonne par colonne des migrations 37/38 doivent couvrir chaque
+--     colonne listée (docs/RUNBOOK_SECURITY_GRANTS.md).
 create or replace view public.studio_products
 with (security_invoker = true) as
 select
@@ -200,11 +328,12 @@ select
   sp.visual_traits,
   coalesce(sp.data_quality, '{}'::jsonb) as data_quality
 from public.products_public p
-left join public.studio_product_profiles sp on sp.product_id = p.id;
+left join public.studio_product_profiles_public sp on sp.product_id = p.id;
 
 comment on view public.studio_products is
-  'Studio : catalogue public qualifié. Aucune colonne de coût (security_invoker sur products_public + profils).';
+  'Studio : catalogue public qualifié. Aucune colonne de coût ni interne (security_invoker sur products_public + studio_product_profiles_public).';
 
+revoke all on public.studio_products from public;
 grant select on public.studio_products to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -326,9 +455,12 @@ select
 from classified c
 on conflict (product_id) do nothing;
 
--- Une voie de production standard par produit public actif, au MOQ existant
--- (aucune nouvelle vérité : c'est le MOQ de la fiche). Non confirmée : la
--- production n'est « ouverte » que sur signal logistique (container ouvert).
+-- Une option standard_production « seed_moq » par produit public actif, au
+-- MOQ existant (aucune nouvelle vérité : c'est le MOQ de la fiche). Elle
+-- signifie seulement « nous connaissons la série standard de ce produit » :
+-- confirmed_by reste NULL, donc elle sert au devis et à la faisabilité mais
+-- n'est JAMAIS une voie de réservation. Seule une confirmation admin
+-- explicite (confirmed_by renseigné) ouvre la réservation pour ce produit.
 insert into public.studio_fulfillment_options
   (product_id, variant_id, mode, min_quantity, price_basis, source, note)
 select p.id, null, 'standard_production', greatest(p.moq_units, 1), 'container', 'seed_moq',
@@ -338,32 +470,76 @@ where p.is_active and p.visibility = 'public'
 on conflict (product_id, (coalesce(variant_id, '')), mode, source) do nothing;
 
 -- ---------------------------------------------------------------------------
--- 7. Auto-vérification : la migration échoue si la vue expose une colonne de
---    coût, si un rôle public ne peut plus la lire, ou si une famille a été
---    remplie automatiquement.
+-- 7. Auto-vérification : la migration échoue si une surface publique expose
+--    une colonne de coût ou interne, si anon garde un droit sur une table
+--    interne, si un rôle public ne peut plus lire les vues, si la projection
+--    de data_quality laisse passer by/note, si une option semée est
+--    confirmée, ou si une famille a été remplie automatiquement.
 -- ---------------------------------------------------------------------------
 do $$
 declare
   leaked text;
   missing_profiles integer;
+  internal_table text;
+  internal_column text;
+  public_surface text;
 begin
-  select string_agg(column_name, ', ') into leaked
+  -- 7a. Aucune colonne de coût ni interne dans les surfaces publiques.
+  select string_agg(table_name || '.' || column_name, ', ') into leaked
   from information_schema.columns
-  where table_schema = 'public' and table_name = 'studio_products'
-    and column_name in ('fob_usd', 'qty_per_container', 'is_loss_leader', 'table_price_modifier_rate');
+  where table_schema = 'public'
+    and table_name in ('studio_products', 'studio_product_profiles_public',
+                       'studio_fulfillment_options_public', 'studio_model_families_public')
+    and column_name in ('fob_usd', 'qty_per_container', 'is_loss_leader', 'table_price_modifier_rate',
+                        'notes', 'note', 'created_by', 'updated_by', 'confirmed_by');
   if leaked is not null then
-    raise exception 'studio_products expose des colonnes de coût : %', leaked;
+    raise exception 'surface publique Studio expose une colonne interne : %', leaked;
   end if;
 
-  if not has_table_privilege('anon', 'public.studio_products', 'select')
-     or not has_table_privilege('authenticated', 'public.studio_products', 'select') then
-    raise exception 'studio_products : grant select manquant pour anon ou authenticated';
-  end if;
-  if has_table_privilege('anon', 'public.studio_product_profiles', 'insert')
-     or has_table_privilege('anon', 'public.studio_fulfillment_options', 'insert') then
-    raise exception 'studio_* : anon ne doit pas pouvoir écrire';
+  -- 7b. Les vues publiques sont lisibles par anon et authenticated.
+  foreach public_surface in array array['studio_products', 'studio_product_profiles_public',
+                                        'studio_fulfillment_options_public', 'studio_model_families_public']
+  loop
+    if not has_table_privilege('anon', 'public.' || public_surface, 'select')
+       or not has_table_privilege('authenticated', 'public.' || public_surface, 'select') then
+      raise exception '% : grant select manquant pour anon ou authenticated', public_surface;
+    end if;
+  end loop;
+
+  -- 7c. anon n'a AUCUN droit sur les tables internes, colonne par colonne
+  --     comprise ; personne d'autre que l'admin n'y écrit (RLS is_admin()).
+  foreach internal_table in array array['studio_model_families', 'studio_product_profiles',
+                                        'studio_fulfillment_options']
+  loop
+    if has_table_privilege('anon', 'public.' || internal_table, 'select')
+       or has_table_privilege('anon', 'public.' || internal_table, 'insert') then
+      raise exception '% : anon ne doit avoir aucun droit', internal_table;
+    end if;
+    foreach internal_column in array array['notes', 'note', 'created_by', 'updated_by', 'confirmed_by', 'data_quality']
+    loop
+      if exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public' and table_name = internal_table and column_name = internal_column
+      ) and has_column_privilege('anon', 'public.' || internal_table, internal_column, 'select') then
+        raise exception '%.% : anon ne doit pas pouvoir lire cette colonne', internal_table, internal_column;
+      end if;
+    end loop;
+    if (select count(*) from pg_policies
+        where schemaname = 'public' and tablename = internal_table
+          and coalesce(qual, '') not like '%is_admin()%') > 0 then
+      raise exception '% : seule une policy is_admin() est admise', internal_table;
+    end if;
+  end loop;
+
+  -- 7d. La projection de data_quality ne laisse passer ni by ni note.
+  if (public.studio_public_data_quality(
+        '{"price": {"status": "verified", "source": "admin_input", "by": "u", "note": "n", "updatedAt": "t"}}'::jsonb
+      ) -> 'price') ?| array['by', 'note'] then
+    raise exception 'studio_public_data_quality laisse passer by ou note';
   end if;
 
+  -- 7e. Peuplement : chaque produit a un profil ; aucune famille auto ;
+  --     aucune option semée n'est confirmée.
   select count(*) into missing_profiles
   from public.products p
   where not exists (select 1 from public.studio_product_profiles sp where sp.product_id = p.id);
@@ -373,5 +549,12 @@ begin
 
   if exists (select 1 from public.studio_product_profiles where model_family_id is not null) then
     raise exception 'model_family_id ne doit jamais être peuplé automatiquement';
+  end if;
+
+  if exists (
+    select 1 from public.studio_fulfillment_options
+    where source = 'seed_moq' and confirmed_by is not null
+  ) then
+    raise exception 'une option seed_moq ne doit jamais être confirmée par la migration';
   end if;
 end $$;

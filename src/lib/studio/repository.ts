@@ -1,10 +1,16 @@
 // Lecture du catalogue qualifié pour le Studio (lot 1).
 //
-// Source unique : la vue `studio_products` (products_public + profil Studio),
-// lue avec des colonnes EXPLICITES — jamais `select('*')` sur products, et la
-// vue elle-même ne contient aucune colonne de coût (migration 39). Les
-// variantes, les options de fulfillment déclarées, le stock réel et le signal
-// « production ouverte » (un container ouvert) sont lus séparément.
+// Sources : UNIQUEMENT des surfaces publiques (migration 39), lues avec des
+// colonnes EXPLICITES — jamais `select('*')` :
+// - `studio_products` (products_public + profil public) : aucune colonne de
+//   coût, data_quality projetée (status/source/updatedAt) ;
+// - `studio_fulfillment_options_public` : booléen `is_confirmed`, jamais
+//   `confirmed_by` ni `note` ;
+// - `product_variants`, `stock_lines` (stock réel, jamais copié).
+// Les tables internes studio_* (notes, updated_by, confirmed_by…) ne sont
+// jamais lues ici : le navigateur n'a aucun droit dessus. Il n'existe aucun
+// signal global de production (containers) : une voie n'est confirmée que
+// par le stock réel ou une option confirmée pour le produit.
 //
 // Pattern : client injecté (structurel), mapping row → type, fallback vide
 // propre si Supabase n'est pas configuré. Aucune écriture.
@@ -17,6 +23,7 @@ import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { parseDataQuality } from './data-quality'
 import {
   FULFILLMENT_MODES,
+  FULFILLMENT_OPTION_SOURCES,
   PRICE_BASES,
   SEAT_KINDS,
   SEAT_MATERIALS,
@@ -45,10 +52,43 @@ export const STUDIO_PRODUCT_SELECT: string = [
   ...STUDIO_PROFILE_COLUMNS,
 ].join(', ')
 
+/** Colonnes internes des tables studio_* : jamais dans une surface publique,
+ *  jamais sélectionnées par le navigateur (parité vérifiée en test). */
+export const STUDIO_INTERNAL_COLUMNS = [
+  'notes',
+  'note',
+  'created_by',
+  'updated_by',
+  'confirmed_by',
+] as const
+
+/** Colonnes de la vue publique studio_fulfillment_options_public. */
+export const FULFILLMENT_OPTION_COLUMNS = [
+  'id',
+  'product_id',
+  'variant_id',
+  'mode',
+  'min_quantity',
+  'max_quantity',
+  'price_basis',
+  'source',
+  'is_active',
+  'is_confirmed',
+  'available_from',
+  'expires_at',
+] as const
+
+/** Colonnes des autres surfaces publiques Studio (référence pour les
+ *  contrôles ; le lot 1 ne lit pas les familles). */
+export const STUDIO_PROFILE_PUBLIC_COLUMNS = [
+  'product_id',
+  ...STUDIO_PROFILE_COLUMNS,
+] as const
+export const MODEL_FAMILY_PUBLIC_COLUMNS = ['id', 'label', 'status'] as const
+
 export const VARIANT_SELECT =
   'id, product_id, name, image_url, gallery_urls, sort_order, created_at, min_order_units'
-export const FULFILLMENT_OPTION_SELECT =
-  'id, product_id, variant_id, mode, min_quantity, max_quantity, price_basis, is_active, confirmed_by, available_from, expires_at'
+export const FULFILLMENT_OPTION_SELECT: string = FULFILLMENT_OPTION_COLUMNS.join(', ')
 export const STOCK_SELECT =
   'id, product_id, variant_id, available_units, stock_price_ht'
 
@@ -67,9 +107,8 @@ interface SelectBuilder<T> extends PromiseLike<QueryResult<T>> {
 export type StudioDbTable =
   | 'studio_products'
   | 'product_variants'
-  | 'studio_fulfillment_options'
+  | 'studio_fulfillment_options_public'
   | 'stock_lines'
-  | 'containers'
 
 export interface StudioDbClient {
   from(table: StudioDbTable): {
@@ -85,7 +124,7 @@ export interface StudioCatalog {
 
 const EMPTY_CATALOG: StudioCatalog = {
   products: [],
-  context: { stock: [], options: [], productionOpen: false },
+  context: { stock: [], options: [] },
   source: 'unconfigured',
 }
 
@@ -160,8 +199,10 @@ function optionFromRow(row: Record<string, unknown>): FulfillmentOption | null {
     minQuantity: asNullableInt(row.min_quantity),
     maxQuantity: asNullableInt(row.max_quantity),
     priceBasis: oneOf(row.price_basis, PRICE_BASES) ?? 'container',
+    source: oneOf(row.source, FULFILLMENT_OPTION_SOURCES) ?? 'admin',
     isActive: row.is_active === true,
-    confirmedBy: asNullableString(row.confirmed_by),
+    // Seul un booléen strict confirme : toute autre valeur = non confirmée.
+    isConfirmed: row.is_confirmed === true,
     availableFrom: asNullableString(row.available_from),
     expiresAt: asNullableString(row.expires_at),
   }
@@ -180,7 +221,7 @@ function stockFromRow(row: Record<string, unknown>): StockAvailability {
 export async function fetchStudioCatalog(
   client: StudioDbClient,
 ): Promise<StudioCatalog> {
-  const [productsResult, variantsResult, optionsResult, stockResult, containerResult] =
+  const [productsResult, variantsResult, optionsResult, stockResult] =
     await Promise.all([
       client
         .from('studio_products')
@@ -192,7 +233,7 @@ export async function fetchStudioCatalog(
         .select(VARIANT_SELECT)
         .order('sort_order', { ascending: true }),
       client
-        .from('studio_fulfillment_options')
+        .from('studio_fulfillment_options_public')
         .select(FULFILLMENT_OPTION_SELECT)
         .eq('is_active', true),
       client
@@ -200,14 +241,12 @@ export async function fetchStudioCatalog(
         .select(STOCK_SELECT)
         .eq('is_active', true)
         .gt('available_units', 0),
-      client.from('containers').select('id').eq('status', 'open').limit(1),
     ])
 
   if (productsResult.error) throw new Error(productsResult.error.message)
   if (variantsResult.error) throw new Error(variantsResult.error.message)
   if (optionsResult.error) throw new Error(optionsResult.error.message)
   if (stockResult.error) throw new Error(stockResult.error.message)
-  if (containerResult.error) throw new Error(containerResult.error.message)
 
   const variantsByProduct = new Map<string, DesignVariant[]>()
   for (const row of variantsResult.data ?? []) {
@@ -231,11 +270,7 @@ export async function fetchStudioCatalog(
 
   return {
     products,
-    context: {
-      stock,
-      options,
-      productionOpen: (containerResult.data?.length ?? 0) > 0,
-    },
+    context: { stock, options },
     source: 'db',
   }
 }

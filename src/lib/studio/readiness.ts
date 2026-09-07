@@ -5,18 +5,23 @@
 //   project    : peut entrer dans un projet (dimensions et prix présents) ;
 //   quote      : peut figurer sur un devis ferme (prix confirmé, non
 //                indicatif, produit public, un design photographié) ;
-//   reservation: quote + au moins une voie de fulfillment ouverte (stock
-//                réel, production standard ouverte, ou regroupement confirmé).
+//   reservation: quote + au moins une voie de fulfillment CONFIRMÉE pour ce
+//                produit (stock réel disponible, production standard
+//                confirmée par un admin, ou regroupement confirmé par un
+//                admin). Voir fulfillment.ts : confirmedFulfillmentPaths.
 //
-// Studio Ready ≠ Quote Ready ≠ Reservation Ready. Un container ouvert est un
-// signal de production parmi d'autres, jamais la condition universelle.
+// Studio Ready ≠ Quote Ready ≠ Reservation Ready. Aucun signal global (MOQ,
+// option semée, container ouvert) ne confirme la production d'un produit.
 //
 // Prix : le prix public actif de la base est une vérité commerciale tant
 // qu'il n'est pas marqué « sur demande » (visibility) ou « indicatif »
 // (data_quality.price = estimated). Il n'est `pending` que s'il est absent.
 
 import { qualityOf } from './data-quality'
-import { stockFor } from './fulfillment'
+import {
+  confirmedFulfillmentPaths,
+  type ConfirmedFulfillmentPath,
+} from './fulfillment'
 import type {
   DataQualityField,
   FulfillmentContext,
@@ -64,11 +69,7 @@ export interface ProductReadiness {
   readonly reservation: LevelReadiness
 }
 
-const EMPTY_CONTEXT: FulfillmentContext = {
-  stock: [],
-  options: [],
-  productionOpen: false,
-}
+const EMPTY_CONTEXT: FulfillmentContext = { stock: [], options: [] }
 
 function level(issues: ReadonlyArray<ReadinessIssue>): LevelReadiness {
   return { ready: issues.length === 0, issues }
@@ -122,36 +123,14 @@ function quoteIssues(product: StudioProduct): ReadinessIssue[] {
   return issues
 }
 
-/** Une voie de fulfillment est-elle ouverte pour ce produit ? */
+/** Voies CONFIRMÉES pour ce produit (ou ce coloris). Une option non
+ *  confirmée, un MOQ ou un container ouvert n'y figurent jamais. */
 export function describeFulfillmentPaths(
   product: StudioProduct,
   context: FulfillmentContext,
   variantId?: string,
-): ReadonlyArray<string> {
-  const now = context.now ?? new Date()
-  const paths: string[] = []
-  const stockLines = variantId
-    ? stockFor({ productId: product.id, variantId }, context.stock)
-    : context.stock.filter(
-        (line) => line.productId === product.id && line.availableUnits > 0,
-      )
-  if (stockLines.length > 0) paths.push('stock')
-
-  for (const option of context.options) {
-    if (option.productId !== product.id || !option.isActive) continue
-    if (variantId && option.variantId !== null && option.variantId !== variantId) {
-      continue
-    }
-    if (option.availableFrom && new Date(option.availableFrom) > now) continue
-    if (option.expiresAt && new Date(option.expiresAt) <= now) continue
-    if (option.mode === 'standard_production' && context.productionOpen) {
-      paths.push('standard_production')
-    }
-    if (option.mode === 'grouped_production' && option.confirmedBy !== null) {
-      paths.push('grouped_production')
-    }
-  }
-  return [...new Set(paths)]
+): ReadonlyArray<ConfirmedFulfillmentPath> {
+  return confirmedFulfillmentPaths(product.id, context, variantId)
 }
 
 export function computeReadiness(
@@ -168,9 +147,8 @@ export function computeReadiness(
     if (paths.length === 0) {
       reservation.push({
         code: 'no_fulfillment_path',
-        detail: context.productionOpen
-          ? 'aucune option de production déclarée ni stock disponible'
-          : 'ni stock disponible, ni production ouverte, ni regroupement confirmé',
+        detail:
+          'ni stock disponible, ni production standard confirmée, ni regroupement confirmé',
       })
     }
   }

@@ -103,10 +103,26 @@ export function option(
     minQuantity: mode === 'standard_production' ? 50 : null,
     maxQuantity: null,
     priceBasis: 'container',
+    source: mode === 'standard_production' ? 'seed_moq' : 'admin',
     isActive: true,
-    confirmedBy: null,
+    // Par défaut NON confirmée : exactement l'option semée par la migration.
+    isConfirmed: false,
     availableFrom: null,
     expiresAt: null,
     ...overrides,
   }
+}
+
+/** Option explicitement confirmée par un admin (source admin). */
+export function confirmedOption(
+  productId: string,
+  mode: FulfillmentOption['mode'],
+  overrides: Partial<FulfillmentOption> = {},
+): FulfillmentOption {
+  return option(productId, mode, {
+    id: `opt-${productId}-${mode}-confirmed`,
+    source: 'admin',
+    isConfirmed: true,
+    ...overrides,
+  })
 }

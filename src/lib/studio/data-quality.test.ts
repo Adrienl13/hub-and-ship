@@ -20,6 +20,22 @@ describe('qualité de données granulaire', () => {
     ).toBe('verified')
   })
 
+  it('projection publique : by, note et toute clé inconnue sont ignorés côté client', () => {
+    const entry = normalizeDataQualityEntry({
+      status: 'verified',
+      source: 'admin_input',
+      updatedAt: '2026-09-07',
+      by: 'uuid-admin',
+      note: 'note interne',
+      internal_flag: true,
+    })
+    expect(entry).toEqual({ status: 'verified', source: 'admin_input', updatedAt: '2026-09-07' })
+    expect(Object.keys(entry)).not.toContain('by')
+    expect(Object.keys(entry)).not.toContain('note')
+    const quality = parseDataQuality({ price: { status: 'verified', source: 'admin_input', by: 'x', note: 'y' } })
+    expect(JSON.stringify(quality)).not.toMatch(/"by"|"note"|uuid-admin/)
+  })
+
   it('tolère un JSON inconnu ou partiel', () => {
     expect(normalizeDataQualityEntry(null)).toEqual({ status: 'pending', source: 'none' })
     expect(normalizeDataQualityEntry({ status: 'bizarre', source: 'ailleurs' })).toMatchObject({

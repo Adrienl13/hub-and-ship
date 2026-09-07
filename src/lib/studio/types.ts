@@ -72,12 +72,14 @@ export const DATA_QUALITY_FIELDS = [
 ] as const
 export type DataQualityField = (typeof DATA_QUALITY_FIELDS)[number]
 
+/** Projection PUBLIQUE d'une entrée de qualité (vue studio_products via
+ *  studio_public_data_quality()). Les métadonnées internes (`by`, `note`)
+ *  restent en base et n'existent pas côté client : le type ne les porte pas
+ *  et parseDataQuality les ignore même si elles arrivaient. */
 export interface DataQualityEntry {
   readonly status: DataQualityStatus
   readonly source: DataQualitySource
   readonly updatedAt?: string | null
-  readonly by?: string | null
-  readonly note?: string | null
 }
 
 export type DataQuality = Partial<Record<DataQualityField, DataQualityEntry>>
@@ -117,9 +119,18 @@ export type FulfillmentMode = (typeof FULFILLMENT_MODES)[number]
 export const PRICE_BASES = ['container', 'stock'] as const
 export type PriceBasis = (typeof PRICE_BASES)[number]
 
-/** Voie de production déclarée en base (table studio_fulfillment_options).
- *  Le stock n'est PAS une option déclarée : il est lu en direct dans
- *  stock_lines pour ne jamais fabriquer une disponibilité périmée. */
+export const FULFILLMENT_OPTION_SOURCES = ['seed_moq', 'admin'] as const
+export type FulfillmentOptionSource = (typeof FULFILLMENT_OPTION_SOURCES)[number]
+
+/** Voie de production déclarée en base, lue par la vue publique
+ *  studio_fulfillment_options_public. Le stock n'est PAS une option
+ *  déclarée : il est lu en direct dans stock_lines pour ne jamais fabriquer
+ *  une disponibilité périmée.
+ *
+ *  `isConfirmed` est le SEUL signal de confirmation : un admin a confirmé
+ *  cette voie pour ce produit/variant. Une option non confirmée (dont toute
+ *  option `seed_moq`) informe le devis et la faisabilité, jamais la
+ *  réservation. L'identité de l'admin (confirmed_by) reste interne. */
 export interface FulfillmentOption {
   readonly id: string
   readonly productId: string
@@ -128,9 +139,10 @@ export interface FulfillmentOption {
   readonly minQuantity: number | null
   readonly maxQuantity: number | null
   readonly priceBasis: PriceBasis
+  /** `seed_moq` = série standard connue par la fiche ; `admin` = déclarée. */
+  readonly source: FulfillmentOptionSource
   readonly isActive: boolean
-  /** Un admin a confirmé cette voie (obligatoire pour grouped_production). */
-  readonly confirmedBy: string | null
+  readonly isConfirmed: boolean
   readonly availableFrom: string | null
   readonly expiresAt: string | null
 }
@@ -144,12 +156,12 @@ export interface StockAvailability {
   readonly stockPriceHt: number
 }
 
+/** Contexte de résolution. Il n'existe AUCUN signal global (« un container
+ *  est ouvert ») : une voie n'est confirmée que par le stock réel ou par une
+ *  option confirmée pour ce produit/variant. */
 export interface FulfillmentContext {
   readonly stock: ReadonlyArray<StockAvailability>
   readonly options: ReadonlyArray<FulfillmentOption>
-  /** Une production standard peut être lancée (container ouvert ou créneau
-   *  déclaré par l'admin). Signal logistique, jamais la seule condition. */
-  readonly productionOpen: boolean
   readonly now?: Date
 }
 
@@ -168,7 +180,9 @@ export const COMMERCIAL_REASONS = [
   'compatibility_unconfirmed',
   'custom_colour_requested',
   'custom_tabletop_requested',
-  'production_not_open',
+  /** Série standard connue mais production non confirmée par un admin pour
+   *  ce produit : devis possible, réservation non. */
+  'production_unconfirmed',
   'product_not_discoverable',
   'no_fulfillment_path',
   'empty_project',
