@@ -120,7 +120,7 @@ interface CatalogueDbClient {
   }
 }
 
-function variantFromRow(
+export function variantFromRow(
   row: VariantRow,
   unitsCommitted: number,
 ): DesignVariant {
@@ -143,7 +143,7 @@ function toTopShapes(
   )
 }
 
-function productFromRow(
+export function productFromRow(
   row: ProductRow,
   variants: ReadonlyArray<DesignVariant>,
   resolvedPriceHt?: number,
