@@ -144,6 +144,50 @@ describe('fulfillment : le MOQ ne bloque jamais', () => {
   })
 })
 
+describe('fulfillment : une voie confirmée gagne toujours sur une voie non confirmée', () => {
+  it('MOQ 50, qty 50, seed standard NON confirmée + regroupement confirmé 1..100 → grouped_production confirmée', () => {
+    const grouped = confirmedOption('chair-a', 'grouped_production', { minQuantity: 1, maxQuantity: 100 })
+    const result = resolveFulfillment(
+      item('chair-a', 50),
+      product,
+      context({ options: [seeded, grouped] }),
+    )
+    expect(result).toMatchObject({
+      mode: 'grouped_production',
+      confirmed: true,
+      reasons: [],
+      optionId: grouped.id,
+    })
+  })
+
+  it("l'ordre des options ne change rien : le regroupement confirmé gagne même déclaré après la seed", () => {
+    const grouped = confirmedOption('chair-a', 'grouped_production', { minQuantity: 1, maxQuantity: 100 })
+    for (const options of [[seeded, grouped], [grouped, seeded]]) {
+      expect(resolveFulfillment(item('chair-a', 50), product, context({ options })).optionId).toBe(grouped.id)
+    }
+  })
+
+  it('standard confirmée + regroupement confirmé : la standard gagne (priorité déterministe documentée)', () => {
+    const standard = confirmedOption('chair-a', 'standard_production')
+    const grouped = confirmedOption('chair-a', 'grouped_production', { minQuantity: 1, maxQuantity: 100 })
+    for (const options of [[grouped, standard, seeded], [seeded, standard, grouped]]) {
+      const result = resolveFulfillment(item('chair-a', 50), product, context({ options }))
+      expect(result).toMatchObject({ mode: 'standard_production', confirmed: true, optionId: standard.id })
+    }
+    // Sous le minimum de série, la standard confirmée ne s'applique pas : le
+    // regroupement confirmé prend le relais.
+    expect(
+      resolveFulfillment(item('chair-a', 20), product, context({ options: [standard, grouped] })),
+    ).toMatchObject({ mode: 'grouped_production', confirmed: true, optionId: grouped.id })
+  })
+
+  it('un regroupement confirmé qui ne couvre pas la quantité ne masque pas la standard non confirmée', () => {
+    const grouped = confirmedOption('chair-a', 'grouped_production', { minQuantity: 1, maxQuantity: 40 })
+    const result = resolveFulfillment(item('chair-a', 50), product, context({ options: [seeded, grouped] }))
+    expect(result).toMatchObject({ mode: 'standard_production', confirmed: false, reasons: ['production_unconfirmed'] })
+  })
+})
+
 describe('fulfillment : voies confirmées par produit', () => {
   it("l'option seed_moq n'est jamais une voie confirmée", () => {
     expect(confirmedFulfillmentPaths('chair-a', context())).toEqual([])

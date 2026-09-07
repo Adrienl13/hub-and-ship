@@ -30,6 +30,11 @@ import {
   STUDIO_PROFILE_COLUMNS,
   STUDIO_PROFILE_PUBLIC_COLUMNS,
 } from '../../src/lib/studio/repository'
+import {
+  DATA_QUALITY_FIELDS,
+  DATA_QUALITY_SOURCES,
+  DATA_QUALITY_STATUSES,
+} from '../../src/lib/studio/types'
 
 const url = process.env.SUPABASE_TEST_URL?.replace(/\/$/, '')
 const anonKey = process.env.SUPABASE_TEST_ANON_KEY
@@ -54,6 +59,9 @@ const PUBLIC_SURFACES: ReadonlyArray<{ view: string; columns: ReadonlyArray<stri
 ]
 
 const DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])
+const DATA_QUALITY_FIELD_SET = new Set<string>(DATA_QUALITY_FIELDS)
+const DATA_QUALITY_STATUS_SET = new Set<string>(DATA_QUALITY_STATUSES)
+const DATA_QUALITY_SOURCE_SET = new Set<string>(DATA_QUALITY_SOURCES)
 
 interface RestResult {
   readonly status: number
@@ -153,12 +161,36 @@ async function expectPublicSurfacesMinimal(token: string, label: string) {
       if ('is_confirmed' in row) expect(typeof row.is_confirmed).toBe('boolean')
       if ('data_quality' in row && row.data_quality && typeof row.data_quality === 'object') {
         for (const [field, entry] of Object.entries(row.data_quality as Record<string, unknown>)) {
+          expect(DATA_QUALITY_FIELD_SET.has(field), `${label} ${view}.data_quality.${field} hors liste blanche`).toBe(true)
           expect(entry && typeof entry === 'object', `${view}.data_quality.${field}`).toBe(true)
-          for (const key of Object.keys(entry as Record<string, unknown>)) {
+          const record = entry as Record<string, unknown>
+          for (const key of Object.keys(record)) {
             expect(DATA_QUALITY_PUBLIC_KEYS.has(key), `${label} ${view}.data_quality.${field}.${key} publié`).toBe(true)
           }
+          expect(DATA_QUALITY_STATUS_SET.has(String(record.status)), `${field}.status`).toBe(true)
+          expect(DATA_QUALITY_SOURCE_SET.has(String(record.source)), `${field}.source`).toBe(true)
         }
       }
+      if ('mode' in row) {
+        expect(['standard_production', 'grouped_production']).toContain(row.mode)
+      }
+    }
+  }
+
+  // Aucun produit inactif, aucune option orpheline, aucune famille non vérifiée.
+  const inactive = await rest('studio_products?select=id&is_active=eq.false&limit=1', token)
+  expect(inactive.status).toBe(200)
+  expect(rows(inactive), `${label} studio_products montre un produit inactif`).toHaveLength(0)
+  const visible = new Set(rows(await rest('studio_products?select=id&limit=1000', token)).map((row) => row.id))
+  for (const option of rows(await rest('studio_fulfillment_options_public?select=product_id&limit=1000', token))) {
+    expect(visible.has(option.product_id), `${label} option publique d'un produit non visible ${String(option.product_id)}`).toBe(true)
+  }
+  const families = rows(await rest('studio_model_families_public?select=id,status&limit=1000', token))
+  for (const family of families) expect(family.status).toBe('verified')
+  const verifiedIds = new Set(families.map((family) => family.id))
+  for (const profile of rows(await rest('studio_product_profiles_public?select=model_family_id&limit=1000', token))) {
+    if (profile.model_family_id !== null) {
+      expect(verifiedIds.has(profile.model_family_id), `${label} famille non vérifiée publiée`).toBe(true)
     }
   }
 

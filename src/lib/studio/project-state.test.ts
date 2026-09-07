@@ -77,6 +77,15 @@ describe('état projet', () => {
     expect(result.state).toBe('reservation_ready')
   })
 
+  it('seed standard non confirmée + regroupement confirmé 1..100 pour 50 unités → reservation_ready', () => {
+    const grouped = confirmedOption('chair', 'grouped_production', { minQuantity: 1, maxQuantity: 100 })
+    const result = computeProjectState([
+      evaluate(item('chair', 50), chair, { stock: [], options: [...seededOnly.options, grouped] }),
+    ])
+    expect(result.state).toBe('reservation_ready')
+    expect(result.reasons).toEqual([])
+  })
+
   it('cas F — coloris RAL ou dimensions spéciales → manual_quote_required, jamais une réservation automatique', () => {
     const custom = computeProjectState([
       evaluate(item('chair', 50, { customColour: true }), chair, confirmedStandard),

@@ -189,6 +189,8 @@ function studioProductFromRow(
 }
 
 function optionFromRow(row: Record<string, unknown>): FulfillmentOption | null {
+  // La table n'accepte que standard_production / grouped_production
+  // (contrainte SQL) ; le filtre reste ici par défense en profondeur.
   const mode = oneOf(row.mode, FULFILLMENT_MODES)
   if (mode !== 'standard_production' && mode !== 'grouped_production') return null
   return {

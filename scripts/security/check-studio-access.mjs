@@ -37,6 +37,9 @@ const PUBLIC_SURFACES = [
 ]
 const INTERNAL_TABLES = ['studio_model_families', 'studio_product_profiles', 'studio_fulfillment_options']
 const DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])
+const DATA_QUALITY_FIELDS = new Set(['dimensions', 'weight', 'material', 'price', 'compatibility', 'customization', 'media', 'model_family'])
+const DATA_QUALITY_STATUSES = new Set(['verified', 'estimated', 'pending'])
+const DATA_QUALITY_SOURCES = new Set(['admin_input', 'supplier_sheet', 'catalogue_public_price', 'sku_prefix', 'name_heuristic', 'family_mode', 'category', 'pipeline', 'none'])
 
 const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, '')
 const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? ''
@@ -88,10 +91,13 @@ function dataQualityLeak(row) {
   const quality = row.data_quality
   if (!quality || typeof quality !== 'object') return null
   for (const [field, entry] of Object.entries(quality)) {
+    if (!DATA_QUALITY_FIELDS.has(field)) return `champ hors liste blanche : ${field}`
     if (!entry || typeof entry !== 'object') return `${field} n'est pas un objet`
     for (const key of Object.keys(entry)) {
       if (!DATA_QUALITY_PUBLIC_KEYS.has(key)) return `${field}.${key}`
     }
+    if (!DATA_QUALITY_STATUSES.has(entry.status)) return `${field}.status = ${entry.status}`
+    if (!DATA_QUALITY_SOURCES.has(entry.source)) return `${field}.source = ${entry.source}`
   }
   return null
 }
@@ -107,7 +113,10 @@ async function checkRole(role, token, allowEmptyInternal) {
     record(role, `${view} select=* = exactement la liste blanche`, star.status === 200 && starRows.every((row) => sameSet(Object.keys(row), columns)), extra.length ? `colonnes inattendues : ${[...new Set(extra)].join(', ')}` : `HTTP ${star.status}, ${starRows.length} lignes`)
     const leak = starRows.map(dataQualityLeak).find(Boolean)
     if (columns.includes('data_quality')) {
-      record(role, `${view}.data_quality projetée (status/source/updatedAt)`, !leak, leak ?? '')
+      record(role, `${view}.data_quality projetée (champs et clés en liste blanche, valeurs normalisées)`, !leak, leak ?? '')
+    }
+    if (columns.includes('mode')) {
+      record(role, `${view}.mode ∈ production seulement`, starRows.every((row) => ['standard_production', 'grouped_production'].includes(row.mode)))
     }
     if (columns.includes('is_confirmed')) {
       record(role, `${view}.is_confirmed booléen`, starRows.every((row) => typeof row.is_confirmed === 'boolean'))
@@ -119,6 +128,21 @@ async function checkRole(role, token, allowEmptyInternal) {
   }
   const products = await rest('studio_products?select=id&is_active=eq.true', token)
   record(role, `studio_products ≥ ${expectedMin} produit(s) actif(s)`, products.status === 200 && rows(products).length >= expectedMin, `HTTP ${products.status}, ${rows(products).length} lignes`)
+
+  // Aucun produit inactif ni famille non vérifiée dans les surfaces publiques.
+  const inactive = await rest('studio_products?select=id&is_active=eq.false&limit=1', token)
+  record(role, 'studio_products ne montre aucun produit inactif', inactive.status === 200 && rows(inactive).length === 0, `HTTP ${inactive.status}, ${rows(inactive).length} lignes`)
+  const optionProducts = await rest('studio_fulfillment_options_public?select=product_id&limit=1000', token)
+  const publicProducts = await rest('studio_products?select=id&limit=1000', token)
+  const visible = new Set(rows(publicProducts).map((row) => row.id))
+  const orphan = rows(optionProducts).find((row) => !visible.has(row.product_id))
+  record(role, 'options publiques : uniquement des produits visibles', optionProducts.status === 200 && !orphan, orphan ? `option orpheline pour ${orphan.product_id}` : '')
+  const families = await rest('studio_model_families_public?select=id,status&limit=1000', token)
+  record(role, 'familles publiques : status verified seulement', families.status === 200 && rows(families).every((row) => row.status === 'verified'))
+  const familyIds = new Set(rows(families).map((row) => row.id))
+  const profileFamilies = await rest('studio_product_profiles_public?select=product_id,model_family_id&limit=1000', token)
+  const leakedFamily = rows(profileFamilies).find((row) => row.model_family_id !== null && !familyIds.has(row.model_family_id))
+  record(role, 'profils publics : model_family_id ∈ familles vérifiées ou null', profileFamilies.status === 200 && !leakedFamily, leakedFamily ? `famille non vérifiée publiée : ${leakedFamily.model_family_id}` : '')
 
   // 2. Tables internes : anon refusé ; buyer refusé ou zéro ligne (RLS).
   for (const table of INTERNAL_TABLES) {

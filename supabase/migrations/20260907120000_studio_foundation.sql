@@ -108,8 +108,12 @@ create table if not exists public.studio_fulfillment_options (
   id uuid primary key default extensions.gen_random_uuid(),
   product_id text not null references public.products (id) on delete cascade,
   variant_id text references public.product_variants (id) on delete cascade,
+  -- Seules des VOIES DE PRODUCTION déclarées vivent ici. `stock` (lu dans
+  -- stock_lines) et `manual_review` (résultat de résolution) ne sont pas
+  -- des lignes d'options : le type FulfillmentMode du code les porte, la
+  -- table non.
   mode text not null
-    check (mode in ('stock', 'standard_production', 'grouped_production', 'manual_review')),
+    check (mode in ('standard_production', 'grouped_production')),
   min_quantity integer check (min_quantity is null or min_quantity >= 1),
   max_quantity integer check (max_quantity is null or max_quantity >= 1),
   price_basis text not null default 'container'
@@ -207,9 +211,15 @@ create policy "Admins manage studio fulfillment options"
 --    migrations 37/38) et joint la vue publique des profils.
 -- ---------------------------------------------------------------------------
 
--- Projection publique de data_quality : par champ, uniquement status /
--- source / updatedAt. `by`, `note` et toute métadonnée future restent
--- internes. Liste blanche : une clé non listée n'est jamais publiée.
+-- Projection publique de data_quality : VRAIE liste blanche SQL.
+-- - champs de premier niveau publiables : dimensions, weight, material,
+--   price, compatibility, customization, media, model_family — toute autre
+--   clé (ex. une vérification interne) disparaît entièrement ;
+-- - par champ, uniquement status / source / updatedAt ; `by`, `note` et
+--   toute métadonnée future restent internes ;
+-- - status et source sont normalisés aux valeurs autorisées (sinon pending /
+--   none) et une provenance heuristique n'est jamais publiée `verified`
+--   (même règle que src/lib/studio/data-quality.ts).
 create or replace function public.studio_public_data_quality(quality jsonb)
 returns jsonb
 language sql
@@ -218,33 +228,64 @@ strict
 parallel safe
 set search_path = ''
 as $$
+  with entries as (
+    select
+      field,
+      quality -> field as entry,
+      quality -> field ->> 'status' as raw_status,
+      quality -> field ->> 'source' as raw_source
+    from unnest(array['dimensions', 'weight', 'material', 'price', 'compatibility', 'customization', 'media', 'model_family']) as field
+    where jsonb_typeof(quality) = 'object'
+      and jsonb_typeof(quality -> field) = 'object'
+  ),
+  normalized as (
+    select
+      field,
+      case
+        when raw_status in ('verified', 'estimated', 'pending') then raw_status
+        else 'pending'
+      end as status,
+      case
+        when raw_source in ('admin_input', 'supplier_sheet', 'catalogue_public_price', 'sku_prefix', 'name_heuristic', 'family_mode', 'category', 'pipeline') then raw_source
+        else 'none'
+      end as source,
+      case
+        when jsonb_typeof(entry -> 'updatedAt') = 'string' then entry -> 'updatedAt'
+        else null
+      end as updated_at
+    from entries
+  )
   select coalesce(
     (
       select jsonb_object_agg(
-        entry.key,
+        field,
         jsonb_strip_nulls(jsonb_build_object(
-          'status', entry.value -> 'status',
-          'source', entry.value -> 'source',
-          'updatedAt', entry.value -> 'updatedAt'
+          'status', case
+            when status = 'verified' and source in ('sku_prefix', 'name_heuristic', 'family_mode', 'category', 'pipeline') then 'estimated'
+            when status = 'verified' and source = 'none' then 'pending'
+            else status
+          end,
+          'source', source,
+          'updatedAt', updated_at
         ))
       )
-      from jsonb_each(
-        case when jsonb_typeof(quality) = 'object' then quality else '{}'::jsonb end
-      ) as entry
-      where jsonb_typeof(entry.value) = 'object'
+      from normalized
     ),
     '{}'::jsonb
   );
 $$;
 
 comment on function public.studio_public_data_quality(jsonb) is
-  'Studio : projection publique de data_quality (status, source, updatedAt par champ). Jamais by ni note.';
+  'Studio : projection publique de data_quality. Liste blanche de champs, status/source normalisés, uniquement status/source/updatedAt. Jamais by ni note.';
 
 revoke all on function public.studio_public_data_quality(jsonb) from public;
 grant execute on function public.studio_public_data_quality(jsonb) to anon, authenticated;
 
 -- 5a. Profils : rôle, sous-type, matière, famille, traits calculés, qualité
 --     projetée. Ni notes, ni updated_by. Produits actifs seulement.
+--     model_family_id n'est publié que si la famille référencée est
+--     VÉRIFIÉE : candidate, rejetée ou absente → null publiquement (la
+--     valeur interne de studio_product_profiles n'est pas modifiée).
 create or replace view public.studio_product_profiles_public
 with (security_barrier = true) as
 select
@@ -252,10 +293,11 @@ select
   sp.studio_role,
   sp.seat_kind,
   sp.material,
-  sp.model_family_id,
+  case when f.status = 'verified' then sp.model_family_id else null end as model_family_id,
   sp.visual_traits,
   public.studio_public_data_quality(sp.data_quality) as data_quality
 from public.studio_product_profiles sp
+left join public.studio_model_families f on f.id = sp.model_family_id
 where exists (
   select 1 from public.products p where p.id = sp.product_id and p.is_active
 );
@@ -264,7 +306,9 @@ comment on view public.studio_product_profiles_public is
   'Studio : surface publique des profils (colonnes explicites, data_quality projetée). Table interne : studio_product_profiles.';
 
 -- 5b. Options de fulfillment : is_confirmed (booléen commercial) remplace
---     confirmed_by ; ni note. Options actives seulement.
+--     confirmed_by ; ni note. Options actives de PRODUITS ACTIFS seulement :
+--     une donnée Studio ne révèle jamais l'existence opérationnelle d'un
+--     produit inactif (les produits on_request sont actifs : inchangés).
 create or replace view public.studio_fulfillment_options_public
 with (security_barrier = true) as
 select
@@ -281,7 +325,10 @@ select
   o.available_from,
   o.expires_at
 from public.studio_fulfillment_options o
-where o.is_active = true;
+where o.is_active = true
+  and exists (
+    select 1 from public.products p where p.id = o.product_id and p.is_active
+  );
 
 comment on view public.studio_fulfillment_options_public is
   'Studio : surface publique des voies de fulfillment. is_confirmed = confirmation admin explicite ; confirmed_by reste interne.';
@@ -473,8 +520,12 @@ on conflict (product_id, (coalesce(variant_id, '')), mode, source) do nothing;
 -- 7. Auto-vérification : la migration échoue si une surface publique expose
 --    une colonne de coût ou interne, si anon garde un droit sur une table
 --    interne, si un rôle public ne peut plus lire les vues, si la projection
---    de data_quality laisse passer by/note, si une option semée est
---    confirmée, ou si une famille a été remplie automatiquement.
+--    de data_quality laisse passer un champ ou une clé hors liste blanche,
+--    si une surface publique montre un produit inactif ou une famille non
+--    vérifiée, si la table d'options accepte stock/manual_review, si une
+--    option semée est confirmée, ou si une famille a été remplie
+--    automatiquement. Le bloc ne laisse aucune trace : l'aller-retour de 7f
+--    est entièrement défait.
 -- ---------------------------------------------------------------------------
 do $$
 declare
@@ -483,6 +534,8 @@ declare
   internal_table text;
   internal_column text;
   public_surface text;
+  projected jsonb;
+  probe_product text;
 begin
   -- 7a. Aucune colonne de coût ni interne dans les surfaces publiques.
   select string_agg(table_name || '.' || column_name, ', ') into leaked
@@ -531,14 +584,96 @@ begin
     end if;
   end loop;
 
-  -- 7d. La projection de data_quality ne laisse passer ni by ni note.
-  if (public.studio_public_data_quality(
-        '{"price": {"status": "verified", "source": "admin_input", "by": "u", "note": "n", "updatedAt": "t"}}'::jsonb
-      ) -> 'price') ?| array['by', 'note'] then
-    raise exception 'studio_public_data_quality laisse passer by ou note';
+  -- 7d. La projection de data_quality : liste blanche de champs, uniquement
+  --     status/source/updatedAt, valeurs normalisées, heuristique jamais
+  --     verified.
+  projected := public.studio_public_data_quality(
+    '{"price": {"status": "verified", "source": "admin_input", "by": "u", "note": "n", "updatedAt": "t"},
+      "internal_factory_check": {"status": "verified", "source": "admin_input", "note": "secret"},
+      "material": {"status": "verified", "source": "sku_prefix"},
+      "weight": {"status": "bizarre", "source": "ailleurs", "updatedAt": 42},
+      "media": "pas un objet"}'::jsonb
+  );
+  if (select array_agg(k order by k) from jsonb_object_keys(projected) k)
+     is distinct from array['material', 'price', 'weight'] then
+    raise exception 'studio_public_data_quality : champs publiés inattendus : %', projected;
+  end if;
+  if projected -> 'price' is distinct from
+     '{"status": "verified", "source": "admin_input", "updatedAt": "t"}'::jsonb then
+    raise exception 'studio_public_data_quality : price mal projeté : %', projected -> 'price';
+  end if;
+  if projected -> 'material' is distinct from '{"status": "estimated", "source": "sku_prefix"}'::jsonb then
+    raise exception 'studio_public_data_quality : une heuristique est publiée verified : %', projected -> 'material';
+  end if;
+  if projected -> 'weight' is distinct from '{"status": "pending", "source": "none"}'::jsonb then
+    raise exception 'studio_public_data_quality : valeurs non normalisées : %', projected -> 'weight';
+  end if;
+  if public.studio_public_data_quality('"texte"'::jsonb) <> '{}'::jsonb then
+    raise exception 'studio_public_data_quality : un JSON non objet doit donner {}';
   end if;
 
-  -- 7e. Peuplement : chaque produit a un profil ; aucune famille auto ;
+  -- 7e. Les surfaces publiques ne montrent aucun produit inactif.
+  if exists (
+    select 1 from public.studio_fulfillment_options_public v
+    join public.products p on p.id = v.product_id
+    where not p.is_active
+  ) or exists (
+    select 1 from public.studio_product_profiles_public v
+    join public.products p on p.id = v.product_id
+    where not p.is_active
+  ) then
+    raise exception 'une surface publique Studio expose un produit inactif';
+  end if;
+
+  -- 7f. model_family_id public uniquement pour une famille VÉRIFIÉE.
+  --     Contrôle réel de la vue par un aller-retour dans la transaction de
+  --     la migration : famille temporaire candidate puis vérifiée, liée à un
+  --     produit actif, tout est remis à l'identique avant la fin du bloc.
+  select sp.product_id into probe_product
+  from public.studio_product_profiles sp
+  join public.products p on p.id = sp.product_id
+  where p.is_active and sp.model_family_id is null
+  limit 1;
+  if probe_product is not null then
+    insert into public.studio_model_families (id, label, status, source)
+      values ('zz-selfcheck-migration-39', 'auto-vérification', 'candidate', 'manual');
+    update public.studio_product_profiles
+      set model_family_id = 'zz-selfcheck-migration-39' where product_id = probe_product;
+    if (select model_family_id from public.studio_product_profiles_public where product_id = probe_product) is not null
+       or (select model_family_id from public.studio_products where id = probe_product) is not null then
+      raise exception 'une famille candidate est publiée';
+    end if;
+    update public.studio_model_families set status = 'rejected' where id = 'zz-selfcheck-migration-39';
+    if (select model_family_id from public.studio_product_profiles_public where product_id = probe_product) is not null then
+      raise exception 'une famille rejetée est publiée';
+    end if;
+    update public.studio_model_families set status = 'verified' where id = 'zz-selfcheck-migration-39';
+    if (select model_family_id from public.studio_product_profiles_public where product_id = probe_product)
+       is distinct from 'zz-selfcheck-migration-39'
+       or (select model_family_id from public.studio_products where id = probe_product)
+       is distinct from 'zz-selfcheck-migration-39' then
+      raise exception 'une famille vérifiée n''est pas publiée';
+    end if;
+    if not exists (select 1 from public.studio_model_families_public where id = 'zz-selfcheck-migration-39')
+       or exists (select 1 from public.studio_model_families_public where status <> 'verified') then
+      raise exception 'studio_model_families_public : filtre verified incorrect';
+    end if;
+    update public.studio_product_profiles set model_family_id = null where product_id = probe_product;
+    delete from public.studio_model_families where id = 'zz-selfcheck-migration-39';
+  end if;
+
+  -- 7g. La table d'options n'accepte que des voies de production.
+  if exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.studio_fulfillment_options'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) like '%mode%'
+      and (pg_get_constraintdef(oid) like '%''stock''%' or pg_get_constraintdef(oid) like '%''manual_review''%')
+  ) then
+    raise exception 'studio_fulfillment_options.mode ne doit accepter que standard_production et grouped_production';
+  end if;
+
+  -- 7h. Peuplement : chaque produit a un profil ; aucune famille auto ;
   --     aucune option semée n'est confirmée.
   select count(*) into missing_profiles
   from public.products p

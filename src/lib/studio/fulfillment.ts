@@ -10,6 +10,10 @@
 //   produit/variant, (3) une grouped_production explicitement confirmée.
 //   Un MOQ, une option semée (seed_moq) ou n'importe quel container ouvert ne
 //   confirment rien : ils ne produisent jamais reservation_ready ;
+// - ordre de priorité, déterministe : stock réel → standard confirmée →
+//   regroupement confirmé → standard NON confirmée (devis seulement) →
+//   manual_review. Une voie confirmée n'est jamais masquée par une voie non
+//   confirmée ;
 // - une standard_production NON confirmée (dont toute option seed_moq) est
 //   une information de série : la ligne reste quotable, avec la raison
 //   production_unconfirmed, mais n'est pas réservable ;
@@ -187,44 +191,59 @@ export function resolveFulfillment(
   if (variantMinimum(variant) > quantity) shortfallReasons.push('colour_minimum')
   if (stockAvailable > 0) shortfallReasons.push('stock_insufficient')
 
-  // 4. Quantité au niveau de la série : production standard. Une option
-  //    CONFIRMÉE par un admin est une voie de réservation ; une option non
-  //    confirmée (seed_moq ou déclarée sans confirmation) reste une base de
-  //    devis avec la raison production_unconfirmed.
-  if (quantity >= minimumRequired) {
-    const standards = liveOptions.filter(
-      (option) =>
-        option.mode === 'standard_production' && optionCovers(option, quantity),
-    )
-    const standard =
-      standards.find((option) => option.isConfirmed) ?? standards[0]
-    if (standard) {
-      return {
-        ...base,
-        mode: 'standard_production',
-        reasons: standard.isConfirmed ? [] : ['production_unconfirmed'],
-        priceBasis: standard.priceBasis,
-        confirmed: standard.isConfirmed,
-        optionId: standard.id,
-      }
+  // 4. Voies CONFIRMÉES d'abord : une voie confirmée n'est JAMAIS masquée
+  //    par une voie non confirmée. Priorité déterministe :
+  //    4a. standard_production confirmée couvrant la quantité, quantité au
+  //        niveau de la série (minimum MOQ / coloris) ;
+  //    4b. sinon grouped_production confirmée couvrant la quantité (le
+  //        regroupement peut servir sous le minimum de série).
+  const covering = liveOptions.filter((option) => optionCovers(option, quantity))
+  const confirmedStandard =
+    quantity >= minimumRequired
+      ? covering.find(
+          (option) => option.mode === 'standard_production' && option.isConfirmed,
+        )
+      : undefined
+  if (confirmedStandard) {
+    return {
+      ...base,
+      mode: 'standard_production',
+      reasons: [],
+      priceBasis: confirmedStandard.priceBasis,
+      confirmed: true,
+      optionId: confirmedStandard.id,
     }
   }
-
-  // 5. Regroupement CONFIRMÉ par un admin couvrant la quantité.
-  const grouped = liveOptions.find(
-    (option) =>
-      option.mode === 'grouped_production' &&
-      option.isConfirmed &&
-      optionCovers(option, quantity),
+  const confirmedGrouped = covering.find(
+    (option) => option.mode === 'grouped_production' && option.isConfirmed,
   )
-  if (grouped) {
+  if (confirmedGrouped) {
     return {
       ...base,
       mode: 'grouped_production',
       reasons: [],
-      priceBasis: grouped.priceBasis,
+      priceBasis: confirmedGrouped.priceBasis,
       confirmed: true,
-      optionId: grouped.id,
+      optionId: confirmedGrouped.id,
+    }
+  }
+
+  // 5. Aucune voie confirmée : une standard_production NON confirmée
+  //    (seed_moq ou déclarée sans confirmation) couvrant une quantité au
+  //    niveau de la série reste une base de devis (auto_quote_ready) avec la
+  //    raison production_unconfirmed. Jamais une réservation.
+  const unconfirmedStandard =
+    quantity >= minimumRequired
+      ? covering.find((option) => option.mode === 'standard_production')
+      : undefined
+  if (unconfirmedStandard) {
+    return {
+      ...base,
+      mode: 'standard_production',
+      reasons: ['production_unconfirmed'],
+      priceBasis: unconfirmedStandard.priceBasis,
+      confirmed: false,
+      optionId: unconfirmedStandard.id,
     }
   }
 

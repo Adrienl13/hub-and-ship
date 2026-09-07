@@ -21,6 +21,20 @@ import {
   STUDIO_PROFILE_COLUMNS,
   STUDIO_PROFILE_PUBLIC_COLUMNS,
 } from '../../src/lib/studio/repository'
+import {
+  DATA_QUALITY_FIELDS,
+  DATA_QUALITY_SOURCES,
+  DATA_QUALITY_STATUSES,
+  FULFILLMENT_MODES,
+  HEURISTIC_SOURCES,
+} from '../../src/lib/studio/types'
+
+/** Liste SQL `array['a', 'b']` ou `in ('a', 'b')` → tableau de chaînes. */
+function sqlList(segment: string, marker: RegExp): string[] {
+  const match = segment.match(marker)
+  expect(match, marker.source).not.toBeNull()
+  return [...(match?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1] ?? '')
+}
 
 const MIGRATION = '20260907120000_studio_foundation.sql'
 const sql = readFileSync(
@@ -28,6 +42,10 @@ const sql = readFileSync(
   'utf8',
 )
 const code = sql.replace(/--[^\n]*/g, '')
+/** Bloc d'auto-vérification final (do $$ … end $$;) et corps sans ce bloc. */
+const selfCheckStart = code.lastIndexOf('do $$')
+const selfCheck = code.slice(selfCheckStart)
+const body = code.slice(0, selfCheckStart)
 
 const INTERNAL_TABLES = [
   'studio_model_families',
@@ -69,6 +87,7 @@ describe('migration studio_foundation : horodatage et périmètre', () => {
   })
 
   it('est strictement additive : aucune suppression ni modification de colonne', () => {
+    expect(selfCheckStart).toBeGreaterThan(0)
     expect(code).not.toMatch(/drop\s+column/i)
     expect(code).not.toMatch(/rename\s+(column|to)/i)
     expect(code).not.toMatch(/alter\s+column/i)
@@ -76,8 +95,24 @@ describe('migration studio_foundation : horodatage et périmètre', () => {
     expect(code).not.toMatch(/alter\s+table\s+public\.product_variants\b/i)
     expect(code).not.toMatch(/update\s+public\.products\b/i)
     expect(code).not.toMatch(/update\s+public\.product_variants\b/i)
-    expect(code).not.toMatch(/delete\s+from/i)
+    expect(body).not.toMatch(/delete\s+from/i)
+    expect(body).not.toMatch(/\bupdate\s+public\./i)
     expect(code).not.toMatch(/drop\s+table\s+(?!if exists)/i)
+  })
+
+  it("l'auto-vérification ne laisse aucune trace : elle ne supprime et ne modifie que sa propre famille temporaire", () => {
+    const deletes = [...selfCheck.matchAll(/delete\s+from\s+[^;]+;/gi)].map((m) => m[0])
+    expect(deletes).toEqual([
+      "delete from public.studio_model_families where id = 'zz-selfcheck-migration-39';",
+    ])
+    const updates = [...selfCheck.matchAll(/\bupdate\s+public\.(\w+)\s+set\s+([^;]+);/gi)]
+    for (const update of updates) {
+      const [, table, clause] = update
+      expect(['studio_model_families', 'studio_product_profiles']).toContain(table)
+      expect(clause).toMatch(/zz-selfcheck-migration-39|product_id = probe_product/)
+    }
+    expect(selfCheck).toContain('update public.studio_product_profiles set model_family_id = null where product_id = probe_product;')
+    expect(selfCheck).not.toMatch(/insert\s+into\s+public\.(?!studio_model_families)/i)
   })
 
   it('ne touche ni au panier, ni aux réservations, ni à Stripe, ni au pricing', () => {
@@ -103,8 +138,17 @@ describe('migration studio_foundation : schéma', () => {
     expect(code).toMatch(/create table if not exists public\.studio_fulfillment_options/)
     expect(code).toContain("check (status in ('candidate', 'verified', 'rejected'))")
     expect(code).toContain("check (studio_role in ('seat', 'tabletop', 'base', 'catalog_only'))")
-    expect(code).toContain("('stock', 'standard_production', 'grouped_production', 'manual_review')")
     expect(code).toContain("check (price_basis in ('container', 'stock'))")
+  })
+
+  it("studio_fulfillment_options.mode n'accepte que des voies de production (stock et manual_review sont des résultats de résolution)", () => {
+    expect(code).toContain("check (mode in ('standard_production', 'grouped_production'))")
+    expect(code).not.toMatch(/check \(mode in \([^)]*'stock'/)
+    expect(code).not.toMatch(/check \(mode in \([^)]*'manual_review'/)
+    // Le type global du code garde les quatre modes : distinction voulue.
+    expect(FULFILLMENT_MODES).toEqual(['stock', 'standard_production', 'grouped_production', 'manual_review'])
+    // Auto-vérification en base.
+    expect(code).toContain("pg_get_constraintdef(oid) like '%''stock''%' or pg_get_constraintdef(oid) like '%''manual_review''%'")
   })
 
   it('porte une qualité de données granulaire en jsonb et des traits visuels calculés', () => {
@@ -173,16 +217,40 @@ describe('migration studio_foundation : surfaces publiques explicites', () => {
     const body = viewBody('studio_product_profiles_public')
     expect(body).toMatch(/with \(security_barrier = true\)/)
     expect(body).toMatch(/public\.studio_public_data_quality\(sp\.data_quality\) as data_quality/)
-    expect(body).toMatch(/p\.is_active/)
+    expect(body).toMatch(/where exists \(\s*select 1 from public\.products p where p\.id = sp\.product_id and p\.is_active\s*\)/)
     expect(viewColumns('studio_product_profiles_public')).toEqual([...STUDIO_PROFILE_PUBLIC_COLUMNS])
   })
 
-  it('studio_fulfillment_options_public : is_confirmed booléen, jamais confirmed_by, options actives, parité avec le code', () => {
+  it('studio_product_profiles_public : model_family_id publié uniquement si la famille est VÉRIFIÉE (candidate, rejected, absente → null)', () => {
+    const body = viewBody('studio_product_profiles_public')
+    expect(body).toMatch(/left join public\.studio_model_families f on f\.id = sp\.model_family_id/)
+    expect(body).toMatch(/case when f\.status = 'verified' then sp\.model_family_id else null end as model_family_id/)
+    expect(body).not.toMatch(/\bsp\.model_family_id,/)
+    // studio_products hérite de cette projection : il lit sp.model_family_id de la vue publique, jamais de la table.
+    const products = viewBody('studio_products')
+    expect(products).toMatch(/sp\.model_family_id/)
+    expect(products).toMatch(/left join public\.studio_product_profiles_public sp/)
+    expect(products).not.toMatch(/studio_model_families/)
+    // Auto-vérification réelle en base : candidate → null, rejected → null, verified → id, puis remise à l'identique.
+    for (const marker of [
+      "raise exception 'une famille candidate est publiée'",
+      "raise exception 'une famille rejetée est publiée'",
+      "raise exception 'une famille vérifiée n''est pas publiée'",
+      "update public.studio_product_profiles set model_family_id = null where product_id = probe_product",
+      "delete from public.studio_model_families where id = 'zz-selfcheck-migration-39'",
+    ]) {
+      expect(code).toContain(marker)
+    }
+  })
+
+  it('studio_fulfillment_options_public : is_confirmed booléen, jamais confirmed_by, options actives de produits ACTIFS, parité avec le code', () => {
     const body = viewBody('studio_fulfillment_options_public')
     expect(body).toMatch(/with \(security_barrier = true\)/)
     expect(body).toMatch(/\(o\.confirmed_by is not null\) as is_confirmed/)
-    expect(body).toMatch(/where o\.is_active = true/)
+    expect(body).toMatch(/where o\.is_active = true\s+and exists \(\s*select 1 from public\.products p where p\.id = o\.product_id and p\.is_active\s*\)/)
     expect(viewColumns('studio_fulfillment_options_public')).toEqual([...FULFILLMENT_OPTION_COLUMNS])
+    // Auto-vérification : aucun produit inactif dans les surfaces publiques.
+    expect(code).toContain("raise exception 'une surface publique Studio expose un produit inactif'")
   })
 
   it('studio_model_families_public : id, label, status des familles vérifiées seulement', () => {
@@ -191,18 +259,36 @@ describe('migration studio_foundation : surfaces publiques explicites', () => {
     expect(viewColumns('studio_model_families_public')).toEqual([...MODEL_FAMILY_PUBLIC_COLUMNS])
   })
 
-  it('la projection data_quality est une liste blanche status/source/updatedAt et exclut by/note', () => {
+  it('la projection data_quality est une VRAIE liste blanche SQL : champs, clés et valeurs, en parité avec types.ts', () => {
     const start = code.search(/create or replace function public\.studio_public_data_quality/)
     expect(start).toBeGreaterThanOrEqual(0)
     const fn = code.slice(start, code.indexOf('$$;', start))
-    expect(fn).toMatch(/'status', entry\.value -> 'status'/)
-    expect(fn).toMatch(/'source', entry\.value -> 'source'/)
-    expect(fn).toMatch(/'updatedAt', entry\.value -> 'updatedAt'/)
+    // Champs de premier niveau : exactement DATA_QUALITY_FIELDS, via unnest(array[...]) — jamais jsonb_each sur le JSON entier.
+    expect(sqlList(fn, /from unnest\(array\[([^\]]*)\]\) as field/)).toEqual([...DATA_QUALITY_FIELDS])
+    expect(fn).not.toMatch(/jsonb_each/)
+    // Statuts et provenances normalisés aux valeurs autorisées.
+    expect(sqlList(fn, /when raw_status in \(([^)]*)\) then raw_status/)).toEqual([...DATA_QUALITY_STATUSES])
+    expect(sqlList(fn, /when raw_source in \(([^)]*)\) then raw_source/)).toEqual(
+      DATA_QUALITY_SOURCES.filter((source) => source !== 'none'),
+    )
+    expect(fn).toMatch(/else 'pending'/)
+    expect(fn).toMatch(/else 'none'/)
+    // Une heuristique n'est jamais publiée verified (même règle que data-quality.ts).
+    expect(sqlList(fn, /when status = 'verified' and source in \(([^)]*)\) then 'estimated'/)).toEqual([...HEURISTIC_SOURCES])
+    expect(fn).toMatch(/when status = 'verified' and source = 'none' then 'pending'/)
+    // Par champ : uniquement status / source / updatedAt.
+    expect(fn).toMatch(/'status', case/)
+    expect(fn).toMatch(/'source', source/)
+    expect(fn).toMatch(/'updatedAt', updated_at/)
     expect(fn).not.toMatch(/'by'|'note'/)
     expect(fn).toMatch(/set search_path = ''/)
     expect(code).toContain('grant execute on function public.studio_public_data_quality(jsonb) to anon, authenticated;')
-    // Auto-vérification en base.
-    expect(code).toContain("?| array['by', 'note']")
+    // Auto-vérification en base : champ inconnu absent, by/note absents, normalisation, heuristique.
+    expect(code).toContain('"internal_factory_check": {"status": "verified", "source": "admin_input", "note": "secret"}')
+    expect(code).toContain("is distinct from array['material', 'price', 'weight']")
+    expect(code).toContain(`'{"status": "verified", "source": "admin_input", "updatedAt": "t"}'::jsonb`)
+    expect(code).toContain(`'{"status": "estimated", "source": "sku_prefix"}'::jsonb`)
+    expect(code).toContain(`'{"status": "pending", "source": "none"}'::jsonb`)
   })
 
   it("l'auto-vérification balaie les colonnes internes et de coût sur les quatre surfaces", () => {
