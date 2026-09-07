@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run src/lib",
     "test:security": "vitest run tests/security",
+    "security:grants": "node scripts/security/check-cost-exposure.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
