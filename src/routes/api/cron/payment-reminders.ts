@@ -18,6 +18,7 @@ import {
   resolveDueReminders,
   type ReminderCandidate,
 } from '@/lib/reservations/payment-reminders'
+import { timingSafeEqualStr } from '@/lib/security/timing-safe-equal'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 const SITE_URL = 'https://prosimport.com'
@@ -35,20 +36,6 @@ function methodNotAllowed(): Response {
     { ok: false, error: 'Method Not Allowed' },
     { status: 405, headers: { Allow: 'POST' } },
   )
-}
-
-// Comparaison en temps constant (pas de node:crypto sur Workers) : le temps
-// de réponse ne doit pas révéler combien de caractères du secret matchent.
-function timingSafeEqualStr(a: string, b: string): boolean {
-  const encoder = new TextEncoder()
-  const aBytes = encoder.encode(a)
-  const bBytes = encoder.encode(b)
-  let diff = aBytes.length ^ bBytes.length
-  const length = Math.max(aBytes.length, bBytes.length)
-  for (let index = 0; index < length; index += 1) {
-    diff |= (aBytes[index] ?? 0) ^ (bBytes[index] ?? 0)
-  }
-  return diff === 0
 }
 
 export async function handlePaymentReminders(

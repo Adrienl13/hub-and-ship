@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransportPartenairesRouteImport } from './routes/transport-partenaires'
+import { Route as StudioRouteImport } from './routes/studio'
 import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as SitemapProductsDotxmlRouteImport } from './routes/sitemap-products[.]xml'
@@ -28,10 +29,12 @@ import { Route as AvisRouteImport } from './routes/avis'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StudioIndexRouteImport } from './routes/studio.index'
 import { Route as LivresIndexRouteImport } from './routes/livres.index'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
+import { Route as StudioPreviewRouteImport } from './routes/studio_.preview'
 import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
 import { Route as LivresSlugRouteImport } from './routes/livres.$slug'
@@ -62,6 +65,11 @@ import { Route as AccountReservationsReservationIdFactureInvoiceIdRouteImport } 
 const TransportPartenairesRoute = TransportPartenairesRouteImport.update({
   id: '/transport-partenaires',
   path: '/transport-partenaires',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StockMobilierTerrasse24hRoute =
@@ -155,6 +163,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioIndexRoute = StudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudioRoute,
+} as any)
 const LivresIndexRoute = LivresIndexRouteImport.update({
   id: '/livres/',
   path: '/livres/',
@@ -173,6 +186,11 @@ const GuidesIndexRoute = GuidesIndexRouteImport.update({
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/account/',
   path: '/account/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioPreviewRoute = StudioPreviewRouteImport.update({
+  id: '/studio_/preview',
+  path: '/studio/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerSelectionsRoute = PartnerSelectionsRouteImport.update({
@@ -331,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
+  '/studio': typeof StudioRouteWithChildren
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
   '/account/favoris': typeof AccountFavorisRoute
@@ -351,10 +370,12 @@ export interface FileRoutesByFullPath {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
+  '/studio/': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -402,10 +423,12 @@ export interface FileRoutesByTo {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio/preview': typeof StudioPreviewRoute
   '/account': typeof AccountIndexRoute
   '/guides': typeof GuidesIndexRoute
   '/legal': typeof LegalIndexRoute
   '/livres': typeof LivresIndexRoute
+  '/studio': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -434,6 +457,7 @@ export interface FileRoutesById {
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
+  '/studio': typeof StudioRouteWithChildren
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
   '/account/favoris': typeof AccountFavorisRoute
@@ -454,10 +478,12 @@ export interface FileRoutesById {
   '/livres/$slug': typeof LivresSlugRoute
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
+  '/studio_/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/legal/': typeof LegalIndexRoute
   '/livres/': typeof LivresIndexRoute
+  '/studio/': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -487,6 +513,7 @@ export interface FileRouteTypes {
     | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
+    | '/studio'
     | '/transport-partenaires'
     | '/account/avis'
     | '/account/favoris'
@@ -507,10 +534,12 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio/preview'
     | '/account/'
     | '/guides/'
     | '/legal/'
     | '/livres/'
+    | '/studio/'
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -558,10 +587,12 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio/preview'
     | '/account'
     | '/guides'
     | '/legal'
     | '/livres'
+    | '/studio'
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -589,6 +620,7 @@ export interface FileRouteTypes {
     | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
+    | '/studio'
     | '/transport-partenaires'
     | '/account/avis'
     | '/account/favoris'
@@ -609,10 +641,12 @@ export interface FileRouteTypes {
     | '/livres/$slug'
     | '/p/$partnerSlug'
     | '/partner/selections'
+    | '/studio_/preview'
     | '/account/'
     | '/guides/'
     | '/legal/'
     | '/livres/'
+    | '/studio/'
     | '/account/reservations/$reservationId'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -641,6 +675,7 @@ export interface RootRouteChildren {
   SitemapProductsDotxmlRoute: typeof SitemapProductsDotxmlRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
+  StudioRoute: typeof StudioRouteWithChildren
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountAvisRoute: typeof AccountAvisRoute
   AccountFavorisRoute: typeof AccountFavorisRoute
@@ -660,6 +695,7 @@ export interface RootRouteChildren {
   LegalSlugRoute: typeof LegalSlugRoute
   LivresSlugRoute: typeof LivresSlugRoute
   PPartnerSlugRoute: typeof PPartnerSlugRouteWithChildren
+  StudioPreviewRoute: typeof StudioPreviewRoute
   AccountIndexRoute: typeof AccountIndexRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
@@ -676,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/transport-partenaires'
       fullPath: '/transport-partenaires'
       preLoaderRoute: typeof TransportPartenairesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stock-mobilier-terrasse-24h': {
@@ -804,6 +847,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio/': {
+      id: '/studio/'
+      path: '/'
+      fullPath: '/studio/'
+      preLoaderRoute: typeof StudioIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/livres/': {
       id: '/livres/'
       path: '/livres'
@@ -830,6 +880,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account/'
       preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio_/preview': {
+      id: '/studio_/preview'
+      path: '/studio/preview'
+      fullPath: '/studio/preview'
+      preLoaderRoute: typeof StudioPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner/selections': {
@@ -1028,6 +1085,17 @@ const PartnerRouteChildren: PartnerRouteChildren = {
 const PartnerRouteWithChildren =
   PartnerRoute._addFileChildren(PartnerRouteChildren)
 
+interface StudioRouteChildren {
+  StudioIndexRoute: typeof StudioIndexRoute
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioIndexRoute: StudioIndexRoute,
+}
+
+const StudioRouteWithChildren =
+  StudioRoute._addFileChildren(StudioRouteChildren)
+
 interface AccountReservationsReservationIdRouteChildren {
   AccountReservationsReservationIdDocumentRoute: typeof AccountReservationsReservationIdDocumentRoute
   AccountReservationsReservationIdFactureInvoiceIdRoute: typeof AccountReservationsReservationIdFactureInvoiceIdRoute
@@ -1089,6 +1157,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapProductsDotxmlRoute: SitemapProductsDotxmlRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
+  StudioRoute: StudioRouteWithChildren,
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountAvisRoute: AccountAvisRoute,
   AccountFavorisRoute: AccountFavorisRoute,
@@ -1109,6 +1178,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalSlugRoute: LegalSlugRoute,
   LivresSlugRoute: LivresSlugRoute,
   PPartnerSlugRoute: PPartnerSlugRouteWithChildren,
+  StudioPreviewRoute: StudioPreviewRoute,
   AccountIndexRoute: AccountIndexRoute,
   GuidesIndexRoute: GuidesIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
