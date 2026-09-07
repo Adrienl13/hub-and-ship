@@ -15,17 +15,16 @@ describe('store Studio (fondation)', () => {
     useStudioStore.getState().resetSession()
   })
 
-  it('persiste sous la clé et la version prévues, sans favoris', () => {
+  it('persiste sous la clé et la version prévues', () => {
     expect(STUDIO_STORE_KEY).toBe('terrassea-studio-v1')
-    expect(STUDIO_STORE_VERSION).toBe(1)
+    expect(STUDIO_STORE_VERSION).toBe(2)
     useStudioStore.getState().setEntry('seats')
     const persisted = JSON.parse(localStorage.getItem(STUDIO_STORE_KEY) ?? '{}') as {
       version: number
       state: Record<string, unknown>
     }
-    expect(persisted.version).toBe(1)
-    expect(Object.keys(persisted.state).sort()).toEqual(['journal', 'project', 'sessionId'])
-    expect(persisted.state).not.toHaveProperty('favorites')
+    expect(persisted.version).toBe(2)
+    expect(Object.keys(persisted.state).sort()).toEqual(['discovery', 'journal', 'project', 'sessionId'])
   })
 
   it('accepte une quantité libre (6 sous un MOQ de 50) sans arrondi', () => {
@@ -69,8 +68,6 @@ describe('store Studio (fondation)', () => {
     let undone = 0
     while (useStudioStore.getState().undo()) undone += 1
     expect(undone).toBe(STUDIO_UNDO_DEPTH)
-    // 80 → 50 retours en arrière → la quantité 30 (la 31e mutation) est la
-    // plus ancienne restaurable ; la création initiale n'est plus annulable.
     expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(30)
   })
 
@@ -78,10 +75,13 @@ describe('store Studio (fondation)', () => {
     const store = useStudioStore.getState()
     store.setItemQuantity('inconnu', 'v', 3)
     store.removeItem('inconnu', 'v')
+    store.removeFavorite('inconnu')
+    store.removeFinalist('inconnu')
+    store.replaceFinalist('inconnu', 'autre')
     expect(useStudioStore.getState().journal).toHaveLength(0)
   })
 
-  it('migre un état de version antérieure sans perdre la session ni les lignes valides', () => {
+  it('migre un état v0 sans perdre la session ni les lignes valides', () => {
     const migrated = migrateStudioState(
       {
         sessionId: 'session-ancienne',
@@ -96,18 +96,154 @@ describe('store Studio (fondation)', () => {
         favorites: ['a'],
       },
       0,
-    ) as { sessionId: string; project: { entry: string; items: unknown[] }; journal: unknown[] }
+    ) as { sessionId: string; project: { entry: string; items: unknown[] }; journal: unknown[]; discovery: unknown }
     expect(migrated.sessionId).toBe('session-ancienne')
     expect(migrated.project.entry).toBe('seats')
     expect(migrated.project.items).toEqual([
       { productId: 'a', variantId: 'v', role: 'seat', requestedQuantity: 1 },
     ])
     expect(migrated.journal).toEqual([])
+    expect(migrated.discovery).toEqual({ interactions: [], favoriteIds: [], finalistIds: [] })
     expect(migrated).not.toHaveProperty('favorites')
+  })
+
+  it('migre un état v1 (lot 1) : session et projet conservés, découverte vide, journal vidé', () => {
+    const migrated = migrateStudioState(
+      {
+        sessionId: 'session-lot-1',
+        project: {
+          entry: 'full_project',
+          items: [{ productId: 'chair', variantId: 'std', requestedQuantity: 6, role: 'seat' }],
+          updatedAt: '2026-09-07T10:00:00.000Z',
+        },
+        journal: [{ label: 'upsert_item', at: 'x', before: { entry: null, items: [], updatedAt: null } }],
+      },
+      1,
+    ) as { sessionId: string; project: { items: unknown[]; updatedAt: string }; journal: unknown[]; discovery: unknown }
+    expect(migrated.sessionId).toBe('session-lot-1')
+    expect(migrated.project.items).toEqual([
+      { productId: 'chair', variantId: 'std', role: 'seat', requestedQuantity: 6 },
+    ])
+    expect(migrated.project.updatedAt).toBe('2026-09-07T10:00:00.000Z')
+    expect(migrated.journal).toEqual([])
+    expect(migrated.discovery).toEqual({ interactions: [], favoriteIds: [], finalistIds: [] })
+  })
+
+  it('un état v2 persisté est validé (finalistes plafonnés, favoris dédoublonnés)', () => {
+    const migrated = migrateStudioState(
+      {
+        sessionId: 's',
+        project: { entry: null, items: [], updatedAt: null },
+        discovery: {
+          interactions: [{ productId: 'a', action: 'like', at: 't' }, { productId: 'b', action: 'bizarre' }],
+          favoriteIds: ['a', 'a', 7],
+          finalistIds: ['a', 'b', 'c', 'd'],
+        },
+        journal: [],
+      },
+      2,
+    ) as { discovery: { interactions: unknown[]; favoriteIds: string[]; finalistIds: string[] } }
+    expect(migrated.discovery.interactions).toEqual([{ productId: 'a', action: 'like', at: 't' }])
+    expect(migrated.discovery.favoriteIds).toEqual(['a'])
+    expect(migrated.discovery.finalistIds).toEqual(['a', 'b', 'c'])
   })
 
   it('génère une session si l’état persisté n’en a pas', () => {
     const migrated = migrateStudioState({}, 0) as { sessionId: string }
     expect(migrated.sessionId.length).toBeGreaterThan(8)
+  })
+})
+
+describe('store Studio (découverte, lot 2)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    useStudioStore.getState().resetSession()
+  })
+
+  it("j'aime ajoute aux favoris, pas pour moi retire, passer ne touche pas aux favoris", () => {
+    const store = useStudioStore.getState()
+    store.decide('a', 'like')
+    store.decide('b', 'pass')
+    store.decide('c', 'like')
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['a', 'c'])
+    expect(useStudioStore.getState().discovery.interactions.map((i) => [i.productId, i.action])).toEqual([
+      ['a', 'like'],
+      ['b', 'pass'],
+      ['c', 'like'],
+    ])
+    store.decide('a', 'dislike')
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['c'])
+  })
+
+  it('Undo d’une décision restaure interactions ET favoris, exactement', () => {
+    const store = useStudioStore.getState()
+    store.decide('a', 'like')
+    store.decide('b', 'dislike')
+    expect(useStudioStore.getState().lastActionLabel()).toBe('decide')
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.interactions).toHaveLength(1)
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['a'])
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.interactions).toHaveLength(0)
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual([])
+  })
+
+  it('favoris ≠ projet : un favori ne crée jamais de ligne de projet', () => {
+    const store = useStudioStore.getState()
+    store.decide('a', 'like')
+    store.addFavorite('b')
+    expect(useStudioStore.getState().project.items).toHaveLength(0)
+    store.removeFavorite('a')
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['b'])
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['a', 'b'])
+  })
+
+  it('finalistes : jamais plus de 3 sélectionnés, ajout refusé au-delà, remplacement et retrait', () => {
+    const store = useStudioStore.getState()
+    store.setFinalists(['a', 'b', 'c', 'd'])
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'b', 'c'])
+    expect(store.addFinalist('e')).toBe(false)
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'b', 'c'])
+    store.replaceFinalist('b', 'e')
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'e', 'c'])
+    store.removeFinalist('a')
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c'])
+    expect(store.addFinalist('f')).toBe(true)
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c', 'f'])
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c'])
+  })
+
+  it('retirer un favori le retire aussi des finalistes', () => {
+    const store = useStudioStore.getState()
+    store.addFavorite('a')
+    store.setFinalists(['a'])
+    store.removeFavorite('a')
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual([])
+  })
+
+  it('Undo mélangé projet / découverte : chaque retour est exact', () => {
+    const store = useStudioStore.getState()
+    store.decide('a', 'like')
+    store.upsertItem({ productId: 'a', variantId: 'v', requestedQuantity: 6, role: 'seat' })
+    store.decide('b', 'pass')
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.interactions).toHaveLength(1)
+    expect(useStudioStore.getState().project.items).toHaveLength(1)
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().project.items).toHaveLength(0)
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['a'])
+    expect(useStudioStore.getState().undo()).toBe(true)
+    expect(useStudioStore.getState().discovery.favoriteIds).toEqual([])
+    expect(useStudioStore.getState().undo()).toBe(false)
+  })
+
+  it('la découverte est persistée et survit à un rechargement du store', () => {
+    useStudioStore.getState().decide('a', 'like')
+    const persisted = JSON.parse(localStorage.getItem(STUDIO_STORE_KEY) ?? '{}') as {
+      state: { discovery: { favoriteIds: string[] } }
+    }
+    expect(persisted.state.discovery.favoriteIds).toEqual(['a'])
   })
 })
