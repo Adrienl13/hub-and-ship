@@ -230,6 +230,8 @@ Peuplement initial (idempotent, `insert … on conflict do nothing`) : `studio_r
 
 ## LOT 2 — Tranche verticale Assises
 
+> État réel (09/2026) : livré sur la branche `claude/studio-lot-2` (moteur V0 `v0.1`, routes `/studio` et `/studio/assises`, composants Studio, store v2, `POST /api/studio/events`, migration 40 `20260907130000_studio_sessions_events.sql` **non appliquée en production**). L'étape 2.0 n'a créé que l'infrastructure (`studio_curation_sets` vide, `?set=pilot` géré sans jeu) ; la curation qualitative attend les métriques du lot 3. Duels désactivés, `studio_diagnostic_pairs` vide. Détails : `docs/RUNBOOK_STUDIO.md`.
+
 ### Objectifs
 Parcours Assises complet avec le moteur **V0 heuristique** : entrée (Projet complet / Assises / Tables), découverte carte par carte, J'aime / Pas pour moi / Passer, Undo, favoris, finalistes (3 max), choix d'une assise, quantité libre, rail projet desktop, barre projet mobile. Les branches Tables renvoient vers le catalogue tant que le Lot 4 n'est pas livré. Le Lot 2 fonctionne sur **toutes** les assises `discovery_ready` ; l'évaluation qualitative se fait sur le jeu curé de l'étape 2.0.
 

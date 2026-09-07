@@ -1,6 +1,6 @@
-# Runbook — Studio Projet (lot 1 : fondation)
+# Runbook — Studio Projet (lot 1 : fondation · lot 2 : tranche Assises)
 
-État : fondation invisible. Aucune expérience utilisateur Studio n'existe encore (lot 2). Ce runbook couvre l'activation, la preview sécurisée, les migrations, les contrôles et le rollback.
+État : lot 1 en production (migration 39 appliquée). Lot 2 = première expérience Assises complète (`/studio` → `/studio/assises`), livrée sur la branche `claude/studio-lot-2`, **migration 40 non appliquée en production**. Ce runbook couvre l'activation, la preview sécurisée, les migrations, les contrôles, le moteur V0 et le rollback.
 
 ## 1. Activer le Studio en local
 
@@ -9,7 +9,9 @@
 VITE_STUDIO_ENABLED=true
 ```
 
-`bun run dev` puis `http://localhost:5173/studio` → page « Fondation en place ». Sans cette variable, `/studio` renvoie la 404 du site.
+`bun run dev` puis `http://localhost:5173/studio` → entrée du Studio (Projet complet / Assises / Tables), puis `/studio/assises`. Sans cette variable, `/studio` et `/studio/assises` renvoient la 404 du site. Le lien « Studio » du Header n'apparaît que sous ce flag ; une session preview accède par l'URL.
+
+Sans Supabase configuré, le Studio affiche « Aucune assise n'est disponible » (jamais un mock). Pour développer avec des données réelles : `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` de `.env.local` (lecture seule des surfaces publiques ; les événements nécessitent `SUPABASE_SERVICE_ROLE_KEY` dans `.dev.vars` et la migration 40, sinon l'API répond 503 et le parcours continue).
 
 `VITE_STUDIO_ENABLED` est une variable de build Vite : elle est inlinée dans le bundle et donc publique par nature. Elle ne doit passer à `true` en production que le jour de l'ouverture publique. Tant qu'elle est absente, les routes `/studio` portent `noindex`.
 
@@ -85,6 +87,44 @@ drop table if exists public.studio_model_families;
 
 Aucune donnée existante n'est touchée par la migration ni par son rollback.
 
+## 3 bis. Migration du lot 2 — NON APPLIQUÉE
+
+| # | Fichier | Statut |
+|---|---|---|
+| 40 | `supabase/migrations/20260907130000_studio_sessions_events.sql` | **non appliquée en production** (à appliquer après déploiement du bundle du lot 2 ; le code dégrade proprement sans elle) |
+
+Contenu, additif uniquement :
+
+| Table / vue | Rôle | Accès |
+|---|---|---|
+| `studio_sessions` | session anonyme de découverte (`id`, `algorithm_version`, `entry`, dates) — aucune PII | écriture serveur seule (client admin) ; lecture admin (RLS `is_admin()`) ; anon : aucun droit |
+| `studio_events` | une ligne par interaction (`event_type` contraint, `product_id`, `variant_id`, `algorithm_version`, `payload` ≤ 2 Ko, `client_ts`) | idem |
+| `studio_curation_sets` | infrastructure du jeu pilote : `product_ids` explicites, `criteria` traçables, `status` draft/active/archived. **Vide** : aucun jeu inventé | admin (RLS) ; surface publique `studio_curation_sets_public` (`id`, `label`, `product_ids`, jeux actifs) |
+| `studio_diagnostic_pairs` | paires diagnostiques explicites (`axis` mesuré, `source` manual/pipeline, `status`). **Vide** : jamais générée | admin (RLS) ; surface publique `studio_diagnostic_pairs_public` (`id`, `product_a_id`, `product_b_id`, `axis`, paires vérifiées de produits actifs) |
+
+Sans la migration : `/api/studio/events` répond 503 (le parcours continue, la mesure est simplement absente), les deux surfaces publiques répondent 404 et le repository dégrade en listes vides (`?set=pilot` → découverte complète, aucun duel).
+
+### Rollback du lot 2
+
+```sql
+drop view if exists public.studio_diagnostic_pairs_public;
+drop view if exists public.studio_curation_sets_public;
+drop table if exists public.studio_events;
+drop table if exists public.studio_sessions;
+drop table if exists public.studio_diagnostic_pairs;
+drop table if exists public.studio_curation_sets;
+```
+
+Côté code : flag OFF (les routes restent en 404 / noindex), ou retour au commit du lot 1. Aucune donnée existante n'est touchée.
+
+### Ajouter une paire diagnostique (sans l'inventer)
+
+Une paire n'existe que si elle est **mesurée** : deux assises éloignées sur un axe calculé (`visual_traits` du lot 3 : `silhouette_ratio`, `edge_density`, `global_contrast`, `openness`, ou distance d'embedding). Procédure : insérer en admin (SQL ou futur onglet) `product_a_id`, `product_b_id`, `axis`, `source = 'manual'` (ou `pipeline` avec version dans `notes`), `status = 'candidate'` ; passer en `verified` après contrôle visuel. Seules les paires `verified` entre produits actifs sont publiques. Aucun duel n'est affiché tant que `findDiagnosticDuel` n'est pas activé dans l'interface (désactivé au lot 2) **et** qu'une paire vérifiée ne relie pas deux finalistes en présence. Jamais de paire « pour remplir ».
+
+### `?set=pilot`
+
+`/studio/assises?set=<id>` (`id` = `[a-z0-9][a-z0-9_-]{0,39}`) restreint la découverte aux `product_ids` du jeu **actif** de ce nom, s'il existe et s'il contient au moins une assise discovery_ready. Sinon : message « Le jeu « … » n'est pas disponible : découverte sur toutes les assises » et découverte complète. Le jeu pilote sera créé au lot 3 à partir de métriques objectives (aucun étiquetage de style) : `insert into studio_curation_sets (id, label, product_ids, criteria, status) values ('pilot', …, '{…}', '{"version":…,"method":…}', 'active')`.
+
 ## 4. Contrôles
 
 - `bun run test:security` : parité migration ↔ code (surfaces publiques sans colonne de coût ni interne, tables internes sans grant anon et sous RLS `is_admin()` seule, projection de qualité, option semée jamais confirmée, absence de `select('*')`, parité du script `security:studio`).
@@ -100,6 +140,18 @@ EXPECTED_MIN_ACTIVE_PRODUCTS=100 bun run security:studio
 - `tests/integration/studio-access.integration.test.ts` : même matrice en Vitest, ignorée sans `SUPABASE_TEST_URL` / `SUPABASE_TEST_ANON_KEY` (+ `TEST_BUYER_*`).
 
 - `bun run security:grants` reste le contrôle des colonnes de `products` (lot 0.5).
+- Depuis le lot 2, `security:studio` contrôle aussi les surfaces `studio_curation_sets_public` / `studio_diagnostic_pairs_public` et le refus (lecture **et** insertion) des tables `studio_sessions`, `studio_events`, `studio_curation_sets`, `studio_diagnostic_pairs` ; une surface absente (migration 40 non appliquée) est ignorée avec un `SKIP` explicite.
+
+### Commandes de test du lot 2
+
+```
+bun run check                                   # typecheck + lint + tous les tests
+bun run test:security                           # gardes texte des migrations 39 et 40, parité script, aucun service_role client
+bunx vitest run src/lib/studio src/stores/studio.store.test.ts src/components/studio src/routes/api/studio
+bun run build                                   # budget de bundle + scan de fuite
+VITE_STUDIO_ENABLED=true VITE_SUPABASE_URL=https://fake-supabase.test VITE_SUPABASE_ANON_KEY=fake \
+  bunx playwright test tests/e2e/studio.spec.ts # parcours Assises desktop + mobile, surfaces Supabase interceptées (fixtures)
+```
 
 ## 5. Ajouter une colonne publique à `products`
 
@@ -113,4 +165,21 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 - Fulfillment, ordre de priorité déterministe (`resolveFulfillment`) : (0) coloris RAL / dimensions spéciales ou produit sur demande → `manual_review` ; (1) stock réel couvrant la quantité → `stock`, confirmé ; (2) `standard_production` **confirmée** couvrant la quantité, quantité au niveau de la série → confirmé ; (3) `grouped_production` **confirmée** couvrant la quantité (même sous la série) → confirmé ; (4) aucune voie confirmée : `standard_production` non confirmée couvrant une quantité au niveau de la série → `production_unconfirmed`, devis seulement ; (5) `manual_review` avec raisons (`below_moq`, `colour_minimum`, `stock_insufficient`, `no_fulfillment_path`). Une voie confirmée n'est jamais masquée par une voie non confirmée ; entre standard confirmée et regroupement confirmé, la standard gagne. Aucune quantité n'est refusée, aucune disponibilité n'est inventée.
 - État projet (`src/lib/studio/project-state.ts`) : `manual_quote_required` > `feasibility_review` > `reservation_ready` > `auto_quote_ready`, raisons par ligne. `reservation_ready` = toutes les lignes quote-ready **et** servies par une voie confirmée (`fulfillment.confirmed`).
 - Qualité de données (`src/lib/studio/data-quality.ts`) : `verified | estimated | pending` + provenance ; une provenance heuristique n'est jamais `verified`.
-- Store local (`src/stores/studio.store.ts`, clé `terrassea-studio-v1`) : projet en cours, quantité libre, Undo profondeur 50. Les favoris existants restent un système distinct.
+- Store local (`src/stores/studio.store.ts`, clé `terrassea-studio-v1`, version 2 depuis le lot 2) : projet en cours (sélection explicite, quantité libre), découverte (interactions, favoris locaux, finalistes ≤ 3), Undo profondeur 50 par snapshot complet. Un état v1 migre sans perdre la session ni le projet. Pour un utilisateur connecté, les favoris Studio sont en plus reflétés dans `product_favorites` par les fonctions existantes (`useStudioFavoritesSync`) ; un anonyme reste pleinement servi.
+
+## 7. Moteur V0 (lot 2) — ce qu'il est, ce qu'il n'est pas
+
+`src/lib/studio/engine/` : `nextCard(state, catalogue, version)`, fonctions pures, `ALGORITHM_VERSION = 'v0.1'` porté par chaque carte et chaque événement.
+
+- Entrée : uniquement les assises `discovery_ready` (rôle `seat`, active, image principale), projetées en `{id, material, seatKind, familyId}`. **Le prix n'entre jamais dans le moteur** (test : deux catalogues identiques à prix différents → même séquence). `familyId` n'est transmis que pour une famille vérifiée (aucune au lot 2).
+- Ordre initial : round-robin par matière puis par sous-type, mélange seedé par `sessionId` (FNV-1a + mulberry32, aucun `Math.random`).
+- Signaux : j'aime +1 / pas pour moi −1 sur matière, sous-type, famille vérifiée ; passer = vu, poids 0 ; bonus de nouveauté (+0,5 par matière ou sous-type jamais montré) ; malus de répétition (−1 si les 3 dernières cartes partagent la matière ou la famille) ; exploration ε = 0,2 seedée par `sessionId` + position.
+- Déterministe : même session + même historique = même carte.
+- Finalistes : parmi les favoris, classés par affinité ; 3 maximum ; le 3ᵉ seulement si son affinité est > 0 ; « Voir plus » propose 2 candidats à comparer, jamais plus de 3 sélectionnés.
+- Duels : désactivés (`findDiagnosticDuel(..., {enabled: false})`) ; jamais sans paire explicite vérifiée.
+- Limites assumées : V0 ne comprend aucun goût et l'interface ne le prétend jamais (vocabulaire : « Voici des assises variées », « Vos favoris », « Vos finalistes », « Affinons votre sélection » ; aucun pourcentage d'affinité). Il sert à développer l'UX, garantir la diversité, tester Undo et enregistrer les interactions. Le moteur V1 (lot 3) le remplacera sans changer le store ni l'interface.
+
+## 8. Mesure (lot 2)
+
+- Événements métier : `studio_started`, `card_liked`, `card_disliked`, `card_passed`, `undo`, `favorite_added`, `favorite_removed`, `finalists_viewed`, `seat_selected`, `quantity_changed`, `project_completed` (réservé, jamais émis au lot 2 : aucun état correspondant n'existe). Envoi groupé par `POST /api/studio/events` (zod strict, origin-check, 60 lots / 10 min par IP, ≤ 20 événements par lot, aucune PII), écrit avec le client admin côté serveur uniquement. Un échec est silencieux pour l'utilisateur.
+- Miroir marketing minimal (`src/lib/analytics.ts`) : `studio_started` seulement ; `project_completed` réservé. Soumis au consentement existant (Consent Mode / Plausible inchangés).
