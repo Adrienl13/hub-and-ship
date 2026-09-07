@@ -34,8 +34,15 @@ const PUBLIC_SURFACES = [
     columns: ['id', 'product_id', 'variant_id', 'mode', 'min_quantity', 'max_quantity', 'price_basis', 'source', 'is_active', 'is_confirmed', 'available_from', 'expires_at'],
   },
   { view: 'studio_model_families_public', columns: ['id', 'label', 'status'] },
+  // Lot 2 (migration 40) : ignorées tant qu'elles n'existent pas (404).
+  { view: 'studio_curation_sets_public', columns: ['id', 'label', 'product_ids'], optional: true },
+  { view: 'studio_diagnostic_pairs_public', columns: ['id', 'product_a_id', 'product_b_id', 'axis'], optional: true },
 ]
-const INTERNAL_TABLES = ['studio_model_families', 'studio_product_profiles', 'studio_fulfillment_options']
+const INTERNAL_TABLES = [
+  'studio_model_families', 'studio_product_profiles', 'studio_fulfillment_options',
+  // Lot 2 : jamais lisibles ni inscriptibles par un rôle public.
+  'studio_sessions', 'studio_events', 'studio_curation_sets', 'studio_diagnostic_pairs',
+]
 const DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])
 const DATA_QUALITY_FIELDS = new Set(['dimensions', 'weight', 'material', 'price', 'compatibility', 'customization', 'media', 'model_family'])
 const DATA_QUALITY_STATUSES = new Set(['verified', 'estimated', 'pending'])
@@ -104,8 +111,12 @@ function dataQualityLeak(row) {
 
 async function checkRole(role, token, allowEmptyInternal) {
   // 1. Surfaces publiques : lisibles, liste blanche stricte.
-  for (const { view, columns } of PUBLIC_SURFACES) {
+  for (const { view, columns, optional } of PUBLIC_SURFACES) {
     const explicit = await rest(`${view}?select=${columns.join(',')}&limit=5`, token)
+    if (optional && explicit.status === 404) {
+      lines.push(`SKIP [${role}] ${view} absente (migration du lot 2 non appliquée)`)
+      continue
+    }
     record(role, `${view} lisible (colonnes explicites)`, explicit.status === 200, `HTTP ${explicit.status}`)
     const star = await rest(`${view}?select=*&limit=5`, token)
     const starRows = rows(star)
@@ -145,10 +156,22 @@ async function checkRole(role, token, allowEmptyInternal) {
   record(role, 'profils publics : model_family_id ∈ familles vérifiées ou null', profileFamilies.status === 200 && !leakedFamily, leakedFamily ? `famille non vérifiée publiée : ${leakedFamily.model_family_id}` : '')
 
   // 2. Tables internes : anon refusé ; buyer refusé ou zéro ligne (RLS).
+  //    Une table absente (404 : migration non appliquée) est ignorée.
   for (const table of INTERNAL_TABLES) {
     const star = await rest(`${table}?select=*&limit=1`, token)
+    if (star.status === 404) {
+      lines.push(`SKIP [${role}] ${table} absente (migration non appliquée)`)
+      continue
+    }
     const starOk = isDenied(star) || (allowEmptyInternal && star.status === 200 && rows(star).length === 0)
     record(role, `${table} select=* ${allowEmptyInternal ? 'refusé ou vide' : 'refusé'}`, starOk, `HTTP ${star.status}`)
+    // Écriture directe : toujours refusée pour un rôle public.
+    const write = await fetch(`${url}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { apikey: anonKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({}),
+    })
+    record(role, `${table} insert refusé`, write.status === 401 || write.status === 403 || write.status === 400 || write.status === 404, `HTTP ${write.status}`)
     for (const column of STUDIO_INTERNAL_COLUMNS) {
       const r = await rest(`${table}?select=${column}&limit=1`, token)
       const ok = isDenied(r) || pgCode(r) === '42703' || (allowEmptyInternal && r.status === 200 && rows(r).length === 0)

@@ -24,6 +24,8 @@ import { describe, expect, it } from 'vitest'
 
 import { INTERNAL_PRODUCT_COST_COLUMNS, PUBLIC_PRODUCT_COLUMNS } from '../../src/lib/catalogue/product-columns'
 import {
+  CURATION_SET_PUBLIC_COLUMNS,
+  DIAGNOSTIC_PAIR_PUBLIC_COLUMNS,
   FULFILLMENT_OPTION_COLUMNS,
   MODEL_FAMILY_PUBLIC_COLUMNS,
   STUDIO_INTERNAL_COLUMNS,
@@ -49,13 +51,20 @@ const INTERNAL_TABLES = [
   'studio_model_families',
   'studio_product_profiles',
   'studio_fulfillment_options',
+  // Lot 2 (migration 40) : absentes tant qu'elle n'est pas appliquée (404 toléré).
+  'studio_sessions',
+  'studio_events',
+  'studio_curation_sets',
+  'studio_diagnostic_pairs',
 ] as const
 
-const PUBLIC_SURFACES: ReadonlyArray<{ view: string; columns: ReadonlyArray<string> }> = [
+const PUBLIC_SURFACES: ReadonlyArray<{ view: string; columns: ReadonlyArray<string>; optional?: boolean }> = [
   { view: 'studio_products', columns: [...PUBLIC_PRODUCT_COLUMNS, ...STUDIO_PROFILE_COLUMNS] },
   { view: 'studio_product_profiles_public', columns: STUDIO_PROFILE_PUBLIC_COLUMNS },
   { view: 'studio_fulfillment_options_public', columns: FULFILLMENT_OPTION_COLUMNS },
   { view: 'studio_model_families_public', columns: MODEL_FAMILY_PUBLIC_COLUMNS },
+  { view: 'studio_curation_sets_public', columns: CURATION_SET_PUBLIC_COLUMNS, optional: true },
+  { view: 'studio_diagnostic_pairs_public', columns: DIAGNOSTIC_PAIR_PUBLIC_COLUMNS, optional: true },
 ]
 
 const DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])
@@ -121,6 +130,7 @@ function rows(result: RestResult): ReadonlyArray<Record<string, unknown>> {
 async function expectInternalColumnsUnreadable(token: string, label: string, allowEmpty: boolean) {
   for (const table of INTERNAL_TABLES) {
     const star = await rest(`${table}?select=*&limit=1`, token)
+    if (star.status === 404) continue
     const starOk = isDenied(star) || (allowEmpty && star.status === 200 && rows(star).length === 0)
     expect(starOk, `${label} ${table} select=* → HTTP ${star.status}`).toBe(true)
 
@@ -146,8 +156,9 @@ async function expectInternalColumnsUnreadable(token: string, label: string, all
 }
 
 async function expectPublicSurfacesMinimal(token: string, label: string) {
-  for (const { view, columns } of PUBLIC_SURFACES) {
+  for (const { view, columns, optional } of PUBLIC_SURFACES) {
     const explicit = await rest(`${view}?select=${columns.join(',')}&limit=5`, token)
+    if (optional && explicit.status === 404) continue
     expect(explicit.status, `${label} ${view} colonnes explicites`).toBe(200)
 
     const star = await rest(`${view}?select=*&limit=5`, token)

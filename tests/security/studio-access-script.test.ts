@@ -9,6 +9,8 @@ import { describe, expect, it } from 'vitest'
 import { PUBLIC_PRODUCT_COLUMNS } from '../../src/lib/catalogue/product-columns'
 import { DATA_QUALITY_FIELDS, DATA_QUALITY_SOURCES, DATA_QUALITY_STATUSES } from '../../src/lib/studio/types'
 import {
+  CURATION_SET_PUBLIC_COLUMNS,
+  DIAGNOSTIC_PAIR_PUBLIC_COLUMNS,
   FULFILLMENT_OPTION_COLUMNS,
   MODEL_FAMILY_PUBLIC_COLUMNS,
   STUDIO_INTERNAL_COLUMNS,
@@ -31,7 +33,8 @@ function surfaceColumns(view: string): string[] {
   const start = script.indexOf(`view: '${view}'`)
   expect(start, view).toBeGreaterThanOrEqual(0)
   const segment = script.slice(start, script.indexOf('}', start))
-  return [...segment.matchAll(/'([^']+)'/g)].map((m) => m[1] ?? '').filter((v) => v !== view)
+  const columns = segment.match(/columns: \[([^\]]*)\]/)?.[1] ?? ''
+  return [...columns.matchAll(/'([^']+)'/g)].map((m) => m[1] ?? '')
 }
 
 describe('security:studio — parité avec le code', () => {
@@ -44,9 +47,18 @@ describe('security:studio — parité avec le code', () => {
     expect(list('PROFILE_COLUMNS')).toEqual([...STUDIO_PROFILE_COLUMNS])
   })
 
-  it('surfaces publiques identiques', () => {
+  it('surfaces publiques identiques (lot 1 et lot 2)', () => {
     expect(surfaceColumns('studio_fulfillment_options_public')).toEqual([...FULFILLMENT_OPTION_COLUMNS])
     expect(surfaceColumns('studio_model_families_public')).toEqual([...MODEL_FAMILY_PUBLIC_COLUMNS])
+    expect(surfaceColumns('studio_curation_sets_public')).toEqual([...CURATION_SET_PUBLIC_COLUMNS])
+    expect(surfaceColumns('studio_diagnostic_pairs_public')).toEqual([...DIAGNOSTIC_PAIR_PUBLIC_COLUMNS])
+  })
+
+  it('tables internes du lot 2 contrôlées en lecture ET en écriture', () => {
+    for (const table of ['studio_sessions', 'studio_events', 'studio_curation_sets', 'studio_diagnostic_pairs']) {
+      expect(list('INTERNAL_TABLES')).toContain(table)
+    }
+    expect(script).toContain("record(role, `${table} insert refusé`")
   })
 
   it('tente explicitement de lire chaque colonne interne sur les tables et les vues', () => {
