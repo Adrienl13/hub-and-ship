@@ -13,13 +13,13 @@ import type {
   AdminPricingParameters,
   AdminProduct,
   AdminProductDetail,
+  AdminProductRow,
   AdminProductVariant,
   AdminSeedCommitment,
   PricingParameterRow,
   PricingParameterUpdate,
   ProductPartnerPriceRow,
   ProductPricingInputRow,
-  ProductRow,
   ProductUpdate,
   ProductVariantRow,
   SeedCommitmentRow,
@@ -31,20 +31,28 @@ import {
   fromVariantRow,
 } from './types'
 import type { Database } from '@/lib/supabase/types'
+import { PUBLIC_PRODUCT_SELECT } from '@/lib/catalogue/product-columns'
 
 export type CatalogueAdminClient = SupabaseBrowserClient
+
+// Jamais `select('*')` sur products : l'admin est un utilisateur
+// `authenticated` (même rôle Postgres que n'importe quel client connecté,
+// seule la RLS le distingue) et ce rôle ne lit la table que colonne par
+// colonne depuis la migration 38 — un `*` échoue en 42501. Les coûts
+// fournisseur sont lus séparément dans product_pricing_inputs (RLS admin).
+const ADMIN_PRODUCT_SELECT = PUBLIC_PRODUCT_SELECT
 
 export async function listProducts(
   client: CatalogueAdminClient,
 ): Promise<ReadonlyArray<AdminProduct>> {
   const productsResult = await client
     .from('products')
-    .select('*, product_variants(id)')
+    .select(`${ADMIN_PRODUCT_SELECT}, product_variants(id)`)
     .order('sort_order', { ascending: true })
 
   if (productsResult.error) throw new Error(productsResult.error.message)
 
-  type JoinedProductRow = ProductRow & {
+  type JoinedProductRow = AdminProductRow & {
     readonly product_variants?: ReadonlyArray<{ id: string }> | null
   }
 
@@ -528,7 +536,7 @@ export async function getProductWithVariants(
 ): Promise<AdminProductDetail | null> {
   const { data, error } = await client
     .from('products')
-    .select('*')
+    .select(ADMIN_PRODUCT_SELECT)
     .eq('id', id)
     .maybeSingle()
 
@@ -540,7 +548,7 @@ export async function getProductWithVariants(
   const pricingInput = await getPricingInputIfAvailable(client, id)
 
   const product = fromProductRow(
-    data as ProductRow,
+    data as AdminProductRow,
     variants.length,
     activePartnerNetPrice(partnerPrice),
     pricingInput,

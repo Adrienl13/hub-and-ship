@@ -1,7 +1,14 @@
 import type { ProductCategory } from '@/lib/products'
 import type { Database, FireRatingDb, TableShapeDb } from '@/lib/supabase/types'
+import type { InternalProductCostColumn } from '@/lib/catalogue/product-columns'
 
 export type ProductRow = Database['public']['Tables']['products']['Row']
+/**
+ * Ligne `products` telle que l'admin la LIT (sélection explicite des colonnes
+ * publiques, migration 38) : les coûts fournisseur ne transitent jamais par
+ * cette table côté client, ils viennent de product_pricing_inputs.
+ */
+export type AdminProductRow = Omit<ProductRow, InternalProductCostColumn>
 export type ProductInsert = Database['public']['Tables']['products']['Insert']
 export type ProductUpdate = Database['public']['Tables']['products']['Update']
 
@@ -112,7 +119,7 @@ export interface AdminPricingParameters {
 }
 
 export function fromProductRow(
-  row: ProductRow,
+  row: AdminProductRow,
   variantsCount = 0,
   partnerNetPriceHt: number | null = null,
   pricingInput: ProductPricingInputRow | null = null,

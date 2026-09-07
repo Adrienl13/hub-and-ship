@@ -4,6 +4,7 @@
 // `container_seed_commitments` are all behind public SELECT policies.
 
 import { setPublicPricingRules } from '@/lib/pricing/public-rules'
+import type { InternalProductCostColumn } from '@/lib/catalogue/product-columns'
 import type { Database } from '@/lib/supabase/types'
 import type {
   DesignVariant,
@@ -18,7 +19,7 @@ import type {
 // pouvoir lire — anonymisation fournisseur oblige.
 type ProductRow = Omit<
   Database['public']['Tables']['products']['Row'],
-  'fob_usd' | 'qty_per_container' | 'is_loss_leader' | 'table_price_modifier_rate'
+  InternalProductCostColumn
 >
 type VariantRow = Database['public']['Tables']['product_variants']['Row']
 type ContainerRow = Database['public']['Tables']['containers']['Row']
