@@ -16,7 +16,7 @@ export function StudioShell({
   readonly bottomBar: ReactNode
 }) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-28 pt-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,30%)] lg:gap-8 lg:pb-10 lg:pt-8">
+    <div data-testid="studio-shell" className="mx-auto w-full max-w-7xl px-4 pb-28 pt-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,30%)] lg:gap-8 lg:pb-10 lg:pt-8">
       <div className="min-w-0">{children}</div>
       <aside
         aria-label="Mon projet"

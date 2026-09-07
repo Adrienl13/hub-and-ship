@@ -2,12 +2,13 @@
 // catalogue Studio et le moteur.
 //
 // - seules les assises discovery_ready entrent en découverte (readiness lot 1) ;
-// - `?set=<id>` restreint au jeu curé ACTIF correspondant, s'il existe ; sans
+// - en preview uniquement, `?set=<id>` restreint au jeu curé ACTIF correspondant, s'il existe ; sans
 //   jeu valide, la découverte continue sur toutes les assises et l'interface
 //   le dit (aucun jeu n'est inventé) ;
 // - la spécification affichée sur une carte vient de la base : dimensions
 //   si complètes, sinon poids, sinon rien.
 
+import type { StudioAccessSource } from './access'
 import { formatProductDimensions } from '@/lib/products'
 import { toEngineSeat, type EngineCatalogue } from './engine'
 import { computeReadiness } from './readiness'
@@ -30,10 +31,12 @@ export function isDiscoverySeat(product: StudioProduct): boolean {
 
 export function buildDiscoveryPool(
   catalog: Pick<StudioCatalog, 'products' | 'curationSets' | 'diagnosticPairs'>,
-  options: { readonly set?: string | null } = {},
+  options: { readonly set?: string | null; readonly accessSource?: StudioAccessSource } = {},
 ): DiscoveryPool {
   const allSeats = catalog.products.filter(isDiscoverySeat)
-  const requested = options.set?.trim() ?? ''
+  const requested = options.accessSource === 'preview' && /^[a-z0-9][a-z0-9_-]{0,39}$/.test(options.set ?? '')
+    ? options.set!
+    : ''
   const curationSet = requested
     ? (catalog.curationSets.find((set) => set.id === requested) ?? null)
     : null
@@ -41,9 +44,13 @@ export function buildDiscoveryPool(
   const curated = allowed ? allSeats.filter((seat) => allowed.has(seat.id)) : allSeats
   const curationMissing = requested.length > 0 && (curationSet === null || curated.length === 0)
   const seats = curationMissing ? allSeats : curated
-  // Le lot 1 masque déjà les familles non vérifiées ; sans liste de
-  // familles vérifiées transmise, le moteur n'en utilise aucune.
-  const verifiedFamilies = new Set<string>()
+  // Migration 39 : studio_products hérite du CASE WHEN f.status = 'verified'
+  // de studio_product_profiles_public. Un ID public non vide est donc une
+  // preuve SQL ; aucun ID n'est déduit du nom ou des attributs du produit.
+  const verifiedFamilies = new Set(seats.flatMap((seat) => {
+    const id = seat.studio.modelFamilyId
+    return typeof id === 'string' && id.trim().length > 0 ? [id] : []
+  }))
   return {
     seats,
     seatsById: new Map(seats.map((seat) => [seat.id, seat] as const)),

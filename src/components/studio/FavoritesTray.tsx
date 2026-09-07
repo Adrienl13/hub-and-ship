@@ -23,7 +23,7 @@ export function FavoritesTray({
       aria-label="Vos favoris"
       className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-4"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <Heart className="h-4 w-4 text-[color:var(--ember)]" aria-hidden />
           Vos favoris
@@ -63,7 +63,7 @@ export function FavoritesTray({
                 type="button"
                 onClick={() => onRemove(product.id)}
                 aria-label={`Retirer ${product.name} des favoris`}
-                className="absolute -right-2 -top-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[color:var(--sand-deep)] bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--sand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)]"
+                className="mt-1 inline-flex h-11 w-20 items-center justify-center rounded-full border border-[color:var(--sand-deep)] bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--sand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)]"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>

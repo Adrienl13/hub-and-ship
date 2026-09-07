@@ -7,7 +7,7 @@
 //   VITE_STUDIO_ENABLED=true VITE_SUPABASE_URL=https://fake-supabase.test \
 //   VITE_SUPABASE_ANON_KEY=fake bunx playwright test tests/e2e/studio.spec.ts
 
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page, type Locator } from '@playwright/test'
 
 const SUPABASE = 'https://fake-supabase.test'
 
@@ -51,7 +51,7 @@ function productRow(seat: FixtureSeat, index: number) {
     retail_price_ref: '149.00',
     eco_contribution: '0',
     main_image_url: PIXEL,
-    gallery_urls: [],
+    gallery_urls: [PIXEL + '#second'],
     features: ['Empilable'],
     fire_rating: 'M2',
     is_active: true,
@@ -131,6 +131,17 @@ async function mockStudioBackend(page: Page, events: unknown[]) {
   })
 }
 
+async function assertStudioTargets(root: Locator) {
+  const targets = root.locator('button, a[href], input, select, textarea, [role="button"]')
+  for (const target of await targets.all()) {
+    if (!await target.isVisible()) continue
+    const box = await target.boundingBox()
+    const label = await target.getAttribute('aria-label') ?? await target.textContent()
+    expect(box?.width ?? 0, `largeur : ${label}`).toBeGreaterThanOrEqual(44)
+    expect(box?.height ?? 0, `hauteur : ${label}`).toBeGreaterThanOrEqual(44)
+  }
+}
+
 test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
   test('parcours complet : entrée → découverte → favoris → finalistes → choix → quantité 6 → projet, avec Undo et clavier', async ({ page }, testInfo) => {
     const events: Array<{ sessionId: string; algorithmVersion: string; events: Array<{ type: string; payload?: Record<string, unknown> }> }> = []
@@ -151,6 +162,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     // Aucun débordement horizontal.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(overflow).toBeLessThanOrEqual(0)
+    await assertStudioTargets(page.getByTestId('studio-shell'))
     const firstName = await card.getByRole('heading').textContent()
     // Aucun prix pendant la découverte.
     await expect(card).not.toContainText('€')
@@ -179,6 +191,8 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     const tray = page.getByRole('region', { name: 'Vos favoris' })
     await expect(tray).toContainText('(3)')
 
+    await assertStudioTargets(tray)
+
     // Finalistes : ≤ 3, prix visible, choix explicite.
     await tray.getByRole('button', { name: 'Vos finalistes' }).click()
     const finalists = page.getByTestId('finalists')
@@ -187,6 +201,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     expect(count).toBeGreaterThanOrEqual(1)
     expect(count).toBeLessThanOrEqual(3)
     await expect(finalists).toContainText('€')
+    await assertStudioTargets(finalists)
     await finalists.getByRole('button', { name: 'Choisir cette assise' }).first().click()
 
     // Quantité libre : 6 sous un MOQ de 50, jamais bloqué, retour explicite.
@@ -204,11 +219,13 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
       await page.getByRole('button', { name: 'Ouvrir mon projet' }).click()
       const sheet = page.getByRole('dialog', { name: 'Mon projet' })
       await expect(sheet).toContainText('6 unités')
+      await assertStudioTargets(sheet)
       await page.keyboard.press('Escape')
       await expect(sheet).toBeHidden()
     } else {
       const rail = page.getByTestId('project-rail')
       await expect(rail).toContainText('6 unités')
+      await assertStudioTargets(rail)
       await expect(rail.getByTestId('project-state')).toBeVisible()
     }
 
@@ -246,6 +263,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
     await expect(dialog).not.toContainText('€')
+    await assertStudioTargets(dialog)
     await dialog.getByRole('button', { name: /Ajouter .* aux favoris/ }).click()
     await expect(dialog.getByRole('button', { name: /Retirer .* des favoris/ })).toBeVisible()
     await page.keyboard.press('Escape')
@@ -258,10 +276,11 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     }
   })
 
-  test('?set=pilot sans jeu en base : message explicite et découverte complète', async ({ page }) => {
+  test('?set=pilot ignoré avec flag public, même avec un jeu actif', async ({ page }) => {
     await mockStudioBackend(page, [])
+    await page.route(`${SUPABASE}/rest/v1/studio_curation_sets_public*`, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 'pilot', label: 'Pilote', product_ids: ['e2e-001'] }]) }))
     await page.goto('/studio/assises?set=pilot')
-    await expect(page.getByRole('status').filter({ hasText: 'pilot' })).toContainText("n'est pas disponible")
+    await expect(page.getByRole('status').filter({ hasText: /pilot/i })).toHaveCount(0)
     await expect(page.getByTestId('decision-card')).toContainText('1 / 6')
   })
 
@@ -272,4 +291,52 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     await page.getByRole('button', { name: /^J'aime :/ }).click()
     await expect(page.getByTestId('decision-card')).toContainText('2 / 6')
   })
+})
+
+test('projet persisté incomplet et candidat sans affinité : vérification et comparaison sans troisième finaliste', async ({ page }) => {
+  await mockStudioBackend(page, [])
+  await page.addInitScript(() => {
+    localStorage.setItem('terrassea-studio-v1', JSON.stringify({
+      version: 2,
+      state: {
+        sessionId: 's-review-e2e',
+        project: { entry: 'seats', updatedAt: null, items: [
+          { productId: 'e2e-002', variantId: 'e2e-002-std', role: 'seat', requestedQuantity: 6 },
+          { productId: 'missing-reference', variantId: 'missing-design', role: 'seat', requestedQuantity: 4 },
+        ] },
+        discovery: { interactions: [], favoriteIds: ['e2e-001', 'e2e-002', 'e2e-003'], finalistIds: ['e2e-001', 'e2e-002'] },
+        journal: [],
+      },
+    }))
+  })
+  await page.goto('/studio')
+  const resume = page.getByRole('link', { name: 'Reprendre' })
+  await expect(resume).toBeVisible()
+  const resumeBox = await resume.boundingBox()
+  expect(resumeBox?.height).toBeGreaterThanOrEqual(44)
+  expect(resumeBox?.width).toBeGreaterThanOrEqual(44)
+  await resume.click()
+  await expect(page.getByTestId('decision-card')).toBeVisible()
+  const mobile = (page.viewportSize()?.width ?? 1280) < 1024
+  if (mobile) await page.getByRole('button', { name: 'Ouvrir mon projet' }).click()
+  const project = mobile ? page.getByRole('dialog', { name: 'Mon projet' }) : page.getByTestId('project-rail')
+  await expect(project.getByRole('listitem')).toHaveCount(2)
+  await expect(project).toContainText('Référence à vérifier')
+  await expect(project).toContainText('Montant à vérifier')
+  await expect(project.getByTestId('project-state')).toHaveText('Devis manuel')
+  await assertStudioTargets(project)
+  await project.getByRole('button', { name: 'Retirer la référence à vérifier du projet' }).click()
+  await expect(project.getByRole('listitem')).toHaveCount(1)
+  if (mobile) await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Vos finalistes' }).click()
+  await page.getByRole('button', { name: 'Voir plus de finalistes' }).click()
+  const more = page.getByTestId('more-finalists')
+  await assertStudioTargets(more)
+  await more.getByRole('button', { name: /Comparer/ }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  const finalists = await page.evaluate(() => JSON.parse(localStorage.getItem('terrassea-studio-v1') ?? '{}').state.discovery.finalistIds)
+  expect(finalists).toHaveLength(2)
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('finalists').getByRole('listitem')).toHaveCount(2)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
 })

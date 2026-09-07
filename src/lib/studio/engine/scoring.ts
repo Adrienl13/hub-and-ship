@@ -109,3 +109,18 @@ export function moreFinalistCandidates(
 ): ReadonlyArray<string> {
   return selection.remainingIds.filter((id) => !alreadyShown.includes(id)).slice(0, count)
 }
+
+/** Décision pour « Voir plus » : consulter reste possible sans remplir la
+ * troisième place. Un remplacement à sélection pleine reste explicite. */
+export function finalistCandidateAction(
+  candidateId: string,
+  finalistIds: ReadonlyArray<string>,
+  affinity: Affinity,
+  seatsById: ReadonlyMap<string, EngineSeat>,
+): 'add' | 'replace' | 'compare' {
+  const candidate = seatsById.get(candidateId)
+  if (!candidate || finalistIds.includes(candidateId)) return 'compare'
+  if (finalistIds.length >= MAX_FINALISTS) return 'replace'
+  if (finalistIds.length === MAX_FINALISTS - 1 && !(affinityScore(candidate, affinity) > 0)) return 'compare'
+  return 'add'
+}

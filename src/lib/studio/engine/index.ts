@@ -17,6 +17,7 @@ export { ALGORITHM_VERSION, nextCard, initialOrder, remainingCandidates } from '
 export type { AlgorithmVersion, NextCard, NextCardReason } from './v0'
 export {
   affinityFromHistory,
+  finalistCandidateAction,
   scoreCandidate,
   emptyAffinity,
   MAX_FINALISTS,

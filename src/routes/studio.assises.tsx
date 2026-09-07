@@ -6,7 +6,7 @@
 // terrassea-studio-v1 ; le catalogue vient des surfaces publiques Studio ;
 // aucune vérité commerciale n'est produite ici.
 //
-// `?set=<id>` : restreint la découverte à un jeu curé ACTIF s'il existe en
+// En preview uniquement, `?set=<id>` restreint la découverte à un jeu curé ACTIF s'il existe en
 // base. Sinon, découverte complète et message explicite.
 
 import { Link, createFileRoute } from '@tanstack/react-router'
@@ -28,6 +28,7 @@ import { markStudioStarted, useStudioTracker } from '@/hooks/useStudioTracker'
 import { buildDiscoveryPool, cardImageUrl } from '@/lib/studio/discovery'
 import {
   affinityFromHistory,
+  finalistCandidateAction,
   moreFinalistCandidates,
   nextCard,
   selectFinalists,
@@ -66,6 +67,7 @@ type Stage = 'discover' | 'finalists' | 'quantity'
 
 function StudioSeatsPage() {
   const { set, entry: requestedEntry } = Route.useSearch()
+  const { studioAccess } = Route.useRouteContext()
   const catalogState = useStudioCatalog()
   const tracker = useStudioTracker()
   const favoritesSync = useStudioFavoritesSync()
@@ -91,8 +93,8 @@ function StudioSeatsPage() {
   }, [requestedEntry, sessionId, store])
 
   const pool = useMemo(
-    () => (catalogState.catalog ? buildDiscoveryPool(catalogState.catalog, { set }) : null),
-    [catalogState.catalog, set],
+    () => (catalogState.catalog ? buildDiscoveryPool(catalogState.catalog, { set, accessSource: studioAccess }) : null),
+    [catalogState.catalog, set, studioAccess],
   )
   const productsById = useMemo(() => {
     const map = new Map<string, StudioProduct>()
@@ -213,16 +215,32 @@ function StudioSeatsPage() {
     setMoreIds((current) => [...current, ...moreFinalistCandidates(selection, shown)])
   }, [selection, moreIds, store])
 
+  const candidateAction = useCallback(
+    (candidateId: string) => {
+      const state = store.getState()
+      const seatsById = new Map(pool?.engineCatalogue.seats.map((seat) => [seat.id, seat] as const) ?? [])
+      return finalistCandidateAction(candidateId, state.discovery.finalistIds,
+        affinityFromHistory(state.discovery.interactions, seatsById), seatsById)
+    },
+    [pool, store],
+  )
+
   const replaceFinalist = useCallback(
     (candidateId: string) => {
       const state = store.getState()
-      if (!state.addFinalist(candidateId)) {
+      const action = candidateAction(candidateId)
+      if (action === 'compare') {
+        setDetailsId(candidateId)
+        return
+      }
+      if (action === 'add') state.addFinalist(candidateId)
+      else {
         const last = state.discovery.finalistIds[state.discovery.finalistIds.length - 1]
         if (last) state.replaceFinalist(last, candidateId)
       }
       setMoreIds((current) => current.filter((id) => id !== candidateId))
     },
-    [store],
+    [store, candidateAction],
   )
 
   const choose = useCallback(
@@ -415,6 +433,7 @@ function StudioSeatsPage() {
           onOpenDetails={setDetailsId}
           onRemove={(productId) => store.getState().removeFinalist(productId)}
           onReplace={replaceFinalist}
+          candidateAction={candidateAction}
         />
       )}
 

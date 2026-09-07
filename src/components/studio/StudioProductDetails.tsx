@@ -45,8 +45,8 @@ export function StudioProductDetails({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-3xl">
-        <DialogHeader>
+      <DialogContent className="[&_button]:min-h-[44px] [&_button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center motion-reduce:animate-none motion-reduce:transition-none [&_*]:motion-reduce:transition-none [&_*]:motion-reduce:transform-none max-h-[92vh] overflow-y-auto bg-[color:var(--sand-soft)] sm:max-w-3xl">
+        <DialogHeader className="pr-12">
           <div className="label-eyebrow text-[color:var(--ink-soft)]">
             {[kind, material].filter(Boolean).join(' · ') || 'Assise'} · {product.sku}
           </div>

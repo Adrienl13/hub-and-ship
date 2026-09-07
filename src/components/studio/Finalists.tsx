@@ -22,6 +22,7 @@ export function Finalists({
   onOpenDetails,
   onRemove,
   onReplace,
+  candidateAction,
 }: {
   readonly finalists: ReadonlyArray<StudioProduct>
   /** Candidats supplémentaires révélés par « Voir plus ». */
@@ -33,6 +34,7 @@ export function Finalists({
   readonly onRemove: (productId: string) => void
   /** Remplace un finaliste par un candidat (ou l'ajoute s'il reste une place). */
   readonly onReplace: (candidateId: string) => void
+  readonly candidateAction: (candidateId: string) => 'add' | 'replace' | 'compare'
 }) {
   return (
     <section aria-label="Vos finalistes" className="space-y-6">
@@ -138,7 +140,7 @@ export function Finalists({
             {moreCandidates.map((product) => (
               <li
                 key={product.id}
-                className="flex items-center gap-3 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3"
+                className="flex flex-wrap items-center gap-3 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3"
               >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-white">
                   <SafeImage
@@ -158,11 +160,11 @@ export function Finalists({
                   type="button"
                   onClick={() => onReplace(product.id)}
                   aria-label={`Comparer ${product.name} parmi les finalistes`}
-                  title={finalists.length >= MAX_FINALISTS ? 'Remplace le dernier finaliste' : 'Ajoute aux finalistes'}
+                  title={candidateAction(product.id) === 'compare' ? 'Consulter sans ajouter aux finalistes' : candidateAction(product.id) === 'replace' ? 'Remplace le dernier finaliste' : 'Ajoute aux finalistes'}
                   className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] px-3 text-xs font-medium hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
                 >
                   <Replace className="h-3.5 w-3.5" aria-hidden />
-                  {finalists.length >= MAX_FINALISTS ? 'Remplacer' : 'Ajouter'}
+                  {candidateAction(product.id) === 'compare' ? 'Comparer' : candidateAction(product.id) === 'replace' ? 'Remplacer' : 'Ajouter'}
                 </button>
               </li>
             ))}

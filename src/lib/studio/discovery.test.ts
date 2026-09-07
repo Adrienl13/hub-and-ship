@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { buildDiscoveryPool, cardImageUrl, isDiscoverySeat, seatSpecLine } from './discovery'
 import { confirmedOption, item, option, seat, stock, variant } from './fixtures.test-helpers'
+import { affinityFromHistory, repetitionPenalty } from './engine'
+import { affinityScore } from './engine/scoring'
 import { describeQuantity } from './quantity-feedback'
 
 const base = { curationSets: [], diagnosticPairs: [] }
@@ -32,7 +34,7 @@ describe('découverte : assises discovery_ready seulement', () => {
     const products = [seat('a'), seat('b'), seat('c')]
     const pool = buildDiscoveryPool(
       { products, curationSets: [{ id: 'pilot', label: 'Pilote', productIds: ['b', 'c', 'inconnu'] }], diagnosticPairs: [] },
-      { set: 'pilot' },
+      { set: 'pilot', accessSource: 'preview' },
     )
     expect(pool.seats.map((s) => s.id)).toEqual(['b', 'c'])
     expect(pool.curationSet?.id).toBe('pilot')
@@ -41,21 +43,21 @@ describe('découverte : assises discovery_ready seulement', () => {
 
   it('sans jeu pilote valide : découverte complète et signal explicite, aucune donnée inventée', () => {
     const products = [seat('a'), seat('b')]
-    const missing = buildDiscoveryPool({ products, ...base }, { set: 'pilot' })
+    const missing = buildDiscoveryPool({ products, ...base }, { set: 'pilot', accessSource: 'preview' })
     expect(missing.seats.map((s) => s.id)).toEqual(['a', 'b'])
     expect(missing.curationSet).toBeNull()
     expect(missing.curationMissing).toBe(true)
     const empty = buildDiscoveryPool(
       { products, curationSets: [{ id: 'pilot', label: 'Vide', productIds: ['zzz'] }], diagnosticPairs: [] },
-      { set: 'pilot' },
+      { set: 'pilot', accessSource: 'preview' },
     )
     expect(empty.curationMissing).toBe(true)
     expect(empty.seats).toHaveLength(2)
   })
 
-  it('les familles ne sont transmises au moteur que vérifiées (aucune liste au lot 2 → null)', () => {
+  it('les IDs de famille vérifiés par la surface SQL publique entrent dans le moteur', () => {
     const products = [seat('f', { studio: { studioRole: 'seat', seatKind: 'chair', material: 'rope', modelFamilyId: 'fam', visualTraits: null, dataQuality: {} } })]
-    expect(buildDiscoveryPool({ products, ...base }).engineCatalogue.seats[0]?.familyId).toBeNull()
+    expect(buildDiscoveryPool({ products, ...base }).engineCatalogue.seats[0]?.familyId).toBe('fam')
   })
 
   it('spécification et image viennent de la base, sans transformation', () => {
@@ -107,4 +109,33 @@ describe('retour de quantité : 6 unités, MOQ 50', () => {
     expect(describeQuantity(item('chair', 60, { customColour: true }), product, { stock: [], options: [] }).title).toBe('Personnalisation : confirmation usine')
     expect(describeQuantity(item('or', 60), seat('or', { visibility: 'on_request' }), { stock: [], options: [] }).title).toBe('Produit sur demande : devis manuel')
   })
+})
+
+
+describe('curation réservée à la preview', () => {
+  const catalog = { products: [seat('a'), seat('b')], diagnosticPairs: [], curationSets: [{ id: 'pilot', label: 'Pilote', productIds: ['a'] }] }
+  it.each(['flag', 'none', undefined] as const)('ignore le jeu hors preview (%s)', (accessSource) => {
+    const pool = buildDiscoveryPool(catalog, { set: 'pilot', accessSource })
+    expect(pool.seats).toHaveLength(2)
+    expect(pool.curationSet).toBeNull()
+    expect(pool.curationMissing).toBe(false)
+  })
+  it.each(['', 'INVALID!', 'a'.repeat(41)])('ignore un identifiant invalide %s', (set) => {
+    expect(buildDiscoveryPool(catalog, { set, accessSource: 'preview' }).seats).toHaveLength(2)
+  })
+})
+
+
+it('familles publiques : affinité et répétition, sans famille inventée ni effet du prix', () => {
+  const a = seat('a')
+  const familySeat = (id: string) => seat(id, { studio: { ...a.studio, material: null, seatKind: null, modelFamilyId: 'verified-sql' } })
+  const products = [familySeat('a'), familySeat('b'), seat('masked', { studio: { ...a.studio, material: null, seatKind: null, modelFamilyId: null } })]
+  const pool = buildDiscoveryPool({ products, ...base }).engineCatalogue.seats
+  const byId = new Map(pool.map((s) => [s.id, s]))
+  const affinity = affinityFromHistory([{ productId: 'a', action: 'like' }], byId)
+  expect(affinityScore(byId.get('b')!, affinity)).toBe(1)
+  expect(affinityScore(byId.get('masked')!, affinity)).toBe(0)
+  expect(repetitionPenalty(byId.get('b')!, [pool[0]!, pool[0]!, pool[0]!])).toBe(-1)
+  expect(byId.get('masked')!.familyId).toBeNull()
+  expect(buildDiscoveryPool({ products: products.map((p) => ({ ...p, basePriceHt: 99999 })), ...base }).engineCatalogue.seats).toEqual(pool)
 })

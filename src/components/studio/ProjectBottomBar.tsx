@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { formatEUR } from '@/lib/order'
 
-import { ProjectSummary, projectStateFor, type ProjectSummaryProps } from './ProjectSummary'
+import { ProjectSummary, projectStateFor, hasUnresolvedItems, type ProjectSummaryProps } from './ProjectSummary'
 
 const STATE_SHORT: Record<string, string> = {
   reservation_ready: 'prêt',
@@ -25,6 +25,7 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
     const product = productsById.get(item.productId)
     return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
   }, 0)
+  const unresolved = hasUnresolvedItems(items, productsById)
   const state = projectStateFor(items, productsById, context)
   const first = items[0] ? productsById.get(items[0].productId) : undefined
 
@@ -45,20 +46,20 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
             <span className="block truncate text-sm font-semibold">
               {items.length === 0
                 ? 'Mon projet : aucune assise choisie'
-                : `${first?.name ?? 'Assise'} · ${totalUnits} unité${totalUnits > 1 ? 's' : ''}`}
+                : `${first?.name ?? 'Référence à vérifier'} · ${totalUnits} unité${totalUnits > 1 ? 's' : ''}`}
             </span>
             <span className="block text-xs text-[color:var(--sand)]/70">
               {items.length === 0
                 ? 'Choisissez une assise pour la retrouver ici'
-                : `${formatEUR(totalHt)} HT indicatif${state ? ` · ${STATE_SHORT[state] ?? state}` : ''}`}
+                : `${unresolved ? 'Montant à vérifier' : `${formatEUR(totalHt)} HT indicatif`}${state ? ` · ${STATE_SHORT[state] ?? state}` : ''}`}
             </span>
           </span>
           <ChevronUp className="h-5 w-5 shrink-0" aria-hidden />
         </button>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-lg bg-[color:var(--sand-soft)]">
-          <SheetHeader className="text-left">
+        <SheetContent side="bottom" className="[&_button]:min-h-[44px] [&_button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center motion-reduce:animate-none motion-reduce:transition-none max-h-[85vh] overflow-y-auto rounded-t-lg bg-[color:var(--sand-soft)]">
+          <SheetHeader className="pr-12 text-left">
             <SheetTitle>Mon projet</SheetTitle>
             <SheetDescription>Votre sélection, vos quantités et l&apos;état du projet.</SheetDescription>
           </SheetHeader>

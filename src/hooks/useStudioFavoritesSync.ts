@@ -5,6 +5,7 @@
 
 import { useCallback } from 'react'
 
+import { enqueueStudioFavorite } from '@/lib/studio/favorites-sync'
 import { useAuth } from '@/hooks/useAuth'
 import { addFavorite, removeFavorite, type FavoritesClient } from '@/lib/favorites/repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -26,14 +27,9 @@ export function useStudioFavoritesSync(): StudioFavoritesSync {
       const config = getSupabasePublicConfig()
       if (!config.isConfigured) return
       const client = createSupabaseBrowserClient(config) as unknown as FavoritesClient
-      void (async () => {
-        try {
-          if (favorite) await addFavorite(client, user.id, productId)
-          else await removeFavorite(client, user.id, productId)
-        } catch {
-          // Le favori local reste ; le miroir compte n'est pas bloquant.
-        }
-      })()
+      void enqueueStudioFavorite(user.id, productId, () =>
+        favorite ? addFavorite(client, user.id, productId) : removeFavorite(client, user.id, productId),
+      )
     },
     [isAuthenticated, user],
   )

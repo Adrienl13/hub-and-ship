@@ -88,7 +88,7 @@ function StudioIndex() {
       {itemCount > 0 && (
         <p className="mt-8 text-sm text-[color:var(--ink-soft)]">
           Un projet est en cours sur cet appareil ({itemCount} ligne{itemCount > 1 ? 's' : ''}).{' '}
-          <Link to="/studio/assises" className="font-semibold text-[color:var(--ember)] underline-offset-2 hover:underline">
+          <Link to="/studio/assises" className="inline-flex min-h-[44px] min-w-[44px] items-center font-semibold text-[color:var(--ember)] underline-offset-2 hover:underline">
             Reprendre
           </Link>
         </p>

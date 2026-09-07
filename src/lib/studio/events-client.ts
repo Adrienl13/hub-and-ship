@@ -69,10 +69,10 @@ export function createStudioEventTracker(options: StudioEventTrackerOptions): St
       clearTimeout(timer)
       timer = null
     }
-    if (queue.length === 0) return
+    if (queue.length === 0) return inFlight
     const chunks: StudioEvent[][] = []
     while (queue.length > 0) chunks.push(queue.splice(0, MAX_EVENTS_PER_BATCH))
-    const work = (async () => {
+    const work = async () => {
       for (const events of chunks) {
         try {
           await send(
@@ -88,9 +88,9 @@ export function createStudioEventTracker(options: StudioEventTrackerOptions): St
           // La mesure ne casse jamais le parcours : on abandonne ce lot.
         }
       }
-    })()
-    inFlight = inFlight.then(() => work, () => work)
-    await work
+    }
+    inFlight = inFlight.then(work, work)
+    await inFlight
   }
 
   return {
