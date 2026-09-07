@@ -427,3 +427,19 @@ supabase/migrations/2026xxxx_studio_*.sql
 - `studio_projects`, `studio_project_versions` (payload jsonb = items + snapshot prix + statut commercial + raisons), `studio_project_contacts` ou colonnes contact sur le projet, `studio_quotes` (snapshot figé + `valid_until` + `pricing_parameters_snapshot`).
 
 Aucune de ces tables ne modifie l'existant ; toutes sont supprimables sans impact sur le catalogue (rollback trivial).
+
+---
+
+## Addendum du 08/09/2026 (relecture)
+
+L'audit est validé dans son ensemble ; les points suivants amendent les sections concernées sans réécrire l'audit. Le détail opérationnel est dans `STUDIO_IMPLEMENTATION_PLAN.md` v2.
+
+- **N. Sécurité** : vérification complémentaire en base le 08/09 : les 4 colonnes de coût héritées de `products` (`fob_usd`, `qty_per_container`, `is_loss_leader`, `table_price_modifier_rate`) sont vides sur les 196 lignes ; les 121 FOB réels sont dans `product_pricing_inputs`. L'exposition à `authenticated` est donc théorique aujourd'hui, mais deux requêtes admin font `select('*')` sur `products` (`src/lib/catalogue-admin/repository.ts` lignes 41 et 530) : tout retrait de colonnes pour `authenticated` doit s'accompagner de listes de colonnes explicites côté admin. Un Lot 0.5 « security hardening » est ajouté en prérequis du Lot 1.
+- **I. MOQ** : la règle « jamais bloquant » est étendue : le stock (`stock_lines`) est consulté avant d'assigner `below_moq` ; modes de fulfillment `stock`, `standard_production`, `grouped_production`, `manual_review` ; états projet `auto_quote_ready`, `manual_quote_required`, `reservation_ready`, `feasibility_review`.
+- **R. Readiness** : `reservation_ready` n'est plus « quote_ready + container ouvert » ; c'est « quote_ready + au moins une voie de fulfillment ouverte » (stock, production standard, production groupée confirmée, ou mode futur). Le container ouvert est un signal parmi d'autres.
+- **R. Schéma** : `style_tags` retiré ; remplacé par `visual_traits` (métriques d'image calculées, versionnées, non subjectives). Aucun étiquetage manuel de style n'est prérequis. `data_quality` devient granulaire (dimensions, weight, material, price, compatibility, customization, media, model_family) avec provenance ; une valeur heuristique (préfixe SKU, nom, valeur modale, pipeline) n'est jamais `verified`.
+- **D. Familles** : `model_family_id` n'est jamais peuplé à partir du nom ; familles = candidats (pipeline ou admin) puis validation.
+- **Moteur** : le prix a un poids nul dans la découverte ; V0 est un moteur heuristique assumé ; finalistes ≤ 3 ; duels uniquement sur paires diagnostiques explicites.
+- **G. Images** : les Decision Images étendent `normalize-packshot.ts` et `normalize-packshots.mjs` (rôle, score de qualité, validation admin, version de traitement) ; aucune transformation ne modifie le design réel.
+- **E/F. Plateaux et piètements** : expérience plateau légère, tout affiché ; piètements = règle déterministe via `table-composer.ts` étendu, seuls les compatibles sont proposés, une liste `compatible_top_shapes` vide n'est plus « tout accepté » dans le Studio.
+- **B. Staging** : flag + preview obligatoires avant Lot 2 ; staging séparé obligatoire avant bêta publique, avant Lot 6 et avant Lot 8, non bloquant pour le Lot 1.
