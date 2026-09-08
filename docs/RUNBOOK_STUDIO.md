@@ -1,6 +1,12 @@
 # Runbook — Studio Projet (lot 1 : fondation · lot 2 : tranche Assises)
 
-État : lot 1 en production (migration 39 appliquée). Lot 2 = première expérience Assises complète (`/studio` → `/studio/assises`), livrée sur la branche `claude/studio-lot-2`, **migration 40 non appliquée en production**. Ce runbook couvre l'activation, la preview sécurisée, les migrations, les contrôles, le moteur V0 et le rollback.
+État validé en production le 08/09/2026 : **Lot 1 : PRODUCTION VERIFIED · Lot 2 : PRODUCTION VERIFIED**. Les migrations **39 et 40 sont APPLIQUÉES EN PRODUCTION**. Le Lot 2 couvre l'expérience Assises complète (`/studio` → `/studio/assises`). Ce runbook couvre l'activation, la preview sécurisée, les migrations, les contrôles, le moteur V0 et le rollback.
+
+- `main` inclut le hotfix preview `4017238` : cookie `Path=/`, déployé et validé en production.
+- Preview privée production et navigation `/studio` → `/studio/assises` : **fonctionnelles**.
+- `VITE_STUDIO_ENABLED` reste **OFF en production** : le Studio reste accessible uniquement par la preview privée.
+- Contrôles de sécurité production : **`security:studio` OK · `security:grants` OK**.
+- Version Cloudflare validée : `9418ec86-8ba1-4102-8f82-109541dcafe5`.
 
 ## 1. Activer le Studio en local
 
@@ -42,7 +48,7 @@ Ce que la preview ne fait pas : elle n'accorde aucun accès admin, aucune sessio
 - Tous les cookies de preview : changer `STUDIO_PREVIEW_KEY` (ou le supprimer). Les jetons signés avec l'ancien secret deviennent invalides immédiatement.
 - Son propre navigateur : `https://prosimport.com/studio/preview?clear=1`. Supprime le cookie `Path=/` et l’ancien cookie `Path=/studio`.
 
-Le scope `/` est nécessaire aux vérifications TanStack `/_serverFn/` lors de la navigation `/studio` → `/studio/assises`. Il n’accorde aucun accès supplémentaire : signature HMAC, HttpOnly, Secure en production, SameSite=Lax et TTL de 7 jours restent inchangés. Après ce hotfix, rouvrir le lien d’accès preview pour renouveler le cookie ; cette ouverture efface aussi l’ancien scope `/studio`.
+Le scope `/` est nécessaire aux vérifications TanStack `/_serverFn/` lors de la navigation `/studio` → `/studio/assises`. Il n’accorde aucun accès supplémentaire : signature HMAC, HttpOnly, Secure en production, SameSite=Lax et TTL de 7 jours restent inchangés. Le hotfix `4017238` est déployé et validé en production. Pour un navigateur conservant un ancien cookie, rouvrir le lien d’accès preview pour renouveler le cookie ; cette ouverture efface aussi l’ancien scope `/studio`.
 
 Régression locale avec flag OFF et clé factice en mémoire, sans modifier de secret : `bunx playwright test --config tests/e2e/studio-preview.config.ts`.
 
@@ -91,11 +97,11 @@ drop table if exists public.studio_model_families;
 
 Aucune donnée existante n'est touchée par la migration ni par son rollback.
 
-## 3 bis. Migration du lot 2 — NON APPLIQUÉE
+## 3 bis. Migration du lot 2 — APPLIQUÉE EN PRODUCTION
 
 | # | Fichier | Statut |
 |---|---|---|
-| 40 | `supabase/migrations/20260907130000_studio_sessions_events.sql` | **non appliquée en production** (à appliquer après déploiement du bundle du lot 2 ; le code dégrade proprement sans elle) |
+| 40 | `supabase/migrations/20260907130000_studio_sessions_events.sql` | **APPLIQUÉE EN PRODUCTION — Lot 2 PRODUCTION VERIFIED** |
 
 Contenu, additif uniquement :
 
@@ -106,7 +112,7 @@ Contenu, additif uniquement :
 | `studio_curation_sets` | infrastructure du jeu pilote : `product_ids` explicites, `criteria` traçables, `status` draft/active/archived. **Vide** : aucun jeu inventé | admin (RLS) ; surface publique `studio_curation_sets_public` (`id`, `label`, `product_ids`, jeux actifs) |
 | `studio_diagnostic_pairs` | paires diagnostiques explicites (`axis` mesuré, `source` manual/pipeline, `status`). **Vide** : jamais générée | admin (RLS) ; surface publique `studio_diagnostic_pairs_public` (`id`, `product_a_id`, `product_b_id`, `axis`, paires vérifiées de produits actifs) |
 
-Sans la migration : `/api/studio/events` répond 503 (le parcours continue, la mesure est simplement absente), les deux surfaces publiques répondent 404 et le repository dégrade en listes vides (`?set=pilot` → découverte complète, aucun duel).
+Comportement de repli pour un environnement local incomplet : `/api/studio/events` répond 503 (le parcours continue, la mesure est simplement absente), les deux surfaces publiques répondent 404 et le repository dégrade en listes vides (`?set=pilot` → découverte complète, aucun duel).
 
 ### Rollback du lot 2
 
@@ -144,7 +150,7 @@ EXPECTED_MIN_ACTIVE_PRODUCTS=100 bun run security:studio
 - `tests/integration/studio-access.integration.test.ts` : même matrice en Vitest, ignorée sans `SUPABASE_TEST_URL` / `SUPABASE_TEST_ANON_KEY` (+ `TEST_BUYER_*`).
 
 - `bun run security:grants` reste le contrôle des colonnes de `products` (lot 0.5).
-- Depuis le lot 2, `security:studio` contrôle aussi les surfaces `studio_curation_sets_public` / `studio_diagnostic_pairs_public` et le refus (lecture **et** insertion) des tables `studio_sessions`, `studio_events`, `studio_curation_sets`, `studio_diagnostic_pairs` ; une surface absente (migration 40 non appliquée) est ignorée avec un `SKIP` explicite.
+- Depuis le lot 2, `security:studio` contrôle aussi les surfaces `studio_curation_sets_public` / `studio_diagnostic_pairs_public` et le refus (lecture **et** insertion) des tables `studio_sessions`, `studio_events`, `studio_curation_sets`, `studio_diagnostic_pairs` ; une surface absente dans un environnement incomplet est ignorée avec un `SKIP` explicite. En production, la migration 40 est appliquée et le contrôle `security:studio` est validé OK.
 
 ### Commandes de test du lot 2
 
