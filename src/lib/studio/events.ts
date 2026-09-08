@@ -9,7 +9,7 @@
 
 import { z } from 'zod'
 
-export const STUDIO_EVENT_TYPES = [
+export const LOT_2_EVENT_TYPES = [
   'studio_started',
   'card_liked',
   'card_disliked',
@@ -22,6 +22,14 @@ export const STUDIO_EVENT_TYPES = [
   'quantity_changed',
   /** Réservé : aucun état « projet terminé » n'existe au lot 2, jamais émis. */
   'project_completed',
+] as const
+export const STUDIO_EVENT_TYPES = [
+  ...LOT_2_EVENT_TYPES,
+  'convergence_ready',
+  'convergence_stalled',
+  'convergence_prompt_viewed',
+  'convergence_accepted',
+  'exploration_continued',
 ] as const
 export type StudioEventType = (typeof STUDIO_EVENT_TYPES)[number]
 
@@ -82,7 +90,12 @@ export function parseStudioEventsBatch(input: unknown): StudioEventsParse {
   const result = studioEventsBatchSchema.safeParse(input)
   if (!result.success) {
     const issue = result.error.issues[0]
-    return { ok: false, error: issue ? `${issue.path.join('.') || 'body'}: ${issue.message}` : 'invalid' }
+    return {
+      ok: false,
+      error: issue
+        ? `${issue.path.join('.') || 'body'}: ${issue.message}`
+        : 'invalid',
+    }
   }
   return { ok: true, batch: result.data }
 }

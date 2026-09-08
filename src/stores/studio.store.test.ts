@@ -17,22 +17,39 @@ describe('store Studio (fondation)', () => {
 
   it('persiste sous la clé et la version prévues', () => {
     expect(STUDIO_STORE_KEY).toBe('terrassea-studio-v1')
-    expect(STUDIO_STORE_VERSION).toBe(2)
+    expect(STUDIO_STORE_VERSION).toBe(3)
     useStudioStore.getState().setEntry('seats')
-    const persisted = JSON.parse(localStorage.getItem(STUDIO_STORE_KEY) ?? '{}') as {
+    const persisted = JSON.parse(
+      localStorage.getItem(STUDIO_STORE_KEY) ?? '{}',
+    ) as {
       version: number
       state: Record<string, unknown>
     }
-    expect(persisted.version).toBe(2)
-    expect(Object.keys(persisted.state).sort()).toEqual(['discovery', 'journal', 'project', 'sessionId'])
+    expect(persisted.version).toBe(3)
+    expect(Object.keys(persisted.state).sort()).toEqual([
+      'algorithmVersion',
+      'discovery',
+      'journal',
+      'project',
+      'sessionId',
+    ])
   })
 
   it('accepte une quantité libre (6 sous un MOQ de 50) sans arrondi', () => {
     const store = useStudioStore.getState()
-    store.upsertItem({ productId: 'chair', variantId: 'std', requestedQuantity: 6, role: 'seat' })
-    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(6)
+    store.upsertItem({
+      productId: 'chair',
+      variantId: 'std',
+      requestedQuantity: 6,
+      role: 'seat',
+    })
+    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(
+      6,
+    )
     store.setItemQuantity('chair', 'std', 53)
-    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(53)
+    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(
+      53,
+    )
     expect(normalizeRequestedQuantity(0)).toBe(1)
     expect(normalizeRequestedQuantity(2.9)).toBe(2)
     expect(normalizeRequestedQuantity(Number.NaN)).toBe(1)
@@ -41,14 +58,23 @@ describe('store Studio (fondation)', () => {
   it('Undo restaure exactement l’état précédent, action par action', () => {
     const store = useStudioStore.getState()
     store.setEntry('full_project')
-    store.upsertItem({ productId: 'a', variantId: 'v', requestedQuantity: 10, role: 'seat' })
+    store.upsertItem({
+      productId: 'a',
+      variantId: 'v',
+      requestedQuantity: 10,
+      role: 'seat',
+    })
     store.setItemQuantity('a', 'v', 12)
     store.removeItem('a', 'v')
     expect(useStudioStore.getState().project.items).toHaveLength(0)
     expect(useStudioStore.getState().undo()).toBe(true)
-    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(12)
+    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(
+      12,
+    )
     expect(useStudioStore.getState().undo()).toBe(true)
-    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(10)
+    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(
+      10,
+    )
     expect(useStudioStore.getState().undo()).toBe(true)
     expect(useStudioStore.getState().project.items).toHaveLength(0)
     expect(useStudioStore.getState().project.entry).toBe('full_project')
@@ -60,7 +86,12 @@ describe('store Studio (fondation)', () => {
 
   it('le journal est plafonné à 50 actions inversibles', () => {
     const store = useStudioStore.getState()
-    store.upsertItem({ productId: 'a', variantId: 'v', requestedQuantity: 1, role: 'seat' })
+    store.upsertItem({
+      productId: 'a',
+      variantId: 'v',
+      requestedQuantity: 1,
+      role: 'seat',
+    })
     for (let quantity = 2; quantity <= 80; quantity += 1) {
       store.setItemQuantity('a', 'v', quantity)
     }
@@ -68,7 +99,9 @@ describe('store Studio (fondation)', () => {
     let undone = 0
     while (useStudioStore.getState().undo()) undone += 1
     expect(undone).toBe(STUDIO_UNDO_DEPTH)
-    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(30)
+    expect(useStudioStore.getState().project.items[0]?.requestedQuantity).toBe(
+      30,
+    )
   })
 
   it('les actions sans effet ne créent pas d’entrée de journal', () => {
@@ -88,22 +121,46 @@ describe('store Studio (fondation)', () => {
         project: {
           entry: 'seats',
           items: [
-            { productId: 'a', variantId: 'v', requestedQuantity: 0, role: 'seat' },
-            { productId: 'b', variantId: 'v', requestedQuantity: 4, role: 'style_tag' },
-            { productId: 42, variantId: 'v', requestedQuantity: 4, role: 'seat' },
+            {
+              productId: 'a',
+              variantId: 'v',
+              requestedQuantity: 0,
+              role: 'seat',
+            },
+            {
+              productId: 'b',
+              variantId: 'v',
+              requestedQuantity: 4,
+              role: 'style_tag',
+            },
+            {
+              productId: 42,
+              variantId: 'v',
+              requestedQuantity: 4,
+              role: 'seat',
+            },
           ],
         },
         favorites: ['a'],
       },
       0,
-    ) as { sessionId: string; project: { entry: string; items: unknown[] }; journal: unknown[]; discovery: unknown }
+    ) as {
+      sessionId: string
+      project: { entry: string; items: unknown[] }
+      journal: unknown[]
+      discovery: unknown
+    }
     expect(migrated.sessionId).toBe('session-ancienne')
     expect(migrated.project.entry).toBe('seats')
     expect(migrated.project.items).toEqual([
       { productId: 'a', variantId: 'v', role: 'seat', requestedQuantity: 1 },
     ])
     expect(migrated.journal).toEqual([])
-    expect(migrated.discovery).toEqual({ interactions: [], favoriteIds: [], finalistIds: [] })
+    expect(migrated.discovery).toEqual({
+      interactions: [],
+      favoriteIds: [],
+      finalistIds: [],
+    })
     expect(migrated).not.toHaveProperty('favorites')
   })
 
@@ -113,20 +170,47 @@ describe('store Studio (fondation)', () => {
         sessionId: 'session-lot-1',
         project: {
           entry: 'full_project',
-          items: [{ productId: 'chair', variantId: 'std', requestedQuantity: 6, role: 'seat' }],
+          items: [
+            {
+              productId: 'chair',
+              variantId: 'std',
+              requestedQuantity: 6,
+              role: 'seat',
+            },
+          ],
           updatedAt: '2026-09-07T10:00:00.000Z',
         },
-        journal: [{ label: 'upsert_item', at: 'x', before: { entry: null, items: [], updatedAt: null } }],
+        journal: [
+          {
+            label: 'upsert_item',
+            at: 'x',
+            before: { entry: null, items: [], updatedAt: null },
+          },
+        ],
       },
       1,
-    ) as { sessionId: string; project: { items: unknown[]; updatedAt: string }; journal: unknown[]; discovery: unknown }
+    ) as {
+      sessionId: string
+      project: { items: unknown[]; updatedAt: string }
+      journal: unknown[]
+      discovery: unknown
+    }
     expect(migrated.sessionId).toBe('session-lot-1')
     expect(migrated.project.items).toEqual([
-      { productId: 'chair', variantId: 'std', role: 'seat', requestedQuantity: 6 },
+      {
+        productId: 'chair',
+        variantId: 'std',
+        role: 'seat',
+        requestedQuantity: 6,
+      },
     ])
     expect(migrated.project.updatedAt).toBe('2026-09-07T10:00:00.000Z')
     expect(migrated.journal).toEqual([])
-    expect(migrated.discovery).toEqual({ interactions: [], favoriteIds: [], finalistIds: [] })
+    expect(migrated.discovery).toEqual({
+      interactions: [],
+      favoriteIds: [],
+      finalistIds: [],
+    })
   })
 
   it('un état v2 persisté est validé (finalistes plafonnés, favoris dédoublonnés)', () => {
@@ -135,15 +219,26 @@ describe('store Studio (fondation)', () => {
         sessionId: 's',
         project: { entry: null, items: [], updatedAt: null },
         discovery: {
-          interactions: [{ productId: 'a', action: 'like', at: 't' }, { productId: 'b', action: 'bizarre' }],
+          interactions: [
+            { productId: 'a', action: 'like', at: 't' },
+            { productId: 'b', action: 'bizarre' },
+          ],
           favoriteIds: ['a', 'a', 7],
           finalistIds: ['a', 'b', 'c', 'd'],
         },
         journal: [],
       },
       2,
-    ) as { discovery: { interactions: unknown[]; favoriteIds: string[]; finalistIds: string[] } }
-    expect(migrated.discovery.interactions).toEqual([{ productId: 'a', action: 'like', at: 't' }])
+    ) as {
+      discovery: {
+        interactions: unknown[]
+        favoriteIds: string[]
+        finalistIds: string[]
+      }
+    }
+    expect(migrated.discovery.interactions).toEqual([
+      { productId: 'a', action: 'like', at: 't' },
+    ])
     expect(migrated.discovery.favoriteIds).toEqual(['a'])
     expect(migrated.discovery.finalistIds).toEqual(['a', 'b', 'c'])
   })
@@ -166,7 +261,11 @@ describe('store Studio (découverte, lot 2)', () => {
     store.decide('b', 'pass')
     store.decide('c', 'like')
     expect(useStudioStore.getState().discovery.favoriteIds).toEqual(['a', 'c'])
-    expect(useStudioStore.getState().discovery.interactions.map((i) => [i.productId, i.action])).toEqual([
+    expect(
+      useStudioStore
+        .getState()
+        .discovery.interactions.map((i) => [i.productId, i.action]),
+    ).toEqual([
       ['a', 'like'],
       ['b', 'pass'],
       ['c', 'like'],
@@ -202,15 +301,31 @@ describe('store Studio (découverte, lot 2)', () => {
   it('finalistes : jamais plus de 3 sélectionnés, ajout refusé au-delà, remplacement et retrait', () => {
     const store = useStudioStore.getState()
     store.setFinalists(['a', 'b', 'c', 'd'])
-    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'b', 'c'])
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual([
+      'a',
+      'b',
+      'c',
+    ])
     expect(store.addFinalist('e')).toBe(false)
-    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'b', 'c'])
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual([
+      'a',
+      'b',
+      'c',
+    ])
     store.replaceFinalist('b', 'e')
-    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['a', 'e', 'c'])
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual([
+      'a',
+      'e',
+      'c',
+    ])
     store.removeFinalist('a')
     expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c'])
     expect(store.addFinalist('f')).toBe(true)
-    expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c', 'f'])
+    expect(useStudioStore.getState().discovery.finalistIds).toEqual([
+      'e',
+      'c',
+      'f',
+    ])
     expect(useStudioStore.getState().undo()).toBe(true)
     expect(useStudioStore.getState().discovery.finalistIds).toEqual(['e', 'c'])
   })
@@ -226,7 +341,12 @@ describe('store Studio (découverte, lot 2)', () => {
   it('Undo mélangé projet / découverte : chaque retour est exact', () => {
     const store = useStudioStore.getState()
     store.decide('a', 'like')
-    store.upsertItem({ productId: 'a', variantId: 'v', requestedQuantity: 6, role: 'seat' })
+    store.upsertItem({
+      productId: 'a',
+      variantId: 'v',
+      requestedQuantity: 6,
+      role: 'seat',
+    })
     store.decide('b', 'pass')
     expect(useStudioStore.getState().undo()).toBe(true)
     expect(useStudioStore.getState().discovery.interactions).toHaveLength(1)
@@ -241,9 +361,49 @@ describe('store Studio (découverte, lot 2)', () => {
 
   it('la découverte est persistée et survit à un rechargement du store', () => {
     useStudioStore.getState().decide('a', 'like')
-    const persisted = JSON.parse(localStorage.getItem(STUDIO_STORE_KEY) ?? '{}') as {
+    const persisted = JSON.parse(
+      localStorage.getItem(STUDIO_STORE_KEY) ?? '{}',
+    ) as {
       state: { discovery: { favoriteIds: string[] } }
     }
     expect(persisted.state.discovery.favoriteIds).toEqual(['a'])
+  })
+})
+
+describe('Lot 3 : version de session persistée', () => {
+  it('attribue une seule fois ; Undo et rechargement conservent la version', async () => {
+    useStudioStore.getState().resetSession()
+    useStudioStore.getState().initializeAlgorithm('v1.0')
+    useStudioStore.getState().decide('a', 'like')
+    useStudioStore.getState().initializeAlgorithm('v0.1')
+    useStudioStore.getState().undo()
+    expect(useStudioStore.getState().algorithmVersion).toBe('v1.0')
+    await useStudioStore.persist.rehydrate()
+    expect(useStudioStore.getState().algorithmVersion).toBe('v1.0')
+  })
+  it('migration v2 conserve découverte et snapshots, attribue V0 historique', () => {
+    const raw = {
+      sessionId: 'legacy-session',
+      project: { entry: 'seats', items: [], updatedAt: null },
+      discovery: {
+        interactions: [{ productId: 'a', action: 'like', at: '' }],
+        favoriteIds: ['a'],
+        finalistIds: [],
+      },
+      journal: [
+        {
+          label: 'decide',
+          at: '',
+          before: {
+            project: { entry: 'seats', items: [], updatedAt: null },
+            discovery: { interactions: [], favoriteIds: [], finalistIds: [] },
+          },
+        },
+      ],
+    }
+    expect(migrateStudioState(raw, 2)).toEqual({
+      ...raw,
+      algorithmVersion: 'v0.1',
+    })
   })
 })

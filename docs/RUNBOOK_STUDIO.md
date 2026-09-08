@@ -133,7 +133,7 @@ Une paire n'existe que si elle est **mesurée** : deux assises éloignées sur u
 
 ### `?set=pilot`
 
-**Preview uniquement** : avec une source d’accès `preview`, `/studio/assises?set=<id>` (`id` = `[a-z0-9][a-z0-9_-]{0,39}`) restreint la découverte aux `product_ids` du jeu **actif** de ce nom, s'il existe et s'il contient au moins une assise discovery_ready. Sinon : message « Le jeu « … » n'est pas disponible : découverte sur toutes les assises » et découverte complète. En accès public par flag (`source = flag`), le paramètre `set` est ignoré : découverte complète, sans filtre ni message de jeu curé. Un identifiant invalide est également ignoré. Le jeu pilote sera créé au lot 3 à partir de métriques objectives (aucun étiquetage de style) : `insert into studio_curation_sets (id, label, product_ids, criteria, status) values ('pilot', …, '{…}', '{"version":…,"method":…}', 'active')`.
+**Preview uniquement** : avec une source d’accès `preview`, `/studio/assises?set=<id>` (`id` = `[a-z0-9][a-z0-9_-]{0,39}`) restreint la découverte aux `product_ids` du jeu **actif** de ce nom, s'il existe et s'il contient au moins une assise discovery_ready. Sinon : message « Le jeu « … » n'est pas disponible : découverte sur toutes les assises » et découverte complète. En accès public par flag (`source = flag`), le paramètre `set` est ignoré : découverte complète, sans filtre ni message de jeu curé. Un identifiant invalide est également ignoré. Le pipeline Lot 3 prépare un pilote en dry-run/draft ; aucune activation automatique. Voir le runbook Lot 3.
 
 ## 4. Contrôles
 
@@ -187,7 +187,7 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 - Déterministe : même session + même historique = même carte.
 - Finalistes : parmi les favoris, classés par affinité ; 3 maximum ; le 3ᵉ seulement si son affinité est > 0 ; « Voir plus » propose 2 candidats à comparer, jamais plus de 3 sélectionnés.
 - Duels : désactivés (`findDiagnosticDuel(..., {enabled: false})`) ; jamais sans paire explicite vérifiée.
-- Limites assumées : V0 ne comprend aucun goût et l'interface ne le prétend jamais (vocabulaire : « Voici des assises variées », « Vos favoris », « Vos finalistes », « Affinons votre sélection » ; aucun pourcentage d'affinité). Il sert à développer l'UX, garantir la diversité, tester Undo et enregistrer les interactions. Le moteur V1 (lot 3) le remplacera sans changer le store ni l'interface.
+- Limites assumées : V0 ne comprend aucun goût et l'interface ne le prétend jamais (vocabulaire : « Voici des assises variées », « Vos favoris », « Vos finalistes », « Affinons votre sélection » ; aucun pourcentage d'affinité). Il sert à développer l'UX, garantir la diversité, tester Undo et enregistrer les interactions. Le moteur V1 (lot 3) est disponible uniquement en preview explicite ; il ajoute l’UX de convergence et épingle la version dans le store v3 en conservant les données v2.
 
 ## 8. Mesure (lot 2)
 
@@ -195,3 +195,10 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 - Miroir marketing minimal (`src/lib/analytics.ts`) : `studio_started` seulement ; `project_completed` réservé. Soumis au consentement existant (Consent Mode / Plausible inchangés).
 
 Dans le Lot 2, `SUPABASE_SERVICE_ROLE_KEY` sert à ingérer côté serveur les événements Studio. Le Lot 2 ne fait aucune réservation. Les favoris connectés sont sérialisés par compte et produit ; les lots d’événements sont envoyés dans leur ordre, sans chevauchement. Une référence persistée absente du catalogue reste visible et retirable, avec état « Devis manuel » et montant à vérifier.
+
+
+## Lot 3 — code local, données et production en attente
+
+Le [runbook Lot 3](STUDIO_LOT_3_RUNBOOK.md) décrit les Decision Images, le pipeline DINOv2 hors ligne, les surfaces publiques minimales, l’onglet admin Studio, la version V1 et sa convergence adaptative. La migration 41 `20260908090000_studio_visual_intelligence.sql` est **NON APPLIQUÉE EN PRODUCTION** ; les migrations 39 et 40 restent appliquées et le Lot 2 reste PRODUCTION VERIFIED. Aucun déploiement Lot 3 ni traitement du catalogue réel n’a été effectué.
+
+V1 s’utilise dans une nouvelle session preview via `/studio/assises?engine=v1`. La version est ensuite épinglée dans le store v3 ; les sessions v2 et leurs snapshots Undo restent conservés en V0. La curation est préparée en dry-run/draft, jamais activée automatiquement. Le flag public reste OFF, Supabase Auth et le cookie preview Path=/ ne changent pas.

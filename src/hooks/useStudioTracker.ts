@@ -5,7 +5,10 @@
 import { useEffect, useMemo } from 'react'
 
 import { AnalyticsEvent, track } from '@/lib/analytics'
-import { createStudioEventTracker, type StudioEventTracker } from '@/lib/studio/events-client'
+import {
+  createStudioEventTracker,
+  type StudioEventTracker,
+} from '@/lib/studio/events-client'
 import { useStudioStore, type StudioEntry } from '@/stores/studio.store'
 
 const trackers = new Map<string, StudioEventTracker>()
@@ -15,7 +18,9 @@ const STARTED_STORAGE_PREFIX = 'studio_started:'
 function alreadyStarted(sessionId: string): boolean {
   if (startedSessions.has(sessionId)) return true
   try {
-    return sessionStorage.getItem(`${STARTED_STORAGE_PREFIX}${sessionId}`) === '1'
+    return (
+      sessionStorage.getItem(`${STARTED_STORAGE_PREFIX}${sessionId}`) === '1'
+    )
   } catch {
     return false
   }
@@ -36,15 +41,25 @@ function rememberStarted(sessionId: string): void {
 export function markStudioStarted(sessionId: string, entry: StudioEntry): void {
   if (alreadyStarted(sessionId)) return
   rememberStarted(sessionId)
-  getStudioTracker(sessionId, entry).track('studio_started', { payload: { entry } })
+  getStudioTracker(sessionId, entry).track('studio_started', {
+    payload: { entry },
+  })
   track(AnalyticsEvent.StudioStarted, { entry })
 }
 
-export function getStudioTracker(sessionId: string, entry: StudioEntry | null): StudioEventTracker {
-  const key = `${sessionId}:${entry ?? ''}`
+export function getStudioTracker(
+  sessionId: string,
+  entry: StudioEntry | null,
+  algorithmVersion = useStudioStore.getState().algorithmVersion ?? 'v0.1',
+): StudioEventTracker {
+  const key = `${sessionId}:${algorithmVersion}:${entry ?? ''}`
   let tracker = trackers.get(key)
   if (!tracker) {
-    tracker = createStudioEventTracker({ sessionId, ...(entry ? { entry } : {}) })
+    tracker = createStudioEventTracker({
+      sessionId,
+      algorithmVersion,
+      ...(entry ? { entry } : {}),
+    })
     trackers.set(key, tracker)
   }
   return tracker
@@ -53,7 +68,11 @@ export function getStudioTracker(sessionId: string, entry: StudioEntry | null): 
 export function useStudioTracker(): StudioEventTracker {
   const sessionId = useStudioStore((state) => state.sessionId)
   const entry = useStudioStore((state) => state.project.entry)
-  const tracker = useMemo(() => getStudioTracker(sessionId, entry), [sessionId, entry])
+  const version = useStudioStore((state) => state.algorithmVersion)
+  const tracker = useMemo(
+    () => getStudioTracker(sessionId, entry, version ?? 'v0.1'),
+    [sessionId, entry, version],
+  )
 
   useEffect(() => {
     if (typeof window === 'undefined') return

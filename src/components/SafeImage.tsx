@@ -7,6 +7,8 @@ import { ImageOff } from 'lucide-react'
 
 export function SafeImage({
   src,
+  srcSet,
+  sizes,
   alt,
   className,
   imgClassName,
@@ -14,6 +16,8 @@ export function SafeImage({
   loading = 'lazy',
 }: {
   readonly src: string | null | undefined
+  readonly srcSet?: string
+  readonly sizes?: string
   readonly alt: string
   /** Classes du conteneur placeholder (mêmes dimensions que l'image). */
   readonly className?: string
@@ -43,6 +47,8 @@ export function SafeImage({
   return (
     <img
       src={src}
+      srcSet={srcSet}
+      sizes={sizes}
       alt={alt}
       loading={loading}
       decoding="async"

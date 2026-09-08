@@ -62,6 +62,14 @@ export const STUDIO_INTERNAL_COLUMNS = [
   'created_by',
   'updated_by',
   'confirmed_by',
+  'validated_by',
+  'validated_at',
+  'rejected_reason',
+  'embedding',
+  'source_media_id',
+  'evidence',
+  'metadata',
+  'reviewed_by',
 ] as const
 
 /** Colonnes de la vue publique studio_fulfillment_options_public. */
@@ -90,14 +98,26 @@ export const MODEL_FAMILY_PUBLIC_COLUMNS = ['id', 'label', 'status'] as const
 
 /** Colonnes des surfaces publiques du lot 2 (jeux curés actifs, paires
  *  diagnostiques vérifiées). Jamais notes, created_by, verified_by. */
-export const CURATION_SET_PUBLIC_COLUMNS = ['id', 'label', 'product_ids'] as const
-export const DIAGNOSTIC_PAIR_PUBLIC_COLUMNS = ['id', 'product_a_id', 'product_b_id', 'axis'] as const
+export const CURATION_SET_PUBLIC_COLUMNS = [
+  'id',
+  'label',
+  'product_ids',
+] as const
+export const DIAGNOSTIC_PAIR_PUBLIC_COLUMNS = [
+  'id',
+  'product_a_id',
+  'product_b_id',
+  'axis',
+] as const
 
 export const VARIANT_SELECT =
   'id, product_id, name, image_url, gallery_urls, sort_order, created_at, min_order_units'
-export const CURATION_SET_SELECT: string = CURATION_SET_PUBLIC_COLUMNS.join(', ')
-export const DIAGNOSTIC_PAIR_SELECT: string = DIAGNOSTIC_PAIR_PUBLIC_COLUMNS.join(', ')
-export const FULFILLMENT_OPTION_SELECT: string = FULFILLMENT_OPTION_COLUMNS.join(', ')
+export const CURATION_SET_SELECT: string =
+  CURATION_SET_PUBLIC_COLUMNS.join(', ')
+export const DIAGNOSTIC_PAIR_SELECT: string =
+  DIAGNOSTIC_PAIR_PUBLIC_COLUMNS.join(', ')
+export const FULFILLMENT_OPTION_SELECT: string =
+  FULFILLMENT_OPTION_COLUMNS.join(', ')
 export const STOCK_SELECT =
   'id, product_id, variant_id, available_units, stock_price_ht'
 
@@ -128,6 +148,7 @@ export interface StudioDbClient {
 }
 
 export interface StudioCatalog {
+  readonly visual?: import('./visual').StudioVisualData
   readonly products: ReadonlyArray<StudioProduct>
   readonly context: FulfillmentContext
   /** Jeux curés ACTIFS déclarés en base (lot 2 : infrastructure). */
@@ -168,7 +189,8 @@ function oneOf<T extends string>(
   value: unknown,
   allowed: ReadonlyArray<T>,
 ): T | null {
-  return typeof value === 'string' && (allowed as ReadonlyArray<string>).includes(value)
+  return typeof value === 'string' &&
+    (allowed as ReadonlyArray<string>).includes(value)
     ? (value as T)
     : null
 }
@@ -184,7 +206,8 @@ function studioProductFromRow(
     row as Parameters<typeof productFromRow>[0],
     variants,
   )
-  const role: StudioRole = oneOf(row.studio_role, STUDIO_ROLES) ?? 'catalog_only'
+  const role: StudioRole =
+    oneOf(row.studio_role, STUDIO_ROLES) ?? 'catalog_only'
   const seatKind: SeatKind | null = oneOf(row.seat_kind, SEAT_KINDS)
   const material: SeatMaterial | null = oneOf(row.material, SEAT_MATERIALS)
   const traits =
@@ -209,7 +232,8 @@ function optionFromRow(row: Record<string, unknown>): FulfillmentOption | null {
   // La table n'accepte que standard_production / grouped_production
   // (contrainte SQL) ; le filtre reste ici par défense en profondeur.
   const mode = oneOf(row.mode, FULFILLMENT_MODES)
-  if (mode !== 'standard_production' && mode !== 'grouped_production') return null
+  if (mode !== 'standard_production' && mode !== 'grouped_production')
+    return null
   return {
     id: asString(row.id),
     productId: asString(row.product_id),
@@ -231,17 +255,23 @@ function curationSetFromRow(row: Record<string, unknown>): CurationSet | null {
   const id = asNullableString(row.id)
   if (!id) return null
   const productIds = Array.isArray(row.product_ids)
-    ? row.product_ids.filter((value): value is string => typeof value === 'string' && value.length > 0)
+    ? row.product_ids.filter(
+        (value): value is string =>
+          typeof value === 'string' && value.length > 0,
+      )
     : []
   return { id, label: asString(row.label, id), productIds }
 }
 
-function diagnosticPairFromRow(row: Record<string, unknown>): DiagnosticPair | null {
+function diagnosticPairFromRow(
+  row: Record<string, unknown>,
+): DiagnosticPair | null {
   const id = asNullableString(row.id)
   const productAId = asNullableString(row.product_a_id)
   const productBId = asNullableString(row.product_b_id)
   const axis = asNullableString(row.axis)
-  if (!id || !productAId || !productBId || !axis || productAId === productBId) return null
+  if (!id || !productAId || !productBId || !axis || productAId === productBId)
+    return null
   return { id, productAId, productBId, axis }
 }
 
@@ -258,29 +288,37 @@ function stockFromRow(row: Record<string, unknown>): StockAvailability {
 export async function fetchStudioCatalog(
   client: StudioDbClient,
 ): Promise<StudioCatalog> {
-  const [productsResult, variantsResult, optionsResult, stockResult, setsResult, pairsResult] =
-    await Promise.all([
-      client
-        .from('studio_products')
-        .select(STUDIO_PRODUCT_SELECT)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true }),
-      client
-        .from('product_variants')
-        .select(VARIANT_SELECT)
-        .order('sort_order', { ascending: true }),
-      client
-        .from('studio_fulfillment_options_public')
-        .select(FULFILLMENT_OPTION_SELECT)
-        .eq('is_active', true),
-      client
-        .from('stock_lines')
-        .select(STOCK_SELECT)
-        .eq('is_active', true)
-        .gt('available_units', 0),
-      client.from('studio_curation_sets_public').select(CURATION_SET_SELECT),
-      client.from('studio_diagnostic_pairs_public').select(DIAGNOSTIC_PAIR_SELECT),
-    ])
+  const [
+    productsResult,
+    variantsResult,
+    optionsResult,
+    stockResult,
+    setsResult,
+    pairsResult,
+  ] = await Promise.all([
+    client
+      .from('studio_products')
+      .select(STUDIO_PRODUCT_SELECT)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true }),
+    client
+      .from('product_variants')
+      .select(VARIANT_SELECT)
+      .order('sort_order', { ascending: true }),
+    client
+      .from('studio_fulfillment_options_public')
+      .select(FULFILLMENT_OPTION_SELECT)
+      .eq('is_active', true),
+    client
+      .from('stock_lines')
+      .select(STOCK_SELECT)
+      .eq('is_active', true)
+      .gt('available_units', 0),
+    client.from('studio_curation_sets_public').select(CURATION_SET_SELECT),
+    client
+      .from('studio_diagnostic_pairs_public')
+      .select(DIAGNOSTIC_PAIR_SELECT),
+  ])
 
   if (productsResult.error) throw new Error(productsResult.error.message)
   if (variantsResult.error) throw new Error(variantsResult.error.message)
@@ -290,7 +328,9 @@ export async function fetchStudioCatalog(
   // doit pas priver la découverte ; on dégrade en listes vides.
   const curationSets = setsResult.error
     ? []
-    : (setsResult.data ?? []).map(curationSetFromRow).filter((set): set is CurationSet => set !== null)
+    : (setsResult.data ?? [])
+        .map(curationSetFromRow)
+        .filter((set): set is CurationSet => set !== null)
   const diagnosticPairs = pairsResult.error
     ? []
     : (pairsResult.data ?? [])
@@ -331,5 +371,7 @@ export async function loadStudioCatalog(): Promise<StudioCatalog> {
   const config = getSupabasePublicConfig()
   if (!config.isConfigured) return EMPTY_CATALOG
   const client = createSupabaseBrowserClient(config)
-  return fetchStudioCatalog(client as unknown as StudioDbClient)
+  const catalog = await fetchStudioCatalog(client as unknown as StudioDbClient)
+  const { enrichVisualCatalog } = await import('./visual-repository')
+  return enrichVisualCatalog(catalog)
 }

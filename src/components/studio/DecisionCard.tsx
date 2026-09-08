@@ -8,7 +8,7 @@ import { Info } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { SafeImage } from '@/components/SafeImage'
-import { cardImageUrl, seatSpecLine } from '@/lib/studio/discovery'
+import { cardImageUrl, decisionImageSrcSet, DECISION_IMAGE_SIZES, seatSpecLine } from '@/lib/studio/discovery'
 import { materialLabel, seatKindLabel } from '@/lib/studio/labels'
 import type { StudioProduct } from '@/lib/studio/types'
 
@@ -100,6 +100,8 @@ export function DecisionCard({
         <div className="relative aspect-[4/3] bg-white sm:aspect-[5/4] lg:aspect-[4/3]">
           <SafeImage
             src={image}
+            srcSet={decisionImageSrcSet(product)}
+            sizes={DECISION_IMAGE_SIZES}
             alt={product.name}
             loading="eager"
             className="h-full w-full"

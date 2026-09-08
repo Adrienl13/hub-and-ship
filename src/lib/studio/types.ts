@@ -100,6 +100,8 @@ export interface StudioProfile {
 }
 
 export interface StudioProduct extends Product {
+  readonly decisionImageUrl?: string
+  readonly decisionThumbUrl?: string
   readonly isActive: boolean
   readonly studio: StudioProfile
 }

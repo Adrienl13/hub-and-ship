@@ -48,6 +48,7 @@ const configured = Boolean(url && anonKey)
 const hasBuyer = configured && Boolean(buyerEmail && buyerPassword)
 
 const INTERNAL_TABLES = [
+  'studio_product_media', 'studio_product_visual_features', 'studio_product_neighbors', 'studio_model_family_candidates', 'studio_algorithm_versions', 'studio_visual_jobs',
   'studio_model_families',
   'studio_product_profiles',
   'studio_fulfillment_options',
@@ -59,6 +60,9 @@ const INTERNAL_TABLES = [
 ] as const
 
 const PUBLIC_SURFACES: ReadonlyArray<{ view: string; columns: ReadonlyArray<string>; optional?: boolean }> = [
+  { view: 'studio_product_media_public', columns: ['product_id','role','url'], optional: true },
+  { view: 'studio_product_neighbors_public', columns: ['product_id','neighbor_product_id','rank','similarity','model_version'], optional: true },
+  { view: 'studio_algorithm_versions_public', columns: ['version','engine','model_version','status'], optional: true },
   { view: 'studio_products', columns: [...PUBLIC_PRODUCT_COLUMNS, ...STUDIO_PROFILE_COLUMNS] },
   { view: 'studio_product_profiles_public', columns: STUDIO_PROFILE_PUBLIC_COLUMNS },
   { view: 'studio_fulfillment_options_public', columns: FULFILLMENT_OPTION_COLUMNS },

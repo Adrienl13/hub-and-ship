@@ -72,10 +72,20 @@ export function seatSpecLine(product: StudioProduct): string | null {
 }
 
 /** Image à afficher sur la carte : photo du design par défaut, sinon la
- *  photo principale. Aucune transformation (Decision Images = lot 3). */
+ *  photo principale. Decision Image validée pour la découverte uniquement ;
+ *  un design choisi conserve sa propre photo. */
 export function cardImageUrl(product: StudioProduct, variantId?: string | null): string {
+  if (!variantId && product.decisionImageUrl) return product.decisionImageUrl
   const variant = variantId
     ? product.variants.find((entry) => entry.id === variantId)
     : product.variants[0]
   return variant?.imageUrl ?? product.mainImageUrl
+}
+
+/** Variantes de résolution du même packshot validé, jamais variantes commerciales. */
+export const DECISION_IMAGE_SIZES = '(max-width: 640px) 90vw, 600px'
+export function decisionImageSrcSet(product: StudioProduct): string | undefined {
+  return product.decisionImageUrl && product.decisionThumbUrl
+    ? `${product.decisionThumbUrl} 600w, ${product.decisionImageUrl} 1200w`
+    : undefined
 }

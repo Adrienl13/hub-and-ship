@@ -230,7 +230,7 @@ Peuplement initial (idempotent, `insert … on conflict do nothing`) : `studio_r
 
 ## LOT 2 — Tranche verticale Assises
 
-> État réel (09/2026) : livré sur la branche `claude/studio-lot-2` (moteur V0 `v0.1`, routes `/studio` et `/studio/assises`, composants Studio, store v2, `POST /api/studio/events`, migration 40 `20260907130000_studio_sessions_events.sql` **non appliquée en production**). L'étape 2.0 n'a créé que l'infrastructure (`studio_curation_sets` vide, `?set=pilot` géré sans jeu) ; la curation qualitative attend les métriques du lot 3. Duels désactivés, `studio_diagnostic_pairs` vide. Détails : `docs/RUNBOOK_STUDIO.md`.
+> État réel (09/2026) : livré sur la branche `claude/studio-lot-2` (moteur V0 `v0.1`, routes `/studio` et `/studio/assises`, composants Studio, store v2, `POST /api/studio/events`, migration 40 `20260907130000_studio_sessions_events.sql` **appliquée en production**, Lot 2 PRODUCTION VERIFIED, hotfix preview Path=/ déployé et validé). L'étape 2.0 n'a créé que l'infrastructure (`studio_curation_sets` vide, `?set=pilot` géré sans jeu) ; la curation qualitative attend les métriques du lot 3. Duels désactivés, `studio_diagnostic_pairs` vide. Détails : `docs/RUNBOOK_STUDIO.md`.
 
 ### Objectifs
 Parcours Assises complet avec le moteur **V0 heuristique** : entrée (Projet complet / Assises / Tables), découverte carte par carte, J'aime / Pas pour moi / Passer, Undo, favoris, finalistes (3 max), choix d'une assise, quantité libre, rail projet desktop, barre projet mobile. Les branches Tables renvoient vers le catalogue tant que le Lot 4 n'est pas livré. Le Lot 2 fonctionne sur **toutes** les assises `discovery_ready` ; l'évaluation qualitative se fait sur le jeu curé de l'étape 2.0.
@@ -283,6 +283,9 @@ Flag OFF ; suppression des routes ; `drop table studio_events, studio_sessions, 
 
 ## LOT 3 — Pipeline visuel, Decision Images, embeddings, moteur V1
 
+> Implémentation locale sur `codex/studio-lot-3` depuis `2ee0174` : Decision Images, pipeline DINOv2 offline, migration 41, admin, V1 et convergence adaptative. Migration 41 **NON APPLIQUÉE PROD**, couverture réelle non établie. Le [runbook Lot 3](docs/STUDIO_LOT_3_RUNBOOK.md) décrit les contrats effectivement implémentés, seuils, tests et actions humaines. Les critères de couverture ci-dessous concernent DATA READY, pas le seul code.
+
+
 ### Objectifs
 1. Decision Images standardisées en **étendant** le pipeline existant (`src/lib/images/normalize-packshot.ts`, `scripts/normalize-packshots.mjs`) : pas de second pipeline.
 2. `visual_traits` objectifs par assise (calculés, versionnés, contrôlables), features et voisins précalculés, paires diagnostiques réelles.
@@ -293,14 +296,14 @@ Flag OFF ; suppression des routes ; `drop table studio_events, studio_sessions, 
 - `scripts/normalize-packshots.mjs` gagne un mode `--role decision` : mêmes primitives (détection fond blanc, trim, canevas carré, marge), sortie fixe 1 200×1 200 + 600×600, WebP q85, préfixe Storage `studio/`, sans jamais écraser `main_image_url`.
 - Transformations autorisées : recadrage, fond blanc, redimensionnement, correction d'exposition globale légère. **Interdites** : toute modification du design réel (retouche de couleur locale, remplissage génératif, suppression d'éléments du produit, changement de proportions).
 - Ajouts en base (`studio_product_media`) : `role` (`decision`, `thumb`), `quality_score` (0–1, calculé : fond, centrage, netteté, taille du produit dans le cadre), `pipeline_version`, `source_url`, `validated_by` / `validated_at` (validation admin), `rejected_reason`.
-- Admin : `AdminStudioMediaTab` (liste, aperçu avant/après, valider/rejeter, relancer).
+- Admin : `AdminStudioTab` (liste, aperçu avant/après, valider/rejeter, relancer).
 - `src/lib/images/normalize-packshot.ts` : extraction des primitives partagées (détection fond, bounding box) pour que le script et l'admin utilisent le même code ; aucun changement de comportement pour l'upload admin actuel.
 
 ### `visual_traits` (objectifs, calculés)
 Par assise et par Decision Image validée : `silhouette_ratio`, `edge_density` (complexité), `global_contrast`, `dominant_colors[]` (hex + part), `pattern_score` (régularité de motif), `openness` (proportion de vide dans la silhouette, proxy fine/enveloppante). Stockés dans `studio_product_profiles.visual_traits` avec `{version, computed_at}` ; `data_quality.media = {estimated, pipeline:vX}`. Ces traits alimentent la curation (étape 2.0), la diversité et, plus tard, des filtres explicites ; ils ne sont pas des étiquettes de style et ne sont jamais présentés comme telles.
 
 ### Features, voisins, paires
-- `pipeline/` (Python isolé, `requirements.txt`, jamais dans le build Cloudflare) ou `scripts/studio/*.mjs` : embeddings image (modèle open source local), écriture `studio_product_visual_features` (`features jsonb`, `embedding float8[]`, `model_version`), voisins k = 12 (`studio_product_neighbors`), paires diagnostiques = paires maximisant la distance sur un axe mesuré (`studio_diagnostic_pairs.axis` ∈ traits ci-dessus ou embedding), avec `source = pipeline:vX` ; l'admin peut aussi saisir des paires `source = manual`.
+- `pipeline/` (Python isolé, `requirements.txt`, jamais dans le build Cloudflare) ou `scripts/studio/*.mjs` : embeddings image (modèle open source local), écriture `studio_product_visual_features` (`features jsonb`, `embedding float8[]`, `model_version`), voisins k = 12 (`studio_product_neighbors`), paires diagnostiques = paires maximisant la distance sur un axe mesuré (`studio_diagnostic_pairs.axis` ∈ traits ci-dessus ou embedding), avec `source = pipeline` et `pipeline_version` séparée ; l'admin peut aussi saisir des paires `source = manual`.
 - `pgvector` : optionnel ; à activer seulement si le calcul des voisins en SQL est préféré. Le runtime n'exécute jamais d'opération vectorielle.
 
 ### Familles de design
@@ -324,7 +327,7 @@ Par assise et par Decision Image validée : `silhouette_ratio`, `edge_density` (
 - ≥ 90 % des assises `discovery_ready` ont une Decision Image validée et 12 voisins ; `visual_traits` présents ; familles utilisées = `verified` uniquement ; V1 remplace V0 sans changer store ni interface.
 
 ### Rollback
-`is_default` remis sur V0 ; tables visuelles conservées.
+`studio_algorithm_versions.status = disabled` pour V1 ; repli V0 au rechargement, attribution de session conservée et tables visuelles conservées. Aucun rollout public.
 
 ---
 

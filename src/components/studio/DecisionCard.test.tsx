@@ -110,3 +110,8 @@ describe('DecisionCard', () => {
     expect(article.className).not.toMatch(/(^|\s)animate-fade-in/)
   })
 })
+
+it('sert les deux résolutions du même Decision Image validé', () => {
+  renderCard({ product: { ...product, decisionImageUrl: 'https://example.test/1200.webp', decisionThumbUrl: 'https://example.test/600.webp' } })
+  expect(screen.getByRole('img', { name: product.name })).toHaveAttribute('srcset', 'https://example.test/600.webp 600w, https://example.test/1200.webp 1200w')
+})

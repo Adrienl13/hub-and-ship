@@ -18,6 +18,7 @@ describe('contrat des événements Studio', () => {
       'seat_selected',
       'quantity_changed',
       'project_completed',
+      'convergence_ready', 'convergence_stalled', 'convergence_prompt_viewed', 'convergence_accepted', 'exploration_continued',
     ])
     expect(MAX_EVENTS_PER_BATCH).toBe(20)
   })

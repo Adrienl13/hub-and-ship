@@ -61,6 +61,7 @@ import type {
 } from '@/lib/supabase/types'
 
 const ADMIN_TABS = [
+  'studio',
   'overview',
   'stock-requests',
   'reservations',
@@ -111,6 +112,8 @@ const LazyAdminContainersTab = lazy(() =>
     default: module.AdminContainersTab,
   })),
 )
+
+const LazyAdminStudioTab = lazy(() => import('@/components/AdminStudioTab').then((module) => ({ default: module.AdminStudioTab })))
 
 const LazyAdminSiteMediaTab = lazy(() =>
   import('@/components/AdminSiteMediaTab').then((module) => ({
@@ -281,6 +284,7 @@ function AdminPage() {
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
               ['media', 'Médias'],
+              ['studio', 'Studio'],
               ['stock', 'Stock'],
               ['quality', 'Qualité'],
               ['carriers', 'Transporteurs'],
@@ -329,6 +333,7 @@ function AdminPage() {
           {activeTab === 'containers' && (
             <LazyAdminContainersTab authStatus={auth.status} />
           )}
+          {activeTab === 'studio' && <LazyAdminStudioTab />}
           {activeTab === 'media' && <LazyAdminSiteMediaTab />}
           {activeTab === 'quality' && (
             <LazyAdminQualityReportsTab authStatus={auth.status} />

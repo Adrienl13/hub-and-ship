@@ -7,7 +7,11 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { PUBLIC_PRODUCT_COLUMNS } from '../../src/lib/catalogue/product-columns'
-import { DATA_QUALITY_FIELDS, DATA_QUALITY_SOURCES, DATA_QUALITY_STATUSES } from '../../src/lib/studio/types'
+import {
+  DATA_QUALITY_FIELDS,
+  DATA_QUALITY_SOURCES,
+  DATA_QUALITY_STATUSES,
+} from '../../src/lib/studio/types'
 import {
   CURATION_SET_PUBLIC_COLUMNS,
   DIAGNOSTIC_PAIR_PUBLIC_COLUMNS,
@@ -24,7 +28,11 @@ const script = readFileSync(
 
 function list(name: string): string[] {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const match = script.match(new RegExp(`const ${escaped}${name.endsWith('(') ? '' : ' = '}\\[([^\\]]*)\\]`))
+  const match = script.match(
+    new RegExp(
+      `const ${escaped}${name.endsWith('(') ? '' : ' = '}\\[([^\\]]*)\\]`,
+    ),
+  )
   expect(match, name).not.toBeNull()
   return [...(match?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1] ?? '')
 }
@@ -39,7 +47,9 @@ function surfaceColumns(view: string): string[] {
 
 describe('security:studio — parité avec le code', () => {
   it('colonnes internes identiques', () => {
-    expect(list('STUDIO_INTERNAL_COLUMNS')).toEqual([...STUDIO_INTERNAL_COLUMNS])
+    expect(list('STUDIO_INTERNAL_COLUMNS')).toEqual([
+      ...STUDIO_INTERNAL_COLUMNS,
+    ])
   })
 
   it('colonnes publiques de products et du profil identiques', () => {
@@ -48,30 +58,75 @@ describe('security:studio — parité avec le code', () => {
   })
 
   it('surfaces publiques identiques (lot 1 et lot 2)', () => {
-    expect(surfaceColumns('studio_fulfillment_options_public')).toEqual([...FULFILLMENT_OPTION_COLUMNS])
-    expect(surfaceColumns('studio_model_families_public')).toEqual([...MODEL_FAMILY_PUBLIC_COLUMNS])
-    expect(surfaceColumns('studio_curation_sets_public')).toEqual([...CURATION_SET_PUBLIC_COLUMNS])
-    expect(surfaceColumns('studio_diagnostic_pairs_public')).toEqual([...DIAGNOSTIC_PAIR_PUBLIC_COLUMNS])
+    expect(surfaceColumns('studio_product_media_public')).toEqual([
+      'product_id',
+      'role',
+      'url',
+    ])
+    expect(surfaceColumns('studio_product_neighbors_public')).toEqual([
+      'product_id',
+      'neighbor_product_id',
+      'rank',
+      'similarity',
+      'model_version',
+    ])
+    expect(surfaceColumns('studio_algorithm_versions_public')).toEqual([
+      'version',
+      'engine',
+      'model_version',
+      'status',
+    ])
+    expect(surfaceColumns('studio_fulfillment_options_public')).toEqual([
+      ...FULFILLMENT_OPTION_COLUMNS,
+    ])
+    expect(surfaceColumns('studio_model_families_public')).toEqual([
+      ...MODEL_FAMILY_PUBLIC_COLUMNS,
+    ])
+    expect(surfaceColumns('studio_curation_sets_public')).toEqual([
+      ...CURATION_SET_PUBLIC_COLUMNS,
+    ])
+    expect(surfaceColumns('studio_diagnostic_pairs_public')).toEqual([
+      ...DIAGNOSTIC_PAIR_PUBLIC_COLUMNS,
+    ])
   })
 
   it('tables internes du lot 2 contrôlées en lecture ET en écriture', () => {
-    for (const table of ['studio_sessions', 'studio_events', 'studio_curation_sets', 'studio_diagnostic_pairs']) {
+    for (const table of [
+      'studio_sessions',
+      'studio_events',
+      'studio_curation_sets',
+      'studio_diagnostic_pairs',
+    ]) {
       expect(list('INTERNAL_TABLES')).toContain(table)
     }
-    expect(script).toContain("record(role, `${table} insert refusé`")
+    expect(script).toContain('record(role, `${table} insert refusé`')
   })
 
   it('tente explicitement de lire chaque colonne interne sur les tables et les vues', () => {
     expect(script).toMatch(/for \(const table of INTERNAL_TABLES\)/)
     expect(script).toMatch(/for \(const column of STUDIO_INTERNAL_COLUMNS\)/)
-    expect(script).toMatch(/for \(const column of \[\.\.\.STUDIO_INTERNAL_COLUMNS, \.\.\.INTERNAL_COST_COLUMNS\]\)/)
-    expect(script).toContain("DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])")
-    expect(list('DATA_QUALITY_FIELDS = new Set(')).toEqual([...DATA_QUALITY_FIELDS])
-    expect(list('DATA_QUALITY_STATUSES = new Set(')).toEqual([...DATA_QUALITY_STATUSES])
-    expect(list('DATA_QUALITY_SOURCES = new Set(')).toEqual([...DATA_QUALITY_SOURCES])
-    expect(script).toContain("['standard_production', 'grouped_production'].includes(row.mode)")
+    expect(script).toMatch(
+      /for \(const column of \[\.\.\.STUDIO_INTERNAL_COLUMNS, \.\.\.INTERNAL_COST_COLUMNS\]\)/,
+    )
+    expect(script).toContain(
+      "DATA_QUALITY_PUBLIC_KEYS = new Set(['status', 'source', 'updatedAt'])",
+    )
+    expect(list('DATA_QUALITY_FIELDS = new Set(')).toEqual([
+      ...DATA_QUALITY_FIELDS,
+    ])
+    expect(list('DATA_QUALITY_STATUSES = new Set(')).toEqual([
+      ...DATA_QUALITY_STATUSES,
+    ])
+    expect(list('DATA_QUALITY_SOURCES = new Set(')).toEqual([
+      ...DATA_QUALITY_SOURCES,
+    ])
+    expect(script).toContain(
+      "['standard_production', 'grouped_production'].includes(row.mode)",
+    )
     expect(script).toContain('familles publiques : status verified seulement')
-    expect(script).toContain('options publiques : uniquement des produits visibles')
+    expect(script).toContain(
+      'options publiques : uniquement des produits visibles',
+    )
     expect(script).not.toMatch(/method:\s*'(POST|PATCH|PUT|DELETE)'.*rest\//)
   })
 })

@@ -17,7 +17,7 @@ import { createSeededRandom, hashSeed } from './seed'
 import type { EngineCatalogue, EngineSeat, EngineState } from './types'
 
 export const ALGORITHM_VERSION = 'v0.1' as const
-export type AlgorithmVersion = typeof ALGORITHM_VERSION
+export type AlgorithmVersion = import('./versions').StudioAlgorithmVersion
 
 export const EXPLORATION_RATE = 0.2
 

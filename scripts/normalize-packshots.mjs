@@ -14,9 +14,17 @@
 // Usage : node scripts/normalize-packshots.mjs public/catalogue/bistro-seating-clean [autres dossiers…]
 //         (réécrit les .webp/.jpg/.png en place, WebP qualité 92)
 
-import { readdir, stat } from 'node:fs/promises'
-import { extname, join } from 'node:path'
+import { readdir, stat, readFile, writeFile, mkdir } from 'node:fs/promises'
+import { extname, join, resolve } from 'node:path'
 import sharp from 'sharp'
+import { createHash } from 'node:crypto'
+import { pathToFileURL } from 'node:url'
+import {
+  analyzePackshot,
+  decisionPlacement,
+  DECISION_PIPELINE_VERSION,
+  DECISION_SIZES,
+} from '../src/lib/images/packshot-metrics.mjs'
 
 const MARGIN_RATIO = 0.07 // marge de chaque côté (produit ≈ 86 % du côté)
 const WHITE_THRESHOLD = 242 // coin considéré blanc si R,G,B ≥ seuil
@@ -81,28 +89,172 @@ async function normalizeFile(path) {
   return `normalisée ${meta.width}×${meta.height} → ${side}×${side}`
 }
 
-const dirs = process.argv.slice(2)
-if (dirs.length === 0) {
-  console.error('Usage: node scripts/normalize-packshots.mjs <dossier> […]')
-  process.exit(1)
+export async function normalizeDecisionBuffer(source) {
+  const { data, info } = await sharp(source)
+    .rotate()
+    .flatten({ background: '#ffffff' })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const analysis = analyzePackshot(data, info.width, info.height, info.channels)
+  if (!analysis || analysis.background !== 1)
+    throw new Error('Fond non neutre ou contenu absent : revue manuelle')
+  const crop = await sharp(data, { raw: info })
+    .extract({
+      left: analysis.box.x,
+      top: analysis.box.y,
+      width: analysis.box.w,
+      height: analysis.box.h,
+    })
+    .png()
+    .toBuffer()
+  const images = []
+  for (const size of DECISION_SIZES) {
+    const place = decisionPlacement(analysis.box, size)
+    const buffer = await sharp(crop)
+      .resize(place.width, place.height, { fit: 'fill' })
+      .extend({
+        top: place.top,
+        left: place.left,
+        bottom: size - place.top - place.height,
+        right: size - place.left - place.width,
+        background: '#ffffff',
+      })
+      .webp({ quality: 85 })
+      .toBuffer()
+    images.push(buffer)
+  }
+  // Traits sur une grille fixe, indépendante de la résolution fournisseur.
+  const measure = await sharp(images[0])
+    .resize(128, 128)
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const traits = analyzePackshot(
+    measure.data,
+    128,
+    128,
+    measure.info.channels,
+  ).traits
+  return {
+    images,
+    analysis,
+    traits,
+    pipeline_version: DECISION_PIPELINE_VERSION,
+  }
 }
 
-for (const dir of dirs) {
-  const entries = await readdir(dir)
-  let done = 0
-  let skipped = 0
-  for (const entry of entries) {
-    const path = join(dir, entry)
-    if (!(await stat(path)).isFile()) continue
-    if (!['.webp', '.jpg', '.jpeg', '.png'].includes(extname(entry).toLowerCase()))
-      continue
+async function decisionBatch(args) {
+  const value = (flag) => args[args.indexOf(flag) + 1]
+  if (!args.includes('--manifest')) throw new Error('--manifest <JSON> requis')
+  const manifest = JSON.parse(await readFile(value('--manifest'), 'utf8'))
+  const output = resolve(
+    args.includes('--output') ? value('--output') : '.cache/studio-decision',
+  )
+  const write = args.includes('--write')
+  const results = [],
+    errors = []
+  for (const product of manifest.products) {
     try {
-      const result = await normalizeFile(path)
-      if (result.startsWith('normalisée')) done++
-      else skipped++
+      if (!/^[a-zA-Z0-9_-]+$/.test(product.product_id))
+        throw new Error('Identifiant invalide')
+      const source = await readFile(product.path)
+      const hash = createHash('sha256').update(source).digest('hex')
+      const directory = join(
+        'studio',
+        DECISION_PIPELINE_VERSION,
+        product.product_id,
+        hash,
+      )
+      const paths = ['decision.webp', 'thumb.webp'].map((name) =>
+        join(directory, name),
+      )
+      // Reprise idempotente par hash source et version ; aucune réécriture source.
+      const normalized = await normalizeDecisionBuffer(source)
+      if (write) {
+        await mkdir(join(output, directory), { recursive: true })
+        for (const [index, path] of paths.entries())
+          await writeFile(join(output, path), normalized.images[index])
+      }
+      results.push({
+        product_id: product.product_id,
+        source_url: product.source_url,
+        source_hash: hash,
+        pipeline_version: DECISION_PIPELINE_VERSION,
+        status: 'pending',
+        quality_score: normalized.analysis.quality_score,
+        quality: normalized.analysis.quality,
+        visual_traits: {
+          ...normalized.traits,
+          source_hash: hash,
+          version: DECISION_PIPELINE_VERSION,
+          provenance: 'pipeline',
+          computed_at: manifest.computed_at ?? new Date().toISOString(),
+        },
+        paths,
+      })
     } catch (error) {
-      console.error(`✗ ${path}: ${error.message}`)
+      errors.push({ product_id: product.product_id, error: error.message })
     }
   }
-  console.log(`${dir}: ${done} normalisées, ${skipped} laissées intactes`)
+  const report = {
+    dry_run: !write,
+    generated: results.length,
+    errors,
+    products: results,
+  }
+  if (write) {
+    await mkdir(output, { recursive: true })
+    await writeFile(
+      join(output, 'decision-manifest.json'),
+      JSON.stringify(report, null, 2),
+    )
+  }
+  console.log(JSON.stringify(report, null, 2))
+}
+
+async function main() {
+  const args = process.argv.slice(2)
+  if (args.includes('--role')) {
+    if (args[args.indexOf('--role') + 1] !== 'decision')
+      throw new Error('Rôle inconnu')
+    return decisionBatch(args)
+  }
+  const dirs = args
+  if (dirs.length === 0)
+    throw new Error(
+      'Usage: node scripts/normalize-packshots.mjs <dossier> […] ou --role decision --manifest <JSON> [--write]',
+    )
+  for (const dir of dirs) {
+    const entries = await readdir(dir)
+    let done = 0,
+      skipped = 0
+    for (const entry of entries) {
+      const path = join(dir, entry)
+      if (
+        !(await stat(path)).isFile() ||
+        !['.webp', '.jpg', '.jpeg', '.png'].includes(
+          extname(entry).toLowerCase(),
+        )
+      )
+        continue
+      try {
+        const result = await normalizeFile(path)
+        if (result.startsWith('normalisée')) done++
+        else skipped++
+      } catch (error) {
+        console.error(`✗ ${path}: ${error.message}`)
+      }
+    }
+    console.log(`${dir}: ${done} normalisées, ${skipped} laissées intactes`)
+  }
+}
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  main().catch((error) => {
+    console.error(error.message)
+    process.exitCode = 1
+  })
 }

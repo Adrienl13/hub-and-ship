@@ -18,7 +18,7 @@
 // src/lib/studio/repository.ts est vérifiée par tests/security.
 
 const INTERNAL_COST_COLUMNS = ['fob_usd', 'qty_per_container', 'is_loss_leader', 'table_price_modifier_rate']
-const STUDIO_INTERNAL_COLUMNS = ['notes', 'note', 'created_by', 'updated_by', 'confirmed_by']
+const STUDIO_INTERNAL_COLUMNS = ['notes', 'note', 'created_by', 'updated_by', 'confirmed_by', 'validated_by', 'validated_at', 'rejected_reason', 'embedding', 'source_media_id', 'evidence', 'metadata', 'reviewed_by']
 const PRODUCT_COLUMNS = [
   'id', 'sku', 'category', 'name', 'description', 'dim_length_cm', 'dim_width_cm', 'dim_height_cm',
   'cbm_per_unit', 'weight_kg', 'moq_units', 'base_price_ht', 'retail_price_ref', 'eco_contribution',
@@ -27,6 +27,9 @@ const PRODUCT_COLUMNS = [
 ]
 const PROFILE_COLUMNS = ['studio_role', 'seat_kind', 'material', 'model_family_id', 'visual_traits', 'data_quality']
 const PUBLIC_SURFACES = [
+  { view: 'studio_product_media_public', columns: ['product_id', 'role', 'url'], optional: true },
+  { view: 'studio_product_neighbors_public', columns: ['product_id', 'neighbor_product_id', 'rank', 'similarity', 'model_version'], optional: true },
+  { view: 'studio_algorithm_versions_public', columns: ['version', 'engine', 'model_version', 'status'], optional: true },
   { view: 'studio_products', columns: [...PRODUCT_COLUMNS, ...PROFILE_COLUMNS] },
   { view: 'studio_product_profiles_public', columns: ['product_id', ...PROFILE_COLUMNS] },
   {
@@ -39,6 +42,7 @@ const PUBLIC_SURFACES = [
   { view: 'studio_diagnostic_pairs_public', columns: ['id', 'product_a_id', 'product_b_id', 'axis'], optional: true },
 ]
 const INTERNAL_TABLES = [
+  'studio_product_media', 'studio_product_visual_features', 'studio_product_neighbors', 'studio_model_family_candidates', 'studio_algorithm_versions', 'studio_visual_jobs',
   'studio_model_families', 'studio_product_profiles', 'studio_fulfillment_options',
   // Lot 2 : jamais lisibles ni inscriptibles par un rôle public.
   'studio_sessions', 'studio_events', 'studio_curation_sets', 'studio_diagnostic_pairs',

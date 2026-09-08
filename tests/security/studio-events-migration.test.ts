@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { STUDIO_EVENT_TYPES } from '../../src/lib/studio/events'
+import { LOT_2_EVENT_TYPES } from '../../src/lib/studio/events'
 import {
   CURATION_SET_PUBLIC_COLUMNS,
   DIAGNOSTIC_PAIR_PUBLIC_COLUMNS,
@@ -49,7 +49,7 @@ describe('migration lot 2 : horodatage et périmètre', () => {
     const timestamps = names.map((name) => name.slice(0, 14))
     expect(timestamps.filter((ts) => ts === '20260907130000')).toHaveLength(1)
     expect('20260907130000' > '20260907120000').toBe(true)
-    expect(Math.max(...timestamps.map(Number))).toBe(20260907130000)
+    expect(Math.max(...timestamps.map(Number))).toBeGreaterThanOrEqual(20260907130000)
   })
 
   it('est strictement additive et ne touche à aucune table existante', () => {
@@ -76,7 +76,7 @@ describe('migration lot 2 : schéma', () => {
   it('event_type est strictement contraint et en parité avec le code', () => {
     const check = code.match(/event_type text not null\s+check \(event_type in \(([^)]*)\)\)/)?.[1] ?? ''
     const types = [...check.matchAll(/'([^']+)'/g)].map((m) => m[1])
-    expect(types).toEqual([...STUDIO_EVENT_TYPES])
+    expect(types).toEqual([...LOT_2_EVENT_TYPES])
   })
 
   it("sessions et événements : aucune PII, version d'algorithme obligatoire, payload borné", () => {

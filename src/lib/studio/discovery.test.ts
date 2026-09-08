@@ -139,3 +139,9 @@ it('familles publiques : affinité et répétition, sans famille inventée ni ef
   expect(byId.get('masked')!.familyId).toBeNull()
   expect(buildDiscoveryPool({ products: products.map((p) => ({ ...p, basePriceHt: 99999 })), ...base }).engineCatalogue.seats).toEqual(pool)
 })
+
+it('Decision Image en découverte, photo commerciale pour un design choisi', () => {
+  const product = seat('a', { decisionImageUrl: 'https://example.test/decision.webp' })
+  expect(cardImageUrl(product)).toBe(product.decisionImageUrl)
+  expect(cardImageUrl(product, product.variants[0]!.id)).toBe(product.variants[0]!.imageUrl)
+})

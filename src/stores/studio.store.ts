@@ -1,5 +1,5 @@
 // Store Studio (lot 1 + lot 2) : état LOCAL persisté dans le navigateur
-// (clé terrassea-studio-v1, version 2) avec journal d'actions inversibles
+// (clé terrassea-studio-v1, version 3) avec journal d'actions inversibles
 // (Undo, profondeur 50). Aucune persistance serveur ici.
 //
 // Deux espaces distincts, un seul store :
@@ -18,12 +18,13 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
+import type { StudioAlgorithmVersion } from '@/lib/studio/engine/versions'
 import { MAX_FINALISTS } from '@/lib/studio/engine/scoring'
 import type { InteractionAction } from '@/lib/studio/engine/types'
 import type { StudioProjectItem, StudioRole } from '@/lib/studio/types'
 
 export const STUDIO_STORE_KEY = 'terrassea-studio-v1'
-export const STUDIO_STORE_VERSION = 2
+export const STUDIO_STORE_VERSION = 3
 export const STUDIO_UNDO_DEPTH = 50
 
 export type StudioEntry = 'full_project' | 'seats' | 'tables'
@@ -77,6 +78,8 @@ export interface StudioJournalEntry {
 }
 
 export interface StudioStoreState extends StudioSnapshot {
+  readonly algorithmVersion: StudioAlgorithmVersion | null
+  readonly initializeAlgorithm: (version: StudioAlgorithmVersion) => void
   readonly sessionId: string
   readonly journal: ReadonlyArray<StudioJournalEntry>
   readonly setEntry: (entry: StudioEntry | null) => void
@@ -109,7 +112,10 @@ export function studioItemKey(productId: string, variantId: string): string {
 }
 
 export function createStudioSessionId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
     return crypto.randomUUID()
   }
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
@@ -147,7 +153,9 @@ function commit(
   next: Partial<StudioSnapshot>,
   now: string,
 ): Mutable {
-  const project = next.project ? { ...next.project, updatedAt: now } : state.project
+  const project = next.project
+    ? { ...next.project, updatedAt: now }
+    : state.project
   const discovery = next.discovery ?? state.discovery
   return {
     project,
@@ -162,7 +170,10 @@ function commit(
 
 function isRole(value: unknown): value is StudioRole {
   return (
-    value === 'seat' || value === 'tabletop' || value === 'base' || value === 'catalog_only'
+    value === 'seat' ||
+    value === 'tabletop' ||
+    value === 'base' ||
+    value === 'catalog_only'
   )
 }
 
@@ -172,7 +183,10 @@ function isAction(value: unknown): value is InteractionAction {
 
 function stringList(value: unknown): string[] {
   return Array.isArray(value)
-    ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+    ? value.filter(
+        (entry): entry is string =>
+          typeof entry === 'string' && entry.length > 0,
+      )
     : []
 }
 
@@ -193,7 +207,9 @@ function sanitizeItems(value: unknown): StudioProjectItem[] {
         variantId: item.variantId,
         role: item.role,
         requestedQuantity: normalizeRequestedQuantity(
-          typeof item.requestedQuantity === 'number' ? item.requestedQuantity : 1,
+          typeof item.requestedQuantity === 'number'
+            ? item.requestedQuantity
+            : 1,
         ),
         ...(item.customColour === true ? { customColour: true } : {}),
         ...(item.customDimensions === true ? { customDimensions: true } : {}),
@@ -206,7 +222,9 @@ function sanitizeProject(value: unknown): StudioProjectDraft {
   const legacy = (value ?? {}) as Record<string, unknown>
   return {
     entry:
-      legacy.entry === 'full_project' || legacy.entry === 'seats' || legacy.entry === 'tables'
+      legacy.entry === 'full_project' ||
+      legacy.entry === 'seats' ||
+      legacy.entry === 'tables'
         ? legacy.entry
         : null,
     items: sanitizeItems(legacy.items),
@@ -219,7 +237,11 @@ function sanitizeDiscovery(value: unknown): StudioDiscoveryState {
   const interactions = Array.isArray(raw.interactions)
     ? raw.interactions.flatMap((entry): StudioInteraction[] => {
         const interaction = (entry ?? {}) as Record<string, unknown>
-        if (typeof interaction.productId !== 'string' || !isAction(interaction.action)) return []
+        if (
+          typeof interaction.productId !== 'string' ||
+          !isAction(interaction.action)
+        )
+          return []
         return [
           {
             productId: interaction.productId,
@@ -232,24 +254,33 @@ function sanitizeDiscovery(value: unknown): StudioDiscoveryState {
   return {
     interactions,
     favoriteIds: [...new Set(stringList(raw.favoriteIds))],
-    finalistIds: [...new Set(stringList(raw.finalistIds))].slice(0, MAX_FINALISTS),
+    finalistIds: [...new Set(stringList(raw.finalistIds))].slice(
+      0,
+      MAX_FINALISTS,
+    ),
   }
 }
 
 /**
  * Migration défensive : la session est toujours conservée ; le projet est
  * validé ligne par ligne ; la découverte (lot 2) repart vide pour les
- * versions antérieures ; le journal repart vide (sa forme a changé en v2).
+ * versions antérieures à v2 ; les snapshots v2 sont conservés et la version
+ * historique V0 est épinglée. Les nouvelles sessions v3 sont attribuées une fois.
  */
-export function migrateStudioState(persisted: unknown, version: number): unknown {
+export function migrateStudioState(
+  persisted: unknown,
+  version: number,
+): unknown {
   const raw = (persisted ?? {}) as Record<string, unknown>
   const sessionId =
     typeof raw.sessionId === 'string' && raw.sessionId.length > 0
       ? raw.sessionId
       : createStudioSessionId()
-  if (version >= STUDIO_STORE_VERSION) {
+  if (version >= 2) {
     return {
       ...raw,
+      algorithmVersion:
+        version >= 3 && raw.algorithmVersion === 'v1.0' ? 'v1.0' : 'v0.1',
       sessionId,
       project: sanitizeProject(raw.project),
       discovery: sanitizeDiscovery(raw.discovery),
@@ -257,6 +288,7 @@ export function migrateStudioState(persisted: unknown, version: number): unknown
   }
   return {
     sessionId,
+    algorithmVersion: 'v0.1',
     project: sanitizeProject(raw.project),
     discovery: emptyDiscovery(),
     journal: [],
@@ -266,43 +298,76 @@ export function migrateStudioState(persisted: unknown, version: number): unknown
 export const useStudioStore = create<StudioStoreState>()(
   persist(
     (set, get) => ({
+      algorithmVersion: null,
+      initializeAlgorithm: (version) =>
+        set((state) =>
+          state.algorithmVersion ? state : { algorithmVersion: version },
+        ),
       sessionId: createStudioSessionId(),
       project: emptyProject(),
       discovery: emptyDiscovery(),
       journal: [],
       setEntry: (entry) =>
         set((state) =>
-          commit(state, 'set_entry', { project: { ...state.project, entry } }, new Date().toISOString()),
+          commit(
+            state,
+            'set_entry',
+            { project: { ...state.project, entry } },
+            new Date().toISOString(),
+          ),
         ),
       upsertItem: (item) =>
         set((state) => {
           const key = studioItemKey(item.productId, item.variantId)
           const normalized: StudioProjectItem = {
             ...item,
-            requestedQuantity: normalizeRequestedQuantity(item.requestedQuantity),
+            requestedQuantity: normalizeRequestedQuantity(
+              item.requestedQuantity,
+            ),
           }
           const exists = state.project.items.some(
             (entry) => studioItemKey(entry.productId, entry.variantId) === key,
           )
           const items = exists
             ? state.project.items.map((entry) =>
-                studioItemKey(entry.productId, entry.variantId) === key ? normalized : entry,
+                studioItemKey(entry.productId, entry.variantId) === key
+                  ? normalized
+                  : entry,
               )
             : [...state.project.items, normalized]
-          return commit(state, 'upsert_item', { project: { ...state.project, items } }, new Date().toISOString())
+          return commit(
+            state,
+            'upsert_item',
+            { project: { ...state.project, items } },
+            new Date().toISOString(),
+          )
         }),
       setItemQuantity: (productId, variantId, requestedQuantity) =>
         set((state) => {
           const key = studioItemKey(productId, variantId)
-          if (!state.project.items.some((entry) => studioItemKey(entry.productId, entry.variantId) === key)) {
+          if (
+            !state.project.items.some(
+              (entry) =>
+                studioItemKey(entry.productId, entry.variantId) === key,
+            )
+          ) {
             return state
           }
           const items = state.project.items.map((entry) =>
             studioItemKey(entry.productId, entry.variantId) === key
-              ? { ...entry, requestedQuantity: normalizeRequestedQuantity(requestedQuantity) }
+              ? {
+                  ...entry,
+                  requestedQuantity:
+                    normalizeRequestedQuantity(requestedQuantity),
+                }
               : entry,
           )
-          return commit(state, 'set_quantity', { project: { ...state.project, items } }, new Date().toISOString())
+          return commit(
+            state,
+            'set_quantity',
+            { project: { ...state.project, items } },
+            new Date().toISOString(),
+          )
         }),
       removeItem: (productId, variantId) =>
         set((state) => {
@@ -311,14 +376,29 @@ export const useStudioStore = create<StudioStoreState>()(
             (entry) => studioItemKey(entry.productId, entry.variantId) !== key,
           )
           if (items.length === state.project.items.length) return state
-          return commit(state, 'remove_item', { project: { ...state.project, items } }, new Date().toISOString())
+          return commit(
+            state,
+            'remove_item',
+            { project: { ...state.project, items } },
+            new Date().toISOString(),
+          )
         }),
       clearProject: () =>
-        set((state) => commit(state, 'clear_project', { project: emptyProject() }, new Date().toISOString())),
+        set((state) =>
+          commit(
+            state,
+            'clear_project',
+            { project: emptyProject() },
+            new Date().toISOString(),
+          ),
+        ),
       decide: (productId, action) =>
         set((state) => {
           const now = new Date().toISOString()
-          const interactions = [...state.discovery.interactions, { productId, action, at: now }]
+          const interactions = [
+            ...state.discovery.interactions,
+            { productId, action, at: now },
+          ]
           let favoriteIds = state.discovery.favoriteIds
           if (action === 'like' && !favoriteIds.includes(productId)) {
             favoriteIds = [...favoriteIds, productId]
@@ -339,7 +419,12 @@ export const useStudioStore = create<StudioStoreState>()(
           return commit(
             state,
             'favorite_add',
-            { discovery: { ...state.discovery, favoriteIds: [...state.discovery.favoriteIds, productId] } },
+            {
+              discovery: {
+                ...state.discovery,
+                favoriteIds: [...state.discovery.favoriteIds, productId],
+              },
+            },
             new Date().toISOString(),
           )
         }),
@@ -352,8 +437,12 @@ export const useStudioStore = create<StudioStoreState>()(
             {
               discovery: {
                 ...state.discovery,
-                favoriteIds: state.discovery.favoriteIds.filter((id) => id !== productId),
-                finalistIds: state.discovery.finalistIds.filter((id) => id !== productId),
+                favoriteIds: state.discovery.favoriteIds.filter(
+                  (id) => id !== productId,
+                ),
+                finalistIds: state.discovery.finalistIds.filter(
+                  (id) => id !== productId,
+                ),
               },
             },
             new Date().toISOString(),
@@ -377,7 +466,12 @@ export const useStudioStore = create<StudioStoreState>()(
           commit(
             current,
             'add_finalist',
-            { discovery: { ...current.discovery, finalistIds: [...current.discovery.finalistIds, productId] } },
+            {
+              discovery: {
+                ...current.discovery,
+                finalistIds: [...current.discovery.finalistIds, productId],
+              },
+            },
             new Date().toISOString(),
           ),
         )
@@ -392,7 +486,9 @@ export const useStudioStore = create<StudioStoreState>()(
             {
               discovery: {
                 ...state.discovery,
-                finalistIds: state.discovery.finalistIds.filter((id) => id !== productId),
+                finalistIds: state.discovery.finalistIds.filter(
+                  (id) => id !== productId,
+                ),
               },
             },
             new Date().toISOString(),
@@ -408,7 +504,9 @@ export const useStudioStore = create<StudioStoreState>()(
             {
               discovery: {
                 ...state.discovery,
-                finalistIds: state.discovery.finalistIds.map((id) => (id === previousId ? nextId : id)),
+                finalistIds: state.discovery.finalistIds.map((id) =>
+                  id === previousId ? nextId : id,
+                ),
               },
             },
             new Date().toISOString(),
@@ -416,7 +514,12 @@ export const useStudioStore = create<StudioStoreState>()(
         }),
       resetDiscovery: () =>
         set((state) =>
-          commit(state, 'reset_discovery', { discovery: emptyDiscovery() }, new Date().toISOString()),
+          commit(
+            state,
+            'reset_discovery',
+            { discovery: emptyDiscovery() },
+            new Date().toISOString(),
+          ),
         ),
       undo: () => {
         const state = get()
@@ -430,9 +533,11 @@ export const useStudioStore = create<StudioStoreState>()(
         return true
       },
       canUndo: () => get().journal.length > 0,
-      lastActionLabel: () => get().journal[get().journal.length - 1]?.label ?? null,
+      lastActionLabel: () =>
+        get().journal[get().journal.length - 1]?.label ?? null,
       resetSession: () =>
         set({
+          algorithmVersion: null,
           sessionId: createStudioSessionId(),
           project: emptyProject(),
           discovery: emptyDiscovery(),
@@ -444,6 +549,7 @@ export const useStudioStore = create<StudioStoreState>()(
       version: STUDIO_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        algorithmVersion: state.algorithmVersion,
         sessionId: state.sessionId,
         project: state.project,
         discovery: state.discovery,

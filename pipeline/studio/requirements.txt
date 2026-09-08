@@ -1,0 +1,5 @@
+# Python 3.9+ / Apple Silicon. Dépendances offline seulement.
+torch==2.8.0
+transformers==4.57.3
+Pillow==11.3.0
+numpy==2.0.2

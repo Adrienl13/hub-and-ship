@@ -59,7 +59,9 @@ function contentBoundingBox(
  * l'upload ne doit JAMAIS être bloqué par la normalisation.
  */
 export async function normalizePackshotFile(file: File): Promise<File> {
-  if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)) {
+  if (
+    !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type)
+  ) {
     return file
   }
   try {
@@ -107,5 +109,93 @@ export async function normalizePackshotFile(file: File): Promise<File> {
     return new File([blob], `${baseName}.webp`, { type: 'image/webp' })
   } catch {
     return file
+  }
+}
+
+// Mode Decision du même normaliseur : sortie explicite, jamais utilisée pour
+// remplacer main_image_url. Une ambiance est refusée, sans détourage génératif.
+export async function normalizeDecisionPackshot(file: File) {
+  const {
+    analyzePackshot,
+    decisionPlacement,
+    DECISION_PIPELINE_VERSION,
+    DECISION_SIZES,
+  } = await import('./packshot-metrics.mjs')
+  const bitmap = await createImageBitmap(file)
+  try {
+    const input = document.createElement('canvas')
+    input.width = bitmap.width
+    input.height = bitmap.height
+    const ctx = input.getContext('2d')
+    if (!ctx) throw new Error('Canvas indisponible')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, input.width, input.height)
+    ctx.drawImage(bitmap, 0, 0)
+    const analysis = analyzePackshot(
+      ctx.getImageData(0, 0, input.width, input.height).data,
+      input.width,
+      input.height,
+    )
+    if (!analysis || analysis.background !== 1)
+      throw new Error(
+        'Fond non neutre ou produit non détectable : revue manuelle requise',
+      )
+    const outputs: File[] = []
+    let traits = analysis.traits
+    for (const size of DECISION_SIZES) {
+      const output = document.createElement('canvas')
+      output.width = size
+      output.height = size
+      const target = output.getContext('2d')
+      if (!target) throw new Error('Canvas indisponible')
+      target.fillStyle = '#ffffff'
+      target.fillRect(0, 0, size, size)
+      const box = analysis.box,
+        place = decisionPlacement(box, size)
+      target.drawImage(
+        input,
+        box.x,
+        box.y,
+        box.w,
+        box.h,
+        place.left,
+        place.top,
+        place.width,
+        place.height,
+      )
+      const blob = await new Promise<Blob | null>((resolve) =>
+        output.toBlob(resolve, 'image/webp', 0.85),
+      )
+      if (!blob || blob.type !== 'image/webp')
+        throw new Error('WebP indisponible')
+      if (size === 1200) {
+        const grid = document.createElement('canvas')
+        grid.width = 128
+        grid.height = 128
+        const measure = grid.getContext('2d')
+        if (!measure) throw new Error('Canvas indisponible')
+        measure.drawImage(output, 0, 0, 128, 128)
+        traits = analyzePackshot(
+          measure.getImageData(0, 0, 128, 128).data,
+          128,
+          128,
+        )!.traits
+      }
+      outputs.push(new File([blob], `${size}.webp`, { type: 'image/webp' }))
+    }
+    return {
+      decision: outputs[0]!,
+      thumb: outputs[1]!,
+      analysis,
+      traits: {
+        ...traits,
+        version: DECISION_PIPELINE_VERSION,
+        provenance: 'pipeline-canvas',
+        computed_at: new Date().toISOString(),
+      },
+      pipelineVersion: DECISION_PIPELINE_VERSION,
+    }
+  } finally {
+    bitmap.close()
   }
 }
