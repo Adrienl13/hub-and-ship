@@ -8,6 +8,14 @@
 - Contrôles de sécurité production : **`security:studio` OK · `security:grants` OK**.
 - Version Cloudflare validée : `9418ec86-8ba1-4102-8f82-109541dcafe5`.
 
+## Lot 4 — état local au 09/09/2026
+
+Le parcours Tables est implémenté sur `codex/studio-lot-4-bring` : entrée `/studio`, transition volontaire Assises → `/studio/tables`, configuration plateau/piètement et résumé partagé. [Revue et procédures Lot 4](STUDIO_LOT_4_REVIEW.md). Le contrôle de preview existant couvre aussi cette route ; cookie `Path=/` inchangé.
+
+La migration **42 `20260909100000_studio_table_compatibility.sql` est NON APPLIQUÉE EN PRODUCTION**. Elle ajoute types de piètement, rattachements et règles vérifiés, RLS admin et deux projections publiques minimales. Aucun couple réel n’est prérempli. Sans les projections disponibles, le Studio conserve le besoin mais ne confirme aucune compatibilité. La validation humaine avec provenance se fait dans l’onglet Studio admin existant.
+
+**CODE READY et UX REVIEW READY** après contrôles locaux ; **DATA / COMPATIBILITY READY : NON ; PRODUCTION READY : NON**. Aucun déploiement ni changement du flag public. Les états production des Lots 1/2 et des migrations 39/40 ci-dessus restent inchangés.
+
 ## 1. Activer le Studio en local
 
 ```
@@ -15,7 +23,7 @@
 VITE_STUDIO_ENABLED=true
 ```
 
-`bun run dev` puis `http://localhost:5173/studio` → entrée du Studio (Projet complet / Assises / Tables), puis `/studio/assises`. Sans cette variable, `/studio` et `/studio/assises` renvoient la 404 du site. Le lien « Studio » du Header n'apparaît que sous ce flag ; une session preview accède par l'URL.
+`bun run dev` puis `http://localhost:5173/studio` → entrée du Studio (Projet complet / Assises / Tables), puis `/studio/assises` ou `/studio/tables`. Sans cette variable ni cookie preview valide, `/studio`, `/studio/assises` et `/studio/tables` renvoient la 404 du site. Le lien « Studio » du Header n'apparaît que sous ce flag ; une session preview accède par l'URL.
 
 Sans Supabase configuré, le Studio affiche « Aucune assise n'est disponible » (jamais un mock). Pour développer avec des données réelles : `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` de `.env.local` (lecture seule des surfaces publiques ; les événements nécessitent `SUPABASE_SERVICE_ROLE_KEY` dans `.dev.vars` et la migration 40, sinon l'API répond 503 et le parcours continue).
 
@@ -54,9 +62,9 @@ Régression locale avec flag OFF et clé factice en mémoire, sans modifier de s
 
 ## 3. Migrations du lot 1
 
-| # | Fichier | Statut |
-|---|---|---|
-| 39 | `supabase/migrations/20260907120000_studio_foundation.sql` | **APPLIQUÉE en production — Lot 1 production verified** |
+| #   | Fichier                                                    | Statut                                                  |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------- |
+| 39  | `supabase/migrations/20260907120000_studio_foundation.sql` | **APPLIQUÉE en production — Lot 1 production verified** |
 
 Contenu : tables internes `studio_model_families`, `studio_product_profiles`, `studio_fulfillment_options` ; surfaces publiques `studio_product_profiles_public`, `studio_fulfillment_options_public`, `studio_model_families_public` et `studio_products` ; fonction `studio_public_data_quality()` ; peuplement idempotent des profils (rôle par catégorie, sous-type et matière estimés, prix public reconnu, `model_family_id` jamais renseigné) et d'une option `standard_production` **non confirmée** (`seed_moq`) par produit public actif au MOQ de la fiche. Auto-vérification en fin de migration (colonnes internes absentes des surfaces publiques, aucun droit anon sur les tables, projection de qualité étanche, aucune option semée confirmée).
 
@@ -64,13 +72,13 @@ Ordre : code puis migration (le code lit les vues avec des colonnes explicites ;
 
 ### Surface publique minimale (principe du lot 0.5)
 
-| Surface | Lisible par | Colonnes |
-|---|---|---|
-| `studio_products` (vue, security_invoker) | anon, authenticated | les 25 colonnes publiques de `products_public` + `studio_role`, `seat_kind`, `material`, `model_family_id`, `visual_traits`, `data_quality` (projetée) |
-| `studio_product_profiles_public` (vue) | anon, authenticated | `product_id`, `studio_role`, `seat_kind`, `material`, `model_family_id`, `visual_traits`, `data_quality` (projetée) — produits actifs |
-| `studio_fulfillment_options_public` (vue) | anon, authenticated | `id`, `product_id`, `variant_id`, `mode`, `min_quantity`, `max_quantity`, `price_basis`, `source`, `is_active`, `is_confirmed`, `available_from`, `expires_at` — options actives |
-| `studio_model_families_public` (vue) | anon, authenticated | `id`, `label`, `status` — familles vérifiées |
-| tables `studio_*` | admin uniquement (RLS `is_admin()` ; anon : aucun grant ; buyer : zéro ligne) | tout, dont `notes`, `note`, `created_by`, `updated_by`, `confirmed_by`, `data_quality` complète |
+| Surface                                   | Lisible par                                                                   | Colonnes                                                                                                                                                                         |
+| ----------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `studio_products` (vue, security_invoker) | anon, authenticated                                                           | les 25 colonnes publiques de `products_public` + `studio_role`, `seat_kind`, `material`, `model_family_id`, `visual_traits`, `data_quality` (projetée)                           |
+| `studio_product_profiles_public` (vue)    | anon, authenticated                                                           | `product_id`, `studio_role`, `seat_kind`, `material`, `model_family_id`, `visual_traits`, `data_quality` (projetée) — produits actifs                                            |
+| `studio_fulfillment_options_public` (vue) | anon, authenticated                                                           | `id`, `product_id`, `variant_id`, `mode`, `min_quantity`, `max_quantity`, `price_basis`, `source`, `is_active`, `is_confirmed`, `available_from`, `expires_at` — options actives |
+| `studio_model_families_public` (vue)      | anon, authenticated                                                           | `id`, `label`, `status` — familles vérifiées                                                                                                                                     |
+| tables `studio_*`                         | admin uniquement (RLS `is_admin()` ; anon : aucun grant ; buyer : zéro ligne) | tout, dont `notes`, `note`, `created_by`, `updated_by`, `confirmed_by`, `data_quality` complète                                                                                  |
 
 Règles :
 
@@ -99,18 +107,18 @@ Aucune donnée existante n'est touchée par la migration ni par son rollback.
 
 ## 3 bis. Migration du lot 2 — APPLIQUÉE EN PRODUCTION
 
-| # | Fichier | Statut |
-|---|---|---|
-| 40 | `supabase/migrations/20260907130000_studio_sessions_events.sql` | **APPLIQUÉE EN PRODUCTION — Lot 2 PRODUCTION VERIFIED** |
+| #   | Fichier                                                         | Statut                                                  |
+| --- | --------------------------------------------------------------- | ------------------------------------------------------- |
+| 40  | `supabase/migrations/20260907130000_studio_sessions_events.sql` | **APPLIQUÉE EN PRODUCTION — Lot 2 PRODUCTION VERIFIED** |
 
 Contenu, additif uniquement :
 
-| Table / vue | Rôle | Accès |
-|---|---|---|
-| `studio_sessions` | session anonyme de découverte (`id`, `algorithm_version`, `entry`, dates) — aucune PII | écriture serveur seule (client admin) ; lecture admin (RLS `is_admin()`) ; anon : aucun droit |
-| `studio_events` | une ligne par interaction (`event_type` contraint, `product_id`, `variant_id`, `algorithm_version`, `payload` ≤ 2 Ko, `client_ts`) | idem |
-| `studio_curation_sets` | infrastructure du jeu pilote : `product_ids` explicites, `criteria` traçables, `status` draft/active/archived. **Vide** : aucun jeu inventé | admin (RLS) ; surface publique `studio_curation_sets_public` (`id`, `label`, `product_ids`, jeux actifs) |
-| `studio_diagnostic_pairs` | paires diagnostiques explicites (`axis` mesuré, `source` manual/pipeline, `status`). **Vide** : jamais générée | admin (RLS) ; surface publique `studio_diagnostic_pairs_public` (`id`, `product_a_id`, `product_b_id`, `axis`, paires vérifiées de produits actifs) |
+| Table / vue               | Rôle                                                                                                                                        | Accès                                                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `studio_sessions`         | session anonyme de découverte (`id`, `algorithm_version`, `entry`, dates) — aucune PII                                                      | écriture serveur seule (client admin) ; lecture admin (RLS `is_admin()`) ; anon : aucun droit                                                       |
+| `studio_events`           | une ligne par interaction (`event_type` contraint, `product_id`, `variant_id`, `algorithm_version`, `payload` ≤ 2 Ko, `client_ts`)          | idem                                                                                                                                                |
+| `studio_curation_sets`    | infrastructure du jeu pilote : `product_ids` explicites, `criteria` traçables, `status` draft/active/archived. **Vide** : aucun jeu inventé | admin (RLS) ; surface publique `studio_curation_sets_public` (`id`, `label`, `product_ids`, jeux actifs)                                            |
+| `studio_diagnostic_pairs` | paires diagnostiques explicites (`axis` mesuré, `source` manual/pipeline, `status`). **Vide** : jamais générée                              | admin (RLS) ; surface publique `studio_diagnostic_pairs_public` (`id`, `product_a_id`, `product_b_id`, `axis`, paires vérifiées de produits actifs) |
 
 Comportement de repli pour un environnement local incomplet : `/api/studio/events` répond 503 (le parcours continue, la mesure est simplement absente), les deux surfaces publiques répondent 404 et le repository dégrade en listes vides (`?set=pilot` → découverte complète, aucun duel).
 
@@ -195,7 +203,6 @@ Depuis le lot 1, **deux vues** listent explicitement les colonnes : `products_pu
 - Miroir marketing minimal (`src/lib/analytics.ts`) : `studio_started` seulement ; `project_completed` réservé. Soumis au consentement existant (Consent Mode / Plausible inchangés).
 
 Dans le Lot 2, `SUPABASE_SERVICE_ROLE_KEY` sert à ingérer côté serveur les événements Studio. Le Lot 2 ne fait aucune réservation. Les favoris connectés sont sérialisés par compte et produit ; les lots d’événements sont envoyés dans leur ordre, sans chevauchement. Une référence persistée absente du catalogue reste visible et retirable, avec état « Devis manuel » et montant à vérifier.
-
 
 ## Lot 3 — code local, données et production en attente
 
