@@ -30,6 +30,11 @@
 -- Retour au modèle sécurisé après correction du runtime : rejouer les deux
 -- instructions revoke/grant ci-dessous (idempotentes).
 
+-- fresh-local-replay repair: declare the existing admin write ACL explicitly.
+-- A fresh local database need not inherit historical Supabase default grants.
+-- RLS still restricts these writes to admins; SELECT remains column-scoped.
+grant insert, update, delete on table public.products to authenticated;
+
 revoke select on table public.products from authenticated;
 
 grant select (

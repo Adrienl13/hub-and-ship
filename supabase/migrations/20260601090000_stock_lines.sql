@@ -56,7 +56,13 @@ create policy "Admins write stock lines"
 insert into public.stock_lines (
   id, product_id, variant_id, available_units, reserved_units,
   stock_price_ht, location, ready_label, condition, priority, note
-) values
+)
+-- fresh-local-replay repair: historical catalogue rows are not migration seeds.
+-- Preserve existing fixtures only when their real product/design exists.
+select seed.id, seed.product_id, seed.variant_id, seed.available_units,
+       seed.reserved_units, seed.stock_price_ht, seed.location, seed.ready_label,
+       seed.condition::public.stock_condition, seed.priority, seed.note
+from (values
   ('stock-cannes-noir', 'p1', 'v1a', 86, 12, 109, 'Marseille-Fos',
    'Retrait sous 24h', 'new', 1,
    'Lot homogène, cartons complets, idéal terrasse à ouvrir rapidement.'),
@@ -72,4 +78,9 @@ insert into public.stock_lines (
   ('stock-marseille-ardoise', 'p6', 'v6b', 9, 0, 399, 'Marseille-Fos',
    'Retrait sous 24h', 'new', 5,
    'Tables rectangulaires en quantité limitée, adaptées aux terrasses 6 places.')
+) as seed(id, product_id, variant_id, available_units, reserved_units,
+          stock_price_ht, location, ready_label, condition, priority, note)
+where exists (select 1 from public.products p where p.id = seed.product_id)
+  and exists (select 1 from public.product_variants v
+              where v.id = seed.variant_id and v.product_id = seed.product_id)
 on conflict (id) do nothing;

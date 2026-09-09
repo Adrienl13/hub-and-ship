@@ -1,3 +1,13 @@
+-- fresh-local-replay repair: restore the prerequisite enum omitted by this
+-- bridge. Exact vocabulary from 4a7906b, 20260701110000_pricing_engine_phase1.
+-- Required by 20260706110000_admin_pricing_engine_parity; no pricing change.
+do $$
+begin
+  create type public.pricing_channel as enum ('direct', 'reseller', 'distributor', 'admin');
+exception
+  when duplicate_object then null;
+end $$;
+
 -- FUSION P2 — pont vers le moteur de prix data-driven + retrait parrainage B2C.
 --
 -- 1) Rapatrie dans le repo le moteur de prix « landed cost » présent en prod

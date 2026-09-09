@@ -22,7 +22,13 @@ begin
     'in_production',
     'in_transit',
     'delivered',
-    'cancelled'
+    'cancelled',
+    -- fresh-local-replay repair: the recovered 20260520101823 migration
+    -- shares this enum with legacy container_reservations. Preserve its
+    -- original statuses without changing the current reservations lifecycle.
+    -- Defining them here commits them before the later casts/defaults/policies.
+    'pending_payment',
+    'confirmed'
   );
 exception
   when duplicate_object then null;
