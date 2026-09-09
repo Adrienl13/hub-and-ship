@@ -110,12 +110,13 @@ export function resolveTableCompatibility(
   if (membership.length > 1)
     return result('requires_confirmation', 'conflicting_types')
   const general = data.rules.filter(
-    (r) => r.base_type_id && r.base_type_id === membership[0]?.base_type_id,
+    (r) =>
+      r.base_type_id &&
+      r.base_type_id === membership[0]?.base_type_id &&
+      r.shape === shape,
   )
   if (general.length) {
-    const shaped = general.filter((r) => r.shape === shape)
-    if (!shaped.length) return result('denied', 'shape_not_supported')
-    const matching = shaped.filter(
+    const matching = general.filter(
       (r) =>
         Math.max(l, w) <= Math.max(r.max_length_cm!, r.max_width_cm!) &&
         Math.min(l, w) <= Math.min(r.max_length_cm!, r.max_width_cm!),

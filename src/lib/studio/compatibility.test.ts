@@ -35,7 +35,7 @@ describe('compatibilité Studio conservatrice', () => {
         .verdict,
     ).toBe('denied')
     expect(resolve({ ...top, tableShape: 'round' }, base, typed).verdict).toBe(
-      'denied',
+      'requires_confirmation',
     )
     expect(
       resolve(top, base, {
@@ -92,4 +92,80 @@ describe('compatibilité Studio conservatrice', () => {
         rules: [pair, { ...pair, id: 'conflict', verdict: 'denied' }],
       }).verdict,
     ).toBe('requires_confirmation'))
+})
+
+describe('forme sans règle générale applicable', () => {
+  const roundTop = { ...top, tableShape: 'round' as const }
+  const typed = {
+    ...data,
+    baseProfiles: [{ base_id: base.id, base_type_id: 'central' }],
+    rules: [
+      {
+        ...pair,
+        base_id: null,
+        tabletop_id: null,
+        base_type_id: 'central',
+        shape: 'rectangular' as const,
+        max_length_cm: 80,
+        max_width_cm: 70,
+      },
+    ],
+  }
+  it('sans liste explicite, reste non confirmé', () => {
+    expect(
+      resolve(roundTop, { ...base, compatibleTopShapes: [] }, typed),
+    ).toMatchObject({
+      verdict: 'requires_confirmation',
+      reason: 'compatibility_unconfirmed',
+    })
+  })
+  it('une liste explicite round autorise le repli', () => {
+    expect(
+      resolve(roundTop, { ...base, compatibleTopShapes: ['round'] }, typed),
+    ).toMatchObject({ verdict: 'allowed', reason: 'catalogue_explicit_shapes' })
+  })
+  it('une liste explicite rectangular refuse le plateau round', () => {
+    expect(
+      resolve(
+        roundTop,
+        { ...base, compatibleTopShapes: ['rectangular'] },
+        typed,
+      ),
+    ).toMatchObject({ verdict: 'denied', reason: 'catalogue_explicit_shapes' })
+  })
+  it('une règle round max70 refuse un plateau round90 malgré un repli positif', () => {
+    expect(
+      resolve(
+        { ...roundTop, dimensions: { l: 90, w: 90, h: 2 } },
+        { ...base, compatibleTopShapes: ['round'] },
+        {
+          ...typed,
+          rules: [
+            {
+              ...typed.rules[0]!,
+              shape: 'round',
+              max_length_cm: 70,
+              max_width_cm: 70,
+            },
+          ],
+        },
+      ),
+    ).toMatchObject({
+      verdict: 'denied',
+      reason: 'maximum_dimensions_exceeded',
+    })
+  })
+  it('une exception exacte denied prévaut sur tout repli', () => {
+    expect(
+      resolve(
+        roundTop,
+        { ...base, compatibleTopShapes: ['round'] },
+        { ...typed, rules: [...typed.rules, { ...pair, verdict: 'denied' }] },
+      ),
+    ).toMatchObject({
+      verdict: 'denied',
+      reason: 'verified_pair',
+      ruleId: pair.id,
+    })
+  })
 })
