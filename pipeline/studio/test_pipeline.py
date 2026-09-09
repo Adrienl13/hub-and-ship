@@ -54,4 +54,7 @@ class PipelineTests(unittest.TestCase):
         with self.assertRaises(ValueError):importer.insert('studio_product_media',{'id) values (1); --':'x'})
     def test_import_rejects_incomplete_visual_report(self):
         with self.assertRaises(ValueError):importer.render({'model_version':MODEL_VERSION,'errors':['failure']},'visual')
+    def test_import_rejects_empty_batch_before_graph_delete(self):
+        with self.assertRaisesRegex(ValueError, 'Empty visual batch'):
+            importer.render({'model_version':MODEL_VERSION,'features':[],'errors':[]},'visual')
 if __name__=='__main__':unittest.main()

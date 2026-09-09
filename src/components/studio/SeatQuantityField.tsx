@@ -7,23 +7,32 @@ import { CheckCircle2, CircleHelp, FileSearch } from 'lucide-react'
 import { useId } from 'react'
 
 import type { Product } from '@/lib/products'
-import { describeQuantity, type QuantityFeedbackTone } from '@/lib/studio/quantity-feedback'
+import {
+  describeQuantity,
+  type QuantityFeedbackTone,
+} from '@/lib/studio/quantity-feedback'
 import type { FulfillmentContext, StudioProjectItem } from '@/lib/studio/types'
 import { normalizeRequestedQuantity } from '@/stores/studio.store'
 
-const TONE_STYLE: Record<QuantityFeedbackTone, { className: string; Icon: typeof CheckCircle2; label: string }> = {
+const TONE_STYLE: Record<
+  QuantityFeedbackTone,
+  { className: string; Icon: typeof CheckCircle2; label: string }
+> = {
   confirmed: {
-    className: 'border-[color:var(--forest)]/40 bg-[color:var(--forest-bg)] text-[color:var(--ink)]',
+    className:
+      'border-[color:var(--forest)]/40 bg-[color:var(--forest-bg)] text-[color:var(--ink)]',
     Icon: CheckCircle2,
     label: 'Voie confirmée',
   },
   review: {
-    className: 'border-[color:var(--ochre)]/40 bg-[color:var(--color-warning-bg)] text-[color:var(--ink)]',
+    className:
+      'border-[color:var(--ochre)]/40 bg-[color:var(--color-warning-bg)] text-[color:var(--ink)]',
     Icon: FileSearch,
     label: 'Étude de faisabilité',
   },
   quote: {
-    className: 'border-[color:var(--info)]/40 bg-[color:var(--color-info-bg)] text-[color:var(--ink)]',
+    className:
+      'border-[color:var(--info)]/40 bg-[color:var(--color-info-bg)] text-[color:var(--ink)]',
     Icon: CircleHelp,
     label: 'Devis à confirmer',
   },
@@ -52,7 +61,8 @@ export function SeatQuantityField({
             Quantité souhaitée
           </label>
           <p className="text-xs text-[color:var(--ink-soft)]">
-            Règle de série indicative : {feedback.ruleLabel}. Vous saisissez la quantité de votre projet.
+            Règle de série indicative : {feedback.ruleLabel}. Vous saisissez la
+            quantité de votre projet.
           </p>
         </div>
         <input
@@ -83,10 +93,9 @@ export function SeatQuantityField({
         <div>
           <div className="label-eyebrow">{tone.label}</div>
           <p className="mt-0.5 font-medium">{feedback.title}</p>
-          {feedback.detail && <p className="mt-0.5 text-[color:var(--ink-soft)]">{feedback.detail}</p>}
-          {feedback.resolution.reasons.length > 0 && (
-            <p className="mono mt-1 text-[10px] uppercase tracking-wider text-[color:var(--ink-soft)]">
-              {feedback.resolution.mode} · {feedback.resolution.reasons.join(', ')}
+          {feedback.detail && (
+            <p className="mt-0.5 text-[color:var(--ink-soft)]">
+              {feedback.detail}
             </p>
           )}
         </div>

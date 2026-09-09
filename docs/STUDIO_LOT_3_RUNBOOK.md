@@ -4,6 +4,8 @@ Checkout : `/Users/adrien/hub-and-ship`, branche `codex/studio-lot-3`, départ `
 
 Statut : **CODE READY**, **DATA READY non établi**, jamais PRODUCTION VERIFIED. La migration 41 `20260908090000_studio_visual_intelligence.sql` est **NON APPLIQUÉE EN PRODUCTION**. Aucun déploiement, secret, flag ou donnée de production modifié. Les migrations 39/40 et le hotfix preview restent inchangés.
 
+Revue corrective : branche `codex/studio-lot-3-review`, base `112eff81f1f04cd15dd742c146afdc99fba4c2b0`. Voir [le compte rendu de revue](STUDIO_LOT_3_REVIEW.md) pour les corrections et validations locales les plus récentes. Le statut DATA/production ci-dessus reste inchangé.
+
 ## Audit et décisions
 
 - La migration 40 impose `source = manual | pipeline`. Le plan historique proposait `pipeline:vX` : le code conserve le contrat réel et ajoute `pipeline_version` aux paires.
@@ -110,7 +112,15 @@ Le manifeste utilise `is_active`, `media_status`, `media_id`, `media_url` (ou `l
   --include-pilot-draft --output /tmp/studio-visual-review.sql
 ```
 
-L’artefact SQL remplace transactionnellement le graphe de **ce modèle**, upsert les features, ajoute les candidats sans écraser une revue existante et, seulement sur demande, prépare `pilot` en **draft**. Il refuse un rapport contenant des erreurs : les résoudre, puis revoir la couverture avant import. Utiliser un batch complet de la base cible, pas un sous-ensemble accidentel qui supprimerait les voisins absents du rapport. Un artefact généré ne constitue pas une autorisation d’exécution en production.
+L’artefact SQL remplace transactionnellement le graphe de **ce modèle**, upsert les features, rafraîchit les candidats non revus sans écraser une décision humaine et, seulement sur demande, prépare `pilot` en **draft**. Il refuse un batch vide, des features d’un autre modèle ou un rapport contenant des erreurs : les résoudre, puis revoir la couverture avant import. Utiliser un batch complet de la base cible, pas un sous-ensemble accidentel qui supprimerait les voisins absents du rapport. Un artefact généré ne constitue pas une autorisation d’exécution en production.
+
+Règles de rafraîchissement (transaction + verrouillage des trois tables pour sérialiser avec les revues humaines) :
+
+- Familles candidates : mise à jour de `similarity/evidence` uniquement si `candidate`, sans reviewer/date/famille rattachée. Nettoyage des anciens candidats absents du rapport lorsque **les deux produits** appartiennent au batch. Une décision accepted/rejected ou une trace de revue bloque aussi la reproposition du même couple sous un nouveau modèle.
+- Paires : conflit sur le couple canonique + axe ; seuls `notes/pipeline_version` des candidates `source=pipeline`, sans vérificateur, sont recalculés. Les candidates pipeline disparues sont retirées dans le même périmètre. Les paires verified/rejected et les paires manuelles restent intactes.
+- `pilot` : sur demande explicite `--include-pilot-draft`, seuls `product_ids/criteria` du draft sont régénérés ; label, notes et auteur conservés. Active/archived ne changent jamais.
+- Un second import est idempotent pour le contenu objectif et les décisions ; les timestamps techniques de rafraîchissement peuvent évoluer. Les autres produits sont conservés pour les candidats ; le graphe du modèle reste un snapshot complet, d’où l’exigence de batch complet ci-dessus.
+
 
 Les relances admin créent une demande `pending`. L’opérateur relance le normaliseur ou le calcul, réimporte les résultats revus et clôture manuellement les demandes dans `studio_visual_jobs` (`done` ou `error`). Aucun daemon ni cron n’est installé.
 
@@ -134,6 +144,8 @@ Le rapport donne candidats, raisons, exclusions, couverture et diversité. Toujo
 Ouvrir une **nouvelle session navigateur privée**, obtenir la preview par le mécanisme existant, puis `/studio/assises?engine=v1`. `engine=v0` conserve V0, `engine=compare` attribue V0/V1 par hash déterministe de session. Hors preview ces paramètres n’activent jamais V1. Une session déjà commencée garde sa version même si l’URL change ; le changement d’URL n’est pas un reset de projet.
 
 `studio_algorithm_versions` doit publier la version/model_version reconnue avec statut preview ou active. V0 reste le défaut. Sans migration, sans voisins ou avec couverture <50 %, repli V0 sans disparition des produits. L’exploration prend ses candidats parmi **tous** les produits restants, même sans voisins. La session garde l’attribution V1 lors d’un repli, ce qui permet de mesurer l’expérience assignée.
+
+`resolveStudioEngine` distingue `v1Assigned` de `v1Operational`. La couverture est celle du graphe reconnu **dans le pool effectivement exploré** (y compris `?set=pilot`), calculée avec la même règle que V1. V1 opérationnel exige une preview autorisée, `v1.0` publiée pour `engine=v1`, le modèle exact et au moins 50 % de couverture. Sinon **toutes** les nouvelles décisions comportementales utilisent V0 : cartes, sélection et substitution des finalistes ; aucun prompt de convergence ni duel V1. Les sélections déjà enregistrées restent conservées. L’interface expose le moteur réellement utilisé via `data-studio-engine`, sans texte technique pour le client. `algorithmVersion=v1.0` reste immuable pour l’attribution des événements. L’API n’accepte que `v0.1` et `v1.0` ; `v42.7` est refusé avant écriture. Aucune FK ajoutée aux sessions historiques.
 
 `V1_POLICY` dans `engine/v1.ts` centralise les paramètres :
 
@@ -182,7 +194,9 @@ bunx playwright test -c tests/e2e/studio-v1.config.ts
 bunx playwright test -c tests/e2e/studio-lot2.config.ts
 ```
 
-Les tests SQL PGlite exécutent réellement la migration 41 sur les contrats minimaux des tables déjà déployées, avec rôles anon/buyer/admin. Ce n’est pas une validation du déploiement complet Supabase. Les intégrations réseau sont ignorées sans variables de test. `security:studio` est étendu, mais n’a pas été lancé contre la production (il comprend des sondes de refus d’écriture).
+Les tests SQL PGlite exécutent les DDL et droits des trois tables internes de la migration 39, la migration 40 puis la migration 41, sur un socle minimal produits/auth local, avec rôles anon/buyer/admin. Ce n’est pas une validation du déploiement complet Supabase. Les intégrations réseau sont ignorées sans variables de test. `security:studio` envoie désormais des payloads construits avec des produits publics et exige SQLSTATE `42501` : HTTP 400, erreur de contrainte ou JWT invalide ne prouvent plus un refus d’écriture. Exécuter ses sondes uniquement sur une base de TEST : une cible vulnérable pourrait insérer la ligne. Aucune exécution distante pendant cette revue.
+
+Limites distantes explicites (`SKIP WRITE`, jamais comptées comme réussite) : `studio_events` nécessite une session privée ; `studio_product_visual_features` nécessite un ID média interne lié au produit ; `studio_product_neighbors` nécessite deux features du même modèle. Sans ces fixtures, le script vérifie les lectures/restreints publics ; la preuve INSERT valide + refus anon/buyer est exécutée dans PostgreSQL local pour les 13 tables. Un même payload réussit comme admin (ou propriétaire pour sessions/events réservés au serveur), puis échoue avec `42501` pour anon/buyer. Les relations privées sont ainsi réellement présentes au test ; aucune règle n’est assouplie.
 
 Essai réel du modèle sur 13 fixtures géométriques locales, sans références commerciales : 13/13 embeddings, 13/13 avec 12 voisins, zéro erreur. Curation de ces fixtures : 2 représentants et 11 quasi-doublons exclus ; ce n’est **pas** un pilote commercial. Répéter une même image a produit le même vecteur de 384 valeurs. Sur une paire différente du smoke test, cosinus 0,69961 contre 1,0 pour l’image identique. Ces mesures vérifient le calcul, pas la qualité de recommandation réelle.
 
@@ -200,7 +214,7 @@ Contrôles et corrections effectués :
 - Session V2 conservée, version épinglée, Undo exact, répétition d’un like incapable de créer du signal distinct.
 - Pagination des voisins au-delà de 1000 ; valeurs non finies exclues ; produits sans données toujours découvrables.
 - Prix absent du goût, aucune altération des faits commerciaux, maximum trois finalistes, prompt non contraignant et langage prudent.
-- Aucun ML dans le runtime ; aucune écriture distante dans les scripts ; aucun secret de production dans les E2E.
+- Aucun ML dans le runtime ; aucune écriture distante dans les outils du pipeline offline ; aucun secret de production dans les E2E.
 
 Actions humaines restantes : autoriser puis appliquer la migration sur la cible choisie ; préparer/uploader et valider les Decision Images réelles ; calculer et revoir le batch complet ; importer les artefacts ; vérifier familles/paires ; valider puis activer éventuellement le pilote ; calibrer V1 en preview. Le déploiement et toute écriture production nécessitent une instruction distincte.
 

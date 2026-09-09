@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createRateLimitStore } from '@/lib/security/rate-limit'
 import { enforceApiRateLimit } from '@/lib/security/api-rate-limit'
-import type { StudioEventInsert, StudioEventsClient, StudioSessionUpsert } from '@/lib/studio/events-server'
+import type {
+  StudioEventInsert,
+  StudioEventsClient,
+  StudioSessionUpsert,
+} from '@/lib/studio/events-server'
 
 import { STUDIO_EVENTS_RATE_LIMIT, handleStudioEvents } from './events'
 
@@ -11,13 +15,29 @@ const VALID_BODY = {
   algorithmVersion: 'v0.1',
   entry: 'seats',
   events: [
-    { type: 'studio_started', clientTs: '2026-09-08T10:00:00.000Z', payload: { entry: 'seats' } },
-    { type: 'card_liked', productId: 'bis-001', payload: { position: 0, reason: 'initial' } },
-    { type: 'quantity_changed', productId: 'bis-001', variantId: 'bis-001-std', payload: { quantity: 6 } },
+    {
+      type: 'studio_started',
+      clientTs: '2026-09-08T10:00:00.000Z',
+      payload: { entry: 'seats' },
+    },
+    {
+      type: 'card_liked',
+      productId: 'bis-001',
+      payload: { position: 0, reason: 'initial' },
+    },
+    {
+      type: 'quantity_changed',
+      productId: 'bis-001',
+      variantId: 'bis-001-std',
+      payload: { quantity: 6 },
+    },
   ],
 }
 
-function createRequest(body: unknown, init: { origin?: string; method?: string; ip?: string } = {}): Request {
+function createRequest(
+  body: unknown,
+  init: { origin?: string; method?: string; ip?: string } = {},
+): Request {
   return new Request('https://prosimport.com/api/studio/events', {
     method: init.method ?? 'POST',
     headers: {
@@ -25,11 +45,18 @@ function createRequest(body: unknown, init: { origin?: string; method?: string; 
       ...(init.origin ? { origin: init.origin } : {}),
       ...(init.ip ? { 'cf-connecting-ip': init.ip } : {}),
     },
-    body: init.method === 'GET' ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
+    body:
+      init.method === 'GET'
+        ? undefined
+        : typeof body === 'string'
+          ? body
+          : JSON.stringify(body),
   })
 }
 
-function fakeClient(options: { sessionError?: string; insertError?: string } = {}) {
+function fakeClient(
+  options: { sessionError?: string; insertError?: string } = {},
+) {
   const sessions: StudioSessionUpsert[] = []
   const events: StudioEventInsert[] = []
   const client = {
@@ -38,12 +65,20 @@ function fakeClient(options: { sessionError?: string; insertError?: string } = {
         upsert: async (values: StudioSessionUpsert) => {
           expect(table).toBe('studio_sessions')
           sessions.push(values)
-          return { error: options.sessionError ? { message: options.sessionError } : null }
+          return {
+            error: options.sessionError
+              ? { message: options.sessionError }
+              : null,
+          }
         },
         insert: async (values: ReadonlyArray<StudioEventInsert>) => {
           expect(table).toBe('studio_events')
           events.push(...values)
-          return { error: options.insertError ? { message: options.insertError } : null }
+          return {
+            error: options.insertError
+              ? { message: options.insertError }
+              : null,
+          }
         },
       }
     },
@@ -87,10 +122,13 @@ describe('POST /api/studio/events', () => {
 
   it('refuse toute méthode autre que POST', async () => {
     const fake = fakeClient()
-    const response = await handleStudioEvents(createRequest(null, { method: 'GET' }), {
-      client: () => fake.client,
-      rateLimit: allow,
-    })
+    const response = await handleStudioEvents(
+      createRequest(null, { method: 'GET' }),
+      {
+        client: () => fake.client,
+        rateLimit: allow,
+      },
+    )
     expect(response.status).toBe(405)
     expect(response.headers.get('allow')).toBe('POST')
     expect(fake.events).toHaveLength(0)
@@ -98,27 +136,51 @@ describe('POST /api/studio/events', () => {
 
   it('refuse une origine étrangère avant toute écriture', async () => {
     const fake = fakeClient()
-    const response = await handleStudioEvents(createRequest(VALID_BODY, { origin: 'https://evil.example' }), {
-      client: () => fake.client,
-      rateLimit: allow,
-    })
+    const response = await handleStudioEvents(
+      createRequest(VALID_BODY, { origin: 'https://evil.example' }),
+      {
+        client: () => fake.client,
+        rateLimit: allow,
+      },
+    )
     expect(response.status).toBe(403)
     expect(fake.sessions).toHaveLength(0)
   })
 
   it.each([
     ['type inconnu', { ...VALID_BODY, events: [{ type: 'email_captured' }] }],
-    ['clé de payload inconnue (PII)', { ...VALID_BODY, events: [{ type: 'card_liked', payload: { email: 'a@b.c' } }] }],
+    [
+      'clé de payload inconnue (PII)',
+      {
+        ...VALID_BODY,
+        events: [{ type: 'card_liked', payload: { email: 'a@b.c' } }],
+      },
+    ],
     ['clé de premier niveau inconnue', { ...VALID_BODY, userEmail: 'a@b.c' }],
     ['version invalide', { ...VALID_BODY, algorithmVersion: 'latest' }],
     ['session invalide', { ...VALID_BODY, sessionId: 'x' }],
     ['lot vide', { ...VALID_BODY, events: [] }],
-    ['lot trop grand', { ...VALID_BODY, events: Array.from({ length: 21 }, () => ({ type: 'card_passed' })) }],
-    ['quantité non entière', { ...VALID_BODY, events: [{ type: 'quantity_changed', payload: { quantity: 6.5 } }] }],
+    [
+      'lot trop grand',
+      {
+        ...VALID_BODY,
+        events: Array.from({ length: 21 }, () => ({ type: 'card_passed' })),
+      },
+    ],
+    [
+      'quantité non entière',
+      {
+        ...VALID_BODY,
+        events: [{ type: 'quantity_changed', payload: { quantity: 6.5 } }],
+      },
+    ],
     ['JSON illisible', '{not json'],
   ])('refuse un payload invalide (%s) avec 400', async (_label, body) => {
     const fake = fakeClient()
-    const response = await handleStudioEvents(createRequest(body), { client: () => fake.client, rateLimit: allow })
+    const response = await handleStudioEvents(createRequest(body), {
+      client: () => fake.client,
+      rateLimit: allow,
+    })
     expect(response.status).toBe(400)
     expect(fake.sessions).toHaveLength(0)
     expect(fake.events).toHaveLength(0)
@@ -128,22 +190,40 @@ describe('POST /api/studio/events', () => {
     const fake = fakeClient()
     const store = createRateLimitStore()
     const rateLimit = (request: Request) =>
-      enforceApiRateLimit(request, 'studio-events-test', STUDIO_EVENTS_RATE_LIMIT, store)
+      enforceApiRateLimit(
+        request,
+        'studio-events-test',
+        STUDIO_EVENTS_RATE_LIMIT,
+        store,
+      )
     expect(STUDIO_EVENTS_RATE_LIMIT).toEqual({ limit: 60, windowMs: 600_000 })
     let last = 0
     for (let index = 0; index < 60; index += 1) {
-      last = (await handleStudioEvents(createRequest(VALID_BODY, { ip: '203.0.113.9' }), { client: () => fake.client, rateLimit })).status
+      last = (
+        await handleStudioEvents(
+          createRequest(VALID_BODY, { ip: '203.0.113.9' }),
+          { client: () => fake.client, rateLimit },
+        )
+      ).status
     }
     expect(last).toBe(202)
-    const blocked = await handleStudioEvents(createRequest(VALID_BODY, { ip: '203.0.113.9' }), { client: () => fake.client, rateLimit })
+    const blocked = await handleStudioEvents(
+      createRequest(VALID_BODY, { ip: '203.0.113.9' }),
+      { client: () => fake.client, rateLimit },
+    )
     expect(blocked.status).toBe(429)
     expect(blocked.headers.get('retry-after')).toBeTruthy()
-    const other = await handleStudioEvents(createRequest(VALID_BODY, { ip: '203.0.113.10' }), { client: () => fake.client, rateLimit })
+    const other = await handleStudioEvents(
+      createRequest(VALID_BODY, { ip: '203.0.113.10' }),
+      { client: () => fake.client, rateLimit },
+    )
     expect(other.status).toBe(202)
   })
 
   it('répond 503 proprement quand le client admin est indisponible ou l’insertion échoue', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
     const missing = await handleStudioEvents(createRequest(VALID_BODY), {
       client: () => {
         throw new Error('Supabase admin client misconfigured')
@@ -151,13 +231,33 @@ describe('POST /api/studio/events', () => {
       rateLimit: allow,
     })
     expect(missing.status).toBe(503)
-    await expect(missing.json()).resolves.toEqual({ ok: false, error: 'Mesure indisponible' })
+    await expect(missing.json()).resolves.toEqual({
+      ok: false,
+      error: 'Mesure indisponible',
+    })
 
     const failing = fakeClient({ insertError: 'relation does not exist' })
-    const failed = await handleStudioEvents(createRequest(VALID_BODY), { client: () => failing.client, rateLimit: allow })
+    const failed = await handleStudioEvents(createRequest(VALID_BODY), {
+      client: () => failing.client,
+      rateLimit: allow,
+    })
     expect(failed.status).toBe(503)
     const body = await failed.text()
     expect(body).not.toContain('relation does not exist')
     errorSpy.mockRestore()
   })
 })
+
+it.each(['v0.1', 'v1.0', 'v42.7'])(
+  'contrat explicite des versions événements : %s',
+  async (algorithmVersion) => {
+    const fake = fakeClient()
+    const response = await handleStudioEvents(
+      createRequest({ ...VALID_BODY, algorithmVersion }),
+      { client: () => fake.client, rateLimit: allow },
+    )
+    expect(response.status).toBe(algorithmVersion === 'v42.7' ? 400 : 202)
+    expect(fake.events).toHaveLength(algorithmVersion === 'v42.7' ? 0 : 3)
+    expect(fake.sessions).toHaveLength(algorithmVersion === 'v42.7' ? 0 : 1)
+  },
+)

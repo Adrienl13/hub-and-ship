@@ -6,7 +6,6 @@
 
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router'
 
-import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { resolveStudioAccess } from '@/lib/studio/access'
 import { isStudioEnabled } from '@/lib/studio/flags'
@@ -36,7 +35,37 @@ function StudioLayout() {
       <main className="w-full flex-1 overflow-x-hidden">
         <Outlet />
       </main>
-      <Footer />
+      <footer className="mx-auto w-full max-w-7xl border-t border-[color:var(--sand-deep)] px-6 py-8 pb-28 text-sm text-[color:var(--ink-soft)] lg:pb-8">
+        <p>
+          Du mobilier professionnel pour votre projet, en direct des fabricants.
+        </p>
+        <p className="mt-1">
+          La personnalisation sera définie à partir de votre sélection.
+        </p>
+        <nav
+          aria-label="Informations Studio"
+          className="mt-4 flex flex-wrap gap-x-6"
+        >
+          <a
+            href="/contact"
+            className="inline-flex min-h-[44px] items-center underline underline-offset-4"
+          >
+            Parlons de votre projet
+          </a>
+          <a
+            href="/legal/confidentialite"
+            className="inline-flex min-h-[44px] items-center"
+          >
+            Confidentialité
+          </a>
+          <a
+            href="/legal/mentions-legales"
+            className="inline-flex min-h-[44px] items-center"
+          >
+            Mentions légales
+          </a>
+        </nav>
+      </footer>
     </div>
   )
 }

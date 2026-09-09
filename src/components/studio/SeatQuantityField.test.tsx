@@ -53,7 +53,7 @@ describe('SeatQuantityField', () => {
     expect(status).toHaveAttribute('data-tone', 'review')
     expect(status).toHaveAttribute('data-mode', 'manual_review')
     expect(screen.getByText('Quantité sous le minimum de série (50) : nous étudions la faisabilité')).toBeInTheDocument()
-    expect(screen.getByText(/manual_review · below_moq/)).toBeInTheDocument()
+    expect(screen.queryByText(/manual_review|below_moq/)).not.toBeInTheDocument()
     expect(screen.queryByText(/Disponible en stock/)).toBeNull()
   })
 

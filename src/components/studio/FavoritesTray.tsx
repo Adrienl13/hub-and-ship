@@ -21,29 +21,35 @@ export function FavoritesTray({
   return (
     <section
       aria-label="Vos favoris"
-      className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-4"
+      className="border-t border-[color:var(--sand-deep)] pt-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <Heart className="h-4 w-4 text-[color:var(--ember)]" aria-hidden />
           Vos favoris
-          <span className="mono text-xs text-[color:var(--ink-soft)]">({favorites.length})</span>
+          <span className="mono text-xs text-[color:var(--ink-soft)]">
+            ({favorites.length})
+          </span>
         </h3>
         <button
           type="button"
           onClick={onOpenFinalists}
           disabled={favorites.length === 0}
-          className="inline-flex min-h-[44px] items-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] transition-colors hover:bg-[color:var(--ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2 disabled:opacity-40"
+          className="inline-flex min-h-[44px] items-center rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium transition-colors hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2 disabled:opacity-40"
         >
           Vos finalistes
         </button>
       </div>
       {favorites.length === 0 ? (
         <p className="mt-3 text-sm text-[color:var(--ink-soft)]">
-          Appuyez sur « J&apos;aime » pour garder une assise ici. Un favori n&apos;engage rien.
+          Appuyez sur « J&apos;aime » pour garder une assise ici. Un favori
+          n&apos;engage rien.
         </p>
       ) : (
-        <ul className="mt-3 flex gap-3 overflow-x-auto pb-1" aria-label="Liste des favoris">
+        <ul
+          className="mt-3 flex gap-3 overflow-x-auto pb-1"
+          aria-label="Liste des favoris"
+        >
           {favorites.map((product) => (
             <li key={product.id} className="relative shrink-0">
               <button

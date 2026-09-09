@@ -24,7 +24,7 @@ export function DecisionActions({
   readonly productName: string
 }) {
   const base =
-    'inline-flex min-h-[48px] min-w-[44px] flex-1 items-center justify-center gap-2 rounded-md border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2 disabled:opacity-50 motion-safe:transition-colors'
+    'inline-flex min-h-[48px] min-w-[44px] flex-1 items-center justify-center gap-1.5 rounded-md border px-2 text-xs sm:px-4 sm:text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2 disabled:opacity-50 motion-safe:transition-colors'
   return (
     <div
       role="group"
@@ -39,7 +39,7 @@ export function DecisionActions({
         aria-keyshortcuts="ArrowLeft"
         className={`${base} border-[color:var(--sand-deep)] bg-[color:var(--paper)] text-[color:var(--ink)] hover:border-[color:var(--ink)]`}
       >
-        <X className="h-4 w-4" aria-hidden />
+        <X className="h-4 w-4 shrink-0" aria-hidden />
         Pas pour moi
       </button>
       <button
@@ -50,7 +50,7 @@ export function DecisionActions({
         aria-keyshortcuts="ArrowDown"
         className={`${base} border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-[color:var(--ink-soft)] hover:border-[color:var(--ink)] hover:text-[color:var(--ink)]`}
       >
-        <SkipForward className="h-4 w-4" aria-hidden />
+        <SkipForward className="h-4 w-4 shrink-0" aria-hidden />
         Passer
       </button>
       <button
@@ -61,7 +61,7 @@ export function DecisionActions({
         aria-keyshortcuts="ArrowRight"
         className={`${base} border-[color:var(--ember)] bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember-hover)]`}
       >
-        <Heart className="h-4 w-4" aria-hidden />
+        <Heart className="h-4 w-4 shrink-0" aria-hidden />
         J&apos;aime
       </button>
     </div>
@@ -71,11 +71,27 @@ export function DecisionActions({
 export function DecisionShortcutsHint() {
   return (
     <p className="mt-3 hidden text-xs text-[color:var(--ink-soft)] sm:block">
-      Clavier : <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">←</kbd> pas
-      pour moi · <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">↓</kbd>{' '}
-      passer · <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">→</kbd> j&apos;aime ·{' '}
-      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">Z</kbd> annuler ·{' '}
-      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">D</kbd> détails
+      Clavier :{' '}
+      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">
+        ←
+      </kbd>{' '}
+      pas pour moi ·{' '}
+      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">
+        ↓
+      </kbd>{' '}
+      passer ·{' '}
+      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">
+        →
+      </kbd>{' '}
+      j&apos;aime ·{' '}
+      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">
+        Z
+      </kbd>{' '}
+      annuler ·{' '}
+      <kbd className="mono rounded-sm border border-[color:var(--sand-deep)] px-1">
+        D
+      </kbd>{' '}
+      détails
     </p>
   )
 }

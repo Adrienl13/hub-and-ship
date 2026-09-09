@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* global console, process, fetch */
 // Lot 1 Studio — contrôle des surfaces publiques Studio en conditions réelles
-// (anon, puis compte de TEST non admin si fourni). Aucune écriture.
+// (anon, puis compte de TEST non admin). Sondes INSERT : base de test uniquement.
+// Si une permission est défaillante, une sonde peut créer une ligne.
 // Échec (code 1) si :
 // - une vue publique devient illisible (401/403/vide) pour un rôle public ;
 // - une colonne interne (notes, note, created_by, updated_by, confirmed_by)
@@ -16,6 +17,8 @@
 //
 // Listes dupliquées volontairement (script sans TypeScript) ; la parité avec
 // src/lib/studio/repository.ts est vérifiée par tests/security.
+
+import { studioWriteDenied, studioWriteProbe } from './studio-write-probes.mjs'
 
 const INTERNAL_COST_COLUMNS = ['fob_usd', 'qty_per_container', 'is_loss_leader', 'table_price_modifier_rate']
 const STUDIO_INTERNAL_COLUMNS = ['notes', 'note', 'created_by', 'updated_by', 'confirmed_by', 'validated_by', 'validated_at', 'rejected_reason', 'embedding', 'source_media_id', 'evidence', 'metadata', 'reviewed_by']
@@ -169,13 +172,19 @@ async function checkRole(role, token, allowEmptyInternal) {
     }
     const starOk = isDenied(star) || (allowEmptyInternal && star.status === 200 && rows(star).length === 0)
     record(role, `${table} select=* ${allowEmptyInternal ? 'refusé ou vide' : 'refusé'}`, starOk, `HTTP ${star.status}`)
-    // Écriture directe : toujours refusée pour un rôle public.
-    const write = await fetch(`${url}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: { apikey: anonKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({}),
-    })
-    record(role, `${table} insert refusé`, write.status === 401 || write.status === 403 || write.status === 400 || write.status === 404, `HTTP ${write.status}`)
+    // Valid payloads, real product references. Only SQLSTATE 42501 proves denial.
+    const probe = studioWriteProbe(table, [...visible], String(Date.now()))
+    if (probe.limitation) {
+      lines.push(`SKIP WRITE [${role}] ${table}: ${probe.limitation}`)
+    } else {
+      const write = await fetch(`${url}/rest/v1/${table}`, {
+        method: 'POST',
+        headers: { apikey: anonKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(probe.payload),
+      })
+      const body = await write.json().catch(() => null)
+      record(role, `${table} insert refusé`, studioWriteDenied(write.status, body), `HTTP ${write.status}, SQLSTATE ${body?.code ?? 'absent'}`)
+    }
     for (const column of STUDIO_INTERNAL_COLUMNS) {
       const r = await rest(`${table}?select=${column}&limit=1`, token)
       const ok = isDenied(r) || pgCode(r) === '42703' || (allowEmptyInternal && r.status === 200 && rows(r).length === 0)

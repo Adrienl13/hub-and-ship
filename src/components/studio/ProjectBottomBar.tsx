@@ -5,10 +5,21 @@
 import { ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { formatEUR } from '@/lib/order'
 
-import { ProjectSummary, projectStateFor, hasUnresolvedItems, type ProjectSummaryProps } from './ProjectSummary'
+import {
+  ProjectSummary,
+  projectStateFor,
+  hasUnresolvedItems,
+  type ProjectSummaryProps,
+} from './ProjectSummary'
 
 const STATE_SHORT: Record<string, string> = {
   reservation_ready: 'prêt',
@@ -20,7 +31,10 @@ const STATE_SHORT: Record<string, string> = {
 export function ProjectBottomBar(props: ProjectSummaryProps) {
   const [open, setOpen] = useState(false)
   const { items, productsById, context } = props
-  const totalUnits = items.reduce((sum, item) => sum + item.requestedQuantity, 0)
+  const totalUnits = items.reduce(
+    (sum, item) => sum + item.requestedQuantity,
+    0,
+  )
   const totalHt = items.reduce((sum, item) => {
     const product = productsById.get(item.productId)
     return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
@@ -33,7 +47,7 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
     <>
       <div
         data-testid="project-bottom-bar"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[color:var(--foreground)] text-[color:var(--sand)]"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[color:var(--foreground)] pb-[env(safe-area-inset-bottom)] text-[color:var(--sand)]"
       >
         <button
           type="button"
@@ -45,10 +59,10 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold">
               {items.length === 0
-                ? 'Mon projet : aucune assise choisie'
+                ? 'Votre projet commence ici'
                 : `${first?.name ?? 'Référence à vérifier'} · ${totalUnits} unité${totalUnits > 1 ? 's' : ''}`}
             </span>
-            <span className="block text-xs text-[color:var(--sand)]/70">
+            <span className="text-[color:var(--sand)]/70 block text-xs">
               {items.length === 0
                 ? 'Choisissez une assise pour la retrouver ici'
                 : `${unresolved ? 'Montant à vérifier' : `${formatEUR(totalHt)} HT indicatif`}${state ? ` · ${STATE_SHORT[state] ?? state}` : ''}`}
@@ -58,10 +72,15 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
         </button>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" className="[&_button]:min-h-[44px] [&_button]:min-w-[44px] [&>button]:flex [&>button]:items-center [&>button]:justify-center motion-reduce:animate-none motion-reduce:transition-none max-h-[85vh] overflow-y-auto rounded-t-lg bg-[color:var(--sand-soft)]">
+        <SheetContent
+          side="bottom"
+          className="max-h-[85vh] overflow-y-auto rounded-t-lg bg-[color:var(--sand-soft)] motion-reduce:animate-none motion-reduce:transition-none [&>button]:flex [&>button]:items-center [&>button]:justify-center [&_button]:min-h-[44px] [&_button]:min-w-[44px]"
+        >
           <SheetHeader className="pr-12 text-left">
             <SheetTitle>Mon projet</SheetTitle>
-            <SheetDescription>Votre sélection, vos quantités et l&apos;état du projet.</SheetDescription>
+            <SheetDescription>
+              Votre sélection, vos quantités et l&apos;état du projet.
+            </SheetDescription>
           </SheetHeader>
           <div className="mt-4">
             <ProjectSummary {...props} compact />

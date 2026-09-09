@@ -25,7 +25,12 @@ import { UndoButton } from '@/components/studio/UndoButton'
 import { useStudioCatalog } from '@/hooks/useStudioCatalog'
 import { useStudioFavoritesSync } from '@/hooks/useStudioFavoritesSync'
 import { markStudioStarted, useStudioTracker } from '@/hooks/useStudioTracker'
-import { buildDiscoveryPool, cardImageUrl, decisionImageSrcSet, DECISION_IMAGE_SIZES } from '@/lib/studio/discovery'
+import {
+  buildDiscoveryPool,
+  cardImageUrl,
+  decisionImageSrcSet,
+  DECISION_IMAGE_SIZES,
+} from '@/lib/studio/discovery'
 import {
   affinityFromHistory,
   findDiagnosticDuel,
@@ -36,16 +41,14 @@ import {
   type EngineState,
   type Interaction,
 } from '@/lib/studio/engine'
-import {
-  assignStudioAlgorithm,
-  V1_MODEL_VERSION,
-} from '@/lib/studio/engine/versions'
+import { assignStudioAlgorithm } from '@/lib/studio/engine/versions'
 import {
   nextCardV1,
   rankVisualSeats,
   selectVisualFinalists,
   V1_POLICY,
 } from '@/lib/studio/engine/v1'
+import { resolveStudioEngine } from '@/lib/studio/engine/runtime'
 import { evaluateConvergence } from '@/lib/studio/engine/convergence'
 import { EMPTY_VISUAL_DATA } from '@/lib/studio/visual'
 import { isStudioEnabled } from '@/lib/studio/flags'
@@ -109,6 +112,18 @@ function StudioSeatsPage() {
   const [dismissedDuel, setDismissedDuel] = useState<string | null>(null)
   const [dismissedPrompt, setDismissedPrompt] = useState<number | null>(null)
   const [stage, setStage] = useState<Stage>('discover')
+  const stageRoot = useRef<HTMLDivElement>(null)
+  const previousStage = useRef(stage)
+  useEffect(() => {
+    if (previousStage.current === stage) return
+    previousStage.current = stage
+    const heading = stageRoot.current?.querySelector<HTMLElement>('h1, h2')
+    if (heading) {
+      heading.tabIndex = -1
+      heading.focus({ preventScroll: true })
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [stage])
   const [detailsId, setDetailsId] = useState<string | null>(null)
   const [quantityKey, setQuantityKey] = useState<string | null>(null)
   const [moreIds, setMoreIds] = useState<ReadonlyArray<string>>([])
@@ -159,36 +174,36 @@ function StudioSeatsPage() {
     [sessionId, history],
   )
   const visual = catalogState.catalog?.visual ?? EMPTY_VISUAL_DATA
-  const useV1 =
-    algorithmVersion === 'v1.0' &&
-    studioAccess === 'preview' &&
-    visual.versions.some(
-      (v) =>
-        v.version === 'v1.0' &&
-        v.engine === 'v1' &&
-        v.model_version === V1_MODEL_VERSION &&
-        (v.status === 'preview' || v.status === 'active'),
-    )
+  const { v1Assigned, v1Operational, effectiveEngine } = useMemo(
+    () =>
+      resolveStudioEngine(
+        algorithmVersion,
+        studioAccess,
+        pool?.engineCatalogue ?? null,
+        visual,
+      ),
+    [algorithmVersion, studioAccess, pool, visual],
+  )
   const next = useCallback(
     (state: EngineState) =>
       pool
-        ? useV1
+        ? v1Operational
           ? nextCardV1(state, pool.engineCatalogue, visual.neighbors)
           : nextCard(state, pool.engineCatalogue, algorithmVersion ?? 'v0.1')
         : null,
-    [pool, useV1, visual.neighbors, algorithmVersion],
+    [pool, v1Operational, visual.neighbors, algorithmVersion],
   )
   const card = useMemo(() => next(engineState), [next, engineState])
   const convergence = useMemo(
     () =>
-      useV1 && pool
+      v1Operational && pool
         ? evaluateConvergence(
             engineState,
             pool.engineCatalogue,
             visual.neighbors,
           )
         : null,
-    [useV1, pool, engineState, visual.neighbors],
+    [v1Operational, pool, engineState, visual.neighbors],
   )
   const showPrompt =
     convergence &&
@@ -254,7 +269,7 @@ function StudioSeatsPage() {
   )
   const selection = useMemo(() => {
     if (!pool) return null
-    if (useV1)
+    if (v1Operational)
       return selectVisualFinalists(
         discovery.favoriteIds,
         rankVisualSeats(engineState, pool.engineCatalogue, visual.neighbors),
@@ -271,7 +286,7 @@ function StudioSeatsPage() {
     pool,
     discovery.favoriteIds,
     history,
-    useV1,
+    v1Operational,
     engineState,
     visual.neighbors,
   ])
@@ -281,9 +296,9 @@ function StudioSeatsPage() {
       findDiagnosticDuel(
         discovery.finalistIds,
         catalogState.catalog?.diagnosticPairs ?? [],
-        { enabled: useV1 },
+        { enabled: v1Operational },
       ),
-    [discovery.finalistIds, catalogState.catalog, useV1],
+    [discovery.finalistIds, catalogState.catalog, v1Operational],
   )
 
   const mirrorDiff = useCallback(
@@ -375,7 +390,7 @@ function StudioSeatsPage() {
   const candidateAction = useCallback(
     (candidateId: string) => {
       const state = store.getState()
-      if (useV1 && pool) {
+      if (v1Operational && pool) {
         const candidate = rankVisualSeats(
           engineState,
           pool.engineCatalogue,
@@ -400,7 +415,7 @@ function StudioSeatsPage() {
         seatsById,
       )
     },
-    [pool, store, useV1, engineState, visual.neighbors],
+    [pool, store, v1Operational, engineState, visual.neighbors],
   )
 
   const replaceFinalist = useCallback(
@@ -511,303 +526,319 @@ function StudioSeatsPage() {
       rail={<ProjectRail {...summaryProps} />}
       bottomBar={<ProjectBottomBar {...summaryProps} />}
     >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/studio"
-            className="inline-flex min-h-[44px] items-center gap-1.5 text-sm text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Studio
-          </Link>
-          <span className="label-eyebrow text-[color:var(--ember)]">
-            Assises
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {stage !== 'discover' && (
-            <button
-              type="button"
-              onClick={() => setStage('discover')}
-              className="inline-flex min-h-[44px] items-center rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
-            >
-              Continuer la découverte
-            </button>
-          )}
-          <UndoButton onUndo={onUndo} canUndo={canUndo} />
-        </div>
-      </div>
-
-      {pool?.curationMissing && (
-        <p
-          role="status"
-          className="mb-4 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3 text-sm"
-        >
-          Le jeu « {set} » n&apos;est pas disponible : découverte sur toutes les
-          assises.
-        </p>
-      )}
-      {pool?.curationSet && (
-        <p
-          role="status"
-          className="mb-4 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3 text-sm"
-        >
-          Jeu « {pool.curationSet.label} » : {pool.seats.length} assises.
-        </p>
-      )}
-
-      {catalogState.status === 'loading' && (
+      <div ref={stageRoot}>
         <div
-          className="bg-[color:var(--sand-deep)]/50 aspect-[4/3] animate-pulse rounded-lg"
-          aria-busy="true"
-          aria-label="Chargement des assises"
-        />
-      )}
-      {catalogState.status === 'error' && (
-        <p
-          role="alert"
-          className="border-[color:var(--stamp)]/40 rounded-md border bg-[color:var(--stamp-bg)] p-4 text-sm"
+          data-studio-engine={effectiveEngine}
+          data-v1-assigned={v1Assigned}
+          className="mb-5 flex flex-wrap items-center justify-between gap-3"
         >
-          Les assises n&apos;ont pas pu être chargées. Réessayez dans un
-          instant.
-        </p>
-      )}
-      {catalogState.status === 'ready' && pool && pool.seats.length === 0 && (
-        <p className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-4 text-sm">
-          Aucune assise n&apos;est disponible pour la découverte pour le moment.
-        </p>
-      )}
-
-      {catalogState.status === 'ready' &&
-        pool &&
-        pool.seats.length > 0 &&
-        stage === 'discover' && (
-          <div className="space-y-6">
-            <div>
-              <p className="label-eyebrow text-[color:var(--ink-soft)]">
-                Voici des assises variées
-              </p>
-              <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                Gardez ce qui vous plaît, écartez le reste.
-              </h1>
-            </div>
-            {showPrompt && convergence && (
-              <section
-                aria-label="Vos pistes"
-                aria-live="polite"
-                className="rounded-lg border border-[color:var(--sand-deep)] p-4"
-                data-testid="convergence-prompt"
-              >
-                <p>
-                  {convergence.state === 'ready'
-                    ? 'On commence à cerner ce que vous recherchez.'
-                    : favorites.length
-                      ? 'On peut déjà vous proposer quelques pistes à partir de vos choix, ou continuer à explorer.'
-                      : 'Vos réponses ne dégagent pas encore de piste. Vous pouvez revoir les assises ou continuer à explorer.'}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {favorites.length > 0 && (
-                    <button
-                      type="button"
-                      className="min-h-[44px] rounded-md bg-[color:var(--ink)] px-4 text-[color:var(--sand)]"
-                      onClick={() => {
-                        tracker.track('convergence_accepted')
-                        if (selection)
-                          store.getState().setFinalists(selection.finalistIds)
-                        openFinalists()
-                      }}
-                    >
-                      Voir mes meilleures pistes
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="min-h-[44px] rounded-md border px-4"
-                    onClick={() => {
-                      setDismissedPrompt(history.length)
-                      tracker.track('exploration_continued')
-                    }}
-                  >
-                    Continuer à explorer
-                  </button>
-                </div>
-              </section>
-            )}
-            {current && card ? (
-              <DecisionCard
-                product={current}
-                position={card.position}
-                total={pool.seats.length}
-                onLike={onLike}
-                onDislike={onDislike}
-                onPass={onPass}
-                onUndo={onUndo}
-                onDetails={() => setDetailsId(current.id)}
-                shortcutsEnabled={detailsId === null}
-              />
-            ) : (
-              <div
-                className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-6"
-                data-testid="discovery-exhausted"
-              >
-                <h2 className="font-display text-xl font-bold">
-                  Vous avez vu toutes les assises.
-                </h2>
-                <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-                  Passez à vos finalistes, ou recommencez la découverte (vos
-                  favoris sont conservés).
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={openFinalists}
-                    disabled={favorites.length === 0}
-                    className="inline-flex min-h-[44px] items-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] hover:bg-[color:var(--ink-soft)] disabled:opacity-40"
-                  >
-                    Vos finalistes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const favoriteIds = store.getState().discovery.favoriteIds
-                      store.getState().resetDiscovery()
-                      for (const id of favoriteIds)
-                        store.getState().addFavorite(id)
-                    }}
-                    className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)]"
-                  >
-                    <RotateCcw className="h-4 w-4" aria-hidden />
-                    Revoir les assises
-                  </button>
-                </div>
-              </div>
-            )}
-            <FavoritesTray
-              favorites={favorites}
-              onRemove={removeFavorite}
-              onOpenFinalists={openFinalists}
-              onOpenDetails={setDetailsId}
-            />
-          </div>
-        )}
-
-      {catalogState.status === 'ready' && pool && stage === 'finalists' && (
-        <>
-          {duel && dismissedDuel !== duel.pairId && (
-            <section
-              aria-label="Comparaison diagnostique"
-              className="mb-5 rounded-lg border p-4"
+          <div className="flex items-center gap-3">
+            <Link
+              to="/studio"
+              className="inline-flex min-h-[44px] items-center gap-1.5 text-sm text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]"
             >
-              <h2 className="font-semibold">
-                Vous pouvez comparer ces deux pistes.
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[duel.leftId, duel.rightId].map((id) => {
-                  const p = productsById.get(id)
-                  return p ? (
-                    <button
-                      type="button"
-                      key={id}
-                      className="min-h-[44px] rounded border p-3"
-                      onClick={() => setDetailsId(id)}
-                    >
-                      <img
-                        src={cardImageUrl(p)}
-                        alt=""
-                        className="aspect-square w-full object-contain"
-                      />
-                      Voir {p.name}
-                    </button>
-                  ) : null
-                })}
-              </div>
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+              Studio
+            </Link>
+            <span className="label-eyebrow text-[color:var(--ember)]">
+              Assises
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {stage !== 'discover' && (
               <button
                 type="button"
-                className="mt-3 min-h-[44px] px-3 underline"
-                onClick={() => setDismissedDuel(duel.pairId)}
+                onClick={() => setStage('discover')}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
               >
-                Ignorer cette comparaison
+                Explorer encore
               </button>
-            </section>
-          )}
-          <Finalists
-            finalists={finalistProducts}
-            moreCandidates={moreIds.flatMap((id) => productsById.get(id) ?? [])}
-            canShowMore={Boolean(
-              selection &&
-              moreFinalistCandidates(selection, [
-                ...moreIds,
-                ...discovery.finalistIds,
-              ]).length > 0,
             )}
-            onShowMore={showMore}
-            onChoose={(productId) => choose(productId)}
-            onOpenDetails={setDetailsId}
-            onRemove={(productId) => store.getState().removeFinalist(productId)}
-            onReplace={replaceFinalist}
-            candidateAction={candidateAction}
-          />
-        </>
-      )}
-
-      {stage === 'quantity' && quantityItem && quantityProduct && (
-        <section
-          aria-label="Quantité"
-          className="space-y-6"
-          data-testid="quantity-stage"
-        >
-          <div>
-            <p className="label-eyebrow text-[color:var(--ember)]">
-              Votre choix
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              {quantityProduct.name}
-            </h1>
-            <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-              Cette assise est dans votre projet. Indiquez la quantité souhaitée
-              : aucune quantité n&apos;est refusée, nous vous disons simplement
-              ce qui est confirmé et ce qui demande une étude.
-            </p>
+            <UndoButton onUndo={onUndo} canUndo={canUndo} />
           </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,240px)_1fr]">
-            <div className="aspect-square overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-white">
-              <img
-                src={cardImageUrl(quantityProduct, quantityItem.variantId)}
-                alt={quantityProduct.name}
-                className="h-full w-full object-contain p-4"
-                loading="eager"
-                decoding="async"
+        </div>
+
+        {pool?.curationMissing && (
+          <p
+            role="status"
+            className="mb-4 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3 text-sm"
+          >
+            La sélection « {set} » n&apos;est pas disponible. Votre exploration
+            reste accessible.
+          </p>
+        )}
+        {pool?.curationSet && (
+          <p
+            role="status"
+            className="mb-4 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3 text-sm"
+          >
+            Sélection d’exploration : {pool.curationSet.label}.
+          </p>
+        )}
+
+        {catalogState.status === 'loading' && (
+          <div
+            className="bg-[color:var(--sand-deep)]/50 h-[clamp(300px,50svh,480px)] animate-pulse rounded-lg"
+            aria-busy="true"
+            aria-label="Chargement des assises"
+          />
+        )}
+        {catalogState.status === 'error' && (
+          <p
+            role="alert"
+            className="border-[color:var(--stamp)]/40 rounded-md border bg-[color:var(--stamp-bg)] p-4 text-sm"
+          >
+            Les assises n&apos;ont pas pu être chargées. Votre projet est
+            conservé.
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="ml-2 inline-flex min-h-[44px] items-center font-semibold underline underline-offset-4"
+            >
+              Réessayer
+            </button>
+          </p>
+        )}
+        {catalogState.status === 'ready' && pool && pool.seats.length === 0 && (
+          <p className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-4 text-sm">
+            Aucune assise n&apos;est disponible pour la découverte pour le
+            moment.
+          </p>
+        )}
+
+        {catalogState.status === 'ready' &&
+          pool &&
+          pool.seats.length > 0 &&
+          stage === 'discover' && (
+            <div className="space-y-6">
+              <div>
+                <p className="label-eyebrow text-[color:var(--ink-soft)]">
+                  Vos préférences
+                </p>
+                <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                  Quelles assises pour votre établissement ?
+                </h1>
+              </div>
+              {showPrompt && convergence && (
+                <section
+                  aria-label="Vos pistes"
+                  aria-live="polite"
+                  className="rounded-lg border-l-2 border-[color:var(--ember)] bg-[color:var(--paper)] p-5"
+                  data-testid="convergence-prompt"
+                >
+                  <p>
+                    {convergence.state === 'ready'
+                      ? 'On commence à cerner ce que vous recherchez.'
+                      : favorites.length
+                        ? 'On peut déjà vous proposer quelques pistes à partir de vos choix, ou continuer à explorer.'
+                        : 'Vos réponses ne dégagent pas encore de piste. Vous pouvez revoir les assises ou continuer à explorer.'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {favorites.length > 0 && (
+                      <button
+                        type="button"
+                        className="min-h-[48px] w-full rounded-md bg-[color:var(--ink)] px-5 font-semibold text-[color:var(--sand)] sm:w-auto"
+                        onClick={() => {
+                          tracker.track('convergence_accepted')
+                          if (selection)
+                            store.getState().setFinalists(selection.finalistIds)
+                          openFinalists()
+                        }}
+                      >
+                        Voir mes meilleures pistes
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="min-h-[44px] px-2 text-sm underline underline-offset-4"
+                      onClick={() => {
+                        setDismissedPrompt(history.length)
+                        tracker.track('exploration_continued')
+                      }}
+                    >
+                      Continuer à explorer
+                    </button>
+                  </div>
+                </section>
+              )}
+              {current && card ? (
+                <DecisionCard
+                  product={current}
+                  position={card.position}
+                  onLike={onLike}
+                  onDislike={onDislike}
+                  onPass={onPass}
+                  onUndo={onUndo}
+                  onDetails={() => setDetailsId(current.id)}
+                  shortcutsEnabled={detailsId === null}
+                />
+              ) : (
+                <div
+                  className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-6"
+                  data-testid="discovery-exhausted"
+                >
+                  <h2 className="font-display text-xl font-bold">
+                    Faisons le point sur votre projet.
+                  </h2>
+                  <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
+                    Comparez vos pistes, ou revisitez les assises. Vos favoris
+                    sont conservés.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={openFinalists}
+                      disabled={favorites.length === 0}
+                      className="inline-flex min-h-[44px] items-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] hover:bg-[color:var(--ink-soft)] disabled:opacity-40"
+                    >
+                      Vos finalistes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const favoriteIds =
+                          store.getState().discovery.favoriteIds
+                        store.getState().resetDiscovery()
+                        for (const id of favoriteIds)
+                          store.getState().addFavorite(id)
+                      }}
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)]"
+                    >
+                      <RotateCcw className="h-4 w-4" aria-hidden />
+                      Revoir les assises
+                    </button>
+                  </div>
+                </div>
+              )}
+              <FavoritesTray
+                favorites={favorites}
+                onRemove={removeFavorite}
+                onOpenFinalists={openFinalists}
+                onOpenDetails={setDetailsId}
               />
             </div>
-            <div className="space-y-4">
-              <SeatQuantityField
-                item={quantityItem}
-                product={quantityProduct}
-                context={context}
-                onChange={(quantity) => setQuantity(quantityItem, quantity)}
-              />
-              <div className="flex flex-wrap gap-2">
+          )}
+
+        {catalogState.status === 'ready' && pool && stage === 'finalists' && (
+          <>
+            <Finalists
+              visualRanking={v1Operational}
+              finalists={finalistProducts}
+              moreCandidates={moreIds.flatMap(
+                (id) => productsById.get(id) ?? [],
+              )}
+              canShowMore={Boolean(
+                selection &&
+                moreFinalistCandidates(selection, [
+                  ...moreIds,
+                  ...discovery.finalistIds,
+                ]).length > 0,
+              )}
+              onShowMore={showMore}
+              onChoose={(productId) => choose(productId)}
+              onOpenDetails={setDetailsId}
+              onRemove={(productId) =>
+                store.getState().removeFinalist(productId)
+              }
+              onReplace={replaceFinalist}
+              candidateAction={candidateAction}
+            />
+            {duel && dismissedDuel !== duel.pairId && (
+              <section
+                aria-label="Comparaison diagnostique"
+                className="mt-6 border-t border-[color:var(--sand-deep)] pt-4"
+              >
+                <h2 className="font-semibold">
+                  Vous pouvez comparer ces deux pistes.
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {[duel.leftId, duel.rightId].map((id) => {
+                    const p = productsById.get(id)
+                    return p ? (
+                      <button
+                        type="button"
+                        key={id}
+                        className="min-h-[44px] rounded border p-3"
+                        onClick={() => setDetailsId(id)}
+                      >
+                        <img
+                          src={cardImageUrl(p)}
+                          alt=""
+                          className="h-24 w-full object-contain"
+                        />
+                        Voir {p.name}
+                      </button>
+                    ) : null
+                  })}
+                </div>
                 <button
                   type="button"
-                  onClick={() => setStage('discover')}
-                  className="inline-flex min-h-[44px] items-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] hover:bg-[color:var(--ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
-                  data-testid="quantity-continue"
+                  className="mt-3 min-h-[44px] px-3 underline"
+                  onClick={() => setDismissedDuel(duel.pairId)}
                 >
-                  Continuer la découverte
+                  Ignorer cette comparaison
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailsId(quantityProduct.id)}
-                  className="inline-flex min-h-[44px] items-center rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
-                >
-                  Changer de design
-                </button>
+              </section>
+            )}
+          </>
+        )}
+
+        {stage === 'quantity' && quantityItem && quantityProduct && (
+          <section
+            aria-label="Quantité"
+            className="space-y-6"
+            data-testid="quantity-stage"
+          >
+            <div>
+              <p className="label-eyebrow text-[color:var(--ember)]">
+                Votre choix
+              </p>
+              <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                {quantityProduct.name}
+              </h1>
+              <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
+                Indiquez la quantité souhaitée pour votre projet.
+              </p>
+            </div>
+            <div className="grid grid-cols-[80px_minmax(0,1fr)] gap-4 md:grid-cols-[minmax(0,240px)_1fr] md:gap-6">
+              <div className="aspect-square self-start overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-white">
+                <img
+                  src={cardImageUrl(quantityProduct, quantityItem.variantId)}
+                  alt={quantityProduct.name}
+                  className="h-full w-full object-contain p-4"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+              <div className="space-y-4">
+                <SeatQuantityField
+                  item={quantityItem}
+                  product={quantityProduct}
+                  context={context}
+                  onChange={(quantity) => setQuantity(quantityItem, quantity)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStage('discover')}
+                    className="inline-flex min-h-[44px] items-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] hover:bg-[color:var(--ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
+                    data-testid="quantity-continue"
+                  >
+                    Explorer encore
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDetailsId(quantityProduct.id)}
+                    className="inline-flex min-h-[44px] items-center rounded-md border border-[color:var(--sand-deep)] px-4 text-sm font-medium hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
+                  >
+                    Changer de design
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
-
+          </section>
+        )}
+      </div>
       <StudioProductDetails
         product={detailsProduct}
         open={detailsProduct !== null}

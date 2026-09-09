@@ -8,6 +8,7 @@
 // client admin) ; le navigateur n'a aucun droit sur studio_events.
 
 import { z } from 'zod'
+import { ALGORITHM_VERSIONS } from './engine/versions'
 
 export const LOT_2_EVENT_TYPES = [
   'studio_started',
@@ -43,7 +44,7 @@ export const studioSessionIdSchema = z
   .max(64)
   .regex(/^[A-Za-z0-9-]+$/)
 
-export const algorithmVersionSchema = z.string().regex(/^v\d+\.\d+$/)
+export const algorithmVersionSchema = z.enum(ALGORITHM_VERSIONS)
 
 /** Payload minimal : uniquement des clés connues, toutes optionnelles. */
 export const studioEventPayloadSchema = z

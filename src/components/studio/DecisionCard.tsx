@@ -8,22 +8,35 @@ import { Info } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { SafeImage } from '@/components/SafeImage'
-import { cardImageUrl, decisionImageSrcSet, DECISION_IMAGE_SIZES, seatSpecLine } from '@/lib/studio/discovery'
+import {
+  cardImageUrl,
+  decisionImageSrcSet,
+  DECISION_IMAGE_SIZES,
+  seatSpecLine,
+} from '@/lib/studio/discovery'
 import { materialLabel, seatKindLabel } from '@/lib/studio/labels'
 import type { StudioProduct } from '@/lib/studio/types'
 
-import { DECISION_SHORTCUTS, DecisionActions, DecisionShortcutsHint } from './DecisionActions'
+import {
+  DECISION_SHORTCUTS,
+  DecisionActions,
+  DecisionShortcutsHint,
+} from './DecisionActions'
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   const tag = target.tagName
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
+  return (
+    tag === 'INPUT' ||
+    tag === 'TEXTAREA' ||
+    tag === 'SELECT' ||
+    target.isContentEditable
+  )
 }
 
 export interface DecisionCardProps {
   readonly product: StudioProduct
   readonly position: number
-  readonly total: number
   readonly onLike: () => void
   readonly onDislike: () => void
   readonly onPass: () => void
@@ -36,7 +49,6 @@ export interface DecisionCardProps {
 export function DecisionCard({
   product,
   position,
-  total,
   onLike,
   onDislike,
   onPass,
@@ -47,7 +59,13 @@ export function DecisionCard({
   useEffect(() => {
     if (!shortcutsEnabled || typeof document === 'undefined') return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
+      if (
+        event.defaultPrevented ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      )
+        return
       if (isTypingTarget(event.target)) return
       switch (event.key) {
         case DECISION_SHORTCUTS.like:
@@ -91,13 +109,13 @@ export function DecisionCard({
 
   return (
     <article
-      aria-label={`Assise ${position + 1} sur ${total} : ${product.name}`}
+      aria-label={`Choix ${position + 1} : ${product.name}`}
       className="motion-safe:animate-fade-in"
       data-testid="decision-card"
       key={product.id}
     >
-      <div className="overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] shadow-paper">
-        <div className="relative aspect-[4/3] bg-white sm:aspect-[5/4] lg:aspect-[4/3]">
+      <div className="shadow-paper overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)]">
+        <div className="relative h-[clamp(220px,38svh,380px)] bg-white lg:h-[clamp(280px,42svh,420px)]">
           <SafeImage
             src={image}
             srcSet={decisionImageSrcSet(product)}
@@ -107,20 +125,22 @@ export function DecisionCard({
             className="h-full w-full"
             imgClassName="h-full w-full object-contain p-6 sm:p-10"
           />
-          <span className="label-eyebrow absolute left-4 top-4 rounded-sm bg-[color:var(--sand)]/90 px-2 py-1 text-[color:var(--ink-soft)]">
-            {position + 1} / {total}
+          <span className="label-eyebrow bg-[color:var(--sand)]/90 absolute left-4 top-4 rounded-sm px-2 py-1 text-[color:var(--ink-soft)]">
+            Choix {position + 1}
           </span>
         </div>
-        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-6">
+        <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
           <div className="min-w-0">
             <div className="label-eyebrow text-[color:var(--ink-soft)]">
               {[kind, material].filter(Boolean).join(' · ') || 'Assise'}
             </div>
-            <h2 className="mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl">
+            <h2 className="mt-1 truncate font-display text-xl font-bold tracking-tight sm:text-2xl">
               {product.name}
             </h2>
             {spec && (
-              <p className="mt-1 text-sm tabular-nums text-[color:var(--ink-soft)]">{spec}</p>
+              <p className="mt-1 text-sm tabular-nums text-[color:var(--ink-soft)]">
+                {spec}
+              </p>
             )}
           </div>
           {onDetails && (

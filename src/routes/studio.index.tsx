@@ -26,40 +26,64 @@ function StudioIndex() {
     <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:py-16">
       <p className="label-eyebrow text-[color:var(--ember)]">Studio Projet</p>
       <h1 className="mt-3 max-w-3xl font-display text-h1 font-bold tracking-tight">
-        Composez votre terrasse, assise par assise.
+        Le mobilier de votre projet commence ici.
       </h1>
       <p className="mt-4 max-w-2xl text-[color:var(--ink-soft)]">
-        Un espace de travail, pas un catalogue : vous regardez des assises variées, vous gardez
-        vos favoris, vous comparez vos finalistes puis vous choisissez. Quantité libre, sans
-        arrondi. Votre projet reste sur cet appareil.
+        Des assises adaptées à votre établissement, du mobilier professionnel en
+        direct des fabricants. Exprimez vos préférences, comparez vos pistes,
+        puis indiquez la quantité dont vous avez besoin.
       </p>
 
       <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Link to="/studio/assises" search={{ entry: 'full_project' }} className={cardClass} data-testid="entry-full-project">
-          <LayoutGrid className="h-6 w-6 text-[color:var(--ember)]" aria-hidden />
+        <Link
+          to="/studio/assises"
+          search={{ entry: 'full_project' }}
+          className={cardClass}
+          data-testid="entry-full-project"
+        >
+          <LayoutGrid
+            className="h-6 w-6 text-[color:var(--ember)]"
+            aria-hidden
+          />
           <span>
-            <span className="block font-display text-xl font-bold">Projet complet</span>
+            <span className="block font-display text-xl font-bold">
+              Projet complet
+            </span>
             <span className="mt-1 block text-sm text-[color:var(--ink-soft)]">
               Assises d&apos;abord, puis tables. Vous avancez à votre rythme.
             </span>
           </span>
           <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold">
             Commencer par les assises
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            <ArrowRight
+              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden
+            />
           </span>
         </Link>
 
-        <Link to="/studio/assises" search={{ entry: 'seats' }} className={cardClass} data-testid="entry-seats">
+        <Link
+          to="/studio/assises"
+          search={{ entry: 'seats' }}
+          className={cardClass}
+          data-testid="entry-seats"
+        >
           <Armchair className="h-6 w-6 text-[color:var(--ember)]" aria-hidden />
           <span>
-            <span className="block font-display text-xl font-bold">Assises</span>
+            <span className="block font-display text-xl font-bold">
+              Assises
+            </span>
             <span className="mt-1 block text-sm text-[color:var(--ink-soft)]">
-              Chaises et fauteuils de terrasse : découverte carte par carte.
+              Trouvez les chaises et fauteuils qui correspondent à votre
+              établissement.
             </span>
           </span>
           <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold">
             Découvrir les assises
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            <ArrowRight
+              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden
+            />
           </span>
         </Link>
 
@@ -74,21 +98,29 @@ function StudioIndex() {
           <span>
             <span className="block font-display text-xl font-bold">Tables</span>
             <span className="mt-1 block text-sm text-[color:var(--ink-soft)]">
-              Plateaux et piètements se composent aujourd&apos;hui dans le catalogue. L&apos;expérience
-              Studio Tables arrive dans une prochaine étape.
+              Plateaux et piètements se composent aujourd&apos;hui dans le
+              catalogue. L&apos;expérience Studio Tables arrive dans une
+              prochaine étape.
             </span>
           </span>
           <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold">
             Ouvrir le catalogue tables
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            <ArrowRight
+              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden
+            />
           </span>
         </Link>
       </div>
 
       {itemCount > 0 && (
         <p className="mt-8 text-sm text-[color:var(--ink-soft)]">
-          Un projet est en cours sur cet appareil ({itemCount} ligne{itemCount > 1 ? 's' : ''}).{' '}
-          <Link to="/studio/assises" className="inline-flex min-h-[44px] min-w-[44px] items-center font-semibold text-[color:var(--ember)] underline-offset-2 hover:underline">
+          Un projet est en cours sur cet appareil ({itemCount} ligne
+          {itemCount > 1 ? 's' : ''}).{' '}
+          <Link
+            to="/studio/assises"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center font-semibold text-[color:var(--ember)] underline-offset-2 hover:underline"
+          >
             Reprendre
           </Link>
         </p>

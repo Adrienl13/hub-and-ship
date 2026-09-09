@@ -5,7 +5,7 @@ export function ProjectRail(props: ProjectSummaryProps) {
   return (
     <div
       data-testid="project-rail"
-      className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5"
+      className="border-l border-[color:var(--sand-deep)] py-3 pl-6"
     >
       <ProjectSummary {...props} />
     </div>

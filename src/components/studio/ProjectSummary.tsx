@@ -12,7 +12,12 @@ import { resolveFulfillment } from '@/lib/studio/fulfillment'
 import { computeProjectState } from '@/lib/studio/project-state'
 import { describeQuantity } from '@/lib/studio/quantity-feedback'
 import { computeReadiness } from '@/lib/studio/readiness'
-import type { FulfillmentContext, ProjectState, StudioProduct, StudioProjectItem } from '@/lib/studio/types'
+import type {
+  FulfillmentContext,
+  ProjectState,
+  StudioProduct,
+  StudioProjectItem,
+} from '@/lib/studio/types'
 import type { StudioEntry } from '@/stores/studio.store'
 
 const STATE_LABEL: Record<ProjectState, string> = {
@@ -44,7 +49,12 @@ export function hasUnresolvedItems(
   items: ReadonlyArray<StudioProjectItem>,
   productsById: ReadonlyMap<string, StudioProduct>,
 ): boolean {
-  return items.some((item) => !productsById.get(item.productId)?.variants.some((variant) => variant.id === item.variantId))
+  return items.some(
+    (item) =>
+      !productsById
+        .get(item.productId)
+        ?.variants.some((variant) => variant.id === item.variantId),
+  )
 }
 
 export function projectStateFor(
@@ -80,7 +90,10 @@ export function ProjectSummary({
 }: ProjectSummaryProps) {
   const state = projectStateFor(items, productsById, context)
   const unresolved = hasUnresolvedItems(items, productsById)
-  const totalUnits = items.reduce((sum, item) => sum + item.requestedQuantity, 0)
+  const totalUnits = items.reduce(
+    (sum, item) => sum + item.requestedQuantity,
+    0,
+  )
   const totalHt = items.reduce((sum, item) => {
     const product = productsById.get(item.productId)
     return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
@@ -89,9 +102,13 @@ export function ProjectSummary({
   return (
     <div className="space-y-4">
       <div>
-        <div className="label-eyebrow text-[color:var(--ember)]">Mon projet</div>
+        <div className="label-eyebrow text-[color:var(--ember)]">
+          Mon projet
+        </div>
         <div className="mt-1 flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-bold">{entry ? ENTRY_LABEL[entry] : 'Studio'}</h2>
+          <h2 className="font-display text-lg font-bold">
+            {entry ? ENTRY_LABEL[entry] : 'Studio'}
+          </h2>
           {state && (
             <span
               data-testid="project-state"
@@ -105,25 +122,45 @@ export function ProjectSummary({
 
       {items.length === 0 ? (
         <p className="text-sm text-[color:var(--ink-soft)]">
-          Aucune assise choisie pour l&apos;instant. Un favori n&apos;est pas un choix : le projet se
-          remplit avec « Choisir cette assise ».
+          Votre sélection prendra place ici. Commencez par ce qui vous plaît,
+          puis choisissez une piste.
         </p>
       ) : (
         <ul className="space-y-3" aria-label="Lignes du projet">
           {items.map((item) => {
             const product = productsById.get(item.productId)
-            if (!product || !product.variants.some((variant) => variant.id === item.variantId)) return (
-              <li key={`${item.productId}:${item.variantId}`} className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3">
-                <div className="text-sm font-semibold">Référence à vérifier</div>
-                <p className="mt-1 text-xs text-[color:var(--ink-soft)]">Cette référence n&apos;est pas disponible dans le catalogue actuel.</p>
-                <p className="mt-2 text-xs">Quantité demandée : {item.requestedQuantity}</p>
-                <button type="button" onClick={() => onRemove(item)} aria-label="Retirer la référence à vérifier du projet"
-                  className="mt-2 inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 text-xs font-medium text-[color:var(--stamp)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)]">
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden /> Retirer
-                </button>
-              </li>
+            if (
+              !product ||
+              !product.variants.some((variant) => variant.id === item.variantId)
             )
-            const variant = product.variants.find((entry) => entry.id === item.variantId)
+              return (
+                <li
+                  key={`${item.productId}:${item.variantId}`}
+                  className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-3"
+                >
+                  <div className="text-sm font-semibold">
+                    Référence à vérifier
+                  </div>
+                  <p className="mt-1 text-xs text-[color:var(--ink-soft)]">
+                    Cette référence n&apos;est pas disponible dans le catalogue
+                    actuel.
+                  </p>
+                  <p className="mt-2 text-xs">
+                    Quantité demandée : {item.requestedQuantity}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(item)}
+                    aria-label="Retirer la référence à vérifier du projet"
+                    className="mt-2 inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 text-xs font-medium text-[color:var(--stamp)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden /> Retirer
+                  </button>
+                </li>
+              )
+            const variant = product.variants.find(
+              (entry) => entry.id === item.variantId,
+            )
             const feedback = describeQuantity(item, product, context)
             return (
               <li
@@ -140,11 +177,19 @@ export function ProjectSummary({
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{product.name}</div>
-                    {variant && <div className="truncate text-xs text-[color:var(--ink-soft)]">{variant.name}</div>}
+                    <div className="truncate text-sm font-semibold">
+                      {product.name}
+                    </div>
+                    {variant && (
+                      <div className="truncate text-xs text-[color:var(--ink-soft)]">
+                        {variant.name}
+                      </div>
+                    )}
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                       <label className="flex items-center gap-1.5">
-                        <span className="text-[color:var(--ink-soft)]">Qté</span>
+                        <span className="text-[color:var(--ink-soft)]">
+                          Qté
+                        </span>
                         <input
                           type="number"
                           inputMode="numeric"
@@ -165,7 +210,10 @@ export function ProjectSummary({
                     </div>
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-[color:var(--ink-soft)]" data-tone={feedback.tone}>
+                <p
+                  className="mt-2 text-xs text-[color:var(--ink-soft)]"
+                  data-tone={feedback.tone}
+                >
                   {feedback.title}
                 </p>
                 <div className="mt-2 flex gap-2">
@@ -200,11 +248,13 @@ export function ProjectSummary({
             <span className="text-[color:var(--ink-soft)]">
               {totalUnits} unité{totalUnits > 1 ? 's' : ''}
             </span>
-            <span className="font-display text-lg font-bold tabular-nums">{unresolved ? 'Montant à vérifier' : `${formatEUR(totalHt)} HT`}</span>
+            <span className="font-display text-lg font-bold tabular-nums">
+              {unresolved ? 'Montant à vérifier' : `${formatEUR(totalHt)} HT`}
+            </span>
           </div>
           <p className="mt-1 text-xs text-[color:var(--ink-soft)]">
-            Montant indicatif au prix public. Le devis et la réservation arrivent dans une prochaine
-            étape du Studio.
+            Montant indicatif au prix public. Le devis et la réservation
+            arrivent dans une prochaine étape du Studio.
           </p>
         </div>
       )}

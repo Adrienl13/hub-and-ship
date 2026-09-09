@@ -8,7 +8,9 @@ import { DecisionCard } from './DecisionCard'
 
 const product = seat('bis-001', { name: 'Chaise RIVOLI', basePriceHt: 62 })
 
-function renderCard(overrides: Partial<React.ComponentProps<typeof DecisionCard>> = {}) {
+function renderCard(
+  overrides: Partial<React.ComponentProps<typeof DecisionCard>> = {},
+) {
   const handlers = {
     onLike: vi.fn(),
     onDislike: vi.fn(),
@@ -16,21 +18,45 @@ function renderCard(overrides: Partial<React.ComponentProps<typeof DecisionCard>
     onUndo: vi.fn(),
     onDetails: vi.fn(),
   }
-  render(<DecisionCard product={product} position={2} total={40} {...handlers} {...overrides} />)
+  render(
+    <DecisionCard
+      product={product}
+      position={2}
+      {...handlers}
+      {...overrides}
+    />,
+  )
   return handlers
 }
 
 describe('DecisionCard', () => {
   it('affiche image, nom, matière, une spécification et les trois actions visibles', () => {
     renderCard()
-    expect(screen.getByRole('img', { name: 'Chaise RIVOLI' })).toHaveAttribute('loading', 'eager')
-    expect(screen.getByRole('heading', { name: 'Chaise RIVOLI' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Chaise RIVOLI' })).toHaveAttribute(
+      'loading',
+      'eager',
+    )
+    expect(
+      screen.getByRole('heading', { name: 'Chaise RIVOLI' }),
+    ).toBeInTheDocument()
     expect(screen.getByText('Chaise · Tressage PE')).toBeInTheDocument()
     expect(screen.getByText('48 × 56 × 86 cm')).toBeInTheDocument()
-    expect(screen.getByText('3 / 40')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' })).toBeVisible()
-    expect(screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" })).toBeVisible()
+    expect(screen.getByText('Choix 3')).toBeInTheDocument()
+    expect(screen.getByRole('article')).toHaveAccessibleName(
+      'Choix 3 : Chaise RIVOLI',
+    )
+    expect(screen.getByRole('article').textContent).not.toMatch(
+      /\d+\s*\/\s*\d+/,
+    )
+    expect(
+      screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" }),
+    ).toBeVisible()
   })
 
   it('ne montre jamais le prix pendant la découverte', () => {
@@ -41,7 +67,11 @@ describe('DecisionCard', () => {
 
   it('les boutons ont une zone tactile ≥ 44 px et des aria-label', () => {
     renderCard()
-    for (const name of ['Pas pour moi : Chaise RIVOLI', 'Passer : Chaise RIVOLI', "J'aime : Chaise RIVOLI"]) {
+    for (const name of [
+      'Pas pour moi : Chaise RIVOLI',
+      'Passer : Chaise RIVOLI',
+      "J'aime : Chaise RIVOLI",
+    ]) {
       const button = screen.getByRole('button', { name })
       expect(button.className).toMatch(/min-h-\[48px\]/)
       expect(button.className).toMatch(/min-w-\[44px\]/)
@@ -52,10 +82,18 @@ describe('DecisionCard', () => {
   it('déclenche les callbacks au clic', async () => {
     const user = userEvent.setup()
     const handlers = renderCard()
-    await user.click(screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" }))
-    await user.click(screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' }))
-    await user.click(screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' }))
-    await user.click(screen.getByRole('button', { name: 'Voir les détails de Chaise RIVOLI' }))
+    await user.click(
+      screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: 'Voir les détails de Chaise RIVOLI' }),
+    )
     expect(handlers.onLike).toHaveBeenCalledTimes(1)
     expect(handlers.onDislike).toHaveBeenCalledTimes(1)
     expect(handlers.onPass).toHaveBeenCalledTimes(1)
@@ -93,14 +131,22 @@ describe('DecisionCard', () => {
   it('navigation clavier : les actions sont dans l’ordre Pas pour moi → Passer → J’aime', async () => {
     const user = userEvent.setup()
     renderCard()
-    const details = screen.getByRole('button', { name: 'Voir les détails de Chaise RIVOLI' })
+    const details = screen.getByRole('button', {
+      name: 'Voir les détails de Chaise RIVOLI',
+    })
     details.focus()
     await user.tab()
-    expect(screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' })).toHaveFocus()
+    expect(
+      screen.getByRole('button', { name: 'Pas pour moi : Chaise RIVOLI' }),
+    ).toHaveFocus()
     await user.tab()
-    expect(screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' })).toHaveFocus()
+    expect(
+      screen.getByRole('button', { name: 'Passer : Chaise RIVOLI' }),
+    ).toHaveFocus()
     await user.tab()
-    expect(screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" })).toHaveFocus()
+    expect(
+      screen.getByRole('button', { name: "J'aime : Chaise RIVOLI" }),
+    ).toHaveFocus()
   })
 
   it('reduced motion : l’animation d’entrée est conditionnée à motion-safe', () => {
@@ -112,6 +158,15 @@ describe('DecisionCard', () => {
 })
 
 it('sert les deux résolutions du même Decision Image validé', () => {
-  renderCard({ product: { ...product, decisionImageUrl: 'https://example.test/1200.webp', decisionThumbUrl: 'https://example.test/600.webp' } })
-  expect(screen.getByRole('img', { name: product.name })).toHaveAttribute('srcset', 'https://example.test/600.webp 600w, https://example.test/1200.webp 1200w')
+  renderCard({
+    product: {
+      ...product,
+      decisionImageUrl: 'https://example.test/1200.webp',
+      decisionThumbUrl: 'https://example.test/600.webp',
+    },
+  })
+  expect(screen.getByRole('img', { name: product.name })).toHaveAttribute(
+    'srcset',
+    'https://example.test/600.webp 600w, https://example.test/1200.webp 1200w',
+  )
 })

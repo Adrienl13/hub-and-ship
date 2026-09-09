@@ -150,7 +150,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     const isMobile = (page.viewportSize()?.width ?? 1280) < 1024 || testInfo.project.name === 'mobile-chrome'
 
     await page.goto('/studio')
-    await expect(page.getByRole('heading', { name: /Composez votre terrasse/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Le mobilier de votre projet commence ici/ })).toBeVisible()
     await page.waitForLoadState('networkidle')
     await page.getByTestId('entry-seats').click()
     await expect(page).toHaveURL(/\/studio\/assises\?entry=seats$/)
@@ -177,13 +177,13 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     await expect(card.getByRole('heading')).not.toHaveText(firstName ?? '')
     await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('ArrowDown')
-    await expect(card).toContainText('4 / 6')
+    await expect(card).toContainText('Choix 4')
 
     // Undo restaure la carte précédente (3/6), puis Z aussi.
     await page.getByRole('button', { name: 'Annuler la dernière action' }).click()
-    await expect(card).toContainText('3 / 6')
+    await expect(card).toContainText('Choix 3')
     await page.keyboard.press('z')
-    await expect(card).toContainText('2 / 6')
+    await expect(card).toContainText('Choix 2')
     await page.keyboard.press('ArrowRight')
     await page.keyboard.press('ArrowRight')
 
@@ -281,7 +281,14 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     await page.route(`${SUPABASE}/rest/v1/studio_curation_sets_public*`, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 'pilot', label: 'Pilote', product_ids: ['e2e-001'] }]) }))
     await page.goto('/studio/assises?set=pilot')
     await expect(page.getByRole('status').filter({ hasText: /pilot/i })).toHaveCount(0)
-    await expect(page.getByTestId('decision-card')).toContainText('1 / 6')
+    await expect(page.getByTestId('decision-card')).toContainText('Choix 1')
+    const names = new Set<string>()
+    for (let index = 0; index < 6; index++) {
+      names.add(await page.getByTestId('decision-card').getByRole('heading').innerText())
+      await page.getByRole('button', { name: /^Passer :/ }).click()
+    }
+    expect(names.size).toBe(6)
+    await expect(page.getByTestId('discovery-exhausted')).toBeVisible()
   })
 
   test("l'échec de l'API d'événements ne casse pas le parcours", async ({ page }) => {
@@ -289,7 +296,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     await page.route('**/api/studio/events', (route) => route.fulfill({ status: 503, body: '{"ok":false}' }))
     await page.goto('/studio/assises')
     await page.getByRole('button', { name: /^J'aime :/ }).click()
-    await expect(page.getByTestId('decision-card')).toContainText('2 / 6')
+    await expect(page.getByTestId('decision-card')).toContainText('Choix 2')
   })
 })
 
