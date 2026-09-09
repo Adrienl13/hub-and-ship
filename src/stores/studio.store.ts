@@ -1,5 +1,5 @@
 // Store Studio (lot 1 + lot 2) : état LOCAL persisté dans le navigateur
-// (clé terrassea-studio-v1, version 3) avec journal d'actions inversibles
+// (clé terrassea-studio-v1, version 4) avec journal d'actions inversibles
 // (Undo, profondeur 50). Aucune persistance serveur ici.
 //
 // Deux espaces distincts, un seul store :
@@ -15,6 +15,13 @@
 // product_favorites par les fonctions existantes (hook useStudioFavoritesSync),
 // sans que ce store en dépende : un anonyme reste pleinement servi.
 
+import {
+  sanitizeTables,
+  reconcileTable,
+  type TableConfiguration,
+} from '@/lib/studio/table-project'
+import type { TableCompatibilityData } from '@/lib/studio/compatibility'
+import type { StudioProduct } from '@/lib/studio/types'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -24,12 +31,13 @@ import type { InteractionAction } from '@/lib/studio/engine/types'
 import type { StudioProjectItem, StudioRole } from '@/lib/studio/types'
 
 export const STUDIO_STORE_KEY = 'terrassea-studio-v1'
-export const STUDIO_STORE_VERSION = 3
+export const STUDIO_STORE_VERSION = 4
 export const STUDIO_UNDO_DEPTH = 50
 
 export type StudioEntry = 'full_project' | 'seats' | 'tables'
 
 export interface StudioProjectDraft {
+  readonly tables?: ReadonlyArray<TableConfiguration>
   readonly entry: StudioEntry | null
   readonly items: ReadonlyArray<StudioProjectItem>
   readonly updatedAt: string | null
@@ -51,6 +59,8 @@ export interface StudioDiscoveryState {
 }
 
 export type StudioActionLabel =
+  | 'save_table'
+  | 'remove_table'
   | 'set_entry'
   | 'upsert_item'
   | 'set_quantity'
@@ -78,6 +88,12 @@ export interface StudioJournalEntry {
 }
 
 export interface StudioStoreState extends StudioSnapshot {
+  readonly saveTable: (
+    table: TableConfiguration,
+    products: ReadonlyArray<StudioProduct>,
+    compatibility: TableCompatibilityData,
+  ) => void
+  readonly removeTable: (id: string) => void
   readonly algorithmVersion: StudioAlgorithmVersion | null
   readonly initializeAlgorithm: (version: StudioAlgorithmVersion) => void
   readonly sessionId: string
@@ -122,7 +138,7 @@ export function createStudioSessionId(): string {
 }
 
 export function emptyProject(): StudioProjectDraft {
-  return { entry: null, items: [], updatedAt: null }
+  return { entry: null, items: [], tables: [], updatedAt: null }
 }
 
 export function emptyDiscovery(): StudioDiscoveryState {
@@ -228,6 +244,7 @@ function sanitizeProject(value: unknown): StudioProjectDraft {
         ? legacy.entry
         : null,
     items: sanitizeItems(legacy.items),
+    tables: sanitizeTables(legacy.tables),
     updatedAt: typeof legacy.updatedAt === 'string' ? legacy.updatedAt : null,
   }
 }
@@ -280,9 +297,36 @@ export function migrateStudioState(
     return {
       ...raw,
       algorithmVersion:
-        version >= 3 && raw.algorithmVersion === 'v1.0' ? 'v1.0' : 'v0.1',
+        version >= 3 && raw.algorithmVersion === null
+          ? null
+          : version >= 3 && raw.algorithmVersion === 'v1.0'
+            ? 'v1.0'
+            : 'v0.1',
       sessionId,
       project: sanitizeProject(raw.project),
+      journal: Array.isArray(raw.journal)
+        ? raw.journal
+            .flatMap((entry) => {
+              if (!entry || typeof entry !== 'object') return []
+              const journal = entry as StudioJournalEntry
+              if (
+                !journal.before?.project ||
+                !journal.before?.discovery ||
+                typeof journal.label !== 'string'
+              )
+                return []
+              return [
+                {
+                  ...journal,
+                  before: {
+                    project: sanitizeProject(journal.before.project),
+                    discovery: sanitizeDiscovery(journal.before.discovery),
+                  },
+                },
+              ]
+            })
+            .slice(-STUDIO_UNDO_DEPTH)
+        : [],
       discovery: sanitizeDiscovery(raw.discovery),
     }
   }
@@ -298,6 +342,47 @@ export function migrateStudioState(
 export const useStudioStore = create<StudioStoreState>()(
   persist(
     (set, get) => ({
+      saveTable: (table, products, compatibility) =>
+        set((state) => {
+          const clean = sanitizeTables([table])[0]
+          if (!clean) return state
+          const next = reconcileTable(clean, products, compatibility)
+          const tables = state.project.tables ?? []
+          if (
+            JSON.stringify(tables.find((t) => t.id === next.id)) ===
+            JSON.stringify(next)
+          )
+            return state
+          return commit(
+            state,
+            'save_table',
+            {
+              project: {
+                ...state.project,
+                tables: tables.some((t) => t.id === next.id)
+                  ? tables.map((t) => (t.id === next.id ? next : t))
+                  : [...tables, next],
+              },
+            },
+            new Date().toISOString(),
+          )
+        }),
+      removeTable: (id) =>
+        set((state) => {
+          const tables = state.project.tables ?? []
+          if (!tables.some((t) => t.id === id)) return state
+          return commit(
+            state,
+            'remove_table',
+            {
+              project: {
+                ...state.project,
+                tables: tables.filter((t) => t.id !== id),
+              },
+            },
+            new Date().toISOString(),
+          )
+        }),
       algorithmVersion: null,
       initializeAlgorithm: (version) =>
         set((state) =>

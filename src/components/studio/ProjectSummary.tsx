@@ -2,6 +2,15 @@
 // UNE seule source, le store. Sélection explicite, quantité, état projet
 // calculé par le lot 1, CTA adapté (aucun devis ni réservation au lot 2).
 
+import {
+  EMPTY_COMPATIBILITY,
+  type TableCompatibilityData,
+} from '@/lib/studio/compatibility'
+import {
+  evaluateTable,
+  type TableConfiguration,
+} from '@/lib/studio/table-project'
+import { TableProjectSummary } from './TableProjectSummary'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Trash2 } from 'lucide-react'
 
@@ -34,6 +43,10 @@ const ENTRY_LABEL: Record<StudioEntry, string> = {
 }
 
 export interface ProjectSummaryProps {
+  readonly tables?: ReadonlyArray<TableConfiguration>
+  readonly compatibility?: TableCompatibilityData
+  readonly onTableQuantityChange?: (id: string, quantity: number) => void
+  readonly onRemoveTable?: (id: string) => void
   readonly entry: StudioEntry | null
   readonly items: ReadonlyArray<StudioProjectItem>
   readonly productsById: ReadonlyMap<string, StudioProduct>
@@ -78,6 +91,53 @@ export function projectStateFor(
   return computeProjectState(lines).state
 }
 
+export function projectOverview({
+  items,
+  productsById,
+  context,
+  tables = [],
+  compatibility = EMPTY_COMPATIBILITY,
+}: Pick<
+  ProjectSummaryProps,
+  'items' | 'productsById' | 'context' | 'tables' | 'compatibility'
+>) {
+  const tableEvaluations = tables.map((table) =>
+    evaluateTable(table, productsById, compatibility, context),
+  )
+  const seatState = projectStateFor(items, productsById, context)
+  const states = [seatState, ...tableEvaluations.map((e) => e.state)]
+  const state: ProjectState | null = states.includes('manual_quote_required')
+    ? 'manual_quote_required'
+    : states.includes('feasibility_review')
+      ? 'feasibility_review'
+      : states.includes('auto_quote_ready')
+        ? 'auto_quote_ready'
+        : states.includes('reservation_ready')
+          ? 'reservation_ready'
+          : null
+  const unresolved =
+    hasUnresolvedItems(items, productsById) ||
+    items.some((item) => {
+      const product = productsById.get(item.productId)
+      return (
+        !product ||
+        !computeReadiness(product, context, item.variantId).quote.ready
+      )
+    }) ||
+    tableEvaluations.some((e) => e.total === null)
+  const totalUnits =
+    items.reduce((sum, item) => sum + item.requestedQuantity, 0) +
+    tables.reduce((n, t) => n + t.quantity, 0)
+  const totalHt =
+    tableEvaluations.reduce((sum, e) => sum + (e.total ?? 0), 0) +
+    items.reduce((sum, item) => {
+      const product = productsById.get(item.productId)
+      return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
+    }, 0)
+
+  return { state, unresolved, totalUnits, totalHt }
+}
+
 export function ProjectSummary({
   entry,
   items,
@@ -87,23 +147,24 @@ export function ProjectSummary({
   onRemove,
   onEditQuantity,
   compact = false,
+  tables = [],
+  compatibility = EMPTY_COMPATIBILITY,
+  onTableQuantityChange,
+  onRemoveTable,
 }: ProjectSummaryProps) {
-  const state = projectStateFor(items, productsById, context)
-  const unresolved = hasUnresolvedItems(items, productsById)
-  const totalUnits = items.reduce(
-    (sum, item) => sum + item.requestedQuantity,
-    0,
-  )
-  const totalHt = items.reduce((sum, item) => {
-    const product = productsById.get(item.productId)
-    return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
-  }, 0)
+  const { state, unresolved, totalUnits, totalHt } = projectOverview({
+    items,
+    productsById,
+    context,
+    tables,
+    compatibility,
+  })
 
   return (
     <div className="space-y-4">
       <div>
         <div className="label-eyebrow text-[color:var(--ember)]">
-          Mon projet
+          Votre projet
         </div>
         <div className="mt-1 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-bold">
@@ -120,7 +181,7 @@ export function ProjectSummary({
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && tables.length === 0 ? (
         <p className="text-sm text-[color:var(--ink-soft)]">
           Votre sélection prendra place ici. Commencez par ce qui vous plaît,
           puis choisissez une piste.
@@ -242,7 +303,17 @@ export function ProjectSummary({
         </ul>
       )}
 
-      {items.length > 0 && (
+      {tables.length > 0 && (
+        <TableProjectSummary
+          tables={tables}
+          productsById={productsById}
+          compatibility={compatibility}
+          context={context}
+          onQuantityChange={onTableQuantityChange}
+          onRemove={onRemoveTable}
+        />
+      )}
+      {(items.length > 0 || tables.length > 0) && (
         <div className="border-t border-[color:var(--sand-deep)] pt-3 text-sm">
           <div className="flex items-baseline justify-between">
             <span className="text-[color:var(--ink-soft)]">
@@ -260,16 +331,17 @@ export function ProjectSummary({
       )}
 
       <div className="space-y-2">
-        {entry === 'full_project' && (
-          <Link
-            to="/catalogue"
-            search={{ collection: 'pietements' }}
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] transition-colors hover:bg-[color:var(--ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
-          >
-            Passer aux tables (catalogue)
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        )}
+        {entry === 'full_project' &&
+          tables.length === 0 &&
+          items.some((i) => i.role === 'seat') && (
+            <Link
+              to="/studio/tables"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-[color:var(--sand)] transition-colors hover:bg-[color:var(--ink-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2"
+            >
+              Continuer avec les tables
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
         <p className="text-xs text-[color:var(--ink-soft)]">
           Votre projet est conservé sur cet appareil.
         </p>

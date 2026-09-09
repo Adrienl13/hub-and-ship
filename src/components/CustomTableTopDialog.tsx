@@ -1,3 +1,4 @@
+import type { CustomTabletopRequest } from '@/lib/studio/table-project'
 import { useState } from 'react'
 import { Ruler, Send } from 'lucide-react'
 import { toast } from 'sonner'
@@ -54,7 +55,7 @@ function Chips({
               className={`h-8 rounded-full border px-3 text-xs font-medium transition-colors ${
                 selected
                   ? 'border-foreground bg-foreground text-background'
-                  : 'border-[color:var(--sand-deep)] bg-card hover:border-foreground/40'
+                  : 'hover:border-foreground/40 border-[color:var(--sand-deep)] bg-card'
               }`}
             >
               {choice}
@@ -71,7 +72,11 @@ export function CustomTableTopDialog({
   onOpenChange,
   base,
   baseVariant,
+  onSaveProject,
+  onCloseAutoFocus,
 }: {
+  readonly onCloseAutoFocus?: (event: Event) => void
+  readonly onSaveProject?: (request: CustomTabletopRequest) => void
   readonly open: boolean
   readonly onOpenChange: (open: boolean) => void
   /** Piètement déjà choisi dans le composeur, s'il y en a un. */
@@ -102,15 +107,27 @@ export function CustomTableTopDialog({
       return
     }
 
+    if (onSaveProject) {
+      if (!Number.isFinite(l) || !Number.isFinite(w) || l > 9999 || w > 9999) {
+        toast.error('Dimensions invalides (maximum 9999 cm).')
+        return
+      }
+      onSaveProject({
+        shape: isRound ? 'round' : 'rectangular',
+        length: l,
+        width: w,
+        finish: finish.trim().slice(0, 160),
+      })
+      onOpenChange(false)
+      return
+    }
     const message = [
       'Demande de plateau sur mesure',
       base
         ? `Piètement choisi : ${base.name} (réf. ${base.sku})${baseVariant ? ` — ${baseVariant.name}` : ''}`
         : null,
       `Forme : ${shape}`,
-      isRound
-        ? `Dimensions : Ø ${l} cm`
-        : `Dimensions : ${l} × ${w} cm`,
+      isRound ? `Dimensions : Ø ${l} cm` : `Dimensions : ${l} × ${w} cm`,
       finish.trim() ? `Matière / coloris souhaité : ${finish.trim()}` : null,
       quantity ? `Quantité envisagée : ${quantity}` : null,
     ]
@@ -181,16 +198,19 @@ export function CustomTableTopDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-md border-[color:var(--sand-deep)] p-0 sm:max-w-md">
+      <DialogContent
+        onCloseAutoFocus={onCloseAutoFocus}
+        className="max-h-[90dvh] overflow-y-auto rounded-md border-[color:var(--sand-deep)] p-0 sm:max-w-md [&>button]:min-w-[44px] [&_button]:min-h-[44px] [&_input]:min-h-[44px]"
+      >
         <DialogHeader className="space-y-1 px-5 pt-5 text-left">
           <DialogTitle className="flex items-center gap-2 font-display text-lg tracking-tight">
             <Ruler className="h-4 w-4 text-[color:var(--ember)]" />
             Plateau sur mesure
           </DialogTitle>
           <DialogDescription className="text-xs leading-5">
-            Nos plateaux se découpent à la dimension de votre projet. Décrivez
-            le besoin : tarif sous 24 h ouvrées, puis réservation en ligne au
-            prix convenu.
+            {onSaveProject
+              ? 'Conservez les dimensions souhaitées dans votre projet. La faisabilité et le prix restent à confirmer.'
+              : 'Nos plateaux se découpent à la dimension de votre projet. Décrivez le besoin : tarif sous 24 h ouvrées, puis réservation en ligne au prix convenu.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -199,7 +219,10 @@ export function CustomTableTopDialog({
             <span className="text-muted-foreground">Piètement choisi : </span>
             <span className="font-medium">{base.name}</span>
             {baseVariant ? (
-              <span className="text-muted-foreground"> · {baseVariant.name}</span>
+              <span className="text-muted-foreground">
+                {' '}
+                · {baseVariant.name}
+              </span>
             ) : null}
           </div>
         )}
@@ -219,6 +242,7 @@ export function CustomTableTopDialog({
               min={1}
               inputMode="numeric"
               value={length}
+              aria-label={isRound ? 'Diamètre (cm)' : 'Longueur (cm)'}
               placeholder={isRound ? 'Diamètre (cm) *' : 'Longueur (cm) *'}
               onChange={(e) => setLength(e.target.value)}
             />
@@ -229,6 +253,7 @@ export function CustomTableTopDialog({
                 min={1}
                 inputMode="numeric"
                 value={width}
+                aria-label="Largeur (cm)"
                 placeholder="Largeur (cm) *"
                 onChange={(e) => setWidth(e.target.value)}
               />
@@ -238,42 +263,47 @@ export function CustomTableTopDialog({
           <Input
             className={inputClass}
             value={finish}
+            aria-label="Matière / coloris souhaité"
             placeholder="Matière / coloris souhaité (ex. HPL chêne clair)"
             onChange={(e) => setFinish(e.target.value)}
           />
 
-          <Chips
-            label="Quantité envisagée (optionnel)"
-            choices={QUANTITY_CHOICES}
-            value={quantity}
-            onChange={setQuantity}
-          />
+          {!onSaveProject && (
+            <Chips
+              label="Quantité envisagée (optionnel)"
+              choices={QUANTITY_CHOICES}
+              value={quantity}
+              onChange={setQuantity}
+            />
+          )}
 
-          <div className="grid gap-2.5 border-t border-[color:var(--sand-deep)] pt-3.5 sm:grid-cols-2">
-            <Input
-              className={inputClass}
-              value={name}
-              placeholder="Votre nom *"
-              autoComplete="name"
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Input
-              className={inputClass}
-              type="email"
-              value={email}
-              placeholder="Email professionnel *"
-              autoComplete="email"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Input
-              className={`${inputClass} sm:col-span-2`}
-              type="tel"
-              value={phone}
-              placeholder="Téléphone (optionnel)"
-              autoComplete="tel"
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
+          {!onSaveProject && (
+            <div className="grid gap-2.5 border-t border-[color:var(--sand-deep)] pt-3.5 sm:grid-cols-2">
+              <Input
+                className={inputClass}
+                value={name}
+                placeholder="Votre nom *"
+                autoComplete="name"
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Input
+                className={inputClass}
+                type="email"
+                value={email}
+                placeholder="Email professionnel *"
+                autoComplete="email"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Input
+                className={`${inputClass} sm:col-span-2`}
+                type="tel"
+                value={phone}
+                placeholder="Téléphone (optionnel)"
+                autoComplete="tel"
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          )}
 
           <Button
             type="button"
@@ -282,7 +312,11 @@ export function CustomTableTopDialog({
             className="h-11 w-full gap-2 rounded-sm bg-foreground text-background"
           >
             <Send className="h-4 w-4" />
-            {submitting ? 'Envoi…' : 'Demander un tarif'}
+            {onSaveProject
+              ? 'Conserver dans mon projet'
+              : submitting
+                ? 'Envoi…'
+                : 'Demander un tarif'}
           </Button>
         </div>
       </DialogContent>

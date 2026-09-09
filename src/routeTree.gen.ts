@@ -35,6 +35,7 @@ import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as StudioPreviewRouteImport } from './routes/studio_.preview'
+import { Route as StudioTablesRouteImport } from './routes/studio.tables'
 import { Route as StudioAssisesRouteImport } from './routes/studio.assises'
 import { Route as PartnerSelectionsRouteImport } from './routes/partner.selections'
 import { Route as PPartnerSlugRouteImport } from './routes/p.$partnerSlug'
@@ -194,6 +195,11 @@ const StudioPreviewRoute = StudioPreviewRouteImport.update({
   id: '/studio_/preview',
   path: '/studio/preview',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StudioTablesRoute = StudioTablesRouteImport.update({
+  id: '/tables',
+  path: '/tables',
+  getParentRoute: () => StudioRoute,
 } as any)
 const StudioAssisesRoute = StudioAssisesRouteImport.update({
   id: '/assises',
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/studio/assises': typeof StudioAssisesRoute
+  '/studio/tables': typeof StudioTablesRoute
   '/studio/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/studio/assises': typeof StudioAssisesRoute
+  '/studio/tables': typeof StudioTablesRoute
   '/studio/preview': typeof StudioPreviewRoute
   '/account': typeof AccountIndexRoute
   '/guides': typeof GuidesIndexRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/p/$partnerSlug': typeof PPartnerSlugRouteWithChildren
   '/partner/selections': typeof PartnerSelectionsRoute
   '/studio/assises': typeof StudioAssisesRoute
+  '/studio/tables': typeof StudioTablesRoute
   '/studio_/preview': typeof StudioPreviewRoute
   '/account/': typeof AccountIndexRoute
   '/guides/': typeof GuidesIndexRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/studio/assises'
+    | '/studio/tables'
     | '/studio/preview'
     | '/account/'
     | '/guides/'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/studio/assises'
+    | '/studio/tables'
     | '/studio/preview'
     | '/account'
     | '/guides'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/p/$partnerSlug'
     | '/partner/selections'
     | '/studio/assises'
+    | '/studio/tables'
     | '/studio_/preview'
     | '/account/'
     | '/guides/'
@@ -914,6 +926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio/tables': {
+      id: '/studio/tables'
+      path: '/tables'
+      fullPath: '/studio/tables'
+      preLoaderRoute: typeof StudioTablesRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/studio/assises': {
       id: '/studio/assises'
       path: '/assises'
@@ -1126,11 +1145,13 @@ const PartnerRouteWithChildren =
 
 interface StudioRouteChildren {
   StudioAssisesRoute: typeof StudioAssisesRoute
+  StudioTablesRoute: typeof StudioTablesRoute
   StudioIndexRoute: typeof StudioIndexRoute
 }
 
 const StudioRouteChildren: StudioRouteChildren = {
   StudioAssisesRoute: StudioAssisesRoute,
+  StudioTablesRoute: StudioTablesRoute,
   StudioIndexRoute: StudioIndexRoute,
 }
 

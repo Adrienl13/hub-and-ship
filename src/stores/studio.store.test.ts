@@ -17,7 +17,7 @@ describe('store Studio (fondation)', () => {
 
   it('persiste sous la clé et la version prévues', () => {
     expect(STUDIO_STORE_KEY).toBe('terrassea-studio-v1')
-    expect(STUDIO_STORE_VERSION).toBe(3)
+    expect(STUDIO_STORE_VERSION).toBe(4)
     useStudioStore.getState().setEntry('seats')
     const persisted = JSON.parse(
       localStorage.getItem(STUDIO_STORE_KEY) ?? '{}',
@@ -25,7 +25,7 @@ describe('store Studio (fondation)', () => {
       version: number
       state: Record<string, unknown>
     }
-    expect(persisted.version).toBe(3)
+    expect(persisted.version).toBe(4)
     expect(Object.keys(persisted.state).sort()).toEqual([
       'algorithmVersion',
       'discovery',
@@ -403,6 +403,14 @@ describe('Lot 3 : version de session persistée', () => {
     }
     expect(migrateStudioState(raw, 2)).toEqual({
       ...raw,
+      project: { ...raw.project, tables: [] },
+      journal: raw.journal.map((entry) => ({
+        ...entry,
+        before: {
+          ...entry.before,
+          project: { ...entry.before.project, tables: [] },
+        },
+      })),
       algorithmVersion: 'v0.1',
     })
   })

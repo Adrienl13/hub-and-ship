@@ -16,8 +16,7 @@ import { formatEUR } from '@/lib/order'
 
 import {
   ProjectSummary,
-  projectStateFor,
-  hasUnresolvedItems,
+  projectOverview,
   type ProjectSummaryProps,
 } from './ProjectSummary'
 
@@ -30,17 +29,9 @@ const STATE_SHORT: Record<string, string> = {
 
 export function ProjectBottomBar(props: ProjectSummaryProps) {
   const [open, setOpen] = useState(false)
-  const { items, productsById, context } = props
-  const totalUnits = items.reduce(
-    (sum, item) => sum + item.requestedQuantity,
-    0,
-  )
-  const totalHt = items.reduce((sum, item) => {
-    const product = productsById.get(item.productId)
-    return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
-  }, 0)
-  const unresolved = hasUnresolvedItems(items, productsById)
-  const state = projectStateFor(items, productsById, context)
+  const { items, productsById } = props
+  const tables = props.tables ?? []
+  const { state, unresolved, totalUnits, totalHt } = projectOverview(props)
   const first = items[0] ? productsById.get(items[0].productId) : undefined
 
   return (
@@ -59,11 +50,15 @@ export function ProjectBottomBar(props: ProjectSummaryProps) {
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold">
               {items.length === 0
-                ? 'Votre projet commence ici'
-                : `${first?.name ?? 'Référence à vérifier'} · ${totalUnits} unité${totalUnits > 1 ? 's' : ''}`}
+                ? tables.length
+                  ? `Votre projet · ${totalUnits} éléments`
+                  : 'Votre projet commence ici'
+                : tables.length
+                  ? `Votre projet · ${totalUnits} éléments`
+                  : `${first?.name ?? 'Référence à vérifier'} · ${totalUnits} unité${totalUnits > 1 ? 's' : ''}`}
             </span>
             <span className="text-[color:var(--sand)]/70 block text-xs">
-              {items.length === 0
+              {items.length === 0 && !tables.length
                 ? 'Choisissez une assise pour la retrouver ici'
                 : `${unresolved ? 'Montant à vérifier' : `${formatEUR(totalHt)} HT indicatif`}${state ? ` · ${STATE_SHORT[state] ?? state}` : ''}`}
             </span>

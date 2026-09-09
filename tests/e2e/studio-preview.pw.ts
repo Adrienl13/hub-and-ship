@@ -23,14 +23,18 @@ test('preview valide : accès initial puis vraie navigation TanStack vers les as
   expect(cookie.sameSite).toBe('Lax')
   expect(cookie.expires - Date.now() / 1000).toBeGreaterThan(7 * 24 * 3600 - 60)
   expect(await page.evaluate(() => document.cookie)).not.toContain('studio_preview')
+  await page.goto('/studio')
+  await page.getByTestId('entry-tables').click()
+  await expect(page).toHaveURL(/\/studio\/tables\?entry=tables$/)
+  await expect(page.getByTestId('studio-shell')).toBeVisible()
 })
 
-test('flag OFF : sans cookie ou cookie forgé, les deux routes restent 404', async ({ context }) => {
-  for (const path of ['/studio', '/studio/assises']) {
+test('flag OFF : sans cookie ou cookie forgé, les trois routes restent 404', async ({ context }) => {
+  for (const path of ['/studio', '/studio/assises', '/studio/tables']) {
     expect((await context.request.get(path)).status()).toBe(404)
   }
   await context.addCookies([{ name: 'studio_preview', value: '9999999999.forged', domain: 'localhost', path: '/', httpOnly: true, sameSite: 'Lax' }])
-  for (const path of ['/studio', '/studio/assises']) {
+  for (const path of ['/studio', '/studio/assises', '/studio/tables']) {
     expect((await context.request.get(path)).status()).toBe(404)
   }
 })
@@ -43,7 +47,7 @@ test('clear efface la preview courante et le cookie historique Path=/studio', as
   const clear = await context.request.get('/studio/preview?clear=1', { maxRedirects: 0 })
   expect(clear.status()).toBe(302)
   expect((await context.cookies()).filter((entry) => entry.name === 'studio_preview')).toEqual([])
-  for (const path of ['/studio', '/studio/assises']) {
+  for (const path of ['/studio', '/studio/assises', '/studio/tables']) {
     expect((await context.request.get(path)).status()).toBe(404)
   }
 })

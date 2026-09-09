@@ -150,7 +150,7 @@ test.describe('Studio Assises (flag ON, surfaces interceptées)', () => {
     const isMobile = (page.viewportSize()?.width ?? 1280) < 1024 || testInfo.project.name === 'mobile-chrome'
 
     await page.goto('/studio')
-    await expect(page.getByRole('heading', { name: /Le mobilier de votre projet commence ici/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Créez votre projet/ })).toBeVisible()
     await page.waitForLoadState('networkidle')
     await page.getByTestId('entry-seats').click()
     await expect(page).toHaveURL(/\/studio\/assises\?entry=seats$/)

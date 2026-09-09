@@ -1,3 +1,4 @@
+import { StudioSectionHeader } from '@/components/studio/StudioChoices'
 // /studio/assises — tranche verticale Assises (lot 2).
 //
 // Découverte carte par carte (moteur V0), J'aime / Pas pour moi / Passer,
@@ -22,6 +23,7 @@ import { SeatQuantityField } from '@/components/studio/SeatQuantityField'
 import { StudioProductDetails } from '@/components/studio/StudioProductDetails'
 import { StudioShell } from '@/components/studio/StudioShell'
 import { UndoButton } from '@/components/studio/UndoButton'
+import { useStudioProjectSummary } from '@/hooks/useStudioProjectSummary'
 import { useStudioCatalog } from '@/hooks/useStudioCatalog'
 import { useStudioFavoritesSync } from '@/hooks/useStudioFavoritesSync'
 import { markStudioStarted, useStudioTracker } from '@/hooks/useStudioTracker'
@@ -508,7 +510,9 @@ function StudioSeatsPage() {
     ? (productsById.get(detailsId) ?? null)
     : null
 
+  const tableSummary = useStudioProjectSummary(catalogState.catalog)
   const summaryProps = {
+    ...tableSummary,
     entry: project.entry,
     items: project.items,
     productsById,
@@ -611,14 +615,10 @@ function StudioSeatsPage() {
           pool.seats.length > 0 &&
           stage === 'discover' && (
             <div className="space-y-6">
-              <div>
-                <p className="label-eyebrow text-[color:var(--ink-soft)]">
-                  Vos préférences
-                </p>
-                <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                  Quelles assises pour votre établissement ?
-                </h1>
-              </div>
+              <StudioSectionHeader
+                eyebrow="Vos préférences"
+                title="Quelles assises pour votre établissement ?"
+              />
               {showPrompt && convergence && (
                 <section
                   aria-label="Vos pistes"
@@ -818,6 +818,14 @@ function StudioSeatsPage() {
                   onChange={(quantity) => setQuantity(quantityItem, quantity)}
                 />
                 <div className="flex flex-wrap gap-2">
+                  {project.entry === 'full_project' && (
+                    <Link
+                      to="/studio/tables"
+                      className="inline-flex min-h-[48px] items-center rounded-md bg-[color:var(--ink)] px-5 text-sm font-semibold text-[color:var(--sand)]"
+                    >
+                      Continuer avec les tables
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => setStage('discover')}
