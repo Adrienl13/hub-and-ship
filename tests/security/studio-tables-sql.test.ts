@@ -29,6 +29,12 @@ beforeAll(async () => {
  `)
   await db.exec(sql)
   await db.exec(
+    readFileSync(
+      'supabase/migrations/20260910100000_studio_table_dimension_ranges.sql',
+      'utf8',
+    ),
+  )
+  await db.exec(
     `set test.admin='true';set role authenticated;insert into studio_table_base_types(id,label) values ('${type}','Type testé');insert into studio_table_base_profiles(base_id,base_type_id,status,provenance) values ('base','${type}','verified','Fixture fabricant');insert into studio_tabletop_base_rules(base_id,tabletop_id,verdict,status,provenance) values ('base','top','allowed','verified','Fixture documentée');reset role;set test.admin='false'`,
   )
 }, 30000)
@@ -128,4 +134,46 @@ it('migration additive non appliquée, sans seed commercial', () => {
   expect(sql).not.toMatch(
     /insert into public\.studio_table|service_role|cost_price|purchase_price/i,
   )
+})
+
+it('plages SQL facultatives et rotation : incohérences refusées', async () => {
+  await db.exec("set test.admin='true';set role authenticated")
+  const cases = [
+    [50, 50, 80, 80, true],
+    [50, null, null, null, true],
+    [null, 50, null, null, true],
+    [null, null, 80, null, true],
+    [null, null, null, 80, true],
+    [null, null, null, null, true],
+    [40, 80, 70, 100, true],
+    [80, null, null, 70, true],
+    [0, null, null, null, false],
+    [-1, null, null, null, false],
+    [10000, null, null, null, false],
+    [90, 90, 80, 80, false],
+    [null, 90, 80, null, false],
+    [80, 60, 90, 50, false],
+  ] as const
+  for (const [minL, minW, maxL, maxW, valid] of cases) {
+    await db.exec('begin')
+    const insert = db.query(
+      `insert into studio_tabletop_base_rules(base_type_id,shape,min_length_cm,min_width_cm,max_length_cm,max_width_cm,verdict) values ($1,'rectangular',$2,$3,$4,$5,'allowed')`,
+      [type, minL, minW, maxL, maxW],
+    )
+    if (valid) await insert
+    else await expect(insert).rejects.toMatchObject({ code: '23514' })
+    await db.exec('rollback')
+  }
+  await expect(
+    db.exec(
+      'update studio_tabletop_base_rules set min_length_cm=50 where base_id is not null',
+    ),
+  ).rejects.toMatchObject({ code: '23514' })
+  await expect(
+    db.query(
+      `insert into studio_tabletop_base_rules(base_type_id,shape,min_width_cm,max_length_cm,verdict) values ($1,'round',90,80,'allowed')`,
+      [type],
+    ),
+  ).rejects.toMatchObject({ code: '23514' })
+  await db.exec("reset role;set test.admin='false'")
 })

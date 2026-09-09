@@ -30,7 +30,7 @@ const PRODUCT_COLUMNS = [
 ]
 const PROFILE_COLUMNS = ['studio_role', 'seat_kind', 'material', 'model_family_id', 'visual_traits', 'data_quality']
 const PUBLIC_SURFACES = [
-  { view: 'studio_tabletop_base_rules_public', columns: ['id', 'base_id', 'tabletop_id', 'base_type_id', 'shape', 'max_length_cm', 'max_width_cm', 'verdict'], optional: true },
+  { view: 'studio_tabletop_base_rules_public', columns: ['id', 'base_id', 'tabletop_id', 'base_type_id', 'shape', 'max_length_cm', 'max_width_cm', 'verdict', 'min_length_cm', 'min_width_cm'], optional: true },
   { view: 'studio_table_base_profiles_public', columns: ['base_id', 'base_type_id'], optional: true },
   { view: 'studio_product_media_public', columns: ['product_id', 'role', 'url'], optional: true },
   { view: 'studio_product_neighbors_public', columns: ['product_id', 'neighbor_product_id', 'rank', 'similarity', 'model_version'], optional: true },

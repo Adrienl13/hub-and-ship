@@ -10,6 +10,7 @@ import {
 } from '@/lib/studio/table-repository'
 import {
   resolveTableCompatibility,
+  validTableDimensions,
   EMPTY_COMPATIBILITY,
   type TableCompatibilityData,
 } from '@/lib/studio/compatibility'
@@ -21,7 +22,7 @@ const fields = {
   studio_table_base_profiles:
     'base_id,base_type_id,status,provenance,verified_by,verified_at',
   studio_tabletop_base_rules:
-    'id,base_id,tabletop_id,base_type_id,shape,max_length_cm,max_width_cm,verdict,status,provenance,verified_by,verified_at',
+    'id,base_id,tabletop_id,base_type_id,shape,min_length_cm,min_width_cm,max_length_cm,max_width_cm,verdict,status,provenance,verified_by,verified_at',
 }
 const input = 'min-h-[44px] w-full rounded border bg-white px-3'
 /** Human review within the existing Studio admin. RLS remains authoritative. */
@@ -39,6 +40,8 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
     [label, setLabel] = useState('')
   const [mode, setMode] = useState('pair'),
     [shape, setShape] = useState('rectangular'),
+    [minLength, setMinLength] = useState(''),
+    [minWidth, setMinWidth] = useState(''),
     [length, setLength] = useState(''),
     [width, setWidth] = useState('')
   const [verdict, setVerdict] = useState('allowed'),
@@ -114,12 +117,15 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
     products.find((p) => p.id === id)?.name ?? String(id ?? '—')
   const validSource =
     provenance.trim().length >= 3 && provenance.trim().length <= 1000
-  const validDimensions =
-    Number(length) > 0 &&
-    Number(length) < 10000 &&
-    Number(width) > 0 &&
-    Number(width) < 10000 &&
-    (shape !== 'round' || Number(length) === Number(width))
+  const optionalNumber = (value: string) =>
+    value.trim() === '' ? null : Number(value)
+  const dimensions = {
+    min_length_cm: optionalNumber(minLength),
+    min_width_cm: optionalNumber(minWidth),
+    max_length_cm: optionalNumber(length),
+    max_width_cm: optionalNumber(width),
+  }
+  const validDimensions = validTableDimensions({ shape, ...dimensions })
   function submitRule() {
     if (
       !validSource ||
@@ -138,8 +144,10 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
         tabletop_id: mode === 'pair' ? top : null,
         base_type_id: mode === 'type' ? type : null,
         shape: mode === 'type' ? shape : null,
-        max_length_cm: mode === 'type' ? Number(length) : null,
-        max_width_cm: mode === 'type' ? Number(width) : null,
+        min_length_cm: mode === 'type' ? dimensions.min_length_cm : null,
+        min_width_cm: mode === 'type' ? dimensions.min_width_cm : null,
+        max_length_cm: mode === 'type' ? dimensions.max_length_cm : null,
+        max_width_cm: mode === 'type' ? dimensions.max_width_cm : null,
         verdict,
         status: 'verified',
         provenance: provenance.trim(),
@@ -283,12 +291,43 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
                     <option value="round">Rond</option>
                   </select>
                 </label>
+                <p className="md:col-span-2">
+                  Bornes facultatives : vide signifie non renseigné. Longueur =
+                  grand côté, largeur = petit côté ; deux bornes renseignées
+                  sont normalisées par rotation. Une règle sans borne exprime
+                  uniquement la validation explicite de la forme.
+                </p>
+                <label>
+                  Longueur minimale (cm)
+                  <input
+                    className={input}
+                    type="number"
+                    min="0"
+                    step="any"
+                    max="9999"
+                    value={minLength}
+                    onChange={(e) => setMinLength(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Largeur minimale (cm)
+                  <input
+                    className={input}
+                    type="number"
+                    min="0"
+                    step="any"
+                    max="9999"
+                    value={minWidth}
+                    onChange={(e) => setMinWidth(e.target.value)}
+                  />
+                </label>
                 <label>
                   Longueur maximale (cm)
                   <input
                     className={input}
                     type="number"
-                    min="1"
+                    min="0"
+                    step="any"
                     max="9999"
                     value={length}
                     onChange={(e) => setLength(e.target.value)}
@@ -299,7 +338,8 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
                   <input
                     className={input}
                     type="number"
-                    min="1"
+                    min="0"
+                    step="any"
                     max="9999"
                     value={width}
                     onChange={(e) => setWidth(e.target.value)}
@@ -407,7 +447,7 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
               <li key={String(r.id)} className="border-b pb-3">
                 <p>
                   {r.base_type_id
-                    ? `${String(types.find((t) => t.id === r.base_type_id)?.label ?? r.base_type_id)} · ${String(r.shape)} · max ${String(r.max_length_cm)} × ${String(r.max_width_cm)} cm`
+                    ? `${String(types.find((t) => t.id === r.base_type_id)?.label ?? r.base_type_id)} · ${String(r.shape)} · min ${String(r.min_length_cm ?? '—')} × ${String(r.min_width_cm ?? '—')} cm · max ${String(r.max_length_cm ?? '—')} × ${String(r.max_width_cm ?? '—')} cm`
                     : `${name(r.tabletop_id)} · ${name(r.base_id)}`}{' '}
                   — {String(r.verdict)} / {String(r.status)}
                 </p>

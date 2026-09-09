@@ -209,3 +209,12 @@ Dans le Lot 2, `SUPABASE_SERVICE_ROLE_KEY` sert à ingérer côté serveur les �
 Le [runbook Lot 3](STUDIO_LOT_3_RUNBOOK.md) décrit les Decision Images, le pipeline DINOv2 hors ligne, les surfaces publiques minimales, l’onglet admin Studio, la version V1 et sa convergence adaptative. La migration 41 `20260908090000_studio_visual_intelligence.sql` est **NON APPLIQUÉE EN PRODUCTION** ; les migrations 39 et 40 restent appliquées et le Lot 2 reste PRODUCTION VERIFIED. Aucun déploiement Lot 3 ni traitement du catalogue réel n’a été effectué.
 
 V1 s’utilise dans une nouvelle session preview via `/studio/assises?engine=v1`. La version est ensuite épinglée dans le store v3 ; les sessions v2 et leurs snapshots Undo restent conservés en V0. La curation est préparée en dry-run/draft, jamais activée automatiquement. Le flag public reste OFF, Supabase Auth et le cookie preview Path=/ ne changent pas.
+
+### Lot 4 — bornes dimensionnelles (migration additive 43)
+
+Le patch de plages vérifiées est décrit dans
+[STUDIO_TABLE_DIMENSION_RANGES.md](./STUDIO_TABLE_DIMENSION_RANGES.md).
+La migration 42 reste inchangée et NON APPLIQUÉE EN PRODUCTION ; la nouvelle
+migration 43 est également NON APPLIQUÉE EN PRODUCTION. Les minima/maxima sont
+facultatifs et les formes catalogue restent inchangées. DATA READY = NON : les
+règles métier réelles doivent être validées séparément avant toute saisie.

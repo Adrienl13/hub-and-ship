@@ -17,8 +17,54 @@ export const TABLE_RULE_PUBLIC_COLUMNS = [
   'max_length_cm',
   'max_width_cm',
   'verdict',
+  'min_length_cm',
+  'min_width_cm',
 ] as const
 export const BASE_PROFILE_PUBLIC_COLUMNS = ['base_id', 'base_type_id'] as const
+/** Paired bounds rotate together; a single length/width bounds the long/short side. */
+export function normalizedBounds(
+  length: number | null,
+  width: number | null,
+): [number | null, number | null] {
+  return length !== null && width !== null
+    ? [Math.max(length, width), Math.min(length, width)]
+    : [length, width]
+}
+export function validTableDimensions(r: {
+  shape: string | null
+  min_length_cm: number | null
+  min_width_cm: number | null
+  max_length_cm: number | null
+  max_width_cm: number | null
+}): boolean {
+  const values = [
+    r.min_length_cm,
+    r.min_width_cm,
+    r.max_length_cm,
+    r.max_width_cm,
+  ]
+  if (
+    values.some(
+      (v) => v !== null && (!Number.isFinite(v) || v <= 0 || v >= 10000),
+    )
+  )
+    return false
+  const [minL, minW] = normalizedBounds(r.min_length_cm, r.min_width_cm)
+  const [maxL, maxW] = normalizedBounds(r.max_length_cm, r.max_width_cm)
+  if (r.shape === 'round') {
+    if (minL !== null && minW !== null && minL !== minW) return false
+    if (maxL !== null && maxW !== null && maxL !== maxW) return false
+    return (
+      Math.max(minL ?? 0, minW ?? 0) <=
+      Math.min(maxL ?? Infinity, maxW ?? Infinity)
+    )
+  }
+  return (
+    (minL ?? 0) <= (maxL ?? Infinity) &&
+    (minW ?? 0) <= (maxW ?? Infinity) &&
+    (minW ?? 0) <= (maxL ?? Infinity)
+  )
+}
 export const tableRuleSchema = z
   .object({
     id: z.string().min(1),
@@ -26,8 +72,10 @@ export const tableRuleSchema = z
     tabletop_id: z.string().nullable(),
     base_type_id: z.string().nullable(),
     shape: z.enum(['round', 'rectangular']).nullable(),
-    max_length_cm: z.number().positive().finite().nullable(),
-    max_width_cm: z.number().positive().finite().nullable(),
+    max_length_cm: z.number().positive().lt(10000).finite().nullable(),
+    max_width_cm: z.number().positive().lt(10000).finite().nullable(),
+    min_length_cm: z.number().positive().lt(10000).finite().nullable(),
+    min_width_cm: z.number().positive().lt(10000).finite().nullable(),
     verdict: z.enum(COMPATIBILITY_VERDICTS),
   })
   .refine(
@@ -38,17 +86,13 @@ export const tableRuleSchema = z
         !r.base_type_id &&
         !r.shape &&
         r.max_length_cm === null &&
-        r.max_width_cm === null,
-      ) ||
-      Boolean(
-        !r.base_id &&
-        !r.tabletop_id &&
-        r.base_type_id &&
-        r.shape &&
-        r.max_length_cm &&
-        r.max_width_cm,
-      ),
+        r.max_width_cm === null &&
+        r.min_length_cm === null &&
+        r.min_width_cm === null &&
+        r.base_id !== r.tabletop_id,
+      ) || Boolean(!r.base_id && !r.tabletop_id && r.base_type_id && r.shape),
   )
+  .refine(validTableDimensions)
 export type TableCompatibilityRule = z.infer<typeof tableRuleSchema>
 export interface TableCompatibilityData {
   readonly rules: ReadonlyArray<TableCompatibilityRule>
@@ -116,15 +160,31 @@ export function resolveTableCompatibility(
       r.shape === shape,
   )
   if (general.length) {
-    const matching = general.filter(
-      (r) =>
-        Math.max(l, w) <= Math.max(r.max_length_cm!, r.max_width_cm!) &&
-        Math.min(l, w) <= Math.min(r.max_length_cm!, r.max_width_cm!),
+    // A type+shape has one rule in SQL. Conflicting duplicate data must fail closed.
+    const outcomes = general.map((r) => {
+      if (!tableRuleSchema.safeParse(r).success)
+        return result('requires_confirmation', 'invalid_rule')
+      const [minL, minW] = normalizedBounds(r.min_length_cm, r.min_width_cm)
+      const [maxL, maxW] = normalizedBounds(r.max_length_cm, r.max_width_cm)
+      if (Math.max(l, w) < (minL ?? 0) || Math.min(l, w) < (minW ?? 0))
+        return result('denied', 'minimum_dimensions_not_reached', r.id)
+      if (
+        Math.max(l, w) > (maxL ?? Infinity) ||
+        Math.min(l, w) > (maxW ?? Infinity)
+      )
+        return result('denied', 'maximum_dimensions_exceeded', r.id)
+      return result(r.verdict, 'verified_type_rule', r.id)
+    })
+    if (
+      general.some((r) => r.verdict !== general[0]!.verdict) ||
+      outcomes.some(
+        (r) =>
+          r.verdict !== outcomes[0]!.verdict ||
+          r.reason !== outcomes[0]!.reason,
+      )
     )
-    if (!matching.length) return result('denied', 'maximum_dimensions_exceeded')
-    if (matching.some((r) => r.verdict !== matching[0]!.verdict))
       return result('requires_confirmation', 'conflicting_rules')
-    return result(matching[0]!.verdict, 'verified_type_rule', matching[0]!.id)
+    return outcomes[0]!
   }
   if (base.compatibleTopShapes?.length)
     return result(

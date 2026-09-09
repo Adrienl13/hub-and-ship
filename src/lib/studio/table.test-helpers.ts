@@ -20,6 +20,8 @@ export const pair: TableCompatibilityRule = {
   tabletop_id: top.id,
   base_type_id: null,
   shape: null,
+  min_length_cm: null,
+  min_width_cm: null,
   max_length_cm: null,
   max_width_cm: null,
   verdict: 'allowed',

@@ -169,3 +169,128 @@ describe('forme sans règle générale applicable', () => {
     })
   })
 })
+
+describe('plages dimensionnelles vérifiées', () => {
+  const rule = {
+    ...pair,
+    base_id: null,
+    tabletop_id: null,
+    base_type_id: 'central',
+    shape: 'rectangular' as const,
+    min_length_cm: 50,
+    min_width_cm: 50,
+    max_length_cm: 80,
+    max_width_cm: 80,
+  }
+  const typed = {
+    ...data,
+    rules: [rule],
+    baseProfiles: [{ base_id: base.id, base_type_id: 'central' }],
+  }
+  it.each([50, 65, 80])('accepte %s dans 50–80 bornes incluses', (size) => {
+    expect(
+      resolve({ ...top, dimensions: { l: size, w: size, h: 2 } }, base, typed)
+        .verdict,
+    ).toBe('allowed')
+  })
+  it.each([
+    [49, 'minimum_dimensions_not_reached'],
+    [81, 'maximum_dimensions_exceeded'],
+  ] as const)('refuse %s avec raison explicite', (size, reason) => {
+    expect(
+      resolve({ ...top, dimensions: { l: size, w: size, h: 2 } }, base, typed),
+    ).toMatchObject({ verdict: 'denied', reason })
+  })
+  it('min seul, max seul et forme explicitement vérifiée sans borne inventée', () => {
+    for (const bounds of [
+      { max_length_cm: null, max_width_cm: null },
+      { min_length_cm: null, min_width_cm: null },
+      {
+        min_length_cm: null,
+        min_width_cm: null,
+        max_length_cm: null,
+        max_width_cm: null,
+      },
+    ])
+      expect(
+        resolve(top, base, { ...typed, rules: [{ ...rule, ...bounds }] })
+          .verdict,
+      ).toBe('allowed')
+    expect(
+      resolve({ ...top, dimensions: { l: 200, w: 200, h: 2 } }, base, {
+        ...typed,
+        rules: [{ ...rule, max_length_cm: null, max_width_cm: null }],
+      }).verdict,
+    ).toBe('allowed')
+    expect(
+      resolve({ ...top, dimensions: { l: 20, w: 20, h: 2 } }, base, {
+        ...typed,
+        rules: [{ ...rule, min_length_cm: null, min_width_cm: null }],
+      }).verdict,
+    ).toBe('allowed')
+  })
+  it('normalise séparément plateau et bornes tournés', () => {
+    const rotated = {
+      ...rule,
+      min_length_cm: 40,
+      min_width_cm: 80,
+      max_length_cm: 70,
+      max_width_cm: 100,
+    }
+    for (const [l, w] of [
+      [90, 60],
+      [60, 90],
+    ])
+      expect(
+        resolve({ ...top, dimensions: { l: l!, w: w!, h: 2 } }, base, {
+          ...typed,
+          rules: [rotated],
+        }).verdict,
+      ).toBe('allowed')
+  })
+  it('borne partielle longueur sur grand côté, largeur sur petit côté', () => {
+    const partial = {
+      ...rule,
+      min_length_cm: 80,
+      min_width_cm: null,
+      max_length_cm: null,
+      max_width_cm: 70,
+    }
+    expect(
+      resolve({ ...top, dimensions: { l: 60, w: 90, h: 2 } }, base, {
+        ...typed,
+        rules: [partial],
+      }).verdict,
+    ).toBe('allowed')
+    expect(resolve(top, base, { ...typed, rules: [partial] }).reason).toBe(
+      'minimum_dimensions_not_reached',
+    )
+  })
+  it('exception exacte allowed prioritaire même sous le minimum', () => {
+    expect(
+      resolve({ ...top, dimensions: { l: 20, w: 20, h: 2 } }, base, {
+        ...typed,
+        rules: [rule, pair],
+      }).reason,
+    ).toBe('verified_pair')
+  })
+  it('conflit entre bornes ou verdicts reste non confirmé', () => {
+    for (const other of [
+      { ...rule, min_length_cm: 75 },
+      { ...rule, verdict: 'denied' as const },
+    ])
+      expect(
+        resolve(top, base, { ...typed, rules: [rule, other] }).verdict,
+      ).toBe('requires_confirmation')
+  })
+  it('dimension manquante ou règle corrompue reste non confirmée', () => {
+    expect(
+      resolve({ ...top, dimensions: { l: NaN, w: 70, h: 2 } }, base, typed)
+        .verdict,
+    ).toBe('requires_confirmation')
+    expect(
+      resolve(top, base, { ...typed, rules: [{ ...rule, min_length_cm: 100 }] })
+        .verdict,
+    ).toBe('requires_confirmation')
+  })
+})
