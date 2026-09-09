@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createStudioEventTracker } from './events-client'
-import { MAX_EVENTS_PER_BATCH, STUDIO_EVENT_TYPES, parseStudioEventsBatch, type StudioEventsBatch } from './events'
+import {
+  MAX_EVENTS_PER_BATCH,
+  STUDIO_EVENT_TYPES,
+  parseStudioEventsBatch,
+  type StudioEventsBatch,
+} from './events'
 import { buildStudioEventRows } from './events-server'
 
 describe('contrat des événements Studio', () => {
@@ -18,7 +23,17 @@ describe('contrat des événements Studio', () => {
       'seat_selected',
       'quantity_changed',
       'project_completed',
-      'convergence_ready', 'convergence_stalled', 'convergence_prompt_viewed', 'convergence_accepted', 'exploration_continued',
+      'convergence_ready',
+      'convergence_stalled',
+      'convergence_prompt_viewed',
+      'convergence_accepted',
+      'exploration_continued',
+      'studio_tables_started',
+      'tabletop_selected',
+      'table_quantity_changed',
+      'base_selected',
+      'compatibility_verification_requested',
+      'custom_tabletop_requested',
     ])
     expect(MAX_EVENTS_PER_BATCH).toBe(20)
   })
@@ -43,7 +58,14 @@ describe('contrat des événements Studio', () => {
     const batch: StudioEventsBatch = {
       sessionId: 's-abcdefgh',
       algorithmVersion: 'v0.1',
-      events: [{ type: 'seat_selected', productId: 'p', variantId: 'v', payload: { quantity: 6 } }],
+      events: [
+        {
+          type: 'seat_selected',
+          productId: 'p',
+          variantId: 'v',
+          payload: { quantity: 6 },
+        },
+      ],
     }
     const rows = buildStudioEventRows(batch)
     expect(rows).toEqual([
@@ -72,7 +94,8 @@ describe('traqueur client', () => {
       debounceMs: 0,
       now: () => new Date('2026-09-08T10:00:00.000Z'),
     })
-    for (let index = 0; index < 25; index += 1) tracker.track('card_passed', { productId: `p-${index}` })
+    for (let index = 0; index < 25; index += 1)
+      tracker.track('card_passed', { productId: `p-${index}` })
     await tracker.flush()
     expect(tracker.pending()).toBe(0)
     expect(sent.length).toBeGreaterThanOrEqual(2)
@@ -82,7 +105,8 @@ describe('traqueur client', () => {
       expect(batch.algorithmVersion).toBe('v0.1')
       expect(batch.sessionId).toBe('s-abcdefgh')
       expect(batch.entry).toBe('seats')
-      for (const event of batch.events) expect(event.clientTs).toBe('2026-09-08T10:00:00.000Z')
+      for (const event of batch.events)
+        expect(event.clientTs).toBe('2026-09-08T10:00:00.000Z')
     }
   })
 
@@ -99,15 +123,24 @@ describe('traqueur client', () => {
     await tracker.flush()
     tracker.track('card_passed', { productId: 'q' })
     await tracker.flush({ keepalive: true })
-    expect(calls.map((options) => options?.keepalive === true)).toEqual([false, true])
+    expect(calls.map((options) => options?.keepalive === true)).toEqual([
+      false,
+      true,
+    ])
   })
 
   it('un envoi qui échoue est silencieux et ne rejette jamais', async () => {
     const send = vi.fn(async () => {
       throw new Error('network down')
     })
-    const tracker = createStudioEventTracker({ sessionId: 's-abcdefgh', send, debounceMs: 0 })
-    expect(() => tracker.track('studio_started', { payload: { entry: 'seats' } })).not.toThrow()
+    const tracker = createStudioEventTracker({
+      sessionId: 's-abcdefgh',
+      send,
+      debounceMs: 0,
+    })
+    expect(() =>
+      tracker.track('studio_started', { payload: { entry: 'seats' } }),
+    ).not.toThrow()
     await expect(tracker.flush()).resolves.toBeUndefined()
     expect(send).toHaveBeenCalledTimes(1)
   })
@@ -117,7 +150,11 @@ describe('traqueur client', () => {
     const send = vi.fn(async (batch: StudioEventsBatch) => {
       sent.push(batch)
     })
-    const tracker = createStudioEventTracker({ sessionId: 's-abcdefgh', send, debounceMs: 0 })
+    const tracker = createStudioEventTracker({
+      sessionId: 's-abcdefgh',
+      send,
+      debounceMs: 0,
+    })
     await tracker.flush()
     expect(send).not.toHaveBeenCalled()
     tracker.track('undo', { payload: {} })
@@ -129,9 +166,18 @@ describe('traqueur client', () => {
 
 it('sérialise réellement les flush, garde ordre et keepalive même après erreur', async () => {
   let rejectFirst!: (error: Error) => void
-  const first = new Promise<void>((_resolve, reject) => { rejectFirst = reject })
-  const send = vi.fn().mockImplementationOnce(() => first).mockResolvedValue(undefined)
-  const tracker = createStudioEventTracker({ sessionId: 's-abcdefgh', send, debounceMs: 10000 })
+  const first = new Promise<void>((_resolve, reject) => {
+    rejectFirst = reject
+  })
+  const send = vi
+    .fn()
+    .mockImplementationOnce(() => first)
+    .mockResolvedValue(undefined)
+  const tracker = createStudioEventTracker({
+    sessionId: 's-abcdefgh',
+    send,
+    debounceMs: 10000,
+  })
   tracker.track('card_liked', { productId: 'a' })
   const one = tracker.flush()
   await Promise.resolve()
@@ -143,7 +189,10 @@ it('sérialise réellement les flush, garde ordre et keepalive même après erre
   rejectFirst(new Error('network'))
   await Promise.all([one, two, tracker.flush()])
   expect(send).toHaveBeenCalledTimes(2)
-  expect(send.mock.calls.map(([batch]) => batch.events[0].productId)).toEqual(['a', 'b'])
+  expect(send.mock.calls.map(([batch]) => batch.events[0].productId)).toEqual([
+    'a',
+    'b',
+  ])
   expect(send.mock.calls[1]?.[1]).toEqual({ keepalive: true })
   expect(tracker.pending()).toBe(0)
 })

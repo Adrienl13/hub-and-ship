@@ -3,7 +3,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { STUDIO_EVENT_TYPES } from '../../src/lib/studio/events'
+import { LOT_3_EVENT_TYPES } from '../../src/lib/studio/events'
 import {
   VISUAL_MEDIA_COLUMNS,
   VISUAL_NEIGHBOR_COLUMNS,
@@ -191,7 +191,7 @@ describe('Lot 3 — PostgreSQL local, droits réels', () => {
     await db.exec(
       "insert into studio_sessions(id,algorithm_version) values ('event-session','v1.0')",
     )
-    for (const type of STUDIO_EVENT_TYPES)
+    for (const type of LOT_3_EVENT_TYPES)
       await db.query(
         "insert into studio_events(session_id,event_type,algorithm_version) values ('event-session',$1,'v1.0')",
         [type],

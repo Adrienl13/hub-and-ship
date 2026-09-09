@@ -70,6 +70,9 @@ export const STUDIO_INTERNAL_COLUMNS = [
   'evidence',
   'metadata',
   'reviewed_by',
+  'provenance',
+  'verified_by',
+  'verified_at',
 ] as const
 
 /** Colonnes de la vue publique studio_fulfillment_options_public. */
@@ -350,7 +353,12 @@ export async function fetchStudioCatalog(
     .map((row) =>
       studioProductFromRow(row, variantsByProduct.get(asString(row.id)) ?? []),
     )
-    .filter((product) => product.variants.length > 0)
+    .filter(
+      (product) =>
+        product.variants.length > 0 ||
+        product.studio.studioRole === 'tabletop' ||
+        product.studio.studioRole === 'base',
+    )
 
   const options = (optionsResult.data ?? [])
     .map(optionFromRow)

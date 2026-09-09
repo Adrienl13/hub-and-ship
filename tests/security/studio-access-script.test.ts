@@ -1,3 +1,7 @@
+import {
+  TABLE_RULE_PUBLIC_COLUMNS,
+  BASE_PROFILE_PUBLIC_COLUMNS,
+} from '../../src/lib/studio/compatibility'
 // Parité entre le script REST `security:studio` (JavaScript, listes
 // dupliquées) et les constantes TypeScript du repository Studio : une colonne
 // publique ou interne ajoutée d'un côté doit l'être de l'autre.
@@ -46,6 +50,20 @@ function surfaceColumns(view: string): string[] {
 }
 
 describe('security:studio — parité avec le code', () => {
+  it('projections Lot 4 en parité', () => {
+    expect(surfaceColumns('studio_tabletop_base_rules_public')).toEqual([
+      ...TABLE_RULE_PUBLIC_COLUMNS,
+    ])
+    expect(surfaceColumns('studio_table_base_profiles_public')).toEqual([
+      ...BASE_PROFILE_PUBLIC_COLUMNS,
+    ])
+    for (const table of [
+      'studio_table_base_types',
+      'studio_table_base_profiles',
+      'studio_tabletop_base_rules',
+    ])
+      expect(list('INTERNAL_TABLES')).toContain(table)
+  })
   it('colonnes internes identiques', () => {
     expect(list('STUDIO_INTERNAL_COLUMNS')).toEqual([
       ...STUDIO_INTERNAL_COLUMNS,

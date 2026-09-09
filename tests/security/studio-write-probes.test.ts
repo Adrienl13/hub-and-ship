@@ -19,6 +19,7 @@ it('seul un refus SQL de permission prouve le blocage, jamais une validation 400
 })
 it('payloads concrets ou limites relationnelles explicites', () => {
   for (const table of [
+    'studio_table_base_types',
     'studio_model_families',
     'studio_sessions',
     'studio_curation_sets',
@@ -36,6 +37,8 @@ it('payloads concrets ou limites relationnelles explicites', () => {
     ).toBeGreaterThan(1)
   }
   for (const table of [
+    'studio_table_base_profiles',
+    'studio_tabletop_base_rules',
     'studio_events',
     'studio_product_visual_features',
     'studio_product_neighbors',

@@ -36,7 +36,11 @@ export function studioWriteProbe(table, productIds, nonce) {
         is_default: false,
       },
     }
+  if (table === 'studio_table_base_types')
+    return { payload: { label: 'Security probe', id: '99999999-0000-0000-0000-000000000001' } }
   const unavailable = {
+    studio_table_base_profiles: 'type interne et rôle piètement nécessaires',
+    studio_tabletop_base_rules: 'type interne ou couple plateau/piètement qualifié nécessaire',
     studio_events: 'session_id interne inaccessible au rôle public',
     studio_product_visual_features:
       'source_media_id interne et relation produit/image non accessibles',
