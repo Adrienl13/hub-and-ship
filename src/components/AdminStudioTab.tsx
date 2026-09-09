@@ -1,3 +1,4 @@
+import { AdminStudioCompatibility } from './AdminStudioCompatibility'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -14,7 +15,7 @@ interface Query extends PromiseLike<Result> {
   range(from: number, to: number): Query
   eq(column: string, value: string): Query
 }
-interface AdminClient {
+export interface AdminClient {
   auth: ReturnType<typeof createSupabaseBrowserClient>['auth']
   from(table: string): {
     select(columns: string): Query
@@ -127,7 +128,13 @@ export function AdminStudioTab() {
           discovery_ready: readyIds.has(p.id),
           material: profile?.material,
           seat_kind: profile?.seat_kind,
-          visual_traits: (profile?.visual_traits as Row | null)?.source_hash === image?.source_hash && (profile?.visual_traits as Row | null)?.version === image?.pipeline_version ? profile?.visual_traits : {},
+          visual_traits:
+            (profile?.visual_traits as Row | null)?.source_hash ===
+              image?.source_hash &&
+            (profile?.visual_traits as Row | null)?.version ===
+              image?.pipeline_version
+              ? profile?.visual_traits
+              : {},
           media_id: image?.id,
           media_status: image?.status,
           media_url: image?.url,
@@ -368,6 +375,7 @@ export function AdminStudioTab() {
           </p>
         ))}
       </section>
+      <AdminStudioCompatibility client={client} />
     </div>
   )
 }
