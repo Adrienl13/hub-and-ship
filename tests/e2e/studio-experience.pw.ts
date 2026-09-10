@@ -206,3 +206,57 @@ test('revue locale isolée, données privées inaccessibles et reduced motion', 
   expect(direct.status()).toBe(404)
   expect(await direct.text()).not.toContain('local-design-review')
 })
+
+test('les modèles circulent, peuvent être arrêtés et respectent reduced motion', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const showcase = page.getByRole('region', {
+    name: 'Explorer les modèles du catalogue',
+  })
+  await expect(
+    showcase.getByText('Tressage rosé', { exact: true }),
+  ).toBeVisible({ timeout: 6000 })
+  await showcase
+    .getByRole('button', { name: 'Mettre les modèles en pause' })
+    .click()
+  await page.mouse.move(0, 0)
+  const selected = await showcase
+    .locator('[data-position="0"] img')
+    .getAttribute('src')
+  await page.waitForTimeout(3300)
+  await expect(showcase.locator('[data-position="0"] img')).toHaveAttribute(
+    'src',
+    selected!,
+  )
+  await showcase.getByRole('button', { name: 'Modèle suivant' }).click()
+  await expect(showcase.locator('[data-position="0"] img')).not.toHaveAttribute(
+    'src',
+    selected!,
+  )
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload({ waitUntil: 'networkidle' })
+  await expect(
+    showcase.getByRole('button', { name: 'Mettre les modèles en pause' }),
+  ).toHaveCount(0)
+  expect(
+    await showcase
+      .locator('[data-position="0"]')
+      .evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe('0s')
+  await expect(page.getByAltText('Terrassea — plaque dorée')).toBeVisible()
+  const sample = page.getByAltText('Échantillon réel PI-TR-007')
+  await sample.scrollIntoViewIfNeeded()
+  await expect
+    .poll(() =>
+      sample.evaluate(
+        (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+      ),
+    )
+    .toBe(true)
+  expect(
+    await sample.evaluate(
+      (img: HTMLImageElement) => img.clientWidth - 16 <= img.naturalWidth,
+    ),
+  ).toBe(true)
+})

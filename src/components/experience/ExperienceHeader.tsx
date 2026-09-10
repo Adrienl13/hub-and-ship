@@ -17,13 +17,13 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
       }}
     >
       <a href="/" className="pi-wordmark" aria-label="Pros Import — accueil">
-        <span className="pi-brand-symbol" aria-hidden>
-          p<span>i</span>
-        </span>
-        <span>
-          pros import<span className="pi-brand-dot">.</span>
-          <small>LE MOBILIER PREND VOTRE DIRECTION</small>
-        </span>
+        <img
+          className="pi-original-logo"
+          src="/brand/terrassea-logo.svg"
+          alt="Terrassea — plaque dorée"
+          width="192"
+          height="90"
+        />
       </a>
       <nav className="pi-desktop-nav" aria-label="Navigation principale">
         {studio && (
@@ -91,7 +91,13 @@ export function ExperienceFooter() {
         </a>
       </div>
       <div className="pi-footer-bottom">
-        <span>pros import.</span>
+        <img
+          className="pi-original-logo"
+          src="/brand/terrassea-logo.svg"
+          alt="Terrassea"
+          width="192"
+          height="90"
+        />
         <nav aria-label="Informations">
           <a href="/catalogue">Catalogue</a>
           <a href="/account">Mon compte</a>

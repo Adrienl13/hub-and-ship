@@ -1,11 +1,6 @@
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
-  MoveUpRight,
-  Plus,
-} from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUpRight } from 'lucide-react'
 import { useState } from 'react'
+import { ChairShowcase } from './ChairShowcase'
 import { ExperienceHeader, ExperienceFooter } from './ExperienceHeader'
 import { isStudioEnabled } from '@/lib/studio/flags'
 const directions = [
@@ -80,49 +75,7 @@ export function ProjectHome() {
               Restaurants · Hôtels · Architectes · Réseaux
             </p>
           </div>
-          <div
-            className="pi-hero-composition"
-            aria-label="Mobilier et inspirations matière présentés séparément"
-          >
-            <div className="pi-composition-grid" aria-hidden />
-            <span className="pi-index-label">ÉTUDE DE MATIÈRES / 01</span>
-            <div className="pi-product-stage">
-              <img
-                src="/catalogue/bistro-seating-clean/BIS-057-01.webp"
-                alt="Assise bistro, photographie catalogue originale"
-                fetchPriority="high"
-                width="640"
-                height="640"
-              />
-              <span className="pi-product-caption">
-                <Plus size={14} /> Une forme comme point de départ
-              </span>
-            </div>
-            <figure className="pi-hero-sample">
-              <img
-                src="/studio/materials/pi-tr-007-detail.webp"
-                alt="Échantillon réel à chevrons bleus et blancs"
-                width="156"
-                height="150"
-              />
-              <figcaption>
-                01 / MOTIF
-                <br />
-                <b>Une direction à explorer</b>
-              </figcaption>
-            </figure>
-            <div className="pi-spec-note">
-              <MoveUpRight size={26} />
-              <p>
-                Le détail fait
-                <br />
-                <strong>la différence.</strong>
-              </p>
-            </div>
-            <span className="pi-composition-disclaimer">
-              Assemblage d’inspirations. Association à confirmer.
-            </span>
-          </div>
+          <ChairShowcase />
         </section>
         <div className="pi-opening-line pi-wrap">
           <span>DU MOBILIER À VOTRE IMAGE, UN PROJET À LA FOIS.</span>
@@ -154,8 +107,6 @@ export function ProjectHome() {
                 src={d.image}
                 loading="lazy"
                 alt={`Échantillon réel ${d.ref}`}
-                width="340"
-                height="340"
               />
               <span className="pi-index-label">{d.ref} / ÉCHANTILLON RÉEL</span>
             </div>

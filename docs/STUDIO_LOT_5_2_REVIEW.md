@@ -2,6 +2,15 @@
 
 Base : `4a9cc212d04b9b7d9c02eb27923c7af8db8e35ae`. Branche : `codex/studio-lot-5-2-experience`.
 
+## Révision après retour visuel — 11 septembre 2026
+
+- Plaque dorée Terrassea existante restaurée dans le header et le footer ; accents laiton discrets, sans remplacer le bleu des actions.
+- Premier écran : quatre photographies catalogue originales circulent entre une carte centrale et deux cartes latérales. Changement toutes les 3 secondes, transition de 900 ms. Précédent/suivant, pause ; arrêt au survol, hors écran et onglet masqué. Aucun défilement automatique avec reduced motion.
+- Sur mobile, les modèles apparaissent juste après la phrase conservée « Votre lieu a du caractère. Votre mobilier aussi. », puis le CTA et le texte explicatif.
+- Les découpes fournisseur très petites (ex. 146 × 140 px) ne sont plus étirées ou inclinées dans les présentations et le zoom. Aucun détail généré, aucune recoloration du produit. Une source haute définition reste nécessaire pour un grand zoom précis.
+- La simplification des quantités/options reste une passe ultérieure, conformément au retour utilisateur.
+- Validation de cette révision : `check` **1 067 réussis / 8 ignorés**, sécurité **277 réussis**, build et isolation **OK**, E2E expérience **8 réussis** (desktop/mobile, animation, pause, reduced motion, bibliothèque, projet et confidentialité). Les autres E2E ci-dessous correspondent à la validation initiale du lot.
+
 ## Trois visions explorées
 
 | Concept                            | Point d’entrée et expérience                                                   | Direction visuelle                                                                                 | Arbitrage                                                                                                                                                                      |
@@ -16,7 +25,7 @@ L’audit initial montrait une homepage guidée par le container, un accès Stud
 
 ### Homepage
 
-La promesse « Votre lieu a du caractère. Votre mobilier aussi. » parle d’abord de l’établissement. La photo catalogue originale et l’échantillon sont présentés comme deux objets distincts sur un plan de travail : aucune texture n’est appliquée artificiellement au produit. Le CTA Studio est majeur ; le catalogue reste immédiatement accessible.
+La promesse « Votre lieu a du caractère. Votre mobilier aussi. » parle d’abord de l’établissement. Plusieurs photographies catalogue originales circulent sur un plan de travail : aucune texture n’est appliquée artificiellement au produit. Le CTA Studio est majeur ; le catalogue reste immédiatement accessible.
 
 Le visiteur peut explorer trois langages de matière avant d’entrer dans son projet. Changer cette inspiration ne recolore jamais la photo et ne crée aucune sélection commerciale. Le processus est présenté ensuite : mobilier → direction → projet à vérifier. Qualité et livraison viennent en preuves d’exécution, avec liens vers les pages existantes. Aucun faux client, témoignage, atelier, test ou délai n’a été ajouté pour remplir ces sections.
 
@@ -43,9 +52,9 @@ Sur mobile, la planche est repliable et placée avant la matière ; la bande de 
 - Bordures fines, angles presque droits, boutons pleins pour l’action principale. Les grands arrondis ne portent plus l’identité.
 - Photographies catalogue conservées, sans masque, recoloration, filtre ou texture générée. Les rotations concernent les cadres de présentation, comme des échantillons sur une table.
 - Bleu pour avancer ; gris/encre pour les outils. Focus visibles, textes de statut conservateurs. Le retour visuel suit l’action du client.
-- Transition matière de 180 ms, désactivée avec `prefers-reduced-motion`. Aucun moteur d’animation supplémentaire chargé.
+- Mouvement des cartes catalogue de 900 ms, désactivé avec `prefers-reduced-motion`. Aucun moteur d’animation supplémentaire chargé.
 
-Les règles sont regroupées dans `src/styles/experience.css` et limitées à `.pi-page`. Elles ne remplacent pas brutalement le thème des écrans historiques. Le mot-symbole Pros Import et le repère « pi » sont une proposition de direction de marque, pas une refonte de l’identité légale ou du logo historique sur tous les supports.
+Les règles sont regroupées dans `src/styles/experience.css` et limitées à `.pi-page`. Elles ne remplacent pas brutalement le thème des écrans historiques. La plaque Terrassea existante est conservée dans la navigation et le pied de page.
 
 ## Revue locale reproductible
 
@@ -105,7 +114,7 @@ Sortie reproductible : `/tmp/lot52-review/`. Une sélection finale est conservé
 
 Les scénarios commerciaux utilisent des données synthétiques et des API interceptées ; ils ne valident pas le catalogue réel. Les suites E2E ont été lancées séparément pour éviter une collision entre les ports d’inspection des serveurs Vite. Deux sélecteurs historiques ont été adaptés à la nouvelle présentation (ouverture de la bibliothèque et lien précis de reprise des assises).
 
-Mesure locale du premier affichage mobile, sans scroll : **2 requêtes image, 64 596 octets**. Le produit hero est prioritaire, les matières complémentaires sont lazy-loadées. Ce relevé concerne uniquement les images de ce viewport, pas le poids total d’une page ni un score Core Web Vitals. Le nuancier ne charge pas 151 détails à l’ouverture. Le budget existant et le scan anti-fuite restent exécutés par le build.
+Mesure locale du premier affichage mobile, sans scroll : **6 requêtes image, 159 508 octets** (logo, quatre chaises et une matière). Le produit hero est prioritaire, les matières complémentaires sont lazy-loadées. Ce relevé concerne uniquement les images de ce viewport, pas le poids total d’une page ni un score Core Web Vitals. Le nuancier ne charge pas 151 détails à l’ouverture. Le budget existant et le scan anti-fuite restent exécutés par le build.
 
 ## Limites et suite
 

@@ -591,8 +591,8 @@ export function MaterialAtelier({
                 : 'Regarder le détail'}
             </DialogTitle>
             <DialogDescription>
-              Échantillons réels agrandis. Les couleurs et l’échelle doivent
-              être confirmées sur un échantillon physique.
+              Échantillons réels. Les couleurs et l’échelle doivent être
+              confirmées sur un échantillon physique.
             </DialogDescription>
           </DialogHeader>
           <div
@@ -605,7 +605,7 @@ export function MaterialAtelier({
                   <img
                     src={item.image}
                     alt={`Détail ${ref}`}
-                    className="aspect-square max-h-[55vh] w-full rounded-xl bg-white object-contain"
+                    className="pi-source-detail"
                   />
                   <figcaption className="mt-3 text-center text-sm font-semibold">
                     {ref}

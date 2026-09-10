@@ -5,6 +5,21 @@ const flag = vi.hoisted(() => ({ enabled: true }))
 vi.mock('@/lib/studio/flags', () => ({ isStudioEnabled: () => flag.enabled }))
 beforeEach(() => {
   flag.enabled = true
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  )
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  )
 })
 it('le projet est le point d’entrée, avec accès explicite au Studio et au catalogue', () => {
   render(<ProjectHome />)
@@ -53,4 +68,20 @@ it('le menu mobile se referme avec Escape et restitue le focus', () => {
     screen.queryByRole('navigation', { name: 'Navigation mobile' }),
   ).not.toBeInTheDocument()
   expect(button).toHaveFocus()
+})
+
+it('affiche la plaque Terrassea et permet de parcourir les vrais modèles sans recoloration', () => {
+  render(<ProjectHome />)
+  expect(screen.getByAltText('Terrassea — plaque dorée')).toHaveAttribute(
+    'src',
+    '/brand/terrassea-logo.svg',
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Modèle suivant' }))
+  expect(screen.getByText('Tressage rosé')).toBeVisible()
+  expect(
+    screen.getByAltText('Tressage rosé, photographie catalogue originale'),
+  ).toHaveAttribute('src', '/catalogue/bistro-seating-clean/BIS-006-01.webp')
+  expect(
+    screen.queryByRole('button', { name: 'Mettre les modèles en pause' }),
+  ).not.toBeInTheDocument()
 })
