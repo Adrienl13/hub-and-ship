@@ -250,7 +250,9 @@ export function evaluateCustomization(
           if (status === 'unavailable') reason = 'option_unavailable'
           else if (
             outside ||
-            (selection.value && !capability.values.includes(selection.value)) ||
+            (!selection.visual &&
+              selection.value &&
+              !capability.values.includes(selection.value)) ||
             (selection.note.trim() && !capability.allows_free_text)
           ) {
             status = 'unknown'

@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs'
 import { it, expect } from 'vitest'
-import { libraryItemSchema, visualAssociationStatus } from './visual-library'
+import {
+  libraryItemSchema,
+  visualAssociationStatus,
+  visualKind,
+} from './visual-library'
 import {
   evaluateCustomization,
   lineTargets,
@@ -83,7 +87,7 @@ it('une capability produit ne certifie pas un motif ni une palette sans preuve e
     scope: 'seat' as const,
     kind: 'weave_pattern' as const,
     status: 'verified' as const,
-    values: ['PI-TR-001'],
+    values: [],
     allows_free_text: false,
     requires_review: false,
     min_quantity: null,
@@ -120,4 +124,79 @@ it('une capability produit ne certifie pas un motif ni une palette sans preuve e
     }).state,
   ).toBe('feasibility_review')
   expect(run({ ...data, capabilities: [] }).state).toBe('feasibility_review')
+})
+it('250 références exactes ne consomment aucune valeur de capability', () => {
+  const target = lineTargets('test', 60, { seat: 'p' })[1]!
+  const capability = {
+    id: 'c',
+    product_id: 'p',
+    scope: 'seat' as const,
+    kind: 'weave_pattern' as const,
+    status: 'verified' as const,
+    values: [],
+    allows_free_text: false,
+    requires_review: false,
+    min_quantity: 50,
+    max_quantity: 80,
+  }
+  const associations = Array.from({ length: 250 }, (_, i) => ({
+    product_id: 'p',
+    public_ref: `PI-TR-${String(i + 1).padStart(3, '0')}`,
+    status: 'verified' as const,
+    palette_refs: [],
+  }))
+  for (const row of associations) {
+    const choice = {
+      kind: 'weave_pattern' as const,
+      value: row.public_ref,
+      requested: true,
+      note: '',
+      visual: { public_ref: row.public_ref, weave_colors: [] },
+    }
+    const data = {
+      available: true,
+      capabilities: [capability],
+      visualAssociations: associations,
+    }
+    expect(
+      evaluateCustomization([target], { [target.key]: [choice] }, data).state,
+    ).toBe('auto_quote_ready')
+    for (const quantity of [49, 81])
+      expect(
+        evaluateCustomization(
+          [{ ...target, quantity }],
+          { [target.key]: [choice] },
+          data,
+        ).state,
+      ).toBe('feasibility_review')
+    expect(
+      evaluateCustomization(
+        [target],
+        { [target.key]: [choice] },
+        { ...data, capabilities: [{ ...capability, requires_review: true }] },
+      ).state,
+    ).toBe('manual_quote_required')
+    for (const status of ['unknown', 'unavailable'] as const)
+      expect(
+        evaluateCustomization(
+          [target],
+          { [target.key]: [choice] },
+          { ...data, capabilities: [{ ...capability, status }] },
+        ).state,
+      ).toBe('feasibility_review')
+  }
+  expect(capability.values).toHaveLength(0)
+})
+it('familles extensibles dans la bibliothèque, mapping éditeur explicite seulement', () => {
+  expect(visualKind('weave')).toBe('weave_pattern')
+  expect(visualKind('rope')).toBe('rope_color')
+  expect(visualKind('textilene')).toBe('textilene_color')
+  expect(visualKind('future_metal')).toBeUndefined()
+  expect(visualKind('toString')).toBeUndefined()
+  const row = JSON.parse(
+    readFileSync('public/studio/materials/library.json', 'utf8'),
+  )[0]
+  expect(
+    libraryItemSchema.safeParse({ ...row, family: 'future_metal' }).success,
+  ).toBe(true)
 })

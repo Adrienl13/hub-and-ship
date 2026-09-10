@@ -111,3 +111,15 @@ Captures locales, issues du scénario E2E synthétique : `/tmp/studio-lot51-{144
 - Protection / sondes : `.gitignore`, `vite.config.ts`, `scripts/security/check-studio-access.mjs`, `studio-write-probes.mjs`.
 - Tests : `src/lib/studio/visual-library.test.ts`, `visual-library-repository.test.ts`, `tests/security/studio-visual-library-sql.test.ts`, `studio-access-script.test.ts`, `tests/e2e/studio-visual-library.config.ts`, `studio-visual-library.pw.ts`.
 - Documentation : ce rapport et `docs/RUNBOOK_STUDIO.md`.
+
+## Revue corrective de 73c2452
+
+- Pour une sélection visuelle, la capability contrôle le type, son statut, les quantités et la revue nécessaire. L’association contrôle la référence exacte ; `capability.values` n’a plus à recopier cette référence. Les sélections classiques conservent leur contrôle de valeurs. Une capability vérifiée avec `values=[]` et une association vérifiée peut atteindre `auto_quote_ready`, jamais certifier un fulfillment. Absence, ambiguïté ou palette libre restent inconnues.
+- La saisie de palette est identifiée par le couple cible/public_ref. Changer de mobilier ou de motif écarte la saisie non enregistrée et restitue seulement la palette sauvegardée de la sélection active. Resélectionner le même motif ne détruit pas sa palette.
+- Le mapping éditeur est explicite : weave, rope, textilene. Une famille future reste valide dans la bibliothèque mais ne peut pas devenir implicitement textilène dans cet éditeur.
+
+Validation corrective : **43 tests ciblés réussis**, `check` **1059 réussis / 8 ignorés**, sécurité **274 réussis**, build et scan des **216 chunks client** OK. E2E : Lot 5.1 **4**, Lot 5 **4**, Lot 4 **12**, Lot 3 **10**, Lot 2 **10**, soit **40 réussis**. Le scénario visuel couvre deux assises, palette sauvegardée et non sauvegardée, retour à l’assise précédente et changement de motif. Les tests moteur évaluent **250 références** sans aucune valeur dans la capability et conservent les contrôles de quantité/statut/revue.
+
+Aucun champ/code usine ou fournisseur dans le JSON public ; le coffre est toujours ignoré par Git et les accès Vite aux sources/manifeste sont refusés dans les quatre viewports E2E. Aucune migration modifiée ou appliquée pendant cette correction.
+
+DATA READY = NON. PROD WRITE = NON. PROD MIGRATION = NON. DEPLOY = NON. MAIN MERGE = NON.

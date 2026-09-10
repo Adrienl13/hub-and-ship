@@ -220,6 +220,12 @@ test('atelier visuel, confidentialité, palette et dossier', async ({
                 role: 'seat',
                 requestedQuantity: 60,
               },
+              {
+                productId: 'seat-1',
+                variantId: 'seat-1-std',
+                role: 'seat',
+                requestedQuantity: 60,
+              },
             ],
             tables: [
               {
@@ -285,6 +291,40 @@ test('atelier visuel, confidentialité, palette et dossier', async ({
   await expect(page.getByLabel('Votre planche matière')).toContainText(
     'Bleu / Ivoire',
   )
+  const furniture = page.getByLabel('Mobilier de la planche')
+  await furniture.selectOption({ label: 'Assise test 2' })
+  await card.getByRole('button', { name: 'Retenir ce détail' }).click()
+  await expect(page.getByLabel('Couleurs du tressage souhaitées')).toHaveValue(
+    '',
+  )
+  await page
+    .getByLabel('Couleurs du tressage souhaitées')
+    .fill('Rouge non enregistré')
+  await furniture.selectOption({ label: 'Assise test 1' })
+  await expect(page.getByLabel('Couleurs du tressage souhaitées')).toHaveValue(
+    'Bleu / Ivoire',
+  )
+  await furniture.selectOption({ label: 'Assise test 2' })
+  await expect(page.getByLabel('Couleurs du tressage souhaitées')).toHaveValue(
+    '',
+  )
+  await furniture.selectOption({ label: 'Assise test 1' })
+  await page
+    .getByRole('article')
+    .filter({
+      has: page.getByRole('heading', { name: 'PI-TR-003', exact: true }),
+    })
+    .getByRole('button', { name: 'Retenir ce détail' })
+    .click()
+  await expect(page.getByLabel('Couleurs du tressage souhaitées')).toHaveValue(
+    '',
+  )
+  await card.getByRole('button', { name: 'Retenir ce détail' }).click()
+  await expect(page.getByLabel('Couleurs du tressage souhaitées')).toHaveValue(
+    '',
+  )
+  await page.getByLabel('Couleurs du tressage souhaitées').fill('Bleu / Ivoire')
+  await page.getByRole('button', { name: 'Noter cette palette' }).click()
   await page.reload()
   await expect(page.getByLabel('Votre planche matière')).toContainText(
     'PI-TR-007',

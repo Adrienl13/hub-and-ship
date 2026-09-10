@@ -61,10 +61,13 @@ export function visualAssociationStatus(
   return rows.length === 1 ? rows[0]!.status : 'unknown'
 }
 /** A palette suggestion is never a recoloring or an approved colorway. */
+const VISUAL_KINDS = {
+  weave: 'weave_pattern',
+  rope: 'rope_color',
+  textilene: 'textilene_color',
+} as const
 export function visualKind(family: string) {
-  return family === 'weave'
-    ? 'weave_pattern'
-    : family === 'rope'
-      ? 'rope_color'
-      : 'textilene_color'
+  return Object.hasOwn(VISUAL_KINDS, family)
+    ? VISUAL_KINDS[family as keyof typeof VISUAL_KINDS]
+    : undefined
 }

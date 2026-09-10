@@ -56,7 +56,10 @@ export function MaterialAtelier({
     [compare, setCompare] = useState<string[]>([]),
     [zoom, setZoom] = useState<string[]>([])
   const active = targets.find((t) => t.target.key === activeKey) ?? targets[0]
-  const [palette, setPalette] = useState('')
+  const [paletteDraft, setPaletteDraft] = useState<{
+    key: string
+    value: string
+  } | null>(null)
   const [boardOpen, setBoardOpen] = useState(false)
   useEffect(() => {
     setBoardOpen(window.matchMedia('(min-width: 1024px)').matches)
@@ -70,6 +73,7 @@ export function MaterialAtelier({
     () =>
       library.items.filter(
         (i) =>
+          visualKind(i.family) !== undefined &&
           i.family === family &&
           `${i.label} ${i.public_ref} ${i.tag}`
             .toLocaleLowerCase()
@@ -81,11 +85,28 @@ export function MaterialAtelier({
   const selected = active
     ? (draft[active.target.key] ?? []).find((s) => s.kind === kind)
     : undefined
+  const paletteKey = JSON.stringify([
+    active?.target.key,
+    selected?.visual?.public_ref,
+  ])
+  const savedPalette = selected?.visual?.weave_colors.join(' / ') ?? ''
+  const palette =
+    paletteDraft?.key === paletteKey ? paletteDraft.value : savedPalette
+  useEffect(() => {
+    setPaletteDraft(null)
+  }, [paletteKey])
   const choose = (item: VisualLibraryItem) => {
     if (!active) return
     setBoardOpen(true)
     const current = draft[active.target.key] ?? []
     const k = visualKind(item.family)
+    if (!k) return
+    if (
+      current.some(
+        (s) => s.kind === k && s.visual?.public_ref === item.public_ref,
+      )
+    )
+      return
     useStudioStore.getState().setCustomization(active.target, [
       ...current.filter((s) => s.kind !== k),
       {
@@ -108,14 +129,16 @@ export function MaterialAtelier({
           capabilities,
         ).selections[0]?.status
       : 'unknown'
-  const unavailable = (item: VisualLibraryItem) =>
-    active
+  const unavailable = (item: VisualLibraryItem) => {
+    const itemKind = visualKind(item.family)
+    if (!itemKind) return true
+    return active
       ? evaluateCustomization(
           [active.target],
           {
             [active.target.key]: [
               {
-                kind: visualKind(item.family),
+                kind: itemKind,
                 value: item.public_ref,
                 note: '',
                 requested: true,
@@ -126,6 +149,7 @@ export function MaterialAtelier({
           capabilities,
         ).selections[0]?.status === 'unavailable'
       : false
+  }
   return (
     <section
       aria-label="Atelier matières"
@@ -366,7 +390,12 @@ export function MaterialAtelier({
                       <input
                         aria-label="Couleurs du tressage souhaitées"
                         value={palette}
-                        onChange={(e) => setPalette(e.target.value)}
+                        onChange={(e) =>
+                          setPaletteDraft({
+                            key: paletteKey,
+                            value: e.target.value,
+                          })
+                        }
                         placeholder="Décrivez votre palette"
                         maxLength={320}
                         className="mt-2 min-h-[44px] w-full rounded border bg-white px-2"
