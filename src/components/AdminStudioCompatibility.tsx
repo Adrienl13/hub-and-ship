@@ -287,7 +287,8 @@ export function AdminStudioCompatibility({ client }: { client: AdminClient }) {
                     value={shape}
                     onChange={(e) => setShape(e.target.value)}
                   >
-                    <option value="rectangular">Carré / rectangle</option>
+                    <option value="square">Carré</option>
+                    <option value="rectangular">Rectangle</option>
                     <option value="round">Rond</option>
                   </select>
                 </label>

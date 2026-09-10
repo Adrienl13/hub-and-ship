@@ -35,6 +35,12 @@ beforeAll(async () => {
     ),
   )
   await db.exec(
+    readFileSync(
+      'supabase/migrations/20260910110000_studio_effective_table_shape.sql',
+      'utf8',
+    ),
+  )
+  await db.exec(
     `set test.admin='true';set role authenticated;insert into studio_table_base_types(id,label) values ('${type}','Type testé');insert into studio_table_base_profiles(base_id,base_type_id,status,provenance) values ('base','${type}','verified','Fixture fabricant');insert into studio_tabletop_base_rules(base_id,tabletop_id,verdict,status,provenance) values ('base','top','allowed','verified','Fixture documentée');reset role;set test.admin='false'`,
   )
 }, 30000)
@@ -172,6 +178,41 @@ it('plages SQL facultatives et rotation : incohérences refusées', async () => 
   await expect(
     db.query(
       `insert into studio_tabletop_base_rules(base_type_id,shape,min_width_cm,max_length_cm,verdict) values ($1,'round',90,80,'allowed')`,
+      [type],
+    ),
+  ).rejects.toMatchObject({ code: '23514' })
+  await db.exec("reset role;set test.admin='false'")
+})
+
+it('migration 44 accepte square sans seed, conserve la projection minimale et refuse les formes inconnues', async () => {
+  const migration = readFileSync(
+    'supabase/migrations/20260910110000_studio_effective_table_shape.sql',
+    'utf8',
+  )
+  expect(migration).not.toMatch(/insert into|update public\.products/i)
+  await db.exec("set test.admin='true';set role authenticated;begin")
+  await db.query(
+    `insert into studio_tabletop_base_rules(base_type_id,shape,min_length_cm,min_width_cm,max_length_cm,max_width_cm,verdict,status,provenance) values ($1,'square',50,50,80,80,'allowed','verified','Fixture uniquement')`,
+    [type],
+  )
+  await db.exec('reset role;set role anon')
+  expect(
+    (
+      await db.query(
+        "select shape,min_length_cm,max_length_cm from studio_tabletop_base_rules_public where shape='square'",
+      )
+    ).rows,
+  ).toEqual([{ shape: 'square', min_length_cm: '50', max_length_cm: '80' }])
+  await db.exec("rollback;set test.admin='true';set role authenticated")
+  await expect(
+    db.query(
+      `insert into studio_tabletop_base_rules(base_type_id,shape,verdict) values ($1,'triangle','allowed')`,
+      [type],
+    ),
+  ).rejects.toMatchObject({ code: '23514' })
+  await expect(
+    db.query(
+      `insert into studio_tabletop_base_rules(base_type_id,shape,min_length_cm,max_width_cm,verdict) values ($1,'square',80,70,'allowed')`,
       [type],
     ),
   ).rejects.toMatchObject({ code: '23514' })

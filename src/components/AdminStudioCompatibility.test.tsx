@@ -146,3 +146,54 @@ it('saisie facultative des quatre bornes et rejet des plages incohérentes', asy
     ),
   )
 })
+
+it('propose Carré, Rectangle et Rond et enregistre square explicitement', async () => {
+  const insert = vi.fn(async () => ({ data: [], error: null }))
+  const client = {
+    from: (table: string) => ({
+      select: () => ({
+        range: async () => ({
+          data:
+            table === 'studio_table_base_types'
+              ? [{ id: 'standard', label: 'Standard test' }]
+              : [],
+          error: null,
+        }),
+      }),
+      insert,
+    }),
+  } as unknown as AdminClient
+  render(<AdminStudioCompatibility client={client} />)
+  await screen.findByLabelText('Portée')
+  fireEvent.change(screen.getByLabelText('Portée'), {
+    target: { value: 'type' },
+  })
+  expect(screen.getByRole('option', { name: 'Carré' })).toHaveValue('square')
+  expect(screen.getByRole('option', { name: 'Rectangle' })).toHaveValue(
+    'rectangular',
+  )
+  expect(screen.getByRole('option', { name: 'Rond' })).toHaveValue('round')
+  expect(screen.queryByRole('option', { name: 'Carré / rectangle' })).toBeNull()
+  fireEvent.change(screen.getByLabelText('Type'), {
+    target: { value: 'standard' },
+  })
+  fireEvent.change(screen.getByLabelText('Forme'), {
+    target: { value: 'square' },
+  })
+  fireEvent.change(screen.getByLabelText('Provenance de la validation'), {
+    target: { value: 'Fixture test' },
+  })
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Enregistrer la validation' }),
+  )
+  await waitFor(() =>
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        shape: 'square',
+        base_type_id: 'standard',
+        base_id: null,
+        tabletop_id: null,
+      }),
+    ),
+  )
+})

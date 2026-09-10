@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { isCompatibleTop } from '@/lib/table-composer'
 import type { StudioProduct } from './types'
 
 export const COMPATIBILITY_VERDICTS = [
@@ -51,6 +50,12 @@ export function validTableDimensions(r: {
     return false
   const [minL, minW] = normalizedBounds(r.min_length_cm, r.min_width_cm)
   const [maxL, maxW] = normalizedBounds(r.max_length_cm, r.max_width_cm)
+  if (
+    r.shape === 'square' &&
+    Math.max(minL ?? 0, minW ?? 0) >
+      Math.min(maxL ?? Infinity, maxW ?? Infinity)
+  )
+    return false
   if (r.shape === 'round') {
     if (minL !== null && minW !== null && minL !== minW) return false
     if (maxL !== null && maxW !== null && maxL !== maxW) return false
@@ -71,7 +76,7 @@ export const tableRuleSchema = z
     base_id: z.string().nullable(),
     tabletop_id: z.string().nullable(),
     base_type_id: z.string().nullable(),
-    shape: z.enum(['round', 'rectangular']).nullable(),
+    shape: z.enum(['round', 'square', 'rectangular']).nullable(),
     max_length_cm: z.number().positive().lt(10000).finite().nullable(),
     max_width_cm: z.number().positive().lt(10000).finite().nullable(),
     min_length_cm: z.number().positive().lt(10000).finite().nullable(),
@@ -114,6 +119,27 @@ export interface CompatibilityResult {
   readonly ruleId?: string
 }
 
+/** Studio-only classification; never mutates the catalogue shape. */
+export function effectiveTableShape(
+  product: StudioProduct | null | undefined,
+): 'round' | 'square' | 'rectangular' | null {
+  const l = product?.dimensions?.l,
+    w = product?.dimensions?.w
+  if (
+    typeof l !== 'number' ||
+    typeof w !== 'number' ||
+    !Number.isFinite(l) ||
+    !Number.isFinite(w) ||
+    l <= 0 ||
+    w <= 0
+  )
+    return null
+  if (product?.tableShape === 'round') return 'round'
+  if (product?.tableShape === 'rectangular')
+    return l === w ? 'square' : 'rectangular'
+  return null
+}
+
 /** Public rules and memberships are projected ONLY after human verification.
  * No names, SKU, price or visual model participate in this decision. */
 export function resolveTableCompatibility(
@@ -146,10 +172,10 @@ export function resolveTableCompatibility(
       return result('requires_confirmation', 'conflicting_rules')
     return result(pair[0]!.verdict, 'verified_pair', pair[0]!.id)
   }
-  const shape = top.tableShape
-  const { l, w } = top.dimensions
-  if (!shape || !Number.isFinite(l) || !Number.isFinite(w) || l <= 0 || w <= 0)
+  const shape = effectiveTableShape(top)
+  if (!shape)
     return result('requires_confirmation', 'missing_shape_or_dimensions')
+  const { l, w } = top.dimensions
   const membership = data.baseProfiles.filter((p) => p.base_id === base.id)
   if (membership.length > 1)
     return result('requires_confirmation', 'conflicting_types')
@@ -186,10 +212,5 @@ export function resolveTableCompatibility(
       return result('requires_confirmation', 'conflicting_rules')
     return outcomes[0]!
   }
-  if (base.compatibleTopShapes?.length)
-    return result(
-      isCompatibleTop(base, top) ? 'allowed' : 'denied',
-      'catalogue_explicit_shapes',
-    )
   return result('requires_confirmation', 'compatibility_unconfirmed')
 }

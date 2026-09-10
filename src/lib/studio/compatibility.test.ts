@@ -23,7 +23,7 @@ describe('compatibilité Studio conservatrice', () => {
           base_id: null,
           tabletop_id: null,
           base_type_id: 'central',
-          shape: 'rectangular' as const,
+          shape: 'square' as const,
           max_length_cm: 80,
           max_width_cm: 70,
         },
@@ -31,7 +31,7 @@ describe('compatibilité Studio conservatrice', () => {
     }
     expect(resolve(top, base, typed).verdict).toBe('allowed')
     expect(
-      resolve({ ...top, dimensions: { l: 90, w: 70, h: 2 } }, base, typed)
+      resolve({ ...top, dimensions: { l: 90, w: 90, h: 2 } }, base, typed)
         .verdict,
     ).toBe('denied')
     expect(resolve({ ...top, tableShape: 'round' }, base, typed).verdict).toBe(
@@ -44,15 +44,15 @@ describe('compatibilité Studio conservatrice', () => {
       }).verdict,
     ).toBe('denied')
   })
-  it('liste catalogue non vide seulement', () => {
-    expect(
-      resolve(top, { ...base, compatibleTopShapes: ['rectangular'] }, empty)
-        .verdict,
-    ).toBe('allowed')
-    expect(
-      resolve(top, { ...base, compatibleTopShapes: ['round'] }, empty).verdict,
-    ).toBe('denied')
-    expect(resolve(top, base, empty).verdict).toBe('requires_confirmation')
+  it('une liste catalogue ne remplace pas une règle vérifiée', () => {
+    for (const compatibleTopShapes of [[], ['rectangular'], ['round']] as const)
+      expect(
+        resolve(
+          top,
+          { ...base, compatibleTopShapes: [...compatibleTopShapes] },
+          empty,
+        ).verdict,
+      ).toBe('requires_confirmation')
   })
   it('données manquantes et lecture indisponible ne certifient rien', () => {
     expect(resolve(undefined, base, data).verdict).toBe('requires_confirmation')
@@ -105,7 +105,7 @@ describe('forme sans règle générale applicable', () => {
         base_id: null,
         tabletop_id: null,
         base_type_id: 'central',
-        shape: 'rectangular' as const,
+        shape: 'square' as const,
         max_length_cm: 80,
         max_width_cm: 70,
       },
@@ -119,19 +119,25 @@ describe('forme sans règle générale applicable', () => {
       reason: 'compatibility_unconfirmed',
     })
   })
-  it('une liste explicite round autorise le repli', () => {
+  it('une liste explicite round ne suffit pas', () => {
     expect(
       resolve(roundTop, { ...base, compatibleTopShapes: ['round'] }, typed),
-    ).toMatchObject({ verdict: 'allowed', reason: 'catalogue_explicit_shapes' })
+    ).toMatchObject({
+      verdict: 'requires_confirmation',
+      reason: 'compatibility_unconfirmed',
+    })
   })
-  it('une liste explicite rectangular refuse le plateau round', () => {
+  it('une liste explicite rectangular ne prouve pas une incompatibilité', () => {
     expect(
       resolve(
         roundTop,
         { ...base, compatibleTopShapes: ['rectangular'] },
         typed,
       ),
-    ).toMatchObject({ verdict: 'denied', reason: 'catalogue_explicit_shapes' })
+    ).toMatchObject({
+      verdict: 'requires_confirmation',
+      reason: 'compatibility_unconfirmed',
+    })
   })
   it('une règle round max70 refuse un plateau round90 malgré un repli positif', () => {
     expect(
@@ -176,7 +182,7 @@ describe('plages dimensionnelles vérifiées', () => {
     base_id: null,
     tabletop_id: null,
     base_type_id: 'central',
-    shape: 'rectangular' as const,
+    shape: 'square' as const,
     min_length_cm: 50,
     min_width_cm: 50,
     max_length_cm: 80,
@@ -232,6 +238,7 @@ describe('plages dimensionnelles vérifiées', () => {
   it('normalise séparément plateau et bornes tournés', () => {
     const rotated = {
       ...rule,
+      shape: 'rectangular' as const,
       min_length_cm: 40,
       min_width_cm: 80,
       max_length_cm: 70,
@@ -251,6 +258,7 @@ describe('plages dimensionnelles vérifiées', () => {
   it('borne partielle longueur sur grand côté, largeur sur petit côté', () => {
     const partial = {
       ...rule,
+      shape: 'rectangular' as const,
       min_length_cm: 80,
       min_width_cm: null,
       max_length_cm: null,
@@ -262,9 +270,12 @@ describe('plages dimensionnelles vérifiées', () => {
         rules: [partial],
       }).verdict,
     ).toBe('allowed')
-    expect(resolve(top, base, { ...typed, rules: [partial] }).reason).toBe(
-      'minimum_dimensions_not_reached',
-    )
+    expect(
+      resolve({ ...top, dimensions: { l: 70, w: 60, h: 2 } }, base, {
+        ...typed,
+        rules: [partial],
+      }).reason,
+    ).toBe('minimum_dimensions_not_reached')
   })
   it('exception exacte allowed prioritaire même sous le minimum', () => {
     expect(

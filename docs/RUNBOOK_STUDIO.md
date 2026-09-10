@@ -218,3 +218,13 @@ La migration 42 reste inchangée et NON APPLIQUÉE EN PRODUCTION ; la nouvelle
 migration 43 est également NON APPLIQUÉE EN PRODUCTION. Les minima/maxima sont
 facultatifs et les formes catalogue restent inchangées. DATA READY = NON : les
 règles métier réelles doivent être validées séparément avant toute saisie.
+
+### Lot 4 — formes techniques (migration additive 44)
+
+Le moteur distingue carré, rectangle et rond à partir de la forme et des
+mesures catalogue, sans modifier les produits. Sans règle vérifiée couvrant
+la forme effective, le verdict reste non confirmé ; les exceptions exactes
+restent prioritaires. La migration 44 ajoute seulement le contrat de règles
+`square` et sa contrainte dimensionnelle. Migrations 42/43 inchangées ; aucune
+règle commerciale ni rattachement créé. MIGRATION 44 PROD = NON APPLIQUÉE.
+DATA READY = NON. Voir [les règles de classification](./STUDIO_TABLE_DIMENSION_RANGES.md).
