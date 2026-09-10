@@ -1,3 +1,4 @@
+import { useStudioVisualLibrary } from './useStudioVisualLibrary'
 import { useStudioCustomization } from './useStudioCustomization'
 import { useMemo } from 'react'
 import type { StudioCatalog } from '@/lib/studio/repository'
@@ -8,13 +9,18 @@ export function useStudioProjectSummary(catalog: StudioCatalog | null) {
   const project = useStudioStore((s) => s.project)
   const compatibility = useStudioCompatibility()
   const capabilities = useStudioCustomization()
+  const visualLibrary = useStudioVisualLibrary()
   const productsById = useMemo(
     () => new Map(catalog?.products.map((p) => [p.id, p]) ?? []),
     [catalog],
   )
   return {
     customization: project.customization,
-    capabilities,
+    visualLibrary,
+    capabilities: {
+      ...capabilities,
+      visualAssociations: visualLibrary.associations,
+    },
     entry: project.entry,
     items: project.items,
     tables: project.tables ?? [],

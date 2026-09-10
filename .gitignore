@@ -82,3 +82,6 @@ supabase/.temp/
 # Project uses bun.lock — keep npm's lockfile out
 package-lock.json
 supplier-mapping-*.json
+
+# Confidential Studio source boards and manufacturer mappings (local admin vault).
+/data/private/

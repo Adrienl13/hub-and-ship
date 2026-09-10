@@ -5,6 +5,17 @@ import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  server: {
+    fs: {
+      deny: [
+        '.env',
+        '.env.*',
+        '*.{crt,pem}',
+        '**/.git/**',
+        '**/data/private/**',
+      ],
+    },
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

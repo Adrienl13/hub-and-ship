@@ -240,3 +240,16 @@ table admin et une projection publique minimale, sans seed ni écriture produit.
 MIGRATION 45 PROD = NON APPLIQUÉE. Aucun flag modifié. DATA READY = NON.
 Les notes ne sont jamais ajoutées aux événements Studio ; elles ne sont
 transmises qu'à l'action explicite du client dans le formulaire.
+
+### Lot 5.1 — atelier matières (migration additive 46)
+
+Voir [STUDIO_LOT_5_1_REVIEW.md](./STUDIO_LOT_5_1_REVIEW.md) : 151 échantillons
+réels, zoom/comparaison, planche projet, références publiques et coffre source
+privé. La migration 46 prépare bibliothèque, sources admin, associations
+vérifiées et registre de compositions. Elle est NON APPLIQUÉE EN PRODUCTION
+et n’a pas été appliquée à Supabase local dans ce chantier (tests PGlite seulement).
+Les migrations 42/43/44/45 restent inchangées. Aucun rattachement catalogue
+n’est créé. DATA READY = NON. Le snapshot public est une inspiration sans preuve
+de compatibilité ; les codes usine ne sont jamais publiés. Le coffre local
+ignoré par Git doit être sauvegardé par l’administration. La recherche par
+référence de composition seule attend encore le raccordement du registre.

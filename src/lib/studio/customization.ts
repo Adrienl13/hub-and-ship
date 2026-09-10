@@ -1,3 +1,8 @@
+import {
+  visualSelectionSchema,
+  visualAssociationStatus,
+  type VisualAssociation,
+} from './visual-library'
 import { z } from 'zod'
 import type { ProjectState, StudioProjectItem } from './types'
 import type { TableConfiguration } from './table-project'
@@ -101,6 +106,7 @@ export const capabilitySchema = z
   )
 export type CustomizationCapability = z.infer<typeof capabilitySchema>
 export interface CapabilityData {
+  visualAssociations?: ReadonlyArray<VisualAssociation>
   available: boolean
   capabilities: ReadonlyArray<CustomizationCapability>
 }
@@ -109,6 +115,7 @@ export const EMPTY_CAPABILITIES: CapabilityData = {
   capabilities: [],
 }
 export const selectionSchema = z.object({
+  visual: visualSelectionSchema.optional(),
   kind: kindSchema,
   value: z.string().max(120).default(''),
   note: z.string().max(600).default(''),
@@ -253,6 +260,22 @@ export function evaluateCustomization(
               ? 'review_required'
               : 'capability_' + status
         }
+        if (selection.visual) {
+          const association = visualAssociationStatus(
+            target.productId,
+            selection.visual.public_ref,
+            data.visualAssociations ?? [],
+          )
+          if (association === 'unavailable') status = 'unavailable'
+          else if (
+            status !== 'unavailable' &&
+            (association === 'unknown' || selection.visual.weave_colors.length)
+          )
+            status = 'unknown'
+          else if (status === 'verified' && association === 'on_request')
+            status = 'on_request'
+          reason = 'visual_association_' + association
+        }
         const review =
           Boolean(selection.note.trim()) ||
           special ||
@@ -294,5 +317,5 @@ export function selectionLabel(row: SelectionEvaluation): string {
   const fields = CUSTOMIZATION_FIELDS[row.target.scope] as Partial<
     Record<CustomizationKind, string>
   >
-  return `${fields[row.selection.kind] ?? row.selection.kind} : ${[row.selection.value, row.selection.note, row.selection.requested ? 'demandé' : ''].filter(Boolean).join(' · ')} — ${STATUS_LABEL[row.status]}${row.review ? ' · validation requise' : ''}`
+  return `${fields[row.selection.kind] ?? row.selection.kind} : ${[row.selection.value, row.selection.visual?.weave_colors.length ? `Couleurs souhaitées : ${row.selection.visual.weave_colors.join(' / ')}` : '', row.selection.note, row.selection.requested ? 'demandé' : ''].filter(Boolean).join(' · ')} — ${STATUS_LABEL[row.status]}${row.review ? ' · validation requise' : ''}`
 }

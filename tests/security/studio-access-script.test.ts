@@ -1,3 +1,7 @@
+import {
+  VISUAL_LIBRARY_COLUMNS,
+  VISUAL_ASSOCIATION_COLUMNS,
+} from '../../src/lib/studio/visual-library'
 import { CAPABILITY_PUBLIC_COLUMNS } from '../../src/lib/studio/customization-repository'
 import {
   TABLE_RULE_PUBLIC_COLUMNS,
@@ -62,6 +66,21 @@ describe('security:studio — parité avec le code', () => {
       'studio_table_base_types',
       'studio_table_base_profiles',
       'studio_tabletop_base_rules',
+    ])
+      expect(list('INTERNAL_TABLES')).toContain(table)
+  })
+  it('surfaces visuelles en parité et mapping usine privé', () => {
+    expect(surfaceColumns('studio_visual_library_public')).toEqual([
+      ...VISUAL_LIBRARY_COLUMNS,
+    ])
+    expect(surfaceColumns('studio_visual_associations_public')).toEqual([
+      ...VISUAL_ASSOCIATION_COLUMNS,
+    ])
+    for (const table of [
+      'studio_visual_library',
+      'studio_visual_sources',
+      'studio_visual_associations',
+      'studio_visual_configurations',
     ])
       expect(list('INTERNAL_TABLES')).toContain(table)
   })

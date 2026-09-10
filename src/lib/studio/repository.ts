@@ -73,6 +73,10 @@ export const STUDIO_INTERNAL_COLUMNS = [
   'provenance',
   'verified_by',
   'verified_at',
+  'factory_ref',
+  'supplier',
+  'source_asset_uri',
+  'internal_notes',
 ] as const
 
 /** Colonnes de la vue publique studio_fulfillment_options_public. */
