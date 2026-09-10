@@ -1,5 +1,11 @@
+import {
+  sanitizeCustomization,
+  type CustomizationDraft,
+  type CustomerSelection,
+  type CustomizationTarget,
+} from '@/lib/studio/customization'
 // Store Studio (lot 1 + lot 2) : état LOCAL persisté dans le navigateur
-// (clé terrassea-studio-v1, version 4) avec journal d'actions inversibles
+// (clé terrassea-studio-v1, version 5) avec journal d'actions inversibles
 // (Undo, profondeur 50). Aucune persistance serveur ici.
 //
 // Deux espaces distincts, un seul store :
@@ -31,12 +37,13 @@ import type { InteractionAction } from '@/lib/studio/engine/types'
 import type { StudioProjectItem, StudioRole } from '@/lib/studio/types'
 
 export const STUDIO_STORE_KEY = 'terrassea-studio-v1'
-export const STUDIO_STORE_VERSION = 4
+export const STUDIO_STORE_VERSION = 5
 export const STUDIO_UNDO_DEPTH = 50
 
 export type StudioEntry = 'full_project' | 'seats' | 'tables'
 
 export interface StudioProjectDraft {
+  readonly customization?: CustomizationDraft
   readonly tables?: ReadonlyArray<TableConfiguration>
   readonly entry: StudioEntry | null
   readonly items: ReadonlyArray<StudioProjectItem>
@@ -59,6 +66,7 @@ export interface StudioDiscoveryState {
 }
 
 export type StudioActionLabel =
+  | 'set_customization'
   | 'save_table'
   | 'remove_table'
   | 'set_entry'
@@ -88,6 +96,10 @@ export interface StudioJournalEntry {
 }
 
 export interface StudioStoreState extends StudioSnapshot {
+  readonly setCustomization: (
+    target: CustomizationTarget,
+    selections: CustomerSelection[],
+  ) => void
   readonly saveTable: (
     table: TableConfiguration,
     products: ReadonlyArray<StudioProduct>,
@@ -243,6 +255,9 @@ function sanitizeProject(value: unknown): StudioProjectDraft {
       legacy.entry === 'tables'
         ? legacy.entry
         : null,
+    ...(legacy.customization
+      ? { customization: sanitizeCustomization(legacy.customization) }
+      : {}),
     items: sanitizeItems(legacy.items),
     tables: sanitizeTables(legacy.tables),
     updatedAt: typeof legacy.updatedAt === 'string' ? legacy.updatedAt : null,
@@ -342,6 +357,23 @@ export function migrateStudioState(
 export const useStudioStore = create<StudioStoreState>()(
   persist(
     (set, get) => ({
+      setCustomization: (target, selections) =>
+        set((state) =>
+          commit(
+            state,
+            'set_customization',
+            {
+              project: {
+                ...state.project,
+                customization: {
+                  ...state.project.customization,
+                  ...sanitizeCustomization({ [target.key]: selections }),
+                },
+              },
+            },
+            new Date().toISOString(),
+          ),
+        ),
       saveTable: (table, products, compatibility) =>
         set((state) => {
           const clean = sanitizeTables([table])[0]
@@ -641,6 +673,22 @@ export const useStudioStore = create<StudioStoreState>()(
         journal: state.journal,
       }),
       migrate: migrateStudioState,
+      merge: (persisted, current) => {
+        if (!persisted) return current
+        const clean = migrateStudioState(
+          persisted,
+          STUDIO_STORE_VERSION,
+        ) as StudioSnapshot &
+          Pick<StudioStoreState, 'sessionId' | 'journal' | 'algorithmVersion'>
+        return {
+          ...current,
+          project: clean.project,
+          discovery: clean.discovery,
+          sessionId: clean.sessionId,
+          journal: clean.journal,
+          algorithmVersion: clean.algorithmVersion,
+        }
+      },
     },
   ),
 )

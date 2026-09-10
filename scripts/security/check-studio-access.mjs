@@ -30,6 +30,7 @@ const PRODUCT_COLUMNS = [
 ]
 const PROFILE_COLUMNS = ['studio_role', 'seat_kind', 'material', 'model_family_id', 'visual_traits', 'data_quality']
 const PUBLIC_SURFACES = [
+  { view: 'studio_customization_capabilities_public', columns: ['id', 'product_id', 'scope', 'kind', 'status', 'values', 'allows_free_text', 'requires_review', 'min_quantity', 'max_quantity'], optional: true },
   { view: 'studio_tabletop_base_rules_public', columns: ['id', 'base_id', 'tabletop_id', 'base_type_id', 'shape', 'max_length_cm', 'max_width_cm', 'verdict', 'min_length_cm', 'min_width_cm'], optional: true },
   { view: 'studio_table_base_profiles_public', columns: ['base_id', 'base_type_id'], optional: true },
   { view: 'studio_product_media_public', columns: ['product_id', 'role', 'url'], optional: true },
@@ -47,6 +48,7 @@ const PUBLIC_SURFACES = [
   { view: 'studio_diagnostic_pairs_public', columns: ['id', 'product_a_id', 'product_b_id', 'axis'], optional: true },
 ]
 const INTERNAL_TABLES = [
+  'studio_customization_capabilities',
   'studio_table_base_types', 'studio_table_base_profiles', 'studio_tabletop_base_rules',
   'studio_product_media', 'studio_product_visual_features', 'studio_product_neighbors', 'studio_model_family_candidates', 'studio_algorithm_versions', 'studio_visual_jobs',
   'studio_model_families', 'studio_product_profiles', 'studio_fulfillment_options',

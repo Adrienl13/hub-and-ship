@@ -1,3 +1,14 @@
+import {
+  EMPTY_CAPABILITIES,
+  evaluateCustomization,
+  projectTargets,
+  withCustomizationState,
+  seatKey,
+  lineTargets,
+  type CustomizationDraft,
+  type CapabilityData,
+} from '@/lib/studio/customization'
+import { CustomizationSummary } from './CustomizationSummary'
 // Contenu partagé du rail desktop et de la barre/feuille mobile (lot 2) :
 // UNE seule source, le store. Sélection explicite, quantité, état projet
 // calculé par le lot 1, CTA adapté (aucun devis ni réservation au lot 2).
@@ -43,6 +54,9 @@ const ENTRY_LABEL: Record<StudioEntry, string> = {
 }
 
 export interface ProjectSummaryProps {
+  readonly showCustomizationLink?: boolean
+  readonly customization?: CustomizationDraft
+  readonly capabilities?: CapabilityData
   readonly tables?: ReadonlyArray<TableConfiguration>
   readonly compatibility?: TableCompatibilityData
   readonly onTableQuantityChange?: (id: string, quantity: number) => void
@@ -97,16 +111,26 @@ export function projectOverview({
   context,
   tables = [],
   compatibility = EMPTY_COMPATIBILITY,
+  customization = {},
+  capabilities = EMPTY_CAPABILITIES,
 }: Pick<
   ProjectSummaryProps,
-  'items' | 'productsById' | 'context' | 'tables' | 'compatibility'
+  | 'items'
+  | 'productsById'
+  | 'context'
+  | 'tables'
+  | 'compatibility'
+  | 'customization'
+  | 'capabilities'
 >) {
   const tableEvaluations = tables.map((table) =>
     evaluateTable(table, productsById, compatibility, context),
   )
   const seatState = projectStateFor(items, productsById, context)
   const states = [seatState, ...tableEvaluations.map((e) => e.state)]
-  const state: ProjectState | null = states.includes('manual_quote_required')
+  const baseState: ProjectState | null = states.includes(
+    'manual_quote_required',
+  )
     ? 'manual_quote_required'
     : states.includes('feasibility_review')
       ? 'feasibility_review'
@@ -135,6 +159,12 @@ export function projectOverview({
       return sum + (product ? product.basePriceHt * item.requestedQuantity : 0)
     }, 0)
 
+  const custom = evaluateCustomization(
+    projectTargets(items, tables),
+    customization,
+    capabilities,
+  )
+  const state = withCustomizationState(baseState, custom.state)
   return { state, unresolved, totalUnits, totalHt }
 }
 
@@ -151,6 +181,9 @@ export function ProjectSummary({
   compatibility = EMPTY_COMPATIBILITY,
   onTableQuantityChange,
   onRemoveTable,
+  customization = {},
+  capabilities = EMPTY_CAPABILITIES,
+  showCustomizationLink = true,
 }: ProjectSummaryProps) {
   const { state, unresolved, totalUnits, totalHt } = projectOverview({
     items,
@@ -158,6 +191,8 @@ export function ProjectSummary({
     context,
     tables,
     compatibility,
+    customization,
+    capabilities,
   })
 
   return (
@@ -277,6 +312,17 @@ export function ProjectSummary({
                 >
                   {feedback.title}
                 </p>
+                <CustomizationSummary
+                  rows={
+                    evaluateCustomization(
+                      lineTargets(seatKey(item), item.requestedQuantity, {
+                        seat: item.productId,
+                      }),
+                      customization,
+                      capabilities,
+                    ).selections
+                  }
+                />
                 <div className="mt-2 flex gap-2">
                   {onEditQuantity && !compact && (
                     <button
@@ -311,6 +357,8 @@ export function ProjectSummary({
           context={context}
           onQuantityChange={onTableQuantityChange}
           onRemove={onRemoveTable}
+          customization={customization}
+          capabilities={capabilities}
         />
       )}
       {(items.length > 0 || tables.length > 0) && (
@@ -324,13 +372,31 @@ export function ProjectSummary({
             </span>
           </div>
           <p className="mt-1 text-xs text-[color:var(--ink-soft)]">
-            Montant indicatif au prix public. Le devis et la réservation
-            arrivent dans une prochaine étape du Studio.
+            Base indicative au prix public, hors personnalisation. Aucun
+            supplément ni délai spécial n’est confirmé. Le devis sera validé
+            avec vous.
           </p>
         </div>
       )}
 
+      <CustomizationSummary
+        rows={
+          evaluateCustomization(
+            projectTargets(items, tables).filter((t) => t.scope === 'project'),
+            customization,
+            capabilities,
+          ).selections
+        }
+      />
       <div className="space-y-2">
+        {showCustomizationLink && (items.length > 0 || tables.length > 0) && (
+          <Link
+            to="/studio/personnalisation"
+            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-[color:var(--ink)] px-4 text-sm font-semibold text-white"
+          >
+            Personnaliser et envoyer le projet
+          </Link>
+        )}
         {entry === 'full_project' &&
           tables.length === 0 &&
           items.some((i) => i.role === 'seat') && (

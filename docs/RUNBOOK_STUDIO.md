@@ -228,3 +228,15 @@ restent prioritaires. La migration 44 ajoute seulement le contrat de règles
 `square` et sa contrainte dimensionnelle. Migrations 42/43 inchangées ; aucune
 règle commerciale ni rattachement créé. MIGRATION 44 PROD = NON APPLIQUÉE.
 DATA READY = NON. Voir [les règles de classification](./STUDIO_TABLE_DIMENSION_RANGES.md).
+
+### Lot 5 — personnalisation (migration additive 45)
+
+Voir [STUDIO_LOT_5_REVIEW.md](./STUDIO_LOT_5_REVIEW.md). La route
+`/studio/personnalisation` permet de sauvegarder les choix dans le store v5 et
+de transmettre le projet via le formulaire de contact existant, même avec des
+besoins à confirmer. Les statuts sont recalculés à partir des capacités publiques.
+La migration `20260911100000_studio_customization_capabilities.sql` ajoute une
+table admin et une projection publique minimale, sans seed ni écriture produit.
+MIGRATION 45 PROD = NON APPLIQUÉE. Aucun flag modifié. DATA READY = NON.
+Les notes ne sont jamais ajoutées aux événements Studio ; elles ne sont
+transmises qu'à l'action explicite du client dans le formulaire.

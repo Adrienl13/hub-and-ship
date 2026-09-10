@@ -33,6 +33,7 @@ const attributionFieldSchema = z
   .transform((value) => (value ? value : null))
 
 const contactMessageSchema = z.object({
+  studioBrief: z.string().max(200000).optional(),
   name: z.string().trim().min(2, 'Votre nom est obligatoire').max(140),
   email: z.string().trim().email('Email invalide').max(254),
   company: z.string().trim().max(180).optional().or(z.literal('')),
@@ -106,7 +107,12 @@ export function buildContactMessageDraft(
       company: emptyToNull(parsed.data.company),
       phone: emptyToNull(parsed.data.phone),
       topic: parsed.data.topic ?? 'autre',
-      message: parsed.data.message,
+      message:
+        parsed.data.message +
+        (parsed.data.studioBrief
+          ? '\n\nPROJET STUDIO — DÉCLARATION CLIENT À REVALIDER (aucun devis ferme)\n' +
+            parsed.data.studioBrief
+          : ''),
       attribution: hasAttribution
         ? {
             utm_source: attribution.utm_source ?? null,

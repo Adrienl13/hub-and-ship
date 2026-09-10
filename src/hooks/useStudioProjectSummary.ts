@@ -1,3 +1,4 @@
+import { useStudioCustomization } from './useStudioCustomization'
 import { useMemo } from 'react'
 import type { StudioCatalog } from '@/lib/studio/repository'
 import { useStudioStore } from '@/stores/studio.store'
@@ -6,11 +7,14 @@ import { useStudioCompatibility } from './useStudioCompatibility'
 export function useStudioProjectSummary(catalog: StudioCatalog | null) {
   const project = useStudioStore((s) => s.project)
   const compatibility = useStudioCompatibility()
+  const capabilities = useStudioCustomization()
   const productsById = useMemo(
     () => new Map(catalog?.products.map((p) => [p.id, p]) ?? []),
     [catalog],
   )
   return {
+    customization: project.customization,
+    capabilities,
     entry: project.entry,
     items: project.items,
     tables: project.tables ?? [],

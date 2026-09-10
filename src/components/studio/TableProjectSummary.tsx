@@ -1,3 +1,12 @@
+import {
+  EMPTY_CAPABILITIES,
+  evaluateCustomization,
+  lineTargets,
+  tableKey,
+  type CustomizationDraft,
+  type CapabilityData,
+} from '@/lib/studio/customization'
+import { CustomizationSummary } from './CustomizationSummary'
 import { Link } from '@tanstack/react-router'
 import { SafeImage } from '@/components/SafeImage'
 import { formatEUR } from '@/lib/order'
@@ -16,7 +25,11 @@ export function TableProjectSummary({
   context,
   onQuantityChange,
   onRemove,
+  customization = {},
+  capabilities = EMPTY_CAPABILITIES,
 }: {
+  customization?: CustomizationDraft
+  capabilities?: CapabilityData
   tables: ReadonlyArray<TableConfiguration>
   productsById: ReadonlyMap<string, StudioProduct>
   compatibility: TableCompatibilityData
@@ -87,6 +100,18 @@ export function TableProjectSummary({
                 ? `${formatEUR(evaluation.total)} HT indicatif`
                 : 'Prix de la configuration à confirmer'}
             </p>
+            <CustomizationSummary
+              rows={
+                evaluateCustomization(
+                  lineTargets(tableKey(table), table.quantity, {
+                    ...(table.top ? { tabletop: table.top.productId } : {}),
+                    ...(table.base ? { base: table.base.productId } : {}),
+                  }),
+                  customization,
+                  capabilities,
+                ).selections
+              }
+            />
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link
                 to="/studio/tables"

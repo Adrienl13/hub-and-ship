@@ -81,3 +81,25 @@ describe('contact API route', () => {
     expect(notify).not.toHaveBeenCalled()
   })
 })
+
+it('transmet un projet Studio à confirmer sans condition de readiness ni écriture DB', async () => {
+  const notify = vi.fn(async () => undefined)
+  const response = await handleContactMessage(
+    createRequest({
+      ...VALID_BODY,
+      studioBrief: 'ROPE : bleu — Sur demande\nLogo demandé — À confirmer',
+    }),
+    notify,
+  )
+  expect(response.status).toBe(201)
+  expect(notify).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.stringContaining('ROPE : bleu — Sur demande'),
+    }),
+  )
+  expect(notify).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message: expect.stringContaining('DÉCLARATION CLIENT À REVALIDER'),
+    }),
+  )
+})

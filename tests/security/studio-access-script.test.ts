@@ -1,3 +1,4 @@
+import { CAPABILITY_PUBLIC_COLUMNS } from '../../src/lib/studio/customization-repository'
 import {
   TABLE_RULE_PUBLIC_COLUMNS,
   BASE_PROFILE_PUBLIC_COLUMNS,
@@ -147,4 +148,11 @@ describe('security:studio — parité avec le code', () => {
     )
     expect(script).not.toMatch(/method:\s*'(POST|PATCH|PUT|DELETE)'.*rest\//)
   })
+})
+
+it('capabilities Lot 5 : contrat public minimal et table interne protégée', () => {
+  expect(surfaceColumns('studio_customization_capabilities_public')).toEqual([
+    ...CAPABILITY_PUBLIC_COLUMNS,
+  ])
+  expect(list('INTERNAL_TABLES')).toContain('studio_customization_capabilities')
 })

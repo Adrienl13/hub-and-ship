@@ -31,16 +31,18 @@ const EMPTY_FORM: FormState = {
 }
 
 const inputClass =
-  'h-10 rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]'
+  'min-h-[44px] rounded-sm border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]'
 
 export function ContactForm({
   initialTopic,
   initialMessage,
+  studioBrief,
 }: {
   /** Sujet pré-sélectionné (déjà validé contre CONTACT_TOPICS par la route). */
   readonly initialTopic?: string
   /** Message pré-rempli (ex. demande de coloris depuis une fiche produit). */
   readonly initialMessage?: string
+  readonly studioBrief?: string
 } = {}) {
   const [form, setForm] = useState<FormState>({
     ...EMPTY_FORM,
@@ -60,6 +62,7 @@ export function ContactForm({
       phone: form.phone,
       topic: form.topic || undefined,
       message: form.message,
+      studioBrief,
     })
     if (!draftResult.ok) {
       toast.error('Message à compléter', { description: draftResult.error })
@@ -79,6 +82,7 @@ export function ContactForm({
           phone: form.phone,
           topic: form.topic || undefined,
           message: form.message,
+          studioBrief,
           // Attribution first-touch : un lead payé qui convertit par le
           // formulaire de contact reste rattaché à sa campagne.
           attribution: getAttributionFields(Date.now()),
@@ -128,6 +132,7 @@ export function ContactForm({
           <Input
             className={inputClass}
             value={form.name}
+            aria-label="Votre nom *"
             placeholder="Votre nom *"
             autoComplete="name"
             onChange={(e) => update('name')(e.target.value)}
@@ -136,6 +141,7 @@ export function ContactForm({
             className={inputClass}
             type="email"
             value={form.email}
+            aria-label="Email professionnel *"
             placeholder="Email professionnel *"
             autoComplete="email"
             onChange={(e) => update('email')(e.target.value)}
@@ -145,6 +151,7 @@ export function ContactForm({
           <Input
             className={inputClass}
             value={form.company}
+            aria-label="Société (optionnel)"
             placeholder="Société (optionnel)"
             autoComplete="organization"
             onChange={(e) => update('company')(e.target.value)}
@@ -153,13 +160,15 @@ export function ContactForm({
             className={inputClass}
             type="tel"
             value={form.phone}
+            aria-label="Téléphone (optionnel)"
             placeholder="Téléphone (optionnel)"
             autoComplete="tel"
             onChange={(e) => update('phone')(e.target.value)}
           />
         </div>
         <select
-          className="h-10 w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          aria-label="Sujet"
+          className="min-h-[44px] w-full rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-foreground"
           value={form.topic}
           onChange={(e) => update('topic')(e.target.value)}
         >
@@ -173,6 +182,7 @@ export function ContactForm({
         <textarea
           className="min-h-[110px] w-full resize-y rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-foreground"
           value={form.message}
+          aria-label="Votre message * (produit, quantités, ville de livraison…)"
           placeholder="Votre message * (produit, quantités, ville de livraison…)"
           onChange={(e) => update('message')(e.target.value)}
         />
