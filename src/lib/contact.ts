@@ -1,3 +1,4 @@
+import { STUDIO_BRIEF_SERVER_LIMIT } from './studio/studio-brief-limit'
 // Pure validation for the /contact form → /api/contact intake. No DB table:
 // a contact message is an email conversation, so the endpoint fires the admin
 // notification (Reply-To = requester) + an acknowledgement, nothing else.
@@ -33,7 +34,7 @@ const attributionFieldSchema = z
   .transform((value) => (value ? value : null))
 
 const contactMessageSchema = z.object({
-  studioBrief: z.string().max(200000).optional(),
+  studioBrief: z.string().max(STUDIO_BRIEF_SERVER_LIMIT).optional(),
   name: z.string().trim().min(2, 'Votre nom est obligatoire').max(140),
   email: z.string().trim().email('Email invalide').max(254),
   company: z.string().trim().max(180).optional().or(z.literal('')),

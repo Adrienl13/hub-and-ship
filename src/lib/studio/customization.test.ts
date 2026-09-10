@@ -42,7 +42,7 @@ const run = (
   )
 it('couleur structure vérifiée conserve le devis possible sans prix ajouté', () => {
   expect(run()).toMatchObject({
-    state: null,
+    state: 'auto_quote_ready',
     canSend: true,
     selections: [{ status: 'verified', review: false }],
   })
@@ -77,7 +77,7 @@ it('finition plateau vérifiée', () => {
         ],
       },
     ).state,
-  ).toBeNull()
+  ).toBe('auto_quote_ready')
 })
 it.each(['logo_request', 'ral_request', 'custom_dimensions_request'] as const)(
   '%s exige une revue même si capacité vérifiée',
@@ -169,4 +169,31 @@ it('résumé texte conserve demandes, quantité et statut sans déduire du nom',
   expect(brief).toContain('Mon souhait')
   expect(brief).toContain('À confirmer')
   expect(brief).not.toContain('Validé')
+})
+
+it('réservation sans personnalisation conservée, sans preuve de fulfillment inventée', () => {
+  const empty = evaluateCustomization([target], {}, EMPTY_CAPABILITIES)
+  expect(withCustomizationState('reservation_ready', empty.state)).toBe(
+    'reservation_ready',
+  )
+})
+it.each([
+  ['verified', 'auto_quote_ready'],
+  ['on_request', 'manual_quote_required'],
+  ['unknown', 'feasibility_review'],
+] as const)('stock confirmé + %s => %s', (status, expected) => {
+  expect(
+    withCustomizationState('reservation_ready', run({ ...cap, status }).state),
+  ).toBe(expected)
+})
+it('la priorité commerciale historique est conservée', () => {
+  expect(withCustomizationState('manual_quote_required', run().state)).toBe(
+    'manual_quote_required',
+  )
+  expect(withCustomizationState('feasibility_review', run().state)).toBe(
+    'feasibility_review',
+  )
+  expect(
+    withCustomizationState('manual_quote_required', 'feasibility_review'),
+  ).toBe('manual_quote_required')
 })

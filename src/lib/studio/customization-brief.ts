@@ -1,3 +1,4 @@
+import { boundStudioBrief } from './studio-brief-limit'
 import {
   evaluateCustomization,
   projectTargets,
@@ -22,19 +23,21 @@ export function customizationBrief(
     evaluateCustomization(targets, draft, capabilities)
       .selections.map(selectionLabel)
       .join('\n')
-  return [
-    'Projet Studio — demande sans engagement. Prix, faisabilité et délais à confirmer.',
-    ...items.map(
-      (i) =>
-        `ASSISE ${products.get(i.productId)?.name ?? i.productId} [${i.productId}/${i.variantId}] — quantité ${i.requestedQuantity}\n${describe(lineTargets(seatKey(i), i.requestedQuantity, { seat: i.productId }))}`,
-    ),
-    ...tables.map(
-      (t) =>
-        `TABLE ${t.id} — quantité ${t.quantity}\nPlateau : ${t.top ? `${products.get(t.top.productId)?.name ?? t.top.productId} [${t.top.productId}/${t.top.variantId}]` : JSON.stringify(t.custom)}\nPiètement : ${t.base ? `${products.get(t.base.productId)?.name ?? t.base.productId} [${t.base.productId}/${t.base.variantId}]` : 'À confirmer'}\n${describe(lineTargets(tableKey(t), t.quantity, { ...(t.top ? { tabletop: t.top.productId } : {}), ...(t.base ? { base: t.base.productId } : {}) }))}`,
-    ),
-    'BESOINS PROJET',
-    describe(
-      projectTargets(items, tables).filter((t) => t.scope === 'project'),
-    ),
-  ].join('\n\n')
+  return boundStudioBrief(
+    [
+      'Projet Studio — demande sans engagement. Prix, faisabilité et délais à confirmer.',
+      ...items.map(
+        (i) =>
+          `ASSISE ${products.get(i.productId)?.name ?? i.productId} [${i.productId}/${i.variantId}] — quantité ${i.requestedQuantity}\n${describe(lineTargets(seatKey(i), i.requestedQuantity, { seat: i.productId }))}`,
+      ),
+      ...tables.map(
+        (t) =>
+          `TABLE ${t.id} — quantité ${t.quantity}\nPlateau : ${t.top ? `${products.get(t.top.productId)?.name ?? t.top.productId} [${t.top.productId}/${t.top.variantId}]` : JSON.stringify(t.custom)}\nPiètement : ${t.base ? `${products.get(t.base.productId)?.name ?? t.base.productId} [${t.base.productId}/${t.base.variantId}]` : 'À confirmer'}\n${describe(lineTargets(tableKey(t), t.quantity, { ...(t.top ? { tabletop: t.top.productId } : {}), ...(t.base ? { base: t.base.productId } : {}) }))}`,
+      ),
+      'BESOINS PROJET',
+      describe(
+        projectTargets(items, tables).filter((t) => t.scope === 'project'),
+      ),
+    ].join('\n\n'),
+  )
 }

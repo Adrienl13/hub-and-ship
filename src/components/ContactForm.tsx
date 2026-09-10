@@ -1,3 +1,4 @@
+import { boundStudioBrief } from '@/lib/studio/studio-brief-limit'
 import { useState } from 'react'
 import { Send } from 'lucide-react'
 import { toast } from 'sonner'
@@ -62,7 +63,8 @@ export function ContactForm({
       phone: form.phone,
       topic: form.topic || undefined,
       message: form.message,
-      studioBrief,
+      studioBrief:
+        studioBrief === undefined ? undefined : boundStudioBrief(studioBrief),
     })
     if (!draftResult.ok) {
       toast.error('Message à compléter', { description: draftResult.error })
@@ -82,7 +84,10 @@ export function ContactForm({
           phone: form.phone,
           topic: form.topic || undefined,
           message: form.message,
-          studioBrief,
+          studioBrief:
+            studioBrief === undefined
+              ? undefined
+              : boundStudioBrief(studioBrief),
           // Attribution first-touch : un lead payé qui convertit par le
           // formulaire de contact reste rattaché à sa campagne.
           attribution: getAttributionFields(Date.now()),

@@ -267,7 +267,9 @@ export function evaluateCustomization(
     ? 'feasibility_review'
     : selections.some((s) => s.review)
       ? 'manual_quote_required'
-      : null
+      : selections.length
+        ? 'auto_quote_ready'
+        : null
   return {
     selections,
     state,
@@ -284,7 +286,9 @@ export function withCustomizationState(
     ? 'manual_quote_required'
     : states.includes('feasibility_review')
       ? 'feasibility_review'
-      : state
+      : states.includes('auto_quote_ready')
+        ? 'auto_quote_ready'
+        : state
 }
 export function selectionLabel(row: SelectionEvaluation): string {
   const fields = CUSTOMIZATION_FIELDS[row.target.scope] as Partial<

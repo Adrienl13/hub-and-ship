@@ -68,7 +68,8 @@ La page résumé affiche les choix et leurs statuts recalculés. La base tarifai
 catalogue ne change pas et est explicitement hors personnalisation.
 
 L'envoi reste accessible indépendamment de la readiness, y compris sans ligne.
-Un champ facultatif `studioBrief` (200 000 caractères maximum) transporte le
+Un champ facultatif `studioBrief`, borné côté client à 20 000 caractères
+(limite serveur stricte : 200 000), transporte le
 récapitulatif texte au formulaire de contact existant ; il n'est pas placé dans
 l'URL ou les événements analytics. Le serveur le valide et l'étiquette comme
 **déclaration client à revalider**, jamais comme devis ferme ou preuve de
@@ -150,3 +151,27 @@ PROD WRITE = NON · PROD MIGRATION = NON · DEPLOY = NON · MAIN MERGE = NON.
 - `tests/e2e/studio-customization.config.ts`
 - `tests/e2e/studio-customization.pw.ts`
 - `tests/security/studio-customization-sql.test.ts`
+
+## Revue corrective après 811fa99
+
+Une personnalisation effective, même verified sans requires_review, plafonne
+l'état à `auto_quote_ready`. La capacité produit ne prouve pas la disponibilité
+de cette sélection exacte dans le stock/fulfillment confirmé. Aucune option du
+Lot 5 ne peut apporter cette preuve. Sans personnalisation, reservation_ready
+reste possible. La priorité reste manual_quote_required > feasibility_review >
+auto_quote_ready > reservation_ready.
+
+Le générateur Studio borne le brief à 20 000 caractères, avec coupure préférée
+sur une fin de ligne et marqueur explicite :
+`[Résumé Studio tronqué — reprendre le projet avec le client]`.
+ContactForm applique la même protection avant validation et envoi. Nom, email
+et message principal ne sont pas tronqués ; le serveur conserve sa limite
+stricte de 200 000 caractères pour les requêtes directes. Aucun nouveau champ
+analytics ou URL. Le brouillon complet reste conservé localement.
+
+Aucune migration modifiée ni appliquée. DATA READY = NON.
+
+Validation de cette correction : tests ciblés 38 réussis (8 fichiers),
+`bun run check` 1 037 réussis / 8 ignorés (typage et lint OK), sécurité 263 réussis,
+build OK (budget et contrôle de fuite : 215 chunks client), E2E Lot 5 : 4,
+Lot 4 : 12, Lot 2 : 10, Lot 3 : 10 réussis. Envois intégralement simulés.
