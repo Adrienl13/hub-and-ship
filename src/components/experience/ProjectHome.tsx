@@ -1,0 +1,289 @@
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUpRight,
+  MoveUpRight,
+  Plus,
+} from 'lucide-react'
+import { useState } from 'react'
+import { ExperienceHeader, ExperienceFooter } from './ExperienceHeader'
+import { isStudioEnabled } from '@/lib/studio/flags'
+const directions = [
+  {
+    id: 'weave',
+    name: 'Le rythme du tressage',
+    detail: 'Un motif donne le ton. Les couleurs ouvrent la discussion.',
+    ref: 'PI-TR-007',
+    image: '/studio/materials/pi-tr-007-detail.webp',
+    word: 'Rythme',
+    color: '#e4e9f6',
+  },
+  {
+    id: 'rope',
+    name: 'Le relief du cordage',
+    detail: 'Une texture, une densité, une présence à explorer.',
+    ref: 'PI-RP-060',
+    image: '/studio/materials/pi-rp-060-detail.webp',
+    word: 'Relief',
+    color: '#e6e9df',
+  },
+  {
+    id: 'textilene',
+    name: 'La finesse du textilène',
+    detail: 'Regarder la trame. Rapprocher les nuances.',
+    ref: 'PI-TX-033',
+    image: '/studio/materials/pi-tx-033-detail.webp',
+    word: 'Trame',
+    color: '#ebe4dd',
+  },
+]
+export function ProjectHome() {
+  const [direction, setDirection] = useState(0)
+  const d = directions[direction]!
+  const start = isStudioEnabled() ? '/studio' : '/contact'
+  return (
+    <div className="pi-page">
+      <ExperienceHeader />
+      <main id="top">
+        <section className="pi-home-hero pi-wrap">
+          <div className="pi-hero-copy">
+            <p className="pi-eyebrow">
+              <span className="pi-status-dot" /> MOBILIER PROFESSIONNEL ·
+              PERSONNALISATION
+            </p>
+            <h1>
+              Votre lieu a<br />
+              du caractère.
+              <span>
+                Votre mobilier
+                <br />
+                aussi.
+              </span>
+            </h1>
+            <p className="pi-hero-intro">
+              Une forme, un motif, vos couleurs. Construisons le mobilier qui
+              raconte votre établissement — puis vérifions ensemble comment le
+              réaliser.
+            </p>
+            <div className="pi-hero-actions">
+              <a href={start} className="pi-button pi-button-blue">
+                {isStudioEnabled()
+                  ? 'Créer mon projet dans le Studio'
+                  : 'Construire mon projet'}
+                <ArrowUpRight size={18} />
+              </a>
+              <a href="/catalogue" className="pi-text-link">
+                Explorer le mobilier <ArrowRight size={16} />
+              </a>
+            </div>
+            <p className="pi-micro">
+              Restaurants · Hôtels · Architectes · Réseaux
+            </p>
+          </div>
+          <div
+            className="pi-hero-composition"
+            aria-label="Mobilier et inspirations matière présentés séparément"
+          >
+            <div className="pi-composition-grid" aria-hidden />
+            <span className="pi-index-label">ÉTUDE DE MATIÈRES / 01</span>
+            <div className="pi-product-stage">
+              <img
+                src="/catalogue/bistro-seating-clean/BIS-057-01.webp"
+                alt="Assise bistro, photographie catalogue originale"
+                fetchPriority="high"
+                width="640"
+                height="640"
+              />
+              <span className="pi-product-caption">
+                <Plus size={14} /> Une forme comme point de départ
+              </span>
+            </div>
+            <figure className="pi-hero-sample">
+              <img
+                src="/studio/materials/pi-tr-007-detail.webp"
+                alt="Échantillon réel à chevrons bleus et blancs"
+                width="156"
+                height="150"
+              />
+              <figcaption>
+                01 / MOTIF
+                <br />
+                <b>Une direction à explorer</b>
+              </figcaption>
+            </figure>
+            <div className="pi-spec-note">
+              <MoveUpRight size={26} />
+              <p>
+                Le détail fait
+                <br />
+                <strong>la différence.</strong>
+              </p>
+            </div>
+            <span className="pi-composition-disclaimer">
+              Assemblage d’inspirations. Association à confirmer.
+            </span>
+          </div>
+        </section>
+        <div className="pi-opening-line pi-wrap">
+          <span>DU MOBILIER À VOTRE IMAGE, UN PROJET À LA FOIS.</span>
+          <a href="#matieres">
+            Entrer dans la matière <ArrowDown size={16} />
+          </a>
+        </div>
+        <section id="matieres" className="pi-material-story pi-wrap">
+          <div className="pi-section-heading">
+            <p className="pi-eyebrow">01 / TROUVER VOTRE LANGAGE</p>
+            <h2>
+              Tout commence
+              <br />
+              par une sensation.
+            </h2>
+            <p>
+              La ligne d’une assise. Le relief d’un cordage. Le rythme d’un
+              motif. Dans le Studio, rapprochez vos idées avant de figer vos
+              choix.
+            </p>
+          </div>
+          <div className="pi-material-editorial">
+            <div className="pi-material-visual" style={{ background: d.color }}>
+              <span aria-hidden className="pi-material-word">
+                {d.word}
+              </span>
+              <img
+                key={d.id}
+                src={d.image}
+                loading="lazy"
+                alt={`Échantillon réel ${d.ref}`}
+                width="340"
+                height="340"
+              />
+              <span className="pi-index-label">{d.ref} / ÉCHANTILLON RÉEL</span>
+            </div>
+            <div className="pi-material-direction">
+              <div role="group" aria-label="Explorer les matières">
+                {directions.map((item, i) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setDirection(i)}
+                    aria-pressed={i === direction}
+                  >
+                    <span>0{i + 1}</span>
+                    <span>{item.name}</span>
+                    <ArrowUpRight size={20} />
+                  </button>
+                ))}
+              </div>
+              <p aria-live="polite">{d.detail}</p>
+              <p className="pi-micro">
+                Le motif et les couleurs sont deux choix distincts. Les
+                possibilités seront vérifiées pour votre mobilier.
+              </p>
+              <a className="pi-text-link" href={start}>
+                Construire ma planche projet <ArrowRight size={18} />
+              </a>
+            </div>
+          </div>
+        </section>
+        <section className="pi-project-invitation">
+          <div className="pi-wrap pi-invitation-grid">
+            <div>
+              <p className="pi-eyebrow">02 / LE STUDIO PROS IMPORT</p>
+              <h2>
+                Pas besoin d’être designer.
+                <br />
+                <span>Juste d’avoir un projet.</span>
+              </h2>
+              <p>
+                Commencez par les formes qui vous parlent. Gardez vos pistes.
+                Précisez les matières, les couleurs et les quantités à votre
+                rythme.
+              </p>
+              <a href={start} className="pi-button pi-button-white">
+                {isStudioEnabled()
+                  ? 'Entrer dans le Studio'
+                  : 'Parler de mon projet'}
+                <ArrowUpRight size={20} />
+              </a>
+            </div>
+            <ol className="pi-step-list">
+              <li>
+                <span>01</span>
+                <div>
+                  <h3>Le mobilier</h3>
+                  <p>Des assises et des tables pour votre lieu.</p>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <h3>Votre direction</h3>
+                  <p>
+                    Motifs, matières, couleurs : une planche qui vous ressemble.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <h3>Le projet à vérifier</h3>
+                  <p>Vos choix réunis pour une étude avec notre équipe.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section id="realisation" className="pi-wrap pi-realisation">
+          <div className="pi-section-heading">
+            <p className="pi-eyebrow">03 / DU PROJET AU RÉEL</p>
+            <h2>
+              Une idée mérite
+              <br />
+              d’être bien réalisée.
+            </h2>
+            <p>
+              La personnalisation est le point de départ. Matières, production,
+              contrôle et livraison font partie de la discussion, avant tout
+              engagement.
+            </p>
+          </div>
+          <div className="pi-evidence-grid">
+            <a href="/qualite">
+              <span className="pi-evidence-number">01—</span>
+              <h3>Regarder de près.</h3>
+              <p>
+                Les échantillons et les contrôles pour parler de la matière
+                réelle, au-delà de l’écran.
+              </p>
+              <span>
+                Qualité & tests <ArrowUpRight size={18} />
+              </span>
+            </a>
+            <a href="/livres">
+              <span className="pi-evidence-number">02—</span>
+              <h3>Aller jusqu’au lieu.</h3>
+              <p>
+                Le container, le transport et la livraison : les moyens de faire
+                aboutir votre projet.
+              </p>
+              <span>
+                Voir les livraisons documentées <ArrowUpRight size={18} />
+              </span>
+            </a>
+            <a href="/contact">
+              <span className="pi-evidence-number">03—</span>
+              <h3>Vérifier ensemble.</h3>
+              <p>
+                Volumes, dimensions, faisabilité et conditions commerciales :
+                votre besoin avant nos réponses.
+              </p>
+              <span>
+                Échanger avec l’équipe <ArrowUpRight size={18} />
+              </span>
+            </a>
+          </div>
+        </section>
+      </main>
+      <ExperienceFooter />
+    </div>
+  )
+}

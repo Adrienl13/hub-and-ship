@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { captureFirstTouchAttribution } from '@/lib/analytics/attribution'
 import { organizationJsonLd } from '@/lib/seo'
 import '@/styles/globals.css'
+import '@/styles/experience.css'
 
 // Single source of truth for the Organization entity (stable @id) — child
 // routes must NOT inject a second copy; /avis merges into it via the @id.
@@ -20,8 +21,7 @@ const ORGANIZATION_JSON_LD = organizationJsonLd()
 
 // Privacy-friendly analytics, only loaded when a Plausible domain is configured.
 const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN as
-  | string
-  | undefined
+  string | undefined
 const PLAUSIBLE_SRC =
   (import.meta.env.VITE_PLAUSIBLE_SRC as string | undefined) ??
   'https://plausible.io/js/script.tagged-events.js'
@@ -115,8 +115,7 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       {
-        title:
-          'Terrassea — Mobilier outdoor pro mutualisé par container',
+        title: 'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'description',
@@ -126,8 +125,7 @@ export const Route = createRootRoute({
       { name: 'author', content: 'Pros Import — Terrassea' },
       {
         property: 'og:title',
-        content:
-          'Terrassea — Mobilier outdoor pro mutualisé par container',
+        content: 'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         property: 'og:description',
@@ -139,8 +137,7 @@ export const Route = createRootRoute({
       { name: 'twitter:card', content: 'summary_large_image' },
       {
         name: 'twitter:title',
-        content:
-          'Terrassea — Mobilier outdoor pro mutualisé par container',
+        content: 'Terrassea — Mobilier outdoor pro mutualisé par container',
       },
       {
         name: 'twitter:description',

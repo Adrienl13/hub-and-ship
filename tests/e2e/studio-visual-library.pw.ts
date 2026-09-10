@@ -258,6 +258,10 @@ test('atelier visuel, confidentialité, palette et dossier', async ({
   await expect(
     page.getByRole('region', { name: 'Atelier matières' }),
   ).toBeVisible()
+  await page
+    .locator('summary')
+    .filter({ hasText: 'Ouvrir la bibliothèque' })
+    .click()
   const zoom = page.getByRole('button', {
     name: 'Agrandir PI-TR-007',
     exact: true,

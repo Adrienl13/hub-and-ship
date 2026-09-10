@@ -6,6 +6,9 @@ import {
   SlidersHorizontal,
   Expand,
   Layers,
+  ArrowLeft,
+  ArrowRight,
+  Plus,
 } from 'lucide-react'
 import {
   Dialog,
@@ -31,8 +34,7 @@ const families = [
   { id: 'rope', label: 'Cordages', detail: 'Le relief de la matière' },
   { id: 'textilene', label: 'Textilènes', detail: 'La finesse de la trame' },
 ]
-const action =
-  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-current/20 px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700'
+const action = 'pi-material-action'
 export function MaterialAtelier({
   library,
   targets,
@@ -55,6 +57,9 @@ export function MaterialAtelier({
     [activeKey, setActiveKey] = useState(''),
     [compare, setCompare] = useState<string[]>([]),
     [zoom, setZoom] = useState<string[]>([])
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const [focusRef, setFocusRef] = useState('PI-TR-007')
+  const [feedback, setFeedback] = useState('')
   const active = targets.find((t) => t.target.key === activeKey) ?? targets[0]
   const [paletteDraft, setPaletteDraft] = useState<{
     key: string
@@ -98,6 +103,10 @@ export function MaterialAtelier({
   const choose = (item: VisualLibraryItem) => {
     if (!active) return
     setBoardOpen(true)
+    setFocusRef(item.public_ref)
+    setFeedback(
+      `${item.public_ref} retenu pour ${active.product?.name ?? 'votre mobilier'} — possibilité à confirmer.`,
+    )
     const current = draft[active.target.key] ?? []
     const k = visualKind(item.family)
     if (!k) return
@@ -150,41 +159,72 @@ export function MaterialAtelier({
         ).selections[0]?.status === 'unavailable'
       : false
   }
+  const focused = filtered.find((i) => i.public_ref === focusRef) ?? filtered[0]
+  const focusIndex = focused ? filtered.indexOf(focused) : 0
+  const moveFocus = (delta: number) => {
+    if (filtered.length)
+      setFocusRef(
+        filtered[(focusIndex + delta + filtered.length) % filtered.length]!
+          .public_ref,
+      )
+  }
+  const boardChoices = targets.flatMap((t) =>
+    (draft[t.target.key] ?? []).flatMap((selection) => {
+      const visual = library.items.find(
+        (i) => i.public_ref === selection.visual?.public_ref,
+      )
+      return visual ? [{ target: t, selection, visual }] : []
+    }),
+  )
   return (
     <section
       aria-label="Atelier matières"
-      className="studio-atelier overflow-hidden rounded-[24px] border border-[#d8d5c9] bg-[#f4f2eb] text-[#23352e]"
+      className="studio-atelier pi-material-atelier"
     >
-      <header className="grid gap-6 border-b border-[#d8d5c9] p-5 sm:p-8 lg:grid-cols-[1fr_260px]">
+      <header className="pi-atelier-heading">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-[#9a4e34]">
-            L’atelier · Matières & caractères
-          </p>
-          <h1 className="mt-3 max-w-xl font-display text-3xl leading-tight sm:text-5xl">
-            Le détail qui rend votre projet singulier.
-          </h1>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-[#57665f]">
-            Explorez les textures, rapprochez deux motifs, retenez une
-            direction. Nous vérifierons avec vous ce qui peut être réalisé sur
-            votre mobilier.
+          <p className="pi-eyebrow">LE STUDIO / MATIÈRES & COULEURS</p>
+          <h1>La matière change tout.</h1>
+          <p>
+            Rapprochez les textures. Retenez une direction. Nous vérifierons sa
+            faisabilité sur votre mobilier.
           </p>
         </div>
+        <span className="pi-atelier-counter">
+          <b>{String(boardChoices.length).padStart(2, '0')}</b>CHOIX DANS VOTRE
+          PLANCHE
+        </span>
+      </header>
+      {boardChoices.length > 0 && (
         <div
-          className="grid w-full max-w-[210px] grid-cols-3 items-center gap-2 justify-self-end lg:max-w-none"
-          aria-hidden
+          className="pi-selection-strip"
+          aria-label="Les matières de mon projet"
         >
-          {['PI-TR-007', 'PI-RP-060', 'PI-TX-033'].map((ref, n) => (
-            <img
-              key={ref}
-              src={library.items.find((i) => i.public_ref === ref)?.image}
-              alt=""
-              className={`aspect-[3/4] w-full rounded-t-full object-cover shadow-sm ${n === 1 ? 'mt-8' : '-rotate-3'}`}
-            />
+          {boardChoices.map(({ target: t, selection, visual }) => (
+            <button
+              key={`${t.target.key}-${visual.public_ref}`}
+              onClick={() => {
+                setActiveKey(t.target.key)
+                setFamily(visual.family)
+                setFocusRef(visual.public_ref)
+                setBoardOpen(true)
+              }}
+            >
+              <img src={visual.thumbnail} alt="" loading="lazy" />
+              <span>
+                <b>{t.product?.name ?? 'Mobilier à vérifier'}</b>
+                <span>{visual.public_ref}</span>
+                {selection.visual?.weave_colors.length ? (
+                  <small>{selection.visual.weave_colors.join(' / ')}</small>
+                ) : null}
+              </span>
+              <ArrowRight size={16} />
+            </button>
           ))}
         </div>
-      </header>
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="min-w-0 p-4 sm:p-7">
+      )}
+      <div className="pi-atelier-layout">
+        <div className="pi-explorer">
           <div
             className="mb-6 flex flex-wrap gap-2"
             aria-label="Familles de matières"
@@ -198,7 +238,7 @@ export function MaterialAtelier({
                   setLimit(12)
                   setQuery('')
                 }}
-                className={`${action} ${family === f.id ? 'border-[#23352e] bg-[#23352e] text-white' : 'bg-white'}`}
+                className={`${action} ${family === f.id ? 'border-[#20282d] bg-[#20282d] text-white' : 'bg-white'}`}
               >
                 {f.label}
                 <span className="text-xs opacity-60">
@@ -207,119 +247,194 @@ export function MaterialAtelier({
               </button>
             ))}
           </div>
-          <div className="mb-5 flex items-center gap-3">
-            <Search size={18} aria-hidden />
-            <input
-              aria-label="Rechercher une matière"
-              placeholder="Référence, motif, trame…"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setLimit(12)
-              }}
-              className="min-h-[44px] min-w-0 flex-1 border-b border-[#b8beb2] bg-transparent text-sm outline-none focus:border-[#23352e]"
-            />
-            <span className="text-xs">{filtered.length} détails</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            {filtered.slice(0, limit).map((item) => {
-              const picked = selected?.visual?.public_ref === item.public_ref
-              return (
-                <article
-                  key={item.public_ref}
-                  className={`group overflow-hidden rounded-xl border bg-[#fffefa] transition-shadow hover:shadow-md ${picked ? 'border-[#9a4e34] ring-1 ring-[#9a4e34]' : 'border-[#dedfd6]'}`}
-                >
-                  <button
-                    className="relative block aspect-square w-full overflow-hidden bg-[#e9e8df] focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#9a4e34]"
-                    aria-label={`Agrandir ${item.public_ref}`}
-                    onClick={() => openZoom([item.public_ref])}
-                  >
-                    <img
-                      src={item.thumbnail}
-                      alt={`${item.label}, détail de matière ${item.public_ref}`}
-                      loading="lazy"
-                      className={`h-full w-full transition-transform duration-300 group-hover:scale-105 ${item.family === 'rope' ? 'object-contain p-3' : 'object-cover'}`}
-                    />
-                    <span className="absolute bottom-2 right-2 rounded-full bg-white/90 p-2">
-                      <Expand size={14} aria-hidden />
-                    </span>
-                  </button>
-                  <div className="p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-[#7a837b]">
-                      {item.tag}
-                    </p>
-                    <h3 className="mt-1 text-sm font-semibold">
-                      {item.public_ref}
-                    </h3>
-                    <button
-                      aria-pressed={picked}
-                      disabled={!active || unavailable(item)}
-                      className="mt-2 flex min-h-[44px] w-full items-center justify-between gap-2 border-t border-[#e4e5dd] text-left text-xs font-semibold disabled:opacity-40"
-                      onClick={() => choose(item)}
-                    >
-                      {picked
-                        ? 'Retenu · à confirmer'
-                        : unavailable(item)
-                          ? 'Indisponible'
-                          : 'Retenir ce détail'}
-                      {picked ? (
-                        <Check size={15} />
-                      ) : (
-                        <ArrowUpRight size={15} />
-                      )}
-                    </button>
-                    <button
-                      aria-pressed={compare.includes(item.public_ref)}
-                      className="min-h-[44px] text-xs text-[#57665f] underline underline-offset-4"
-                      onClick={() =>
-                        setCompare((c) =>
-                          c.includes(item.public_ref)
-                            ? c.filter((r) => r !== item.public_ref)
-                            : [...c.slice(-1), item.public_ref],
-                        )
-                      }
-                    >
-                      Comparer {item.public_ref}
-                    </button>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-          {!filtered.length && (
-            <p className="py-12 text-center text-sm">
-              Aucun détail pour cette recherche. Essayez une autre référence.
-            </p>
-          )}
-          {filtered.length > limit && (
-            <button
-              className={`${action} mx-auto mt-6 flex`}
-              onClick={() => setLimit((n) => n + 12)}
+          {focused && (
+            <section
+              className="pi-material-focus"
+              aria-label="La matière en détail"
             >
-              Explorer les suivants <ArrowUpRight size={16} />
-            </button>
+              <div className="pi-focus-image">
+                <span className="pi-index-label">
+                  {String(focusIndex + 1).padStart(2, '0')} / {filtered.length}{' '}
+                  — ÉCHANTILLON RÉEL
+                </span>
+                <button
+                  onClick={() => openZoom([focused.public_ref])}
+                  aria-label={`Voir le détail de ${focused.public_ref}`}
+                >
+                  <img
+                    key={focused.public_ref}
+                    src={focused.image}
+                    alt={`Matière ${focused.public_ref}`}
+                    loading="lazy"
+                  />
+                </button>
+                <div className="pi-focus-navigation">
+                  <button
+                    className="pi-icon-button"
+                    aria-label="Matière précédente"
+                    onClick={() => moveFocus(-1)}
+                  >
+                    <ArrowLeft size={17} />
+                  </button>
+                  <span>Une piste, pas encore une promesse.</span>
+                  <button
+                    className="pi-icon-button"
+                    aria-label="Matière suivante"
+                    onClick={() => moveFocus(1)}
+                  >
+                    <ArrowRight size={17} />
+                  </button>
+                </div>
+              </div>
+              <div className="pi-focus-description">
+                <div>
+                  <p className="pi-eyebrow">
+                    {families.find((f) => f.id === family)?.detail}
+                  </p>
+                  <h2>{focused.tag || focused.label}</h2>
+                  <p className="pi-focus-ref">{focused.public_ref}</p>
+                </div>
+                <div>
+                  <button
+                    className="pi-button pi-button-blue"
+                    disabled={!active || unavailable(focused)}
+                    onClick={() => choose(focused)}
+                  >
+                    <Plus size={16} />
+                    Retenir cette piste
+                  </button>
+                  <p className="pi-micro">
+                    À étudier pour votre mobilier.
+                    <br />
+                    Aucune compatibilité déduite de l’image.
+                  </p>
+                </div>
+              </div>
+            </section>
           )}
-          {compare.length > 0 && (
-            <div className="sticky bottom-4 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#23352e] p-3 text-white shadow-lg">
-              <span className="text-xs">{compare.join(' + ')}</span>
-              <button
-                disabled={compare.length !== 2}
-                className={`${action} disabled:opacity-50`}
-                onClick={() => openZoom(compare)}
-              >
-                Comparer les 2 détails <Layers size={16} />
-              </button>
+          <p className="pi-selection-feedback" role="status">
+            {feedback}
+          </p>
+          <details
+            className="pi-sample-library"
+            open={libraryOpen}
+            onToggle={(e) => setLibraryOpen(e.currentTarget.open)}
+          >
+            <summary>
+              Ouvrir la bibliothèque{' '}
+              <span>{filtered.length} détails à explorer</span>
+            </summary>
+            <div className="mb-5 flex items-center gap-3">
+              <Search size={18} aria-hidden />
+              <input
+                aria-label="Rechercher une matière"
+                placeholder="Référence, motif, trame…"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value)
+                  setLimit(12)
+                }}
+                className="min-h-[44px] min-w-0 flex-1 border-b border-[#d9dcd9] bg-transparent text-sm outline-none focus:border-[#20282d]"
+              />
+              <span className="text-xs">{filtered.length} détails</span>
             </div>
-          )}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {filtered.slice(0, limit).map((item) => {
+                const picked = selected?.visual?.public_ref === item.public_ref
+                return (
+                  <article
+                    key={item.public_ref}
+                    className={`group overflow-hidden rounded-xl border bg-[#ffffff] transition-shadow hover:shadow-md ${picked ? 'border-[#2549d5] ring-1 ring-[#2549d5]' : 'border-[#d9dcd9]'}`}
+                  >
+                    <button
+                      className="relative block aspect-square w-full overflow-hidden bg-[#e9ecef] focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#2549d5]"
+                      aria-label={`Agrandir ${item.public_ref}`}
+                      onClick={() => openZoom([item.public_ref])}
+                    >
+                      <img
+                        src={item.thumbnail}
+                        alt={`${item.label}, détail de matière ${item.public_ref}`}
+                        loading="lazy"
+                        className={`h-full w-full transition-transform duration-300 group-hover:scale-105 ${item.family === 'rope' ? 'object-contain p-3' : 'object-cover'}`}
+                      />
+                      <span className="absolute bottom-2 right-2 rounded-full bg-white/90 p-2">
+                        <Expand size={14} aria-hidden />
+                      </span>
+                    </button>
+                    <div className="p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-[#596369]">
+                        {item.tag}
+                      </p>
+                      <h3 className="mt-1 text-sm font-semibold">
+                        {item.public_ref}
+                      </h3>
+                      <button
+                        aria-pressed={picked}
+                        disabled={!active || unavailable(item)}
+                        className="mt-2 flex min-h-[44px] w-full items-center justify-between gap-2 border-t border-[#e4e5dd] text-left text-xs font-semibold disabled:opacity-40"
+                        onClick={() => choose(item)}
+                      >
+                        {picked
+                          ? 'Retenu · à confirmer'
+                          : unavailable(item)
+                            ? 'Indisponible'
+                            : 'Retenir ce détail'}
+                        {picked ? (
+                          <Check size={15} />
+                        ) : (
+                          <ArrowUpRight size={15} />
+                        )}
+                      </button>
+                      <button
+                        aria-pressed={compare.includes(item.public_ref)}
+                        className="min-h-[44px] text-xs text-[#596369] underline underline-offset-4"
+                        onClick={() =>
+                          setCompare((c) =>
+                            c.includes(item.public_ref)
+                              ? c.filter((r) => r !== item.public_ref)
+                              : [...c.slice(-1), item.public_ref],
+                          )
+                        }
+                      >
+                        Comparer {item.public_ref}
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+            {!filtered.length && (
+              <p className="py-12 text-center text-sm">
+                Aucun détail pour cette recherche. Essayez une autre référence.
+              </p>
+            )}
+            {filtered.length > limit && (
+              <button
+                className={`${action} mx-auto mt-6 flex`}
+                onClick={() => setLimit((n) => n + 12)}
+              >
+                Explorer les suivants <ArrowUpRight size={16} />
+              </button>
+            )}
+            {compare.length > 0 && (
+              <div className="sticky bottom-4 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#20282d] p-3 text-white shadow-lg">
+                <span className="text-xs">{compare.join(' + ')}</span>
+                <button
+                  disabled={compare.length !== 2}
+                  className={`${action} disabled:opacity-50`}
+                  onClick={() => openZoom(compare)}
+                >
+                  Comparer les 2 détails <Layers size={16} />
+                </button>
+              </div>
+            )}
+          </details>
         </div>
-        <aside
-          aria-label="Votre planche matière"
-          className="order-first border-b border-[#d8d5c9] bg-[#e9ece2] p-5 lg:order-last lg:border-b-0 lg:border-l"
-        >
+        <aside aria-label="Votre planche matière" className="pi-material-board">
           <details
             open={boardOpen}
             onToggle={(event) => setBoardOpen(event.currentTarget.open)}
-            className="lg:sticky lg:top-24"
+            className="pi-board-details"
           >
             <summary className="min-h-[44px] cursor-pointer text-sm font-semibold">
               Votre planche matière
@@ -341,7 +456,7 @@ export function MaterialAtelier({
                 </select>
               </label>
             )}
-            <div className="mt-4 rounded-2xl bg-[#fffefa] p-4">
+            <div className="pi-board-product">
               <SafeImage
                 src={active?.product?.mainImageUrl}
                 alt={active?.product?.name ?? 'Mobilier à sélectionner'}
@@ -353,7 +468,7 @@ export function MaterialAtelier({
                 {active?.product?.name ??
                   'Choisissez une assise dans le Studio'}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#677269]">
+              <p className="mt-1 text-[11px] leading-relaxed text-[#596369]">
                 Photo catalogue d’origine. Le motif choisi n’est pas appliqué à
                 cette photographie.
               </p>
@@ -376,7 +491,7 @@ export function MaterialAtelier({
                   </div>
                 </div>
                 {family === 'weave' && (
-                  <div className="rounded-xl border border-[#c9cfc2] p-3">
+                  <div className="rounded-xl border border-[#d9dcd9] p-3">
                     <p className="flex items-center gap-2 text-xs font-semibold">
                       <SlidersHorizontal size={14} />
                       Le motif et vos couleurs
@@ -444,7 +559,7 @@ export function MaterialAtelier({
                 </p>
               </div>
             ) : (
-              <p className="mt-5 text-sm leading-relaxed text-[#57665f]">
+              <p className="mt-5 text-sm leading-relaxed text-[#596369]">
                 Retenez un détail pour commencer votre planche. Vous pourrez
                 nous transmettre cette direction, même si elle reste à
                 confirmer.
@@ -467,7 +582,7 @@ export function MaterialAtelier({
             event.preventDefault()
             zoomTrigger.current?.focus()
           }}
-          className="max-h-[90vh] max-w-4xl overflow-y-auto bg-[#f4f2eb]"
+          className="max-h-[90vh] max-w-4xl overflow-y-auto bg-[#f5f5f1]"
         >
           <DialogHeader>
             <DialogTitle>

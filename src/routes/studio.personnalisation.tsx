@@ -79,7 +79,10 @@ function StudioCustomization() {
       ref={root}
       className="mx-auto max-w-[1360px] space-y-6 px-4 py-6 sm:px-6"
     >
-      <nav aria-label="Étapes du projet" className="flex flex-wrap gap-3">
+      <nav
+        aria-label="Étapes du projet"
+        className="pi-workspace-nav flex flex-wrap gap-3"
+      >
         <Link to="/studio" className={studioButton}>
           ← Sélection
         </Link>

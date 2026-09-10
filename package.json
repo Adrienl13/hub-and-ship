@@ -13,7 +13,7 @@
     "dev": "vite --host 0.0.0.0",
     "dev:e2e": "vite --host 0.0.0.0 --port 3000",
     "dev:debug": "NODE_OPTIONS='--inspect' vite --host 0.0.0.0",
-    "build": "vite build && node scripts/check-bundle-budget.mjs",
+    "build": "vite build && node scripts/check-bundle-budget.mjs && node scripts/check-design-review-bundle.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "start": "vite preview --host 0.0.0.0",
     "deploy": "node scripts/check-deploy-env.mjs && npm run build && wrangler deploy",
@@ -43,7 +43,8 @@
     "audit": "bun audit --audit-level=moderate",
     "gitleaks": "gitleaks detect --source . --verbose",
     "stats": "find src tests supabase -type f \\( -name '*.ts' -o -name '*.tsx' -o -name '*.sql' \\) -print | xargs wc -l",
-    "prepare": "husky"
+    "prepare": "husky",
+    "design:review": "bun scripts/design-review/start.mjs"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.1.2",

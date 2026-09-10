@@ -253,3 +253,8 @@ n’est créé. DATA READY = NON. Le snapshot public est une inspiration sans pr
 de compatibilité ; les codes usine ne sont jamais publiés. Le coffre local
 ignoré par Git doit être sauvegardé par l’administration. La recherche par
 référence de composition seule attend encore le raccordement du registre.
+
+
+## Lot 5.2 — expérience et revue locale
+
+Direction homepage/Studio/atelier implémentée sur `codex/studio-lot-5-2-experience`. Voir [le rapport de conception et de validation](STUDIO_LOT_5_2_REVIEW.md) et [la galerie desktop/mobile](design/lot-5-2/index.html). Depuis le dépôt, `bun run design:review` ouvre une surface de démonstration locale sur `http://localhost:5190/`, avec données synthétiques identifiées et envois simulés. Aucun changement de statut production ni de données métier. Migrations 42–46 inchangées pendant ce lot ; aucune migration exécutée. DATA READY = NON.

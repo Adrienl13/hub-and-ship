@@ -317,7 +317,7 @@ test('projet persisté incomplet et candidat sans affinité : vérification et c
     }))
   })
   await page.goto('/studio')
-  const resume = page.getByRole('link', { name: 'Reprendre' })
+  const resume = page.getByRole('link', { name: 'Reprendre les assises', exact: true })
   await expect(resume).toBeVisible()
   const resumeBox = await resume.boundingBox()
   expect(resumeBox?.height).toBeGreaterThanOrEqual(44)

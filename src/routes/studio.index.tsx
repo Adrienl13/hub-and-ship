@@ -2,7 +2,6 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { SafeImage } from '@/components/SafeImage'
 import { ProjectSummary } from '@/components/studio/ProjectSummary'
-import { StudioSectionHeader } from '@/components/studio/StudioChoices'
 import { useStudioCatalog } from '@/hooks/useStudioCatalog'
 import { useStudioProjectSummary } from '@/hooks/useStudioProjectSummary'
 export const Route = createFileRoute('/studio/')({ component: StudioIndex })
@@ -20,94 +19,110 @@ function StudioIndex() {
     (p) => p.isActive && p.studio.studioRole === 'base' && p.mainImageUrl,
   )
   const active = summary.items.length > 0 || summary.tables.length > 0
-  const card =
-    'group flex min-h-[44px] min-w-0 flex-col overflow-hidden rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] transition-colors hover:border-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-4 motion-reduce:transition-none'
   const photo = (src: string | undefined, alt: string) => (
     <SafeImage
       src={src}
       alt={alt}
-      label="Visuels à venir"
-      imgClassName="h-56 w-full object-contain p-6 lg:h-72"
-      className="h-56 w-full lg:h-72"
+      label="Visuel à venir"
+      imgClassName="pi-entry-photo"
     />
   )
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-16">
-      <StudioSectionHeader eyebrow="Studio Projet" title="Créez votre projet">
-        Choisissez vos assises, composez vos tables et précisez vos quantités.
-        Votre projet se construit à votre rythme.
-      </StudioSectionHeader>
-      <div className="grid gap-5 md:grid-cols-3">
+    <section className="pi-wrap pi-studio-intro">
+      <p className="pi-eyebrow">LE STUDIO / DE VOTRE IDÉE À VOTRE MOBILIER</p>
+      <div className="pi-studio-title">
+        <h1>Créez votre projet</h1>
+        <p>
+          Partez d’une forme. Explorez les matières. Gardez vos envies : nous
+          vérifierons ensemble ce qui peut être réalisé.
+        </p>
+      </div>
+      {active && (
+        <div className="pi-resume-banner">
+          <div>
+            <p className="pi-eyebrow">VOTRE PLAN DE TRAVAIL</p>
+            <h2>Vos idées vous attendent.</h2>
+            <p>
+              {summary.items.length} sélection
+              {summary.items.length > 1 ? 's' : ''} d’assises ·{' '}
+              {summary.tables.length} composition
+              {summary.tables.length > 1 ? 's' : ''} de tables · conservées sur
+              cet appareil
+            </p>
+          </div>
+          <Link
+            to="/studio/personnalisation"
+            className="pi-button pi-button-white"
+          >
+            Reprendre ma planche <ArrowRight size={18} />
+          </Link>
+        </div>
+      )}
+      <div className="pi-project-paths">
         <Link
           to="/studio/assises"
           search={{ entry: 'full_project' }}
           data-testid="entry-full-project"
-          className={card}
+          className="pi-path-primary"
         >
-          <div className="grid grid-cols-2">
+          <div className="pi-path-copy">
+            <p className="pi-eyebrow">01 / ASSISES + TABLES</p>
+            <h2>Projet complet</h2>
+            <p>Le mobilier de votre établissement, pensé comme un ensemble.</p>
+            <span className="pi-text-link">
+              Commencer mon projet <ArrowRight size={16} />
+            </span>
+          </div>
+          <div className="pi-path-photo">
             {photo(seat?.mainImageUrl, seat?.name ?? 'Assises')}
-            {photo(top?.mainImageUrl, top?.name ?? 'Tables')}
-          </div>
-          <div className="flex flex-1 flex-col p-6">
-            <p className="label-eyebrow text-[color:var(--ember)]">
-              Assises + tables
-            </p>
-            <h2 className="mt-2 text-2xl font-bold">Projet complet</h2>
-            <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-              Construisez le mobilier de votre établissement, en commençant par
-              les assises.
-            </p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
-              Commencer mon projet{' '}
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </span>
           </div>
         </Link>
-        <Link
-          to="/studio/assises"
-          search={{ entry: 'seats' }}
-          data-testid="entry-seats"
-          className={card}
-        >
-          {photo(seat?.mainImageUrl, seat?.name ?? 'Assises')}
-          <div className="p-6">
-            <p className="label-eyebrow text-[color:var(--ink-soft)]">
-              Vos préférences
-            </p>
-            <h2 className="mt-2 text-2xl font-bold">Assises</h2>
-            <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-              Explorez les formes, gardez vos pistes et choisissez votre assise.
-            </p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
-              Découvrir les assises{' '}
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </span>
-          </div>
-        </Link>
-        <Link
-          to="/studio/tables"
-          search={{ entry: 'tables' }}
-          data-testid="entry-tables"
-          className={card}
-        >
-          {photo(
-            top?.mainImageUrl || base?.mainImageUrl,
-            top?.name ?? base?.name ?? 'Tables',
-          )}
-          <div className="p-6">
-            <p className="label-eyebrow text-[color:var(--ink-soft)]">
-              Votre composition
-            </p>
-            <h2 className="mt-2 text-2xl font-bold">Tables</h2>
-            <p className="mt-2 text-sm text-[color:var(--ink-soft)]">
-              Une forme, une finition, puis le piètement compatible avec votre
-              plateau.
-            </p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
-              Composer mes tables <ArrowRight aria-hidden className="h-4 w-4" />
-            </span>
-          </div>
-        </Link>
+        <div className="pi-path-secondary">
+          <Link
+            to="/studio/assises"
+            search={{ entry: 'seats' }}
+            data-testid="entry-seats"
+          >
+            <div>
+              <p className="pi-eyebrow">02 / LES FORMES QUI VOUS PARLENT</p>
+              <h2>Assises</h2>
+              <p>Explorez, comparez, gardez vos pistes.</p>
+              <span className="pi-text-link">
+                Découvrir les assises <ArrowRight size={16} />
+              </span>
+            </div>
+            {photo(seat?.mainImageUrl, seat?.name ?? 'Assises')}
+          </Link>
+          <Link
+            to="/studio/tables"
+            search={{ entry: 'tables' }}
+            data-testid="entry-tables"
+          >
+            <div>
+              <p className="pi-eyebrow">03 / VOTRE COMPOSITION</p>
+              <h2>Tables</h2>
+              <p>Un plateau, un piètement, une association à vérifier.</p>
+              <span className="pi-text-link">
+                Composer mes tables <ArrowRight size={16} />
+              </span>
+            </div>
+            {photo(
+              top?.mainImageUrl || base?.mainImageUrl,
+              top?.name ?? base?.name ?? 'Tables',
+            )}
+          </Link>
+        </div>
+      </div>
+      <div className="pi-studio-sequence">
+        <span>
+          <b>01</b>Choisir les formes
+        </span>
+        <span>
+          <b>02</b>Explorer les matières
+        </span>
+        <span>
+          <b>03</b>Partager le projet
+        </span>
       </div>
       {catalog.status === 'error' && (
         <p role="status" className="mt-4 text-sm">
