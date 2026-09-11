@@ -85,3 +85,15 @@ it('affiche la plaque Terrassea et permet de parcourir les vrais modèles sans r
     screen.queryByRole('button', { name: 'Mettre les modèles en pause' }),
   ).not.toBeInTheDocument()
 })
+
+it('explique le regroupement sans promettre une économie ni certifier les inspirations', () => {
+  render(<ProjectHome />)
+  expect(screen.getByText(/Images d’inspiration/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: /Les volumes réunis/ }))
+  expect(screen.getByText(/mutualiser le transport/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: /Votre devis/ }))
+  expect(screen.getByText(/Le prix final dépend/)).toBeVisible()
+  expect(
+    screen.getByRole('link', { name: /Comprendre notre modèle de prix/ }),
+  ).toHaveAttribute('href', '/prix')
+})

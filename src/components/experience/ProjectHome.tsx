@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUpRight } from 'lucide-react'
 import { useState } from 'react'
 import { ChairShowcase } from './ChairShowcase'
+import { ContainerStory } from './ContainerStory'
 import { ExperienceHeader, ExperienceFooter } from './ExperienceHeader'
 import { isStudioEnabled } from '@/lib/studio/flags'
 const directions = [
@@ -83,6 +84,58 @@ export function ProjectHome() {
             Entrer dans la matière <ArrowDown size={16} />
           </a>
         </div>
+        <section
+          className="pi-atmosphere pi-wrap"
+          aria-labelledby="pi-atmosphere-title"
+        >
+          <div className="pi-atmosphere-heading">
+            <p className="pi-eyebrow">
+              LE MOBILIER CHANGE LA PERCEPTION D’UN LIEU
+            </p>
+            <h2 id="pi-atmosphere-title">
+              On vient pour une adresse.
+              <br />
+              <span>On revient pour une atmosphère.</span>
+            </h2>
+          </div>
+          <div className="pi-atmosphere-pair">
+            <figure className="pi-atmosphere-wide">
+              <img
+                src="/images/home/hero-salon-vue-mer.webp"
+                alt="Inspiration : salon outdoor ouvert sur la mer"
+                width="1920"
+                height="960"
+                loading="lazy"
+              />
+              <figcaption>
+                <span>01 / PRENDRE LE TEMPS</span>Des lignes qui invitent à
+                rester.
+              </figcaption>
+            </figure>
+            <figure className="pi-atmosphere-detail">
+              <img
+                src="/images/home/fauteuils-tresses-dessus.webp"
+                alt="Inspiration : fauteuils aux cordages roses et bleus vus du dessus"
+                width="1920"
+                height="960"
+                loading="lazy"
+              />
+              <figcaption>
+                <span>02 / AFFIRMER UNE IDENTITÉ</span>Une couleur que l’on
+                retient.
+              </figcaption>
+            </figure>
+          </div>
+          <div className="pi-atmosphere-foot">
+            <p>
+              Images d’inspiration. Les modèles, finitions et associations de
+              votre projet seront vérifiés ensemble.
+            </p>
+            <a href={start} className="pi-text-link">
+              Trouver ma direction <ArrowRight size={18} />
+            </a>
+          </div>
+        </section>
         <section id="matieres" className="pi-material-story pi-wrap">
           <div className="pi-section-heading">
             <p className="pi-eyebrow">01 / TROUVER VOTRE LANGAGE</p>
@@ -160,6 +213,14 @@ export function ProjectHome() {
               <li>
                 <span>01</span>
                 <div>
+                  <img
+                    className="pi-step-photo"
+                    src="/catalogue/bistro-seating-clean/BIS-012-01.webp"
+                    alt="Une forme : assise du catalogue"
+                    loading="lazy"
+                    width="220"
+                    height="220"
+                  />
                   <h3>Le mobilier</h3>
                   <p>Des assises et des tables pour votre lieu.</p>
                 </div>
@@ -167,6 +228,21 @@ export function ProjectHome() {
               <li>
                 <span>02</span>
                 <div>
+                  <div
+                    className="pi-step-samples"
+                    aria-label="Exemples de matières distinctes"
+                  >
+                    {directions.map((item) => (
+                      <img
+                        key={item.id}
+                        src={item.image}
+                        alt={item.name}
+                        loading="lazy"
+                        width="90"
+                        height="90"
+                      />
+                    ))}
+                  </div>
                   <h3>Votre direction</h3>
                   <p>
                     Motifs, matières, couleurs : une planche qui vous ressemble.
@@ -176,6 +252,13 @@ export function ProjectHome() {
               <li>
                 <span>03</span>
                 <div>
+                  <div className="pi-project-paper" aria-hidden="true">
+                    <span>TERRASSEA / VOTRE PROJET</span>
+                    <i />
+                    <i />
+                    <i />
+                    <b>À étudier ensemble ↗</b>
+                  </div>
                   <h3>Le projet à vérifier</h3>
                   <p>Vos choix réunis pour une étude avec notre équipe.</p>
                 </div>
@@ -183,56 +266,7 @@ export function ProjectHome() {
             </ol>
           </div>
         </section>
-        <section id="realisation" className="pi-wrap pi-realisation">
-          <div className="pi-section-heading">
-            <p className="pi-eyebrow">03 / DU PROJET AU RÉEL</p>
-            <h2>
-              Une idée mérite
-              <br />
-              d’être bien réalisée.
-            </h2>
-            <p>
-              La personnalisation est le point de départ. Matières, production,
-              contrôle et livraison font partie de la discussion, avant tout
-              engagement.
-            </p>
-          </div>
-          <div className="pi-evidence-grid">
-            <a href="/qualite">
-              <span className="pi-evidence-number">01—</span>
-              <h3>Regarder de près.</h3>
-              <p>
-                Les échantillons et les contrôles pour parler de la matière
-                réelle, au-delà de l’écran.
-              </p>
-              <span>
-                Qualité & tests <ArrowUpRight size={18} />
-              </span>
-            </a>
-            <a href="/livres">
-              <span className="pi-evidence-number">02—</span>
-              <h3>Aller jusqu’au lieu.</h3>
-              <p>
-                Le container, le transport et la livraison : les moyens de faire
-                aboutir votre projet.
-              </p>
-              <span>
-                Voir les livraisons documentées <ArrowUpRight size={18} />
-              </span>
-            </a>
-            <a href="/contact">
-              <span className="pi-evidence-number">03—</span>
-              <h3>Vérifier ensemble.</h3>
-              <p>
-                Volumes, dimensions, faisabilité et conditions commerciales :
-                votre besoin avant nos réponses.
-              </p>
-              <span>
-                Échanger avec l’équipe <ArrowUpRight size={18} />
-              </span>
-            </a>
-          </div>
-        </section>
+        <ContainerStory />
       </main>
       <ExperienceFooter />
     </div>

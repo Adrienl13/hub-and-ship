@@ -260,3 +260,43 @@ test('les modèles circulent, peuvent être arrêtés et respectent reduced moti
     ),
   ).toBe(true)
 })
+
+test('le défilement alterne images et explications du container, sans débordement', async ({
+  page,
+}, info) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  for (const selector of [
+    '.pi-atmosphere',
+    '.pi-project-invitation',
+    '.pi-container-story',
+  ]) {
+    const section = page.locator(selector)
+    await section.scrollIntoViewIfNeeded()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - innerWidth,
+      ),
+    ).toBe(0)
+    if (selector === '.pi-atmosphere') {
+      for (const img of await section.locator('img').all()) {
+        await expect
+          .poll(() =>
+            img.evaluate(
+              (el: HTMLImageElement) => el.complete && el.naturalWidth > 0,
+            ),
+          )
+          .toBe(true)
+      }
+    }
+    await section.screenshot({
+      path: `${screenshots}/${selector.slice(1)}-${info.project.name}.png`,
+    })
+  }
+  await page.getByRole('button', { name: /Les volumes réunis/ }).click()
+  await expect(page.getByText(/mutualiser le transport/)).toBeVisible()
+  await page.getByRole('button', { name: /Votre devis/ }).click()
+  await expect(page.getByText(/Le prix final dépend/)).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: /Comprendre notre modèle de prix/ }),
+  ).toHaveAttribute('href', '/prix')
+})
