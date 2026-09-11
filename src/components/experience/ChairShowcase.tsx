@@ -92,7 +92,6 @@ export function ChairShowcase() {
     <div
       ref={root}
       className="pi-chair-showcase pi-showcase-depth"
-      style={{ backgroundColor: chairs[active]!.tone }}
       role="region"
       aria-label="Explorer les modèles du catalogue"
       onMouseEnter={() => setHovered(true)}
@@ -163,6 +162,7 @@ export function ChairShowcase() {
             onClick={() => move(-1)}
           >
             <ArrowLeft size={18} />
+            <span>Précédent</span>
           </button>
           {!reduced && (
             <button
@@ -174,6 +174,7 @@ export function ChairShowcase() {
               onClick={() => setPaused(!paused)}
             >
               {paused ? <Play size={16} /> : <Pause size={16} />}
+              <span>{paused ? 'Lecture' : 'Pause'}</span>
             </button>
           )}
           <button
@@ -182,6 +183,7 @@ export function ChairShowcase() {
             onClick={() => move(1)}
           >
             <ArrowRight size={18} />
+            <span>Suivant</span>
           </button>
         </div>
       </div>

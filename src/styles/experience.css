@@ -2227,3 +2227,274 @@
     margin-top: 0;
   }
 }
+
+/* Accueil unifié : titre et collection sur une seule scène sans panneau latéral. */
+.pi-home-unified.pi-home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: 32px;
+  padding-bottom: 24px;
+  max-width: 1540px;
+}
+.pi-home-unified .pi-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  max-width: 100%;
+}
+.pi-home-unified .pi-hero-copy > .pi-eyebrow {
+  margin: 0 0 18px;
+}
+.pi-home-unified .pi-hero-copy h1 {
+  font-size: clamp(38px, 4.6vw, 70px);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+.pi-home-unified .pi-hero-copy h1 > span {
+  display: block;
+}
+.pi-home-unified .pi-hero-intro {
+  max-width: 600px;
+  margin: 18px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.pi-home-unified .pi-hero-actions {
+  margin: 20px 0 0;
+  gap: 22px;
+  justify-content: center;
+}
+.pi-home-unified .pi-button {
+  border-radius: 999px;
+}
+.pi-home-unified .pi-hero-actions .pi-text-link {
+  border: 0;
+  background: #e7e8e7;
+  border-radius: 999px;
+  min-height: 50px;
+  padding: 12px 22px;
+}
+.pi-home-unified .pi-hero-copy > .pi-micro {
+  margin: 16px 0 0;
+  font-size: 9px;
+}
+.pi-home-unified .pi-chair-showcase {
+  width: 100%;
+  background: none;
+  border: 0;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 14px;
+}
+.pi-home-unified .pi-showcase-heading {
+  display: none;
+}
+.pi-home-unified .pi-showcase-families {
+  padding: 0;
+  gap: 6px;
+}
+.pi-home-unified .pi-showcase-families button {
+  background: transparent;
+  border: 0;
+  color: #596369;
+  padding: 8px 18px;
+}
+.pi-home-unified .pi-showcase-families button[aria-pressed='true'] {
+  background: #20282d;
+  color: #fff;
+}
+.pi-home-unified .pi-chair-orbit {
+  min-height: 296px;
+  perspective: 1200px;
+  margin-top: 6px;
+}
+.pi-home-unified .pi-chair-card {
+  width: 250px;
+  height: 240px;
+  left: calc(50% - 125px);
+  top: 20px;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 0;
+  box-shadow: 0 14px 28px #20282d12;
+  padding: 10px;
+}
+.pi-home-unified .pi-chair-card img {
+  border-radius: 18px;
+}
+.pi-home-unified .pi-chair-card[data-position='0'] {
+  transform: translate(0, 0) rotate(0);
+  z-index: 5;
+}
+.pi-home-unified .pi-chair-card[data-position='1'] {
+  transform: translate(110%, 12%) rotate(6deg) scale(0.85);
+  z-index: 3;
+}
+.pi-home-unified .pi-chair-card[data-position='2'] {
+  transform: translate(205%, 16%) rotate(10deg) scale(0.68);
+  z-index: 1;
+}
+.pi-home-unified .pi-chair-card[data-position='3'] {
+  transform: translate(-110%, 12%) rotate(-6deg) scale(0.85);
+  z-index: 3;
+}
+.pi-home-unified .pi-chair-card[data-position='4'] {
+  transform: translate(-205%, 16%) rotate(-10deg) scale(0.68);
+  z-index: 1;
+}
+.pi-home-unified .pi-showcase-bottom {
+  background: transparent;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 12px 10px;
+  text-align: center;
+}
+.pi-home-unified .pi-showcase-bottom .pi-eyebrow {
+  display: none;
+}
+.pi-home-unified .pi-showcase-bottom p {
+  font-size: 19px;
+  margin: 0;
+}
+.pi-home-unified .pi-showcase-controls {
+  background: #e2e4e4;
+  border-radius: 999px;
+  padding: 6px;
+  gap: 4px;
+}
+.pi-home-unified .pi-showcase-controls button {
+  width: auto;
+  min-width: 100px;
+  min-height: 44px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: #20282d;
+  font-size: 12px;
+}
+.pi-home-unified .pi-showcase-controls button[data-motion-toggle] {
+  background: #20282d;
+  color: white;
+}
+.pi-home-unified .pi-showcase-controls button:hover {
+  background: #cdd2d3;
+}
+.pi-home-unified .pi-showcase-controls button[data-motion-toggle]:hover {
+  background: #35464e;
+}
+.pi-home-unified .pi-showcase-note {
+  max-width: none;
+  padding: 0 12px;
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 9px;
+}
+@media (max-width: 760px) {
+  .pi-home-unified.pi-home-hero {
+    padding-top: 22px;
+  }
+  .pi-home-unified .pi-hero-copy {
+    display: contents;
+  }
+  .pi-home-unified .pi-hero-copy > .pi-eyebrow {
+    order: 0;
+    font-size: 7px;
+    align-self: center;
+    margin: 0 0 14px;
+  }
+  .pi-home-unified .pi-hero-copy h1 {
+    order: 1;
+    font-size: clamp(30px, 7.9vw, 48px);
+    text-align: center;
+    margin: 0;
+  }
+  .pi-home-unified .pi-hero-intro {
+    order: 2;
+    text-align: center;
+    font-size: 12px;
+    margin: 14px auto 0;
+    max-width: 36ch;
+  }
+  .pi-home-unified .pi-chair-showcase {
+    order: 3;
+    margin: 18px 0 0;
+  }
+  .pi-home-unified .pi-hero-actions {
+    order: 4;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  .pi-home-unified .pi-hero-actions .pi-button {
+    min-height: 52px;
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+  .pi-home-unified .pi-hero-actions .pi-text-link {
+    min-height: 52px;
+    padding: 10px 14px;
+    font-size: 11px;
+    flex: 1;
+    justify-content: center;
+  }
+  .pi-home-unified .pi-hero-copy > .pi-micro {
+    order: 5;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .pi-home-unified .pi-showcase-families {
+    gap: 0;
+  }
+  .pi-home-unified .pi-showcase-families button {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .pi-home-unified .pi-chair-orbit {
+    min-height: 220px;
+    overflow: visible;
+  }
+  .pi-home-unified .pi-chair-card {
+    width: 160px;
+    height: 165px;
+    left: calc(50% - 80px);
+    top: 20px;
+    border-radius: 22px;
+    padding: 8px;
+  }
+  .pi-home-unified .pi-chair-card[data-position='1'] {
+    transform: translate(85%, 10%) rotate(7deg) scale(0.72);
+  }
+  .pi-home-unified .pi-chair-card[data-position='3'] {
+    transform: translate(-85%, 10%) rotate(-7deg) scale(0.72);
+  }
+  .pi-home-unified .pi-chair-card[data-position='2'] {
+    transform: translate(150%, 10%) rotate(10deg) scale(0.6);
+  }
+  .pi-home-unified .pi-chair-card[data-position='4'] {
+    transform: translate(-150%, 10%) rotate(-10deg) scale(0.6);
+  }
+  .pi-home-unified .pi-showcase-controls button {
+    min-width: 0;
+    padding: 10px 12px;
+    gap: 5px;
+    font-size: 11px;
+  }
+  .pi-home-unified .pi-showcase-bottom p {
+    font-size: 17px;
+  }
+  .pi-home-unified .pi-showcase-note {
+    font-size: 8px;
+  }
+}

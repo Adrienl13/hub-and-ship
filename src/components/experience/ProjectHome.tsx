@@ -41,20 +41,15 @@ export function ProjectHome() {
     <div className="pi-page">
       <ExperienceHeader />
       <main id="top">
-        <section className="pi-home-hero pi-wrap">
+        <section className="pi-home-hero pi-home-unified pi-wrap">
           <div className="pi-hero-copy">
             <p className="pi-eyebrow">
               <span className="pi-status-dot" /> MOBILIER PROFESSIONNEL ·
               PERSONNALISATION
             </p>
             <h1>
-              Votre lieu a<br />
-              du caractère.
-              <span>
-                Votre mobilier
-                <br />
-                aussi.
-              </span>
+              Votre lieu a du caractère.
+              <span>Votre mobilier aussi.</span>
             </h1>
             <p className="pi-hero-intro">
               Chaises, fauteuils, tables, lounge. Trouvez un modèle qui vous
