@@ -300,3 +300,26 @@ test('le défilement alterne images et explications du container, sans débordem
     page.getByRole('link', { name: /Comprendre notre modèle de prix/ }),
   ).toHaveAttribute('href', '/prix')
 })
+
+test('les familles sont explorables et le regroupement peut être rejoué', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: 'Lounge', exact: true }).click()
+  await expect(page.getByText('Amalfi · lounge', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Tables', exact: true }).click()
+  await expect(
+    page.getByText('Siena · table en situation', { exact: true }),
+  ).toBeVisible()
+  const scene = page.locator('.pi-container-scene')
+  await scene.scrollIntoViewIfNeeded()
+  await expect(scene).toHaveClass(/is-playing/)
+  await page.getByRole('button', { name: /Rejouer le regroupement/ }).click()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  expect(
+    await scene
+      .locator('.pi-cargo-group')
+      .first()
+      .evaluate((el) => getComputedStyle(el).animationName),
+  ).toBe('none')
+})

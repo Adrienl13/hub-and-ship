@@ -1,11 +1,59 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Pause, Play } from 'lucide-react'
 
+// Editorial references from the repository catalogue. No price or capability inference.
 const chairs = [
-  { image: 'BIS-057-01', label: 'Chevrons bleus', tone: '#dce4ef' },
-  { image: 'BIS-006-01', label: 'Tressage rosé', tone: '#ede0d9' },
-  { image: 'BIS-012-01', label: 'Contraste graphique', tone: '#e2dfd7' },
-  { image: 'BIS-019-01', label: 'Cordage naturel', tone: '#e7e6d9' },
+  {
+    image: '/catalogue/bistro-seating-clean/BIS-057-01.webp',
+    label: 'Chevrons bleus',
+    tone: '#e3e7ec',
+  },
+  {
+    image: '/catalogue/bistro-seating-clean/BIS-006-01.webp',
+    label: 'Tressage rosé',
+    tone: '#ece0d9',
+  },
+  {
+    image: '/catalogue/rope-series/ROP-015-01.webp',
+    label: 'Amalfi · lounge',
+    tone: '#e7e6df',
+  },
+  {
+    image: '/catalogue/bistro-seating-clean/BIS-036-01.webp',
+    label: 'Siena · table en situation',
+    tone: '#e3e5df',
+  },
+  {
+    image: '/catalogue/bistro-seating-clean/BIS-009-01.webp',
+    label: 'Montmartre · fauteuil',
+    tone: '#e7e2db',
+  },
+  {
+    image: '/catalogue/rope-series/ROP-007-01.webp',
+    label: 'Deauville · fauteuil cordage',
+    tone: '#ede0de',
+  },
+  {
+    image: '/catalogue/rope-series/ROP-019-01.webp',
+    label: 'Ravenna · lounge',
+    tone: '#e5e6db',
+  },
+  {
+    image: '/catalogue/rope-series/ROP-040-01.webp',
+    label: 'Patmos · chaise cordage',
+    tone: '#dfe7e5',
+  },
+  {
+    image: '/catalogue/bistro-seating-clean/BIS-039-01.webp',
+    label: 'Ravenna · bistrot',
+    tone: '#e0e5ee',
+  },
+]
+const families = [
+  { label: 'Chaises', index: 0 },
+  { label: 'Fauteuils', index: 4 },
+  { label: 'Tables', index: 3 },
+  { label: 'Lounge', index: 2 },
 ]
 
 export function ChairShowcase() {
@@ -43,7 +91,7 @@ export function ChairShowcase() {
   return (
     <div
       ref={root}
-      className="pi-chair-showcase"
+      className="pi-chair-showcase pi-showcase-depth"
       style={{ backgroundColor: chairs[active]!.tone }}
       role="region"
       aria-label="Explorer les modèles du catalogue"
@@ -56,7 +104,25 @@ export function ChairShowcase() {
     >
       <div className="pi-showcase-heading">
         <span>DES FORMES. DES COULEURS. VOTRE LIEU.</span>
-        <span>0{active + 1} / 04</span>
+        <span>0{active + 1} / 09</span>
+      </div>
+      <div
+        className="pi-showcase-families"
+        role="group"
+        aria-label="Explorer les familles de mobilier"
+      >
+        {families.map((f) => (
+          <button
+            key={f.label}
+            onClick={() => {
+              setPaused(true)
+              setActive(f.index)
+            }}
+            aria-pressed={active === f.index}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
       <div className="pi-chair-orbit">
         {chairs.map((chair, i) => {
@@ -67,9 +133,10 @@ export function ChairShowcase() {
               className="pi-chair-card"
               data-position={position}
               aria-hidden={position !== 0}
+              data-testid={position === 0 ? 'featured-model' : undefined}
             >
               <img
-                src={`/catalogue/bistro-seating-clean/${chair.image}.webp`}
+                src={chair.image}
                 alt={
                   i === 0
                     ? 'Assise bistro, photographie catalogue originale'

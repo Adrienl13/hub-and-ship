@@ -97,3 +97,14 @@ it('explique le regroupement sans promettre une économie ni certifier les inspi
     screen.getByRole('link', { name: /Comprendre notre modèle de prix/ }),
   ).toHaveAttribute('href', '/prix')
 })
+
+it('présente plusieurs familles sans modifier la sélection du projet', () => {
+  render(<ProjectHome />)
+  fireEvent.click(screen.getByRole('button', { name: 'Lounge' }))
+  expect(screen.getByText('Amalfi · lounge')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Tables' }))
+  expect(screen.getByText('Siena · table en situation')).toBeVisible()
+  expect(
+    screen.getByTestId('featured-model').querySelector('img'),
+  ).toHaveAttribute('src', '/catalogue/bistro-seating-clean/BIS-036-01.webp')
+})

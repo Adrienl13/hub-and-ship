@@ -2043,3 +2043,187 @@
     padding: 20px 0;
   }
 }
+
+/* Composition multi-familles, cinq plans visibles dès le premier écran. */
+.pi-showcase-depth {
+  min-height: 660px;
+  background-image: radial-gradient(ellipse at 50% 45%, #fff 0%, #ffffff00 65%);
+}
+.pi-showcase-families {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  z-index: 5;
+  position: relative;
+  padding: 0 15px;
+}
+.pi-showcase-families button {
+  min-height: 44px;
+  border: 1px solid #a5acb8;
+  border-radius: 24px;
+  padding: 8px 15px;
+  font-size: 12px;
+  background: #ffffffb5;
+}
+.pi-showcase-families button[aria-pressed='true'] {
+  background: #20282d;
+  color: white;
+  border-color: #20282d;
+}
+.pi-showcase-depth .pi-chair-orbit {
+  min-height: 415px;
+}
+.pi-showcase-depth .pi-chair-card {
+  width: 49%;
+  left: 25.5%;
+  top: 22%;
+  max-height: 270px;
+  aspect-ratio: 1;
+  padding: 8px;
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+}
+.pi-showcase-depth .pi-chair-card[data-position='0'] {
+  opacity: 1;
+  transform: translateY(4%) rotate(-3deg);
+  z-index: 5;
+}
+.pi-showcase-depth .pi-chair-card[data-position='1'] {
+  opacity: 1;
+  transform: translate(66%, -35%) rotate(9deg) scale(0.66);
+  z-index: 2;
+}
+.pi-showcase-depth .pi-chair-card[data-position='2'] {
+  opacity: 1;
+  transform: translate(66%, 64%) rotate(5deg) scale(0.8);
+  z-index: 4;
+}
+.pi-showcase-depth .pi-chair-card[data-position='3'] {
+  opacity: 1;
+  transform: translate(-65%, -41%) rotate(-9deg) scale(0.8);
+  z-index: 2;
+}
+.pi-showcase-depth .pi-chair-card[data-position='4'] {
+  opacity: 1;
+  transform: translate(-66%, 67%) rotate(-5deg) scale(0.68);
+  z-index: 3;
+}
+.pi-container-cinema {
+  background: linear-gradient(150deg, #e1e8e8, #bacbd2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pi-container-scene {
+  filter: drop-shadow(0 14px 14px #203b4a20);
+}
+.pi-container-scene.is-playing .pi-cargo-group {
+  animation: pi-consolidate 3.6s cubic-bezier(0.22, 0.65, 0.28, 1) both;
+}
+@keyframes pi-consolidate {
+  0%,
+  15% {
+    transform: translate(-180px, -100px) scale(0.7);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  75%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+}
+.pi-scene-caption {
+  border-top: 1px solid #637d8850;
+  padding-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.pi-scene-caption > span {
+  font-size: 18px;
+  max-width: 210px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.pi-scene-caption button {
+  min-height: 44px;
+  font-size: 11px;
+}
+@media (min-width: 1100px) {
+  .pi-home-hero {
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 40px;
+  }
+  .pi-hero-copy h1 {
+    font-size: clamp(54px, 5.2vw, 76px);
+  }
+}
+@media (max-width: 760px) {
+  .pi-showcase-depth {
+    min-height: 425px;
+  }
+  .pi-showcase-families {
+    gap: 5px;
+    padding: 0 8px;
+  }
+  .pi-showcase-families button {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+  .pi-showcase-depth .pi-chair-orbit {
+    min-height: 245px;
+  }
+  .pi-showcase-depth .pi-chair-card {
+    width: 49%;
+    left: 25.5%;
+    top: 24%;
+    max-height: 165px;
+  }
+  .pi-showcase-depth .pi-showcase-bottom {
+    padding-top: 16px;
+  }
+  .pi-showcase-depth .pi-showcase-bottom p {
+    font-size: 18px;
+  }
+  .pi-scene-caption > span {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pi-container-scene.is-playing .pi-cargo-group {
+    animation: none;
+  }
+}
+.pi-showcase-depth .pi-chair-card {
+  height: 240px;
+  top: 20%;
+}
+.pi-showcase-depth .pi-chair-card[data-position='2'] {
+  transform: translate(66%, 42%) rotate(5deg) scale(0.72);
+}
+.pi-showcase-depth .pi-chair-card[data-position='4'] {
+  transform: translate(-66%, 42%) rotate(-5deg) scale(0.65);
+}
+.pi-showcase-depth .pi-showcase-bottom {
+  background: #ffffff60;
+}
+@media (max-width: 760px) {
+  .pi-showcase-depth .pi-chair-card {
+    height: 145px;
+    top: 20%;
+  }
+  .pi-showcase-depth {
+    min-height: 390px;
+  }
+  .pi-showcase-depth .pi-chair-orbit {
+    min-height: 225px;
+  }
+  .pi-hero-actions {
+    margin-top: 0;
+  }
+}

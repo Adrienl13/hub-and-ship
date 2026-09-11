@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 const steps = [
   {
@@ -19,6 +19,21 @@ const steps = [
 ]
 export function ContainerStory() {
   const [step, setStep] = useState(0)
+  const [scene, setScene] = useState(0)
+  const visual = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setScene(1)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.5 },
+    )
+    if (visual.current) observer.observe(visual.current)
+    return () => observer.disconnect()
+  }, [])
   return (
     <section id="realisation" className="pi-container-story">
       <div className="pi-wrap">
@@ -35,9 +50,13 @@ export function ContainerStory() {
           </p>
         </div>
         <div className="pi-container-layout">
-          <div className="pi-container-visual">
+          <div ref={visual} className="pi-container-visual pi-container-cinema">
             <span className="pi-eyebrow">LE PRINCIPE DU CONTAINER PARTAGÉ</span>
             <svg
+              key={scene}
+              className={
+                scene ? 'pi-container-scene is-playing' : 'pi-container-scene'
+              }
               viewBox="0 0 640 350"
               role="img"
               aria-label="Schéma de plusieurs commandes réunies dans un container partagé"
@@ -61,7 +80,7 @@ export function ContainerStory() {
                 <g
                   key={i}
                   className="pi-cargo-group"
-                  opacity={step === 0 && i !== 0 ? 0.35 : 1}
+                  style={{ animationDelay: `${i * 0.5}s` }}
                 >
                   <rect
                     x={86 + i * 128}
@@ -111,6 +130,15 @@ export function ContainerStory() {
               Illustration du principe · aucun chargement réel ni économie
               chiffrée représentés.
             </p>
+            <div className="pi-scene-caption">
+              <span>Plusieurs projets. Un transport partagé.</span>
+              <button
+                className="pi-text-link"
+                onClick={() => setScene((n) => n + 1)}
+              >
+                Rejouer le regroupement ↻
+              </button>
+            </div>
           </div>
           <div className="pi-container-explainer">
             <div

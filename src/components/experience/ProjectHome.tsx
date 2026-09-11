@@ -57,9 +57,8 @@ export function ProjectHome() {
               </span>
             </h1>
             <p className="pi-hero-intro">
-              Une forme, un motif, vos couleurs. Construisons le mobilier qui
-              raconte votre établissement — puis vérifions ensemble comment le
-              réaliser.
+              Chaises, fauteuils, tables, lounge. Trouvez un modèle qui vous
+              plaît, ou créez votre direction avec nos matières et vos couleurs.
             </p>
             <div className="pi-hero-actions">
               <a href={start} className="pi-button pi-button-blue">
