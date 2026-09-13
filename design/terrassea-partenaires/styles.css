@@ -1,0 +1,169 @@
+@import url('./source-styles.css');
+* {
+  box-sizing: border-box;
+}
+body {
+  overflow-x: visible;
+}
+main,
+.wrap,
+.g > * {
+  min-width: 0;
+}
+.wrap {
+  width: 100%;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+}
+.nav .btn-primary {
+  color: var(--color-bg);
+}
+.preview-notice {
+  padding: 6px 20px;
+  background: #201e1d;
+  color: #fff;
+  text-align: center;
+  font-size: 12px;
+}
+.btn,
+button,
+input,
+select {
+  touch-action: manipulation;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #0088b0;
+  outline-offset: 4px;
+}
+.btn {
+  min-height: 44px;
+}
+.field,
+.field > * {
+  min-width: 0;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  max-width: 100%;
+}
+.form-feedback {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.ticker {
+  padding-right: 56px;
+}
+.ticker:hover {
+  animation-play-state: paused !important;
+}
+.tbl-wrap {
+  max-width: 100%;
+}
+.tbl th[scope='row'] {
+  font-weight: 400;
+}
+#statut-panel > div:first-child > div {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+#statut-panel h3,
+#statut-panel p {
+  overflow-wrap: anywhere;
+}
+#statut-panel > div:first-child > div:last-child {
+  text-align: left !important;
+}
+#statuts [role='tab']:hover {
+  filter: brightness(0.98);
+}
+[data-onclick='p.pick']:hover {
+  border-color: var(--color-text) !important;
+}
+#faq button:hover {
+  color: #8f6f33 !important;
+}
+section[id] {
+  scroll-margin-top: 90px;
+}
+.fab {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (max-width: 759px) {
+  .nav {
+    min-height: 64px;
+    gap: 12px !important;
+  }
+  .nav .btn {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  .nav img {
+    width: 95px;
+    height: auto !important;
+  }
+  .sec h1 {
+    font-size: clamp(34px, 8vw, 42px) !important;
+  }
+  .sec input,
+  .sec select,
+  .sec textarea {
+    font-size: 16px;
+  }
+  #candidature .g2 {
+    grid-template-columns: 1fr;
+  }
+  #partners-page footer {
+    padding-bottom: 100px !important;
+  }
+  .tbl-wrap {
+    overscroll-behavior-inline: contain;
+  }
+  #partners-page form input {
+    min-width: 0 !important;
+  }
+  #partners-page form .btn {
+    white-space: normal !important;
+  }
+  .fab .btn {
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+  .ticker {
+    font-size: 10px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rv,
+  .rv-l,
+  .rv-w {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}
+
+@media (max-width: 759px) {
+  .kpi-num {
+    font-size: 24px !important;
+  }
+}

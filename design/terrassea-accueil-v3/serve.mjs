@@ -44,6 +44,29 @@ const server = Bun.serve({
     const path = decodeURIComponent(new URL(req.url).pathname)
     if (path.includes('..') || path.includes('\\'))
       return new Response('Forbidden', { status: 403 })
+    if (path === '/partenaires') return Response.redirect('/partenaires/', 302)
+    if (path.startsWith('/partenaires/')) {
+      const name = path.slice(13) || 'index.html'
+      if (
+        ![
+          'index.html',
+          'source-styles.css',
+          'styles.css',
+          'model.js',
+          'app.js',
+          'config.js',
+        ].includes(name)
+      )
+        return new Response('Not found', { status: 404 })
+      return new Response(
+        Bun.file(
+          fileURLToPath(
+            new URL('../terrassea-partenaires/' + name, import.meta.url),
+          ),
+        ),
+        { headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } },
+      )
+    }
     if (path === '/prix') return Response.redirect('/prix/', 302)
     if (path.startsWith('/prix/')) {
       const name = path.slice(6) || 'index.html'
