@@ -1,0 +1,220 @@
+@import url('./source-styles.css');
+:root {
+  --color-accent-100: #e9f8ff;
+  --color-accent-200: #cbeeff;
+  --color-accent-700: #006786;
+  --color-accent-800: #004961;
+  --color-accent-900: #0a303e;
+  --color-process-yellow: #edbb00;
+}
+.nav {
+  height: 72px;
+  min-height: 72px;
+}
+.wrap {
+  max-width: 1240px;
+}
+.bar button,
+.bar select {
+  min-height: 44px !important;
+}
+#catalogue-status:empty {
+  display: none;
+}
+[data-screen-label='Catalogue'] figure {
+  min-width: 0;
+}
+figcaption > span {
+  flex-wrap: wrap;
+}
+figcaption button {
+  flex-shrink: 0;
+}
+.card-img > span {
+  z-index: 2;
+}
+.card-img .prod {
+  transition:
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.4s !important;
+}
+.drawer[aria-hidden='true'] {
+  visibility: hidden;
+  transition:
+    transform 0.5s,
+    visibility 0s 0.5s;
+}
+.drawer[aria-hidden='false'] {
+  visibility: visible;
+}
+.sheet-card {
+  min-width: 0;
+}
+.sheet:focus,
+.drawer:focus {
+  outline: none;
+}
+.drawer button {
+  border-radius: 2px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sheet [data-onclick='sheet.add'] {
+  min-width: 0;
+}
+.sheet label {
+  flex-shrink: 0;
+}
+[data-onclick='toggleIntro'] {
+  min-height: 44px !important;
+}
+.drawer [data-onclick='ci.remove'] {
+  min-height: 44px !important;
+}
+.sheet .btn,
+.drawer .btn {
+  white-space: normal;
+}
+.drawer [data-onclick='d.pick'] {
+  grid-template-columns: 1fr !important;
+}
+.drawer [data-onclick='d.pick'] > * {
+  white-space: normal !important;
+}
+.drawer [data-list='cart'] + * {
+  min-width: 0;
+}
+.sheet .g-sheet > div {
+  min-width: 0;
+}
+.sheet .sheet-img img {
+  min-height: 0;
+}
+.preview-notice {
+  font-size: 12px;
+}
+#catalogue-page {
+  min-height: 100vh;
+}
+@media (max-width: 759px) {
+  .nav {
+    height: 64px;
+    min-height: 64px;
+  }
+  .bar {
+    top: 64px;
+  }
+  .g4 {
+    gap: 28px 16px !important;
+  }
+  .g-incl > div {
+    padding: 10px 14px !important;
+  }
+  .g-incl {
+    margin-bottom: 16px !important;
+  }
+  header h1 {
+    font-size: clamp(22px, 4.2vw, 32px) !important;
+    white-space: normal !important;
+    text-wrap: balance;
+    letter-spacing: -0.03em !important;
+  }
+  header .g-intro {
+    font-size: 14px;
+  }
+  figcaption > span:nth-child(3) {
+    display: block !important;
+  }
+  figcaption > span:nth-child(3) > span:first-child {
+    flex-wrap: wrap;
+  }
+  figcaption > span:first-child > span:first-child {
+    font-size: 15px !important;
+    overflow-wrap: anywhere;
+  }
+  figcaption > span:nth-child(2) {
+    font-size: 12px !important;
+  }
+  .card-img .prod {
+    padding: 8px !important;
+  }
+  .card-img > span {
+    left: 6px !important;
+    font-size: 10px !important;
+  }
+  .card-img > span:last-child {
+    left: auto !important;
+    right: 6px !important;
+    font-size: 9px !important;
+  }
+  .card-img span span {
+    font-size: 9px !important;
+    padding: 3px 5px !important;
+  }
+  figcaption [data-onclick='p.add'] {
+    font-size: 13px !important;
+    min-height: 44px !important;
+  }
+  figcaption [data-onclick='openCart'] {
+    min-height: 44px !important;
+  }
+  [data-screen-label='Studio'] > div {
+    grid-template-columns: 1fr !important;
+  }
+  .sheet-card {
+    width: 100%;
+    max-height: 100dvh;
+  }
+  .sheet .g-sheet {
+    padding: 16px !important;
+  }
+  .sheet [data-onclick='sheet.add'] {
+    font-size: 13px !important;
+  }
+  .drawer {
+    width: 100%;
+  }
+  .drawer > div {
+    padding: 20px !important;
+  }
+  .drawer [data-list='cart'] ~ * {
+    min-width: 0;
+  }
+  .g4 figure > figcaption > span:last-child {
+    gap: 6px !important;
+  }
+  .bar > .wrap {
+    gap: 8px !important;
+  }
+  .sheet-img {
+    height: min(38vh, 320px) !important;
+  }
+  footer {
+    padding-bottom: 56px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rv {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+[data-loading] [data-screen-label='Catalogue'] {
+  visibility: hidden;
+  min-height: 35vh;
+}
+[data-error] [data-screen-label='Catalogue'] {
+  display: none;
+}

@@ -6,8 +6,8 @@ export const config = {
   demo: true,
   projectEndpoint: null,
   newsletterEndpoint: null,
-  // Missing design-system token: provisional accessible ochre, to approve.
-  processYellow: '#806000',
+  // Exact token from the supplied Broadsheet design system.
+  processYellow: '#edbb00',
   univers: [
     { url: null, name: 'Salon lounge, terrasse vue mer', href: null },
     { url: null, name: 'Fauteuils colorés vus de haut', href: null },

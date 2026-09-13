@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Catalogue Terrassea · aperçu local</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="preview-notice">
+      Aperçu local · données publiques catalogue · estimation selon le brief, à
+      confirmer · aucun envoi réel
+    </aside>
+    <main id="catalogue-page">
+      <nav
+        class="nav"
+        style="
+          position: sticky;
+          top: 0;
+          z-index: 20;
+          background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+          backdrop-filter: blur(8px);
+          padding-inline: clamp(20px, 5vw, 72px);
+          gap: clamp(14px, 2vw, 30px);
+        "
+      >
+        <a href="/" style="margin-right: auto; display: block"
+          ><img
+            src="/brand/terrassea-logo.svg"
+            alt="Terrassea"
+            style="height: 40px; display: block; width: auto"
+            width="132"
+            height="40"
+            loading="eager"
+            decoding="async"
+        /></a>
+        <div class="nav-links">
+          <a href="#" style="color: var(--color-text); font-weight: 600"
+            >Le mobilier</a
+          ><a href="/#studio">Le Studio</a><a href="/#reel">Du projet au réel</a
+          ><a href="/#contact">Contact</a>
+        </div>
+        <button
+          type="button"
+          class="btn btn-primary"
+          style="display: inline-flex; gap: 10px; align-items: center"
+          data-onclick="openCart"
+        >
+          Mon projet
+          <span
+            style="
+              display: inline-grid;
+              place-items: center;
+              min-width: 22px;
+              height: 22px;
+              padding: 0 6px;
+              border-radius: 11px;
+              background: var(--color-bg);
+              color: var(--color-text);
+              font-size: 12px;
+              font-weight: 600;
+            "
+            >{{ cartCount }}</span
+          >
+        </button>
+      </nav>
+
+      <header
+        data-screen-label="En-tête"
+        class="wrap"
+        style="padding-block: 20px 14px"
+      >
+        <div
+          class="g g-incl"
+          style="
+            margin-top: 0;
+            margin-bottom: 24px;
+            gap: 8px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          "
+        >
+          <template data-list="included" data-as="inc">
+            <div
+              class="rv in"
+              style="display:flex;align-items:center;gap:14px;padding:12px 18px;background:{{ inc.bg }};color:{{ inc.fg }};transition-delay:{{ inc.delay }}"
+            >
+              <span
+                style="
+                  flex: none;
+                  font-size: 24px;
+                  line-height: 1;
+                  font-weight: 600;
+                  letter-spacing: -0.02em;
+                  min-width: 72px;
+                "
+                >{{ inc.big }}</span
+              >
+              <span style="min-width: 0"
+                ><span
+                  style="
+                    display: block;
+                    font-size: 13.5px;
+                    line-height: 17px;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  "
+                  >{{ inc.title }}</span
+                ><span
+                  style="
+                    display: block;
+                    font-size: 12px;
+                    line-height: 15px;
+                    opacity: 0.75;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  "
+                  >{{ inc.sub }}</span
+                ></span
+              >
+            </div>
+          </template>
+        </div>
+        <div style="display: flex; justify-content: center">
+          <h1
+            style="
+              font-size: clamp(22px, 2.9vw, 40px);
+              line-height: 1.1;
+              letter-spacing: -0.02em;
+              margin: 0;
+              white-space: nowrap;
+              text-align: center;
+            "
+          >
+            Du mobilier pensé pour durer,
+            <em style="font-weight: 400">au prix direct usine.</em>
+          </h1>
+        </div>
+        <div
+          class="g g-intro"
+          style="
+            margin-top: 20px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 14px clamp(28px, 4vw, 56px);
+            align-items: start;
+          "
+        >
+          <p
+            style="
+              margin: 0;
+              font-size: 15.5px;
+              line-height: 26px;
+              color: color-mix(in srgb, var(--color-text) 78%, transparent);
+            "
+          >
+            {{ introLead }}
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 15.5px;
+              line-height: 26px;
+              color: color-mix(in srgb, var(--color-text) 78%, transparent);
+            "
+          >
+            Prix HT par pièce, contrôle SGS et garantie d'un an compris. Chaque
+            modèle se décline dans vos couleurs via le Studio dès 50 pièces, et
+            la remise volume s'applique automatiquement à votre projet.
+          </p>
+          <div
+            style="grid-column:1/-1;max-height:{{ introMax }};overflow:hidden;transition:max-height .6s cubic-bezier(.2,.7,.2,1)"
+          >
+            <div
+              class="g g-intro"
+              style="
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 14px clamp(28px, 4vw, 56px);
+                padding-top: 14px;
+                border-top: 1px solid var(--color-neutral-300);
+              "
+            >
+              <p
+                style="
+                  margin: 0;
+                  font-size: 15.5px;
+                  line-height: 26px;
+                  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+                "
+              >
+                Chaque modèle est photographié dans ses designs catalogue.
+                Ajoutez-le tel quel à votre projet ou déclinez-le dans vos
+                matières et vos couleurs via le Studio, dès 50 pièces, sans
+                surcoût de personnalisation. Vos choix sont vérifiés avec notre
+                équipe avant toute production.
+              </p>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 15.5px;
+                  line-height: 26px;
+                  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+                "
+              >
+                Les prix comprennent le contrôle qualité SGS avant départ et la
+                garantie d'un an avec SAV en France. Seule la livraison finale
+                jusqu'à votre établissement est chiffrée à part, ou gratuite en
+                enlèvement à notre dépôt de Fos-sur-Mer. Les remises
+                s'appliquent au volume total du projet : −6 % dès 100 pièces,
+                −10 % dès 150. Nous vous rappelons sous 24 h ouvrées pour cadrer
+                matières, quantités et délai.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            style="
+              grid-column: 1/-1;
+              justify-self: start;
+              background: none;
+              border: 0;
+              padding: 0;
+              min-height: 28px;
+              cursor: pointer;
+              font: 600 14px var(--font-body);
+              color: var(--color-accent-700);
+              text-decoration: underline;
+              text-underline-offset: 4px;
+            "
+            data-onclick="toggleIntro"
+            aria-expanded="{{ introExpanded }}"
+          >
+            {{ introLabel }}
+          </button>
+        </div>
+      </header>
+
+      <div id="grille" class="bar" data-screen-label="Filtres">
+        <div
+          class="wrap"
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 20px;
+            padding-block: 12px;
+          "
+        >
+          <div
+            style="display: flex; flex-wrap: wrap; gap: 6px; margin-right: auto"
+          >
+            <template data-list="cats" data-as="c"
+              ><button
+                type="button"
+                style="min-height:38px;padding:6px 14px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font:400 14px var(--font-body);cursor:pointer;transition:background .25s,color .25s;border-radius:19px"
+                data-onclick="c.pick"
+                aria-pressed="{{ c.selected }}"
+              >
+                {{ c.label }}
+              </button></template
+            >
+            <button
+              type="button"
+              style="display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:6px 14px;border:1px solid var(--color-accent-700);background:{{ stockBg }};color:{{ stockColor }};font:600 14px var(--font-body);cursor:pointer;transition:background .25s,color .25s;border-radius:19px"
+              data-onclick="toggleStock"
+              aria-pressed="{{ stockSelected }}"
+            >
+              <img
+                src="https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/package-duotone.svg"
+                alt=""
+                style="width: 14px; height: 14px; display: block"
+                width="600"
+                height="600"
+                loading="lazy"
+                decoding="async"
+              />En stock
+            </button>
+          </div>
+          <select
+            class="input"
+            value="{{ sort }}"
+            aria-label="Trier"
+            style="
+              min-height: 38px;
+              padding: 4px 10px;
+              font-size: 14px;
+              width: auto;
+            "
+            data-onchange="setSort"
+          >
+            <option value="pop">Sélection</option>
+            <option value="asc">Prix croissant</option>
+            <option value="desc">Prix décroissant</option>
+            <option value="new">Nouveautés</option>
+          </select>
+          <span
+            style="
+              font:
+                11px ui-monospace,
+                Menlo,
+                monospace;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: color-mix(in srgb, var(--color-text) 60%, transparent);
+            "
+            >{{ countLabel }}</span
+          >
+          <button
+            type="button"
+            style="background:none;border:0;padding:0;min-height:32px;cursor:pointer;font:400 13px var(--font-body);color:var(--color-accent-700);text-decoration:underline;opacity:{{ clearOp }}"
+            data-onclick="clearFilters"
+          >
+            Effacer ×
+          </button>
+        </div>
+      </div>
+
+      <p id="catalogue-status" class="wrap" role="status">
+        Chargement du catalogue…
+      </p>
+      <section
+        data-screen-label="Catalogue"
+        class="wrap"
+        style="padding-block: 20px calc(3 * 28px)"
+      >
+        <div class="g g4" style="gap: 36px 20px">
+          <template data-list="items" data-as="p">
+            <figure
+              class="rv"
+              style="margin:0;display:flex;flex-direction:column;transition-delay:{{ p.delay }}"
+            >
+              <button
+                type="button"
+                class="card-img hover-c0"
+                style="
+                  position: relative;
+                  aspect-ratio: 4/5;
+                  background: #fff;
+                  border: 0;
+                  padding: 0;
+                  cursor: pointer;
+                  box-shadow: var(--shadow-sm);
+                  overflow: hidden;
+                  transition: box-shadow 0.5s;
+                "
+                data-onclick="p.open"
+              >
+                <img
+                  class="prod"
+                  src="{{ p.img }}"
+                  alt="{{ p.name }}"
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    padding: 18px;
+                    display: block;
+                    transition: opacity 0.4s;
+                  "
+                  width="600"
+                  height="600"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span
+                  style="
+                    position: absolute;
+                    left: 12px;
+                    bottom: 12px;
+                    font-size: 12px;
+                    font-style: italic;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 65%,
+                      transparent
+                    );
+                    background: rgba(255, 255, 255, 0.85);
+                    padding: 2px 8px;
+                  "
+                  >{{ p.designName }}</span
+                >
+                <template data-if="p.hasAmb"
+                  ><img
+                    class="amb"
+                    src="{{ p.amb }}"
+                    alt=""
+                    style="
+                      position: absolute;
+                      inset: 0;
+                      width: 100%;
+                      height: 100%;
+                      object-fit: cover;
+                      display: block;
+                    "
+                    width="600"
+                    height="600"
+                    loading="lazy"
+                    decoding="async"
+                /></template>
+                <span
+                  style="
+                    position: absolute;
+                    left: 12px;
+                    top: 12px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    align-items: flex-start;
+                  "
+                >
+                  <template data-if="p.inStock"
+                    ><span
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        font:
+                          11px ui-monospace,
+                          Menlo,
+                          monospace;
+                        letter-spacing: 0.08em;
+                        text-transform: uppercase;
+                        padding: 5px 8px;
+                        background: var(--color-accent-700);
+                        color: var(--color-bg);
+                      "
+                      ><img
+                        src="https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/package-duotone.svg"
+                        alt=""
+                        style="
+                          width: 13px;
+                          height: 13px;
+                          display: block;
+                          filter: brightness(0) invert(1);
+                        "
+                        width="600"
+                        height="600"
+                        loading="lazy"
+                        decoding="async"
+                      />En stock</span
+                    ></template
+                  >
+                  <template data-if="p.tag"
+                    ><span
+                      style="
+                        font:
+                          11px ui-monospace,
+                          Menlo,
+                          monospace;
+                        letter-spacing: 0.08em;
+                        text-transform: uppercase;
+                        padding: 5px 8px;
+                        background: var(--color-text);
+                        color: var(--color-bg);
+                      "
+                      >{{ p.tag }}</span
+                    ></template
+                  >
+                </span>
+                <span
+                  style="
+                    position: absolute;
+                    right: 12px;
+                    top: 12px;
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.06em;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 55%,
+                      transparent
+                    );
+                  "
+                  >{{ p.ref }}</span
+                >
+              </button>
+              <figcaption style="margin-top: 14px; display: grid; gap: 6px">
+                <span
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 10px;
+                    align-items: baseline;
+                  "
+                  ><span
+                    style="
+                      font-size: 17px;
+                      line-height: 22px;
+                      font-weight: 600;
+                      letter-spacing: -0.01em;
+                    "
+                    >{{ p.name }}</span
+                  ><span
+                    style="
+                      font-size: 16px;
+                      line-height: 22px;
+                      white-space: nowrap;
+                    "
+                    >{{ p.priceLabel }}
+                    <span
+                      style="
+                        font-size: 11px;
+                        color: color-mix(
+                          in srgb,
+                          var(--color-text) 55%,
+                          transparent
+                        );
+                      "
+                      >HT</span
+                    ></span
+                  ></span
+                >
+                <span
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 10px;
+                    font-size: 13.5px;
+                    line-height: 18px;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 65%,
+                      transparent
+                    );
+                  "
+                  ><span>{{ p.kind }} · {{ p.material }}</span
+                  ><span style="white-space: nowrap"
+                    >dès {{ p.moq }} pcs</span
+                  ></span
+                >
+                <span
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                    margin-top: 6px;
+                  "
+                >
+                  <span style="display: flex; align-items: center; gap: 5px">
+                    <template data-list="p.designs" data-as="d"
+                      ><button
+                        type="button"
+                        aria-label="{{ d.name }}"
+                        title="{{ d.name }}"
+                        style="width:30px;height:30px;padding:2px;background:#fff;border:1px solid {{ d.border }};cursor:pointer;overflow:hidden;transition:border-color .25s"
+                        class="hover-c1"
+                        data-onclick="d.pick"
+                        aria-pressed="{{ d.selected }}"
+                      >
+                        <img
+                          src="{{ d.img }}"
+                          alt=""
+                          style="
+                            width: 100%;
+                            height: 100%;
+                            object-fit: contain;
+                            display: block;
+                          "
+                          width="600"
+                          height="600"
+                          loading="lazy"
+                          decoding="async"
+                        /></button
+                    ></template>
+                    <template data-if="p.hasMore"
+                      ><button
+                        type="button"
+                        title="Voir tous les designs"
+                        aria-label="Voir tous les designs"
+                        style="
+                          width: 30px;
+                          height: 30px;
+                          display: grid;
+                          place-items: center;
+                          background: #fff;
+                          border: 1px solid var(--color-neutral-300);
+                          cursor: pointer;
+                          font: 600 11px var(--font-body);
+                          color: var(--color-text);
+                          transition: border-color 0.25s;
+                        "
+                        class="hover-c2"
+                        data-onclick="p.open"
+                      >
+                        {{ p.moreLabel }}
+                      </button></template
+                    >
+                    <a
+                      href="/#studio"
+                      title="Personnaliser ce modèle"
+                      aria-label="Personnaliser ce modèle"
+                      style="
+                        width: 30px;
+                        height: 30px;
+                        display: grid;
+                        place-items: center;
+                        border: 1px dashed var(--color-accent-700);
+                        background: var(--color-accent-100);
+                        text-decoration: none;
+                        transition: background 0.25s;
+                      "
+                      class="hover-c3"
+                      ><img
+                        src="https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/palette-duotone.svg"
+                        alt=""
+                        style="width: 16px; height: 16px; display: block"
+                        width="600"
+                        height="600"
+                        loading="lazy"
+                        decoding="async"
+                    /></a>
+                  </span>
+                  <span
+                    style="
+                      font-size: 12px;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 55%,
+                        transparent
+                      );
+                    "
+                    >{{ p.designCount }}</span
+                  >
+                </span>
+                <span
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                    margin-top: 8px;
+                    padding-top: 10px;
+                    border-top: 1px solid var(--color-neutral-300);
+                    min-height: 44px;
+                  "
+                >
+                  <template data-if="p.notInCart"
+                    ><button
+                      type="button"
+                      style="
+                        background: none;
+                        border: 0;
+                        padding: 0;
+                        min-height: 28px;
+                        cursor: pointer;
+                        font: 600 14px var(--font-body);
+                        color: var(--color-text);
+                        text-decoration: underline;
+                        text-underline-offset: 4px;
+                        text-decoration-color: color-mix(
+                          in srgb,
+                          currentColor 40%,
+                          transparent
+                        );
+                      "
+                      class="hover-c4"
+                      data-onclick="p.add"
+                      data-disabled="{{ p.blocked }}"
+                    >
+                      Ajouter à mon projet +
+                    </button></template
+                  >
+                  <template data-if="p.inCartFlag">
+                    <span
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        border: 1px solid var(--color-accent-700);
+                        color: var(--color-accent-800);
+                      "
+                      ><button
+                        type="button"
+                        aria-label="Retirer"
+                        style="
+                          min-width: 32px;
+                          min-height: 32px;
+                          border: 0;
+                          background: none;
+                          cursor: pointer;
+                          font: 16px var(--font-body);
+                          color: inherit;
+                        "
+                        class="hover-c5"
+                        data-onclick="p.dec"
+                      >
+                        −</button
+                      ><span
+                        style="
+                          font: 600 14px var(--font-body);
+                          min-width: 56px;
+                          text-align: center;
+                        "
+                        >{{ p.qtyLabel }}</span
+                      ><button
+                        type="button"
+                        aria-label="Ajouter"
+                        style="
+                          min-width: 32px;
+                          min-height: 32px;
+                          border: 0;
+                          background: none;
+                          cursor: pointer;
+                          font: 16px var(--font-body);
+                          color: inherit;
+                        "
+                        class="hover-c6"
+                        data-onclick="p.inc"
+                      >
+                        +
+                      </button></span
+                    >
+                    <button
+                      type="button"
+                      style="
+                        background: none;
+                        border: 0;
+                        padding: 0;
+                        cursor: pointer;
+                        font: 600 13px var(--font-body);
+                        color: var(--color-accent-700);
+                        text-decoration: underline;
+                        text-underline-offset: 4px;
+                        white-space: nowrap;
+                      "
+                      data-onclick="openCart"
+                    >
+                      Mon projet →
+                    </button>
+                  </template>
+                </span>
+              </figcaption>
+            </figure>
+          </template>
+        </div>
+        <template data-if="empty"
+          ><p
+            style="
+              margin: 56px 0;
+              font-size: 17px;
+              line-height: 28px;
+              font-style: italic;
+            "
+          >
+            Aucun modèle ne correspond à ces filtres.
+            <button
+              type="button"
+              style="
+                background: none;
+                border: 0;
+                padding: 0;
+                cursor: pointer;
+                font: inherit;
+                color: var(--color-accent-700);
+                text-decoration: underline;
+              "
+              data-onclick="clearFilters"
+            >
+              Effacer les filtres
+            </button>
+            ou <a href="/#studio">composez cette direction dans le Studio</a>.
+          </p></template
+        >
+      </section>
+
+      <section
+        data-screen-label="Studio"
+        class="wrap"
+        style="padding-block: 0 calc(4 * 28px)"
+      >
+        <div
+          style="
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px 40px;
+            align-items: center;
+            background: var(--color-accent-700);
+            color: var(--color-bg);
+            padding: clamp(24px, 3vw, 40px);
+          "
+        >
+          <div>
+            <p
+              style="
+                margin: 0 0 10px;
+                font-size: 13px;
+                line-height: 14px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-bg) 75%, transparent);
+              "
+            >
+              Vos couleurs, sans surcoût
+            </p>
+            <h2
+              style="
+                margin: 0;
+                font-size: clamp(24px, 2.6vw, 34px);
+                line-height: 1.15;
+                letter-spacing: -0.015em;
+              "
+            >
+              Le même modèle,
+              <em
+                style="
+                  font-weight: 400;
+                  color: color-mix(in srgb, var(--color-bg) 75%, transparent);
+                "
+                >dans vos coloris dès 50 pièces.</em
+              >
+            </h2>
+          </div>
+          <a
+            href="/#studio"
+            class="btn"
+            style="
+              background: var(--color-bg);
+              color: var(--color-text);
+              border-color: transparent;
+              padding: 13px 22px;
+              font-size: 15px;
+              text-decoration: none;
+              white-space: nowrap;
+            "
+            >Ouvrir le Studio ↗</a
+          >
+        </div>
+      </section>
+
+      <template data-if="sheetOpen">
+        <div
+          class="sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fiche produit"
+          tabindex="-1"
+          data-screen-label="Fiche produit"
+          data-onclick="closeSheet"
+        >
+          <article class="sheet-card" data-onclick="stop">
+            <div class="g g-sheet" style="padding: clamp(20px, 3vw, 40px)">
+              <div style="display: grid; gap: 12px">
+                <div
+                  class="sheet-img"
+                  style="
+                    aspect-ratio: 1;
+                    max-height: min(52vh, 560px);
+                    background: #fff;
+                    display: grid;
+                    place-items: center;
+                    overflow: hidden;
+                    box-shadow: var(--shadow-sm);
+                  "
+                >
+                  <img
+                    src="{{ sheet.img }}"
+                    alt="{{ sheet.name }}"
+                    style="width:100%;height:100%;max-height:100%;object-fit:{{ sheet.fit }};padding:{{ sheet.pad }}"
+                    width="600"
+                    height="600"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    gap: 10px;
+                  "
+                >
+                  <template data-list="sheet.gallery" data-as="gi"
+                    ><button
+                      type="button"
+                      style="aspect-ratio:1;background:#fff;border:1px solid {{ gi.border }};padding:0;cursor:pointer;overflow:hidden"
+                      data-onclick="gi.pick"
+                      aria-label="{{ gi.label }}"
+                    >
+                      <img
+                        src="{{ gi.img }}"
+                        alt=""
+                        style="width:100%;height:100%;object-fit:{{ gi.fit }};padding:{{ gi.pad }};display:block"
+                        width="600"
+                        height="600"
+                        loading="lazy"
+                        decoding="async"
+                      /></button
+                  ></template>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 14px;
+                    align-items: flex-start;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0;
+                      font:
+                        11px ui-monospace,
+                        Menlo,
+                        monospace;
+                      letter-spacing: 0.08em;
+                      text-transform: uppercase;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                  >
+                    {{ sheet.ref }} · {{ sheet.cat }} · {{ sheet.family }}
+                  </p>
+                  <button
+                    type="button"
+                    aria-label="Fermer"
+                    class="btn btn-ghost"
+                    style="
+                      min-width: 44px;
+                      min-height: 44px;
+                      padding: 0;
+                      font-size: 20px;
+                      line-height: 1;
+                    "
+                    data-onclick="closeSheet"
+                  >
+                    ×
+                  </button>
+                </div>
+                <h2
+                  style="
+                    margin: 10px 0 0;
+                    font-size: clamp(28px, 3vw, 40px);
+                    line-height: 1.1;
+                    letter-spacing: -0.02em;
+                  "
+                >
+                  {{ sheet.name }}
+                </h2>
+                <template data-if="sheet.inStock"
+                  ><p
+                    style="
+                      margin: 10px 0 0;
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 8px;
+                      font: 600 12px/1 var(--font-body);
+                      letter-spacing: 0.06em;
+                      text-transform: uppercase;
+                      padding: 7px 10px;
+                      background: var(--color-accent-700);
+                      color: var(--color-bg);
+                      justify-self: start;
+                      width: max-content;
+                    "
+                  >
+                    <img
+                      src="https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/package-duotone.svg"
+                      alt=""
+                      style="
+                        width: 14px;
+                        height: 14px;
+                        display: block;
+                        filter: brightness(0) invert(1);
+                      "
+                      width="600"
+                      height="600"
+                      loading="lazy"
+                      decoding="async"
+                    />En stock France
+                  </p></template
+                >
+                <p
+                  style="
+                    margin: 8px 0 0;
+                    font-size: 16px;
+                    line-height: 24px;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 70%,
+                      transparent
+                    );
+                  "
+                >
+                  {{ sheet.kind }} · {{ sheet.material }} · {{ sheet.frame }}
+                </p>
+                <div
+                  style="
+                    margin: 20px 0 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: baseline;
+                    gap: 6px 14px;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 34px;
+                      line-height: 1;
+                      font-weight: 600;
+                      letter-spacing: -0.02em;
+                    "
+                    >{{ sheet.priceLabel }}</span
+                  ><span
+                    style="
+                      font-size: 13px;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                    >HT / pièce · dès {{ sheet.moq }} pièces</span
+                  >
+                </div>
+                <div
+                  style="
+                    margin-top: 10px;
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                  "
+                >
+                  <span
+                    style="
+                      padding: 4px 8px;
+                      border: 1px solid var(--color-neutral-300);
+                    "
+                    >−6 % dès 100 pcs</span
+                  ><span
+                    style="
+                      padding: 4px 8px;
+                      border: 1px solid var(--color-neutral-300);
+                    "
+                    >−10 % dès 150 pcs</span
+                  ><span
+                    style="
+                      padding: 4px 8px;
+                      border: 1px solid var(--color-neutral-300);
+                    "
+                    >SGS · garantie 1 an</span
+                  >
+                </div>
+                <div
+                  style="
+                    margin-top: 24px;
+                    border-top: 1px solid var(--color-text);
+                    padding-top: 14px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 10px;
+                      font-size: 13px;
+                      line-height: 14px;
+                      letter-spacing: 0.08em;
+                      text-transform: uppercase;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 70%,
+                        transparent
+                      );
+                    "
+                  >
+                    Designs disponibles ·
+                    <span
+                      style="
+                        color: var(--color-text);
+                        text-transform: none;
+                        letter-spacing: 0;
+                        font-size: 14px;
+                      "
+                      >{{ sheet.variantName }}</span
+                    >
+                  </p>
+                  <div
+                    style="
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 8px;
+                      align-items: stretch;
+                    "
+                  >
+                    <template data-list="sheet.variants" data-as="v"
+                      ><button
+                        type="button"
+                        aria-label="{{ v.name }}"
+                        title="{{ v.name }}"
+                        style="
+                          width: 72px;
+                          display: grid;
+                          gap: 4px;
+                          padding: 0;
+                          background: none;
+                          border: 0;
+                          cursor: pointer;
+                          text-align: center;
+                        "
+                        data-onclick="v.pick"
+                      >
+                        <span
+                          style="display:block;aspect-ratio:1;background:#fff;border:2px solid {{ v.border }};padding:4px;overflow:hidden"
+                          ><img
+                            src="{{ v.img }}"
+                            alt=""
+                            style="
+                              width: 100%;
+                              height: 100%;
+                              object-fit: contain;
+                              display: block;
+                            "
+                            width="600"
+                            height="600"
+                            loading="lazy"
+                            decoding="async" /></span
+                        ><span
+                          style="font-size:11px;line-height:14px;color:{{ v.text }}"
+                          >{{ v.name }}</span
+                        >
+                      </button></template
+                    >
+                    <a
+                      href="/#studio"
+                      title="Votre design dans le Studio"
+                      style="
+                        width: 72px;
+                        display: grid;
+                        gap: 4px;
+                        text-decoration: none;
+                        text-align: center;
+                        color: var(--color-accent-700);
+                      "
+                      ><span
+                        style="
+                          display: grid;
+                          place-items: center;
+                          aspect-ratio: 1;
+                          border: 1px dashed var(--color-accent-700);
+                          font-size: 22px;
+                          line-height: 1;
+                        "
+                        >+</span
+                      ><span style="font-size: 11px; line-height: 14px"
+                        >Votre design</span
+                      ></a
+                    >
+                  </div>
+                </div>
+                <dl
+                  style="
+                    margin: 20px 0 0;
+                    display: grid;
+                    grid-template-columns: auto 1fr;
+                    gap: 6px 20px;
+                    font-size: 14px;
+                    line-height: 22px;
+                  "
+                >
+                  <dt
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                  >
+                    Usage
+                  </dt>
+                  <dd style="margin: 0">{{ sheet.usage }}</dd>
+                  <dt
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                  >
+                    Empilable
+                  </dt>
+                  <dd style="margin: 0">{{ sheet.stack }}</dd>
+                  <dt
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                  >
+                    Inclus
+                  </dt>
+                  <dd style="margin: 0">
+                    Fret & dédouanement, contrôle SGS, garantie 1 an + SAV
+                    France
+                  </dd>
+                </dl>
+                <div
+                  style="
+                    margin-top: auto;
+                    padding-top: 28px;
+                    display: grid;
+                    gap: 10px;
+                  "
+                >
+                  <div style="display: flex; gap: 10px; align-items: stretch">
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        border: 1px solid var(--color-neutral-300);
+                        padding: 0 12px;
+                        font-size: 14px;
+                      "
+                      ><span
+                        style="
+                          color: color-mix(
+                            in srgb,
+                            var(--color-text) 60%,
+                            transparent
+                          );
+                        "
+                        >Qté</span
+                      ><input
+                        type="number"
+                        min="{{ sheet.moq }}"
+                        step="10"
+                        value="{{ sheetQty }}"
+                        style="
+                          width: 64px;
+                          border: 0;
+                          background: transparent;
+                          font: 16px var(--font-body);
+                          color: var(--color-text);
+                          min-height: 48px;
+                        "
+                        data-onchange="setQty"
+                        data-oninput="setQty"
+                    /></label>
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      style="
+                        flex: 1;
+                        justify-content: center;
+                        min-height: 52px;
+                        font-size: 15px;
+                      "
+                      data-onclick="sheet.add"
+                      data-disabled="{{ sheet.blocked }}"
+                    >
+                      {{ sheet.addLabel }}
+                    </button>
+                  </div>
+                  <a
+                    href="/#contact"
+                    class="btn btn-secondary"
+                    style="
+                      justify-content: center;
+                      min-height: 48px;
+                      text-decoration: none;
+                    "
+                    >Demander un devis pour ce modèle →</a
+                  >
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </template>
+
+      <aside
+        class="drawer"
+        aria-hidden="true"
+        inert
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mon projet"
+        tabindex="-1"
+        data-screen-label="Mon projet"
+        style="transform:translateX({{ drawerX }})"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            padding: clamp(20px, 3vw, 32px);
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              gap: 14px;
+            "
+          >
+            <div>
+              <p
+                style="
+                  margin: 0 0 10px;
+                  font-size: 13px;
+                  line-height: 14px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+                "
+              >
+                Mon projet
+              </p>
+              <h2
+                style="
+                  margin: 0;
+                  font-size: 28px;
+                  line-height: 1.1;
+                  letter-spacing: -0.02em;
+                "
+              >
+                {{ cartTitle }}
+              </h2>
+            </div>
+            <button
+              type="button"
+              aria-label="Fermer"
+              class="btn btn-ghost"
+              style="
+                min-width: 44px;
+                min-height: 44px;
+                padding: 0;
+                font-size: 20px;
+                line-height: 1;
+              "
+              data-onclick="closeCart"
+            >
+              ×
+            </button>
+          </div>
+          <template data-if="cartEmpty"
+            ><p
+              style="
+                margin: 28px 0 0;
+                font-size: 15.5px;
+                line-height: 26px;
+                color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              "
+            >
+              Ajoutez des modèles depuis le catalogue. Votre sélection sert de
+              base à notre rappel : nous précisons ensemble matières, couleurs
+              et délai.
+            </p></template
+          >
+          <div style="display: grid; gap: 14px; margin-top: 28px">
+            <template data-list="cart" data-as="ci">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 72px 1fr auto;
+                  gap: 14px;
+                  align-items: center;
+                  border-top: 1px solid var(--color-neutral-300);
+                  padding-top: 14px;
+                "
+              >
+                <div style="aspect-ratio: 1; background: #fff; padding: 6px">
+                  <img
+                    src="{{ ci.img }}"
+                    alt=""
+                    style="
+                      width: 100%;
+                      height: 100%;
+                      object-fit: contain;
+                      display: block;
+                    "
+                    width="600"
+                    height="600"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div>
+                  <span
+                    style="
+                      display: block;
+                      font-size: 16px;
+                      font-weight: 600;
+                      line-height: 22px;
+                    "
+                    >{{ ci.name }}</span
+                  ><span
+                    style="
+                      display: block;
+                      font-size: 13px;
+                      line-height: 18px;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 65%,
+                        transparent
+                      );
+                    "
+                    >{{ ci.variantName }} · {{ ci.priceLabel }} HT</span
+                  >
+                  <span
+                    style="
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 8px;
+                      margin-top: 6px;
+                      border: 1px solid var(--color-neutral-300);
+                    "
+                    ><button
+                      type="button"
+                      style="
+                        min-width: 32px;
+                        min-height: 32px;
+                        border: 0;
+                        background: none;
+                        cursor: pointer;
+                        font: 16px var(--font-body);
+                      "
+                      data-onclick="ci.dec"
+                      aria-label="Réduire la quantité"
+                    >
+                      −</button
+                    ><span
+                      style="
+                        font-size: 14px;
+                        min-width: 32px;
+                        text-align: center;
+                      "
+                      >{{ ci.qty }}</span
+                    ><button
+                      type="button"
+                      style="
+                        min-width: 32px;
+                        min-height: 32px;
+                        border: 0;
+                        background: none;
+                        cursor: pointer;
+                        font: 16px var(--font-body);
+                      "
+                      data-onclick="ci.inc"
+                      aria-label="Augmenter la quantité"
+                    >
+                      +
+                    </button></span
+                  >
+                </div>
+                <div style="text-align: right">
+                  <span
+                    style="display: block; font-size: 15px; font-weight: 600"
+                    >{{ ci.lineTotal }}</span
+                  ><button
+                    type="button"
+                    style="
+                      background: none;
+                      border: 0;
+                      padding: 0;
+                      margin-top: 6px;
+                      cursor: pointer;
+                      font: 13px var(--font-body);
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                      text-decoration: underline;
+                    "
+                    data-onclick="ci.remove"
+                  >
+                    Retirer
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+          <template data-if="cartHas">
+            <div
+              style="
+                margin-top: 28px;
+                border-top: 1px solid var(--color-neutral-300);
+                padding-top: 14px;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 13px;
+                  line-height: 18px;
+                "
+              >
+                <span style="font-weight: 600">{{ tierLabel }}</span
+                ><span
+                  style="
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
+                  "
+                  >{{ cartPieces }} pièces</span
+                >
+              </div>
+              <div
+                style="
+                  position: relative;
+                  height: 6px;
+                  background: var(--color-neutral-200);
+                  margin-top: 8px;
+                "
+              >
+                <div
+                  style="position:absolute;left:0;top:0;bottom:0;width:{{ tierPct }};background:var(--color-accent-700);transition:width .6s cubic-bezier(.2,.7,.2,1)"
+                ></div>
+                <span
+                  style="
+                    position: absolute;
+                    left: 66.6%;
+                    top: -3px;
+                    width: 1px;
+                    height: 12px;
+                    background: var(--color-text);
+                  "
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-top: 6px;
+                  font:
+                    10px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.06em;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                <span>50</span><span>100 · −6 %</span><span>150 · −10 %</span>
+              </div>
+              <p
+                style="
+                  margin: 8px 0 0;
+                  font-size: 12.5px;
+                  line-height: 18px;
+                  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+                "
+              >
+                {{ tierHint }}
+              </p>
+            </div>
+            <div style="margin-top: 20px">
+              <p
+                style="
+                  margin: 0 0 8px;
+                  font-size: 13px;
+                  line-height: 14px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+                "
+              >
+                Réception
+              </p>
+              <div style="display: grid; gap: 8px">
+                <template data-list="deliveries" data-as="d"
+                  ><button
+                    type="button"
+                    style="text-align:left;display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 14px;border:1px solid {{ d.border }};background:{{ d.bg }};cursor:pointer;font:400 14px/20px var(--font-body);color:var(--color-text)"
+                    data-onclick="d.pick"
+                    aria-pressed="{{ d.selected }}"
+                  >
+                    <span style="font-weight: 600">{{ d.title }}</span
+                    ><span
+                      style="
+                        font-size: 13px;
+                        white-space: nowrap;
+                        color: color-mix(
+                          in srgb,
+                          var(--color-text) 65%,
+                          transparent
+                        );
+                      "
+                      >{{ d.price }}</span
+                    ><span
+                      style="
+                        grid-column: 1/-1;
+                        font-size: 13px;
+                        line-height: 18px;
+                        color: color-mix(
+                          in srgb,
+                          var(--color-text) 65%,
+                          transparent
+                        );
+                      "
+                      >{{ d.sub }}</span
+                    >
+                  </button></template
+                >
+              </div>
+            </div>
+            <div style="margin-top: auto; padding-top: 28px">
+              <div
+                style="
+                  display: grid;
+                  gap: 6px;
+                  border-top: 2px solid var(--color-text);
+                  padding-top: 14px;
+                  font-size: 14px;
+                  line-height: 22px;
+                "
+              >
+                <div style="display: flex; justify-content: space-between">
+                  <span
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 70%,
+                        transparent
+                      );
+                    "
+                    >Mobilier HT</span
+                  ><span>{{ cartSubtotal }}</span>
+                </div>
+                <template data-if="hasDiscount"
+                  ><div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      color: var(--color-accent-700);
+                    "
+                  >
+                    <span>Remise volume {{ tierRate }}</span
+                    ><span>− {{ cartDiscount }}</span>
+                  </div></template
+                >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                  "
+                >
+                  <span style="font-weight: 600">Estimation HT</span
+                  ><span
+                    style="
+                      font-size: 24px;
+                      font-weight: 600;
+                      letter-spacing: -0.02em;
+                    "
+                    >{{ cartTotal }}</span
+                  >
+                </div>
+              </div>
+              <p
+                style="
+                  margin: 8px 0 0;
+                  font-size: 12.5px;
+                  line-height: 18px;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                Fret, dédouanement, contrôle SGS et garantie inclus. {{
+                deliveryNote }}
+              </p>
+              <a
+                href="/#contact"
+                data-onclick="handoff"
+                class="btn btn-primary"
+                style="
+                  display: flex;
+                  justify-content: center;
+                  min-height: 52px;
+                  margin-top: 20px;
+                  font-size: 15px;
+                  text-decoration: none;
+                "
+                >Être rappelé pour ce projet →</a
+              >
+              <p
+                style="
+                  margin: 10px 0 0;
+                  font-size: 12.5px;
+                  line-height: 18px;
+                  text-align: center;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                Sans engagement · réponse sous 24 h ouvrées
+              </p>
+            </div>
+          </template>
+        </div>
+      </aside>
+      <template data-if="cartOpen"
+        ><div
+          style="
+            position: fixed;
+            inset: 0;
+            z-index: 35;
+            background: color-mix(in srgb, var(--color-text) 30%, transparent);
+          "
+          data-onclick="closeCart"
+        ></div
+      ></template>
+
+      <footer
+        class="wrap"
+        style="
+          padding-block: calc(2 * 28px);
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          gap: 14px;
+          font-size: 13px;
+          line-height: 24px;
+          color: color-mix(in srgb, var(--color-text) 70%, transparent);
+        "
+      >
+        <span>Terrassea · une marque de Pros Import EURL, Paris</span
+        ><span
+          >Prix indicatifs HT, livraison finale en sus · Photographies catalogue
+          originales</span
+        >
+      </footer>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

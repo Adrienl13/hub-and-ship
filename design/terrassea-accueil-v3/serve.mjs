@@ -1,6 +1,26 @@
 /* global Bun, process, Response, URL, console */
-// Standalone development preview: loopback only, read-only, no app/DB environment.
+// Standalone development preview: loopback only, fixed anonymous public API reads, no writes.
 import { fileURLToPath } from 'node:url'
+import { readCatalogue } from '../terrassea-catalogue/api.mjs'
+const catalogueRoot = fileURLToPath(
+  new URL('../terrassea-catalogue/', import.meta.url),
+)
+let catalogueCache = null
+let catalogueRead = null
+async function catalogueData() {
+  if (catalogueCache && Date.now() - catalogueCache.at < 60000)
+    return catalogueCache.data
+  if (!catalogueRead)
+    catalogueRead = readCatalogue()
+      .then((data) => {
+        catalogueCache = { data, at: Date.now() }
+        return data
+      })
+      .finally(() => {
+        catalogueRead = null
+      })
+  return catalogueRead
+}
 const base = fileURLToPath(new URL('./', import.meta.url))
 const publicRoot = fileURLToPath(new URL('../../public/', import.meta.url))
 if (process.env.NODE_ENV === 'production')
@@ -13,6 +33,7 @@ const allowed = new Set([
   'bindings.js',
   'model.js',
   'config.js',
+  'project.js',
 ])
 const server = Bun.serve({
   hostname: '127.0.0.1',
@@ -23,8 +44,41 @@ const server = Bun.serve({
     const path = decodeURIComponent(new URL(req.url).pathname)
     if (path.includes('..') || path.includes('\\'))
       return new Response('Forbidden', { status: 403 })
-    if (path === '/catalogue')
-      return Response.redirect('http://localhost:5190/catalogue', 302)
+    if (path === '/catalogue') return Response.redirect('/catalogue/', 302)
+    if (path === '/catalogue/api') {
+      try {
+        return Response.json(await catalogueData(), {
+          headers: { 'Cache-Control': 'no-store' },
+        })
+      } catch {
+        return Response.json(
+          { error: 'Catalogue indisponible' },
+          { status: 503 },
+        )
+      }
+    }
+    const catalogueFile =
+      path === '/catalogue/'
+        ? 'index.html'
+        : path.startsWith('/catalogue/')
+          ? path.slice(11)
+          : null
+    if (
+      catalogueFile &&
+      [
+        'index.html',
+        'app.js',
+        'data.js',
+        'model.js',
+        'styles.css',
+        'source-styles.css',
+      ].includes(catalogueFile)
+    )
+      return new Response(Bun.file(catalogueRoot + catalogueFile), {
+        headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
+      })
+    if (path === '/terrassea-accueil-v3/bindings.js')
+      return new Response(Bun.file(base + 'bindings.js'))
     const file = path === '/' ? 'index.html' : path.slice(1)
     const asset =
       /^\/(catalogue|brand)\/.+\.(webp|png|jpg|jpeg|svg)$/.test(path) ||

@@ -2,6 +2,7 @@
 import { Accueil } from './model.js'
 import { config } from './config.js'
 import { bind } from './bindings.js'
+import { validateProject } from './project.js'
 
 export class Page extends Accueil {
   constructor(root, settings = config) {
@@ -67,6 +68,7 @@ export class Page extends Accueil {
     this.state.tiles = this.initTiles()
     this.render()
     this.configureMedia()
+    void this.attachCatalogueProject()
     this.appear = setTimeout(() => this.setState({ shown: 16 }), 80)
     this.onScroll = () => {
       const fab = window.scrollY > 600
@@ -168,6 +170,31 @@ export class Page extends Accueil {
         : ''
     })
   }
+  async attachCatalogueProject() {
+    try {
+      const raw = window.localStorage.getItem('terrassea-projet-transfert')
+      if (!raw || raw.length > 200000) return
+      const response = await fetch('/catalogue/api')
+      if (!response.ok) return
+      const selection = validateProject(JSON.parse(raw), await response.json())
+      if (!selection || this.disposed) return
+      this.projectSelection = selection
+      const form = this.root.querySelector('[data-form=project]')
+      const summary = document.createElement('p')
+      summary.className = 'catalogue-selection'
+      summary.textContent =
+        selection.lines
+          .map((r) => `${r.ref} · ${r.design} · ${r.qty} pièces`)
+          .join(' / ') +
+        ' — ' +
+        (selection.delivery === 'depot'
+          ? 'Enlèvement au dépôt'
+          : 'Livraison jusqu’à votre terrasse')
+      form.prepend(summary)
+    } catch {
+      /* An unavailable catalogue must never block the lead form. */
+    }
+  }
   clearReplay() {
     this.replayTimers.forEach(clearTimeout)
     this.replayTimers = []
@@ -254,6 +281,8 @@ export class Page extends Accueil {
     button.disabled = true
     try {
       const payload = Object.fromEntries(new FormData(form))
+      if (type === 'project' && this.projectSelection)
+        payload.selection = this.projectSelection
       if (type === 'project')
         Object.assign(payload, {
           profile: this.state.kind,

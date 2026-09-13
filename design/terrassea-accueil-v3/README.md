@@ -14,15 +14,9 @@ Depuis la racine du repository :
 bun design/terrassea-accueil-v3/serve.mjs
 ```
 
-Ouvrir **http://localhost:5192/**. Le serveur écoute uniquement sur `127.0.0.1`, accepte uniquement GET/HEAD et sert une liste limitée de fichiers. Les images catalogue et le logo proviennent de `public/` ; les URLs publiques Supabase présentes dans la source restent des URLs d’images, sans client DB.
+Ouvrir **http://localhost:5192/**, ou **http://localhost:5192/catalogue/** pour le catalogue autonome. Les deux pages partagent la même origine et leur sélection locale.
 
-Pour que les liens vers le catalogue ouvrent aussi sa démo locale, lancer dans un second terminal :
-
-```sh
-bun run design:review
-```
-
-Le catalogue s’ouvre alors sur `http://localhost:5190/catalogue`. Le serveur V3 n’importe ni Vite, ni les variables d’environnement applicatives, ni les fixtures commerciales. Il ne modifie aucun flag, secret ou paramètre de l’application.
+Le serveur écoute uniquement sur `127.0.0.1`, accepte GET/HEAD et sert une liste limitée de fichiers. Pour le catalogue, il lit les variables publiques `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` chargées par Bun, puis effectue exclusivement les requêtes publiques GET définies dans `../terrassea-catalogue/api.mjs`. Aucun client authentifié, service role, SQL, écriture ou proxy arbitraire. Aucune configuration applicative n’est modifiée. Le catalogue React existant reste séparé.
 
 ## Fichiers
 
@@ -56,7 +50,7 @@ Les blancs/hachures sont volontaires pour les médias non fournis. Les associati
 
 Les textes éditoriaux et l’ordre des sections sont conservés. Les dimensions fixes ajoutées par l’éditeur et les espaces insécables d’indentation sont retirés pour éviter les chevauchements mobiles.
 
-Le fichier source référence `--color-process-yellow` sans définir sa valeur ; son fichier de design system n’est pas fourni. **`#806000` est une valeur provisoire configurable, pas une couleur prétendument récupérée de la maquette.** Elle doit être approuvée/remplacée par le token exact.
+Le dossier source fourni ensuite, `Nouveau design site internet/_ds/broadsheet-0a967099-d301-4672-80c7-72b77c59ccb0/styles.css`, définit désormais le token exact **`--color-process-yellow: #edbb00`**. Il remplace la valeur provisoire du premier export.
 
 Les motifs CSS dessinés dans la source ne sont pas présentés comme des échantillons réels. Deux sont remplacés par les fichiers publics correspondants ; le troisième porte « référence à raccorder ». C’est la seule adaptation du libellé des échantillons.
 
@@ -64,9 +58,11 @@ Un bandeau explicite identifie la démonstration locale et permet de suspendre t
 
 ## Formulaires
 
-Par défaut `demo: true`, endpoints `null` : aucun fetch, aucune inscription, aucun lead envoyé. Les libellés de succès du prototype sont montrés uniquement comme simulation, avec une mention explicite sous le formulaire.
+Par défaut `demo: true`, endpoints `null` : aucune inscription ni aucun lead envoyé. La sélection provenant du catalogue est relue via son API publique pour vérifier références et designs. Les libellés de succès du prototype sont montrés uniquement comme simulation, avec une mention explicite sous le formulaire.
 
 Le transport est prêt à être adapté à un endpoint **same-origin** approuvé : JSON POST avec `email`, `quantity`, `delivery`, `message`, `profile`, `needs` pour le projet ; `email` pour la newsletter. Une réponse HTTP réussie est nécessaire à l’affichage du succès hors démonstration. Une erreur ou un endpoint absent conserve la saisie et ne confirme pas l’envoi. Les entrées obligatoires utilisent la validation native.
+
+Le transfert catalogue ajoute `selection` (références, IDs et noms canoniques des designs, quantités, réception) au payload projet. Il est conservé localement, jamais dans l’URL ; aucun prix issu du stockage navigateur n’est accepté. Un échec de lecture du catalogue ne bloque pas le formulaire.
 
 Le serveur local refuse tous les POST, même si quelqu’un change la configuration. Le contrat CRM réel et ses protections serveur restent à préciser avant toute mise en ligne. Aucune donnée de formulaire n’est placée dans une URL, le stockage local ou l’analytics.
 
@@ -79,7 +75,7 @@ bun run test:security
 bun run build
 ```
 
-Résultats de cette passe :
+Résultats de la livraison initiale V3 (la passe catalogue est documentée dans `../terrassea-catalogue/README.md`) :
 
 - Tests V3 : **16 réussis, 0 échec** (rotation sans doublon, mises à jour répétées, 3 sliders liés, catégories, profil partenaire, besoins multiples, timers/replay, reduced motion, nettoyage, lazy vidéo/reprise, médias configurables, formulaires et chemins catalogue locaux).
 - `bun run check` : typecheck et lint réussis ; **1069 tests réussis, 8 ignorés**, 157 fichiers réussis et 2 ignorés.
