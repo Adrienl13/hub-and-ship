@@ -1,0 +1,2339 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Terrassea — Accueil V3 · Prototype local</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="preview-notice">
+      Prototype local V3 · textes et associations catalogue à valider · aucun
+      envoi réel
+      <button type="button" id="motion-toggle" aria-pressed="false">
+        Mettre les animations en pause
+      </button>
+    </aside>
+    <main id="page">
+      <nav
+        class="nav"
+        style="
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+          backdrop-filter: blur(8px);
+          padding-inline: clamp(20px, 5vw, 72px);
+          gap: clamp(14px, 2vw, 30px);
+        "
+      >
+        <a href="#top" style="margin-right: auto; display: block"
+          ><img
+            src="/brand/terrassea-logo.svg"
+            alt="Terrassea"
+            style="height: 40px; display: block; width: auto"
+            width="132"
+            height="40"
+            decoding="async"
+            loading="eager"
+        /></a>
+        <div class="nav-links">
+          <a href="#mobilier">Le mobilier</a><a href="#studio">Le Studio</a
+          ><a href="#reel">Du projet au réel</a><a href="#contact">Contact</a>
+        </div>
+        <a href="#contact" class="btn btn-primary" style="text-decoration: none"
+          >Commencer un projet</a
+        >
+      </nav>
+
+      <section
+        id="top"
+        data-screen-label="Hero"
+        class="wrap g g-hero sec"
+        style="padding-block: calc(2 * 28px) 28px; align-items: center"
+      >
+        <div>
+          <h1
+            class="rv in"
+            style="
+              font-size: clamp(34px, 3.6vw, 52px);
+              line-height: 1.1;
+              letter-spacing: -0.02em;
+              margin: 0 0 0 -0.035em;
+              text-wrap: balance;
+            "
+          >
+            <span style="display: block">Votre lieu a du caractère.</span
+            ><span style="display: block; font-style: italic; font-weight: 400"
+              >Votre mobilier aussi.</span
+            >
+          </h1>
+          <p
+            class="rv in"
+            style="
+              font-size: 17px;
+              line-height: 28px;
+              max-width: 44ch;
+              margin: 28px 0 0;
+              color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              transition-delay: 0.15s;
+            "
+          >
+            Chaises, fauteuils, tables, lounge pour restaurants et hôtels.
+            Choisissez un modèle, puis vos matières et vos couleurs. Dès 50
+            pièces, livré et facturé en France.
+          </p>
+          <div
+            class="rv in"
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: var(--space-3);
+              margin-top: 28px;
+              transition-delay: 0.3s;
+            "
+          >
+            <a
+              href="#studio"
+              class="btn btn-primary"
+              style="
+                padding: 13px 22px;
+                font-size: 15px;
+                text-decoration: none;
+                background-color: var(--color-accent-700);
+              "
+              >Créer mon projet ↗</a
+            >
+            <a
+              href="/catalogue"
+              class="btn btn-ghost"
+              style="font-size: 15px; text-decoration: none"
+              >Le mobilier ↗</a
+            >
+          </div>
+          <div
+            class="rv in g g2 keep2"
+            style="
+              margin-top: 28px;
+              gap: 10px 20px;
+              padding-top: 16px;
+              border-top: 1px solid var(--color-text);
+              transition-delay: 0.45s;
+            "
+          >
+            <template data-list="proofs" data-as="pf">
+              <div style="display: flex; gap: 10px; align-items: center">
+                <span
+                  style="
+                    flex: none;
+                    width: 36px;
+                    height: 36px;
+                    display: grid;
+                    place-items: center;
+                    border: 1px solid var(--color-text);
+                    border-radius: 50%;
+                  "
+                  ><img
+                    src="{{ pf.icon }}"
+                    alt=""
+                    style="width: 18px; height: 18px; display: block"
+                    width="600"
+                    height="600"
+                    decoding="async"
+                    loading="eager"
+                /></span>
+                <span
+                  ><span
+                    style="
+                      display: block;
+                      font-size: 14px;
+                      line-height: 18px;
+                      font-weight: 600;
+                    "
+                    >{{ pf.title }}</span
+                  ><span
+                    style="
+                      display: block;
+                      font-size: 12px;
+                      line-height: 16px;
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 65%,
+                        transparent
+                      );
+                    "
+                    >{{ pf.sub }}</span
+                  ></span
+                >
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="g-fam">
+          <template data-list="families" data-as="f">
+            <div class="fam-col">
+              <template data-list="f.tiles" data-as="t">
+                <button
+                  type="button"
+                  aria-label="{{ t.name }}"
+                  style="position:relative;aspect-ratio:1;background:#fff;box-shadow:var(--shadow-sm);border:0;padding:0;cursor:pointer;overflow:hidden;opacity:{{ t.op }};transform:{{ t.tf }};transition:opacity .8s cubic-bezier(.2,.7,.2,1) {{ t.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ t.delay }}"
+                  class="hover-0"
+                  data-onclick="t.pick"
+                >
+                  <img
+                    src="{{ t.a }}"
+                    alt=""
+                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:8px;opacity:{{ t.aOp }};transition:opacity .7s"
+                    width="600"
+                    height="600"
+                    decoding="async"
+                    loading="eager"
+                  />
+                  <img
+                    src="{{ t.b }}"
+                    alt=""
+                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:8px;opacity:{{ t.bOp }};transition:opacity .7s"
+                    width="600"
+                    height="600"
+                    decoding="async"
+                    loading="eager"
+                  />
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Univers"
+        class="wrap sec"
+        style="padding-block: calc(4 * 28px) calc(3 * 28px)"
+      >
+        <p
+          class="rv"
+          style="
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Le mobilier change la perception d'un lieu
+        </p>
+        <h2
+          class="rv"
+          style="
+            font-size: clamp(32px, 4.2vw, 58px);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin: 0;
+            transition-delay: 0.1s;
+          "
+        >
+          <span style="display: block">On vient pour une adresse.</span
+          ><span style="display: block; font-style: italic; font-weight: 400"
+            >On revient pour une atmosphère.</span
+          >
+        </h2>
+        <div class="g g-univ" style="margin-top: 42px; align-items: start">
+          <figure class="rv-l" style="margin: 0">
+            <div
+              class="halftone"
+              style="
+                aspect-ratio: 3/2;
+                background: repeating-linear-gradient(
+                  135deg,
+                  var(--color-neutral-200) 0 12px,
+                  var(--color-surface) 12px 24px
+                );
+                display: grid;
+                place-items: center;
+                font:
+                  12px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+                text-align: center;
+                padding: 20px;
+              "
+              data-media-slot="0"
+            >
+              photo — salon lounge, terrasse vue mer
+            </div>
+            <figcaption style="margin-top: 20px">
+              <span
+                style="
+                  display: block;
+                  font:
+                    12px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+                >01 / Prendre le temps</span
+              ><span
+                style="
+                  display: block;
+                  margin-top: 10px;
+                  font-size: 22px;
+                  line-height: 28px;
+                "
+                >Des lignes qui invitent à rester.</span
+              >
+            </figcaption>
+          </figure>
+          <figure
+            class="rv offset"
+            style="margin-block: 0; margin-inline: 0; transition-delay: 0.2s"
+          >
+            <div
+              class="halftone"
+              style="
+                aspect-ratio: 1;
+                background: repeating-linear-gradient(
+                  135deg,
+                  var(--color-neutral-200) 0 12px,
+                  var(--color-surface) 12px 24px
+                );
+                display: grid;
+                place-items: center;
+                font:
+                  12px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+                text-align: center;
+                padding: 20px;
+              "
+              data-media-slot="1"
+            >
+              photo — fauteuils colorés vus de haut
+            </div>
+            <figcaption style="margin-top: 20px">
+              <span
+                style="
+                  display: block;
+                  font:
+                    12px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+                >02 / Affirmer une identité</span
+              ><span
+                style="
+                  display: block;
+                  margin-top: 10px;
+                  font-size: 22px;
+                  line-height: 28px;
+                "
+                >Une couleur que l'on retient.</span
+              >
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section
+        id="studio"
+        data-screen-label="Studio"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <div class="rv-l" style="max-width: 60ch">
+          <p
+            style="
+              margin: 0 0 14px;
+              font-size: 13px;
+              line-height: 14px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: color-mix(in srgb, var(--color-text) 70%, transparent);
+            "
+          >
+            01 / Le Studio
+          </p>
+          <h2
+            style="
+              font-size: clamp(30px, 3.4vw, 44px);
+              line-height: 1.15;
+              letter-spacing: -0.015em;
+              margin: 0;
+            "
+          >
+            Un modèle que vous aimez,
+            <em style="font-weight: 400">dans vos couleurs.</em>
+          </h2>
+          <p
+            style="
+              font-size: 15.5px;
+              line-height: 28px;
+              margin: 18px 0 0;
+              max-width: 52ch;
+              color: color-mix(in srgb, var(--color-text) 78%, transparent);
+            "
+          >
+            Glissez un curseur : les trois modèles passent ensemble du catalogue
+            à votre direction.
+          </p>
+        </div>
+        <div class="g g3" style="margin-top: 42px">
+          <template data-list="compares" data-as="c">
+            <figure
+              class="rv-s"
+              style="margin:0;transition-delay:{{ c.delay }}"
+            >
+              <div
+                style="
+                  position: relative;
+                  aspect-ratio: 1;
+                  background: #fff;
+                  box-shadow: var(--shadow-md);
+                  overflow: hidden;
+                  user-select: none;
+                  touch-action: pan-y;
+                "
+              >
+                <img
+                  src="{{ c.before }}"
+                  alt="{{ c.name }}, coloris catalogue"
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    padding: 24px;
+                  "
+                  width="600"
+                  height="600"
+                  decoding="async"
+                  loading="lazy"
+                />
+                <img
+                  src="{{ c.after }}"
+                  alt="{{ c.name }}, coloris personnalisé"
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:24px;clip-path:inset(0 0 0 {{ pct }})"
+                  width="600"
+                  height="600"
+                  decoding="async"
+                  loading="lazy"
+                />
+                <div
+                  style="position:absolute;top:0;bottom:0;left:{{ pct }};width:1px;background:var(--color-text);pointer-events:none"
+                ></div>
+                <div
+                  style="position:absolute;top:50%;left:{{ pct }};transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:var(--color-bg);box-shadow:var(--shadow-md);display:grid;place-items:center;font-size:13px;pointer-events:none"
+                >
+                  ◂ ▸
+                </div>
+                <span
+                  style="
+                    position: absolute;
+                    left: 14px;
+                    bottom: 10px;
+                    font-style: italic;
+                    font-size: 13px;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 70%,
+                      transparent
+                    );
+                  "
+                  >{{ c.beforeLabel }}</span
+                >
+                <span
+                  style="
+                    position: absolute;
+                    right: 14px;
+                    bottom: 10px;
+                    font-style: italic;
+                    font-size: 13px;
+                    color: var(--color-accent-700);
+                  "
+                  >{{ c.afterLabel }}</span
+                >
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="{{ split }}"
+                  aria-label="Avant / après"
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    opacity: 0;
+                    cursor: ew-resize;
+                    margin: 0;
+                  "
+                  data-onchange="setSplit"
+                  data-oninput="setSplit"
+                />
+              </div>
+              <figcaption
+                style="
+                  display: flex;
+                  align-items: baseline;
+                  justify-content: space-between;
+                  gap: 14px;
+                  margin-top: 14px;
+                  font-size: 15.5px;
+                  line-height: 28px;
+                "
+              >
+                <span
+                  ><span style="font-weight: 600">{{ c.name }}</span>
+                  <span
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 60%,
+                        transparent
+                      );
+                    "
+                    >— {{ c.kind }}</span
+                  ></span
+                ><a
+                  href="#contact"
+                  style="font-size: 14px; color: var(--color-process-yellow)"
+                  >Ce modèle →</a
+                >
+              </figcaption>
+            </figure>
+          </template>
+        </div>
+      </section>
+
+      <section
+        id="mobilier"
+        data-screen-label="Mobilier"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <div
+          class="rv"
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 14px 40px;
+          "
+        >
+          <div style="margin-right: auto">
+            <p
+              style="
+                margin: 0 0 14px;
+                font-size: 13px;
+                line-height: 14px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+            >
+              02 / Choisir un modèle
+            </p>
+            <h2
+              style="
+                font-size: clamp(30px, 3.4vw, 44px);
+                line-height: 1.15;
+                letter-spacing: -0.015em;
+                margin: 0;
+              "
+            >
+              Le mobilier
+            </h2>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px 24px">
+            <template data-list="cats" data-as="c">
+              <button
+                type="button"
+                style="font:400 15.5px/28px var(--font-body);background:none;border:0;padding:0;cursor:pointer;color:{{ c.color }};border-bottom:1px solid {{ c.line }};min-height:44px"
+                data-onclick="c.pick"
+                aria-pressed="{{ c.selected }}"
+              >
+                {{ c.label }}
+              </button>
+            </template>
+          </div>
+        </div>
+        <div class="g g4" style="margin-top: 42px">
+          <template data-list="shown" data-as="p">
+            <figure class="rv" style="margin:0;transition-delay:{{ p.delay }}">
+              <div
+                style="
+                  aspect-ratio: 1;
+                  background: #fff;
+                  display: grid;
+                  place-items: center;
+                  padding: 20px;
+                  box-shadow: var(--shadow-sm);
+                  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+                "
+                class="hover-1"
+              >
+                <img
+                  src="{{ p.img }}"
+                  alt="{{ p.name }}"
+                  style="width: 100%; height: 100%; object-fit: contain"
+                  width="600"
+                  height="600"
+                  decoding="async"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption
+                style="margin-top: 14px; font-size: 15.5px; line-height: 24px"
+              >
+                <span style="font-weight: 600">{{ p.name }}</span><br /><span
+                  style="
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
+                  "
+                  >{{ p.kind }}</span
+                ><br /><a
+                  href="#studio"
+                  style="
+                    display: inline-block;
+                    margin-top: 8px;
+                    font-size: 14px;
+                    min-height: 28px;
+                    color: var(--color-process-yellow);
+                  "
+                  >Personnaliser ce modèle →</a
+                >
+              </figcaption>
+            </figure>
+          </template>
+        </div>
+        <p
+          class="rv"
+          style="
+            margin: 28px 0 0;
+            font-size: 13px;
+            line-height: 20px;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Photographies catalogue originales.
+          <a href="/catalogue">Voir tout le mobilier →</a>
+        </p>
+      </section>
+
+      <section
+        data-screen-label="Sensation"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <div class="rv g g-sens" style="align-items: start">
+          <p
+            style="
+              margin: 0;
+              font-size: 13px;
+              line-height: 14px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: color-mix(in srgb, var(--color-text) 70%, transparent);
+            "
+          >
+            03 / Trouver votre langage
+          </p>
+          <h2
+            style="
+              font-size: clamp(30px, 3.4vw, 44px);
+              line-height: 1.15;
+              letter-spacing: -0.015em;
+              margin: -8px 0 0;
+            "
+          >
+            <span style="display: block">Tout commence</span
+            ><span style="display: block; font-style: italic; font-weight: 400"
+              >par une sensation.</span
+            >
+          </h2>
+          <p
+            style="
+              margin: 0;
+              font-size: 15.5px;
+              line-height: 28px;
+              color: color-mix(in srgb, var(--color-text) 78%, transparent);
+            "
+          >
+            La ligne d'une assise. Le relief d'un cordage. Le rythme d'un motif.
+            Dans le Studio, rapprochez vos idées avant de figer vos choix.
+          </p>
+        </div>
+        <div
+          class="rv-s g g-panel"
+          style="
+            margin-top: 42px;
+            box-shadow: var(--shadow-md);
+            transition-delay: 0.15s;
+          "
+        >
+          <div
+            style="position:relative;min-height:clamp(240px,34vw,420px);overflow:hidden;background:{{ tex.bg }};transition:background 1s"
+          >
+            <span
+              style="
+                position: absolute;
+                left: 14px;
+                bottom: -0.18em;
+                font-weight: 600;
+                font-size: clamp(80px, 15vw, 190px);
+                line-height: 1;
+                letter-spacing: -0.04em;
+                color: #fff;
+                opacity: 0.55;
+                white-space: normal;
+              "
+              >{{ tex.word }}</span
+            >
+            <div
+              style="position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;transform:translate(-50%,-50%) rotate({{ tex.rot }});transition:transform 1s cubic-bezier(.2,.7,.2,1);background:#fff;box-shadow:var(--shadow-lg)"
+            >
+              <template data-list="texLayers" data-as="l"
+                ><div
+                  style="position:absolute;inset:6%;background:{{ l.pattern }};background-size:{{ l.size }};opacity:{{ l.op }};transition:opacity .8s"
+                ></div
+              ></template>
+            </div>
+            <span
+              style="
+                position: absolute;
+                left: 20px;
+                bottom: 18px;
+                font:
+                  11px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+              "
+              >{{ tex.caption }}</span
+            >
+          </div>
+          <div
+            style="
+              background: #fff;
+              padding: clamp(20px, 3vw, 40px);
+              display: flex;
+              flex-direction: column;
+            "
+          >
+            <template data-list="texList" data-as="t">
+              <button
+                type="button"
+                style="display:flex;align-items:center;gap:20px;width:100%;background:none;border:0;border-bottom:1px solid {{ t.line }};padding:16px 0;min-height:56px;cursor:pointer;text-align:left;font:400 19px/26px var(--font-body);color:{{ t.color }};transition:color .4s,border-color .4s"
+                class="hover-2"
+                data-onclick="t.pick"
+                aria-pressed="{{ t.selected }}"
+              >
+                <span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
+                  "
+                  >{{ t.num }}</span
+                ><span style="flex: 1">{{ t.label }}</span
+                ><span aria-hidden="true">↗</span>
+              </button>
+            </template>
+            <p style="margin: 24px 0 0; font-size: 15.5px; line-height: 26px">
+              Un motif donne le ton. Les couleurs ouvrent la discussion.
+            </p>
+            <p
+              style="
+                margin: 6px 0 0;
+                font-size: 13px;
+                line-height: 20px;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+            >
+              Le motif et les couleurs sont deux choix distincts. Les
+              possibilités seront vérifiées pour votre mobilier.
+            </p>
+            <a
+              href="#studio"
+              class="btn btn-ghost"
+              style="
+                align-self: flex-start;
+                margin-top: 20px;
+                padding-inline: 0;
+                text-decoration: none;
+              "
+              >Construire ma planche projet →</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Studio bleu"
+        style="
+          background: var(--color-accent-700);
+          color: var(--color-bg);
+          margin-top: 28px;
+        "
+      >
+        <div class="wrap sec" style="padding-block: calc(2 * 28px)">
+          <div
+            class="g g-split"
+            style="align-items: end; gap: 28px clamp(24px, 5vw, 72px)"
+          >
+            <div>
+              <p
+                class="rv"
+                style="
+                  margin: 0 0 12px;
+                  font-size: 13px;
+                  line-height: 14px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-bg) 75%, transparent);
+                "
+              >
+                Le Studio Pros Import
+              </p>
+              <h2
+                class="rv"
+                style="
+                  font-size: clamp(26px, 3vw, 40px);
+                  line-height: 1.12;
+                  letter-spacing: -0.02em;
+                  margin: 0;
+                  transition-delay: 0.1s;
+                "
+              >
+                Pas besoin d'être designer.
+                <em
+                  style="
+                    font-weight: 400;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                  "
+                  >Juste d'avoir un projet.</em
+                >
+              </h2>
+              <p
+                class="rv"
+                style="
+                  margin: 16px 0 0;
+                  max-width: 46ch;
+                  font-size: 15px;
+                  line-height: 24px;
+                  color: color-mix(in srgb, var(--color-bg) 85%, transparent);
+                  transition-delay: 0.2s;
+                "
+              >
+                Commencez par les formes qui vous parlent. Gardez vos pistes.
+                Précisez les matières, les couleurs et les quantités à votre
+                rythme.
+              </p>
+              <div class="rv" style="margin-top: 20px; transition-delay: 0.3s">
+                <a
+                  href="#contact"
+                  class="btn"
+                  style="
+                    background: var(--color-bg);
+                    color: var(--color-process-yellow);
+                    border-color: transparent;
+                    padding: 12px 20px;
+                    font-size: 15px;
+                    text-decoration: none;
+                  "
+                  >Entrer dans le Studio ↗</a
+                >
+              </div>
+            </div>
+            <ul
+              class="rv g g2 keep2"
+              style="
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                gap: 12px 20px;
+                transition-delay: 0.25s;
+              "
+            >
+              <template data-list="studioFacts" data-as="sf">
+                <li
+                  style="
+                    font-size: 14px;
+                    line-height: 22px;
+                    border-top: 1px solid
+                      color-mix(in srgb, var(--color-bg) 30%, transparent);
+                    padding-top: 10px;
+                  "
+                >
+                  <strong style="display: block; font-weight: 600"
+                    >{{ sf.t }}</strong
+                  ><span
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-bg) 80%,
+                        transparent
+                      );
+                    "
+                    >{{ sf.d }}</span
+                  >
+                </li>
+              </template>
+            </ul>
+          </div>
+          <div class="g g3 g3-cards" style="margin-top: 42px; gap: 20px">
+            <div
+              class="rv"
+              style="
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                border-top: 1px solid
+                  color-mix(in srgb, var(--color-bg) 40%, transparent);
+                padding-top: 16px;
+              "
+            >
+              <div
+                style="
+                  flex: none;
+                  width: 128px;
+                  aspect-ratio: 1;
+                  background: #fff;
+                  position: relative;
+                  overflow: hidden;
+                "
+              >
+                <template data-list="pieces" data-as="pc"
+                  ><img
+                    src="{{ pc.img }}"
+                    alt="{{ pc.label }}"
+                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;opacity:{{ pc.op }};transform:scale({{ pc.sc }});transition:opacity .7s,transform 1.2s cubic-bezier(.2,.7,.2,1)"
+                    width="600"
+                    height="600"
+                    decoding="async"
+                    loading="lazy"
+                /></template>
+                <div
+                  style="
+                    position: absolute;
+                    left: 8px;
+                    right: 8px;
+                    bottom: 6px;
+                    display: flex;
+                    gap: 3px;
+                  "
+                >
+                  <template data-list="pieces" data-as="pc"
+                    ><span
+                      style="flex:1;height:2px;background:{{ pc.bar }};transition:background .5s"
+                    ></span
+                  ></template>
+                </div>
+                <span
+                  style="
+                    position: absolute;
+                    left: 8px;
+                    top: 6px;
+                    font:
+                      9px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 65%,
+                      transparent
+                    );
+                  "
+                  >{{ pieceLabel }}</span
+                >
+              </div>
+              <div>
+                <span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                  "
+                  >01</span
+                >
+                <h3 style="margin: 6px 0 0; font-size: 20px; line-height: 24px">
+                  Le mobilier
+                </h3>
+                <p
+                  style="
+                    margin: 6px 0 0;
+                    font-size: 13.5px;
+                    line-height: 20px;
+                    color: color-mix(in srgb, var(--color-bg) 80%, transparent);
+                  "
+                >
+                  Chaise, plateau, piètement : trois choix, un ensemble.
+                </p>
+              </div>
+            </div>
+            <div
+              class="rv"
+              style="
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                border-top: 1px solid
+                  color-mix(in srgb, var(--color-bg) 40%, transparent);
+                padding-top: 16px;
+                transition-delay: 0.15s;
+              "
+            >
+              <div
+                style="
+                  flex: none;
+                  width: 128px;
+                  aspect-ratio: 1;
+                  background: var(--color-neutral-200);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  padding: 10px;
+                "
+              >
+                <template data-list="swatches" data-as="w"
+                  ><div
+                    style="width:28%;aspect-ratio:1;background:#fff;padding:3px;box-shadow:var(--shadow-sm);transform:scale({{ w.sc }}) translateY({{ w.y }});transition:transform .8s cubic-bezier(.2,.7,.2,1);z-index:{{ w.z }}"
+                  >
+                    <div
+                      style="width:100%;height:100%;background:{{ w.pattern }};background-size:{{ w.size }}"
+                    ></div></div
+                ></template>
+              </div>
+              <div>
+                <span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                  "
+                  >02</span
+                >
+                <h3 style="margin: 6px 0 0; font-size: 20px; line-height: 24px">
+                  Votre direction
+                </h3>
+                <p
+                  style="
+                    margin: 6px 0 0;
+                    font-size: 13.5px;
+                    line-height: 20px;
+                    color: color-mix(in srgb, var(--color-bg) 80%, transparent);
+                  "
+                >
+                  Motifs, matières, couleurs : une planche qui vous ressemble.
+                </p>
+              </div>
+            </div>
+            <div
+              class="rv"
+              style="
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                border-top: 1px solid
+                  color-mix(in srgb, var(--color-bg) 40%, transparent);
+                padding-top: 16px;
+                transition-delay: 0.3s;
+              "
+            >
+              <div
+                style="
+                  flex: none;
+                  width: 128px;
+                  aspect-ratio: 1;
+                  background: var(--color-bg);
+                  color: var(--color-text);
+                  padding: 14px 12px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 7px;
+                  justify-content: center;
+                "
+              >
+                <span
+                  style="
+                    font:
+                      9px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
+                  "
+                  >Votre projet</span
+                >
+                <template data-list="docLines" data-as="d"
+                  ><span
+                    style="display:block;height:6px;background:var(--color-neutral-300);width:{{ d.w }};transition:width 1.2s cubic-bezier(.2,.7,.2,1)"
+                  ></span
+                ></template>
+              </div>
+              <div>
+                <span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                  "
+                  >03</span
+                >
+                <h3 style="margin: 6px 0 0; font-size: 20px; line-height: 24px">
+                  Le projet à vérifier
+                </h3>
+                <p
+                  style="
+                    margin: 6px 0 0;
+                    font-size: 13.5px;
+                    line-height: 20px;
+                    color: color-mix(in srgb, var(--color-bg) 80%, transparent);
+                  "
+                >
+                  Vos choix réunis, étudiés par notre équipe.
+                  <a href="#contact" style="color: var(--color-bg)"
+                    >À étudier ensemble ↗</a
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Bande"
+        style="padding: calc(3 * 28px) 0; overflow: hidden"
+      >
+        <p
+          class="rv wrap"
+          style="
+            margin: 0 0 42px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Quelques directions déjà composées
+        </p>
+        <div
+          style="
+            display: flex;
+            gap: 40px;
+            width: max-content;
+            animation: marquee 70s linear infinite;
+            padding: 20px 0;
+          "
+        >
+          <template data-list="band" data-as="b">
+            <figure
+              style="margin:0;flex:none;width:clamp(220px,26vw,320px);transform:rotate({{ b.rot }});transition:transform .5s"
+              class="hover-3"
+            >
+              <a
+                href="{{ b.href }}"
+                style="
+                  display: block;
+                  aspect-ratio: 1;
+                  background: #fff;
+                  box-shadow: var(--shadow-md);
+                  overflow: hidden;
+                  padding: 8px;
+                "
+                ><img
+                  src="{{ b.img }}"
+                  alt="{{ b.name }}"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                  "
+                  width="600"
+                  height="600"
+                  decoding="async"
+                  loading="lazy"
+              /></a>
+              <figcaption
+                style="
+                  margin-top: 10px;
+                  display: flex;
+                  justify-content: space-between;
+                  gap: 10px;
+                  font-size: 14px;
+                  line-height: 20px;
+                "
+              >
+                <span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.08em;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
+                  "
+                  >{{ b.num }}</span
+                ><a
+                  href="{{ b.href }}"
+                  style="
+                    font-style: italic;
+                    text-decoration: none;
+                    color: var(--color-text);
+                  "
+                  class="hover-4"
+                  >{{ b.name }} →</a
+                >
+              </figcaption>
+            </figure>
+          </template>
+        </div>
+      </section>
+
+      <section
+        id="reel"
+        data-screen-label="Acheminement"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <p
+          class="rv"
+          style="
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          04 / Le design, les pieds sur terre
+        </p>
+        <h2
+          class="rv"
+          style="
+            font-size: clamp(32px, 4.2vw, 58px);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin: 0;
+            transition-delay: 0.1s;
+          "
+        >
+          <span style="display: block">Votre mobilier a du caractère.</span
+          ><span
+            style="
+              display: block;
+              font-style: italic;
+              font-weight: 400;
+              color: color-mix(in srgb, var(--color-text) 60%, transparent);
+            "
+            >Son acheminement a une logique.</span
+          >
+        </h2>
+        <p
+          class="rv"
+          style="
+            margin: 28px 0 0;
+            max-width: 52ch;
+            font-size: 17px;
+            line-height: 28px;
+            color: color-mix(in srgb, var(--color-text) 78%, transparent);
+            transition-delay: 0.2s;
+          "
+        >
+          La personnalisation pour votre lieu. Le container partagé pour penser
+          les volumes et le transport autrement.
+        </p>
+        <div class="g g-split" style="margin-top: 42px; align-items: center">
+          <div
+            class="rv-l"
+            style="
+              background: var(--color-neutral-200);
+              padding: 24px 20px 20px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                gap: 14px;
+                flex-wrap: wrap;
+              "
+            >
+              <p
+                style="
+                  margin: 0;
+                  font-size: 12px;
+                  line-height: 14px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                "
+              >
+                Le principe du container partagé
+              </p>
+              <p
+                style="
+                  margin: 0;
+                  font:
+                    11px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                {{ vizStep }}
+              </p>
+            </div>
+            <p
+              style="
+                margin: 20px 0 0;
+                font-size: 18px;
+                line-height: 24px;
+                min-height: 48px;
+              "
+            >
+              {{ vizCaption }}
+            </p>
+            <div
+              style="
+                position: relative;
+                margin: 20px 0 0;
+                height: 96px;
+                background: #fff;
+                border: 2px solid var(--color-neutral-800);
+                display: flex;
+                overflow: hidden;
+              "
+            >
+              <template data-list="lots" data-as="l">
+                <div
+                  style="flex:0 0 {{ l.w }};display:grid;place-content:center;text-align:center;background:{{ l.bg }};color:{{ l.color }};font-size:12px;line-height:16px;opacity:{{ l.op }};transform:translateX({{ l.x }});transition:flex-basis 1s cubic-bezier(.2,.7,.2,1),opacity .7s,transform 1s cubic-bezier(.2,.7,.2,1),background .8s;transition-delay:{{ l.delay }};overflow:hidden;white-space:normal"
+                >
+                  <span style="font-weight: 600">{{ l.a }}</span
+                  ><span style="font-size: 11px">{{ l.b }}</span>
+                </div>
+              </template>
+              <div
+                style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,transparent 0 10px,color-mix(in srgb,var(--color-text) 8%,transparent) 10px 12px);clip-path:inset(0 0 0 {{ emptyFrom }});transition:clip-path 1s cubic-bezier(.2,.7,.2,1)"
+              ></div>
+              <span
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;font-style:italic;color:color-mix(in srgb,var(--color-text) 60%,transparent);opacity:{{ emptyOp }};transition:opacity .6s"
+                >{{ emptyLabel }}</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 8px;
+                font:
+                  11px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.06em;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+            >
+              <span>0 m³</span><span>{{ axisLabel }}</span>
+            </div>
+            <p
+              style="
+                margin: 14px 0 0;
+                font-size: 11px;
+                line-height: 14px;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+            >
+              Illustration du principe · volumes et proportions indicatifs.
+            </p>
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: flex-end;
+                gap: 14px 20px;
+                margin-top: 14px;
+                border-top: 1px solid
+                  color-mix(in srgb, var(--color-text) 25%, transparent);
+                padding-top: 14px;
+              "
+            >
+              <p
+                style="
+                  margin: 0;
+                  font-size: 18px;
+                  line-height: 24px;
+                  white-space: normal;
+                "
+                class="container-promise"
+              >
+                Un container optimisé. Un meilleur prix pour chacun.
+              </p>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                style="padding-inline: 0; white-space: normal"
+                data-onclick="replay"
+              >
+                Rejouer ↻
+              </button>
+            </div>
+          </div>
+          <div class="rv" style="transition-delay: 0.2s">
+            <div class="g g3" style="gap: 6px">
+              <template data-list="shipSteps" data-as="st"
+                ><button
+                  type="button"
+                  style="text-align:left;padding:12px 10px;min-height:44px;border:1px solid {{ st.border }};background:{{ st.bg }};color:{{ st.color }};cursor:pointer;font:400 13px/18px var(--font-body);transition:background .5s,color .5s"
+                  data-onclick="st.pick"
+                  aria-pressed="{{ st.selected }}"
+                >
+                  <span
+                    style="
+                      display: block;
+                      font:
+                        11px ui-monospace,
+                        Menlo,
+                        monospace;
+                      margin-bottom: 6px;
+                    "
+                    >{{ st.num }}</span
+                  >{{ st.label }}
+                </button></template
+              >
+            </div>
+            <h3
+              style="
+                margin: 36px 0 0;
+                font-size: 28px;
+                line-height: 34px;
+                letter-spacing: -0.01em;
+              "
+            >
+              {{ shipTitle }}
+            </h3>
+            <p
+              style="
+                margin: 14px 0 0;
+                font-size: 15.5px;
+                line-height: 28px;
+                color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              "
+            >
+              {{ shipBody }}
+            </p>
+            <a
+              href="#contact"
+              class="btn btn-ghost"
+              style="
+                margin-top: 42px;
+                padding-inline: 0;
+                text-decoration: none;
+                color: var(--color-process-yellow);
+              "
+              >Comprendre notre modèle de prix ↗</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Parcours"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+          "
+        >
+          <p
+            class="rv"
+            style="
+              margin: 0 0 14px;
+              font-size: 13px;
+              line-height: 14px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: color-mix(in srgb, var(--color-text) 70%, transparent);
+            "
+          >
+            Deux parcours, une règle
+          </p>
+          <h2
+            class="rv"
+            style="
+              font-size: clamp(30px, 3.4vw, 44px);
+              line-height: 1.15;
+              letter-spacing: -0.015em;
+              margin: 0;
+              max-width: 24ch;
+              transition-delay: 0.1s;
+            "
+          >
+            Acheter en direct ou revendre :
+            <em style="font-weight: 400">le canal reste clair.</em>
+          </h2>
+        </div>
+        <div
+          class="g g2"
+          style="margin-top: 42px; gap: 40px clamp(28px, 4vw, 56px)"
+        >
+          <a
+            href="/catalogue"
+            class="rv hover-5"
+            style="
+              display: flex;
+              flex-direction: column;
+              text-decoration: none;
+              color: var(--color-text);
+              transition-delay: 0.15s;
+            "
+          >
+            <div style="overflow: hidden">
+              <div
+                style="
+                  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+                "
+                class="hover-6"
+              >
+                <div
+                  class="halftone"
+                  style="
+                    aspect-ratio: 3/2;
+                    background: repeating-linear-gradient(
+                      135deg,
+                      var(--color-neutral-200) 0 12px,
+                      var(--color-surface) 12px 24px
+                    );
+                    display: grid;
+                    place-items: center;
+                    font:
+                      12px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 70%,
+                      transparent
+                    );
+                    text-align: center;
+                    padding: 20px;
+                  "
+                  data-media-slot="2"
+                >
+                  photo — terrasse de restaurant équipée, service en cours
+                </div>
+              </div>
+            </div>
+            <span
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 14px;
+                margin-top: 24px;
+                padding-top: 14px;
+                border-top: 1px solid var(--color-text);
+              "
+              ><span
+                style="
+                  font:
+                    11px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+                >01 / J'équipe mon établissement</span
+              ><img
+                src="/brand/terrassea-logo.svg"
+                alt="Terrassea"
+                style="height: 24px; width: auto"
+                width="132"
+                height="40"
+                decoding="async"
+                loading="eager"
+            /></span>
+            <span
+              style="
+                display: block;
+                margin-top: 20px;
+                font-size: clamp(24px, 2.4vw, 30px);
+                line-height: 1.15;
+                font-weight: 600;
+                letter-spacing: -0.015em;
+              "
+              >Prix direct pro</span
+            >
+            <span
+              style="
+                display: block;
+                margin-top: 12px;
+                font-size: 15.5px;
+                line-height: 26px;
+                max-width: 44ch;
+                color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              "
+              >MOQ clair, réservation container et stock 24h pour les besoins
+              urgents.</span
+            >
+            <span
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 20px;
+                margin-top: 18px;
+                font-size: 13.5px;
+                line-height: 20px;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+              ><span>· Restaurants, hôtels, bars</span
+              ><span>· Dès 50 pièces</span
+              ><span>· Livraison en France</span></span
+            >
+            <span
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 24px;
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--color-process-yellow);
+              "
+              >Explorer les produits <span aria-hidden="true">→</span></span
+            >
+          </a>
+          <a
+            href="#contact"
+            class="rv hover-7"
+            style="
+              display: flex;
+              flex-direction: column;
+              text-decoration: none;
+              color: var(--color-text);
+              transition-delay: 0.3s;
+            "
+            data-onclick="pickPartner"
+          >
+            <div style="overflow: hidden">
+              <div
+                style="
+                  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+                "
+                class="hover-8"
+              >
+                <div
+                  class="halftone"
+                  style="
+                    aspect-ratio: 3/2;
+                    background: repeating-linear-gradient(
+                      135deg,
+                      var(--color-neutral-200) 0 12px,
+                      var(--color-surface) 12px 24px
+                    );
+                    display: grid;
+                    place-items: center;
+                    font:
+                      12px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 70%,
+                      transparent
+                    );
+                    text-align: center;
+                    padding: 20px;
+                  "
+                  data-media-slot="3"
+                >
+                  photo — showroom d'un revendeur, mobilier exposé sous sa
+                  marque
+                </div>
+              </div>
+            </div>
+            <span
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 14px;
+                margin-top: 24px;
+                padding-top: 14px;
+                border-top: 1px solid var(--color-text);
+              "
+              ><span
+                style="
+                  font:
+                    11px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+                >02 / Je revends à mon réseau</span
+              ><span style="display: flex; align-items: baseline; gap: 6px"
+                ><img
+                  src="/brand/terrassea-logo.svg"
+                  alt="Terrassea"
+                  style="height: 24px; width: auto"
+                  width="132"
+                  height="40"
+                  decoding="async"
+                  loading="eager"
+                /><span
+                  style="
+                    font-size: 15px;
+                    line-height: 1;
+                    font-style: italic;
+                    color: var(--color-accent-700);
+                  "
+                  >Partners</span
+                ></span
+              ></span
+            >
+            <span
+              style="
+                display: block;
+                margin-top: 20px;
+                font-size: clamp(24px, 2.4vw, 30px);
+                line-height: 1.15;
+                font-weight: 600;
+                letter-spacing: -0.015em;
+              "
+              >Programme partenaire</span
+            >
+            <span
+              style="
+                display: block;
+                margin-top: 12px;
+                font-size: 15.5px;
+                line-height: 26px;
+                max-width: 44ch;
+                color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              "
+              >Prix nets réservés, opportunités protégées et sélections
+              co-brandées à construire ensemble.</span
+            >
+            <span
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 20px;
+                margin-top: 18px;
+                font-size: 13.5px;
+                line-height: 20px;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+              ><span>· Revendeurs, agenceurs, architectes</span
+              ><span>· Territoires protégés</span
+              ><span>· Sélections co-brandées</span></span
+            >
+            <span
+              style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 24px;
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--color-process-yellow);
+              "
+              >Voir le programme <span aria-hidden="true">→</span></span
+            >
+          </a>
+        </div>
+      </section>
+
+      <section
+        data-screen-label="Instagram"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <div
+          class="rv"
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px 40px;
+          "
+        >
+          <div>
+            <p
+              style="
+                margin: 0 0 14px;
+                font-size: 13px;
+                line-height: 14px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+            >
+              Du projet au réel
+            </p>
+            <h2
+              style="
+                font-size: clamp(30px, 3.4vw, 44px);
+                line-height: 1.15;
+                letter-spacing: -0.015em;
+                margin: 0;
+                max-width: 22ch;
+              "
+            >
+              Des terrasses livrées,
+              <em style="font-weight: 400">filmées par nos clients.</em>
+            </h2>
+          </div>
+          <a
+            href="https://www.instagram.com/terrassea_france"
+            target="_blank"
+            rel="noopener"
+            class="btn btn-ghost"
+            style="padding-inline: 0; text-decoration: none; font-size: 15px"
+            >@terrassea_france sur Instagram ↗</a
+          >
+        </div>
+        <div class="g g4 g-reels" style="margin-top: 42px; gap: 20px">
+          <template data-list="reels" data-as="r">
+            <a
+              href="{{ r.href }}"
+              target="_blank"
+              rel="noopener"
+              class="rv hover-9"
+              style="position:relative;display:block;aspect-ratio:9/16;background:var(--color-neutral-800);overflow:hidden;text-decoration:none;color:var(--color-bg);box-shadow:var(--shadow-sm);transition-delay:{{ r.delay }}"
+            >
+              <template data-if="r.hasVideo"
+                ><video
+                  muted=""
+                  loop=""
+                  playsinline=""
+                  preload="none"
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                  "
+                  data-video-src="{{ r.src }}"
+                  width="450"
+                  height="800"
+                ></video
+              ></template>
+              <template data-if="r.noVideo"
+                ><div
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    display: grid;
+                    place-items: center;
+                    font:
+                      12px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    text-align: center;
+                    padding: 20px;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                    background: repeating-linear-gradient(
+                      135deg,
+                      var(--color-neutral-800) 0 12px,
+                      var(--color-neutral-700) 12px 24px
+                    );
+                  "
+                >
+                  {{ r.placeholder }}
+                </div></template
+              >
+              <div
+                style="
+                  position: absolute;
+                  inset: auto 0 0 0;
+                  padding: 14px;
+                  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: flex-end;
+                  gap: 10px;
+                "
+              >
+                <span style="font-size: 13px; line-height: 18px"
+                  >{{ r.caption }}</span
+                ><span
+                  style="
+                    font:
+                      11px ui-monospace,
+                      Menlo,
+                      monospace;
+                    letter-spacing: 0.08em;
+                    flex: none;
+                  "
+                  >▶ Reel</span
+                >
+              </div>
+            </a>
+          </template>
+        </div>
+        <p
+          class="rv"
+          style="
+            margin: 28px 0 0;
+            font-size: 13px;
+            line-height: 20px;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Vidéos publiées sur notre compte Instagram ·
+          <a
+            href="https://www.instagram.com/terrassea_france"
+            target="_blank"
+            rel="noopener"
+            style="color: var(--color-process-yellow)"
+            >Suivre @terrassea_france →</a
+          >
+        </p>
+      </section>
+
+      <section
+        data-screen-label="Témoignages"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px)"
+      >
+        <p
+          class="rv"
+          style="
+            margin: 0 0 42px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Ils ont équipé leur lieu avec Terrassea
+        </p>
+        <div class="g g3" style="gap: 40px clamp(28px, 4vw, 56px)">
+          <template data-list="quotes" data-as="q">
+            <figure
+              class="rv"
+              style="margin:0;display:flex;flex-direction:column;border-top:1px solid var(--color-text);padding-top:20px;transition-delay:{{ q.delay }}"
+            >
+              <blockquote
+                style="
+                  font-style: italic;
+                  font-weight: 400;
+                  font-size: clamp(19px, 1.7vw, 22px);
+                  line-height: 1.45;
+                  letter-spacing: -0.01em;
+                  margin: 0;
+                  text-indent: -0.45em;
+                "
+              >
+                {{ q.text }}
+              </blockquote>
+              <figcaption
+                style="
+                  margin-top: auto;
+                  padding-top: 24px;
+                  font-size: 14px;
+                  line-height: 20px;
+                "
+              >
+                <span style="display: block; font-weight: 600">{{ q.who }}</span
+                ><span
+                  style="
+                    display: block;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 65%,
+                      transparent
+                    );
+                  "
+                  >{{ q.place }}</span
+                >
+              </figcaption>
+            </figure>
+          </template>
+        </div>
+      </section>
+
+      <section
+        id="contact"
+        data-screen-label="Contact"
+        class="wrap sec"
+        style="padding-block: calc(3 * 28px) calc(4 * 28px)"
+      >
+        <div
+          class="rv-s"
+          style="
+            background: var(--color-neutral-900);
+            color: var(--color-bg);
+            padding: clamp(28px, 4vw, 56px);
+          "
+        >
+          <div
+            class="g g-split"
+            style="align-items: center; gap: 28px clamp(24px, 5vw, 72px)"
+          >
+            <div>
+              <p
+                style="
+                  margin: 0 0 14px;
+                  font-size: 13px;
+                  line-height: 14px;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--color-accent-300);
+                "
+              >
+                Parlons de votre projet · réponse sous 24 h ouvrées
+              </p>
+              <h2
+                style="
+                  font-size: clamp(32px, 4.2vw, 58px);
+                  line-height: 1.08;
+                  letter-spacing: -0.02em;
+                  margin: 0;
+                "
+              >
+                <span style="display: block">Votre terrasse mérite mieux</span
+                ><span
+                  style="
+                    display: block;
+                    font-style: italic;
+                    font-weight: 400;
+                    color: color-mix(in srgb, var(--color-bg) 70%, transparent);
+                  "
+                  >qu'un catalogue standard.</span
+                >
+              </h2>
+              <p
+                style="
+                  margin: 24px 0 0;
+                  max-width: 46ch;
+                  font-size: 16px;
+                  line-height: 26px;
+                  color: color-mix(in srgb, var(--color-bg) 85%, transparent);
+                "
+              >
+                Dites-nous ce qu'il vous faut et pour quand. Nous vous rappelons
+                pour cadrer le projet : modèles, matières, quantités et délai
+                réaliste. Le chiffrage vient ensuite.
+              </p>
+              <ul
+                style="
+                  list-style: none;
+                  margin: 24px 0 0;
+                  padding: 0;
+                  display: grid;
+                  gap: 8px;
+                  font-size: 14px;
+                  line-height: 22px;
+                  color: color-mix(in srgb, var(--color-bg) 80%, transparent);
+                "
+              >
+                <li>✓ Sans engagement, sans frais d'étude</li>
+                <li>✓ Prix direct pro, dès 50 pièces</li>
+                <li>✓ Un interlocuteur unique du projet à la livraison</li>
+              </ul>
+            </div>
+            <form
+              style="
+                display: grid;
+                gap: 18px;
+                background: var(--color-bg);
+                color: var(--color-text);
+                padding: clamp(20px, 3vw, 32px);
+              "
+              data-onsubmit="submit"
+              data-form="project"
+            >
+              <div style="display: grid; gap: 8px">
+                <span style="font-size: 14px">Vous êtes</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                  <template data-list="kinds" data-as="k"
+                    ><button
+                      type="button"
+                      style="min-height:44px;padding:8px 14px;border:1px solid {{ k.border }};background:{{ k.bg }};color:{{ k.color }};font:400 14px var(--font-body);cursor:pointer;transition:background .3s"
+                      data-onclick="k.pick"
+                      aria-pressed="{{ k.selected }}"
+                    >
+                      {{ k.label }}
+                    </button></template
+                  >
+                </div>
+              </div>
+              <div style="display: grid; gap: 8px">
+                <span style="font-size: 14px">Il vous faut</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                  <template data-list="needs" data-as="n"
+                    ><button
+                      type="button"
+                      style="min-height:44px;padding:8px 14px;border:1px solid {{ n.border }};background:{{ n.bg }};color:{{ n.color }};font:400 14px var(--font-body);cursor:pointer;transition:background .3s"
+                      data-onclick="n.pick"
+                      aria-pressed="{{ n.selected }}"
+                    >
+                      {{ n.label }}
+                    </button></template
+                  >
+                </div>
+              </div>
+              <div class="g g2 keep2" style="gap: 14px">
+                <label class="field" style="display: grid; gap: 8px"
+                  ><span style="font-size: 14px">Quantité approximative</span
+                  ><input
+                    class="input"
+                    type="number"
+                    min="1"
+                    placeholder="ex. 60 chaises, 15 tables"
+                    style="min-height: 44px"
+                    name="quantity"
+                /></label>
+                <label class="field" style="display: grid; gap: 8px"
+                  ><span style="font-size: 14px">Réception souhaitée</span
+                  ><select
+                    class="input"
+                    style="min-height: 44px"
+                    name="delivery"
+                  >
+                    <option>Dès que possible</option>
+                    <option>Dans 2 à 3 mois</option>
+                    <option>Avant la prochaine saison</option>
+                    <option>Je me renseigne</option>
+                  </select></label
+                >
+              </div>
+              <label class="field" style="display: grid; gap: 8px"
+                ><span style="font-size: 14px">Votre email professionnel</span
+                ><input
+                  class="input"
+                  type="email"
+                  required=""
+                  placeholder="vous@etablissement.fr"
+                  style="min-height: 44px"
+                  name="email"
+                  autocomplete="email"
+                  maxlength="254"
+              /></label>
+              <label class="field" style="display: grid; gap: 8px"
+                ><span style="font-size: 14px"
+                  >Votre projet en une phrase
+                  <span
+                    style="
+                      color: color-mix(
+                        in srgb,
+                        var(--color-text) 55%,
+                        transparent
+                      );
+                    "
+                    >(facultatif)</span
+                  ></span
+                ><textarea
+                  class="input"
+                  rows="2"
+                  placeholder="ex. Terrasse de 80 couverts, ouverture en avril, ambiance bord de mer"
+                  style="min-height: 64px; resize: vertical; font: inherit"
+                  name="message"
+                  maxlength="5000"
+                ></textarea>
+              </label>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                style="
+                  justify-content: center;
+                  min-height: 52px;
+                  font-size: 16px;
+                  background-color: var(--color-process-yellow);
+                "
+              >
+                {{ submitLabel }}
+              </button>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 12px;
+                  line-height: 18px;
+                  text-align: center;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                Deux minutes. Aucune donnée partagée. Vous pouvez aussi
+                <a href="/catalogue">parcourir le catalogue d'abord →</a>
+              </p>
+              <p class="form-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+        <div
+          class="rv g g-split"
+          style="
+            margin-top: 28px;
+            align-items: center;
+            gap: 20px clamp(24px, 5vw, 72px);
+            border: 1px solid var(--color-neutral-300);
+            padding: clamp(20px, 3vw, 32px);
+          "
+        >
+          <div>
+            <h3
+              style="
+                margin: 0;
+                font-size: 24px;
+                line-height: 30px;
+                letter-spacing: -0.01em;
+              "
+            >
+              Pas encore prêt ? Gardez une longueur d'avance.
+            </h3>
+            <p
+              style="
+                margin: 10px 0 0;
+                font-size: 15px;
+                line-height: 24px;
+                max-width: 52ch;
+                color: color-mix(in srgb, var(--color-text) 78%, transparent);
+              "
+            >
+              Nouveaux modèles, matières et projets livrés, une fois par mois.
+              Pas de spam.
+            </p>
+          </div>
+          <form
+            style="display: flex; gap: 10px; flex-wrap: wrap"
+            data-onsubmit="subscribe"
+            data-form="newsletter"
+          >
+            <input
+              class="input"
+              type="email"
+              required=""
+              placeholder="vous@etablissement.fr"
+              aria-label="Email"
+              style="flex: 1; min-width: 200px; min-height: 44px"
+              name="email"
+              autocomplete="email"
+              maxlength="254"
+            />
+            <button
+              type="submit"
+              class="btn btn-secondary"
+              style="min-height: 44px; white-space: normal"
+            >
+              {{ subLabel }}
+            </button>
+            <p class="form-status" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <footer
+        class="wrap"
+        style="
+          padding-block: calc(2 * 28px);
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          gap: 14px;
+          font-size: 13px;
+          line-height: 24px;
+          color: color-mix(in srgb, var(--color-text) 70%, transparent);
+        "
+      >
+        <span>Terrassea · une marque de Pros Import EURL, Paris</span
+        ><span>Mobilier · Studio · Du projet au réel · Contact</span>
+      </footer>
+
+      <div
+        class="fab"
+        style="position:fixed;left:16px;right:16px;bottom:16px;z-index:20;justify-content:center;opacity:{{ fabOp }};transform:translateY({{ fabY }});transition:opacity .4s,transform .4s;pointer-events:{{ fabPe }}"
+      >
+        <a
+          href="#contact"
+          class="btn btn-primary"
+          style="
+            width: 100%;
+            justify-content: center;
+            min-height: 52px;
+            font-size: 16px;
+            text-decoration: none;
+            box-shadow: var(--shadow-lg);
+          "
+          >Commencer mon projet ↗</a
+        >
+      </div>
+    </main>
+    <noscript
+      >Activez JavaScript pour afficher les sélections et les animations de ce
+      prototype.</noscript
+    >
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
