@@ -37,6 +37,7 @@
             decoding="async"
         /></a>
         <div class="nav-links">
+          <a href="/prix/">Le prix prouvé</a>
           <a href="#" style="color: var(--color-text); font-weight: 600"
             >Le mobilier</a
           ><a href="/#studio">Le Studio</a><a href="/#reel">Du projet au réel</a
@@ -329,6 +330,7 @@
         <div class="g g4" style="gap: 36px 20px">
           <template data-list="items" data-as="p">
             <figure
+              id="produit-{{ p.ref }}"
               class="rv"
               style="margin:0;display:flex;flex-direction:column;transition-delay:{{ p.delay }}"
             >

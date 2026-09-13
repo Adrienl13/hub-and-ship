@@ -271,6 +271,18 @@ if (root) {
       } catch {
         page.state.cart = []
       }
+      try {
+        const ref = decodeURIComponent(
+          window.location.hash.replace(/^#produit-/, ''),
+        )
+        const product = page.products.find((p) => p.ref === ref)
+        if (product && window.location.hash.startsWith('#produit-')) {
+          page.state.sheet = product.ref
+          page.state.qty = page.minimum(product, 0)
+        }
+      } catch {
+        /* Malformed reference: keep the catalogue open. */
+      }
       page.render()
       delete root.dataset.loading
       document.getElementById('catalogue-status').textContent = page.products

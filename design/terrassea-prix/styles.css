@@ -1,0 +1,160 @@
+@import url('./source-styles.css');
+* {
+  box-sizing: border-box;
+}
+body {
+  overflow-x: visible;
+}
+.nav {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+}
+.wrap {
+  width: 100%;
+}
+main {
+  min-width: 0;
+}
+.g > * {
+  min-width: 0;
+}
+a,
+button,
+input {
+  touch-action: manipulation;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #0088b0;
+  outline-offset: 4px;
+}
+button {
+  font-family: inherit;
+}
+img[data-unavailable] {
+  visibility: hidden;
+}
+.preview-notice {
+  padding: 6px 20px;
+  background: #201e1d;
+  color: #fff;
+  text-align: center;
+  font-size: 12px;
+}
+.form-status {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.btn {
+  min-height: 44px;
+}
+#faq button:hover {
+  color: var(--color-accent-700) !important;
+}
+section[id] {
+  scroll-margin-top: 92px;
+}
+.node-label {
+  min-height: 28px;
+}
+video {
+  border-radius: 2px;
+}
+.sim-img {
+  border-radius: 2px;
+}
+.sim-img img {
+  aspect-ratio: 1;
+}
+.sim-img span {
+  min-width: 0;
+}
+@media (max-width: 999px) {
+  .g-hero,
+  .g-split {
+    grid-template-columns: 1fr;
+  }
+  .g4,
+  .g5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 759px) {
+  .nav {
+    min-height: 64px;
+    gap: 12px !important;
+  }
+  .nav .btn {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  .nav img {
+    width: 95px;
+    height: auto !important;
+  }
+  .g4,
+  .g5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .node-label {
+    font-size: 10px !important;
+  }
+  #preuves [data-screen-label='Preuves bloc'] {
+    grid-template-columns: 1fr !important;
+  }
+  .vids {
+    gap: 12px !important;
+  }
+  #methode li {
+    padding: 16px 12px !important;
+  }
+  #methode h3 {
+    font-size: 18px !important;
+  }
+  #methode p,
+  #trajet p {
+    overflow-wrap: anywhere;
+  }
+  .sim [data-onclick='t.pick'] {
+    font-size: 13px !important;
+  }
+  .sim-img {
+    padding: 16px !important;
+  }
+  .sim-img > span:last-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  #prix-page input {
+    min-width: 0 !important;
+    width: 100%;
+  }
+  #prix-page form .btn {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rv,
+  .rv-l,
+  .rv-w,
+  .bar {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}
+.nav .btn-primary {
+  color: var(--color-bg);
+}
