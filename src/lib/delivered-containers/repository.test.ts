@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   computeStats,
+  listPublishedRegistryContainers,
   getDeliveredContainerBySlug,
   listPublishedDeliveredContainers,
   type DeliveredContainersClient,
@@ -63,6 +64,7 @@ function makeListClient<T>(result: FakeResult<T>): DeliveredContainersClient {
   const chain: Record<string, unknown> = {
     select: () => chain,
     eq: () => chain,
+    in: () => chain,
     not: () => chain,
     order: () => Promise.resolve(result),
     maybeSingle: () => Promise.resolve(result),
@@ -205,5 +207,37 @@ describe('computeStats', () => {
     expect(stats.totalSavings).toBe(15000)
     expect(stats.onTimeRate).toBe(50)
     expect(stats.avgSavingsPercent).toBe(35)
+  })
+})
+
+describe('public register', () => {
+  it('reuses the canonical model while withholding the transit manifest and euro savings', async () => {
+    const rows = await listPublishedRegistryContainers(
+      makeListClient({
+        data: [makeRow(), makeRow({ id: 'shipping', status: 'shipping' })],
+        error: null,
+      }),
+    )
+    expect(rows[0]?.reference).toBe('CC-2025-014')
+    expect(rows[0]?.savingsTotalEur).toBeNull()
+    expect(rows[0]?.id).toBe('shipping')
+    const shipping = rows.find((row) => row.status === 'shipping')
+    expect(shipping?.professionalsServed).toBeNull()
+    expect(shipping?.totalItems).toBeNull()
+    expect(shipping?.savingsPercent).toBeNull()
+    expect(shipping?.productBreakdown).toEqual([])
+    expect(shipping?.testimonial.quote).toBeNull()
+  })
+  it('never replaces an empty register or a read failure with demo containers', async () => {
+    expect(
+      await listPublishedRegistryContainers(
+        makeListClient({ data: [], error: null }),
+      ),
+    ).toEqual([])
+    await expect(
+      listPublishedRegistryContainers(
+        makeListClient({ data: null, error: { message: 'unavailable' } }),
+      ),
+    ).rejects.toThrow('unavailable')
   })
 })

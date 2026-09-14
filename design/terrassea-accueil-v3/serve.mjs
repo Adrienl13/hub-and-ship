@@ -2,6 +2,9 @@
 // Standalone development preview: loopback only, fixed anonymous public API reads, no writes.
 import { fileURLToPath } from 'node:url'
 import { readCatalogue } from '../terrassea-catalogue/api.mjs'
+import { readRegistry } from '../terrassea-livres/api.tsx'
+let registryCache = null
+let registryShared = null
 const catalogueRoot = fileURLToPath(
   new URL('../terrassea-catalogue/', import.meta.url),
 )
@@ -44,6 +47,59 @@ const server = Bun.serve({
     const path = decodeURIComponent(new URL(req.url).pathname)
     if (path.includes('..') || path.includes('\\'))
       return new Response('Forbidden', { status: 403 })
+    if (path === '/livres') return Response.redirect('/livres/', 302)
+    if (path === '/livres/api') {
+      try {
+        if (!registryCache || Date.now() - registryCache.at > 60000)
+          registryCache = { at: Date.now(), data: await readRegistry() }
+        return Response.json(registryCache.data, {
+          headers: { 'Cache-Control': 'no-store' },
+        })
+      } catch {
+        return Response.json(
+          { error: 'Registre indisponible' },
+          { status: 503 },
+        )
+      }
+    }
+    if (path === '/livres/shared.js') {
+      if (!registryShared) {
+        const built = await Bun.build({
+          entrypoints: [
+            fileURLToPath(
+              new URL('../terrassea-livres/shared.ts', import.meta.url),
+            ),
+          ],
+          target: 'browser',
+          minify: true,
+        })
+        if (!built.success) return new Response('Build failed', { status: 500 })
+        registryShared = await built.outputs[0].text()
+      }
+      return new Response(registryShared, {
+        headers: {
+          'Content-Type': 'text/javascript',
+          'Cache-Control': 'no-store',
+        },
+      })
+    }
+    if (path.startsWith('/livres/')) {
+      const name = path.slice(8) || 'index.html'
+      if (
+        !['index.html', 'source-styles.css', 'styles.css', 'app.js'].includes(
+          name,
+        )
+      )
+        return new Response('Not found', { status: 404 })
+      return new Response(
+        Bun.file(
+          fileURLToPath(
+            new URL('../terrassea-livres/' + name, import.meta.url),
+          ),
+        ),
+        { headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } },
+      )
+    }
     if (path === '/partenaires') return Response.redirect('/partenaires/', 302)
     if (path.startsWith('/partenaires/')) {
       const name = path.slice(13) || 'index.html'

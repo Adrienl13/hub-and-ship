@@ -407,3 +407,53 @@ export function computeStats(
     avgSavingsPercent,
   }
 }
+
+/** Published public register, without demo fallback or pre-delivery manifests. */
+export async function listPublishedRegistryContainers(
+  client: DeliveredContainersClient,
+): Promise<ReadonlyArray<DeliveredContainer>> {
+  const { data, error } = await client
+    .from('containers')
+    .select(
+      'id,reference,slug,port,origin_port,status,delivered_at,published_at,professionals_served,total_items,savings_percent,photo_url,product_breakdown,gallery,testimonial_quote,testimonial_author',
+    )
+    .in('status', ['open', 'locked', 'shipping', 'delivered'])
+    .not('published_at', 'is', null)
+    .order('published_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  return ((data ?? []) as ReadonlyArray<ContainerRow>)
+    .map((row) => {
+      const item = toDeliveredContainer(row)
+      // Match the public site's rule: no manifest/volumes before delivery.
+      return {
+        ...item,
+        savingsTotalEur: null,
+        professionalsServed:
+          row.status === 'delivered' ? item.professionalsServed : null,
+        totalItems: row.status === 'delivered' ? item.totalItems : null,
+        savingsPercent: row.status === 'delivered' ? item.savingsPercent : null,
+        productBreakdown:
+          row.status === 'delivered' ? item.productBreakdown : [],
+        testimonial:
+          row.status === 'delivered'
+            ? item.testimonial
+            : {
+                quote: null,
+                longQuote: null,
+                author: null,
+                role: null,
+                location: null,
+                rating: null,
+              },
+      }
+    })
+    .sort((a, b) => {
+      const date = (c: DeliveredContainer) =>
+        Date.parse(
+          c.status === 'delivered'
+            ? c.deliveredAt || c.publishedAt
+            : c.publishedAt,
+        ) || 0
+      return date(b) - date(a) || a.reference.localeCompare(b.reference)
+    })
+}

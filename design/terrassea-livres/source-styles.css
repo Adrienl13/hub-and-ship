@@ -1,0 +1,121 @@
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  text-wrap: pretty;
+  overflow-x: hidden;
+}
+a {
+  color: var(--color-accent-700);
+}
+a:hover {
+  color: var(--color-accent-800);
+}
+img {
+  max-width: 100%;
+}
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 72px);
+}
+.g {
+  display: grid;
+  gap: 28px;
+}
+.g-hero {
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: 40px clamp(24px, 4vw, 64px);
+}
+.g-cur {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 28px clamp(24px, 4vw, 56px);
+}
+.g-kpi {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+}
+.g-ledger {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 0;
+}
+.g-photos {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.g-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+.g3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.g-cta {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px 40px;
+}
+.nav-links {
+  display: contents;
+}
+.rv {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rv.in {
+  opacity: 1;
+  transform: none;
+}
+.rv-w {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.rv-w.in {
+  clip-path: inset(0 0 0 0);
+}
+.only-m {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .g-hero,
+  .g-cur,
+  .g-ledger,
+  .g-cta {
+    grid-template-columns: 1fr;
+  }
+  .g-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .g-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .g-photos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .g3 {
+    grid-template-columns: 1fr;
+  }
+  .nav-links {
+    display: none;
+  }
+  .sec {
+    padding-block: calc(2 * 28px) !important;
+  }
+  .hide-m {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rv,
+  .rv-w {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    transition: none;
+  }
+}

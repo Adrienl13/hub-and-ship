@@ -1,6 +1,9 @@
 import { Star } from 'lucide-react'
 
-import type { DeliveredContainersListItem } from '@/lib/delivered-containers/repository'
+import type {
+  DeliveredContainer,
+  DeliveredContainersListItem,
+} from '@/lib/delivered-containers/repository'
 
 function formatDate(iso: string | null): string {
   if (!iso) return ''
@@ -13,9 +16,17 @@ function formatDate(iso: string | null): string {
 
 export function DeliveredContainerCard({
   container,
+  registry,
 }: {
-  readonly container: DeliveredContainersListItem
+  readonly container: DeliveredContainersListItem | DeliveredContainer
+  readonly registry?: {
+    hasSgs: boolean
+    latestDelivered: boolean
+    sequence: number
+  }
 }) {
+  if (registry && 'status' in container)
+    return <RegistryContainerCard container={container} {...registry} />
   const planned = container.plannedDays
   const actual = container.actualDays
   const onTime = planned != null && actual != null ? actual <= planned : true
@@ -112,5 +123,179 @@ export function DeliveredContainerCard({
         </div>
       </div>
     </a>
+  )
+}
+
+/** Native markup also rendered by the standalone design preview (no client React runtime). */
+function RegistryContainerCard({
+  container: c,
+  hasSgs,
+  latestDelivered,
+  sequence,
+}: {
+  container: DeliveredContainer
+  hasSgs: boolean
+  latestDelivered: boolean
+  sequence: number
+}) {
+  const transit = c.status !== 'delivered'
+  // The current schema has no distinct "loaded" or "French customs" status.
+  const step = c.status === 'shipping' ? 2 : c.status === 'delivered' ? 4 : 0
+  const status = transit ? 'En transit' : 'Livré'
+  const photos = [
+    ...c.gallery.map((p) => p.url),
+    ...(c.photoUrl ? [c.photoUrl] : []),
+  ]
+    .filter((url, i, a) => /^https?:\/\//.test(url) && a.indexOf(url) === i)
+    .slice(0, 4)
+  const fmt = (n: number) => n.toLocaleString('fr-FR')
+  const saving = c.savingsPercent != null ? `−${c.savingsPercent} %` : null
+  const details = [
+    [
+      'Pros servis',
+      c.professionalsServed != null ? fmt(c.professionalsServed) : null,
+    ],
+    ['Articles livrés', c.totalItems != null ? fmt(c.totalItems) : null],
+    ['Économie moyenne', saving],
+    [
+      transit ? 'Arrivée estimée' : 'Livraison',
+      formatDate(c.deliveredAt) || null,
+    ],
+    [
+      'Contenu',
+      c.productBreakdown
+        .map((x) => x.modelLabel)
+        .filter(Boolean)
+        .join(' · ') || null,
+    ],
+  ]
+  return (
+    <article
+      className={`registry-card ${transit ? 'is-transit' : latestDelivered ? 'is-latest' : ''}`}
+      data-container-id={c.id}
+      data-transit={String(transit)}
+    >
+      <button
+        type="button"
+        className="registry-toggle"
+        aria-expanded="false"
+        aria-controls={`detail-${c.id}`}
+      >
+        <span className="registry-number">
+          {String(sequence).padStart(2, '0')}
+        </span>
+        <span className="registry-heading">
+          <span className="registry-code">
+            {c.reference}
+            {!transit && c.deliveredAt ? ` · ${formatDate(c.deliveredAt)}` : ''}
+          </span>{' '}
+          <span className="registry-badge">{status}</span>
+          <strong>{c.port}</strong>
+        </span>
+        <span className="registry-metrics">
+          {c.professionalsServed != null && (
+            <span className="hide-m">
+              <strong>{fmt(c.professionalsServed)}</strong>
+              <small>pros servis</small>
+            </span>
+          )}
+          {c.totalItems != null && (
+            <span className="hide-m">
+              <strong>{fmt(c.totalItems)}</strong>
+              <small>articles</small>
+            </span>
+          )}
+          {saving && (
+            <span>
+              <strong className="registry-saving">{saving}</strong>
+              <small>{transit ? 'vs retail (réservé)' : 'vs retail'}</small>
+            </span>
+          )}
+          <span className="registry-chevron" aria-hidden="true">
+            ↓
+          </span>
+        </span>
+      </button>
+      <div
+        className="registry-details"
+        id={`detail-${c.id}`}
+        aria-hidden="true"
+      >
+        <div className="g g-ledger">
+          <div className="registry-facts">
+            <p className="registry-label">Fiche du container</p>
+            <dl>
+              {details
+                .filter(([, v]) => v)
+                .map(([label, value]) => (
+                  <div key={label}>
+                    <dt>{label}</dt>
+                    <dd
+                      className={
+                        label === 'Économie moyenne' ? 'registry-saving' : ''
+                      }
+                    >
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+            </dl>
+            <div className="registry-badges">
+              {hasSgs && <span>Contrôle SGS validé</span>}
+              <span className="registry-badge">{status}</span>
+            </div>
+            {transit && (
+              <div className="registry-transit">
+                <p className="registry-label">Suivi du transit</p>
+                <div className="registry-track">
+                  <span style={{ width: `${(step / 4) * 100}%` }} />
+                </div>
+                <ol>
+                  {['Usine', 'Chargé', 'En mer', 'Douane FR', 'Dépôt'].map(
+                    (name, i) => (
+                      <li
+                        key={name}
+                        data-done={i <= step}
+                        aria-current={i === step ? 'step' : undefined}
+                      >
+                        <i />
+                        {name}
+                      </li>
+                    ),
+                  )}
+                </ol>
+              </div>
+            )}
+          </div>
+          <div className="registry-media">
+            <p className="registry-label">
+              {transit ? 'Photos du trajet' : 'Photos du déchargement'}
+            </p>
+            <div className="g g-photos">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div className="registry-photo" key={i}>
+                  <span>Photo à venir</span>
+                  {photos[i] && (
+                    <img
+                      src={photos[i]}
+                      alt={`Container ${c.reference} — photo ${i + 1}`}
+                      loading="lazy"
+                      width="320"
+                      height="400"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            {c.testimonial.quote && (
+              <blockquote>
+                {c.testimonial.quote}
+                {c.testimonial.author && <cite>{c.testimonial.author}</cite>}
+              </blockquote>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
   )
 }
