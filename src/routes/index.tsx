@@ -1,22 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ProjectHome } from '@/components/experience/ProjectHome'
-import { buildSeoHead, jsonLdScript, SITE_URL } from '@/lib/seo'
+import { PublicPage } from '@/components/public-design/PublicPage'
+import { buildSeoHead } from '@/lib/seo'
 export const Route = createFileRoute('/')({
-  head: () => ({
-    ...buildSeoHead({
-      title: 'Mobilier professionnel : construisez votre projet',
+  head: () =>
+    buildSeoHead({
+      title: 'Votre lieu a du caractère. Votre mobilier aussi.',
       description:
-        'Pros Import : explorez les formes, matières et couleurs pour votre mobilier professionnel. Composez votre projet avec le Studio, puis vérifiez sa faisabilité avec notre équipe.',
+        'Mobilier professionnel Terrassea : chaises, fauteuils, tables et lounge. Découvrez les designs catalogue et préparez votre projet personnalisé.',
       path: '/',
     }),
-    scripts: [
-      jsonLdScript({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Pros Import',
-        url: SITE_URL,
-      }),
-    ],
-  }),
-  component: ProjectHome,
+  component: Page,
 })
+function Page() {
+  return <PublicPage kind="home" />
+}

@@ -1,0 +1,1236 @@
+<main id="prix-page">
+  <nav
+    class="nav"
+    style="
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+      backdrop-filter: blur(8px);
+      padding-inline: clamp(20px, 5vw, 72px);
+      gap: clamp(14px, 2vw, 30px);
+    "
+  >
+    <a href="/" style="margin-right: auto; display: block"
+      ><img
+        src="/brand/terrassea-logo.svg"
+        alt="Terrassea"
+        style="height: 40px; display: block"
+    /></a>
+    <div class="nav-links">
+      <a href="/livres/">Containers livrés</a>
+      <a href="/partenaires/">Partenaires</a>
+      <a href="/catalogue/">Le mobilier</a><a href="/#studio">Le Studio</a
+      ><a href="#" style="color: var(--color-text); font-weight: 600"
+        >Le prix prouvé</a
+      ><a href="/#contact">Contact</a>
+    </div>
+    <a href="/#contact" class="btn btn-primary" style="text-decoration: none"
+      >Commencer un projet</a
+    >
+  </nav>
+
+  <section
+    data-screen-label="Hero"
+    class="wrap g g-hero sec"
+    style="padding-block: calc(2 * 28px) calc(2 * 28px); align-items: center"
+  >
+    <div>
+      <p
+        class="rv in"
+        style="
+          margin: 0 0 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13px;
+          line-height: 14px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #8f6f33;
+        "
+      >
+        <span
+          style="
+            display: inline-block;
+            width: 28px;
+            height: 2px;
+            background: #b8924a;
+          "
+        ></span
+        >Le prix prouvé
+      </p>
+      <h1
+        class="rv in"
+        style="
+          font-size: clamp(34px, 3.8vw, 54px);
+          line-height: 1.08;
+          letter-spacing: -0.02em;
+          margin: 0;
+          transition-delay: 0.1s;
+        "
+      >
+        On ne vous demande pas de nous croire.
+        <em style="font-weight: 400">On vous montre la méthode.</em>
+      </h1>
+      <p
+        class="rv in"
+        style="
+          font-size: 17px;
+          line-height: 28px;
+          max-width: 48ch;
+          margin: 24px 0 0;
+          color: color-mix(in srgb, var(--color-text) 78%, transparent);
+          transition-delay: 0.2s;
+        "
+      >
+        Un meuble CHR vendu en showroom passe par 4 à 5 intermédiaires qui
+        multiplient le prix usine par 2,5 à 3. Nous achetons en direct,
+        mutualisons le container entre pros et appliquons
+        <strong>une seule marge</strong>.
+      </p>
+      <div
+        class="rv in"
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-3);
+          margin-top: 28px;
+          transition-delay: 0.3s;
+        "
+      >
+        <a
+          href="/catalogue/"
+          class="btn btn-primary"
+          style="padding: 13px 22px; font-size: 15px; text-decoration: none"
+          >Vérifier au catalogue →</a
+        >
+        <a
+          href="https://prosimport.com/qualite"
+          class="btn btn-ghost"
+          style="font-size: 15px; text-decoration: none"
+          >Rapports SGS</a
+        >
+      </div>
+    </div>
+    <div class="rv in" style="transition-delay: 0.25s">
+      <p
+        style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600"
+      >
+        Même chaise, deux chemins. Comptez les intermédiaires.
+      </p>
+      <div style="display: grid; gap: 20px; margin-top: 20px">
+        <template data-list="routes" data-as="r">
+          <div
+            style="
+              background: #fff;
+              box-shadow: var(--shadow-sm);
+              padding: 16px 16px 14px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 10px;
+              "
+            >
+              <span
+                style="font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:{{ r.labelColor }}"
+                ><span data-bound-text="{{ r.label }}"></span></span
+              ><span
+                style="font-size:13px;font-weight:600;color:{{ r.labelColor }}"
+                ><span data-bound-text="{{ r.note }}"></span
+              ></span>
+            </div>
+            <div style="position: relative; margin-top: 18px">
+              <div
+                class="rail"
+                style="
+                  position: absolute;
+                  left: 8%;
+                  right: 8%;
+                  top: 22px;
+                  height: 2px;
+                  background: var(--color-neutral-300);
+                "
+              ></div>
+              <div
+                class="rail"
+                style="position:absolute;left:8%;top:22px;height:2px;width:calc(84% * {{ r.progress }});background:{{ r.lineColor }};transition:width .9s cubic-bezier(.2,.7,.2,1)"
+              ></div>
+              <div style="display: flex; position: relative">
+                <template data-list="r.nodes" data-as="n">
+                  <button
+                    type="button"
+                    data-onclick="n.pick"
+                    style="
+                      flex: 1;
+                      min-width: 0;
+                      display: grid;
+                      justify-items: center;
+                      gap: 8px;
+                      background: none;
+                      border: 0;
+                      padding: 0;
+                      cursor: pointer;
+                    "
+                  >
+                    <span
+                      class="node"
+                      style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:{{ n.bg }};box-shadow:{{ n.ring }};transition:background .5s"
+                      ><img
+                        alt=""
+                        style="width:20px;height:20px;filter:{{ n.filter }}"
+                        data-bound-src="{{ n.icon }}"
+                    /></span>
+                    <span
+                      class="node-label"
+                      style="font-size:11.5px;line-height:14px;text-align:center;color:{{ n.textColor }};font-weight:{{ n.weight }};overflow-wrap:anywhere;hyphens:auto"
+                      lang="fr"
+                      ><span data-bound-text="{{ n.name }}"></span
+                    ></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <template data-if="r.foot"
+              ><p
+                style="
+                  margin: 14px 0 0;
+                  padding-top: 10px;
+                  border-top: 1px solid var(--color-neutral-300);
+                  font-size: 12.5px;
+                  line-height: 18px;
+                  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+                "
+              >
+                <span
+                  data-bound-text="
+                {{ r.foot }}
+              "
+                ></span></p
+            ></template>
+          </div>
+        </template>
+      </div>
+      <div
+        style="
+          margin-top: 16px;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: 14px;
+          align-items: start;
+          padding: 14px 16px;
+          background: var(--color-neutral-200);
+          min-height: 84px;
+        "
+      >
+        <span
+          style="display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:{{ focus.bg }};transition:background .5s"
+          ><img
+            alt=""
+            style="width: 20px; height: 20px; filter: brightness(0) invert(1)"
+            data-bound-src="{{ focus.icon }}"
+        /></span>
+        <div>
+          <p
+            style="
+              margin: 0;
+              font-size: 15px;
+              line-height: 20px;
+              font-weight: 600;
+            "
+          >
+            <span
+              data-bound-text="
+            {{ focus.name }}
+          "
+            ></span>
+          </p>
+          <p
+            style="
+              margin: 4px 0 0;
+              font-size: 13.5px;
+              line-height: 19px;
+              color: color-mix(in srgb, var(--color-text) 70%, transparent);
+            "
+          >
+            <span
+              data-bound-text="
+            {{ focus.desc }}
+          "
+            ></span>
+          </p>
+        </div>
+      </div>
+      <p style="margin: 14px 0 0; font-size: 14px">
+        <a href="/catalogue/">Vérifier sur une vraie fiche produit →</a>
+      </p>
+    </div>
+  </section>
+
+  <section data-screen-label="Rail" class="wrap">
+    <hr
+      class="rv-w"
+      style="
+        height: 5px;
+        border: 0;
+        margin: 0;
+        border-top: 2px solid var(--color-text);
+        border-bottom: 1px solid var(--color-text);
+      "
+    />
+    <p
+      class="rv"
+      style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 32px;
+        margin: 0;
+        padding: 14px 0;
+        font-size: 13px;
+        line-height: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      "
+    >
+      <a href="#methode" style="text-decoration: none; color: var(--color-text)"
+        >La méthode</a
+      ><a
+        href="#remises"
+        style="text-decoration: none; color: var(--color-text)"
+        >Remises &amp; paiement</a
+      ><a href="#trajet" style="text-decoration: none; color: var(--color-text)"
+        >Le trajet</a
+      ><a
+        href="#preuves"
+        style="text-decoration: none; color: var(--color-text)"
+        >Les preuves</a
+      ><a href="#faq" style="text-decoration: none; color: var(--color-text)"
+        >FAQ</a
+      >
+    </p>
+    <hr
+      class="rv-w"
+      style="
+        height: 0;
+        border: 0;
+        border-top: 1px solid var(--color-text);
+        margin: 0;
+        transition-delay: 0.2s;
+      "
+    />
+  </section>
+
+  <section
+    id="methode"
+    data-screen-label="Méthode"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <div
+      class="rv"
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        gap: 14px;
+      "
+    >
+      <p
+        style="
+          margin: 0;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          font-size: 13px;
+          line-height: 14px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #8f6f33;
+        "
+      >
+        La méthode<span
+          style="
+            display: inline-block;
+            width: 28px;
+            height: 2px;
+            background: #b8924a;
+          "
+        ></span>
+      </p>
+      <h2
+        class="rv"
+        style="
+          font-size: clamp(22px, 2.6vw, 36px);
+          line-height: 1.15;
+          letter-spacing: -0.015em;
+          margin: 0;
+          white-space: nowrap;
+        "
+      >
+        D'où vient le prix —
+        <em style="font-weight: 400">les 5 briques, rien d'autre.</em>
+      </h2>
+    </div>
+    <ol
+      class="g g5"
+      style="list-style: none; margin: 42px 0 0; padding: 0; gap: 10px"
+    >
+      <template data-list="bricks" data-as="b">
+        <li
+          class="rv"
+          style="display:flex;flex-direction:column;background:{{ b.bg }};color:{{ b.fg }};padding:20px 18px 22px;min-height:100%;transition-delay:{{ b.delay }}"
+        >
+          <span
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+            ><span
+              style="
+                font:
+                  11px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.08em;
+                opacity: 0.7;
+              "
+              ><span data-bound-text="{{ b.num }}"></span></span
+            ><span
+              style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:{{ b.iconBg }}"
+              ><img
+                alt=""
+                style="width:20px;height:20px;filter:{{ b.iconFilter }}"
+                data-bound-src="{{ b.icon }}" /></span
+          ></span>
+          <h3 style="margin: 22px 0 0; font-size: 20px; line-height: 26px">
+            <span
+              data-bound-text="
+            {{ b.title }}
+          "
+            ></span>
+          </h3>
+          <p
+            style="
+              margin: 10px 0 0;
+              font-size: 14.5px;
+              line-height: 23px;
+              opacity: 0.82;
+            "
+          >
+            <span
+              data-bound-text="
+            {{ b.body }}
+          "
+            ></span>
+          </p>
+        </li>
+      </template>
+    </ol>
+  </section>
+
+  <section
+    id="remises"
+    data-screen-label="Remises"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <div class="g g-split" style="align-items: start">
+      <div class="rv-l">
+        <p
+          class=""
+          style="
+            margin: 0 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #8f6f33;
+          "
+        >
+          <span
+            style="
+              display: inline-block;
+              width: 28px;
+              height: 2px;
+              background: #b8924a;
+            "
+          ></span
+          >Les règles publiques
+        </p>
+        <h2
+          style="
+            font-size: clamp(30px, 3.4vw, 44px);
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+            margin: 0;
+          "
+        >
+          Les remises ne se négocient pas.
+          <em style="font-weight: 400">Elles se déclenchent.</em>
+        </h2>
+        <p
+          style="
+            margin: 18px 0 0;
+            font-size: 15.5px;
+            line-height: 28px;
+            max-width: 44ch;
+            color: color-mix(in srgb, var(--color-text) 78%, transparent);
+          "
+        >
+          Mêmes paliers pour tous les professionnels, appliqués automatiquement
+          au panier — sans code, sans négociation. Exemple sur un vrai modèle du
+          catalogue :
+        </p>
+      </div>
+      <div
+        class="rv g sim"
+        style="
+          grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+          gap: 0;
+          background: #fff;
+          box-shadow: var(--shadow-md);
+          transition-delay: 0.15s;
+        "
+        data-screen-label="Simulateur Quiberon"
+      >
+        <div
+          class="sim-img"
+          style="
+            position: relative;
+            background: var(--color-accent-100);
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 12px;
+            padding: 18px 18px 16px;
+            min-height: 240px;
+          "
+        >
+          <span
+            style="
+              font:
+                11px ui-monospace,
+                Menlo,
+                monospace;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: var(--color-accent-900);
+            "
+            >Référence catalogue</span
+          >
+          <img
+            alt="{{ productName }}"
+            width="200"
+            height="200"
+            style="
+              width: 100%;
+              max-width: 200px;
+              max-height: 200px;
+              object-fit: contain;
+              justify-self: center;
+              align-self: center;
+            "
+            data-bound-src="{{ productImage }}"
+          />
+          <span
+            ><span
+              style="
+                display: block;
+                font-size: 22px;
+                line-height: 1.1;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+                color: var(--color-accent-900);
+              "
+              >Quiberon</span
+            ><span
+              style="
+                display: block;
+                margin-top: 4px;
+                font-size: 13px;
+                line-height: 18px;
+                color: var(--color-accent-900);
+                opacity: 0.75;
+              "
+              >Chaise de bistrot · tressage · empilable</span
+            ><a
+              style="display: inline-block; margin-top: 8px; font-size: 13px"
+              data-bound-href="{{ productHref }}"
+              >Voir la fiche →</a
+            ></span
+          >
+        </div>
+        <div
+          style="
+            padding: clamp(18px, 2.4vw, 28px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          "
+        >
+          <div>
+            <p
+              style="
+                margin: 0 0 8px;
+                font:
+                  11px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+            >
+              Votre volume
+            </p>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+              "
+            >
+              <template data-list="tiers" data-as="t"
+                ><button
+                  type="button"
+                  data-onclick="t.pick"
+                  aria-pressed="{{ t.selected }}"
+                  style="min-height:44px;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.color }};cursor:pointer;font:600 14px var(--font-body);transition:background .3s,color .3s"
+                >
+                  <span
+                    data-bound-text="
+                  {{ t.label }}
+                "
+                  ></span></button
+              ></template>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              gap: 14px;
+              flex-wrap: wrap;
+              padding: 16px 0 14px;
+              border-top: 1px solid var(--color-neutral-300);
+              border-bottom: 1px solid var(--color-neutral-300);
+            "
+          >
+            <div>
+              <p
+                style="
+                  margin: 0;
+                  font:
+                    11px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                "
+              >
+                Prix par chaise
+              </p>
+              <p
+                style="
+                  margin: 8px 0 0;
+                  display: flex;
+                  align-items: baseline;
+                  gap: 8px;
+                  white-space: nowrap;
+                "
+              >
+                <span
+                  style="font-size:clamp(30px,3vw,38px);line-height:1;font-weight:600;letter-spacing:-.02em;color:{{ tier.numColor }};transition:color .3s"
+                  ><span data-bound-text="{{ tier.unit }}"></span></span
+                ><span style="font-size: 13px">HT</span
+                ><span
+                  style="
+                    font-size: 14px;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 50%,
+                      transparent
+                    );
+                    text-decoration: line-through;
+                  "
+                  ><span data-bound-text="{{ tier.base }}"></span
+                ></span>
+              </p>
+            </div>
+            <span
+              style="font:600 13px var(--font-body);letter-spacing:.02em;padding:8px 12px;background:{{ tier.badgeBg }};color:{{ tier.badgeColor }};transition:background .3s;white-space:nowrap"
+              ><span data-bound-text="{{ tier.badge }}"></span
+            ></span>
+          </div>
+          <div>
+            <div
+              style="
+                position: relative;
+                height: 6px;
+                background: var(--color-neutral-200);
+              "
+            >
+              <div
+                style="position:absolute;left:0;top:0;bottom:0;width:{{ tier.pct }};background:var(--color-accent-700);transition:width .6s cubic-bezier(.2,.7,.2,1)"
+              ></div>
+              <span
+                style="
+                  position: absolute;
+                  left: 33.3%;
+                  top: -3px;
+                  width: 1px;
+                  height: 12px;
+                  background: var(--color-neutral-400);
+                "
+              ></span
+              ><span
+                style="
+                  position: absolute;
+                  left: 66.6%;
+                  top: -3px;
+                  width: 1px;
+                  height: 12px;
+                  background: var(--color-neutral-400);
+                "
+              ></span>
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 8px;
+                font:
+                  10px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.06em;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+            >
+              <span>50 pcs</span><span>100 · −6 %</span><span>150 · −10 %</span>
+            </div>
+          </div>
+          <p
+            style="
+              margin: auto 0 0;
+              font-size: 14px;
+              line-height: 21px;
+              color: color-mix(in srgb, var(--color-text) 72%, transparent);
+            "
+          >
+            <span
+              data-bound-text="
+            {{ tier.note }}
+          "
+            ></span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="rv" style="margin-top: 56px">
+      <h3
+        style="
+          margin: 0;
+          font-size: 24px;
+          line-height: 30px;
+          letter-spacing: -0.01em;
+        "
+      >
+        Le paiement suit le container
+      </h3>
+      <div
+        style="
+          position: relative;
+          margin-top: 28px;
+          height: 10px;
+          background: var(--color-neutral-200);
+        "
+      >
+        <div class="bar" style="position: absolute; inset: 0; display: flex">
+          <template data-list="pays" data-as="p"
+            ><span
+              style="flex:0 0 {{ p.w }};background:{{ p.bg }};border-right:2px solid var(--color-bg)"
+            ></span
+          ></template>
+        </div>
+      </div>
+      <div class="g g4" style="gap: 20px; margin-top: 14px">
+        <template data-list="pays" data-as="p">
+          <div style="min-width: 0">
+            <p
+              style="margin:0;font-size:clamp(24px,2.6vw,34px);line-height:1;font-weight:600;letter-spacing:-.02em;color:{{ p.numColor }}"
+            >
+              <span
+                data-bound-text="
+              {{ p.pct }}
+            "
+              ></span>
+            </p>
+            <p
+              style="
+                margin: 8px 0 0;
+                font-size: 15px;
+                line-height: 20px;
+                font-weight: 600;
+              "
+            >
+              <span
+                data-bound-text="
+              {{ p.title }}
+            "
+              ></span>
+            </p>
+            <p
+              style="
+                margin: 4px 0 0;
+                font-size: 13.5px;
+                line-height: 19px;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+            >
+              <span
+                data-bound-text="
+              {{ p.sub }}
+            "
+              ></span>
+            </p>
+          </div>
+        </template>
+      </div>
+      <p
+        style="
+          margin: 28px 0 0;
+          max-width: 70ch;
+          font-size: 15px;
+          line-height: 24px;
+          color: color-mix(in srgb, var(--color-text) 78%, transparent);
+        "
+      >
+        Vous ne payez jamais la totalité d'un mobilier qui n'a pas encore de
+        date de départ. Livraison jusqu'à votre terrasse ou enlèvement gratuit
+        en zone de stockage · Garantie 1 an + SAV France.
+      </p>
+    </div>
+  </section>
+
+  <section
+    id="trajet"
+    data-screen-label="Trajet"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <div
+      class="rv"
+      style="
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        gap: 14px;
+      "
+    >
+      <p
+        style="
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13px;
+          line-height: 14px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #8f6f33;
+        "
+      >
+        La preuve en images<span
+          style="
+            display: inline-block;
+            width: 28px;
+            height: 2px;
+            background: #b8924a;
+          "
+        ></span>
+      </p>
+      <h2
+        style="
+          font-size: clamp(30px, 3.4vw, 44px);
+          line-height: 1.15;
+          letter-spacing: -0.015em;
+          margin: 0;
+          max-width: 24ch;
+        "
+      >
+        Le trajet de votre container,
+        <em style="font-weight: 400">documenté à chaque étape.</em>
+      </h2>
+    </div>
+    <div class="g g4" style="margin-top: 42px; gap: 20px">
+      <template data-list="trip" data-as="t">
+        <figure class="rv" style="margin:0;transition-delay:{{ t.delay }}">
+          <div
+            style="
+              aspect-ratio: 4/5;
+              background: repeating-linear-gradient(
+                135deg,
+                var(--color-neutral-200) 0 12px,
+                var(--color-surface) 12px 24px
+              );
+              display: grid;
+              place-items: center;
+              padding: 20px;
+              text-align: center;
+              font:
+                12px ui-monospace,
+                Menlo,
+                monospace;
+              letter-spacing: 0.06em;
+              text-transform: uppercase;
+              color: color-mix(in srgb, var(--color-text) 70%, transparent);
+            "
+          >
+            Photo publiée à cette étape du container en cours
+          </div>
+          <figcaption style="margin-top: 14px">
+            <span
+              style="
+                font:
+                  11px ui-monospace,
+                  Menlo,
+                  monospace;
+                letter-spacing: 0.08em;
+                color: color-mix(in srgb, var(--color-text) 60%, transparent);
+              "
+              ><span data-bound-text="{{ t.num }}"></span
+            ></span>
+            <h3 style="margin: 8px 0 0; font-size: 20px; line-height: 26px">
+              <span
+                data-bound-text="
+              {{ t.title }}
+            "
+              ></span>
+            </h3>
+            <p
+              style="
+                margin: 6px 0 0;
+                font-size: 14px;
+                line-height: 21px;
+                color: color-mix(in srgb, var(--color-text) 70%, transparent);
+              "
+            >
+              <span
+                data-bound-text="
+              {{ t.body }}
+            "
+              ></span>
+            </p>
+          </figcaption>
+        </figure>
+      </template>
+    </div>
+  </section>
+
+  <section
+    id="preuves"
+    data-screen-label="Preuves"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <div
+      class="rv"
+      style="
+        background: var(--color-accent-700);
+        color: var(--color-bg);
+        padding: clamp(24px, 4vw, 48px);
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 20px clamp(28px, 5vw, 72px);
+        align-items: center;
+      "
+      data-screen-label="Preuves bloc"
+    >
+      <span
+        style="
+          font-size: clamp(56px, 8vw, 110px);
+          line-height: 1;
+          font-weight: 600;
+          letter-spacing: -0.04em;
+          color: #e2c27a;
+        "
+        >Qualité</span
+      >
+      <div>
+        <h2
+          style="
+            margin: 0;
+            font-size: clamp(24px, 2.8vw, 36px);
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+          "
+        >
+          Des contrôles documentés.
+        </h2>
+        <p
+          style="
+            margin: 12px 0 0;
+            font-size: 15.5px;
+            line-height: 26px;
+            color: color-mix(in srgb, var(--color-bg) 85%, transparent);
+          "
+        >
+          Consultez les rapports publiés et les conditions de contrôle de votre
+          commande.
+        </p>
+        <a
+          href="https://prosimport.com/qualite"
+          style="
+            display: inline-block;
+            margin-top: 16px;
+            color: var(--color-bg);
+            font-weight: 600;
+          "
+          >Consulter →</a
+        >
+      </div>
+    </div>
+  </section>
+
+  <section
+    id="faq"
+    data-screen-label="FAQ"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <div class="g g-split" style="align-items: start">
+      <div class="rv-l">
+        <p
+          style="
+            margin: 0 0 14px;
+            font-size: 13px;
+            line-height: 14px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, var(--color-text) 70%, transparent);
+          "
+        >
+          Questions fréquentes
+        </p>
+        <h2
+          style="
+            font-size: clamp(30px, 3.4vw, 44px);
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+            margin: 0;
+          "
+        >
+          Sur nos prix, <em style="font-weight: 400">précisément.</em>
+        </h2>
+      </div>
+      <div class="rv" style="transition-delay: 0.15s">
+        <template data-list="faq" data-as="q">
+          <div style="border-top: 1px solid var(--color-text)">
+            <button
+              type="button"
+              data-onclick="q.toggle"
+              aria-expanded="{{ q.expanded }}"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+                width: 100%;
+                min-height: 60px;
+                padding: 16px 0;
+                background: none;
+                border: 0;
+                cursor: pointer;
+                text-align: left;
+                font: 600 18px/26px var(--font-body);
+                color: var(--color-text);
+              "
+            >
+              <span><span data-bound-text="{{ q.q }}"></span></span
+              ><span
+                style="
+                  font-size: 22px;
+                  line-height: 1;
+                  font-weight: 400;
+                  color: var(--color-accent-700);
+                "
+                ><span data-bound-text="{{ q.sign }}"></span
+              ></span>
+            </button>
+            <div
+              style="max-height:{{ q.max }};overflow:hidden;transition:max-height .5s cubic-bezier(.2,.7,.2,1)"
+            >
+              <p
+                style="
+                  margin: 0 0 18px;
+                  font-size: 15.5px;
+                  line-height: 26px;
+                  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+                "
+              >
+                <span
+                  data-bound-text="
+                {{ q.a }}
+              "
+                ></span>
+              </p>
+              <template data-list="q.points" data-as="pt"
+                ><p
+                  style="
+                    margin: 0 0 12px;
+                    padding-left: 16px;
+                    text-indent: -16px;
+                    font-size: 15px;
+                    line-height: 24px;
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 78%,
+                      transparent
+                    );
+                  "
+                >
+                  <span
+                    data-bound-text="
+                  · {{ pt }}
+                "
+                  ></span></p
+              ></template>
+            </div>
+          </div>
+        </template>
+        <div style="border-top: 1px solid var(--color-text)"></div>
+      </div>
+    </div>
+  </section>
+
+  <section
+    data-screen-label="Fondateur"
+    class="wrap sec"
+    style="padding-block: calc(3 * 28px)"
+  >
+    <figure
+      class="rv"
+      style="
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+      "
+    >
+      <span
+        style="
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          background: var(--color-neutral-900);
+          color: var(--color-bg);
+          font-size: 20px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+        "
+        >AL</span
+      >
+      <div>
+        <blockquote
+          style="
+            margin: 0;
+            font-style: italic;
+            font-size: clamp(22px, 2.4vw, 30px);
+            line-height: 1.4;
+            letter-spacing: -0.01em;
+            max-width: 34ch;
+            text-indent: -0.45em;
+          "
+        >
+          « Cette page décrit exactement comment nos prix sont construits. Si un
+          point reste flou, écrivez-moi : je réponds personnellement. »
+        </blockquote>
+        <figcaption
+          style="margin-top: 18px; font-size: 15px; line-height: 22px"
+        >
+          <strong>Adrien Laniez</strong> · Fondateur &amp; gérant, Pros Import
+          EURL
+        </figcaption>
+        <div
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-top: 28px;
+          "
+        >
+          <a
+            href="/catalogue/"
+            class="btn btn-primary"
+            style="padding: 13px 22px; font-size: 15px; text-decoration: none"
+            >Voir les prix au catalogue →</a
+          >
+          <a
+            href="https://prosimport.com/stock-24h"
+            class="btn btn-ghost"
+            style="font-size: 15px; text-decoration: none"
+            >Stock disponible sous 24 h</a
+          >
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <section
+    data-screen-label="Alerte"
+    class="wrap sec"
+    style="padding-block: 0 calc(4 * 28px)"
+  >
+    <div
+      class="rv g g-split"
+      style="
+        align-items: center;
+        gap: 20px clamp(24px, 5vw, 72px);
+        border: 1px solid var(--color-neutral-300);
+        padding: clamp(20px, 3vw, 32px);
+      "
+    >
+      <div>
+        <h3
+          style="
+            margin: 0;
+            font-size: 24px;
+            line-height: 30px;
+            letter-spacing: -0.01em;
+          "
+        >
+          Ne ratez pas le prochain départ.
+        </h3>
+        <p
+          style="
+            margin: 10px 0 0;
+            font-size: 15px;
+            line-height: 24px;
+            max-width: 52ch;
+            color: color-mix(in srgb, var(--color-text) 78%, transparent);
+          "
+        >
+          Les containers partent quand le seuil est atteint. Laissez votre email
+          pour être prévenu en priorité à la prochaine ouverture.
+        </p>
+      </div>
+      <div data-form-slot="notify" class="public-form-slot"></div>
+    </div>
+  </section>
+</main>

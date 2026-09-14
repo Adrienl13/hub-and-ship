@@ -1,3 +1,4 @@
+import { PublicPage } from '@/components/public-design/PublicPage'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   lazy,
@@ -148,6 +149,11 @@ const LazyReservationDialog = lazy(() =>
 const GRID_PAGE_SIZE = 36
 
 function CataloguePage() {
+  const { panier } = Route.useSearch()
+  return panier ? <LegacyCataloguePage/> : <PublicPage kind="catalogue"/>
+}
+
+function LegacyCataloguePage() {
   const { products, currentContainer } = useCatalog()
   const media = useSiteMedia()
   const productsArray = useMemo(() => [...products], [products])

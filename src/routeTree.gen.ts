@@ -50,6 +50,8 @@ import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
 import { Route as ApiReportAccessRouteImport } from './routes/api/report-access'
+import { Route as ApiPublicRegistryRouteImport } from './routes/api/public-registry'
+import { Route as ApiPublicCatalogueRouteImport } from './routes/api/public-catalogue'
 import { Route as ApiPartnerRequestsRouteImport } from './routes/api/partner-requests'
 import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
@@ -275,6 +277,16 @@ const ApiReportAccessRoute = ApiReportAccessRouteImport.update({
   path: '/api/report-access',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRegistryRoute = ApiPublicRegistryRouteImport.update({
+  id: '/api/public-registry',
+  path: '/api/public-registry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCatalogueRoute = ApiPublicCatalogueRouteImport.update({
+  id: '/api/public-catalogue',
+  path: '/api/public-catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPartnerRequestsRoute = ApiPartnerRequestsRouteImport.update({
   id: '/api/partner-requests',
   path: '/api/partner-requests',
@@ -382,6 +394,8 @@ export interface FileRoutesByFullPath {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/public-catalogue': typeof ApiPublicCatalogueRoute
+  '/api/public-registry': typeof ApiPublicRegistryRoute
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -439,6 +453,8 @@ export interface FileRoutesByTo {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/public-catalogue': typeof ApiPublicCatalogueRoute
+  '/api/public-registry': typeof ApiPublicRegistryRoute
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -498,6 +514,8 @@ export interface FileRoutesById {
   '/account/reservations': typeof AccountReservationsRouteWithChildren
   '/api/contact': typeof ApiContactRoute
   '/api/partner-requests': typeof ApiPartnerRequestsRoute
+  '/api/public-catalogue': typeof ApiPublicCatalogueRoute
+  '/api/public-registry': typeof ApiPublicRegistryRoute
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -558,6 +576,8 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/public-catalogue'
+    | '/api/public-registry'
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -615,6 +635,8 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/public-catalogue'
+    | '/api/public-registry'
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -673,6 +695,8 @@ export interface FileRouteTypes {
     | '/account/reservations'
     | '/api/contact'
     | '/api/partner-requests'
+    | '/api/public-catalogue'
+    | '/api/public-registry'
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
@@ -732,6 +756,8 @@ export interface RootRouteChildren {
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
   ApiContactRoute: typeof ApiContactRoute
   ApiPartnerRequestsRoute: typeof ApiPartnerRequestsRoute
+  ApiPublicCatalogueRoute: typeof ApiPublicCatalogueRoute
+  ApiPublicRegistryRoute: typeof ApiPublicRegistryRoute
   ApiReportAccessRoute: typeof ApiReportAccessRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1043,6 +1069,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public-registry': {
+      id: '/api/public-registry'
+      path: '/api/public-registry'
+      fullPath: '/api/public-registry'
+      preLoaderRoute: typeof ApiPublicRegistryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public-catalogue': {
+      id: '/api/public-catalogue'
+      path: '/api/public-catalogue'
+      fullPath: '/api/public-catalogue'
+      preLoaderRoute: typeof ApiPublicCatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/partner-requests': {
       id: '/api/partner-requests'
       path: '/api/partner-requests'
@@ -1249,6 +1289,8 @@ const rootRouteChildren: RootRouteChildren = {
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
   ApiContactRoute: ApiContactRoute,
   ApiPartnerRequestsRoute: ApiPartnerRequestsRoute,
+  ApiPublicCatalogueRoute: ApiPublicCatalogueRoute,
+  ApiPublicRegistryRoute: ApiPublicRegistryRoute,
   ApiReportAccessRoute: ApiReportAccessRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
