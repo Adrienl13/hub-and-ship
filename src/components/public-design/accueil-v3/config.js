@@ -6,8 +6,16 @@ export const config = {
   // Exact token from the supplied Broadsheet design system.
   processYellow: '#edbb00',
   univers: [
-    { url: null, name: 'Salon lounge, terrasse vue mer', href: null },
-    { url: null, name: 'Fauteuils colorés vus de haut', href: null },
+    {
+      url: '/home/atmospheres/salon-vue-mer.webp',
+      name: 'Salon lounge sur une terrasse face à la mer',
+      href: null,
+    },
+    {
+      url: '/home/atmospheres/sieges-bleus-roses.webp',
+      name: 'Fauteuils en cordage bleu et rose vus de haut',
+      href: null,
+    },
   ],
   parcours: [
     {
