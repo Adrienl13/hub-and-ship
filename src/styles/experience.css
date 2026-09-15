@@ -2498,3 +2498,14 @@
     font-size: 8px;
   }
 }
+
+.pi-account-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}

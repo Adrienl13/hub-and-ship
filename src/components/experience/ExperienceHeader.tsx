@@ -1,4 +1,4 @@
-import { ArrowUpRight, Menu, X } from 'lucide-react'
+import { ArrowUpRight, Menu, UserRound, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { isStudioEnabled } from '@/lib/studio/flags'
 
@@ -37,6 +37,10 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
         <a href="/livres">Conteneurs livrés</a>
         <a href="/contact">Contact</a>
       </nav>
+      <a href="/account" className="pi-account-link">
+        <UserRound size={18} aria-hidden />
+        <span>Mon compte</span>
+      </a>
       <a
         className="pi-button pi-button-ink pi-header-cta"
         href={studio ? '/studio' : '/contact'}

@@ -89,3 +89,16 @@
     display: none;
   }
 }
+
+.public-design .public-account-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font:
+    600 13px Arial,
+    sans-serif;
+}
