@@ -83,7 +83,7 @@ export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
       {slots.map((slot, i) =>
         createPortal(
           slot.dataset.formSlot === 'contact' ? (
-            <ContactForm initialTopic="produit" studioBrief={brief} />
+            <ContactForm initialTopic="produit" studioBrief={brief} embedded />
           ) : slot.dataset.formSlot === 'partner' ? (
             <PartnerForm prefill={partnerPrefill} embedded />
           ) : (

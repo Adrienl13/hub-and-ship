@@ -62,3 +62,9 @@
 .public-design .public-form-slot :is(h1, h2, h3, h4) {
   font-family: Arial, sans-serif;
 }
+
+@media (min-width: 761px) {
+  .public-design .public-contact-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

@@ -38,12 +38,14 @@ export function ContactForm({
   initialTopic,
   initialMessage,
   studioBrief,
+  embedded = false,
 }: {
   /** Sujet pré-sélectionné (déjà validé contre CONTACT_TOPICS par la route). */
   readonly initialTopic?: string
   /** Message pré-rempli (ex. demande de coloris depuis une fiche produit). */
   readonly initialMessage?: string
   readonly studioBrief?: string
+  readonly embedded?: boolean
 } = {}) {
   const [form, setForm] = useState<FormState>({
     ...EMPTY_FORM,
@@ -124,7 +126,13 @@ export function ContactForm({
   }
 
   return (
-    <section className="mt-6 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+    <section
+      className={
+        embedded
+          ? 'min-w-0'
+          : 'mt-6 rounded-md border border-[color:var(--sand-deep)] bg-card p-5'
+      }
+    >
       <h2 className="font-display text-lg font-semibold">
         Écrivez-nous directement
       </h2>
@@ -133,7 +141,7 @@ export function ContactForm({
       </p>
 
       <div className="mt-4 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={embedded ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
           <Input
             className={inputClass}
             value={form.name}
@@ -152,7 +160,7 @@ export function ContactForm({
             onChange={(e) => update('email')(e.target.value)}
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={embedded ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
           <Input
             className={inputClass}
             value={form.company}
