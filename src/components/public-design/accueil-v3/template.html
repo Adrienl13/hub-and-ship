@@ -372,98 +372,39 @@
           color: color-mix(in srgb, var(--color-text) 78%, transparent);
         "
       >
-        Glissez un curseur : les trois modèles passent ensemble du catalogue à
-        votre direction.
+        Découvrez Monceau, Nice et Madeleine dans leurs versions catalogue. Vos
+        choix de matières et de couleurs seront étudiés avec notre équipe.
       </p>
     </div>
     <div class="g g3" style="margin-top: 42px">
       <template data-list="compares" data-as="c">
         <figure class="rv-s" style="margin:0;transition-delay:{{ c.delay }}">
-          <div
+          <a
+            data-bound-href="{{ c.href }}"
+            aria-label="Voir la fiche {{ c.name }}"
             style="
-              position: relative;
+              display: block;
               aspect-ratio: 1;
-              background: #fff;
-              box-shadow: var(--shadow-md);
+              background: white;
               overflow: hidden;
-              user-select: none;
-              touch-action: pan-y;
+              border-radius: 20px;
             "
           >
             <img
-              alt="{{ c.name }}, coloris catalogue"
+              alt="{{ c.name }}, photo catalogue"
+              data-bound-src="{{ c.before }}"
+              width="600"
+              height="600"
+              decoding="async"
+              loading="lazy"
               style="
-                position: absolute;
-                inset: 0;
                 width: 100%;
                 height: 100%;
                 object-fit: contain;
-                padding: 24px;
+                padding: 20px;
               "
-              width="600"
-              height="600"
-              decoding="async"
-              loading="lazy"
-              data-bound-src="{{ c.before }}"
             />
-            <img
-              alt="{{ c.name }}, coloris personnalisé"
-              style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:24px;clip-path:inset(0 0 0 {{ pct }})"
-              width="600"
-              height="600"
-              decoding="async"
-              loading="lazy"
-              data-bound-src="{{ c.after }}"
-            />
-            <div
-              style="position:absolute;top:0;bottom:0;left:{{ pct }};width:1px;background:var(--color-text);pointer-events:none"
-            ></div>
-            <div
-              style="position:absolute;top:50%;left:{{ pct }};transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:var(--color-bg);box-shadow:var(--shadow-md);display:grid;place-items:center;font-size:13px;pointer-events:none"
-            >
-              ◂ ▸
-            </div>
-            <span
-              style="
-                position: absolute;
-                left: 14px;
-                bottom: 10px;
-                font-style: italic;
-                font-size: 13px;
-                color: color-mix(in srgb, var(--color-text) 70%, transparent);
-              "
-              ><span data-bound-text="{{ c.beforeLabel }}"></span
-            ></span>
-            <span
-              style="
-                position: absolute;
-                right: 14px;
-                bottom: 10px;
-                font-style: italic;
-                font-size: 13px;
-                color: var(--color-accent-700);
-              "
-              ><span data-bound-text="{{ c.afterLabel }}"></span
-            ></span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value="{{ split }}"
-              aria-label="Avant / après"
-              style="
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                opacity: 0;
-                cursor: ew-resize;
-                margin: 0;
-              "
-              data-onchange="setSplit"
-              data-oninput="setSplit"
-            />
-          </div>
+          </a>
           <figcaption
             style="
               display: flex;
@@ -485,7 +426,7 @@
                 "
                 ><span data-bound-text="— {{ c.kind }}"></span></span></span
             ><a
-              href="#contact"
+              data-bound-href="{{ c.href }}"
               style="font-size: 14px; color: var(--color-process-yellow)"
               >Ce modèle →</a
             >

@@ -33,14 +33,22 @@ export const config = {
     name: null,
     href: 'https://www.instagram.com/terrassea_france',
   })),
-  // Exact before/after pairs must be confirmed: never replace them by unrelated models.
+  // Exact public catalogue references, using each product's main photograph.
   compares: [
-    { name: 'Fréjus', before: null, after: null },
-    { name: 'Denia', before: null, after: null },
     {
-      name: 'Médaillon',
+      name: 'Monceau',
+      before: '/catalogue/bistro-seating-clean/BIS-002-01.webp',
+      href: '/catalogue/#produit-BIS-002',
+    },
+    {
+      name: 'Nice',
+      before: '/catalogue/rope-series/ROP-002-01.webp',
+      href: '/catalogue/#produit-ROP-002',
+    },
+    {
+      name: 'Madeleine',
       before: '/catalogue/bistro-seating-clean/BIS-012-01.webp',
-      after: null,
+      href: '/catalogue/#produit-BIS-012',
     },
   ],
   pieceChair: '/catalogue/bistro-seating-clean/BIS-012-01.webp',

@@ -146,3 +146,32 @@ test('catalogue mobile menu fits and additional introduction expands on demand',
   await page.goto('/')
   await expect(page.locator('#motion-toggle')).toHaveCount(0)
 })
+
+for (const [name, ref] of [
+  ['Monceau', 'BIS-002'],
+  ['Nice', 'ROP-002'],
+  ['Madeleine', 'BIS-012'],
+] as const) {
+  test(`home ${name} photo links to its exact catalogue sheet`, async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const link = page.getByRole('link', {
+      name: `Voir la fiche ${name}`,
+      exact: true,
+    })
+    await expect(link).toHaveAttribute('href', `/catalogue/#produit-${ref}`)
+    const img = link.locator('img')
+    await img.scrollIntoViewIfNeeded()
+    await expect
+      .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth))
+      .toBeGreaterThan(0)
+    await link.click()
+    await expect(page.getByRole('dialog').first()).toBeVisible({
+      timeout: 20000,
+    })
+    await expect(page.getByRole('dialog').first()).toContainText(
+      new RegExp(name, 'i'),
+    )
+  })
+}

@@ -316,7 +316,7 @@ export class Accueil {
   ]
   compareDefs = [
     {
-      name: 'Fréjus',
+      name: 'Monceau',
       kind: 'chaise de bistrot',
       before: null,
       after: null,
@@ -324,7 +324,7 @@ export class Accueil {
       afterLabel: 'Vert / écru',
     },
     {
-      name: 'Denia',
+      name: 'Nice',
       kind: 'fauteuil cordage',
       before: null,
       after: null,
@@ -332,7 +332,7 @@ export class Accueil {
       afterLabel: 'Terracotta',
     },
     {
-      name: 'Médaillon',
+      name: 'Madeleine',
       kind: 'fauteuil de bistrot',
       before: null,
       after: null,
