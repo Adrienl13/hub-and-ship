@@ -26,13 +26,16 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
         />
       </a>
       <nav className="pi-desktop-nav" aria-label="Navigation principale">
+        <a href="/catalogue">Le mobilier</a>
         {studio && (
           <a href="/studio" aria-current={inStudio ? 'page' : undefined}>
             Le Studio
           </a>
         )}
-        <a href="/catalogue">Le mobilier</a>
-        <a href="/contact">Parlons de votre lieu</a>
+        <a href="/partenaires">Partenaires</a>
+        <a href="/prix">Le prix prouvé</a>
+        <a href="/livres">Conteneurs livrés</a>
+        <a href="/contact">Contact</a>
       </nav>
       <a
         className="pi-button pi-button-ink pi-header-cta"
@@ -57,16 +60,25 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
           className="pi-mobile-menu"
           aria-label="Navigation mobile"
         >
+          <a href="/catalogue" onClick={() => setOpen(false)}>
+            Le mobilier <ArrowUpRight />
+          </a>
           {studio && (
             <a href="/studio" onClick={() => setOpen(false)}>
               Le Studio <ArrowUpRight />
             </a>
           )}
-          <a href="/catalogue" onClick={() => setOpen(false)}>
-            Le mobilier <ArrowUpRight />
+          <a href="/partenaires" onClick={() => setOpen(false)}>
+            Partenaires <ArrowUpRight />
+          </a>
+          <a href="/prix" onClick={() => setOpen(false)}>
+            Le prix prouvé <ArrowUpRight />
+          </a>
+          <a href="/livres" onClick={() => setOpen(false)}>
+            Conteneurs livrés <ArrowUpRight />
           </a>
           <a href="/contact" onClick={() => setOpen(false)}>
-            Parlons de votre lieu <ArrowUpRight />
+            Contact <ArrowUpRight />
           </a>
         </nav>
       )}
