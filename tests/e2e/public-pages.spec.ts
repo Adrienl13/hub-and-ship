@@ -152,7 +152,7 @@ for (const [name, ref] of [
   ['Nice', 'ROP-002'],
   ['Madeleine', 'BIS-012'],
 ] as const) {
-  test(`home ${name} photo links to its exact catalogue sheet`, async ({
+  test(`home ${name} comparison slides and links to its exact catalogue sheet`, async ({
     page,
   }) => {
     await page.goto('/')
@@ -161,11 +161,32 @@ for (const [name, ref] of [
       exact: true,
     })
     await expect(link).toHaveAttribute('href', `/catalogue/#produit-${ref}`)
-    const img = link.locator('img')
+    const card = link.locator('xpath=ancestor::figure')
+    const img = card.locator('img').first()
     await img.scrollIntoViewIfNeeded()
     await expect
       .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth))
       .toBeGreaterThan(0)
+    for (const photo of await card.locator('img').all()) {
+      await expect
+        .poll(() => photo.evaluate((el: HTMLImageElement) => el.naturalWidth))
+        .toBeGreaterThan(0)
+    }
+    const slider = card.getByRole('slider')
+    await slider.fill('80')
+    for (const control of await page
+      .getByRole('slider', { name: /Comparer les coloris/ })
+      .all())
+      await expect(control).toHaveValue('80')
+    await expect(card.locator('img').last()).toHaveCSS(
+      'clip-path',
+      'inset(0px 0px 0px 80%)',
+    )
+    await slider.fill('20')
+    await expect(card.locator('img').last()).toHaveCSS(
+      'clip-path',
+      'inset(0px 0px 0px 20%)',
+    )
     await link.click()
     await expect(page.getByRole('dialog').first()).toBeVisible({
       timeout: 20000,

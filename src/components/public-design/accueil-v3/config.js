@@ -33,21 +33,24 @@ export const config = {
     name: null,
     href: 'https://www.instagram.com/terrassea_france',
   })),
-  // Exact public catalogue references, using each product's main photograph.
+  // Paired original photographs supplied by the catalogue owner.
   compares: [
     {
       name: 'Monceau',
-      before: '/catalogue/bistro-seating-clean/BIS-002-01.webp',
+      before: '/home/comparisons/monceau-noir-blanc.webp',
+      after: '/home/comparisons/monceau-vert.webp',
       href: '/catalogue/#produit-BIS-002',
     },
     {
       name: 'Nice',
-      before: '/catalogue/rope-series/ROP-002-01.webp',
+      before: '/home/comparisons/nice-sable.webp',
+      after: '/home/comparisons/nice-terracotta.webp',
       href: '/catalogue/#produit-ROP-002',
     },
     {
       name: 'Madeleine',
-      before: '/catalogue/bistro-seating-clean/BIS-012-01.webp',
+      before: '/home/comparisons/madeleine-noir-blanc.webp',
+      after: '/home/comparisons/madeleine-bordeaux.webp',
       href: '/catalogue/#produit-BIS-012',
     },
   ],
