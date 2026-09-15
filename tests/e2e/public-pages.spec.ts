@@ -70,11 +70,9 @@ test('registry filters transit without delivered figures', async ({ page }) => {
     'Articles livrés',
   )
 })
-test('Studio remains inaccessible without private preview', async ({
-  request,
-}) => {
-  expect((await request.get('/studio')).status()).toBe(404)
-  expect((await request.get('/studio/assises')).status()).toBe(404)
+test('Studio is publicly open for project preparation', async ({ request }) => {
+  expect((await request.get('/studio')).status()).toBe(200)
+  expect((await request.get('/studio/assises')).status()).toBe(200)
 })
 test('contact submission uses the real contract, with a mocked successful response', async ({
   page,

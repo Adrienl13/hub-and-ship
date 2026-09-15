@@ -1,3 +1,5 @@
+import { isStudioEnabled } from '@/lib/studio/flags'
+import { studioEntryMarkup } from './studio-entry'
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Footer } from '@/components/Footer'
@@ -35,7 +37,10 @@ export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
     nonce: 0,
   })
   const [selection, setSelection] = useState<ProjectSelection>()
-  const markup = useMemo(() => ({ __html: pages[kind] }), [kind])
+  const markup = useMemo(
+    () => ({ __html: studioEntryMarkup(pages[kind], isStudioEnabled()) }),
+    [kind],
+  )
   useEffect(() => {
     let cancelled = false
     let cleanup: (() => void) | undefined

@@ -1,5 +1,7 @@
 # Runbook — Studio Projet (lot 1 : fondation · lot 2 : tranche Assises)
 
+**Ouverture du 15/09/2026 : Studio public de préparation de projet, validation humaine avant commande.** Voir [le runbook d’ouverture](STUDIO_PUBLIC_PREPARATION.md). Le build de cette ouverture active `VITE_STUDIO_ENABLED=true` ; aucune migration ni donnée métier supplémentaire n’est appliquée et **DATA READY reste NON**. Les mentions OFF ci-dessous décrivent les étapes historiques de preview et le retour à l’accès privé.
+
 État validé en production le 08/09/2026 : **Lot 1 : PRODUCTION VERIFIED · Lot 2 : PRODUCTION VERIFIED**. Les migrations **39 et 40 sont APPLIQUÉES EN PRODUCTION**. Le Lot 2 couvre l'expérience Assises complète (`/studio` → `/studio/assises`). Ce runbook couvre l'activation, la preview sécurisée, les migrations, les contrôles, le moteur V0 et le rollback.
 
 - `main` inclut le hotfix preview `4017238` : cookie `Path=/`, déployé et validé en production.
@@ -253,7 +255,6 @@ n’est créé. DATA READY = NON. Le snapshot public est une inspiration sans pr
 de compatibilité ; les codes usine ne sont jamais publiés. Le coffre local
 ignoré par Git doit être sauvegardé par l’administration. La recherche par
 référence de composition seule attend encore le raccordement du registre.
-
 
 ## Lot 5.2 — expérience et revue locale
 
