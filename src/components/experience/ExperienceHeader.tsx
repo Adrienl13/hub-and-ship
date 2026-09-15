@@ -32,7 +32,6 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
           </a>
         )}
         <a href="/catalogue">Le mobilier</a>
-        <a href="/#reel">Du projet au réel</a>
         <a href="/contact">Parlons de votre lieu</a>
       </nav>
       <a
@@ -65,9 +64,6 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
           )}
           <a href="/catalogue" onClick={() => setOpen(false)}>
             Le mobilier <ArrowUpRight />
-          </a>
-          <a href="/#reel" onClick={() => setOpen(false)}>
-            Du projet au réel <ArrowUpRight />
           </a>
           <a href="/contact" onClick={() => setOpen(false)}>
             Parlons de votre lieu <ArrowUpRight />
