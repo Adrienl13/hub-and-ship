@@ -1,13 +1,16 @@
 .showroom-page {
   max-width: 1440px;
   margin: auto;
-  padding: 48px clamp(20px, 5vw, 72px);
+  padding: 32px clamp(20px, 5vw, 72px);
   color: #242321;
   background: #f7f5ef;
 }
 .showroom-intro {
-  max-width: 760px;
-  padding: 16px 0 40px;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  column-gap: clamp(28px, 5vw, 80px);
+  align-items: center;
+  padding: 8px 0 28px;
 }
 .showroom-eyebrow {
   text-transform: uppercase;
@@ -18,7 +21,7 @@
 }
 .showroom-intro h1 {
   font-family: Georgia, serif;
-  font-size: clamp(36px, 4.5vw, 64px);
+  font-size: clamp(36px, 3.7vw, 56px);
   line-height: 1.1;
   margin: 18px 0;
 }
@@ -26,15 +29,21 @@
   font-weight: 400;
   color: #006786;
 }
-.showroom-intro > p:not(.showroom-eyebrow) {
+.showroom-intro-copy p {
   font-size: 18px;
   line-height: 1.7;
-  max-width: 62ch;
+  margin: 0 0 16px;
+  max-width: 48ch;
 }
-.showroom-intro {
-  max-width: none;
+.showroom-intro-copy > span {
+  color: #826624;
+  font-size: 13px;
+}
+.showroom-steps-toggle {
+  display: none;
 }
 .showroom-how {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
@@ -62,10 +71,46 @@
   color: #596369;
 }
 @media (max-width: 760px) {
+  .showroom-intro {
+    grid-template-columns: 1fr;
+    padding: 0 0 20px;
+  }
+  .showroom-intro h1 {
+    font-size: clamp(32px, 8.5vw, 42px);
+    margin: 12px 0 16px;
+  }
+  .showroom-intro-copy p {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .showroom-intro-copy > span {
+    display: none;
+  }
+  .showroom-steps-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 0;
+    margin-top: 4px;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #d9d3c6;
+    color: #006786;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
   .showroom-how {
+    display: none;
     grid-template-columns: 1fr;
     gap: 14px;
     padding-top: 12px;
+  }
+  .showroom-how.is-open {
+    display: grid;
   }
   .showroom-how li {
     padding-top: 12px;

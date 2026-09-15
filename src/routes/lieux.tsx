@@ -25,6 +25,7 @@ export const Route = createFileRoute('/lieux')({
   component: ShowroomPage,
 })
 function ShowroomPage() {
+  const [showSteps, setShowSteps] = useState(false)
   const [places, setPlaces] = useState<PublicLocation[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [selected, setSelected] = useState<string | null>(null)
@@ -95,19 +96,35 @@ function ShowroomPage() {
       <ExperienceHeader />
       <main className="showroom-page">
         <header className="showroom-intro">
-          <p className="showroom-eyebrow">Le showroom à ciel ouvert</p>
-          <h1>
-            Voyez notre mobilier
-            <br />
-            <em>près de chez vous.</em>
-          </h1>
-          <p>
-            Notre showroom, ce sont les lieux qui vivent avec notre mobilier :
-            cafés, restaurants, hôtels et terrasses. Cette carte vous permet de
-            découvrir les établissements équipés et les modèles installés, en
-            conditions réelles.
-          </p>
-          <ol className="showroom-how">
+          <div className="showroom-heading">
+            <p className="showroom-eyebrow">Le showroom à ciel ouvert</p>
+            <h1>
+              Voyez notre mobilier
+              <br />
+              <em>près de chez vous.</em>
+            </h1>
+          </div>
+          <div className="showroom-intro-copy">
+            <p>
+              Pas un showroom traditionnel : des cafés, restaurants et hôtels
+              qui utilisent notre mobilier au quotidien. Repérez un lieu près de
+              chez vous, découvrez ses modèles et préparez votre visite.
+            </p>
+            <span>Des lieux réels. Des adresses partagées avec accord.</span>
+          </div>
+          <button
+            className="showroom-steps-toggle"
+            aria-expanded={showSteps}
+            aria-controls="showroom-steps"
+            onClick={() => setShowSteps(!showSteps)}
+          >
+            Comment découvrir un lieu ?{' '}
+            <span aria-hidden>{showSteps ? '−' : '+'}</span>
+          </button>
+          <ol
+            id="showroom-steps"
+            className={`showroom-how${showSteps ? 'is-open' : ''}`}
+          >
             <li>
               <strong>Repérez un lieu</strong>
               <span>
