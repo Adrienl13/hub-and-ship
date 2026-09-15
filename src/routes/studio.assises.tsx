@@ -661,6 +661,32 @@ function StudioSeatsPage() {
                   </div>
                 </section>
               )}
+              {favorites.length > 0 && (
+                <div
+                  className="sticky top-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-4 shadow-lg"
+                  data-testid="discovery-next-step"
+                  role="region"
+                  aria-label="Continuer mon projet"
+                >
+                  <div>
+                    <p className="font-semibold" aria-live="polite">
+                      {favorites.length} assise{favorites.length > 1 ? 's' : ''}{' '}
+                      aimée{favorites.length > 1 ? 's' : ''}
+                    </p>
+                    <p className="text-sm">
+                      Vous pouvez comparer vos choix maintenant, ou continuer à
+                      explorer.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openFinalists}
+                    className="min-h-[48px] rounded-lg bg-[color:var(--ink)] px-5 font-semibold text-[color:var(--sand)]"
+                  >
+                    Comparer mes choix et continuer
+                  </button>
+                </div>
+              )}
               {current && card ? (
                 <DecisionCard
                   product={current}

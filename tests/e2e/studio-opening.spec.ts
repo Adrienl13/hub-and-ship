@@ -44,3 +44,40 @@ test('tables and customization remain accessible with absent advanced data', asy
     await expect(page.locator('body')).not.toContainText('Application error')
   }
 })
+test('17 likes in fallback mode always offer an explicit next step', async ({
+  page,
+}) => {
+  await page.goto('/studio/assises')
+  for (let i = 1; i <= 17; i++) {
+    await page.getByRole('button', { name: /^J'aime :/ }).click()
+    await expect(page.getByTestId('discovery-next-step')).toContainText(
+      `${i} assise`,
+    )
+  }
+  await page
+    .getByRole('button', {
+      name: 'Comparer mes choix et continuer',
+      exact: true,
+    })
+    .click()
+  await expect(page.getByTestId('discovery-next-step')).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: /pistes|finalistes/i }).first(),
+  ).toBeVisible()
+})
+test('partner form has wide fields and no nested trust panel', async ({
+  page,
+}) => {
+  await page.goto('/partenaires')
+  const slot = page.locator('[data-form-slot="partner"]')
+  await expect(
+    slot.getByText('Pourquoi les pros nous font confiance'),
+  ).toHaveCount(0)
+  const field = slot.getByPlaceholder('Ex. Distri Boissons Provence')
+  await field.fill('Distribution Terrasse Provence')
+  expect((await field.boundingBox())?.width).toBeGreaterThan(200)
+  const siret = slot.getByPlaceholder('14 chiffres')
+  await siret.fill('98826998100011')
+  expect((await siret.boundingBox())?.width).toBeGreaterThan(160)
+  await expect(siret).toHaveValue('98826998100011')
+})

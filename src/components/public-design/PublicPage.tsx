@@ -85,7 +85,7 @@ export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
           slot.dataset.formSlot === 'contact' ? (
             <ContactForm initialTopic="produit" studioBrief={brief} />
           ) : slot.dataset.formSlot === 'partner' ? (
-            <PartnerForm prefill={partnerPrefill} />
+            <PartnerForm prefill={partnerPrefill} embedded />
           ) : (
             <ContainerNotifyForm source={kind} tone="light" />
           ),

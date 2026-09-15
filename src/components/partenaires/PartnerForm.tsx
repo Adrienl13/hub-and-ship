@@ -49,7 +49,13 @@ const inputClass =
 const labelClass =
   'mb-1.5 block text-[12.5px] font-semibold text-[color:var(--ink-soft)]'
 
-export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill }) {
+export function PartnerForm({
+  prefill,
+  embedded = false,
+}: {
+  readonly prefill: PartnerFormPrefill
+  readonly embedded?: boolean
+}) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
 
@@ -137,16 +143,36 @@ export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill 
   return (
     <section
       id="candidature"
-      className="border-y border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-14"
+      className={
+        embedded
+          ? 'min-w-0'
+          : 'border-y border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] py-14'
+      }
     >
-      <div className="mx-auto grid max-w-5xl items-start gap-11 px-6 md:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-7">
-          <span className="mono block text-[11px] uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
-            Candidature partenaire
-          </span>
-          <h2 className="mt-2 font-display text-2xl font-black">
-            Rejoindre le réseau
-          </h2>
+      <div
+        className={
+          embedded
+            ? 'min-w-0'
+            : 'mx-auto grid max-w-5xl items-start gap-11 px-6 md:grid-cols-[1.1fr_1fr]'
+        }
+      >
+        <div
+          className={
+            embedded
+              ? 'min-w-0'
+              : 'rounded-lg border border-[color:var(--sand-deep)] bg-[color:var(--paper)] p-7'
+          }
+        >
+          {!embedded && (
+            <>
+              <span className="mono block text-[11px] uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">
+                Candidature partenaire
+              </span>
+              <h2 className="mt-2 font-display text-2xl font-black">
+                Rejoindre le réseau
+              </h2>
+            </>
+          )}
 
           <div className="mt-5 space-y-3.5">
             <div className="grid gap-3.5 sm:grid-cols-2">
@@ -272,7 +298,7 @@ export function PartnerForm({ prefill }: { readonly prefill: PartnerFormPrefill 
           </div>
         </div>
 
-        <PartnerTrustPanel />
+        {!embedded && <PartnerTrustPanel />}
       </div>
     </section>
   )
@@ -315,7 +341,9 @@ const TRUST_ITEMS: ReadonlyArray<{ tag: string; text: string }> = [
 function PartnerTrustPanel() {
   return (
     <div>
-      <h3 className="text-lg font-extrabold">Pourquoi les pros nous font confiance</h3>
+      <h3 className="text-lg font-extrabold">
+        Pourquoi les pros nous font confiance
+      </h3>
       <p className="mt-2.5 text-[14.5px] text-[color:var(--ink-soft)]">
         Terrassea est la marque de Pros Import EURL, importateur officiel
         français. Chaque container est contrôlé par SGS avant expédition,
