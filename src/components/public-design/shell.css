@@ -13,16 +13,7 @@
 .public-design .public-form-slot select {
   color: #201e1d;
 }
-.public-design .public-motion-toggle {
-  display: block;
-  margin: 8px 20px 8px auto;
-  font:
-    12px Arial,
-    sans-serif;
-  padding: 8px 12px;
-  border: 1px solid #bbb;
-  border-radius: 24px;
-}
+
 .public-design .nav {
   flex-wrap: wrap;
 }
@@ -66,5 +57,35 @@
 @media (min-width: 761px) {
   .public-design .public-contact-layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .public-design .nav {
+    height: auto !important;
+    min-height: 64px;
+    position: relative !important;
+  }
+  .public-design .bar {
+    top: 0;
+  }
+  .public-design
+    .catalogue-introduction:has([aria-expanded='false'])
+    > .catalogue-intro-secondary {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .public-design #catalogue-page .g-incl {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+  .public-design #catalogue-page .g-incl > div {
+    flex: 0 0 280px;
+    scroll-snap-align: start;
+  }
+  .public-design .catalogue-introduction:has([aria-expanded='false']) > div {
+    display: none;
   }
 }

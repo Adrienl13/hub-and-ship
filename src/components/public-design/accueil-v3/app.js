@@ -81,12 +81,6 @@ export class Page extends Accueil {
       this.startTimers()
     }
     this.reduce.addEventListener('change', this.onMotion)
-    this.motionButton = document.getElementById('motion-toggle')
-    this.toggleMotion = () => {
-      this.paused = !this.paused
-      this.startTimers()
-    }
-    this.motionButton?.addEventListener('click', this.toggleMotion)
     this.onPageHide = (event) => {
       this.destroy()
       if (event.persisted)
@@ -208,11 +202,6 @@ export class Page extends Accueil {
     clearInterval(this.shipTimer)
     this.clearReplay()
     document.documentElement.classList.toggle('motion-paused', this.paused)
-    this.motionButton?.setAttribute('aria-pressed', String(this.paused))
-    if (this.motionButton)
-      this.motionButton.textContent = this.paused
-        ? 'Reprendre les animations'
-        : 'Mettre les animations en pause'
     this.root.querySelectorAll('video').forEach((v) => v.pause())
     if (this.paused || this.disposed) return
     this.visibleVideos.forEach((video) => video.play().catch(() => {}))
@@ -262,6 +251,5 @@ export class Page extends Accueil {
     window.removeEventListener('scroll', this.onScroll)
     window.removeEventListener('pagehide', this.onPageHide)
     this.reduce.removeEventListener('change', this.onMotion)
-    this.motionButton?.removeEventListener('click', this.toggleMotion)
   }
 }

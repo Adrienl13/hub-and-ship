@@ -145,7 +145,7 @@ export class CatalogueModel {
         'Terrassea importe en direct usine du mobilier conçu pour un usage professionnel intensif. Chaque série est testée et contrôlée avant départ, puis livrée et facturée en France.',
       introExpanded: s.intro,
       stockSelected: s.stockOnly,
-      introMax: s.intro ? '900px' : '0px',
+      introMax: s.intro ? 'none' : '0px',
       introLabel: s.intro
         ? 'Réduire ↑'
         : 'En savoir plus sur notre fonctionnement…',

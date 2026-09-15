@@ -123,3 +123,26 @@ test('container alert uses the existing RPC, mocked without any remote write', a
   )
   expect(submitted?.p_source).toBe('livres')
 })
+
+test('catalogue mobile menu fits and additional introduction expands on demand', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/catalogue')
+  const toggle = page.locator('[data-onclick="toggleIntro"]')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  const secondary = page.locator('.catalogue-intro-secondary')
+  if (isMobile) {
+    await expect(secondary).toBeHidden()
+    const nav = await page.locator('.nav').boundingBox()
+    const links = await page.locator('.nav-links').boundingBox()
+    expect(links!.y + links!.height).toBeLessThanOrEqual(nav!.y + nav!.height)
+  } else await expect(secondary).toBeVisible()
+  await toggle.click()
+  await expect(secondary).toBeVisible()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await toggle.click()
+  if (isMobile) await expect(secondary).toBeHidden()
+  await page.goto('/')
+  await expect(page.locator('#motion-toggle')).toHaveCount(0)
+})
