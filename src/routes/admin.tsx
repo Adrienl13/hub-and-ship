@@ -70,6 +70,7 @@ const ADMIN_TABS = [
   'products',
   'containers',
   'media',
+  'showroom',
   'stock',
   'quality',
   'carriers',
@@ -119,6 +120,10 @@ const LazyAdminSiteMediaTab = lazy(() =>
   import('@/components/AdminSiteMediaTab').then((module) => ({
     default: module.AdminSiteMediaTab,
   })),
+)
+
+const LazyAdminShowroomTab = lazy(() =>
+  import('@/components/AdminShowroomTab').then(module => ({ default: module.AdminShowroomTab })),
 )
 
 const LazyAdminQualityReportsTab = lazy(() =>
@@ -284,6 +289,7 @@ function AdminPage() {
               ['products', 'Catalogue'],
               ['containers', 'Containers'],
               ['media', 'Médias'],
+              ['showroom', 'Lieux équipés'],
               ['studio', 'Studio'],
               ['stock', 'Stock'],
               ['quality', 'Qualité'],
@@ -335,6 +341,7 @@ function AdminPage() {
           )}
           {activeTab === 'studio' && <LazyAdminStudioTab />}
           {activeTab === 'media' && <LazyAdminSiteMediaTab />}
+          {activeTab === 'showroom' && <LazyAdminShowroomTab />}
           {activeTab === 'quality' && (
             <LazyAdminQualityReportsTab authStatus={auth.status} />
           )}

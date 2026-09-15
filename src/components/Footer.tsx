@@ -68,6 +68,7 @@ export function Footer() {
                   ['Tables restaurant', '/catalogue/tables-restaurant'],
                   ['Stock terrasse 24h', '/stock-mobilier-terrasse-24h'],
                   ['Partenaires revendeurs', '/partenaires'],
+                  ['Voir le mobilier près de chez vous', '/lieux'],
                   ['FAQ achat groupé', '/faq'],
                 ] as const
               ).map(([label, href]) => (
