@@ -97,14 +97,39 @@ function ShowroomPage() {
         <header className="showroom-intro">
           <p className="showroom-eyebrow">Le showroom à ciel ouvert</p>
           <h1>
-            Le mobilier se découvre.
+            Voyez notre mobilier
             <br />
-            <em>La confiance se vit.</em>
+            <em>près de chez vous.</em>
           </h1>
           <p>
-            Dans un café, sur une terrasse, au cœur d’un hôtel. Retrouvez nos
-            modèles là où ils vivent au quotidien, près de chez vous.
+            Notre showroom, ce sont les lieux qui vivent avec notre mobilier :
+            cafés, restaurants, hôtels et terrasses. Cette carte vous permet de
+            découvrir les établissements équipés et les modèles installés, en
+            conditions réelles.
           </p>
+          <ol className="showroom-how">
+            <li>
+              <strong>Repérez un lieu</strong>
+              <span>
+                Indiquez votre ville ou votre code postal pour explorer les
+                adresses autour de vous.
+              </span>
+            </li>
+            <li>
+              <strong>Découvrez le mobilier</strong>
+              <span>
+                Consultez les modèles installés et les photos disponibles pour
+                vous projeter.
+              </span>
+            </li>
+            <li>
+              <strong>Préparez votre visite</strong>
+              <span>
+                Suivez les modalités du lieu ou demandez-nous une mise en
+                relation. Chaque adresse est publiée avec accord.
+              </span>
+            </li>
+          </ol>
         </header>
         <section
           className="showroom-explorer"

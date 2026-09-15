@@ -55,7 +55,7 @@ test('map lists real record shapes, selects a public venue and opens its route',
 }) => {
   await page.goto('/lieux')
   await expect(
-    page.getByRole('heading', { name: /La confiance se vit/ }),
+    page.getByRole('heading', { name: /Voyez notre mobilier près de chez vous/ }),
   ).toBeVisible()
   await page.locator('.showroom-results').getByRole('button', { name: /Terrasse test/ }).click()
   const detail = page.getByRole('region', { name: 'Détails du lieu' })

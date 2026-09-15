@@ -35,6 +35,7 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
         <a href="/partenaires">Partenaires</a>
         <a href="/prix">Le prix prouvé</a>
         <a href="/livres">Conteneurs livrés</a>
+        <a href="/lieux">Près de chez vous</a>
         <a href="/contact">Contact</a>
       </nav>
       <a href="/account" className="pi-account-link">
@@ -83,6 +84,9 @@ export function ExperienceHeader({ inStudio = false }: { inStudio?: boolean }) {
           </a>
           <a href="/contact" onClick={() => setOpen(false)}>
             Contact <ArrowUpRight />
+          </a>
+          <a href="/lieux" onClick={() => setOpen(false)}>
+            Près de chez vous <ArrowUpRight />
           </a>
         </nav>
       )}
