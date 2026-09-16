@@ -578,7 +578,9 @@
     <div class="g g4" style="margin-top: 42px">
       <template data-list="shown" data-as="p">
         <figure class="rv" style="margin:0;transition-delay:{{ p.delay }}">
-          <div
+          <a
+            data-bound-href="{{ p.href }}"
+            aria-label="Voir la fiche {{ p.name }}"
             style="
               aspect-ratio: 1;
               background: #fff;
@@ -599,19 +601,21 @@
               loading="lazy"
               data-bound-src="{{ p.img }}"
             />
-          </div>
+          </a>
           <figcaption
             style="margin-top: 14px; font-size: 15.5px; line-height: 24px"
           >
-            <span style="font-weight: 600"
-              ><span data-bound-text="{{ p.name }}"></span></span
+            <a
+              data-bound-href="{{ p.href }}"
+              style="font-weight: 600; color: inherit; text-decoration: none"
+              ><span data-bound-text="{{ p.name }}"></span></a
             ><br /><span
               style="
                 color: color-mix(in srgb, var(--color-text) 60%, transparent);
               "
               ><span data-bound-text="{{ p.kind }}"></span></span
             ><br /><a
-              href="#studio"
+              data-bound-href="{{ p.href }}"
               style="
                 display: inline-block;
                 margin-top: 8px;
@@ -619,7 +623,7 @@
                 min-height: 28px;
                 color: var(--color-process-yellow);
               "
-              >Personnaliser ce modèle →</a
+              >Voir la fiche →</a
             >
           </figcaption>
         </figure>

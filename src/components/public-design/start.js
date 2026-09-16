@@ -43,6 +43,23 @@ export function startPage(kind, root, onSelection, onPartner) {
       observer.disconnect()
       destroy()
     }
+    // « Le mobilier » : photos et noms des produits réels, chaque carte
+    // ouvrant sa fiche. En cas d'échec, la sélection statique reste affichée.
+    fetch('/api/public-catalogue')
+      .then((r) => {
+        if (!r.ok) throw new Error('Unavailable')
+        return r.json()
+      })
+      .then((data) => {
+        if (page.disposed) return
+        const products = adaptCatalogue(data)
+        if (!products.length) return
+        page.liveProducts = products
+        page.render()
+      })
+      .catch(() => {
+        /* La sélection statique reste affichée. */
+      })
   }
   if (['catalogue', 'prix', 'livres'].includes(kind)) {
     if (kind === 'catalogue') root.dataset.loading = 'true'

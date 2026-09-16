@@ -1,4 +1,57 @@
 import { config } from './config.js'
+
+// Onglets « Le mobilier » → catégories du catalogue public (adaptCatalogue).
+const HOME_TAB_CATEGORIES = {
+  Chaises: ['Chaise'],
+  Fauteuils: ['Fauteuil'],
+  Tables: ['Table'],
+  Lounge: ['Salon & lounge', 'Banc'],
+}
+const HOME_CARDS_PER_TAB = 4
+
+const isCityToken = (token) =>
+  token.length >= 2 && /^[A-ZÀ-Ý0-9][A-ZÀ-Ý0-9'-]*$/u.test(token)
+const capitalize = (word) =>
+  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+
+/**
+ * « Chaise de bistrot ODEON » → { title: 'Odeon', kind: 'chaise de bistrot' } ;
+ * « Salon de terrasse cordage PORTO-VECCHIO » → { title: 'Porto-Vecchio',
+ * kind: 'salon de terrasse cordage' }. Sans nom de modèle en capitales, le
+ * nom court reste le titre et `fallbackKind` (catégorie) sert de sous-titre.
+ */
+export function splitDisplayName(shortName, fallbackKind = '') {
+  const tokens = shortName.trim().split(/\s+/)
+  let split = tokens.length
+  while (split > 1 && isCityToken(tokens[split - 1])) split -= 1
+  if (split === tokens.length || split === 0) {
+    return { title: shortName.trim(), kind: fallbackKind.toLowerCase() }
+  }
+  const title = tokens
+    .slice(split)
+    .map((token) => token.split('-').map(capitalize).join('-'))
+    .join(' ')
+  const kind = tokens.slice(0, split).join(' ')
+  return { title, kind: kind.charAt(0).toLowerCase() + kind.slice(1) }
+}
+
+/** Cartes « Le mobilier » pour un onglet, depuis les produits réels. */
+export function liveHomeCards(products, tab) {
+  const cats = HOME_TAB_CATEGORIES[tab] || []
+  return products
+    .filter((p) => cats.includes(p.cat) && p.img)
+    .slice(0, HOME_CARDS_PER_TAB)
+    .map((p) => {
+      const { title, kind } = splitDisplayName(p.shortName || p.name, p.kind)
+      return {
+        name: title,
+        kind,
+        img: p.img,
+        href: '/catalogue#produit-' + encodeURIComponent(p.ref),
+      }
+    })
+}
+
 export class Accueil {
   config = config
 
@@ -86,8 +139,17 @@ export class Accueil {
     },
   ]
   url(p) {
-    return p.startsWith('S:') ? this.S + p.slice(2) : this.P + p
+    return !p
+      ? ''
+      : /^(https?:|\/)/.test(p)
+        ? p
+        : p.startsWith('S:')
+          ? this.S + p.slice(2)
+          : this.P + p
   }
+  // Produits réels du catalogue (adaptCatalogue), injectés après chargement
+  // par start.js ; tant qu'ils sont absents, la sélection statique s'affiche.
+  liveProducts = null
   products = [
     {
       name: 'Deauville',
@@ -366,13 +428,16 @@ export class Accueil {
   }
   renderVals() {
     const s = this.state
-    const list = (this.picks[s.cat] || [])
-      .map(
-        (nm) =>
-          this.products.find((p) => p.name === nm && p.cat === s.cat) ||
-          this.products.find((p) => p.name === nm),
-      )
-      .filter(Boolean)
+    const list = this.liveProducts
+      ? liveHomeCards(this.liveProducts, s.cat)
+      : (this.picks[s.cat] || [])
+          .map(
+            (nm) =>
+              this.products.find((p) => p.name === nm && p.cat === s.cat) ||
+              this.products.find((p) => p.name === nm),
+          )
+          .filter(Boolean)
+          .map((p) => ({ ...p, href: '/catalogue' }))
     const kinds = [
       'Restaurant',
       'Hôtel',
