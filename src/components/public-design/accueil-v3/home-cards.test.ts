@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { HOME_PICKS, liveHomeCards, splitDisplayName } from './model.js'
+import { HOME_PICKS, liveBandCards, liveHomeCards, splitDisplayName } from './model.js'
+import { config } from './config.js'
 
 describe('splitDisplayName', () => {
   it('sépare le type du nom de modèle en capitales', () => {
@@ -71,5 +72,34 @@ describe('liveHomeCards', () => {
       '/catalogue#produit-BIS-00C',
     ])
     expect(liveHomeCards(products, 'Inconnu')).toEqual([])
+  })
+})
+
+describe('liveBandCards', () => {
+  const products = [
+    { ref: 'BIS-003', name: 'Chaise de bistrot OPERA - rayé blanc / rouge', shortName: 'Chaise de bistrot OPERA', cat: 'Chaise', kind: 'Chaise', img: '/catalogue/bis-003.webp' },
+    { ref: 'ROP-001', name: 'Salon de terrasse cordage CANNES - cordage ajouré', shortName: 'Salon de terrasse cordage CANNES', cat: 'Salon & lounge', kind: 'Salon & lounge', img: 'https://x/rop-001.webp' },
+    { ref: 'BIS-020', name: 'Sans photo', shortName: 'Sans photo', cat: 'Fauteuil', kind: 'Fauteuil', img: '' },
+  ]
+
+  it('résout photo, nom court et fiche depuis la référence, conserve les cartes déjà pourvues et retire les vides', () => {
+    const defs = [
+      { name: 'BIS-003', img: null, href: '/catalogue' },
+      { name: 'ROP-001', img: null, href: '/catalogue' },
+      { name: 'BIS-020', img: null, href: '/catalogue' },
+      { name: 'Ambiance fournie', img: '/home/ambiance.webp', href: '/catalogue' },
+    ]
+    expect(liveBandCards(defs, products)).toEqual([
+      { name: 'Chaise de bistrot OPERA', img: '/catalogue/bis-003.webp', href: '/catalogue#produit-BIS-003' },
+      { name: 'Salon de terrasse cordage CANNES', img: 'https://x/rop-001.webp', href: '/catalogue#produit-ROP-001' },
+      { name: 'Ambiance fournie', img: '/home/ambiance.webp', href: '/catalogue' },
+    ])
+  })
+
+  it('la configuration ne contient que des références de catalogue', () => {
+    expect(config.band.map((b: { name: string }) => b.name)).toEqual([
+      'BIS-020', 'BIS-002', 'BIS-028', 'BIS-005', 'ROP-003', 'BIS-003', 'ROP-019', 'ROP-007', 'ROP-001',
+    ])
+    for (const b of config.band) expect(b.name).toMatch(/^[A-Z]{3}-\d{3}$/)
   })
 })

@@ -25,6 +25,9 @@ export const config = {
     },
     { url: null, name: 'Showroom d’un revendeur', href: '#contact' },
   ],
+  // Références du catalogue : photo, nom et lien de la fiche sont résolus au
+  // chargement (liveBandCards). ROP-001 (salon cordage CANNES) remplace
+  // l'ancien libellé générique « Salon cordage ».
   band: [
     'BIS-020',
     'BIS-002',
@@ -34,7 +37,7 @@ export const config = {
     'BIS-003',
     'ROP-019',
     'ROP-007',
-    'Salon cordage',
+    'ROP-001',
   ].map((name) => ({ name, url: null, href: '/catalogue' })),
   reels: [0, 1, 2, 3].map(() => ({
     url: null,

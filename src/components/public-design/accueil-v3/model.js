@@ -65,6 +65,29 @@ export function liveHomeCards(products, tab, picks = HOME_PICKS) {
     })
 }
 
+/**
+ * « Quelques directions déjà composées » : chaque carte dont le nom est une
+ * référence du catalogue public reçoit la photo, le nom court et le lien de
+ * la fiche. Une carte déjà pourvue d'une photo est conservée telle quelle ;
+ * une référence introuvable sans photo est retirée (pas de carte vide).
+ */
+export function liveBandCards(bandDefs, products) {
+  return bandDefs
+    .map((b) => {
+      const product = products.find((p) => p.ref === b.name && p.img)
+      if (product) {
+        return {
+          ...b,
+          name: product.shortName || product.name,
+          img: product.img,
+          href: '/catalogue#produit-' + encodeURIComponent(product.ref),
+        }
+      }
+      return b.img ? b : null
+    })
+    .filter(Boolean)
+}
+
 export class Accueil {
   config = config
 
@@ -522,11 +545,17 @@ export class Accueil {
         img: this.url(p.img),
         delay: i * 0.12 + 's',
       })),
-      band: [...this.bandDefs, ...this.bandDefs].map((b, i) => ({
-        ...b,
-        num: String((i % this.bandDefs.length) + 1).padStart(2, '0'),
-        rot: (((i % this.bandDefs.length) % 5) - 2) * 2 + 'deg',
-      })),
+      band: (() => {
+        const defs = this.liveProducts
+          ? liveBandCards(this.bandDefs, this.liveProducts)
+          : this.bandDefs
+        const count = defs.length || 1
+        return [...defs, ...defs].map((b, i) => ({
+          ...b,
+          num: String((i % count) + 1).padStart(2, '0'),
+          rot: (((i % count) % 5) - 2) * 2 + 'deg',
+        }))
+      })(),
       tex: this.texDefs[s.tex],
       texLayers: this.texDefs.map((t, i) => ({
         pattern: t.pattern,

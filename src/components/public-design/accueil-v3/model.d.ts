@@ -28,6 +28,17 @@ export function liveHomeCards(
   picks?: Record<string, string[]>,
 ): HomeCard[]
 
+export interface BandCard {
+  name: string
+  img?: string | null
+  href: string
+}
+
+export function liveBandCards(
+  bandDefs: ReadonlyArray<BandCard>,
+  products: ReadonlyArray<HomeCardSource>,
+): BandCard[]
+
 export class Accueil {
   liveProducts: HomeCardSource[] | null
   renderVals(): Record<string, unknown>
