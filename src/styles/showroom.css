@@ -5,6 +5,14 @@
   color: #242321;
   background: #f7f5ef;
 }
+.showroom-save-feedback:not(:empty) {
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #bba574;
+  border-radius: 10px;
+  background: #fff9e9;
+  color: #242321;
+}
 .showroom-intro {
   display: grid;
   grid-template-columns: 1.15fr 1fr;

@@ -154,6 +154,7 @@ export function AdminShowroomTab() {
     setNotice('')
   }
   async function save() {
+    if (busy) return
     const parsed = locationSchema.safeParse(form)
     if (!parsed.success) {
       setNotice(parsed.error.issues[0]?.message ?? 'Vérifiez les champs.')
@@ -235,7 +236,7 @@ export function AdminShowroomTab() {
       <a href="/lieux" target="_blank" rel="noreferrer" className="underline">
         Voir la carte publique ↗
       </a>
-      {notice && (
+      {notice && !available && (
         <p role="status" className="my-4 rounded border p-3">
           {notice}
         </p>
@@ -276,6 +277,7 @@ export function AdminShowroomTab() {
             ))}
           </aside>
           <form
+            noValidate
             onSubmit={(e) => {
               e.preventDefault()
               void save()
@@ -509,6 +511,13 @@ export function AdminShowroomTab() {
                 ))}
               </div>
             </fieldset>
+            <div
+              className="showroom-save-feedback"
+              role="status"
+              aria-live="polite"
+            >
+              {notice}
+            </div>
             <button className="showroom-primary" type="submit" disabled={busy}>
               {busy
                 ? 'En cours…'

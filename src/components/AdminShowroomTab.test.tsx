@@ -52,6 +52,29 @@ beforeEach(() => {
       .mockResolvedValue({ ok: true, json: async () => ({ products: [] }) }),
   )
 })
+it('shows missing commune beside save and retains inputs after a server refusal', async () => {
+  render(<AdminShowroomTab />)
+  const name = await screen.findByLabelText('Nom de l’établissement')
+  fireEvent.change(name, { target: { value: 'Mon établissement' } })
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Enregistrer les modifications' }),
+  )
+  const feedback = await screen.findByText(
+    'Recherchez la commune puis sélectionnez un résultat dans la liste.',
+  )
+  expect(feedback.parentElement?.tagName).toBe('FORM')
+  expect(upsert).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByText('Choisir Lyon'))
+  upsert.mockResolvedValueOnce({ error: { message: 'Denied' } })
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Enregistrer les modifications' }),
+  )
+  await screen.findByText(/Enregistrement impossible/)
+  expect(name).toHaveValue('Mon établissement')
+  expect(
+    screen.getByRole('button', { name: 'Enregistrer les modifications' }),
+  ).toBeEnabled()
+})
 it('saves an internal venue before photos, and prevents publishing without consent', async () => {
   render(<AdminShowroomTab />)
   await screen.findByLabelText('Nom de l’établissement')

@@ -7,10 +7,23 @@ const lng = z.number().finite().min(-180).max(180)
 export const locationSchema = z
   .object({
     id: z.string().uuid(),
-    name: z.string().trim().min(1).max(160),
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Renseignez le nom de l’établissement.')
+      .max(160),
     address: z.string().trim().max(500),
-    city: z.string().trim().min(1).max(160),
-    postal_code: z.string().regex(/^\d{5}$/),
+    city: z
+      .string()
+      .trim()
+      .min(
+        1,
+        'Recherchez la commune puis sélectionnez un résultat dans la liste.',
+      )
+      .max(160),
+    postal_code: z
+      .string()
+      .regex(/^\d{5}$/, 'Renseignez un code postal à 5 chiffres.'),
     city_lat: lat,
     city_lng: lng,
     latitude: lat.nullable(),
