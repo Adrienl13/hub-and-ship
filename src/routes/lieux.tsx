@@ -10,6 +10,7 @@ import {
   type PublicLocation,
   type Commune,
 } from '@/lib/showroom'
+import { productShortName } from '@/lib/products'
 import { buildSeoHead } from '@/lib/seo'
 import '@/styles/experience.css'
 import '@/styles/showroom.css'
@@ -329,7 +330,7 @@ function ShowroomPage() {
                             <a
                               href={`/catalogue/#produit-${encodeURIComponent(sku)}`}
                             >
-                              {product.name} →
+                              {productShortName(product.name)} →
                             </a>
                           ) : (
                             <span>

@@ -8,6 +8,7 @@ import { Heart, Replace, X } from 'lucide-react'
 
 import { SafeImage } from '@/components/SafeImage'
 import { formatEUR } from '@/lib/order'
+import { productShortName } from '@/lib/products'
 import { cardImageUrl, seatSpecLine } from '@/lib/studio/discovery'
 import { materialLabel, seatKindLabel } from '@/lib/studio/labels'
 import type { StudioProduct } from '@/lib/studio/types'
@@ -95,7 +96,7 @@ export function Finalists({
                       .join(' · ') || 'Assise'}
                   </div>
                   <h3 className="mt-1 font-display text-lg font-bold leading-tight">
-                    {product.name}
+                    {productShortName(product.name)}
                   </h3>
                   {seatSpecLine(product) && (
                     <p className="text-xs tabular-nums text-[color:var(--ink-soft)]">

@@ -8,6 +8,7 @@ import { DesignSelector } from '@/components/DesignSelector'
 import {
   CATEGORY_LABEL,
   formatProductDimensions,
+  productShortName,
   type Product,
 } from '@/lib/products'
 import { getMoqStatus } from '@/lib/order'
@@ -120,7 +121,7 @@ function ProductCardComponent({
           className="group/name flex min-w-0 items-start gap-1 text-left"
         >
           <span className="line-clamp-2 min-h-[2.15em] min-w-0 font-display text-sm font-semibold leading-tight tracking-tight">
-            {product.name}
+            {productShortName(product.name)}
           </span>
           <Info className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover/name:text-foreground" />
         </button>

@@ -20,7 +20,7 @@ import { StockLotGallery } from '@/components/StockLotGallery'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useStockRequestCreation } from '@/hooks/useStockRequestCreation'
-import { CATEGORY_LABEL } from '@/lib/products'
+import { CATEGORY_LABEL, productShortName } from '@/lib/products'
 import {
   STOCK_CONDITION_LABEL,
   STOCK_FILTERS,
@@ -335,7 +335,7 @@ function StockCard({
           aria-label={`Voir la fiche de ${line.product.name}`}
         >
           <h3 className="line-clamp-2 font-display text-sm font-semibold leading-tight tracking-tight underline-offset-2 hover:underline">
-            {line.product.name}
+            {productShortName(line.product.name)}
           </h3>
         </button>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2.5">

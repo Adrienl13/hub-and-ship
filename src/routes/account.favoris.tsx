@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useFavorites } from '@/hooks/useFavorites'
 import { formatEUR } from '@/lib/order'
+import { productShortName } from '@/lib/products'
 import { buildSeoHead } from '@/lib/seo'
 
 export const Route = createFileRoute('/account/favoris')({
@@ -106,7 +107,7 @@ function FavoritesPage() {
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
                   <div className="line-clamp-2 font-display text-sm font-semibold leading-tight">
-                    {product.name}
+                    {productShortName(product.name)}
                   </div>
                   <div className="mt-1 font-display text-base font-semibold tabular-nums">
                     {formatEUR(product.basePriceHt)}

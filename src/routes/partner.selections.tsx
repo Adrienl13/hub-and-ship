@@ -32,7 +32,7 @@ import {
   type SelectionItemInput,
 } from '@/lib/partners/selections'
 import { buildPartnerSharePath } from '@/lib/partners/link'
-import { CATEGORY_LABEL } from '@/lib/products'
+import { CATEGORY_LABEL, productShortName } from '@/lib/products'
 import { formatEUR } from '@/lib/order'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -509,7 +509,7 @@ function SelectionBuilder({
               />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium">
-                  {entry.product.name}
+                  {productShortName(entry.product.name)}
                 </div>
                 {entry.variant && (
                   <div className="truncate text-[11px] font-medium text-[color:var(--ember)]">

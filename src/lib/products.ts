@@ -136,6 +136,19 @@ export function formatProductDimensions(
   return `${l} × ${w} × ${h} cm`
 }
 
+/**
+ * Nom court pour les cartes : la partie avant le premier « - » du nom
+ * catalogue (« Salon de terrasse cordage MENERBES - cordage bordeaux… » →
+ * « Salon de terrasse cordage MENERBES »). Le nom complet reste affiché sur
+ * la fiche, le panier, les devis et les alt/aria ; la donnée n'est pas
+ * modifiée. Un nom sans séparateur est rendu tel quel.
+ */
+export function productShortName(name: string): string {
+  const [head] = name.split(/\s+[-–—]\s+/, 1)
+  const short = head?.trim()
+  return short || name
+}
+
 export const PRODUCTS: Product[] = [
   {
     id: 'p1',

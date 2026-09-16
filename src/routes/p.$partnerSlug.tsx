@@ -34,7 +34,7 @@ import {
   type PublicSelection,
 } from '@/lib/partners/selections'
 import { formatEUR } from '@/lib/order'
-import { CATEGORY_LABEL } from '@/lib/products'
+import { CATEGORY_LABEL, productShortName } from '@/lib/products'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -170,7 +170,7 @@ function PartnerSharePage() {
                       {CATEGORY_LABEL[product.category]}
                     </div>
                     <div className="mt-1 font-display text-lg font-semibold">
-                      {product.name}
+                      {productShortName(product.name)}
                     </div>
                   </div>
                 </RevealItem>

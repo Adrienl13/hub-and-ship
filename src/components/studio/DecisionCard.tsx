@@ -8,6 +8,7 @@ import { Info } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { SafeImage } from '@/components/SafeImage'
+import { productShortName } from '@/lib/products'
 import {
   cardImageUrl,
   decisionImageSrcSet,
@@ -135,7 +136,7 @@ export function DecisionCard({
               {[kind, material].filter(Boolean).join(' · ') || 'Assise'}
             </div>
             <h2 className="mt-1 truncate font-display text-xl font-bold tracking-tight sm:text-2xl">
-              {product.name}
+              {productShortName(product.name)}
             </h2>
             {spec && (
               <p className="mt-1 text-sm tabular-nums text-[color:var(--ink-soft)]">

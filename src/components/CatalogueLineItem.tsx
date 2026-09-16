@@ -5,7 +5,7 @@ import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { DesignSelector } from '@/components/DesignSelector'
 import { Button } from '@/components/ui/button'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { CATEGORY_LABEL, productShortName, type Product } from '@/lib/products'
 import { formatEUR, getMoqStatus } from '@/lib/order'
 import { getQuantityRule } from '@/lib/quantity'
 
@@ -64,7 +64,7 @@ function CatalogueLineItemComponent({
             className="group/name flex min-w-0 items-start gap-1.5 text-left"
           >
             <span className="min-w-0 font-display text-base font-semibold leading-tight tracking-tight md:truncate">
-              {product.name}
+              {productShortName(product.name)}
             </span>
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-70 md:opacity-0 md:transition-opacity md:group-hover/name:opacity-100" />
           </button>

@@ -4,7 +4,7 @@ import { memo, useMemo } from 'react'
 import { MoqProgressBar } from '@/components/MoqProgressBar'
 import { QuantityStepper } from '@/components/QuantityStepper'
 import { Button } from '@/components/ui/button'
-import { CATEGORY_LABEL, type Product } from '@/lib/products'
+import { CATEGORY_LABEL, productShortName, type Product } from '@/lib/products'
 import { formatEUR, getMoqStatus } from '@/lib/order'
 import { getNextOrderQuantity, getQuantityRule } from '@/lib/quantity'
 
@@ -73,7 +73,7 @@ function CatalogueGridCardComponent({
         <div className="space-y-2 p-3 pb-0">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="min-w-0 flex-1 truncate font-display text-base font-semibold leading-tight tracking-tight">
-              {product.name}
+              {productShortName(product.name)}
             </h3>
             <span className="shrink-0 font-display text-base font-semibold tabular-nums">
               {formatEUR(product.basePriceHt)}
