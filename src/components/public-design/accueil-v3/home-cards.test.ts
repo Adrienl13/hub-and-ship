@@ -77,12 +77,12 @@ describe('liveHomeCards', () => {
 
 describe('liveBandCards', () => {
   const products = [
-    { ref: 'BIS-003', name: 'Chaise de bistrot OPERA - rayé blanc / rouge', shortName: 'Chaise de bistrot OPERA', cat: 'Chaise', kind: 'Chaise', img: '/catalogue/bis-003.webp' },
-    { ref: 'ROP-001', name: 'Salon de terrasse cordage CANNES - cordage ajouré', shortName: 'Salon de terrasse cordage CANNES', cat: 'Salon & lounge', kind: 'Salon & lounge', img: 'https://x/rop-001.webp' },
+    { ref: 'BIS-003', name: 'Chaise de bistrot OPERA - rayé blanc / rouge', shortName: 'Chaise de bistrot OPERA', cat: 'Chaise', kind: 'Chaise', img: '/catalogue/bis-003.webp', gallery: ['/catalogue/bis-003-ambiance.webp', '/catalogue/bis-003-03.webp'] },
+    { ref: 'ROP-001', name: 'Salon de terrasse cordage CANNES - cordage ajouré', shortName: 'Salon de terrasse cordage CANNES', cat: 'Salon & lounge', kind: 'Salon & lounge', img: 'https://x/rop-001.webp', gallery: [] },
     { ref: 'BIS-020', name: 'Sans photo', shortName: 'Sans photo', cat: 'Fauteuil', kind: 'Fauteuil', img: '' },
   ]
 
-  it('résout photo, nom court et fiche depuis la référence, conserve les cartes déjà pourvues et retire les vides', () => {
+  it('prend la photo de mise en situation (deuxième photo de la fiche), sinon la principale, conserve les cartes déjà pourvues et retire les vides', () => {
     const defs = [
       { name: 'BIS-003', img: null, href: '/catalogue' },
       { name: 'ROP-001', img: null, href: '/catalogue' },
@@ -90,7 +90,7 @@ describe('liveBandCards', () => {
       { name: 'Ambiance fournie', img: '/home/ambiance.webp', href: '/catalogue' },
     ]
     expect(liveBandCards(defs, products)).toEqual([
-      { name: 'Chaise de bistrot OPERA', img: '/catalogue/bis-003.webp', href: '/catalogue#produit-BIS-003' },
+      { name: 'Chaise de bistrot OPERA', img: '/catalogue/bis-003-ambiance.webp', href: '/catalogue#produit-BIS-003' },
       { name: 'Salon de terrasse cordage CANNES', img: 'https://x/rop-001.webp', href: '/catalogue#produit-ROP-001' },
       { name: 'Ambiance fournie', img: '/home/ambiance.webp', href: '/catalogue' },
     ])

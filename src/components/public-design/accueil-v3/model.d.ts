@@ -6,6 +6,7 @@ export interface HomeCardSource {
   cat: string
   kind: string
   img: string
+  gallery?: string[]
 }
 
 export interface HomeCard {

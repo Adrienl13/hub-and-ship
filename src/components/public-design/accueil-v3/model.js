@@ -67,9 +67,11 @@ export function liveHomeCards(products, tab, picks = HOME_PICKS) {
 
 /**
  * « Quelques directions déjà composées » : chaque carte dont le nom est une
- * référence du catalogue public reçoit la photo, le nom court et le lien de
- * la fiche. Une carte déjà pourvue d'une photo est conservée telle quelle ;
- * une référence introuvable sans photo est retirée (pas de carte vide).
+ * référence du catalogue public reçoit la photo de mise en situation (la
+ * deuxième photo de la fiche, première de la galerie ; à défaut la photo
+ * principale), le nom court et le lien de la fiche. Une carte déjà pourvue
+ * d'une photo est conservée telle quelle ; une référence introuvable sans
+ * photo est retirée (pas de carte vide).
  */
 export function liveBandCards(bandDefs, products) {
   return bandDefs
@@ -79,7 +81,7 @@ export function liveBandCards(bandDefs, products) {
         return {
           ...b,
           name: product.shortName || product.name,
-          img: product.img,
+          img: product.gallery?.[0] || product.img,
           href: '/catalogue#produit-' + encodeURIComponent(product.ref),
         }
       }
