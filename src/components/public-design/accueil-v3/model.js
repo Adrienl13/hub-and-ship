@@ -14,6 +14,9 @@ const HOME_CARDS_PER_TAB = 4
 export const HOME_PICKS = {
   Chaises: ['SKU-659', 'BIS-045', 'BIS-003', 'SKU-569'],
   Fauteuils: ['BIS-061', 'BIS-012', 'ROP-049', 'ROP-007'],
+  // Le catalogue n'a pas de catégorie « table » : l'onglet regroupe
+  // piètements et plateaux sous ce mot, volontairement.
+  Tables: ['TBA-001', 'TBA-005', 'SKU-801', 'SKU-566'],
 }
 
 const isCityToken = (token) =>
