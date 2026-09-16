@@ -4,9 +4,11 @@ Routes : `/lieux` (public), `/admin?tab=showroom` (administrateur existant).
 
 ## État
 
-Migration additive : `20260916100000_showroom_locations.sql`. Aucun lieu réel n'est prérempli. Cette fonctionnalité nécessite l'application explicite de cette migration et de son bucket privé sur l'environnement cible. Les anciennes migrations Studio ne sont pas modifiées.
+Migration additive : `20260916100000_showroom_locations.sql`, appliquée en production le 16 septembre 2026 sur `mkfztwibolswqcggukeq`, après autorisation explicite du propriétaire. Aucun lieu réel n'est prérempli. Les anciennes migrations Studio ne sont pas modifiées.
 
-PROD MIGRATION = NON. Aucune adresse client ni photo de lieu réel ajoutée par ce chantier. La carte n'est pas déclarée DATA READY. En l'absence du registre, le public voit un message d'indisponibilité et un accès au contact ; l'admin voit l'explication et ne peut pas simuler un enregistrement.
+PROD MIGRATION SHOWROOM = OUI. Aucune adresse client ni photo de lieu réel ajoutée par ce chantier. La carte n'est pas déclarée DATA READY. Le registre est désormais disponible ; les administrateurs peuvent saisir les lieux. Aucune autre migration appliquée lors de cette activation.
+
+Activation : essai transactionnel annulé, puis application de ce seul fichier et inscription dans l'historique dans une transaction atomique (lock timeout 5 s, statement timeout 30 s). Vérifications : registre vide, RLS active, bucket privé, RPC publique HTTP 200 avec `[]`, accès anonyme direct à la table refusé HTTP 401. Accueil, catalogue, lieux et compte HTTP 200. Aucun enregistrement commercial existant modifié. Le parcours complet de téléversement de photos avec une session administrateur n'a pas été testé en production.
 
 ## Ajouter un lieu
 
