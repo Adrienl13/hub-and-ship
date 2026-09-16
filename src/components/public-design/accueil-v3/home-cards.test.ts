@@ -57,6 +57,7 @@ describe('liveHomeCards', () => {
       '/catalogue#produit-BIS-00B',
     ])
     expect(HOME_PICKS.Chaises).toEqual(['SKU-659', 'BIS-045', 'BIS-003', 'SKU-569'])
+    expect(HOME_PICKS.Fauteuils).toEqual(['BIS-061', 'BIS-012', 'ROP-049', 'ROP-007'])
   })
 
   it('limite à quatre cartes par onglet, dans l’ordre du catalogue', () => {

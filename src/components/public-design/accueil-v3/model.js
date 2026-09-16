@@ -13,6 +13,7 @@ const HOME_CARDS_PER_TAB = 4
 // catalogue ; une référence absente du catalogue public est ignorée.
 export const HOME_PICKS = {
   Chaises: ['SKU-659', 'BIS-045', 'BIS-003', 'SKU-569'],
+  Fauteuils: ['BIS-061', 'BIS-012', 'ROP-049', 'ROP-007'],
 }
 
 const isCityToken = (token) =>
