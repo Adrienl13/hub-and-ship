@@ -20,9 +20,12 @@ export function splitDisplayName(
   fallbackKind?: string,
 ): { title: string; kind: string }
 
+export const HOME_PICKS: Record<string, string[]>
+
 export function liveHomeCards(
   products: ReadonlyArray<HomeCardSource>,
   tab: string,
+  picks?: Record<string, string[]>,
 ): HomeCard[]
 
 export class Accueil {

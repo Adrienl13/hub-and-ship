@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { liveHomeCards, splitDisplayName } from './model.js'
+import { HOME_PICKS, liveHomeCards, splitDisplayName } from './model.js'
 
 describe('splitDisplayName', () => {
   it('sépare le type du nom de modèle en capitales', () => {
@@ -48,8 +48,19 @@ describe('liveHomeCards', () => {
     expect(liveHomeCards(products, 'Tables')[0]).toMatchObject({ name: 'Lourmarin', kind: 'plateau de table' })
   })
 
+  it('place la sélection éditoriale en premier, dans son ordre, et ignore les références absentes', () => {
+    const picks = { Chaises: ['BIS-00C', 'SKU-ABSENT', 'BIS-001'] }
+    expect(liveHomeCards(products, 'Chaises', picks).map((c) => c.href)).toEqual([
+      '/catalogue#produit-BIS-00C',
+      '/catalogue#produit-BIS-001',
+      '/catalogue#produit-BIS-00A',
+      '/catalogue#produit-BIS-00B',
+    ])
+    expect(HOME_PICKS.Chaises).toEqual(['SKU-659', 'BIS-045', 'BIS-003', 'SKU-569'])
+  })
+
   it('limite à quatre cartes par onglet, dans l’ordre du catalogue', () => {
-    const chairs = liveHomeCards(products, 'Chaises')
+    const chairs = liveHomeCards(products, 'Chaises', {})
     expect(chairs).toHaveLength(4)
     expect(chairs.map((c) => c.href)).toEqual([
       '/catalogue#produit-BIS-001',

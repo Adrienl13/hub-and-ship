@@ -8,6 +8,12 @@ const HOME_TAB_CATEGORIES = {
   Lounge: ['Salon & lounge', 'Banc'],
 }
 const HOME_CARDS_PER_TAB = 4
+// Sélection éditoriale par onglet (références SKU, dans l'ordre d'affichage).
+// Un onglet sans liste, ou une liste incomplète, est complété dans l'ordre du
+// catalogue ; une référence absente du catalogue public est ignorée.
+export const HOME_PICKS = {
+  Chaises: ['SKU-659', 'BIS-045', 'BIS-003', 'SKU-569'],
+}
 
 const isCityToken = (token) =>
   token.length >= 2 && /^[A-ZÀ-Ý0-9][A-ZÀ-Ý0-9'-]*$/u.test(token)
@@ -36,10 +42,13 @@ export function splitDisplayName(shortName, fallbackKind = '') {
 }
 
 /** Cartes « Le mobilier » pour un onglet, depuis les produits réels. */
-export function liveHomeCards(products, tab) {
+export function liveHomeCards(products, tab, picks = HOME_PICKS) {
   const cats = HOME_TAB_CATEGORIES[tab] || []
-  return products
-    .filter((p) => cats.includes(p.cat) && p.img)
+  const eligible = products.filter((p) => cats.includes(p.cat) && p.img)
+  const picked = (picks[tab] || [])
+    .map((ref) => eligible.find((p) => p.ref === ref))
+    .filter(Boolean)
+  return [...picked, ...eligible.filter((p) => !picked.includes(p))]
     .slice(0, HOME_CARDS_PER_TAB)
     .map((p) => {
       const { title, kind } = splitDisplayName(p.shortName || p.name, p.kind)
