@@ -1,4 +1,6 @@
 // This adapter never borrows another product's photo or a price from the mockup.
+import { productShortName } from '@/lib/products'
+
 const categories = {
   chair: 'Chaise',
   armchair: 'Fauteuil',
@@ -53,6 +55,8 @@ export function adaptCatalogue(data) {
         id: p.id,
         ref: p.sku,
         name: p.name,
+        // Cartes : nom court (avant le premier « - ») ; la fiche garde name.
+        shortName: productShortName(p.name),
         cat: categories[p.category],
         kind: kinds[p.category],
         material: family || 'Famille à préciser',
