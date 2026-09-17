@@ -3,7 +3,7 @@
 // ============================================================
 
 import { CATEGORY_LABEL } from './products'
-import { calculateLineVat } from './order'
+import { calculateLineVat, describeVolumeDiscounts } from './order'
 import type { CartItem, OrderTotals } from './order'
 import { getContainerLabel } from './container/pricing'
 import type { ContainerType } from './supabase/types'
@@ -270,7 +270,12 @@ export function buildQuoteHTML(q: QuoteData): string {
       <div class="summary">
         ${t.retailReference > 0 ? `<div class="row strike"><span>Équivalent retail FR</span><span class="v">${eur(t.retailReference)}</span></div>` : ''}
         <div class="row muted"><span>Sous-total HT</span><span class="v">${eur(t.subtotalHt)}</span></div>
-        ${t.volumeDiscountAmount > 0 ? `<div class="row muted"><span>Remise volume −${t.volumeDiscountPercent}%</span><span class="v">−${eur(t.volumeDiscountAmount)}</span></div>` : ''}
+        ${describeVolumeDiscounts(t)
+          .map(
+            (row) =>
+              `<div class="row muted"><span>${row.label}</span><span class="v">−${eur(row.amount)}</span></div>`,
+          )
+          .join('')}
         <div class="row muted"><span>Éco-participation</span><span class="v">${eur(t.ecoContributionTotal)}</span></div>
         <div class="row total"><span>Total HT</span><span class="v">${eur(t.totalHt)}</span></div>
         <div class="row muted"><span>TVA 20 %</span><span class="v">${eur(t.vat)}</span></div>

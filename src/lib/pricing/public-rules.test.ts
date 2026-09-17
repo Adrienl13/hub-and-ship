@@ -5,7 +5,10 @@ import { getCustomerDiscountStatus } from '@/lib/pricing/customer-discounts'
 import {
   DEFAULT_PUBLIC_PRICING_RULES,
   getActiveCustomerDiscountTiers,
+  getFamilyDiscountTiers,
   getPublicPricingRules,
+  getVolumeFamilyTiers,
+  parseVolumeFamilyTiers,
   resetPublicPricingRules,
   setPublicPricingRules,
 } from '@/lib/pricing/public-rules'
@@ -25,6 +28,7 @@ describe('public pricing rules module', () => {
       reservationFeeRate: 0.03,
       reservationFeeMin: 150,
       reservationFeeMax: 500,
+      volumeFamilies: null,
       distributorMinOrderCbm: null,
     })
   })
@@ -49,6 +53,7 @@ describe('public pricing rules module', () => {
       reservationFeeMax: 600,
       // Absent du payload → null : l'UI ne bloque jamais sur une valeur
       // qu'elle n'a pas reçue du serveur.
+      volumeFamilies: null,
       distributorMinOrderCbm: null,
     })
   })
@@ -107,5 +112,57 @@ describe('P0.4 — the dead panel fields now act on the money paths', () => {
     setPublicPricingRules({ tier2_qty: 80, tier2_discount: 0.05 })
     expect(getCustomerDiscountStatus(90).discountPercent).toBe(5)
     expect(getCustomerDiscountStatus(150).discountPercent).toBe(10)
+  })
+})
+
+describe('grille de remise par famille', () => {
+  const VALID = {
+    assises: [
+      { min_units: 100, discount: 0.06 },
+      { min_units: 150, discount: 0.1 },
+    ],
+    tables: [{ min_units: 20, discount: 0.05 }],
+    salons: [{ min_units: 5, discount: 0.04 }],
+    autres: [{ min_units: 100, discount: 0.06 }],
+  }
+
+  it('hydrate la grille et convertit les remises en pourcentage', () => {
+    setPublicPricingRules({ volume_discount_families: VALID })
+    const families = getVolumeFamilyTiers()
+    expect(families?.salons).toEqual([{ minUnits: 5, discountPercent: 4 }])
+    expect(getFamilyDiscountTiers('assises')).toEqual([
+      { minUnits: 100, discountPercent: 6 },
+      { minUnits: 150, discountPercent: 10 },
+    ])
+  })
+
+  it('retombe sur la grille unique tant que rien n’est configuré', () => {
+    expect(getVolumeFamilyTiers()).toBeNull()
+    expect(getFamilyDiscountTiers('salons')).toEqual(
+      getActiveCustomerDiscountTiers(),
+    )
+  })
+
+  it('refuse en bloc une grille incomplète ou incohérente', () => {
+    const incomplete = { ...VALID, salons: undefined }
+    for (const invalid of [
+      incomplete,
+      { ...VALID, tables: [] },
+      // Paliers qui ne progressent pas : la grille se contredirait.
+      {
+        ...VALID,
+        assises: [
+          { min_units: 150, discount: 0.1 },
+          { min_units: 100, discount: 0.06 },
+        ],
+      },
+      // 0,9 au lieu de 0,09 — au-delà du plafond de la règle d'or.
+      { ...VALID, salons: [{ min_units: 5, discount: 0.9 }] },
+      { ...VALID, salons: [{ min_units: 0, discount: 0.04 }] },
+      'pas un objet',
+      null,
+    ]) {
+      expect(parseVolumeFamilyTiers(invalid), JSON.stringify(invalid)).toBeNull()
+    }
   })
 })

@@ -48,7 +48,12 @@ const CONTAINER_TYPE_LABEL: Record<ContainerType, string> = {
   '40_gp': "40' General Purpose",
   '40_hc': "40' High Cube",
 }
-import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
+import {
+  type CartItem,
+  type OrderTotals,
+  describeVolumeDiscounts,
+  formatEUR,
+} from '@/lib/order'
 import { isQuoteMode } from '@/lib/reservations/mode'
 import { AnimatedNumber } from '@/components/motion-helpers'
 
@@ -497,14 +502,18 @@ export function OrderSidebar({
             className="space-y-1 border-t border-[color:var(--sand-deep)] px-4 py-3 text-xs"
           >
             <AnimRow label="Sous-total HT" value={totals.subtotalHt} />
-            {showVolumeDiscounts && totals.volumeDiscountPercent > 0 && (
-              <div className="flex items-center justify-between text-[color:var(--forest)]">
-                <span>Remise volume −{totals.volumeDiscountPercent}%</span>
-                <span className="font-medium tabular-nums">
-                  −{formatEUR(totals.volumeDiscountAmount)}
-                </span>
-              </div>
-            )}
+            {showVolumeDiscounts &&
+              describeVolumeDiscounts(totals).map((row) => (
+                <div
+                  key={row.key}
+                  className="flex items-center justify-between text-[color:var(--forest)]"
+                >
+                  <span>{row.label}</span>
+                  <span className="font-medium tabular-nums">
+                    −{formatEUR(row.amount)}
+                  </span>
+                </div>
+              ))}
             {showVolumeDiscounts && totals.volumeDiscountPercent > 0 && (
               <AnimRow label="Total HT remisé" value={totals.totalHt} />
             )}

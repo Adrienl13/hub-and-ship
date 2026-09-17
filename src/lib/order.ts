@@ -2,9 +2,20 @@
 // Terrassea — logique métier (panier, MOQ, container)
 // ============================================================
 
+import type { SalesChannel } from './supabase/types'
 import { getActiveSalesChannel } from './pricing/channel-state'
 import { getCustomerDiscountStatus } from './pricing/customer-discounts'
-import { getPublicPricingRules } from './pricing/public-rules'
+import {
+  DISCOUNT_FAMILY_LABEL,
+  countUnitsByFamily,
+  resolveDiscountFamily,
+  type DiscountFamily,
+} from './pricing/discount-families'
+import {
+  getFamilyDiscountTiers,
+  getPublicPricingRules,
+  getVolumeFamilyTiers,
+} from './pricing/public-rules'
 import type { DesignVariant, Product } from './products'
 
 export interface CartItem {
@@ -18,13 +29,31 @@ export interface CartItem {
   reserved?: boolean
 }
 
+/** Une remise volume obtenue sur une famille de produits. */
+export interface VolumeDiscountLine {
+  readonly family: DiscountFamily
+  readonly label: string
+  /** Pièces de cette famille dans le panier — ce qui déclenche le palier. */
+  readonly units: number
+  readonly discountPercent: number
+  readonly amount: number
+}
+
 export interface OrderTotals {
   /** Somme des lignes AVANT remise volume. */
   subtotalHt: number
-  /** Palier de remise volume atteint (en %, ex. 10 pour −10 %). */
+  /**
+   * Remise volume EFFECTIVE sur l'ensemble du panier, en %. Avec des paliers
+   * par famille, un panier mixte n'a pas un taux unique : celui-ci est le
+   * rapport remise/sous-total, arrondi au dixième. Pour l'afficher
+   * honnêtement, préférer `volumeDiscountLines` dès qu'il y a plus d'une
+   * famille remisée.
+   */
   volumeDiscountPercent: number
   /** Montant HT de la remise volume déduit du sous-total. */
   volumeDiscountAmount: number
+  /** Détail famille par famille — vide si aucune remise. */
+  volumeDiscountLines: ReadonlyArray<VolumeDiscountLine>
   ecoContributionTotal: number
   reservationFee: number
   payNow: number
@@ -101,28 +130,81 @@ export function calculateLineVat(item: CartItem): LineVatBreakdown {
   }
 }
 
+/**
+ * Ligne de commande réduite à ce dont le calcul a besoin. Permet aux surfaces
+ * qui ne manipulent pas de `CartItem` — devis co-brandé d'un partenaire,
+ * sélection publiée — d'utiliser LE MÊME moteur que le checkout, au lieu de
+ * recopier la remise et la TVA et de dériver au premier changement de grille.
+ */
+export interface OrderLineInput {
+  readonly basePriceHt: number
+  readonly ecoContribution: number
+  readonly retailPriceRef: number
+  readonly category: string
+  readonly quantity: number
+}
+
 export function calculateOrder(items: CartItem[]): OrderTotals {
+  return calculateOrderLines(
+    items.map((item) => ({
+      basePriceHt: item.product.basePriceHt,
+      ecoContribution: item.product.ecoContribution,
+      retailPriceRef: item.product.retailPriceRef,
+      category: item.product.category,
+      quantity: item.quantity,
+    })),
+  )
+}
+
+export function calculateOrderLines(
+  items: ReadonlyArray<OrderLineInput>,
+  options?: {
+    /**
+     * Canal dont la grille s'applique. Par défaut celui de la session. Un
+     * devis destiné au client FINAL (sélection co-brandée d'un partenaire)
+     * passe 'direct' explicitement : il affiche des prix publics, la remise
+     * ne doit pas dépendre de qui a le devis sous les yeux.
+     */
+    readonly channel?: SalesChannel
+  },
+): OrderTotals {
   // Chaque ligne est arrondie au centime AVANT d'être sommée — exactement
   // comme le RPC de réservation (`round(prix × qté, 2)` puis accumulation).
   const grossLines = items.map((item) =>
-    round2(item.product.basePriceHt * item.quantity),
+    round2(item.basePriceHt * item.quantity),
   )
   const subtotalHt = grossLines.reduce((sum, line) => sum + line, 0)
   const ecoContributionTotal = items.reduce(
-    (sum, item) => sum + item.product.ecoContribution * item.quantity,
+    (sum, item) => sum + item.ecoContribution * item.quantity,
     0,
   )
 
-  // Remise volume publique (« −6 % dès 100 pièces, −10 % dès 150 »), CANAL
-  // DIRECT UNIQUEMENT — les revendeurs/distributeurs ont déjà leur prix canal.
-  // Basée sur le nombre TOTAL d'unités du panier, appliquée au sous-total. Le
-  // RPC de réservation recompute et revalide exactement la même remise depuis
-  // les paramètres pricing actifs — client et serveur restent synchrones.
+  // Remise volume publique, CANAL DIRECT UNIQUEMENT — les revendeurs et
+  // distributeurs ont déjà leur prix canal.
+  //
+  // DEUX RÉGIMES, et c'est le serveur qui décide lequel : tant que la grille
+  // par famille n'est pas configurée, on compte TOUTES les pièces du panier et
+  // on applique la grille unique historique. Dès qu'elle l'est, chaque famille
+  // — assises, tables, salons — compte ses propres pièces et suit ses propres
+  // paliers, parce qu'un salon à 1 400 € et une chaise à 82 € ne déclenchent
+  // pas un volume au même seuil. Le RPC de réservation lit la même
+  // configuration et bascule sur la même condition : les deux côtés changent
+  // de régime ensemble, jamais l'un sans l'autre.
+  const isDirect = (options?.channel ?? getActiveSalesChannel()) === 'direct'
+  const families = getVolumeFamilyTiers()
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
-  const volumeDiscountPercent =
-    getActiveSalesChannel() === 'direct'
-      ? getCustomerDiscountStatus(totalUnits).discountPercent
-      : 0
+  const unitsByFamily = countUnitsByFamily(items)
+
+  function rateFor(item: OrderLineInput): number {
+    if (!isDirect) return 0
+    if (!families) return getCustomerDiscountStatus(totalUnits).discountPercent
+    const family = resolveDiscountFamily(item.category)
+    return getCustomerDiscountStatus(
+      unitsByFamily[family],
+      getFamilyDiscountTiers(family),
+    ).discountPercent
+  }
+
   // SOMME STRICTE DES LIGNES (demande Adrien 18/09/2026). Le total HT et la
   // TVA ne sont PAS un pourcentage appliqué au sous-total : ce sont les lignes,
   // remisées puis arrondies une par une, additionnées. Sans ça, la TVA affichée
@@ -130,14 +212,42 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
   // remise s'appliquait — et sur un gros panier l'écart pouvait dépasser la
   // tolérance de 0,05 € du RPC et faire REFUSER une réservation légitime.
   // La migration 48 applique le même calcul, ligne par ligne, côté serveur.
-  const netLines = grossLines.map((line) =>
-    round2(line * (1 - volumeDiscountPercent / 100)),
+  // C'est aussi ce qui rend les remises par famille possibles sans rien
+  // réécrire : chaque ligne porte déjà son propre taux.
+  const lineRates = items.map((item) => rateFor(item))
+  const netLines = grossLines.map((line, index) =>
+    round2(line * (1 - lineRates[index]! / 100)),
   )
   const netHt = round2(netLines.reduce((sum, line) => sum + line, 0))
   const volumeDiscountAmount = round2(subtotalHt - netHt)
   const vat = round2(
     netLines.reduce((sum, line) => sum + round2(line * VAT_RATE), 0),
   )
+
+  // Détail par famille : un panier mixte n'a pas UN taux de remise, il en a
+  // un par famille. On ne l'invente pas à l'affichage, on le remonte.
+  const discountByFamily = new Map<DiscountFamily, VolumeDiscountLine>()
+  items.forEach((item, index) => {
+    const percent = lineRates[index]!
+    if (percent <= 0) return
+    const family = resolveDiscountFamily(item.category)
+    const amount = round2(grossLines[index]! - netLines[index]!)
+    const existing = discountByFamily.get(family)
+    discountByFamily.set(family, {
+      family,
+      label: DISCOUNT_FAMILY_LABEL[family],
+      units: unitsByFamily[family],
+      discountPercent: percent,
+      amount: round2((existing?.amount ?? 0) + amount),
+    })
+  })
+  const volumeDiscountLines = [...discountByFamily.values()]
+  // Taux effectif sur l'ensemble : exact quand une seule grille s'applique,
+  // moyenne pondérée sinon.
+  const volumeDiscountPercent =
+    subtotalHt > 0
+      ? Math.round((volumeDiscountAmount / subtotalHt) * 1000) / 10
+      : 0
 
   const reservationFee = calculateReservationFee(netHt)
   const deposit30 = netHt * 0.3
@@ -157,16 +267,14 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
   // SKU-336. On compare donc le retail des lignes éligibles au prix net de
   // CES MÊMES lignes, remise volume répartie au prorata.
   const comparable = items.filter(
-    (item) =>
-      item.product.retailPriceRef > item.product.basePriceHt &&
-      item.product.basePriceHt > 0,
+    (item) => item.retailPriceRef > item.basePriceHt && item.basePriceHt > 0,
   )
   const retailReference = comparable.reduce(
-    (sum, item) => sum + item.product.retailPriceRef * item.quantity,
+    (sum, item) => sum + item.retailPriceRef * item.quantity,
     0,
   )
   const comparableGrossHt = comparable.reduce(
-    (sum, item) => sum + item.product.basePriceHt * item.quantity,
+    (sum, item) => sum + item.basePriceHt * item.quantity,
     0,
   )
   const comparableNetHt =
@@ -179,6 +287,7 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     subtotalHt,
     volumeDiscountPercent,
     volumeDiscountAmount,
+    volumeDiscountLines,
     ecoContributionTotal,
     reservationFee,
     payNow: reservationFee,
@@ -191,6 +300,56 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     savings,
     savingsPercent: retailReference > 0 ? (savings / retailReference) * 100 : 0,
   }
+}
+
+/**
+ * Lignes de remise à afficher dans un récapitulatif.
+ *
+ * Un panier mixte n'a pas UN taux de remise : les assises et les salons ne
+ * suivent pas la même grille. Plutôt que d'afficher une moyenne pondérée que
+ * personne ne peut recalculer, on détaille dès qu'il y a plus d'une famille
+ * remisée — et on garde le libellé historique quand il n'y en a qu'une.
+ */
+export function describeVolumeDiscounts(
+  totals: Pick<
+    OrderTotals,
+    'volumeDiscountLines' | 'volumeDiscountAmount' | 'volumeDiscountPercent'
+  >,
+): ReadonlyArray<{ key: string; label: string; amount: number }> {
+  const lines = totals.volumeDiscountLines
+  if (lines.length === 0) {
+    // Réservation relue depuis la base : le détail n'est pas persisté, on
+    // retombe sur le taux effectif.
+    return totals.volumeDiscountAmount > 0
+      ? [
+          {
+            key: 'total',
+            label: `Remise volume −${formatPercent(totals.volumeDiscountPercent)} %`,
+            amount: totals.volumeDiscountAmount,
+          },
+        ]
+      : []
+  }
+  if (lines.length === 1) {
+    const only = lines[0]!
+    return [
+      {
+        key: only.family,
+        label: `Remise volume −${formatPercent(only.discountPercent)} %`,
+        amount: only.amount,
+      },
+    ]
+  }
+  return lines.map((line) => ({
+    key: line.family,
+    label: `Remise ${line.label.toLowerCase()} −${formatPercent(line.discountPercent)} %`,
+    amount: line.amount,
+  }))
+}
+
+/** 6 → « 6 », 7.25 → « 7,25 » — jamais « 6.0 ». */
+function formatPercent(value: number): string {
+  return String(Math.round(value * 100) / 100).replace('.', ',')
 }
 
 export type MoqStatus = {

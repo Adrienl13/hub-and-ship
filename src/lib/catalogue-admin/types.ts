@@ -6,6 +6,10 @@ import type {
   TableShapeDb,
 } from '@/lib/supabase/types'
 import type { InternalProductCostColumn } from '@/lib/catalogue/product-columns'
+import {
+  parseVolumeFamilyTiers,
+  type VolumeFamilyTiers,
+} from '@/lib/pricing/public-rules'
 
 export type ProductRow = Database['public']['Tables']['products']['Row']
 /**
@@ -138,6 +142,8 @@ export interface AdminPricingParameters {
   readonly tier2Discount: number
   readonly tier3Qty: number
   readonly tier3Discount: number
+  /** Paliers par famille — null = grille unique sur le total des pièces. */
+  readonly volumeFamilies: VolumeFamilyTiers | null
   readonly reservationFeeRate: number
   readonly reservationFeeMin: number
   readonly reservationFeeMax: number
@@ -248,6 +254,9 @@ export function fromPricingParameterRow(
     tier2Discount: Number(row.tier2_discount),
     tier3Qty: row.tier3_qty,
     tier3Discount: Number(row.tier3_discount),
+    // Même lecture/validation que le front public : une grille incohérente
+    // est refusée en bloc plutôt qu'appliquée à moitié.
+    volumeFamilies: parseVolumeFamilyTiers(row.volume_discount_families),
     reservationFeeRate: Number(row.reservation_fee_rate),
     reservationFeeMin: Number(row.reservation_fee_min),
     reservationFeeMax: Number(row.reservation_fee_max),

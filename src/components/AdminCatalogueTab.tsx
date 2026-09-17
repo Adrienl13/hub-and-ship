@@ -21,6 +21,11 @@ import { AdminPartnerPriceGrid } from '@/components/AdminPartnerPriceGrid'
 import { AdminProductEditor } from '@/components/AdminProductEditor'
 import { AdminContainerProfitSimulator } from '@/components/AdminContainerProfitSimulator'
 import { AdminStockEditor } from '@/components/AdminStockEditor'
+import {
+  AdminVolumeTiersEditor,
+  buildVolumeFamiliesPayload,
+  type VolumeTiersDraft,
+} from '@/components/AdminVolumeTiersEditor'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -69,6 +74,7 @@ import type {
 } from '@/lib/catalogue-admin/types'
 import { useAuth } from '@/hooks/useAuth'
 import { computeProductProfit } from '@/lib/pricing/product-profit'
+import { toVolumeFamiliesJson } from '@/lib/pricing/public-rules'
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -240,6 +246,14 @@ function PricingParametersPanel({
   const [tier3DiscountPercent, setTier3DiscountPercent] = useState(
     String(parameters.tier3Discount * 100),
   )
+  // Grille par famille (migration 49). `null` = grille unique, comportement
+  // historique — c'est l'éditeur qui décide, pas un défaut caché ici.
+  const [volumeDraft, setVolumeDraft] = useState<VolumeTiersDraft | null>(null)
+  const volumeCheck = volumeDraft
+    ? buildVolumeFamiliesPayload(volumeDraft)
+    : null
+  const volumeError =
+    volumeCheck && 'error' in volumeCheck ? volumeCheck.error : null
 
   useEffect(() => {
     setFreight(String(parameters.freightEur40hc))
@@ -313,6 +327,11 @@ function PricingParametersPanel({
       tier2_discount: Math.max(0, percentToRate(tier2DiscountPercent)),
       tier3_qty: nextTier3Qty,
       tier3_discount: Math.max(0, percentToRate(tier3DiscountPercent)),
+      // Toujours transmis : la RPC applique « champ absent = inchangé », et
+      // omettre la clé après une désactivation garderait l'ancienne grille.
+      ...(volumeCheck && 'payload' in volumeCheck
+        ? { volume_discount_families: volumeCheck.payload }
+        : {}),
     })
   }
 
@@ -330,7 +349,7 @@ function PricingParametersPanel({
             Version {parameters.version} · {parameters.label}
           </div>
         </div>
-        <Button type="submit" size="sm" disabled={saving}>
+        <Button type="submit" size="sm" disabled={saving || volumeError !== null}>
           {saving ? 'Enregistrement…' : 'Enregistrer paramètres'}
         </Button>
       </div>
@@ -414,6 +433,17 @@ function PricingParametersPanel({
           onChange={setTier3DiscountPercent}
         />
       </div>
+
+      <AdminVolumeTiersEditor
+        value={parameters.volumeFamilies}
+        fallback={{
+          qty2: parameters.tier2Qty,
+          discount2: parameters.tier2Discount * 100,
+          qty3: parameters.tier3Qty,
+          discount3: parameters.tier3Discount * 100,
+        }}
+        onChange={setVolumeDraft}
+      />
 
       <div
         className={`rounded-sm border px-3 py-2 text-xs ${
@@ -1417,6 +1447,10 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           tier2_discount: version.tier2Discount,
           tier3_qty: version.tier3Qty,
           tier3_discount: version.tier3Discount,
+          // La grille par famille appartient à la version restaurée, au même
+          // titre que ses paliers : la laisser de côté restaurerait une
+          // version « à moitié ».
+          volume_discount_families: toVolumeFamiliesJson(version.volumeFamilies),
           reservation_fee_rate: version.reservationFeeRate,
           reservation_fee_min: version.reservationFeeMin,
           reservation_fee_max: version.reservationFeeMax,

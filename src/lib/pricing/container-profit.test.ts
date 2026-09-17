@@ -32,6 +32,7 @@ const PARAMS: AdminPricingParameters = {
   tier2Discount: 0.06,
   tier3Qty: 150,
   tier3Discount: 0.1,
+  volumeFamilies: null,
   reservationFeeRate: 0.03,
   reservationFeeMin: 150,
   reservationFeeMax: 500,

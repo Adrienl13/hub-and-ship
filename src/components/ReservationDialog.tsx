@@ -50,7 +50,12 @@ import { toast } from 'sonner'
 
 import { useChannel } from '@/hooks/useChannel'
 import { getDistributorMinimumStatus } from '@/lib/pricing/distributor-minimum'
-import { formatEUR, type CartItem, type OrderTotals } from '@/lib/order'
+import {
+  describeVolumeDiscounts,
+  formatEUR,
+  type CartItem,
+  type OrderTotals,
+} from '@/lib/order'
 import {
   normalizeReferralCode,
   type ReferralApplication,
@@ -1072,12 +1077,14 @@ function SummaryCard({
           <div className="mt-0.5 font-display text-lg font-semibold tabular-nums">
             {formatEUR(totals.totalHt)}
           </div>
-          {totals.volumeDiscountPercent > 0 && (
-            <div className="mt-0.5 text-[11px] text-[color:var(--forest)]">
-              dont remise volume −{totals.volumeDiscountPercent}% (
-              {formatEUR(totals.volumeDiscountAmount)})
+          {describeVolumeDiscounts(totals).map((row) => (
+            <div
+              key={row.key}
+              className="mt-0.5 text-[11px] text-[color:var(--forest)]"
+            >
+              dont {row.label.toLowerCase()} ({formatEUR(row.amount)})
             </div>
-          )}
+          ))}
         </div>
         {/* Même garde que /panier et la sidebar : pas d'économie à annoncer,
             pas de bloc. Sans elle, un panier dont le prix de référence est

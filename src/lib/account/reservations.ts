@@ -168,6 +168,11 @@ function totalsFromRow(
         ? Math.round((volumeDiscountAmount / subtotalHt) * 1000) / 10
         : 0,
     volumeDiscountAmount,
+    // Le détail par famille n'est pas persisté : `reservations` ne stocke que
+    // le montant total de la remise. Une réservation relue affiche donc le
+    // taux effectif, sans le découpage — on ne reconstitue pas un détail qu'on
+    // n'a pas enregistré.
+    volumeDiscountLines: [],
     ecoContributionTotal: Number(row.eco_contribution_total),
     reservationFee: Number(row.reservation_fee),
     payNow: Number(row.pay_now),

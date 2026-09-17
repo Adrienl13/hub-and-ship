@@ -17,8 +17,12 @@ import {
   type PublicSelection,
 } from '@/lib/partners/selections'
 import { CATEGORY_LABEL } from '@/lib/products'
-import { formatEUR, formatEURprecise } from '@/lib/order'
-import { getCustomerDiscountStatus } from '@/lib/pricing/customer-discounts'
+import {
+  calculateOrderLines,
+  describeVolumeDiscounts,
+  formatEUR,
+  formatEURprecise,
+} from '@/lib/order'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -124,13 +128,22 @@ function PartnerQuotePage() {
   const subtotalHt = selectionPublicTotalHt(items)
   const ecoTotal = selectionEcoTotal(items)
   const totalUnits = selectionTotalUnits(items)
-  // Même remise volume que le checkout (canal direct du client final) : sans
-  // elle, le devis annoncerait un TTC supérieur au montant réellement facturé.
-  const volumeDiscountPercent =
-    getCustomerDiscountStatus(totalUnits).discountPercent
-  const volumeDiscountAmount =
-    Math.round(((subtotalHt * volumeDiscountPercent) / 100) * 100) / 100
-  const totalHt = subtotalHt - volumeDiscountAmount + ecoTotal
+  // Même moteur que le checkout, et non une remise recopiée : paliers par
+  // famille compris. Canal 'direct' forcé — ce devis affiche des prix publics
+  // destinés au client FINAL, la remise ne doit pas dépendre du canal de qui
+  // l'a sous les yeux. Sans ça, le devis annoncerait un montant que la
+  // réservation ne confirmerait pas.
+  const engine = calculateOrderLines(
+    items.map((item) => ({
+      basePriceHt: item.snapshot.basePriceHt,
+      ecoContribution: item.snapshot.ecoContribution,
+      retailPriceRef: 0,
+      category: item.snapshot.category,
+      quantity: item.quantity,
+    })),
+    { channel: 'direct' },
+  )
+  const totalHt = engine.totalHt + ecoTotal
   const vat = totalHt * VAT_RATE
   const ttc = totalHt + vat
 
@@ -234,12 +247,13 @@ function PartnerQuotePage() {
           <div className="mt-4 flex justify-end">
             <dl className="w-64 space-y-1 text-sm">
               <Row label="Sous-total HT" value={formatEUR(subtotalHt)} />
-              {volumeDiscountAmount > 0 && (
+              {describeVolumeDiscounts(engine).map((row) => (
                 <Row
-                  label={`Remise volume −${volumeDiscountPercent}%`}
-                  value={`−${formatEUR(volumeDiscountAmount)}`}
+                  key={row.key}
+                  label={row.label}
+                  value={`−${formatEUR(row.amount)}`}
                 />
-              )}
+              ))}
               <Row
                 label="Éco-participation"
                 value={formatEURprecise(ecoTotal)}

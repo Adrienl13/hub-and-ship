@@ -33,6 +33,7 @@ import {
   calculateContainerFill,
   calculateLineVat,
   calculateOrder,
+  describeVolumeDiscounts,
   formatEUR,
 } from '@/lib/order'
 import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
@@ -308,16 +309,18 @@ function PanierPage() {
                     label={`Sous-total HT (${totalUnits} pièces)`}
                     value={formatEUR(totals.subtotalHt)}
                   />
-                  {showVolumeDiscounts && totals.volumeDiscountPercent > 0 && (
-                    <div className="flex items-baseline justify-between text-[color:var(--forest)]">
-                      <span>
-                        Remise volume −{totals.volumeDiscountPercent} %
-                      </span>
-                      <span className="font-medium tabular-nums">
-                        −{formatEUR(totals.volumeDiscountAmount)}
-                      </span>
-                    </div>
-                  )}
+                  {showVolumeDiscounts &&
+                    describeVolumeDiscounts(totals).map((row) => (
+                      <div
+                        key={row.key}
+                        className="flex items-baseline justify-between text-[color:var(--forest)]"
+                      >
+                        <span>{row.label}</span>
+                        <span className="font-medium tabular-nums">
+                          −{formatEUR(row.amount)}
+                        </span>
+                      </div>
+                    ))}
                   <Row label="Total HT" value={formatEUR(totals.totalHt)} />
                   <Row label="TVA 20 %" value={formatEUR(totals.vat)} muted />
                   <Row

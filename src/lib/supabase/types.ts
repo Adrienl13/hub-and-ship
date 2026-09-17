@@ -1148,6 +1148,8 @@ type PricingParameterRow = {
   tier2_discount: number
   tier3_qty: number
   tier3_discount: number
+  /** Paliers volume par famille (migration 49). NULL = grille unique. */
+  volume_discount_families: VolumeDiscountFamiliesJson | null
   max_loss_leaders: number
   loss_leader_min_lot: number
   reservation_fee_rate: number
@@ -1166,6 +1168,12 @@ type PricingParameterRow = {
   created_at: string
   updated_at: string
 }
+
+/** Forme stockée : { famille: [{ min_units, discount }, ...] }. */
+export type VolumeDiscountFamiliesJson = Record<
+  string,
+  ReadonlyArray<{ readonly min_units: number; readonly discount: number }>
+>
 
 type PricingParameterInsert = {
   id?: string
@@ -1190,6 +1198,7 @@ type PricingParameterInsert = {
   tier2_discount?: number
   tier3_qty?: number
   tier3_discount?: number
+  volume_discount_families?: VolumeDiscountFamiliesJson | null
   max_loss_leaders?: number
   loss_leader_min_lot?: number
   reservation_fee_rate?: number

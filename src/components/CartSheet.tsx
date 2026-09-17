@@ -11,7 +11,11 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useCartLines } from '@/hooks/useCartLines'
-import { calculateOrder, formatEUR } from '@/lib/order'
+import {
+  calculateOrder,
+  describeVolumeDiscounts,
+  formatEUR,
+} from '@/lib/order'
 import {
   getNextOrderQuantity,
   getPreviousOrderQuantity,
@@ -154,16 +158,17 @@ export function CartSheet() {
                   {formatEUR(totals.subtotalHt)}
                 </span>
               </div>
-              {totals.volumeDiscountPercent > 0 && (
-                <div className="flex items-baseline justify-between text-xs text-[color:var(--forest)]">
-                  <span>
-                    Remise volume −{totals.volumeDiscountPercent}% appliquée
-                  </span>
+              {describeVolumeDiscounts(totals).map((row) => (
+                <div
+                  key={row.key}
+                  className="flex items-baseline justify-between text-xs text-[color:var(--forest)]"
+                >
+                  <span>{row.label} appliquée</span>
                   <span className="font-bold tabular-nums">
-                    −{formatEUR(totals.volumeDiscountAmount)}
+                    −{formatEUR(row.amount)}
                   </span>
                 </div>
-              )}
+              ))}
               <Button
                 asChild
                 className="h-11 w-full rounded-[9px] text-sm font-bold"
