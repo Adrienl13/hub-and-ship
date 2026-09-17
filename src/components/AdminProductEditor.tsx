@@ -40,6 +40,10 @@ import type {
   AdminProductVariant,
   AdminSeedCommitment,
 } from '@/lib/catalogue-admin/types'
+import {
+  discardOrphanedImages,
+  purgeOrphanedImages,
+} from '@/components/ImageUploader'
 
 const CATEGORY_VALUES: ReadonlyArray<ProductCategory> = PRODUCT_CATEGORIES
 type ProductUpdate = Database['public']['Tables']['products']['Update']
@@ -242,7 +246,9 @@ function buildPricingPreviewRows(
   const hasRealCost = fobUsd !== null && qtyPerContainer !== null
   const landedCostHt = hasRealCost
     ? round2(
-        fobUsd * params.fxUsdEur * (1 + params.customsRate + params.importInsuranceRate) +
+        fobUsd *
+          params.fxUsdEur *
+          (1 + params.customsRate + params.importInsuranceRate) +
           params.freightEur40hc / qtyPerContainer +
           params.fixedImportFeeEur,
       )
@@ -256,8 +262,16 @@ function buildPricingPreviewRows(
     quantity: number
   }> = [
     { label: 'Direct', channel: 'direct', quantity: 1 },
-    { label: `Direct palier ${params.tier2Qty}`, channel: 'direct', quantity: params.tier2Qty },
-    { label: `Direct palier ${params.tier3Qty}`, channel: 'direct', quantity: params.tier3Qty },
+    {
+      label: `Direct palier ${params.tier2Qty}`,
+      channel: 'direct',
+      quantity: params.tier2Qty,
+    },
+    {
+      label: `Direct palier ${params.tier3Qty}`,
+      channel: 'direct',
+      quantity: params.tier3Qty,
+    },
     { label: 'Revendeur', channel: 'reseller', quantity: 1 },
     { label: 'Distributeur', channel: 'distributor', quantity: 1 },
   ]
@@ -721,6 +735,9 @@ export function AdminProductEditor({
 
     setSaving(false)
     toast.success('Produit enregistré.')
+    // La fiche est en base : seulement MAINTENANT on retire du bucket les
+    // images remplacées ou décochées pendant la saisie.
+    await purgeOrphanedImages()
     await onSaved(targetProductId)
   }
 
@@ -931,7 +948,7 @@ export function AdminProductEditor({
                   <span className="text-sm font-medium">
                     {PARTNER_CHANNEL_LABELS[channel]}
                   </span>
-                  <span className="text-[11px] text-muted-foreground tabular-nums">
+                  <span className="text-[11px] tabular-nums text-muted-foreground">
                     défaut{' '}
                     {defaultPrice !== null
                       ? `${defaultPrice.toFixed(2)} €`
@@ -959,9 +976,7 @@ export function AdminProductEditor({
                 {profit !== null && !goldenViolation && (
                   <div
                     className={`text-[11px] tabular-nums ${
-                      profit > 0
-                        ? 'text-[color:var(--forest)]'
-                        : 'text-red-700'
+                      profit > 0 ? 'text-[color:var(--forest)]' : 'text-red-700'
                     }`}
                   >
                     Bénéfice : {profit > 0 ? '+' : ''}
@@ -1010,9 +1025,7 @@ export function AdminProductEditor({
               <input
                 type="checkbox"
                 checked={state.is_loss_leader}
-                onChange={(e) =>
-                  setField('is_loss_leader', e.target.checked)
-                }
+                onChange={(e) => setField('is_loss_leader', e.target.checked)}
               />
               <span>Activer pour une référence stratégique</span>
             </label>
@@ -1361,7 +1374,16 @@ export function AdminProductEditor({
       )}
 
       <div className="flex justify-end gap-2 border-t border-[color:var(--sand-deep)] pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            // Formulaire abandonné : on ne supprime RIEN. L'ancienne image
+            // est toujours celle de la fiche en base.
+            discardOrphanedImages()
+            onCancel()
+          }}
+        >
           Annuler
         </Button>
         <Button type="submit" disabled={saving}>
@@ -1426,10 +1448,8 @@ function ProfitLine({
   readonly qtyPerContainer: number | null
 }) {
   const unitProfit = round2(sellPriceHt - landedCostHt)
-  const marginPercent =
-    sellPriceHt > 0 ? (unitProfit / sellPriceHt) * 100 : 0
-  const tone =
-    unitProfit > 0 ? 'text-[color:var(--forest)]' : 'text-red-700'
+  const marginPercent = sellPriceHt > 0 ? (unitProfit / sellPriceHt) * 100 : 0
+  const tone = unitProfit > 0 ? 'text-[color:var(--forest)]' : 'text-red-700'
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 text-xs">
       <span className="text-muted-foreground">
@@ -1514,7 +1534,7 @@ function PricingPreviewTable({
       {rows.map((row) => (
         <div
           key={`${row.channel}-${row.quantity}`}
-          className="grid grid-cols-[1.2fr_70px_95px_95px_95px] px-3 py-2 text-xs odd:bg-[color:var(--sand-soft)]/40"
+          className="odd:bg-[color:var(--sand-soft)]/40 grid grid-cols-[1.2fr_70px_95px_95px_95px] px-3 py-2 text-xs"
         >
           <span className="font-medium">{row.label}</span>
           <span className="text-right tabular-nums">{row.quantity}</span>

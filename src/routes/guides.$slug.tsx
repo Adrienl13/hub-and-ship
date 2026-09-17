@@ -14,9 +14,19 @@ import {
 } from '@/lib/seo'
 
 export const Route = createFileRoute('/guides/$slug')({
-  component: GuidePage,
-  head: ({ params }) => {
+  // Résolution dans le LOADER, pas dans le composant : un `throw notFound()`
+  // depuis le corps du composant échappe aux frontières de route et atterrit
+  // sur l'ErrorComponent anglais de TanStack Router — la page répondait 200
+  // avec « Something went wrong! ». Même correctif que /livres/$slug.
+  // getGuideBySlug est synchrone : rien à attendre.
+  loader: ({ params }) => {
     const guide = getGuideBySlug(params.slug)
+    if (!guide) throw notFound()
+    return { guide }
+  },
+  component: GuidePage,
+  head: ({ loaderData, params }) => {
+    const guide = loaderData?.guide
     if (!guide) {
       return buildSeoHead({
         title: 'Guide introuvable',
@@ -55,9 +65,7 @@ export const Route = createFileRoute('/guides/$slug')({
 })
 
 function GuidePage() {
-  const { slug } = Route.useParams()
-  const guide = getGuideBySlug(slug)
-  if (!guide) throw notFound()
+  const { guide } = Route.useLoaderData()
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -79,7 +87,7 @@ function GuidePage() {
             {guide.title}
           </h1>
 
-          <div className="mt-5 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] p-4">
+          <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] mt-5 rounded-md border p-4">
             <div className="label-eyebrow text-[color:var(--ember)]">
               En bref
             </div>
@@ -132,7 +140,9 @@ function GuidePage() {
           </section>
 
           <section className="mt-10 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
-            <h2 className="font-display text-lg font-semibold">Aller plus loin</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Aller plus loin
+            </h2>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {guide.related.map((link) => (
                 <li key={link.href}>

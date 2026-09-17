@@ -128,7 +128,15 @@ export function createCartSnapshot({
 
   // Une ligne par (produit, design résolu) — la sentinelle __default__ et
   // l'id réel du design par défaut fusionnent sur la même ligne.
-  const lines = new Map<string, CartItem>()
+  //
+  // ATTENTION à la façon de fusionner. La sentinelle est un ALIAS du design
+  // par défaut, pas une seconde ligne : les additionner inventait des unités
+  // que l'acheteur n'a jamais demandées. Cas réel — un panier v2 migré écrit
+  // « p1::__default__ = 50 », l'acheteur passe ensuite à 60 sur la vraie
+  // ligne, et le devis partait à 110. On garde donc le MAXIMUM quand un des
+  // deux côtés est la sentinelle, et l'addition pour deux designs réellement
+  // distincts dont l'un a disparu du catalogue (là, les unités sont vraies).
+  const lines = new Map<string, { item: CartItem; fromSentinel: boolean }>()
   for (const [key, quantity] of Object.entries(qtyByLine)) {
     if (!quantity || quantity <= 0) continue
     const { productId, variantId } = parseLineKey(key)
@@ -136,24 +144,35 @@ export function createCartSnapshot({
     if (!product) continue
     const variant = resolveVariant(product, variantId)
     const resolvedKey = cartLineKey(product.id, variant.id)
+    const isSentinel = variantId === DEFAULT_VARIANT_KEY
     const existing = lines.get(resolvedKey)
-    if (existing) {
-      existing.quantity += quantity
+    if (!existing) {
+      lines.set(resolvedKey, {
+        item: { product, variant, quantity },
+        fromSentinel: isSentinel,
+      })
+      continue
+    }
+    if (isSentinel || existing.fromSentinel) {
+      existing.item.quantity = Math.max(existing.item.quantity, quantity)
+      existing.fromSentinel = existing.fromSentinel && isSentinel
     } else {
-      lines.set(resolvedKey, { product, variant, quantity })
+      existing.item.quantity += quantity
     }
   }
 
   // Ordre stable : celui du catalogue, puis l'ordre des designs du produit.
-  const items = [...lines.values()].sort((a, b) => {
-    const productOrder =
-      products.indexOf(a.product) - products.indexOf(b.product)
-    if (productOrder !== 0) return productOrder
-    return (
-      a.product.variants.indexOf(a.variant) -
-      b.product.variants.indexOf(b.variant)
-    )
-  })
+  const items = [...lines.values()]
+    .map((line) => line.item)
+    .sort((a, b) => {
+      const productOrder =
+        products.indexOf(a.product) - products.indexOf(b.product)
+      if (productOrder !== 0) return productOrder
+      return (
+        a.product.variants.indexOf(a.variant) -
+        b.product.variants.indexOf(b.variant)
+      )
+    })
 
   const totals = calculateOrder(items)
   const fill = calculateContainerFill(items, capacityCbm)
@@ -224,10 +243,14 @@ function writeLineQty(
   }
 
   const qtyByLine = { ...previous.qtyByLine }
+  // La sentinelle héritée part à CHAQUE écriture, pas seulement quand la
+  // quantité tombe à zéro : sinon elle survivait à côté de la vraie ligne et
+  // doublait le panier. Elle ne se purgeait que sur une suppression, ce qui
+  // laissait tous les paniers v2 encore ouverts dans un navigateur en écart.
+  const sentinelKey = cartLineKey(productId, DEFAULT_VARIANT_KEY)
+  if (sentinelKey !== key) delete qtyByLine[sentinelKey]
   if (nextQty <= 0) {
     delete qtyByLine[key]
-    // Purge aussi l'éventuelle ligne sentinelle héritée du même produit.
-    delete qtyByLine[cartLineKey(productId, DEFAULT_VARIANT_KEY)]
   } else {
     qtyByLine[key] = nextQty
   }
@@ -245,7 +268,10 @@ export const useCartStore = create<CartStoreState>()(
         set((previous) => {
           const product = resolveCatalogueProduct(productId)
           if (!product) return previous
-          const variantId = selectedVariantId(product, previous.variantByProduct)
+          const variantId = selectedVariantId(
+            product,
+            previous.variantByProduct,
+          )
           return writeLineQty(previous, productId, variantId, quantity, options)
         }),
       setLineQty: (productId, variantId, quantity, options) =>

@@ -97,6 +97,48 @@ async function uploadImage(
   return { ok: true, url: data.publicUrl }
 }
 
+/**
+ * Images remplacées ou retirées d'un formulaire NON ENCORE enregistré.
+ *
+ * Elles ne sont plus supprimées au moment du clic : `onChange` ne fait que
+ * muter l'état local, donc un admin qui remplaçait une image puis fermait
+ * sans enregistrer avait DÉJÀ perdu l'ancienne — définitivement, et parfois
+ * pour une autre fiche, car quatre URL du bucket sont référencées par deux
+ * produits. On accumule ici, et l'éditeur vide le bac après un upsert réussi.
+ */
+const orphanedUrls = new Set<string>()
+
+function markOrphaned(url: string): void {
+  if (url) orphanedUrls.add(url)
+}
+
+/** Annule la mise au rebut — l'admin a remis la même image. */
+function unmarkOrphaned(url: string): void {
+  orphanedUrls.delete(url)
+}
+
+/**
+ * À appeler APRÈS un enregistrement réussi. Best-effort : l'échec d'une
+ * suppression de stockage ne doit jamais faire échouer une sauvegarde qui,
+ * elle, est déjà en base.
+ */
+export async function purgeOrphanedImages(): Promise<void> {
+  const urls = [...orphanedUrls]
+  orphanedUrls.clear()
+  await Promise.all(
+    urls.map((url) =>
+      deleteByPublicUrl(url).catch((error: unknown) => {
+        console.error('purgeOrphanedImages: suppression ignorée', url, error)
+      }),
+    ),
+  )
+}
+
+/** À appeler quand un formulaire est abandonné : on ne supprime rien. */
+export function discardOrphanedImages(): void {
+  orphanedUrls.clear()
+}
+
 async function deleteByPublicUrl(url: string): Promise<void> {
   // Best-effort: only attempt removal if the URL belongs to our bucket;
   // anything else (e.g. an Unsplash placeholder URL from the old fixtures)
@@ -144,8 +186,9 @@ export function ImageUploader({
         return
       }
       onChange(result.url)
+      unmarkOrphaned(result.url)
       if (previous && previous !== result.url) {
-        void deleteByPublicUrl(previous)
+        markOrphaned(previous)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'erreur inconnue')
@@ -154,12 +197,10 @@ export function ImageUploader({
     }
   }
 
-  async function handleRemove(): Promise<void> {
+  function handleRemove(): void {
     const previous = value
     onChange('')
-    if (previous) {
-      await deleteByPublicUrl(previous)
-    }
+    markOrphaned(previous)
   }
 
   return (
@@ -282,11 +323,11 @@ export function ImageGalleryUploader({
     }
   }
 
-  async function handleRemove(index: number): Promise<void> {
+  function handleRemove(index: number): void {
     const url = values[index]
     const next = values.filter((_, i) => i !== index)
     onChange([...next])
-    if (url) await deleteByPublicUrl(url)
+    if (url) markOrphaned(url)
   }
 
   return (

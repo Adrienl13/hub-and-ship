@@ -24,6 +24,10 @@ import type {
 } from '@/lib/delivered-containers/types'
 import { PRODUCT_CATEGORIES, type ProductCategory } from '@/lib/products'
 import { checkContainerPublication } from '@/lib/delivered-containers/publication-check'
+import {
+  discardOrphanedImages,
+  purgeOrphanedImages,
+} from '@/components/ImageUploader'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 type ContainerInsert = Database['public']['Tables']['containers']['Insert']
@@ -347,6 +351,7 @@ export function AdminContainerEditor({
       }
     }
     setSaving(false)
+    await purgeOrphanedImages()
     await onSaved()
   }
 
@@ -718,7 +723,14 @@ export function AdminContainerEditor({
       </Fieldset>
 
       <div className="flex justify-end gap-2 border-t border-[color:var(--sand-deep)] pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            discardOrphanedImages()
+            onCancel()
+          }}
+        >
           Annuler
         </Button>
         <Button type="submit" disabled={saving}>
