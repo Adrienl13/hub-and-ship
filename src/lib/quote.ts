@@ -3,6 +3,7 @@
 // ============================================================
 
 import { CATEGORY_LABEL } from './products'
+import { calculateLineVat } from './order'
 import type { CartItem, OrderTotals } from './order'
 import { getContainerLabel } from './container/pricing'
 import type { ContainerType } from './supabase/types'
@@ -49,7 +50,10 @@ export function buildQuoteHTML(q: QuoteData): string {
   const linesHtml = q.items
     .map((item) => {
       const cbm = item.product.cbmPerUnit * item.quantity
-      const lineTotal = item.product.basePriceHt * item.quantity
+      // TVA ligne par ligne : l'acheteur doit lire ce que coûte CHAQUE
+      // produit TTC, pas seulement un total en bas de page.
+      const line = calculateLineVat(item)
+      const lineTotal = line.lineHt
       const thumbHtml = item.variant.imageUrl
         ? `<img class="sw" src="${escapeHtml(item.variant.imageUrl)}" alt="" />`
         : `<span class="sw"></span>`
@@ -69,9 +73,11 @@ export function buildQuoteHTML(q: QuoteData): string {
             </div>
           </td>
           <td class="num">${item.quantity}</td>
-          <td class="num">${eur(item.product.basePriceHt)}</td>
+          <td class="num">${eur(line.unitHt)}</td>
+          <td class="num muted">${eur(line.unitTtc)}</td>
           <td class="num">${cbm.toFixed(2)} m³</td>
           <td class="num bold">${eur(lineTotal)}</td>
+          <td class="num">${eur(line.lineTtc)}</td>
         </tr>`
     })
     .join('')
@@ -235,11 +241,13 @@ export function buildQuoteHTML(q: QuoteData): string {
           <th>Produit</th>
           <th class="num">Qté</th>
           <th class="num">PU HT</th>
+          <th class="num">PU TTC</th>
           <th class="num">Volume</th>
           <th class="num">Total HT</th>
+          <th class="num">Total TTC</th>
         </tr>
       </thead>
-      <tbody>${linesHtml || `<tr><td colspan="5" style="text-align:center;padding:24px;color:#5a544a;">Aucun article</td></tr>`}</tbody>
+      <tbody>${linesHtml || `<tr><td colspan="7" style="text-align:center;padding:24px;color:#5a544a;">Aucun article</td></tr>`}</tbody>
     </table>
 
     <div class="totals">
@@ -265,6 +273,8 @@ export function buildQuoteHTML(q: QuoteData): string {
         ${t.volumeDiscountAmount > 0 ? `<div class="row muted"><span>Remise volume −${t.volumeDiscountPercent}%</span><span class="v">−${eur(t.volumeDiscountAmount)}</span></div>` : ''}
         <div class="row muted"><span>Éco-participation</span><span class="v">${eur(t.ecoContributionTotal)}</span></div>
         <div class="row total"><span>Total HT</span><span class="v">${eur(t.totalHt)}</span></div>
+        <div class="row muted"><span>TVA 20 %</span><span class="v">${eur(t.vat)}</span></div>
+        <div class="row total"><span>Total TTC</span><span class="v">${eur(t.totalTtc)}</span></div>
         ${t.savings > 0 ? `<div class="row savings"><span>Économie réalisée</span><span class="v">−${eur(t.savings)} (${t.savingsPercent.toFixed(0)} %)</span></div>` : ''}
         <div class="deposit">
           <div class="label">À payer aujourd'hui<strong>Frais de réservation${feeShare}</strong></div>

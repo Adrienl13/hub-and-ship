@@ -60,6 +60,47 @@ export function calculateReservationFee(subtotalHt: number): number {
   )
 }
 
+/**
+ * Taux de TVA française applicable au catalogue. Le RPC de réservation
+ * applique EXACTEMENT le même depuis la migration 47 — il ne le lit plus dans
+ * le payload du client.
+ */
+export const VAT_RATE = 0.2
+
+export interface LineVatBreakdown {
+  /** Prix unitaire HT, tel qu'affiché au catalogue. */
+  readonly unitHt: number
+  /** Le même, TVA comprise — ce que l'acheteur paiera pour une pièce. */
+  readonly unitTtc: number
+  readonly lineHt: number
+  readonly lineVat: number
+  readonly lineTtc: number
+}
+
+/**
+ * TVA d'une ligne, pour que l'acheteur voie ce que coûte CHAQUE produit TTC
+ * et pas seulement un total en bas de page (demande Adrien 18/09/2026).
+ *
+ * Ces montants sont calculés sur le prix de la ligne AVANT remise volume :
+ * la remise porte sur la commande entière, pas sur un article. Le récapitulatif
+ * enchaîne donc sous-total HT → remise → total HT → TVA → total TTC, et c'est
+ * ce total-là qui fait foi. Sommer les TTC de lignes donnerait un écart de
+ * quelques centimes dès qu'une remise s'applique — mesuré : 0,01 à 0,02 € sur
+ * des paniers de 12 à 20 lignes.
+ */
+export function calculateLineVat(item: CartItem): LineVatBreakdown {
+  const unitHt = item.product.basePriceHt
+  const lineHt = round2(unitHt * item.quantity)
+  const lineVat = round2(lineHt * VAT_RATE)
+  return {
+    unitHt,
+    unitTtc: round2(unitHt * (1 + VAT_RATE)),
+    lineHt,
+    lineVat,
+    lineTtc: round2(lineHt + lineVat),
+  }
+}
+
 export function calculateOrder(items: CartItem[]): OrderTotals {
   const subtotalHt = items.reduce(
     (sum, item) => sum + item.product.basePriceHt * item.quantity,
@@ -131,8 +172,8 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     payAt80Percent,
     payBeforeShipping,
     totalHt: netHt,
-    vat: round2(netHt * 0.2),
-    totalTtc: round2(netHt * 1.2),
+    vat: round2(netHt * VAT_RATE),
+    totalTtc: round2(netHt * (1 + VAT_RATE)),
     retailReference,
     savings,
     savingsPercent: retailReference > 0 ? (savings / retailReference) * 100 : 0,

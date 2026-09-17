@@ -29,7 +29,12 @@ import { useChannel } from '@/hooks/useChannel'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { getContainerUsableCbm } from '@/lib/container/pricing'
-import { calculateContainerFill, calculateOrder, formatEUR } from '@/lib/order'
+import {
+  calculateContainerFill,
+  calculateLineVat,
+  calculateOrder,
+  formatEUR,
+} from '@/lib/order'
 import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
 import { openQuotePDF } from '@/lib/quote'
 import {
@@ -191,6 +196,9 @@ function PanierPage() {
               <ul className="divide-[color:var(--sand-deep)]/70 divide-y overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
                 {items.map((item) => {
                   const rule = getQuantityRule(item.product, item.variant)
+                  // TVA ligne par ligne : l'acheteur lit le coût réel de
+                  // CHAQUE produit, pas seulement un total en bas de page.
+                  const line = calculateLineVat(item)
                   return (
                     <li
                       key={`${item.product.id}:${item.variant.id}`}
@@ -216,14 +224,17 @@ function PanierPage() {
                               Design : {item.variant.name}
                             </div>
                             <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                              {formatEUR(item.product.basePriceHt)} HT / unité ·{' '}
-                              {rule.label}
+                              {formatEUR(line.unitHt)} HT / unité ·{' '}
+                              {formatEUR(line.unitTtc)} TTC · {rule.label}
                             </div>
                           </div>
-                          <span className="shrink-0 font-display text-base font-bold tabular-nums sm:text-lg">
-                            {formatEUR(
-                              item.product.basePriceHt * item.quantity,
-                            )}
+                          <span className="shrink-0 text-right">
+                            <span className="block font-display text-base font-bold tabular-nums sm:text-lg">
+                              {formatEUR(line.lineHt)}
+                            </span>
+                            <span className="block text-xs tabular-nums text-muted-foreground">
+                              {formatEUR(line.lineTtc)} TTC
+                            </span>
                           </span>
                         </div>
                         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
