@@ -22,6 +22,7 @@ import { getCustomerDiscountStatus } from '@/lib/pricing/customer-discounts'
 import { buildSeoHead } from '@/lib/seo'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import { selectionBelongsToPartner } from '@/lib/partners/slug-guard'
 
 const VAT_RATE = 0.2
 const VALIDITY_DAYS = 30
@@ -49,6 +50,7 @@ export const Route = createFileRoute('/p/$partnerSlug/devis')({
 
 function usePublicSelection(
   selectionId: string | undefined,
+  partnerSlug: string,
 ): PublicSelection | null | 'missing' {
   const [selection, setSelection] = useState<
     PublicSelection | null | 'missing'
@@ -67,6 +69,14 @@ function usePublicSelection(
         const client = createSupabaseBrowserClient(
           config,
         ) as unknown as PartnerSelectionsClient
+        // Même garde que la page partenaire : un devis co-brandé ne se
+        // ré-affiche pas sous le nom de quelqu'un d'autre.
+        const owns = await selectionBelongsToPartner(selectionId, partnerSlug)
+        if (cancelled) return
+        if (!owns) {
+          setSelection('missing')
+          return
+        }
         const data = await getPublicSelection(client, selectionId)
         if (!cancelled) setSelection(data ?? 'missing')
       } catch {
@@ -76,7 +86,7 @@ function usePublicSelection(
     return () => {
       cancelled = true
     }
-  }, [selectionId])
+  }, [selectionId, partnerSlug])
 
   return selection
 }
@@ -86,7 +96,7 @@ function PartnerQuotePage() {
   const { selection: selectionId } = Route.useSearch()
   const slug = normalizePartnerSlug(partnerSlug) ?? 'partenaire'
   const partnerName = partnerDisplayNameFromSlug(slug)
-  const selection = usePublicSelection(selectionId)
+  const selection = usePublicSelection(selectionId, partnerSlug)
 
   if (selection === null) {
     return (
@@ -135,7 +145,10 @@ function PartnerQuotePage() {
 
       <div className="mx-auto max-w-3xl px-4 print:px-0">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <a href={`/p/${slug}?selection=${selectionId}`} className="text-sm underline">
+          <a
+            href={`/p/${slug}?selection=${selectionId}`}
+            className="text-sm underline"
+          >
             ← Retour à la sélection
           </a>
           <Button
@@ -175,7 +188,9 @@ function PartnerQuotePage() {
               {selection.title}
             </h2>
             {selection.comment && (
-              <p className="mt-1 text-sm text-neutral-600">{selection.comment}</p>
+              <p className="mt-1 text-sm text-neutral-600">
+                {selection.comment}
+              </p>
             )}
           </div>
 
@@ -225,7 +240,10 @@ function PartnerQuotePage() {
                   value={`−${formatEUR(volumeDiscountAmount)}`}
                 />
               )}
-              <Row label="Éco-participation" value={formatEURprecise(ecoTotal)} />
+              <Row
+                label="Éco-participation"
+                value={formatEURprecise(ecoTotal)}
+              />
               <Row label="Total HT" value={formatEUR(totalHt)} strong />
               <Row label={`TVA ${VAT_RATE * 100}%`} value={formatEUR(vat)} />
               <Row label="Total TTC" value={formatEUR(ttc)} strong />
@@ -240,8 +258,8 @@ function PartnerQuotePage() {
               partenaires ne figurent pas sur ce document.
             </p>
             <p className="mt-2">
-              Pros Import — Terrassea · prosimport.com · Réservation et
-              suivi sur la page partenaire.
+              Pros Import — Terrassea · prosimport.com · Réservation et suivi
+              sur la page partenaire.
             </p>
           </footer>
         </article>

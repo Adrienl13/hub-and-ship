@@ -1,6 +1,7 @@
 import {
   Outlet,
   createFileRoute,
+  notFound,
   useRouterState,
 } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
@@ -33,6 +34,10 @@ import {
   type PartnerSelectionsClient,
   type PublicSelection,
 } from '@/lib/partners/selections'
+import {
+  checkPartnerSlug,
+  selectionBelongsToPartner,
+} from '@/lib/partners/slug-guard'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL, productShortName } from '@/lib/products'
 import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
@@ -47,6 +52,15 @@ const LazyReservationDialog = lazy(() =>
 )
 
 export const Route = createFileRoute('/p/$partnerSlug')({
+  // La page affirme « <Marque> vous ouvre son accès Terrassea » et mémorise ce
+  // contexte 120 jours : elle ne s'ouvre que pour un partenaire réel. Une base
+  // injoignable ne produit PAS de 404 — cela fermerait d'un coup toutes les
+  // pages partenaires légitimes déjà partagées (voir partners/slug-guard.ts).
+  loader: async ({ params }) => {
+    const verdict = await checkPartnerSlug(params.partnerSlug)
+    if (verdict === 'unknown') throw notFound()
+    return { verdict }
+  },
   component: PartnerSharePage,
   validateSearch: (
     search: Record<string, unknown>,
@@ -105,7 +119,7 @@ function PartnerSharePage() {
     capacityCbm: currentContainer.capacityCbm,
   })
   const [reserveOpen, setReserveOpen] = useState(false)
-  const selection = usePublicSelection(selectionId)
+  const selection = usePublicSelection(selectionId, partnerSlug)
 
   // Après tous les hooks (règles des hooks) : rendre l'enfant /devis autonome.
   if (!isLeaf) {
@@ -363,6 +377,7 @@ function PartnerSharePage() {
 
 function usePublicSelection(
   selectionId: string | undefined,
+  partnerSlug: string,
 ): PublicSelection | null {
   const [selection, setSelection] = useState<PublicSelection | null>(null)
 
@@ -379,6 +394,15 @@ function usePublicSelection(
         const client = createSupabaseBrowserClient(
           config,
         ) as unknown as PartnerSelectionsClient
+        // La sélection doit appartenir à CE partenaire : sans ce contrôle,
+        // `/p/<slug arbitraire>?selection=<uuid>` ré-affichait le devis
+        // co-brandé d'un vrai partenaire sous un nom quelconque.
+        const owns = await selectionBelongsToPartner(selectionId, partnerSlug)
+        if (cancelled) return
+        if (!owns) {
+          setSelection(null)
+          return
+        }
         const data = await getPublicSelection(client, selectionId)
         if (!cancelled) setSelection(data)
       } catch {
@@ -388,7 +412,7 @@ function usePublicSelection(
     return () => {
       cancelled = true
     }
-  }, [selectionId])
+  }, [selectionId, partnerSlug])
 
   return selection
 }
@@ -468,11 +492,7 @@ function SelectionShowcase({
             </span>
           </span>
           <div className="flex flex-wrap gap-2">
-            <Button
-              asChild
-              variant="outline"
-              className="h-11 rounded-sm px-5"
-            >
+            <Button asChild variant="outline" className="h-11 rounded-sm px-5">
               <a
                 href={`/p/${slug}/devis?selection=${selection.id}`}
                 target="_blank"
