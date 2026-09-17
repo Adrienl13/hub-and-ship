@@ -1,4 +1,6 @@
 /* global document, window */
+import { encodeCartSelection } from '../../../lib/catalogue/share-cart'
+
 export class CatalogueModel {
   state = {
     fam: null,
@@ -104,6 +106,23 @@ export class CatalogueModel {
         behavior: 'smooth',
       })
   }
+  /**
+   * `/panier?panier=…` portant la sélection courante. Les lignes dont
+   * l'identifiant de design est synthétique (produit sans coloris en base)
+   * partent quand même : /panier retombe sur le design par défaut.
+   */
+  quoteHref(cartRows) {
+    const entries = cartRows
+      .filter((row) => row.p.id && row.qty > 0)
+      .map((row) => ({
+        productId: row.p.id,
+        variantId: row.p.variantIds?.[row.varIdx] || '',
+        qty: row.qty,
+      }))
+    const encoded = encodeCartSelection(entries)
+    return encoded ? '/panier?panier=' + encoded : '/panier'
+  }
+
   renderVals() {
     const s = this.state,
       C = this.C
@@ -339,6 +358,12 @@ export class CatalogueModel {
       sheetQty: s.qty,
       setQty: (e) => this.setState({ qty: +e.target.value }),
       handoff: () => this.prepareHandoff(),
+      // Passage de relais vers le tunnel React : la sélection part encodée
+      // dans l'URL, /panier la rejoue et affiche le devis. Sans ce lien, un
+      // acheteur qui compose ici n'atteint jamais son devis — les deux
+      // paniers ne partagent aucun stockage.
+      quoteHref: this.quoteHref(cartRows),
+      quoteHandoff: () => this.prepareHandoff(),
       cartCount: pieces ? String(pieces) : '0',
       openCart: () => this.setState({ cartOpen: true }),
       closeCart: () => this.setState({ cartOpen: false }),

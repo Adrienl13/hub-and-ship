@@ -24,6 +24,7 @@ import { TieredPricingViz } from '@/components/TieredPricingViz'
 import { Button } from '@/components/ui/button'
 import { useCartLines } from '@/hooks/useCartLines'
 import { useCatalog } from '@/hooks/useCatalog'
+import { useSharedCartSelection } from '@/hooks/useSharedCartSelection'
 import { useChannel } from '@/hooks/useChannel'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
@@ -68,7 +69,11 @@ const LazyReservationDialog = lazy(() =>
 
 function PanierPage() {
   const items = useCartLines()
-  const { currentContainer } = useCatalog()
+  const { products, currentContainer } = useCatalog()
+  // Relais depuis le catalogue public : `?panier=` arrive directement ici
+  // pour que l'acheteur atterrisse sur son devis, pas sur un second
+  // catalogue. Même logique que /catalogue — la sélection REMPLACE le panier.
+  useSharedCartSelection(products)
   const setLineQty = useCartStore((state) => state.setLineQty)
   const preferredContainerType = useCartStore(
     (state) => state.preferredContainerType,

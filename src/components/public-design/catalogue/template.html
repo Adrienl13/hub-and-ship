@@ -1674,8 +1674,9 @@
             ></span>
           </p>
           <a
-            href="/#contact"
-            data-onclick="handoff"
+            href="/panier"
+            data-bound-href="{{ quoteHref }}"
+            data-onclick="quoteHandoff"
             class="btn btn-primary"
             style="
               display: flex;
@@ -1685,7 +1686,21 @@
               font-size: 15px;
               text-decoration: none;
             "
-            >Être rappelé pour ce projet →</a
+            >Obtenir mon devis →</a
+          >
+          <a
+            href="/#contact"
+            data-onclick="handoff"
+            class="btn"
+            style="
+              display: flex;
+              justify-content: center;
+              min-height: 46px;
+              margin-top: 10px;
+              font-size: 14px;
+              text-decoration: none;
+            "
+            >Préférez-vous être rappelé ?</a
           >
           <p
             style="
@@ -1696,7 +1711,8 @@
               color: color-mix(in srgb, var(--color-text) 60%, transparent);
             "
           >
-            Sans engagement · réponse sous 24 h ouvrées
+            Devis gratuit, sans engagement · aucun paiement en ligne · réponse
+            sous 24 h ouvrées
           </p>
         </div>
       </template>

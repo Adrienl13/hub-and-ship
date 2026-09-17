@@ -6,7 +6,6 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -39,10 +38,8 @@ import {
 } from '@/lib/catalogue'
 import { formatEUR } from '@/lib/order'
 import { openQuotePDF } from '@/lib/quote'
-import {
-  decodeCartSelection,
-  encodeCartSelection,
-} from '@/lib/catalogue/share-cart'
+import { encodeCartSelection } from '@/lib/catalogue/share-cart'
+import { useSharedCartSelection } from '@/hooks/useSharedCartSelection'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import type { Product } from '@/lib/products'
 import { loadLiveCatalogProducts } from '@/lib/catalogue/server-catalog'
@@ -150,7 +147,7 @@ const GRID_PAGE_SIZE = 36
 
 function CataloguePage() {
   const { panier } = Route.useSearch()
-  return panier ? <LegacyCataloguePage/> : <PublicPage kind="catalogue"/>
+  return panier ? <LegacyCataloguePage /> : <PublicPage kind="catalogue" />
 }
 
 function LegacyCataloguePage() {
@@ -170,7 +167,6 @@ function LegacyCataloguePage() {
     variantByProduct,
     qtyByProduct,
     setQty,
-    setLineQty,
     setVariant,
   } = useCart({
     products: productsArray,
@@ -241,42 +237,8 @@ function LegacyCataloguePage() {
     () => productsArray.find((product) => product.id === composeId) ?? null,
     [composeId, productsArray],
   )
-  // Reconstruct the cart from a shared ?panier= link, once products are loaded.
-  const sharedApplied = useRef(false)
-  useEffect(() => {
-    if (sharedApplied.current || productsArray.length === 0) return
-    sharedApplied.current = true
-    const entries = decodeCartSelection(
-      new URLSearchParams(window.location.search).get('panier'),
-    )
-    if (entries.length === 0) return
-    let applied = 0
-    for (const entry of entries) {
-      const product = productsArray.find((p) => p.id === entry.productId)
-      if (!product) continue
-      // Ligne par (produit, design) : un lien peut porter plusieurs designs
-      // du même produit — chacun devient sa propre ligne de panier.
-      const variantId = product.variants.some((v) => v.id === entry.variantId)
-        ? entry.variantId
-        : getDefaultVariant(product).id
-      setVariant(entry.productId, variantId)
-      setLineQty(entry.productId, variantId, entry.qty, { silent: true })
-      applied += 1
-    }
-    // Ne jamais annoncer un succès trompeur : des produits du lien ont pu
-    // être retirés/désactivés depuis le partage.
-    if (applied === 0) {
-      toast.error(
-        'Les produits de ce lien partagé ne sont plus disponibles au catalogue.',
-      )
-    } else if (applied < entries.length) {
-      toast.warning(
-        `Sélection partiellement chargée : ${entries.length - applied} produit(s) du lien ne sont plus disponibles.`,
-      )
-    } else {
-      toast.success('Sélection chargée depuis le lien partagé.')
-    }
-  }, [productsArray, setLineQty, setVariant])
+  // Reconstruction du panier depuis un `?panier=` — même logique que /panier.
+  useSharedCartSelection(productsArray)
 
   async function shareSelection(): Promise<void> {
     // Le lien embarque TOUTES les lignes (produit, design) — pas seulement le
@@ -383,7 +345,7 @@ function LegacyCataloguePage() {
                   className={`group flex min-w-[180px] items-center gap-3 rounded-md border p-2.5 text-left transition-all sm:min-w-0 ${
                     active
                       ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
-                      : 'hover:-translate-y-0.5 border-[color:var(--sand-deep)] bg-card hover:shadow-sm'
+                      : 'border-[color:var(--sand-deep)] bg-card hover:-translate-y-0.5 hover:shadow-sm'
                   }`}
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-[color:var(--sand-soft)]">
@@ -575,7 +537,7 @@ function LegacyCataloguePage() {
             {/* Filtre Plateaux : rappel « découpe à la demande » — le direct
                 usine permet d'autres dimensions que les formats listés. */}
             {filter === 'table_top' && (
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] p-4 text-sm">
+              <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 text-sm">
                 <div className="flex min-w-0 items-start gap-2">
                   <Ruler className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--ember)]" />
                   <div className="min-w-0">
@@ -593,7 +555,7 @@ function LegacyCataloguePage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 rounded-sm border-[color:var(--ember)]/40 text-[color:var(--ember)]"
+                  className="border-[color:var(--ember)]/40 h-10 rounded-sm text-[color:var(--ember)]"
                   onClick={() => setCustomTopOpen(true)}
                 >
                   Demander un plateau sur mesure
@@ -651,7 +613,10 @@ function LegacyCataloguePage() {
 
           {/* #panier : cible des ancres natives de la barre de commande —
               l'accès permanent au panier (exigence handoff). */}
-          <aside id="panier" className="min-w-0 scroll-mt-24 space-y-3 lg:col-span-3">
+          <aside
+            id="panier"
+            className="min-w-0 scroll-mt-24 space-y-3 lg:col-span-3"
+          >
             <PersoSidebarReminder onOpen={() => setPersoOpen(true)} />
             <OrderSidebar
               items={items}
@@ -715,10 +680,7 @@ function LegacyCataloguePage() {
         )}
 
         {customTopOpen && (
-          <LazyCustomTableTopDialog
-            open
-            onOpenChange={setCustomTopOpen}
-          />
+          <LazyCustomTableTopDialog open onOpenChange={setCustomTopOpen} />
         )}
 
         {composeProduct && (
@@ -762,7 +724,7 @@ function FilterToggle({
       className={`inline-flex h-9 items-center rounded-sm border px-3 text-xs font-medium transition-colors ${
         active
           ? 'border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)]'
-          : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground hover:border-foreground/40'
+          : 'hover:border-foreground/40 border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-foreground'
       }`}
     >
       {children}
