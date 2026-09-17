@@ -21,6 +21,11 @@ import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { formatEUR } from '@/lib/order'
 import {
+  DISCOUNT_FAMILY_LABEL,
+  describeFamilyTiers,
+  resolveDiscountFamily,
+} from '@/lib/pricing/discount-families'
+import {
   CATEGORY_LABEL,
   formatProductDimensions,
   type Product,
@@ -125,6 +130,11 @@ function ProductPage() {
   const { product } = Route.useLoaderData()
   const savings = savingsPercent(product)
   const showRetail = hasMeaningfulRetail(product)
+  // Les paliers dépendent de la famille : annoncer « dès 100 pièces » sur un
+  // salon de jardin serait faux de dix fois.
+  const family = resolveDiscountFamily(product.category)
+  const familyLabel = DISCOUNT_FAMILY_LABEL[family]
+  const familyTiers = describeFamilyTiers(family)
   // Depuis une fiche (entrée SEO), « Réserver » pré-remplit le panier au MOQ
   // au lieu de renvoyer vers 112 cartes à parcourir.
   const preselection = encodeCartSelection([
@@ -209,8 +219,8 @@ function ProductPage() {
               <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
                 Prix rendu zone de stockage (Fos-sur-Mer) : achat usine, fret
                 mutualisé, douane et contrôle SGS inclus. Livraison jusqu'à
-                votre terrasse en option. Remises volume : −6 % dès 100
-                pièces, −10 % dès 150.{' '}
+                votre terrasse en option. Remise volume sur les{' '}
+                {familyLabel.toLowerCase()} : {familyTiers}.{' '}
                 <Link to="/prix" className="underline underline-offset-2">
                   Voir la méthode de prix
                 </Link>

@@ -405,7 +405,15 @@ function LegacyCataloguePage() {
             <div className="bg-background/95 sticky top-16 z-20 min-w-0 border-b border-[color:var(--sand-deep)] py-4 backdrop-blur">
               <div className="flex min-w-0 flex-col gap-3">
                 <div className="flex max-w-full gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-                  {CATEGORY_FILTERS.map((category) => {
+                  {CATEGORY_FILTERS.filter(
+                    // Une puce « Table 0 » n'aide personne : elle annonce une
+                    // catégorie vide (les tables du catalogue vivent sous
+                    // « Plateau » et « Piètement »). On garde le filtre actif
+                    // même vide, pour que le visiteur puisse en sortir.
+                    (category) =>
+                      (categoryCounts[category.id] ?? 0) > 0 ||
+                      category.id === filter,
+                  ).map((category) => {
                     const active = category.id === filter
                     return (
                       <button

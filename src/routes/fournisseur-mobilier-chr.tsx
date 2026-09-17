@@ -10,6 +10,10 @@ import {
   jsonLdScript,
   organizationJsonLd,
 } from '@/lib/seo'
+import {
+  PUBLIC_DISCOUNT_FAMILIES,
+  describeFamilyTiersWithLabel,
+} from '@/lib/pricing/discount-families'
 
 // Landing GEO : cible la requête réelle « fournisseurs de mobilier CHR en
 // France » (Mode IA Google, 08/2026). Les moteurs IA classent les acteurs en
@@ -28,7 +32,7 @@ const FAQ = [
   },
   {
     q: 'Quels sont les minimums de commande ?',
-    a: 'Assises : 50 unités par modèle puis paliers de 10. Tables : 20 unités. Remises volume automatiques : −6 % dès 100 pièces, −10 % dès 150 pièces. Un espace Stock permet aussi de retirer sous 24 h des lots déjà en France, sans minimum container.',
+    a: `Assises : 50 unités par modèle puis paliers de 10. Tables : 20 unités. Les remises volume sont automatiques et propres à chaque famille — ${PUBLIC_DISCOUNT_FAMILIES.map(describeFamilyTiersWithLabel).join(' ; ')}. Un espace Stock permet aussi de retirer sous 24 h des lots déjà en France, sans minimum container.`,
   },
   {
     q: 'Comment sont garantis les prix et la qualité ?',

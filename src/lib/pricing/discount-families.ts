@@ -61,6 +61,66 @@ export function resolveDiscountFamily(category: string): DiscountFamily {
 }
 
 /**
+ * Grille PUBLIÉE — la seule source des chiffres écrits en toutes lettres sur
+ * les pages publiques (FAQ, fiches produit, pages SEO, catalogue).
+ *
+ * Pourquoi une constante plutôt que les règles actives : ces pages sont
+ * rendues côté serveur ou par les modèles « public-design », sans hydrater
+ * `get_public_pricing_rules()`. Elles afficheraient donc la grille par défaut
+ * — c'est-à-dire l'ancienne — et annonceraient au visiteur une remise qui
+ * n'est plus celle qu'il obtiendra.
+ *
+ * ELLE DOIT RESTER IDENTIQUE À LA GRILLE EN BASE
+ * (`pricing_parameters.volume_discount_families`, migration 50). Un test
+ * d'intégration compare les deux et tombe si l'une bouge sans l'autre.
+ */
+export const PUBLISHED_VOLUME_TIERS: Record<
+  DiscountFamily,
+  ReadonlyArray<{ readonly minUnits: number; readonly discountPercent: number }>
+> = {
+  assises: [
+    { minUnits: 100, discountPercent: 6 },
+    { minUnits: 150, discountPercent: 10 },
+  ],
+  tables: [
+    { minUnits: 80, discountPercent: 5 },
+    { minUnits: 160, discountPercent: 8 },
+  ],
+  salons: [
+    { minUnits: 10, discountPercent: 6 },
+    { minUnits: 20, discountPercent: 10 },
+  ],
+  autres: [
+    { minUnits: 100, discountPercent: 6 },
+    { minUnits: 150, discountPercent: 10 },
+  ],
+}
+
+/** « −6 % dès 100 pièces, −10 % dès 150 ». */
+export function describeFamilyTiers(family: DiscountFamily): string {
+  const tiers = PUBLISHED_VOLUME_TIERS[family]
+  return tiers
+    .map((tier, index) =>
+      index === 0
+        ? `−${tier.discountPercent} % dès ${tier.minUnits} pièces`
+        : `−${tier.discountPercent} % dès ${tier.minUnits}`,
+    )
+    .join(', ')
+}
+
+/** « Salons de jardin : −6 % dès 10 pièces, −10 % dès 20 ». */
+export function describeFamilyTiersWithLabel(family: DiscountFamily): string {
+  return `${DISCOUNT_FAMILY_LABEL[family]} : ${describeFamilyTiers(family)}`
+}
+
+/** Les trois familles du catalogue, dans l'ordre d'affichage public. */
+export const PUBLIC_DISCOUNT_FAMILIES: ReadonlyArray<DiscountFamily> = [
+  'assises',
+  'tables',
+  'salons',
+]
+
+/**
  * Plafond de sécurité d'une remise volume configurable, en %.
  *
  * Au-delà, un client direct paierait moins cher qu'un revendeur : c'est la

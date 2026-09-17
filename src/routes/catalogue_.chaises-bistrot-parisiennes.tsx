@@ -10,6 +10,7 @@ import {
   itemListJsonLd,
   jsonLdScript,
 } from '@/lib/seo'
+import { describeFamilyTiers } from '@/lib/pricing/discount-families'
 
 // Landing GEO : cible la requête réelle « chaise bistrot parisienne pour mon
 // restaurant » (Mode IA Google, 08/2026 — les concurrents cités ont tous une
@@ -42,7 +43,7 @@ const FAQ = [
   },
   {
     q: 'Quelle quantité minimum pour commander ?',
-    a: 'Le minimum est de 50 chaises par modèle, puis par paliers de 10. Des remises volume automatiques s’appliquent : −6 % dès 100 pièces et −10 % dès 150 pièces. Pour un besoin urgent en petite quantité, la page Stock propose des lots déjà en France.',
+    a: `Le minimum est de 50 chaises par modèle, puis par paliers de 10. Des remises volume automatiques s’appliquent sur les assises : ${describeFamilyTiers('assises')}. Les tables et les salons de jardin ont leurs propres paliers. Pour un besoin urgent en petite quantité, la page Stock propose des lots déjà en France.`,
   },
   {
     q: 'Peut-on choisir le coloris ou le motif de tressage ?',

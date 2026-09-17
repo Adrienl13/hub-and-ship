@@ -1,5 +1,9 @@
 /* global document, window */
 import { encodeCartSelection } from '../../../lib/catalogue/share-cart'
+import {
+  PUBLIC_DISCOUNT_FAMILIES,
+  describeFamilyTiersWithLabel,
+} from '../../../lib/pricing/discount-families'
 
 export class CatalogueModel {
   state = {
@@ -195,12 +199,18 @@ export class CatalogueModel {
           kicker: 'Sur votre projet',
           big: this.tierBig,
           title: 'Remise automatique',
-          sub: '−6 % dès 100 pcs · −10 % dès 150 pcs',
+          sub: describeFamilyTiersWithLabel('salons'),
           bg: 'var(--color-accent-700)',
           fg: 'var(--color-bg)',
           iconFilter: 'brightness(0) invert(1)',
         },
       ].map((x, i) => ({ ...x, delay: i * 0.12 + 's' })),
+      // Les paliers dépendent de la famille : une chaise et un salon ne
+      // déclenchent pas le volume au même seuil. Les chiffres viennent de
+      // PUBLISHED_VOLUME_TIERS, verrouillé sur la grille en base.
+      tiersInline: PUBLIC_DISCOUNT_FAMILIES.map(
+        describeFamilyTiersWithLabel,
+      ).join(' ; '),
       cats: [
         { label: 'Tout', v: null },
         ...this.catList.map((c) => ({ label: c, v: c })),

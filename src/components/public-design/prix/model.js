@@ -1,3 +1,8 @@
+import {
+  PUBLIC_DISCOUNT_FAMILIES,
+  describeFamilyTiersWithLabel,
+} from '../../../lib/pricing/discount-families'
+
 export class PriceModel {
   state = { step: 0, focus: null, tier: 0, open: 0, sub: false }
   I = 'https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/'
@@ -55,27 +60,9 @@ export class PriceModel {
       rates = [0, 0.06, 0.1],
       t = s.tier,
       step = s.step
-    // Paliers par famille — miroir de pricing_parameters.volume_discount_families
-    // (migration 50). La source de vérité est la base : si la grille y change,
-    // ces libellés doivent changer ici aussi. Le simulateur ci-dessus porte sur
-    // des CHAISES, il suit donc la ligne « assises ».
-    const familles = [
-      {
-        nom: 'Assises (chaises, fauteuils, bancs)',
-        p1: 100,
-        r1: '−6 %',
-        p2: 150,
-        r2: '−10 %',
-      },
-      {
-        nom: 'Tables (tables, plateaux, piètements)',
-        p1: 80,
-        r1: '−5 %',
-        p2: 160,
-        r2: '−8 %',
-      },
-      { nom: 'Salons de jardin', p1: 10, r1: '−6 %', p2: 20, r2: '−10 %' },
-    ]
+    // Paliers par famille. Les chiffres viennent de PUBLISHED_VOLUME_TIERS,
+    // verrouillé par test sur la grille en base — jamais recopiés à la main.
+    // Le simulateur ci-dessus porte sur des CHAISES : il suit « assises ».
     const eur = (n) => {
       if (!Number.isFinite(n)) return 'À confirmer'
       const v = Math.round(n * 100) / 100
@@ -328,12 +315,9 @@ export class PriceModel {
         {
           q: 'Quelles remises de volume sont appliquées ?',
           a: "La remise est automatique et s'applique à chaque pièce du projet. Les paliers dépendent de la famille de produits : un salon de jardin et une chaise ne se commandent pas aux mêmes quantités, ils ne déclenchent donc pas le volume au même seuil. Chaque famille compte ses propres pièces.",
-          points: familles
-            .map(
-              (f) =>
-                `${f.nom} : ${f.r1} dès ${f.p1} pièces, ${f.r2} dès ${f.p2}.`,
-            )
-            .concat([
+          points: PUBLIC_DISCOUNT_FAMILIES.map(
+            (f) => describeFamilyTiersWithLabel(f) + '.',
+          ).concat([
               'Plateau et piètement comptent chacun pour une pièce : une table complète en vaut deux.',
               'En dessous du premier palier : tarif de base, tous les coûts inclus sauf la livraison finale.',
             ]),

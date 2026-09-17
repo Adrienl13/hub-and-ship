@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { calculateOrder, type CartItem } from '@/lib/order'
+import { PUBLISHED_VOLUME_TIERS } from '@/lib/pricing/discount-families'
 import type { DesignVariant, Product, ProductCategory } from '@/lib/products'
 import {
   resetActiveSalesChannel,
@@ -496,6 +497,24 @@ const GRILLE_PRODUCTION = {
 }
 
 describe('grille de production', () => {
+  it('est celle que les pages publiques annoncent', () => {
+    // Les pages SEO, les fiches produit et le catalogue écrivent ces chiffres
+    // en toutes lettres, sans hydrater les règles pricing. Si la grille en
+    // base change sans que PUBLISHED_VOLUME_TIERS suive, le site promet une
+    // remise qu'il n'applique pas — ce test tombe avant.
+    for (const [family, tiers] of Object.entries(GRILLE_PRODUCTION)) {
+      expect(
+        PUBLISHED_VOLUME_TIERS[family as keyof typeof PUBLISHED_VOLUME_TIERS],
+        family,
+      ).toEqual(
+        tiers.map((tier) => ({
+          minUnits: tier.min_units,
+          discountPercent: Math.round(tier.discount * 10000) / 100,
+        })),
+      )
+    }
+  })
+
   it('récompense enfin la commande minimale d’un salon', async () => {
     await useGrid(GRILLE_PRODUCTION)
     // 12 fiches salons sur 15 ont un MOQ de 10 : la plus petite commande

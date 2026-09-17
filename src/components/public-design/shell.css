@@ -34,17 +34,21 @@
     display: flex !important;
     order: 3;
     width: 100%;
-    overflow-x: auto;
-    gap: 18px;
-    padding: 8px 0;
-    white-space: nowrap;
+    /* Les liens s'enroulent au lieu de défiler horizontalement. Sous 760 px
+       la barre n'est PAS collante (position: relative, plus bas) : elle
+       défile avec la page, deux ou trois lignes ne coûtent donc rien passé
+       le premier scroll. Le défilement horizontal, lui, cachait « Conteneurs
+       livrés » et « Contact » derrière un balayage que rien n'annonçait —
+       sur un téléphone, ces entrées n'existaient tout simplement pas. */
+    flex-wrap: wrap;
+    white-space: normal;
+    row-gap: 10px;
+    column-gap: 16px;
+    padding: 10px 0 4px;
   }
   .public-design .nav {
     padding-top: 12px;
     padding-bottom: 8px;
-  }
-  .public-design .nav-links a {
-    flex-shrink: 0;
   }
 }
 .public-design :is(h1, h2, h3, h4, h5, h6) {

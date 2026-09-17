@@ -20,10 +20,6 @@ const PUBLIC_ROUTES: ReadonlyArray<{
       "Votre client reste votre client. Pros Import devient votre back-office d'import.",
   },
   {
-    path: '/p/chr-conseil',
-    heading: 'CHR Conseil vous ouvre son accès Pros Import.',
-  },
-  {
     path: '/catalogue/chaises-restaurant',
     heading: 'Chaises de terrasse professionnelles, commandées par container.',
   },
@@ -53,6 +49,12 @@ const PUBLIC_ROUTES: ReadonlyArray<{
 
 const CANONICAL_ROUTES = PUBLIC_ROUTES.map((route) => route.path)
 
+// `/p/<slug>` affiche « <Marque> vous ouvre son accès Pros Import » et mémorise
+// ce contexte 120 jours. Depuis la migration 20260918090000, la page ne
+// s'ouvre que pour un partenaire réellement qualifié ou approuvé : un slug
+// inventé ne doit plus afficher de page co-brandée à son nom.
+const UNKNOWN_PARTNER_SLUG = '/p/chr-conseil'
+
 async function gotoHydrated(page: Page, path: string) {
   const response = await page.goto(path)
   await page.waitForFunction(
@@ -80,6 +82,16 @@ test.describe('site audit parcours publics', () => {
       expect(consoleErrors).toEqual([])
     })
   }
+
+  test('une page co-brandée ne s’ouvre pas sur un slug inconnu', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, UNKNOWN_PARTNER_SLUG)
+    // Aucune marque ne doit apparaître comme partenaire Pros Import.
+    await expect(
+      page.getByText('vous ouvre son accès', { exact: false }),
+    ).toHaveCount(0)
+  })
 
   test('public internal links and anchors resolve', async ({
     page,
@@ -224,39 +236,33 @@ test.describe('site audit parcours publics', () => {
     await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0)
   })
 
-  test('partner share link captures context without exposing net pricing', async ({
+  // Le chemin nominal — un VRAI partenaire qualifié ouvre sa page co-brandée et
+  // son contexte est mémorisé — ne peut pas être joué ici : la base ne contient
+  // aucune candidature partenaire. La logique du garde est couverte par
+  // tests/security/partner-slug-guard-sql.test.ts. Ce test-ci verrouille le
+  // cas qui était ouvert : un slug inventé, avec la sélection d'un vrai
+  // partenaire en paramètre.
+  test('un slug inconnu ne capte aucun contexte partenaire', async ({
     page,
   }) => {
-    await gotoHydrated(page, '/p/chr-conseil?selection=terrasse-80')
+    await gotoHydrated(page, `${UNKNOWN_PARTNER_SLUG}?selection=terrasse-80`)
 
     await expect(
-      page.getByRole('heading', {
-        name: 'CHR Conseil vous ouvre son accès Pros Import.',
-      }),
-    ).toBeVisible()
-    await expect(
-      page.getByText('Les prix nets partenaires restent privés.'),
-    ).toBeVisible()
-    await expect(page.getByText('Attribution en coulisses')).toBeVisible()
-    await expect(page.getByText('Lien capté')).toBeVisible()
+      page.getByText('vous ouvre son accès', { exact: false }),
+    ).toHaveCount(0)
+    await expect(page.getByText('Lien capté')).toHaveCount(0)
     await expect(
       page.getByRole('heading', { name: 'Prix nets partenaires' }),
     ).toHaveCount(0)
+    // Rien ne doit être mémorisé pour 120 jours au nom d'une marque qui n'a
+    // jamais candidaté.
     await expect
       .poll(() =>
-        page.evaluate(() => {
-          const raw = window.localStorage.getItem(
-            'container-club-partner-link-context',
-          )
-          return raw
-            ? (JSON.parse(raw) as {
-                slug?: string
-                selectionId?: string | null
-              })
-            : null
-        }),
+        page.evaluate(() =>
+          window.localStorage.getItem('container-club-partner-link-context'),
+        ),
       )
-      .toMatchObject({ slug: 'chr-conseil', selectionId: 'terrasse-80' })
+      .toBeNull()
   })
 
   test('global reserve CTA has a logical empty-cart destination', async ({
