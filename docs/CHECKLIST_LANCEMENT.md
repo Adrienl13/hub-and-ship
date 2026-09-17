@@ -26,6 +26,8 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
   public vers le panier (§ 2).
 - Registre `/livres` : indexation réparée, règle de preuve appliquée et
   contrôle de publication dans l'admin (§ 1).
+- Économie négative fermée sur les deux dernières surfaces — récap de
+  réservation et devis PDF (§ 3).
 
 ---
 
@@ -84,24 +86,43 @@ l'incohérence est réduite à ce cas.
 
 ---
 
-## 3. Bloquant — prix publics faux
+## 3. Prix — aucun prix n'est faux, deux fiches vendent autre chose
 
-**[A] À corriger dans l'admin** (tous actifs et visibles aujourd'hui) :
+**Correction d'une erreur d'analyse de ma part.** J'avais classé cinq prix
+comme « faux ». Une contre-expertise contradictoire (quatre enquêtes,
+dix-huit réfuteurs) les a réfutés, 3 voix sur 3, confiance forte.
 
-| SKU     | Nom            | Prix HT     | Prix de référence | Problème                        |
-| ------- | -------------- | ----------- | ----------------- | ------------------------------- |
-| ROP-001 | Salon CANNES   | 1 659 €     | 786 €             | référence sous le prix HT       |
-| BIS-030 | Chaise DINARD  | 181 €       | 149 €             | référence sous le prix HT       |
-| SKU-336 | Chaise DAMIER  | 73,85 €     | 0 €               | référence à zéro                |
-| ROP-031 | Chaise ATHENES | **1 225 €** | 1 630 €           | pairs à 120–189 € (seed : 99 €) |
-| ROP-016 | Table SIENA    | **1 043 €** | 1 900 €           | pairs à 79–193 € (seed : 229 €) |
+Le catalogue applique `prix HT = coût rendu × 1,90`, avec
+`coût rendu = FOB × 0,92 × 1,02 + 4800/qty_par_conteneur + 2`. Appliquée aux
+deux prix que j'avais dits aberrants : ROP-031 → 1 225,58 € (réel 1 225,00),
+ROP-016 → 1 043,71 € (réel 1 043,00). Au centime. Ce sont des sorties du
+moteur de prix, pas des saisies.
 
-**[C]** Borner le calcul d'économie (`src/lib/order.ts`) : ne sommer la
-référence que sur les lignes où elle dépasse le prix HT, et plancher l'économie
-à 0. Sans cela, la fenêtre de réservation et le devis PDF affichent
-« Économie réalisée −-795 € (-11 %) » au moment de confirmer.
+**Le vrai défaut est ailleurs, et il est plus grave.** ROP-031 « Chaise de
+terrasse ATHENES » et ROP-016 « Table de terrasse SIENA » vendent en réalité
+un **salon 4 pièces** — confirmé par le propriétaire le 18/09, et visible sur
+leurs propres photos, où l'objet décrit par la fiche est absent. Le 6
+septembre, en 70 secondes, les deux ont été retarifés _comme des salons_
+(catégorie `lounge`, MOQ 10, FOB de salon) entre deux vrais salons. N'ont pas
+suivi : le nom, la description, les dimensions, le poids et le volume.
 
----
+Conséquence dans le tunnel de devis : au MOQ, un devis annonce
+**« 10 × Chaise ATHENES — 12 250 € HT — 1,00 m³ »** pour dix salons. Le prix
+est bon ; le volume conteneur est faux d'un facteur ~45. Baisser le prix
+ferait vendre à perte — c'est l'identité de la fiche qu'il faut corriger.
+
+**[A] À saisir** sur ROP-031 et ROP-016 : nom, description, dimensions réelles
+du salon, poids, `cbm_per_unit`. Vérifier aussi le MOQ. La base les avait déjà
+signalées : `studio_role = 'catalog_only'`, note « Catégorie signalée
+incohérente par l'audit du 07/09/2026 » — écartées du Studio, mais toujours
+actives et commandables.
+
+**Prix de référence.** Trois fiches ont un `retail_price_ref` périmé ou nul :
+ROP-001 (786 € figé au seed de juin quand le prix est passé à 1 659 €),
+BIS-030 (149 €), SKU-336 (0 €, valeur par défaut du formulaire jamais
+remplie). Ce champ n'entre dans **aucun** calcul de prix — il sert seulement à
+afficher l'économie barrée. Les trois sont à corriger dans l'admin, mais plus
+rien ne les rend visibles : la garde manquante a été posée (commit `ab37f9a`).
 
 ## 4. Parcours de connexion — code fait, une manip reste
 
