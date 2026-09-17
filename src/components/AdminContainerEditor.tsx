@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -23,6 +23,7 @@ import type {
   TimelineStep,
 } from '@/lib/delivered-containers/types'
 import { PRODUCT_CATEGORIES, type ProductCategory } from '@/lib/products'
+import { checkContainerPublication } from '@/lib/delivered-containers/publication-check'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 type ContainerInsert = Database['public']['Tables']['containers']['Insert']
@@ -62,11 +63,7 @@ interface EditableState {
 }
 
 type ContainerStatusValue =
-  | 'open'
-  | 'locked'
-  | 'shipping'
-  | 'delivered'
-  | 'cancelled'
+  'open' | 'locked' | 'shipping' | 'delivered' | 'cancelled'
 
 const CONTAINER_STATUS_VALUES: ReadonlyArray<ContainerStatusValue> = [
   'open',
@@ -232,6 +229,28 @@ export function AdminContainerEditor({
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Contrôle de publication en direct : autant voir ce qui bloque pendant
+  // qu'on remplit la fiche, plutôt que de le découvrir au clic « Publier ».
+  // Ici il n'empêche jamais d'enregistrer — on corrige par étapes.
+  const publicationIssues = useMemo(
+    () =>
+      checkContainerPublication({
+        reference: state.reference,
+        slug: state.slug.trim() || null,
+        status: state.status,
+        deliveredAt: state.delivered_at || null,
+        expectedCloseAt: state.expected_close_at || null,
+        totalItems: parseNumberOrNull(state.total_items),
+        professionalsServed: parseNumberOrNull(state.professionals_served),
+        productBreakdown: state.product_breakdown,
+        photoUrl: state.photo_url.trim() || null,
+        gallery: state.gallery,
+        testimonialQuote: state.testimonial_quote.trim() || null,
+        testimonialAuthor: state.testimonial_author.trim() || null,
+        timeline: state.timeline,
+      }),
+    [state],
+  )
 
   function setField<K extends keyof EditableState>(
     key: K,
@@ -333,6 +352,36 @@ export function AdminContainerEditor({
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+      {publicationIssues.length > 0 ? (
+        <section className="space-y-1 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3">
+          <div className="text-xs font-medium">
+            Contrôle de publication —{' '}
+            {publicationIssues.filter((i) => i.blocking).length} bloquant(s),{' '}
+            {publicationIssues.filter((i) => !i.blocking).length} à regarder
+          </div>
+          <ul className="space-y-1">
+            {publicationIssues.map((issue, index) => (
+              <li
+                key={`${issue.field}-${index}`}
+                className={`rounded-sm border px-2 py-1 text-[11px] leading-5 ${
+                  issue.blocking
+                    ? 'border-red-300 bg-red-50 text-red-900'
+                    : 'border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 text-foreground'
+                }`}
+              >
+                <strong className="font-medium">{issue.field}</strong>{' '}
+                {issue.message}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <p className="border-[color:var(--forest)]/30 bg-[color:var(--forest)]/10 rounded-md border px-3 py-2 text-xs text-[color:var(--forest)]">
+          Contrôle de publication : rien à signaler, cette fiche peut être
+          publiée.
+        </p>
+      )}
+
       {error && (
         <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
           {error}

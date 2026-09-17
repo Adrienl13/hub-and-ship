@@ -24,43 +24,29 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
   sur un lien de réservation ouvert sans session (§ 4).
 - Tunnel de commande en mode devis, e-mails refaits, et pont du catalogue
   public vers le panier (§ 2).
+- Registre `/livres` : indexation réparée, règle de preuve appliquée et
+  contrôle de publication dans l'admin (§ 1).
 
 ---
 
-## 1. Bloquant — le registre « preuve » (`/livres`)
+## 1. Registre « preuve » (`/livres`) — code fait, saisie à faire
 
-C'est la page qui porte la crédibilité du site, et **trois containers publiés
-sur quatre sont des données de démonstration présentées comme réelles.**
+Le code est livré. Les fiches sont enfin **indexables** : la résolution passe
+par un loader, un slug inconnu répond 404 au lieu de 200 avec l'écran
+d'erreur anglais, et `sitemap-livres.xml` les annonce. Le site refuse
+désormais de servir une photo de banque d'images ou une citation sans
+auteur, et l'admin contrôle la fiche avant publication — slug qui désigne
+une autre référence, total qui contredit le détail par famille, compteurs à
+zéro, chronologie impossible, photos de stock. `/qualite` n'expose plus de
+lien vers une fiche inexistante.
 
-- **[A] Photos inventées.** Les galeries de CC-2025-003, CC-2025-004 et
-  CC-2025-014 sont intégralement des photos de banque d'images Unsplash,
-  légendées comme des livraisons réelles : « Tables HPL installées — Camping
-  Les Pins Bleus », « Container 20' HC sur quai Marseille-Fos », « Inspection
-  SGS en usine ». La photo principale de CC-2025-004 aussi. À remplacer par
-  vos photos, ou à dépublier.
-- **[A] Témoignages.** CC-2026-001 publie une citation **sans auteur** ;
-  CC-2025-004 nomme un établissement identifiable (« Restaurant La Marina,
-  Cap d'Agde »). Faire confirmer par écrit, ou dépublier.
-- **[A] Compteurs incohérents.** Trois chiffres différents par fiche :
+**[A] Il reste la saisie**, fiche par fiche : photos réelles, compteurs
+accordés, et la question du témoignage nominatif de CC-2025-004. Tout est
+détaillé champ par champ dans `docs/REGISTRE_LIVRES_A_COMPLETER.md`. En
+attendant, trois fiches sur quatre s'affichent sans galerie.
 
-  | Référence | Affiché | `total_items` | Détail produits | Pros affichés / réels |
-  |---|---|---|---|---|
-  | CC-2025-003 | 198 | 790 | 58 | 6 / 8 |
-  | CC-2025-014 | 287 | 270 | 287 | 8 / 3 |
-  | CC-2026-001 | **0** | 350 | — | 12 / 4 |
-  | CC-2025-004 | 412 | 412 | 412 | 11 / 11 ✓ |
-
-- **[A] Slug faux.** CC-2025-014 est publié sous `cc-2025-002`. C'est aussi ce
-  qui casse le seul lien réel vers ces fiches, depuis `/qualite`.
-- **[A] Chronologie impossible.** CC-2025-004 est « en transit » avec une
-  livraison au 30/09/2026 et une clôture au 29/07. CC-2025-003 fait arriver le
-  container au Havre le 18/05 et livre les clients le 20/04 — et son champ port
-  dit « Fos-sur-Mer » pendant que son récit dit « port du Havre ».
-- **[C]** Retirer le repli photo Unsplash des fiches container (une fiche sans
-  photo doit afficher un neutre, pas une photo de stock légendée).
-- **[C]** `/livres/<slug inconnu>` répond **200** avec « Something went wrong! »
-  en anglais, et les 4 containers publiés sont tous en `noindex` avec le même
-  titre générique. Même défaut sur `/guides/<slug inconnu>`.
+Le plus urgent des quatre : **CC-2025-014 est servi sous l'URL
+`/livres/cc-2025-002`**, qui annonce une autre référence.
 
 ---
 
@@ -102,13 +88,13 @@ l'incohérence est réduite à ce cas.
 
 **[A] À corriger dans l'admin** (tous actifs et visibles aujourd'hui) :
 
-| SKU | Nom | Prix HT | Prix de référence | Problème |
-|---|---|---|---|---|
-| ROP-001 | Salon CANNES | 1 659 € | 786 € | référence sous le prix HT |
-| BIS-030 | Chaise DINARD | 181 € | 149 € | référence sous le prix HT |
-| SKU-336 | Chaise DAMIER | 73,85 € | 0 € | référence à zéro |
-| ROP-031 | Chaise ATHENES | **1 225 €** | 1 630 € | pairs à 120–189 € (seed : 99 €) |
-| ROP-016 | Table SIENA | **1 043 €** | 1 900 € | pairs à 79–193 € (seed : 229 €) |
+| SKU     | Nom            | Prix HT     | Prix de référence | Problème                        |
+| ------- | -------------- | ----------- | ----------------- | ------------------------------- |
+| ROP-001 | Salon CANNES   | 1 659 €     | 786 €             | référence sous le prix HT       |
+| BIS-030 | Chaise DINARD  | 181 €       | 149 €             | référence sous le prix HT       |
+| SKU-336 | Chaise DAMIER  | 73,85 €     | 0 €               | référence à zéro                |
+| ROP-031 | Chaise ATHENES | **1 225 €** | 1 630 €           | pairs à 120–189 € (seed : 99 €) |
+| ROP-016 | Table SIENA    | **1 043 €** | 1 900 €           | pairs à 79–193 € (seed : 229 €) |
 
 **[C]** Borner le calcul d'économie (`src/lib/order.ts`) : ne sommer la
 référence que sur les lignes où elle dépasse le prix HT, et plancher l'économie
