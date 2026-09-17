@@ -45,6 +45,14 @@ describe('existing container card registry presentation', () => {
       renderToStaticMarkup(<DeliveredContainerCard container={container} />),
     ).toContain('/livres/test-01')
   })
+  it('never falls back to a stock photo when the container has none', () => {
+    const html = renderToStaticMarkup(
+      <DeliveredContainerCard container={container} />,
+    )
+    expect(html).not.toContain('unsplash')
+    expect(html).not.toContain('<img')
+    expect(html).toContain('Photo à venir')
+  })
   it('shows delivered metrics and four real placeholders without invented media or SGS evidence', () => {
     const html = render()
     expect(html).toContain('Livré')

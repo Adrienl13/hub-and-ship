@@ -85,3 +85,7 @@ supplier-mapping-*.json
 
 # Confidential Studio source boards and manufacturer mappings (local admin vault).
 /data/private/
+
+# Caches Python du pipeline (générés par les tests)
+__pycache__/
+*.pyc

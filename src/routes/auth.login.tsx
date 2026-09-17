@@ -15,11 +15,32 @@ import {
 } from '@/lib/security/rate-limit'
 import { businessEmailSchema } from '@/lib/validation/schemas'
 
+// Espaces et caractères de contrôle : les navigateurs les retirent en
+// résolvant l'URL, ils masqueraient donc un préfixe hostile.
+function hasUnsafeChar(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    if (code <= 0x20 || code === 0x7f) return true
+  }
+  return false
+}
+
+// Seules les destinations internes sont acceptées : un `returnTo` absolu
+// ferait sortir le visiteur du site depuis un lien /auth/login?returnTo=…
+// Les navigateurs assimilent l'antislash à un slash, donc « /\evil.example »
+// vaut « //evil.example » — d'où la normalisation AVANT les contrôles.
 function sanitizeReturnTo(value: string | undefined): string | undefined {
   if (!value) return undefined
-  if (!value.startsWith('/')) return undefined
-  if (value.startsWith('//')) return undefined
-  return value
+  if (hasUnsafeChar(value)) return undefined
+  const normalized = value.replace(/\\/g, '/')
+  if (!normalized.startsWith('/')) return undefined
+  if (normalized.startsWith('//')) return undefined
+  try {
+    const url = new URL(normalized, 'https://terrassea.invalid')
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return undefined
+  }
 }
 
 const loginSearchSchema = z.object({
@@ -132,8 +153,8 @@ function LoginPage() {
             <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 mb-5 rounded-md border p-3 text-xs leading-5">
               La connexion est momentanément indisponible. Merci de réessayer
               dans quelques minutes, ou écrivez-nous à{' '}
-              <a className="underline" href="mailto:adrienlaniez1@gmail.com">
-                adrienlaniez1@gmail.com
+              <a className="underline" href="mailto:contact@prosimport.com">
+                contact@prosimport.com
               </a>
               .
             </div>

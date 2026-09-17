@@ -31,7 +31,11 @@ function getProductDocuments(product: Product): ProductDocument[] {
     {
       kind: 'technical',
       title: 'Fiche technique',
-      meta: `${formatProductDimensions(product)} · ${product.weightKg} kg`,
+      // Dimensions vides tant que la fiche n'est pas complétée : on retire le
+      // segment plutôt que d'afficher un séparateur orphelin.
+      meta: [formatProductDimensions(product), `${product.weightKg} kg`]
+        .filter(Boolean)
+        .join(' · '),
       gated: false,
     },
     {

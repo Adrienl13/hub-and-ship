@@ -126,10 +126,10 @@ export function LegalLayout({
               <span>
                 Pour toute question juridique :{' '}
                 <a
-                  href="mailto:adrienlaniez1@gmail.com"
+                  href="mailto:contact@prosimport.com"
                   className="font-medium text-foreground underline-offset-2 hover:underline"
                 >
-                  adrienlaniez1@gmail.com
+                  contact@prosimport.com
                 </a>
               </span>
               <span>·</span>

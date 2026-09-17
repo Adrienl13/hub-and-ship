@@ -39,7 +39,7 @@ import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 // Repli humain quand la demande ne peut pas être enregistrée (mailto du
 // panneau + consigne du toast d'échec).
-const STOCK_CONTACT_EMAIL = 'adrienlaniez1@gmail.com'
+const STOCK_CONTACT_EMAIL = 'contact@prosimport.com'
 
 export const Route = createFileRoute('/stock-24h')({
   // Head STATIQUE : plus d'ItemList ni d'og:image dérivés de la fixture — les
@@ -47,9 +47,13 @@ export const Route = createFileRoute('/stock-24h')({
   // dément. Le breadcrumb suffit tant que le stock réel n'est pas SSR.
   head: () => ({
     ...buildSeoHead({
-      title: 'Stock mobilier terrasse disponible sous 24h',
+      // Titre volontairement distinct de /stock-mobilier-terrasse-24h : cette
+      // page-ci est l'inventaire (lots, unités libres, demande de rappel),
+      // l'autre est la page d'entrée éditoriale. Deux titres identiques
+      // faisaient se cannibaliser les deux URL sur la même requête.
+      title: 'Lots de mobilier de terrasse disponibles en France',
       description:
-        'Lots de mobilier outdoor professionnel déjà disponibles en France : chaises, fauteuils et tables pour terrasse urgente, retrait Marseille-Fos sous 24h.',
+        'Le détail des lots déjà arrivés en France : références, unités encore libres, prix HT et demande de rappel. Retrait Marseille-Fos sous 24h selon disponibilité.',
       path: '/stock-24h',
     }),
     scripts: [

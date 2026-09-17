@@ -31,22 +31,28 @@ export function DeliveredContainerCard({
   const actual = container.actualDays
   const onTime = planned != null && actual != null ? actual <= planned : true
   const rating = container.testimonial.rating ?? 0
-  const photo =
-    container.photoUrl ??
-    'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?auto=format&fit=crop&w=900&q=80'
+  // Aucune preuve empruntée : sans photo du container, la vignette reste vide
+  // plutôt que d'afficher une image de banque légendée « Container … ».
+  const photo = container.photoUrl
 
   return (
     <a
       href={`/livres/${container.slug}`}
       className="hover:border-foreground/30 hover:shadow-paper group block h-full overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card transition-all hover:-translate-y-1"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[color:var(--sand)]">
-        <img
-          src={photo}
-          alt={`Container ${container.reference}`}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-        />
+      <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-[color:var(--sand)]">
+        {photo ? (
+          <img
+            src={photo}
+            alt={`Container ${container.reference}`}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <span className="text-[11px] text-muted-foreground">
+            Photo à venir
+          </span>
+        )}
       </div>
       <div className="space-y-3 p-5">
         <div>

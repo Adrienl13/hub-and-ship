@@ -81,7 +81,7 @@ export function ReportAccessRequestDialog({
         toast.error('Demande non envoyée', {
           description:
             payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à adrienlaniez1@gmail.com.',
+            'Réessayez dans un instant, ou écrivez-nous à contact@prosimport.com.',
         })
         return
       }
@@ -102,7 +102,7 @@ export function ReportAccessRequestDialog({
     } catch {
       toast.error('Demande non envoyée', {
         description:
-          'Connexion impossible. Écrivez-nous à adrienlaniez1@gmail.com.',
+          'Connexion impossible. Écrivez-nous à contact@prosimport.com.',
       })
     } finally {
       setSubmitting(false)

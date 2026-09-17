@@ -161,9 +161,12 @@ function AccountReservationsPage() {
         </aside>
 
         <div className="lg:col-span-9">
+          {/* Le détail de la panne reste technique : le client ne voit que ce
+              qu'il peut en faire. */}
           {remoteError && (
             <div className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 mb-4 rounded-md border p-3 text-xs leading-5">
-              Lecture des réservations indisponible : {remoteError}
+              Vos réservations sont momentanément indisponibles. Réessayez dans
+              quelques instants — si cela persiste, contactez-nous.
             </div>
           )}
           <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
@@ -270,8 +273,8 @@ function EmptyReservations({ authStatus }: { authStatus: string }) {
       </div>
       <p className="mx-auto max-w-md text-xs leading-5 text-muted-foreground">
         Les réservations faites avec votre email professionnel sont consultables
-        après connexion. Les commandes anonymes restent accessibles depuis ce
-        navigateur via le lien envoyé par email.
+        après connexion. Si vous avez réservé sans créer de compte, le lien reçu
+        par email vous y donne directement accès.
       </p>
       <Link
         to="/auth/login"
@@ -322,20 +325,25 @@ function AuthStateBox({
   status: string
   isConfigured: boolean
 }) {
+  // Encart visible par tous les clients : il dit où ils en sont, jamais
+  // comment le service est branché.
+  const title = !isConfigured
+    ? 'Espace momentanément indisponible'
+    : status === 'authenticated'
+      ? 'Session active'
+      : 'Connexion requise'
+  const message = !isConfigured
+    ? 'Le suivi de vos réservations revient dans quelques instants. Les réservations enregistrées depuis ce navigateur restent affichées.'
+    : status === 'authenticated'
+      ? 'Vos réservations, vos échéances et vos documents sont rattachés à votre compte.'
+      : 'Connectez-vous pour retrouver les réservations faites avec votre email professionnel.'
+
   return (
     <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 text-sm">
       <div className="label-eyebrow text-muted-foreground">Accès</div>
-      <div className="mt-2 font-medium">
-        {isConfigured
-          ? status === 'authenticated'
-            ? 'Session active'
-            : 'Connexion requise'
-          : 'Aperçu local'}
-      </div>
+      <div className="mt-2 font-medium">{title}</div>
       <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
-        {isConfigured
-          ? 'Les réservations seront lues depuis Supabase dès activation RLS.'
-          : 'Données de démonstration affichées tant que les clés Supabase ne sont pas renseignées.'}
+        {message}
       </p>
     </div>
   )

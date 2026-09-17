@@ -359,7 +359,7 @@ function ResourcesCard() {
       <p className="mt-3 text-xs text-muted-foreground">
         Une question sur une réservation, un document ou une facture ?{' '}
         <a
-          href="mailto:adrienlaniez1@gmail.com"
+          href="mailto:contact@prosimport.com"
           className="text-foreground underline"
         >
           Contacter notre équipe

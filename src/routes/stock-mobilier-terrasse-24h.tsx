@@ -25,9 +25,12 @@ export const Route = createFileRoute('/stock-mobilier-terrasse-24h')({
   // produits du composant est DB-first (useStockLines) et se vide honnêtement.
   head: () => ({
     ...buildSeoHead({
-      title: 'Stock mobilier terrasse disponible sous 24h',
+      // Page d'entrée éditoriale (positionnement + questions fréquentes) ; le
+      // stock lui-même vit sur /stock-24h, qui porte désormais un autre titre.
+      // Les deux restent auto-canoniques : les contenus sont distincts.
+      title: 'Stock mobilier de terrasse : équiper sans attendre le container',
       description:
-        'Mobilier de terrasse professionnel déjà disponible en France : chaises, fauteuils et tables pour ouverture urgente, complément CHR ou remplacement rapide.',
+        'Mobilier de terrasse professionnel déjà disponible en France : pourquoi et quand passer par le stock plutôt que par la précommande container, et comment combiner les deux.',
       path: '/stock-mobilier-terrasse-24h',
     }),
     scripts: [

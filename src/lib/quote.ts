@@ -79,6 +79,16 @@ export function buildQuoteHTML(q: QuoteData): string {
   const buyer = q.buyer ?? {}
   const t = q.totals
 
+  // Les pourcentages de l'échéancier sont DÉRIVÉS des montants imprimés. Dès
+  // que le plancher de 150 € s'applique aux frais de réservation (net < 5 000 €
+  // HT, cas courant au MOQ des assises), l'acompte complémentaire ne vaut plus
+  // 27 % du total : un pourcentage figé contredirait le montant d'à côté.
+  const share = (amount: number): string =>
+    t.totalHt > 0 ? ` ${Math.round((amount / t.totalHt) * 100)} %` : ''
+  const feeShare = share(t.reservationFee)
+  const depositShare = share(t.payAt80Percent)
+  const balanceShare = share(t.payBeforeShipping)
+
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -237,8 +247,8 @@ export function buildQuoteHTML(q: QuoteData): string {
         <h4>Échéancier de paiement</h4>
         <ul>
           <li>Réservation : 3 % (min 150 €, max 500 €), non-remboursables sauf annulation Terrassea.</li>
-          <li>Acompte 27 % complémentaire à 80 % de remplissage.</li>
-          <li>Solde 70 % avant expédition usine après contrôle qualité SGS.</li>
+          <li>Acompte${depositShare} complémentaire à 80 % de remplissage.</li>
+          <li>Solde${balanceShare} avant expédition usine après contrôle qualité SGS.</li>
         </ul>
         <h4 style="margin-top:12px;">Inclus dans le prix</h4>
         <ul>
@@ -257,18 +267,18 @@ export function buildQuoteHTML(q: QuoteData): string {
         <div class="row total"><span>Total HT</span><span class="v">${eur(t.totalHt)}</span></div>
         <div class="row savings"><span>Économie réalisée</span><span class="v">−${eur(t.savings)} (${t.savingsPercent.toFixed(0)} %)</span></div>
         <div class="deposit">
-          <div class="label">À payer aujourd'hui<strong>Frais de réservation 3 %</strong></div>
+          <div class="label">À payer aujourd'hui<strong>Frais de réservation${feeShare}</strong></div>
           <div class="amount">${eur(t.payNow)}</div>
         </div>
         <div class="schedule">
-          <div class="item"><span>Acompte 27 % (à 80 % remplissage)</span><span class="num">${eur(t.payAt80Percent)}</span></div>
-          <div class="item"><span>Solde 70 % (avant expédition)</span><span class="num">${eur(t.payBeforeShipping)}</span></div>
+          <div class="item"><span>Acompte${depositShare} (à 80 % remplissage)</span><span class="num">${eur(t.payAt80Percent)}</span></div>
+          <div class="item"><span>Solde${balanceShare} (avant expédition)</span><span class="num">${eur(t.payBeforeShipping)}</span></div>
         </div>
       </div>
     </div>
 
     <footer>
-      <div>Terrassea — édité par Pros Import EURL · adrienlaniez1@gmail.com</div>
+      <div>Terrassea — édité par Pros Import EURL · contact@prosimport.com</div>
       <div>RCS Paris 988 269 981</div>
     </footer>
   </div>

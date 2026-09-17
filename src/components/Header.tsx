@@ -33,7 +33,9 @@ const PRIMARY_LINKS: ReadonlyArray<readonly [string, string]> = [
 ]
 
 const RESOURCE_LINKS: ReadonlyArray<readonly [string, string]> = [
-  ['Comment ça marche', '/#comment'],
+  // L'accueil ne porte plus de section « Comment ça marche » : le déroulé
+  // complet (étapes, contrôles, paiement) vit désormais sur /prix.
+  ['Comment ça marche', '/prix#trajet'],
   ['Containers livrés', '/livres'],
   ['Avis clients', '/avis'],
   ['Qualité & Tests', '/qualite'],

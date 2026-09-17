@@ -104,13 +104,13 @@ export function ContactForm({
         toast.error('Message non envoyé', {
           description:
             payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à adrienlaniez1@gmail.com.',
+            'Réessayez dans un instant, ou écrivez-nous à contact@prosimport.com.',
         })
       }
     } catch {
       toast.error('Message non envoyé', {
         description:
-          'Connexion impossible. Écrivez-nous à adrienlaniez1@gmail.com.',
+          'Connexion impossible. Écrivez-nous à contact@prosimport.com.',
       })
     }
     setSubmitting(false)

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Calculator,
-  Download,
   Handshake,
   History,
   ImageOff,
@@ -30,10 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { BISTRO_PRODUCTS } from '@/lib/bistro-products'
-import { ROPE_PRODUCTS } from '@/lib/rope-products'
-import { TABLE_BASE_PRODUCTS } from '@/lib/table-base-products'
-import { TESLIN_PRODUCTS } from '@/lib/teslin-products'
 import {
   CATEGORY_LABEL,
   CATEGORY_LABEL_PLURAL,
@@ -55,8 +50,6 @@ import {
   savePricingParametersVersion,
   softDeleteProduct,
   updatePricingParameters,
-  upsertProduct,
-  upsertVariant,
   type CatalogueAdminClient,
   type PriceAdjustmentRow,
   type PriceAdjustmentScope,
@@ -1085,10 +1078,6 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [stockForProduct, setStockForProduct] = useState<AdminProduct | null>(
     null,
   )
-  const [importingBistro, setImportingBistro] = useState(false)
-  const [importingRope, setImportingRope] = useState(false)
-  const [importingTeslin, setImportingTeslin] = useState(false)
-  const [importingTableBase, setImportingTableBase] = useState(false)
   const [categoryFilter, setCategoryFilter] =
     useState<AdminCategoryFilter>('all')
   const [collectionFilter, setCollectionFilter] =
@@ -1239,118 +1228,6 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
     }
     setBusyId(null)
-  }
-
-  async function importProductCollection({
-    products,
-    startSortOrder,
-    action,
-    target,
-    setImporting,
-  }: {
-    readonly products: ReadonlyArray<Product>
-    readonly startSortOrder: number
-    readonly action: string
-    readonly target: string
-    readonly setImporting: (value: boolean) => void
-  }): Promise<void> {
-    if (!isConfigured) return
-    setImporting(true)
-    setError(null)
-    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
-
-    try {
-      for (const [index, product] of products.entries()) {
-        await upsertProduct(client, {
-          id: product.id,
-          sku: product.sku,
-          category: product.category,
-          name: product.name,
-          description: product.description,
-          dim_length_cm: product.dimensions.l,
-          dim_width_cm: product.dimensions.w,
-          dim_height_cm: product.dimensions.h,
-          cbm_per_unit: product.cbmPerUnit,
-          weight_kg: product.weightKg,
-          moq_units: product.moqUnits,
-          base_price_ht: product.basePriceHt,
-          retail_price_ref: product.retailPriceRef,
-          eco_contribution: product.ecoContribution,
-          main_image_url: product.mainImageUrl,
-          gallery_urls: [...product.galleryUrls],
-          features: [...product.features],
-          fire_rating: product.fireRating ?? null,
-          is_active: true,
-          sort_order: startSortOrder + index,
-        })
-
-        for (const [variantIndex, variant] of product.variants.entries()) {
-          await upsertVariant(client, {
-            id: variant.id,
-            product_id: product.id,
-            name: variant.name,
-            image_url: variant.imageUrl ?? null,
-            gallery_urls: [...(variant.galleryUrls ?? [])],
-            sort_order: variantIndex,
-          })
-        }
-      }
-
-      await logAdminAction(client, auth.user?.id ?? null, {
-        action,
-        target,
-        extra: { count: products.length },
-      })
-      await refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
-    } finally {
-      setImporting(false)
-    }
-  }
-
-  async function importBistroProducts(): Promise<void> {
-    if (importingBistro) return
-    await importProductCollection({
-      products: BISTRO_PRODUCTS,
-      startSortOrder: 1000,
-      action: 'catalogue.import_bistro_collection',
-      target: 'bistro-products',
-      setImporting: setImportingBistro,
-    })
-  }
-
-  async function importRopeProducts(): Promise<void> {
-    if (importingRope) return
-    await importProductCollection({
-      products: ROPE_PRODUCTS,
-      startSortOrder: 2000,
-      action: 'catalogue.import_rope_collection',
-      target: 'rope-products',
-      setImporting: setImportingRope,
-    })
-  }
-
-  async function importTeslinProducts(): Promise<void> {
-    if (importingTeslin) return
-    await importProductCollection({
-      products: TESLIN_PRODUCTS,
-      startSortOrder: 3000,
-      action: 'catalogue.import_teslin_collection',
-      target: 'teslin-products',
-      setImporting: setImportingTeslin,
-    })
-  }
-
-  async function importTableBaseProducts(): Promise<void> {
-    if (importingTableBase) return
-    await importProductCollection({
-      products: TABLE_BASE_PRODUCTS,
-      startSortOrder: 4000,
-      action: 'catalogue.import_table_base_collection',
-      target: 'table-base-products',
-      setImporting: setImportingTableBase,
-    })
   }
 
   async function savePricingParameters(
@@ -1532,54 +1409,6 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       )}
 
       <div className="flex flex-wrap justify-end gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1.5 rounded-sm"
-          disabled={importingBistro}
-          onClick={() => void importBistroProducts()}
-        >
-          <Download className="h-3.5 w-3.5" />
-          {importingBistro ? 'Import en cours…' : 'Importer collection bistrot'}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1.5 rounded-sm"
-          disabled={importingRope}
-          onClick={() => void importRopeProducts()}
-        >
-          <Download className="h-3.5 w-3.5" />
-          {importingRope ? 'Import en cours…' : 'Importer collection cordage'}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1.5 rounded-sm"
-          disabled={importingTeslin}
-          onClick={() => void importTeslinProducts()}
-        >
-          <Download className="h-3.5 w-3.5" />
-          {importingTeslin
-            ? 'Import en cours…'
-            : 'Importer collection textilène'}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1.5 rounded-sm"
-          disabled={importingTableBase}
-          onClick={() => void importTableBaseProducts()}
-        >
-          <Download className="h-3.5 w-3.5" />
-          {importingTableBase
-            ? 'Import en cours…'
-            : 'Importer piètements de table'}
-        </Button>
         <AdminPackshotBatchNormalizer onDone={() => void refresh()} />
         <Button
           type="button"

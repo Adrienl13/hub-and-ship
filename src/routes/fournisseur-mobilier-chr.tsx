@@ -32,7 +32,7 @@ const FAQ = [
   },
   {
     q: 'Comment sont garantis les prix et la qualité ?',
-    a: 'La méthode de prix est publiée (page « Le prix prouvé ») : coût usine + fret + douane + marge affichée. Chaque container passe un contrôle qualité SGS indépendant avant départ, et les produits sont garantis 1 an avec un SAV basé en France.',
+    a: 'La méthode de prix est publiée (page « Le prix prouvé ») : coût usine + fret + douane + notre marge unique. Chaque container passe un contrôle qualité SGS indépendant avant départ, et les produits sont garantis 1 an avec un SAV basé en France.',
   },
   {
     q: 'Livrez-vous partout en France ?',

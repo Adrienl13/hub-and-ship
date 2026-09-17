@@ -29,4 +29,19 @@ describe('formatProductDimensions', () => {
       }),
     ).toBe('Ø 80 × H 75 cm')
   })
+
+  it("n'affiche rien tant que les dimensions ne sont pas saisies", () => {
+    expect(formatProductDimensions({ dimensions: { l: 0, w: 0, h: 0 } })).toBe(
+      '',
+    )
+    expect(
+      formatProductDimensions({ dimensions: { l: 48, w: 0, h: 86 } }),
+    ).toBe('')
+    expect(
+      formatProductDimensions({
+        dimensions: { l: 0, w: 0, h: 0 },
+        tableShape: 'round',
+      }),
+    ).toBe('')
+  })
 })

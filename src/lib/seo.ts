@@ -14,6 +14,13 @@ export const SITE_URL = 'https://prosimport.com'
 // (alternateName/sameAs) pour la continuité d'entité Google.
 export const SITE_NAME = 'Terrassea'
 
+// Visuel de partage par défaut : sans og:image, un lien posté en messagerie ou
+// sur un réseau s'affiche sans aperçu. Photo d'ambiance déjà servie par
+// l'accueil ; dimensions relevées sur le fichier, à corriger si on le remplace.
+export const DEFAULT_SHARE_IMAGE = '/images/home/hero-salon-vue-mer.webp'
+const DEFAULT_SHARE_IMAGE_WIDTH = '1920'
+const DEFAULT_SHARE_IMAGE_HEIGHT = '960'
+
 export interface SeoInput {
   readonly title: string
   readonly description: string
@@ -38,7 +45,10 @@ export function buildSeoHead({
   const fullTitle = title.includes(SITE_NAME)
     ? title
     : `${title} | ${SITE_NAME}`
-  const imageUrl = image ? absoluteUrl(image) : undefined
+  // Les dimensions ne sont connues que pour le visuel par défaut : on ne les
+  // annonce pas pour une image fournie par la page.
+  const usesDefaultImage = !image
+  const imageUrl = absoluteUrl(image ?? DEFAULT_SHARE_IMAGE)
 
   return {
     meta: [
@@ -52,18 +62,25 @@ export function buildSeoHead({
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: url },
       { property: 'og:locale', content: 'fr_FR' },
-      {
-        name: 'twitter:card',
-        content: imageUrl ? 'summary_large_image' : 'summary',
-      },
+      { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: fullTitle },
       { name: 'twitter:description', content: description },
-      ...(imageUrl
+      { property: 'og:image', content: imageUrl },
+      ...(usesDefaultImage
         ? [
-            { property: 'og:image', content: imageUrl },
-            { name: 'twitter:image', content: imageUrl },
+            { property: 'og:image:width', content: DEFAULT_SHARE_IMAGE_WIDTH },
+            {
+              property: 'og:image:height',
+              content: DEFAULT_SHARE_IMAGE_HEIGHT,
+            },
+            {
+              property: 'og:image:alt',
+              content:
+                'Terrasse professionnelle équipée en mobilier outdoor Terrassea',
+            },
           ]
         : []),
+      { name: 'twitter:image', content: imageUrl },
     ],
     links: [{ rel: 'canonical', href: url }],
   }
@@ -126,7 +143,7 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: `${SITE_URL}/brand/terrassea-logo.svg`,
     image: `${SITE_URL}/brand/terrassea-logo.svg`,
-    email: 'adrienlaniez1@gmail.com',
+    email: 'contact@prosimport.com',
     description:
       "Terrassea, marque de Pros Import EURL : club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
     founder: {
@@ -247,11 +264,17 @@ export function productJsonLd(product: Product, options?: { url?: string }) {
         name: 'Volume unitaire',
         value: `${product.cbmPerUnit.toFixed(2)} m3`,
       },
-      {
-        '@type': 'PropertyValue',
-        name: 'Dimensions',
-        value: formatProductDimensions(product),
-      },
+      // Même règle que l'image : une fiche dont les dimensions ne sont pas
+      // encore saisies n'émet pas une propriété vide.
+      ...(formatProductDimensions(product)
+        ? [
+            {
+              '@type': 'PropertyValue',
+              name: 'Dimensions',
+              value: formatProductDimensions(product),
+            },
+          ]
+        : []),
     ],
     offers: {
       '@type': 'Offer',

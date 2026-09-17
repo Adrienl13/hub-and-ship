@@ -24,6 +24,7 @@ Terrassea, operated by Pros Import EURL, is a French B2B group-buying platform f
 - Quality and tests: https://prosimport.com/qualite
 - Delivered containers: https://prosimport.com/livres
 - Recommended carriers: https://prosimport.com/transport-partenaires
+- Places where the furniture can be seen in person: https://prosimport.com/lieux
 - FAQ: https://prosimport.com/faq
 
 ## Guides (educational, citable)
@@ -63,5 +64,5 @@ The public website may show direct-pro prices, public discounts, MOQ, CBM, conta
 ## Contact
 
 Primary website: https://prosimport.com/
-Email: adrienlaniez1@gmail.com
+Email: contact@prosimport.com
 

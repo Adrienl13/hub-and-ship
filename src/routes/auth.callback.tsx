@@ -6,13 +6,35 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 
-// Only same-origin paths are accepted as a returnTo target to avoid open
-// redirects when the magic link is shared or intercepted.
+const DEFAULT_RETURN_TO = '/account/reservations'
+
+// Espaces et caractères de contrôle : les navigateurs les retirent en
+// résolvant l'URL, ils masqueraient donc un préfixe hostile.
+function hasUnsafeChar(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    if (code <= 0x20 || code === 0x7f) return true
+  }
+  return false
+}
+
+// Seules les destinations internes sont acceptées : un `returnTo` absolu
+// ferait sortir le visiteur du site quand le lien magique est partagé ou
+// intercepté. Les navigateurs assimilent l'antislash à un slash, donc
+// « /\evil.example » vaut « //evil.example » — d'où la normalisation AVANT
+// les contrôles.
 function sanitizeReturnTo(value: string | undefined): string {
-  if (!value) return '/account/reservations'
-  if (!value.startsWith('/')) return '/account/reservations'
-  if (value.startsWith('//')) return '/account/reservations'
-  return value
+  if (!value) return DEFAULT_RETURN_TO
+  if (hasUnsafeChar(value)) return DEFAULT_RETURN_TO
+  const normalized = value.replace(/\\/g, '/')
+  if (!normalized.startsWith('/')) return DEFAULT_RETURN_TO
+  if (normalized.startsWith('//')) return DEFAULT_RETURN_TO
+  try {
+    const url = new URL(normalized, 'https://terrassea.invalid')
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return DEFAULT_RETURN_TO
+  }
 }
 
 const callbackSearchSchema = z.object({

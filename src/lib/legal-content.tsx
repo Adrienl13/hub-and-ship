@@ -51,7 +51,7 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               <Strong>TVA intracommunautaire :</Strong> FR08988269981
             </LI>
             <LI>
-              <Strong>Email :</Strong> adrienlaniez1@gmail.com
+              <Strong>Email :</Strong> contact@prosimport.com
             </LI>
           </UL>
         </LegalSection>
@@ -419,8 +419,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             responsable de la confidentialité de ses identifiants et de
             l'ensemble des opérations effectuées depuis son compte. Toute
             utilisation frauduleuse ou suspecte doit être signalée sans délai à{' '}
-            <a href="mailto:adrienlaniez1@gmail.com" className="underline">
-              adrienlaniez1@gmail.com
+            <a href="mailto:contact@prosimport.com" className="underline">
+              contact@prosimport.com
             </a>
             .
           </P>
@@ -512,8 +512,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <P>
             Pour toute question relative à la protection de vos données :{' '}
-            <a href="mailto:adrienlaniez1@gmail.com" className="underline">
-              adrienlaniez1@gmail.com
+            <a href="mailto:contact@prosimport.com" className="underline">
+              contact@prosimport.com
             </a>
             .
           </P>
@@ -667,8 +667,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <P>
             Pour exercer ces droits, écrivez à{' '}
-            <a href="mailto:adrienlaniez1@gmail.com" className="underline">
-              adrienlaniez1@gmail.com
+            <a href="mailto:contact@prosimport.com" className="underline">
+              contact@prosimport.com
             </a>{' '}
             en joignant une copie d'une pièce d'identité. Nous répondons sous 30
             jours.
@@ -929,8 +929,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             L'Acheteur dispose de 7 jours après livraison pour signaler tout
             défaut visible (photos par email à{' '}
-            <a href="mailto:adrienlaniez1@gmail.com" className="underline">
-              adrienlaniez1@gmail.com
+            <a href="mailto:contact@prosimport.com" className="underline">
+              contact@prosimport.com
             </a>
             ). En cas de défaut confirmé : remplacement à l'identique sur le
             container suivant, à défaut avoir commercial à valoir sous 12 mois,
@@ -953,8 +953,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="reclamation" title="8. Réclamations">
           <P>
             Toute demande de remboursement doit être adressée par écrit à{' '}
-            <a href="mailto:adrienlaniez1@gmail.com" className="underline">
-              adrienlaniez1@gmail.com
+            <a href="mailto:contact@prosimport.com" className="underline">
+              contact@prosimport.com
             </a>{' '}
             en précisant la référence du container, le numéro de commande et le
             motif. Une réponse argumentée est apportée sous 5 jours ouvrés.

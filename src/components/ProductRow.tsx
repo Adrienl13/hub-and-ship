@@ -77,9 +77,16 @@ function ProductRowComponent({
                 <Info className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover/name:opacity-100" />
               </button>
               <div className="label-eyebrow mt-0.5 text-muted-foreground">
-                {CATEGORY_LABEL[product.category]} ·{' '}
-                {formatProductDimensions(product)} ·{' '}
-                {product.cbmPerUnit.toFixed(2)} m³/u · MOQ {moq}
+                {[
+                  CATEGORY_LABEL[product.category],
+                  // Vide tant que les dimensions ne sont pas saisies : on retire
+                  // le segment au lieu de laisser un séparateur orphelin.
+                  formatProductDimensions(product),
+                  `${product.cbmPerUnit.toFixed(2)} m³/u`,
+                  `MOQ ${moq}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </div>
             </div>
             <div className="text-right">

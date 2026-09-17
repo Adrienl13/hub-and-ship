@@ -125,15 +125,19 @@ export function emptyCategoryCounts(): Record<ProductCategory, number> {
  * « Ø 80 × H 75 cm », tout le reste « L × l × H cm ». Point d'entrée UNIQUE
  * pour l'affichage (cartes, fiches, devis, JSON-LD) — ne pas recomposer les
  * dimensions à la main.
+ *
+ * Renvoie une chaîne VIDE tant que les dimensions ne sont pas saisies : une
+ * fiche en cours de complétion vaut mieux muette que créditée d'un « 0 × 0 × 0
+ * cm ». Les appelants testent le résultat avant d'afficher leur libellé.
  */
 export function formatProductDimensions(
   product: Pick<Product, 'dimensions' | 'tableShape'>,
 ): string {
   const { l, w, h } = product.dimensions
   if (product.tableShape === 'round') {
-    return `Ø ${l} × H ${h} cm`
+    return l > 0 && h > 0 ? `Ø ${l} × H ${h} cm` : ''
   }
-  return `${l} × ${w} × ${h} cm`
+  return l > 0 && w > 0 && h > 0 ? `${l} × ${w} × ${h} cm` : ''
 }
 
 /**

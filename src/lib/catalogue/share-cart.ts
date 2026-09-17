@@ -42,8 +42,13 @@ export function decodeCartSelection(
     const qty = Number(parts[2])
     if (!productId || !variantId) continue
     if (!Number.isFinite(qty) || qty < 1) continue
-    if (seen.has(productId)) continue
-    seen.add(productId)
+    // Le dédoublonnage porte sur la paire produit + design : un même produit
+    // peut légitimement figurer plusieurs fois dans un lien, un coloris par
+    // ligne. Dédoublonner sur le seul produit perdrait silencieusement des
+    // coloris de la commande.
+    const lineKey = `${productId}${FIELD_SEP}${variantId}`
+    if (seen.has(lineKey)) continue
+    seen.add(lineKey)
     entries.push({ productId, variantId, qty: Math.floor(qty) })
   }
   return entries

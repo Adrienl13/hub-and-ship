@@ -49,9 +49,13 @@ export class PriceModel {
   routeB = ['usine', 'terrassea', 'vous']
   renderVals() {
     const s = this.state
+    // Paliers de remise : une seule source pour le simulateur et pour la FAQ,
+    // qui annonçaient auparavant les mêmes chiffres en double.
     const qty = [50, 100, 150],
+      rates = [0, 0.06, 0.1],
       t = s.tier,
       step = s.step
+    const pct = (r) => Math.round(r * 100) + ' %'
     const eur = (n) => {
       if (!Number.isFinite(n)) return 'À confirmer'
       const v = Math.round(n * 100) / 100
@@ -100,6 +104,34 @@ export class PriceModel {
       }
     }
     const focusKey = s.focus || this.routeA[Math.min(step, 5)]
+    // Échéancier contractuel réellement appliqué (devis PDF, panier, moteur de
+    // réservation) : frais 3 %, acompte 27 % au seuil, solde avant expédition.
+    const pays = [
+      {
+        pct: '3 %',
+        w: '3%',
+        title: 'À la réservation',
+        sub: 'Des frais modestes qui retiennent votre quantité, déduits du total.',
+        bg: 'var(--color-text)',
+        numColor: 'var(--color-text)',
+      },
+      {
+        pct: '27 %',
+        w: '27%',
+        title: 'Au seuil de 80 %',
+        sub: 'La production démarre — vous êtes prévenu 48 h avant.',
+        bg: 'var(--color-accent-300)',
+        numColor: 'var(--color-text)',
+      },
+      {
+        pct: '70 %',
+        w: '70%',
+        title: 'Le solde, avant expédition',
+        sub: 'Une fois le contrôle SGS validé en usine, avant le départ du container.',
+        bg: 'var(--color-accent-700)',
+        numColor: 'var(--color-accent-700)',
+      },
+    ]
     return {
       productImage: this.product?.img || '',
       productName: this.product?.name || 'Photo indisponible',
@@ -205,7 +237,7 @@ export class PriceModel {
       })),
       tier: (() => {
         const base = this.price,
-          rate = [0, 0.06, 0.1][t],
+          rate = rates[t],
           unit = Number.isFinite(base)
             ? Math.round((Math.round(base * 100) * (100 - rate * 100)) / 100) /
               100
@@ -228,40 +260,7 @@ export class PriceModel {
           numColor: t ? 'var(--color-accent-700)' : 'var(--color-text)',
         }
       })(),
-      pays: [
-        {
-          pct: '3 %',
-          w: '3%',
-          title: 'À la réservation',
-          sub: 'Un acompte modeste, déduit du total.',
-          bg: 'var(--color-text)',
-          numColor: 'var(--color-text)',
-        },
-        {
-          pct: '27 %',
-          w: '27%',
-          title: 'Au seuil de 80 %',
-          sub: 'La production démarre — vous êtes prévenu 48 h avant.',
-          bg: 'var(--color-accent-300)',
-          numColor: 'var(--color-text)',
-        },
-        {
-          pct: '40 %',
-          w: '40%',
-          title: 'Avant expédition',
-          sub: 'Après validation du contrôle SGS en usine.',
-          bg: 'var(--color-accent-700)',
-          numColor: 'var(--color-accent-700)',
-        },
-        {
-          pct: '30 %',
-          w: '30%',
-          title: 'À la livraison sur votre terrasse',
-          sub: 'Le solde, une fois le mobilier réceptionné chez vous.',
-          bg: '#b8924a',
-          numColor: '#8f6f33',
-        },
-      ],
+      pays,
       videos: [
         {
           src: this.settings.video1 || '',
@@ -308,23 +307,39 @@ export class PriceModel {
         },
         {
           q: 'Quelles remises de volume sont appliquées ?',
-          a: '[Réponse à reprendre du site actuel]',
-          points: [],
+          a: "La remise est automatique et s'applique à chaque pièce du projet, selon le nombre total de pièces commandées, tous produits confondus.",
+          points: [
+            `En dessous de ${qty[1]} pièces : tarif de base, tous les coûts inclus sauf la livraison finale.`,
+            `À partir de ${qty[1]} pièces : −${pct(rates[1])} sur chaque pièce du projet.`,
+            `À partir de ${qty[2]} pièces : −${pct(rates[2])}, notre meilleur tarif volume.`,
+          ],
         },
         {
           q: "Comment se passe le paiement d'une commande par container ?",
-          a: '[Réponse à reprendre du site actuel]',
-          points: [],
+          a: "Le paiement suit l'avancement réel du container, en trois étapes : vous n'avancez jamais une grosse somme dans le vide.",
+          points: [
+            `${pays[0].pct} à la réservation (minimum 150 €, maximum 500 €) : ces frais retiennent votre place et votre quantité. Ils ne sont pas remboursables, sauf si Terrassea annule le container.`,
+            `${pays[1].pct} au seuil de 80 % de remplissage : la production est lancée, vous êtes prévenu 48 h à l'avance.`,
+            `${pays[2].pct} avant expédition : le solde est réglé une fois la production terminée et le contrôle SGS validé en usine, quand la marchandise est prête à charger.`,
+          ],
         },
         {
           q: "Pourquoi ne pas acheter directement à l'usine moi-même ?",
-          a: '[Réponse à reprendre du site actuel]',
-          points: [],
+          a: "Rien ne l'interdit, mais l'achat en solo suppose de réunir seul les minimums de production, d'avancer la totalité de la marchandise et de porter l'import de bout en bout.",
+          points: [
+            'Le container est partagé entre plusieurs professionnels : vous atteignez les minimums de production sans commander un container entier.',
+            "Nous sommes l'importateur officiel : déclaration d'importation, dédouanement, TVA autoliquidée et conformité réglementaire sont pris en charge, et vous recevez une facture française.",
+            "Contrôle SGS indépendant avant chargement, garantie 1 an et SAV en France : en cas de problème, votre interlocuteur est en France, pas à l'autre bout du monde.",
+          ],
         },
         {
           q: 'Le prix affiché inclut-il le transport et la douane ?',
-          a: '[Réponse à reprendre du site actuel]',
-          points: [],
+          a: "Oui : le prix comprend la marchandise, l'importation, la douane et l'acheminement jusqu'à notre zone de stockage de Fos-sur-Mer. Seule la livraison finale reste en option.",
+          points: [
+            "Inclus : fret maritime, dédouanement, TVA à l'import autoliquidée, contrôle SGS, garantie 1 an, SAV France et éco-participation.",
+            "En option : la livraison jusqu'à votre établissement, dont le tarif vous est confirmé sous 24 h selon votre ville — il ne s'ajoute qu'après votre accord.",
+            'Vous pouvez aussi enlever gratuitement la marchandise en zone de stockage, ou y envoyer votre propre transporteur.',
+          ],
         },
       ].map((x, i) => ({
         ...x,

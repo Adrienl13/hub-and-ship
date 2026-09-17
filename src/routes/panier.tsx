@@ -27,6 +27,7 @@ import { useCatalog } from '@/hooks/useCatalog'
 import { useChannel } from '@/hooks/useChannel'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
+import { getContainerUsableCbm } from '@/lib/container/pricing'
 import {
   calculateContainerFill,
   calculateOrder,
@@ -79,9 +80,15 @@ function PanierPage() {
   const [reserveOpen, setReserveOpen] = useState(false)
 
   const totals = useMemo(() => calculateOrder(items), [items])
+  // Le format retenu par l'acheteur prime sur le container actif : sans cela
+  // la jauge et le devis annonceraient la capacité d'un 20' pour un 40' HC.
+  // Même règle que la barre de commande du catalogue (`useCart()`).
+  const capacityCbm = preferredContainerType
+    ? getContainerUsableCbm(preferredContainerType)
+    : currentContainer.capacityCbm
   const fill = useMemo(
-    () => calculateContainerFill(items, currentContainer.capacityCbm),
-    [items, currentContainer.capacityCbm],
+    () => calculateContainerFill(items, capacityCbm),
+    [items, capacityCbm],
   )
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
   const hasItems = items.length > 0

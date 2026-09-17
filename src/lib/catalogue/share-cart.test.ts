@@ -19,11 +19,19 @@ describe('cart selection encode/decode', () => {
     ).toBe('')
   })
 
-  it('decodes defensively (bad chunks, dup product, invalid qty)', () => {
+  it('decodes defensively (bad chunks, dup line, invalid qty)', () => {
     expect(decodeCartSelection('p1~v~3,broken,p1~v~9,p2~w~-1,p3~x~2')).toEqual([
       { productId: 'p1', variantId: 'v', qty: 3 },
       { productId: 'p3', variantId: 'x', qty: 2 },
     ])
+  })
+
+  it('garde tous les designs d’un même produit', () => {
+    const entries = [
+      { productId: 'p1', variantId: 'v-noir', qty: 50 },
+      { productId: 'p1', variantId: 'v-teck', qty: 60 },
+    ]
+    expect(decodeCartSelection(encodeCartSelection(entries))).toEqual(entries)
   })
 
   it('returns [] for empty/missing input', () => {

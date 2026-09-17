@@ -60,4 +60,30 @@ describe('quote html builder', () => {
     expect(html).toContain('Adrien &amp; Co')
     expect(html).not.toContain('<script>alert(1)</script>')
   })
+
+  it("aligne les pourcentages de l'échéancier sur les montants imprimés", () => {
+    // Petite commande : le plancher de 150 € mord, l'acompte ne vaut plus 27 %.
+    const smallChair = { ...chair, basePriceHt: 59 }
+    const items = [
+      {
+        product: smallChair,
+        variant: getDefaultVariant(smallChair),
+        quantity: 50,
+      },
+    ]
+    const html = buildQuoteHTML({
+      items,
+      totals: calculateOrder(items),
+      fillPercent: 13,
+      usedCbm: calculateContainerFill(items, 32).usedCbm,
+      capacity: 32,
+      containerRef: 'CC-2026-001',
+      port: 'Marseille-Fos',
+      containerType: '20_hc',
+    })
+
+    expect(html).toContain('Acompte 25 % (à 80 % remplissage)')
+    expect(html).toContain('Frais de réservation 5 %')
+    expect(html).not.toContain('Acompte 27 %')
+  })
 })

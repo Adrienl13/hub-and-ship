@@ -5,7 +5,7 @@
 // Branded contact surface (the sending domain is authenticated in Brevo and
 // receives via Cloudflare Email Routing). Single source of truth for footers
 // and text signatures so we never leak a personal address.
-const CONTACT_EMAIL = 'adrienlaniez1@gmail.com'
+const CONTACT_EMAIL = 'contact@prosimport.com'
 const SITE_URL = 'https://prosimport.com'
 const SITE_LABEL = 'prosimport.com'
 const TEXT_SIGNATURE = `Terrassea — Pros Import EURL
@@ -503,7 +503,7 @@ L'équipe Terrassea
 
 Terrassea — Pros Import EURL
 60 Rue François Ier, 75008 Paris
-adrienlaniez1@gmail.com`
+contact@prosimport.com`
 
   return {
     subject,

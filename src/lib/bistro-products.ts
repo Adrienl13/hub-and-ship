@@ -2428,24 +2428,15 @@ export const BISTRO_PRODUCTS: Product[] = [
     basePriceHt: 89,
     retailPriceRef: 149,
     ecoContribution: 0.3,
-    mainImageUrl: '/catalogue/bistro-seating-clean/BIS-043-01.webp',
-    galleryUrls: [
-      '/catalogue/bistro-seating-clean/BIS-043-02.webp',
-      '/catalogue/bistro-seating-clean/BIS-043-03.webp',
-      '/catalogue/bistro-seating-clean/BIS-043-04.webp',
-      '/catalogue/bistro-seating-clean/BIS-043-05.webp',
-    ],
+    // Les cinq vues de BIS-043 montraient le chevalet à la marque de l'usine :
+    // supprimées. Aucune vue propre ne subsiste, la fiche reste sans photo
+    // plutôt que d'emprunter celle d'un autre produit.
+    mainImageUrl: '',
+    galleryUrls: [],
     variants: [
       {
         id: 'bis-043-design-principal',
         name: 'tressage bleu',
-        imageUrl: '/catalogue/bistro-seating-clean/BIS-043-01.webp',
-        galleryUrls: [
-          '/catalogue/bistro-seating-clean/BIS-043-02.webp',
-          '/catalogue/bistro-seating-clean/BIS-043-03.webp',
-          '/catalogue/bistro-seating-clean/BIS-043-04.webp',
-          '/catalogue/bistro-seating-clean/BIS-043-05.webp',
-        ],
         unitsCommitted: 0,
       },
     ],
@@ -2479,24 +2470,16 @@ export const BISTRO_PRODUCTS: Product[] = [
     basePriceHt: 89,
     retailPriceRef: 149,
     ecoContribution: 0.3,
+    // Les quatre vues d'ambiance de BIS-044 montraient le chevalet à la marque
+    // de l'usine : supprimées. Seul le packshot studio, propre, est conservé.
     mainImageUrl: '/catalogue/bistro-seating-clean/BIS-044-01.webp',
-    galleryUrls: [
-      '/catalogue/bistro-seating-clean/BIS-044-02.webp',
-      '/catalogue/bistro-seating-clean/BIS-044-03.webp',
-      '/catalogue/bistro-seating-clean/BIS-044-04.webp',
-      '/catalogue/bistro-seating-clean/BIS-044-05.webp',
-    ],
+    galleryUrls: [],
     variants: [
       {
         id: 'bis-044-design-principal',
         name: 'tressage vert',
         imageUrl: '/catalogue/bistro-seating-clean/BIS-044-01.webp',
-        galleryUrls: [
-          '/catalogue/bistro-seating-clean/BIS-044-02.webp',
-          '/catalogue/bistro-seating-clean/BIS-044-03.webp',
-          '/catalogue/bistro-seating-clean/BIS-044-04.webp',
-          '/catalogue/bistro-seating-clean/BIS-044-05.webp',
-        ],
+        galleryUrls: [],
         unitsCommitted: 0,
       },
     ],

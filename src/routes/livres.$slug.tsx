@@ -175,10 +175,10 @@ function DeliveredContainerView({
 }: {
   readonly container: DeliveredContainer
 }) {
-  const heroPhoto =
-    container.photoUrl ??
-    container.gallery[0]?.url ??
-    'https://images.unsplash.com/photo-1494412519320-aa613dfb7738?auto=format&fit=crop&w=1600&q=80'
+  // Aucune preuve empruntée : sans photo du container, la bannière reste vide
+  // plutôt que d'afficher une image de banque légendée « Container … ».
+  // Même règle que la vignette de la liste (DeliveredContainerCard).
+  const heroPhoto = container.photoUrl ?? container.gallery[0]?.url ?? null
 
   return (
     <main>
@@ -209,13 +209,15 @@ function DeliveredContainerView({
           </div>
         </div>
         <div className="mx-auto mt-6 max-w-7xl px-6 pb-10">
-          <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
-            <img
-              src={heroPhoto}
-              alt={`Container ${container.reference}`}
-              className="max-h-[60vh] w-full object-cover"
-            />
-          </div>
+          {heroPhoto && (
+            <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+              <img
+                src={heroPhoto}
+                alt={`Container ${container.reference}`}
+                className="max-h-[60vh] w-full object-cover"
+              />
+            </div>
+          )}
         </div>
       </section>
 

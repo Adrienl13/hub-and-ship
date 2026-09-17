@@ -73,10 +73,10 @@ function ContactPage() {
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[color:var(--ember)]" />
             <a
-              href="mailto:adrienlaniez1@gmail.com"
+              href="mailto:contact@prosimport.com"
               className="text-sm font-medium underline"
             >
-              adrienlaniez1@gmail.com
+              contact@prosimport.com
             </a>
           </div>
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

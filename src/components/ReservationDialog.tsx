@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type HTMLInputTypeAttribute,
   type InputHTMLAttributes,
@@ -160,6 +161,10 @@ export function ReservationDialog({
     (state) => state.preferredContainerType,
   )
   const [submitting, setSubmitting] = useState(false)
+  // Verrou SYNCHRONE du paiement : `submitting` n'est appliqué qu'au rendu
+  // suivant, deux clics rapprochés passeraient donc tous les deux et
+  // créeraient deux réservations.
+  const payInFlight = useRef(false)
   const [createdReservation, setCreatedReservation] = useState<{
     readonly reference: string
     readonly persisted: boolean
@@ -242,6 +247,7 @@ export function ReservationDialog({
     setEmailWarningAccepted(false)
     setCgvAccepted(false)
     setPartnerContext(null)
+    payInFlight.current = false
     setSubmitting(false)
     setCreatedReservation(null)
   }
@@ -296,7 +302,9 @@ export function ReservationDialog({
     }
   }, [siretCheck.status])
 
-  const handlePay = async () => {
+  // Renvoie `true` quand le navigateur part vers Stripe : dans ce cas le
+  // verrou de paiement n'est PAS relâché, la page est en train de quitter.
+  const runPayment = async (): Promise<boolean> => {
     // Re-synchronise les règles publiques (paliers + frais) juste avant de
     // figer le brouillon : si l'admin a changé les paramètres pendant la
     // session, le RPC de réservation validera contre les valeurs LIVE — un
@@ -315,7 +323,7 @@ export function ReservationDialog({
       toast.error('Volume minimum distributeur', {
         description: `Minimum ${freshMinimum.minCbm} m³ — il manque ${freshMinimum.missingCbm} m³. Complétez la commande au catalogue.`,
       })
-      return
+      return false
     }
 
     const draftResult = buildReservationDraft({
@@ -346,20 +354,18 @@ export function ReservationDialog({
         description:
           draftResult.issues[0]?.message ?? 'Vérifiez les champs obligatoires.',
       })
-      return
+      return false
     }
 
-    setSubmitting(true)
     const creation = await reservationCreation.createReservation(
       draftResult.draft,
     )
 
     if (!creation.ok) {
-      setSubmitting(false)
       toast.error('Réservation non enregistrée', {
         description: creation.error,
       })
-      return
+      return false
     }
 
     track(AnalyticsEvent.ReservationSubmit, {
@@ -450,7 +456,7 @@ export function ReservationDialog({
           // /account/reservations/<id>?session_id=… or ?canceled=true.
           track(AnalyticsEvent.CheckoutRedirect)
           window.location.assign(checkout.url)
-          return
+          return true
         }
 
         // Stripe not configured — graceful fallback: keep the reservation
@@ -468,7 +474,6 @@ export function ReservationDialog({
       }
     }
 
-    setSubmitting(false)
     setCreatedReservation({
       reference: creation.reservation.reference,
       persisted: creation.persisted,
@@ -483,6 +488,22 @@ export function ReservationDialog({
       toast.success('Réservation enregistrée', {
         description: `${creation.reservation.reference} gardée sur cet appareil. Reconnectez-vous pour la synchroniser.`,
       })
+    }
+    return false
+  }
+
+  const handlePay = async () => {
+    if (payInFlight.current) return
+    payInFlight.current = true
+    setSubmitting(true)
+    let redirecting = false
+    try {
+      redirecting = await runPayment()
+    } finally {
+      if (!redirecting) {
+        payInFlight.current = false
+        setSubmitting(false)
+      }
     }
   }
 
