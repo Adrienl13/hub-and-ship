@@ -7,6 +7,11 @@ import type {
 import type { SupabaseBrowserClient } from '@/lib/supabase/client'
 import { PAST_CONTAINERS } from '@/lib/products'
 import type { Database, Json } from '@/lib/supabase/types'
+import {
+  keepAttributableTestimonial,
+  keepProofGallery,
+  keepProofPhoto,
+} from './proof'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 
@@ -201,16 +206,16 @@ function toListItem(row: ContainerRow): DeliveredContainersListItem {
     totalItems: row.total_items,
     plannedDays: row.planned_days,
     actualDays: row.actual_days,
-    photoUrl: row.photo_url,
+    photoUrl: keepProofPhoto(row.photo_url),
     savingsTotalEur:
       row.savings_total_eur != null ? Number(row.savings_total_eur) : null,
     savingsPercent: row.savings_percent,
-    testimonial: {
+    testimonial: keepAttributableTestimonial({
       quote: row.testimonial_quote,
       author: row.testimonial_author,
       location: row.testimonial_location,
       rating: row.testimonial_rating,
-    },
+    }),
   }
 }
 
@@ -231,20 +236,22 @@ function toDeliveredContainer(row: ContainerRow): DeliveredContainer {
     savingsPercent: row.savings_percent,
     plannedDays: row.planned_days,
     actualDays: row.actual_days,
-    photoUrl: row.photo_url,
+    // Registre « preuve » : une photo de banque d'images et un témoignage
+    // non signé ne sortent pas d'ici. Voir ./proof.ts.
+    photoUrl: keepProofPhoto(row.photo_url),
     story: row.story,
     certifications: asArray<string>(row.certifications),
     timeline: asArray<TimelineStep>(row.timeline),
     productBreakdown: asArray<ProductBreakdown>(row.product_breakdown),
-    gallery: asArray<GalleryItem>(row.gallery),
-    testimonial: {
+    gallery: keepProofGallery(asArray<GalleryItem>(row.gallery)),
+    testimonial: keepAttributableTestimonial({
       quote: row.testimonial_quote,
       longQuote: row.testimonial_long_quote,
       author: row.testimonial_author,
       role: row.testimonial_role,
       location: row.testimonial_location,
       rating: row.testimonial_rating,
-    },
+    }),
   }
 }
 

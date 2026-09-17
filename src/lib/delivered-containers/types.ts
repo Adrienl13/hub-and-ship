@@ -1,11 +1,7 @@
 import type { ProductCategory } from '@/lib/products'
 
 export type ContainerStatus =
-  | 'open'
-  | 'locked'
-  | 'shipping'
-  | 'delivered'
-  | 'cancelled'
+  'open' | 'locked' | 'shipping' | 'delivered' | 'cancelled'
 
 export type TimelineStatus = 'done' | 'delay'
 

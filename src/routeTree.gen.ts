@@ -14,6 +14,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as StockMobilierTerrasse24hRouteImport } from './routes/stock-mobilier-terrasse-24h'
 import { Route as Stock24hRouteImport } from './routes/stock-24h'
 import { Route as SitemapProductsDotxmlRouteImport } from './routes/sitemap-products[.]xml'
+import { Route as SitemapLivresDotxmlRouteImport } from './routes/sitemap-livres[.]xml'
 import { Route as QualiteRouteImport } from './routes/qualite'
 import { Route as ProductFeedDotxmlRouteImport } from './routes/product-feed[.]xml'
 import { Route as PrixRouteImport } from './routes/prix'
@@ -93,6 +94,11 @@ const Stock24hRoute = Stock24hRouteImport.update({
 const SitemapProductsDotxmlRoute = SitemapProductsDotxmlRouteImport.update({
   id: '/sitemap-products.xml',
   path: '/sitemap-products.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapLivresDotxmlRoute = SitemapLivresDotxmlRouteImport.update({
+  id: '/sitemap-livres.xml',
+  path: '/sitemap-livres.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QualiteRoute = QualiteRouteImport.update({
@@ -389,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/prix': typeof PrixRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-livres.xml': typeof SitemapLivresDotxmlRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -450,6 +457,7 @@ export interface FileRoutesByTo {
   '/prix': typeof PrixRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-livres.xml': typeof SitemapLivresDotxmlRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -511,6 +519,7 @@ export interface FileRoutesById {
   '/prix': typeof PrixRoute
   '/product-feed.xml': typeof ProductFeedDotxmlRoute
   '/qualite': typeof QualiteRoute
+  '/sitemap-livres.xml': typeof SitemapLivresDotxmlRoute
   '/sitemap-products.xml': typeof SitemapProductsDotxmlRoute
   '/stock-24h': typeof Stock24hRoute
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
@@ -574,6 +583,7 @@ export interface FileRouteTypes {
     | '/prix'
     | '/product-feed.xml'
     | '/qualite'
+    | '/sitemap-livres.xml'
     | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -635,6 +645,7 @@ export interface FileRouteTypes {
     | '/prix'
     | '/product-feed.xml'
     | '/qualite'
+    | '/sitemap-livres.xml'
     | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -695,6 +706,7 @@ export interface FileRouteTypes {
     | '/prix'
     | '/product-feed.xml'
     | '/qualite'
+    | '/sitemap-livres.xml'
     | '/sitemap-products.xml'
     | '/stock-24h'
     | '/stock-mobilier-terrasse-24h'
@@ -757,6 +769,7 @@ export interface RootRouteChildren {
   PrixRoute: typeof PrixRoute
   ProductFeedDotxmlRoute: typeof ProductFeedDotxmlRoute
   QualiteRoute: typeof QualiteRoute
+  SitemapLivresDotxmlRoute: typeof SitemapLivresDotxmlRoute
   SitemapProductsDotxmlRoute: typeof SitemapProductsDotxmlRoute
   Stock24hRoute: typeof Stock24hRoute
   StockMobilierTerrasse24hRoute: typeof StockMobilierTerrasse24hRoute
@@ -828,6 +841,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap-products.xml'
       fullPath: '/sitemap-products.xml'
       preLoaderRoute: typeof SitemapProductsDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap-livres.xml': {
+      id: '/sitemap-livres.xml'
+      path: '/sitemap-livres.xml'
+      fullPath: '/sitemap-livres.xml'
+      preLoaderRoute: typeof SitemapLivresDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/qualite': {
@@ -1298,6 +1318,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrixRoute: PrixRoute,
   ProductFeedDotxmlRoute: ProductFeedDotxmlRoute,
   QualiteRoute: QualiteRoute,
+  SitemapLivresDotxmlRoute: SitemapLivresDotxmlRoute,
   SitemapProductsDotxmlRoute: SitemapProductsDotxmlRoute,
   Stock24hRoute: Stock24hRoute,
   StockMobilierTerrasse24hRoute: StockMobilierTerrasse24hRoute,
@@ -1337,13 +1358,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

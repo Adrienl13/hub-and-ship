@@ -63,7 +63,12 @@ function asProductCategories(
 }
 
 interface JoinedRow extends QualityReportRow {
-  readonly containers?: { reference: string; slug: string | null } | null
+  readonly containers?: {
+    reference: string
+    slug: string | null
+    status: string | null
+    published_at: string | null
+  } | null
 }
 
 function toListItem(row: JoinedRow): QualityReportListItem {
@@ -81,7 +86,14 @@ function toListItem(row: JoinedRow): QualityReportListItem {
     highlights: asHighlights(row.highlights),
     previewImageUrl: row.preview_image_url,
     containerReference: row.containers?.reference ?? null,
-    containerSlug: row.containers?.slug ?? null,
+    // Le slug n'est exposé QUE si la fiche existe vraiment : un rapport
+    // « pre_shipment_inspection » est justement rattaché à un container
+    // AVANT livraison, et /livres ne publie que les containers livrés. Sans
+    // cette garde, le seul chemin réel vers le registre menait à une 404.
+    containerSlug:
+      row.containers?.status === 'delivered' && row.containers.published_at
+        ? (row.containers.slug ?? null)
+        : null,
     hasFile: Boolean(row.file_path),
   }
 }
@@ -97,7 +109,7 @@ function toDetail(row: JoinedRow): QualityReportDetail {
 }
 
 const SELECT_WITH_CONTAINER =
-  '*, containers:container_id(reference, slug)' as const
+  '*, containers:container_id(reference, slug, status, published_at)' as const
 
 export async function listPublishedQualityReports(
   client: QualityReportsClient,

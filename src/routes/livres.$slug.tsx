@@ -1,41 +1,47 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { CheckCircle2, Clock, Quote, Star } from 'lucide-react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import {
-  getFallbackDeliveredContainerBySlug,
-  getDeliveredContainerBySlug,
-  type DeliveredContainer,
-} from '@/lib/delivered-containers/repository'
+import type { DeliveredContainer } from '@/lib/delivered-containers/repository'
+import { loadPublishedContainer } from '@/lib/delivered-containers/server-registry'
 import { formatEUR } from '@/lib/order'
 import { CATEGORY_LABEL } from '@/lib/products'
 import { buildSeoHead } from '@/lib/seo'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { useCatalog } from '@/hooks/useCatalog'
 import { useCart } from '@/stores/cart.store'
 
 export const Route = createFileRoute('/livres/$slug')({
+  // Résolution côté SERVEUR : un slug inconnu doit répondre 404, pas 200 avec
+  // l'écran d'erreur anglais de TanStack Router. Et le head se construit
+  // depuis la vraie fiche, sans quoi tous les containers publiés partaient en
+  // noindex avec le même titre générique.
+  loader: async ({ params }) => {
+    const container = await loadPublishedContainer(params.slug)
+    if (!container) throw notFound()
+    return { container }
+  },
   component: LivreDetailPage,
-  head: ({ params }) => {
-    const container = getFallbackDeliveredContainerBySlug(params.slug)
+  head: ({ loaderData, params }) => {
+    const container = loaderData?.container
     if (!container) {
       return {
         meta: [
-          { title: 'Container livré — Terrassea' },
+          { title: 'Container introuvable — Terrassea' },
           { name: 'robots', content: 'noindex,follow' },
         ],
       }
     }
 
+    const summary = container.story?.trim().split(/\n+/)[0]
     return {
       ...buildSeoHead({
         title: `${container.reference} livré à ${container.port}`,
         description:
-          container.story ??
-          `Retour d'expérience du container ${container.reference} livré à ${container.port} : produits, délais, volumes et preuve opérationnelle.`,
+          summary && summary.length > 0
+            ? summary.slice(0, 300)
+            : `Retour d'expérience du container ${container.reference} livré à ${container.port} : produits, délais, volumes et preuve opérationnelle.`,
         path: `/livres/${params.slug}`,
         image: container.photoUrl ?? container.gallery[0]?.url,
       }),
@@ -59,99 +65,20 @@ function formatDate(iso: string | null): string {
 }
 
 function LivreDetailPage() {
-  const { slug } = Route.useParams()
+  const { container } = Route.useLoaderData()
   const { products, currentContainer } = useCatalog()
   const productsArray = useMemo(() => [...products], [products])
   const { items, totals } = useCart({
     products: productsArray,
     capacityCbm: currentContainer.capacityCbm,
   })
-  const [container, setContainer] = useState<DeliveredContainer | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isNotFound, setIsNotFound] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [reserveOpen, setReserveOpen] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    const config = getSupabasePublicConfig()
-    if (!config.isConfigured) {
-      const fallback = getFallbackDeliveredContainerBySlug(slug)
-      if (!fallback) {
-        setIsNotFound(true)
-      } else {
-        setContainer(fallback)
-        if (typeof document !== 'undefined') {
-          document.title = `${fallback.reference} — Terrassea`
-        }
-      }
-      setLoading(false)
-      return
-    }
-
-    const client = createSupabaseBrowserClient(config)
-    void getDeliveredContainerBySlug(client, slug)
-      .then((data) => {
-        if (cancelled) return
-        // La liste affiche les containers de démonstration quand la base n'a
-        // encore rien de publié : la fiche doit résoudre ces cartes-là aussi.
-        const resolved = data ?? getFallbackDeliveredContainerBySlug(slug)
-        if (!resolved) {
-          setIsNotFound(true)
-        } else {
-          setContainer(resolved)
-          if (typeof document !== 'undefined') {
-            document.title = `${resolved.reference} — Terrassea`
-          }
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        const fallback = getFallbackDeliveredContainerBySlug(slug)
-        if (fallback) {
-          setContainer(fallback)
-          setError(null)
-        } else {
-          setError(err instanceof Error ? err.message : 'Erreur inconnue')
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [slug])
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <Header onReserve={() => setReserveOpen(true)} />
 
-      {loading ? (
-        <main className="mx-auto max-w-7xl px-6 py-12">
-          <div className="bg-primary/10 h-72 animate-pulse rounded-md" />
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-primary/10 h-24 animate-pulse rounded-md"
-              />
-            ))}
-          </div>
-        </main>
-      ) : isNotFound ? (
-        (() => {
-          throw notFound()
-        })()
-      ) : error ? (
-        <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <h1 className="font-display text-3xl">Erreur</h1>
-          <p className="mt-3 text-sm text-muted-foreground">{error}</p>
-        </main>
-      ) : container ? (
-        <DeliveredContainerView container={container} />
-      ) : null}
+      <DeliveredContainerView container={container} />
 
       <Footer />
 
@@ -272,7 +199,7 @@ function DeliveredContainerView({
       )}
 
       {container.productBreakdown.length > 0 && (
-        <Section title="Produits livrés">
+        <Section title={breakdownTitle(container)}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {container.productBreakdown.map((b, i) => (
               <div
@@ -379,14 +306,19 @@ function StatsInline({
 }: {
   readonly container: DeliveredContainer
 }) {
+  // Un compteur à zéro n'est pas une preuve : « 0 articles livrés » en gros
+  // sur la page qui doit rassurer fait exactement l'inverse.
   const stats: Array<{ label: string; value: string }> = []
-  if (container.professionalsServed != null) {
+  if (
+    container.professionalsServed != null &&
+    container.professionalsServed > 0
+  ) {
     stats.push({
       label: 'Pros servis',
       value: container.professionalsServed.toString(),
     })
   }
-  if (container.totalItems != null) {
+  if (container.totalItems != null && container.totalItems > 0) {
     stats.push({
       label: 'Articles livrés',
       value: container.totalItems.toString(),
@@ -430,6 +362,22 @@ function StatsInline({
       </div>
     </section>
   )
+}
+
+/**
+ * « Produits livrés » n'est honnête que si le détail couvre bien le total
+ * annoncé. Quand les deux divergent — la donnée reste à corriger côté admin —
+ * on n'implique plus que cette liste est le manifeste complet.
+ */
+function breakdownTitle(container: DeliveredContainer): string {
+  const units = container.productBreakdown.reduce(
+    (sum, line) => sum + (Number.isFinite(line.units) ? line.units : 0),
+    0,
+  )
+  if (container.totalItems == null || units === container.totalItems) {
+    return 'Produits livrés'
+  }
+  return 'Détail par famille'
 }
 
 function Section({

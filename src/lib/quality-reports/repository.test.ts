@@ -25,7 +25,12 @@ interface RawRow {
   preview_image_url?: string | null
   is_active?: boolean
   published_at?: string | null
-  containers?: { reference: string; slug: string | null } | null
+  containers?: {
+    reference: string
+    slug: string | null
+    status: string | null
+    published_at: string | null
+  } | null
 }
 
 function makeRow(overrides: RawRow = {}): RawRow {
@@ -48,7 +53,12 @@ function makeRow(overrides: RawRow = {}): RawRow {
     preview_image_url: 'https://example.com/preview.jpg',
     is_active: true,
     published_at: '2026-05-22T08:27:57.319234+00:00',
-    containers: { reference: 'CC-2025-014', slug: 'cc-2025-014' },
+    containers: {
+      reference: 'CC-2025-014',
+      slug: 'cc-2025-014',
+      status: 'delivered',
+      published_at: '2026-05-22T08:04:50.446Z',
+    },
     ...overrides,
   }
 }
@@ -168,5 +178,34 @@ describe('generateSignedFileUrl', () => {
       120,
     )
     expect(url).toBe('https://signed.example/file.pdf')
+  })
+})
+
+describe('lien vers le registre', () => {
+  it("ne propose pas de fiche tant que le container n'est pas livré et publié", async () => {
+    // Un rapport « pre_shipment_inspection » est justement rattaché à un
+    // container AVANT livraison : /livres n'a pas de fiche à lui opposer.
+    for (const container of [
+      {
+        reference: 'CC-2026-009',
+        slug: 'cc-2026-009',
+        status: 'shipping',
+        published_at: '2026-05-22T08:04:50.446Z',
+      },
+      {
+        reference: 'CC-2026-009',
+        slug: 'cc-2026-009',
+        status: 'delivered',
+        published_at: null,
+      },
+    ]) {
+      const client = makeClient({
+        data: [makeRow({ containers: container })],
+        error: null,
+      })
+      const [report] = await listPublishedQualityReports(client)
+      expect(report?.containerReference).toBe('CC-2026-009')
+      expect(report?.containerSlug).toBeNull()
+    }
   })
 })

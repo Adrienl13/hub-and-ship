@@ -19,4 +19,5 @@ Allow: /partenaires
 
 Sitemap: https://prosimport.com/sitemap.xml
 Sitemap: https://prosimport.com/sitemap-products.xml
+Sitemap: https://prosimport.com/sitemap-livres.xml
 LLM-Summary: https://prosimport.com/llms.txt

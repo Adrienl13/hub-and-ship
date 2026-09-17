@@ -17,6 +17,12 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import type { Database } from '@/lib/supabase/types'
 import type { AuthStatus } from '@/hooks/useAuth'
+import {
+  checkContainerPublication,
+  hasBlockingIssue,
+  type ContainerPublicationInput,
+  type PublicationIssue,
+} from '@/lib/delivered-containers/publication-check'
 
 type ContainerRow = Database['public']['Tables']['containers']['Row']
 
@@ -31,6 +37,12 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
   const [editing, setEditing] = useState<ContainerRow | null>(null)
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Points bloquants relevés au dernier essai de publication, affichés sous
+  // la ligne concernée — le bandeau du haut est hors écran sur une liste.
+  const [rowIssues, setRowIssues] = useState<{
+    readonly id: string
+    readonly issues: ReadonlyArray<PublicationIssue>
+  } | null>(null)
 
   const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -65,8 +77,45 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
     void refresh()
   }, [refresh])
 
+  function toPublicationInput(row: ContainerRow): ContainerPublicationInput {
+    const asArray = <T,>(value: unknown): ReadonlyArray<T> =>
+      Array.isArray(value) ? (value as ReadonlyArray<T>) : []
+    return {
+      reference: row.reference,
+      slug: row.slug ?? null,
+      status: row.status ?? null,
+      deliveredAt: row.delivered_at ?? null,
+      expectedCloseAt: row.expected_close_at ?? null,
+      totalItems: row.total_items ?? null,
+      professionalsServed: row.professionals_served ?? null,
+      productBreakdown: asArray<{ units: number }>(row.product_breakdown),
+      photoUrl: row.photo_url ?? null,
+      gallery: asArray<{ url: string }>(row.gallery),
+      testimonialQuote: row.testimonial_quote ?? null,
+      testimonialAuthor: row.testimonial_author ?? null,
+      timeline: asArray<{ date: string | null }>(row.timeline),
+    }
+  }
+
   async function togglePublication(row: ContainerRow): Promise<void> {
     if (!isConfigured) return
+
+    // Publier, c'est affirmer. Le registre est la page de preuve du site :
+    // on refuse d'y pousser une fiche qui se contredit elle-même. Dépublier
+    // reste toujours possible, sans condition.
+    if (!row.published_at) {
+      const issues = checkContainerPublication(toPublicationInput(row))
+      setRowIssues(issues.length > 0 ? { id: row.id, issues } : null)
+      if (hasBlockingIssue(issues)) {
+        setError(
+          `Publication refusée pour ${row.reference} : ${issues.filter((i) => i.blocking).length} point(s) à corriger.`,
+        )
+        return
+      }
+    } else {
+      setRowIssues(null)
+    }
+
     setBusyId(row.id)
     const client = createSupabaseBrowserClient(config)
     const payload: Database['public']['Tables']['containers']['Update'] = {
@@ -203,6 +252,26 @@ export function AdminContainersTab({ authStatus }: AdminContainersTabProps) {
                       )}
                     </Button>
                   </div>
+                  {rowIssues?.id === row.id && (
+                    <ul className="space-y-1 md:col-span-5">
+                      {rowIssues.issues.map((issue, index) => (
+                        <li
+                          key={`${issue.field}-${index}`}
+                          className={`rounded-sm border px-2 py-1 text-[11px] leading-5 ${
+                            issue.blocking
+                              ? 'border-red-300 bg-red-50 text-red-900'
+                              : 'border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 text-foreground'
+                          }`}
+                        >
+                          <strong className="font-medium">
+                            {issue.blocking ? 'À corriger' : 'À regarder'} ·{' '}
+                            {issue.field}
+                          </strong>{' '}
+                          {issue.message}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </article>
               )
             })
