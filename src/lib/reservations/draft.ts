@@ -147,7 +147,10 @@ export function createReservationReference({
     '0',
   )
   const tokenPart = token
-    ? `-${token.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase()}`
+    ? `-${token
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .slice(0, 6)
+        .toUpperCase()}`
     : ''
 
   return `${containerReference}-${datePart}-${sequencePart}${tokenPart}`
@@ -259,7 +262,11 @@ export function buildReservationDraft(
       lines: input.items.map((item) => buildReservationDraftLine(item)),
       totals,
       payment: {
-        reservationFee: totals.reservationFee,
+        // Les deux champs désignent le MÊME montant : ils doivent être
+        // arrondis pareil. `payNow` l'était, `reservationFee` non — sur un
+        // sous-total de 8 230 € HT les deux divergeaient de 2e-14, invisible
+        // en euros mais faux dès qu'on les compare.
+        reservationFee: round2(totals.reservationFee),
         payNow: round2(payNow),
         depositAmount,
         payAt80Percent: totals.payAt80Percent,

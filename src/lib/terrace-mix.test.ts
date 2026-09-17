@@ -38,8 +38,18 @@ describe('buildTerraceMix', () => {
     const mix = buildTerraceMix({ covers: 72, chair, table: largeTable })!
 
     expect(mix.chairUnits).toBe(80)
-    expect(mix.tableUnits).toBe(12)
     expect(mix.coversPerTable).toBe(6)
+    // 72 couverts / 6 = 12 tables, mais la fiche annonce un minimum de série :
+    // le mix propose ce qui est réellement commandable, et le signale.
+    expect(mix.tableUnits).toBe(largeTable.moqUnits)
+    expect(mix.tableAdjusted).toBe(true)
+  })
+
+  it('ne signale aucun ajustement quand la terrasse dépasse le minimum', () => {
+    const mix = buildTerraceMix({ covers: 240, chair, table: largeTable })!
+
+    expect(mix.tableUnits).toBe(40)
+    expect(mix.tableAdjusted).toBe(false)
   })
 
   it('prices the mix through calculateOrder with the retail comparison', () => {

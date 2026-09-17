@@ -81,6 +81,8 @@ export interface TerraceMix {
   readonly coversPerTable: number
   /** true si la règle de série a arrondi les chaises au-dessus des couverts. */
   readonly chairAdjusted: boolean
+  /** Le nombre de tables a été remonté au minimum de série du produit. */
+  readonly tableAdjusted: boolean
   readonly items: ReadonlyArray<CartItem>
   readonly totals: OrderTotals
 }
@@ -94,20 +96,15 @@ export function buildTerraceMix({
   readonly chair: Product
   readonly table: Product
 }): TerraceMix | null {
-  const clamped = Math.min(
-    MAX_COVERS,
-    Math.max(MIN_COVERS, Math.trunc(covers)),
-  )
+  const clamped = Math.min(MAX_COVERS, Math.max(MIN_COVERS, Math.trunc(covers)))
   if (!Number.isFinite(clamped) || clamped <= 0) return null
 
   const chairUnits = sanitizeOrderQuantity(clamped, getQuantityRule(chair))
   const seats = coversPerTable(table)
+  const tablesForCovers = Math.ceil(clamped / seats)
   const tableUnits = Math.max(
     1,
-    sanitizeOrderQuantity(
-      Math.ceil(clamped / seats),
-      getQuantityRule(table),
-    ),
+    sanitizeOrderQuantity(tablesForCovers, getQuantityRule(table)),
   )
   if (chairUnits <= 0 || tableUnits <= 0) return null
 
@@ -124,6 +121,10 @@ export function buildTerraceMix({
     tableUnits,
     coversPerTable: seats,
     chairAdjusted: chairUnits > clamped,
+    // Depuis que le minimum de série vaut pour toutes les catégories, le mix
+    // peut proposer plus de tables que la terrasse n'en demande. On le DIT :
+    // huit tables en plus sans explication, c'est un devis qu'on nous renvoie.
+    tableAdjusted: tableUnits > tablesForCovers,
     items,
     totals: calculateOrder(items),
   }

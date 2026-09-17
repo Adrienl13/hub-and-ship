@@ -108,7 +108,7 @@ describe('reservation draft builder', () => {
         {
           product: table,
           variant: getDefaultVariant(table),
-          quantity: 10,
+          quantity: 20,
         },
       ],
     })
@@ -126,12 +126,12 @@ describe('reservation draft builder', () => {
       unitPriceHt: chair.basePriceHt,
       cbmTotal: 4,
     })
-    expect(result.draft.totals.subtotalHt).toBe(6340)
+    expect(result.draft.totals.subtotalHt).toBe(8230)
     expect(result.draft.payment).toMatchObject({
-      reservationFee: 190.2,
-      payNow: 190.2,
-      depositAmount: 1902,
-      balanceAmount: 4438,
+      reservationFee: 246.9,
+      payNow: 246.9,
+      depositAmount: 2469,
+      balanceAmount: 5761,
     })
   })
 
@@ -148,7 +148,7 @@ describe('reservation draft builder', () => {
         {
           product: table,
           variant: getDefaultVariant(table),
-          quantity: 10,
+          quantity: 20,
         },
       ],
     })
@@ -158,13 +158,15 @@ describe('reservation draft builder', () => {
 
     // The apporteur benefit is an 8% commission to the referrer, not a discount
     // to the referred client — pay-now stays the full reservation fee.
-    expect(result.draft.payment.payNow).toBe(result.draft.payment.reservationFee)
+    expect(result.draft.payment.payNow).toBe(
+      result.draft.payment.reservationFee,
+    )
     expect(result.draft.referral).toMatchObject({
       code: 'DBP-13',
       status: 'none',
       discountAmount: 0,
     })
-    expect(result.draft.totals.subtotalHt).toBe(6340)
+    expect(result.draft.totals.subtotalHt).toBe(8230)
   })
 
   it('rejects empty carts and invalid checkout data', () => {

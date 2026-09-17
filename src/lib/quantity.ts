@@ -27,12 +27,22 @@ export function getQuantityRule(
   variant?: Pick<DesignVariant, 'minOrderUnits'> | null,
 ): QuantityRule {
   const colorMinimum = variantMinimum(variant)
+  // Le MOQ est affiché sur la carte, la fiche et le devis : il doit être tenu,
+  // quelle que soit la catégorie. Il ne l'était que pour les assises — 42
+  // fiches actives (lounge, piètements, bancs, plateaux) annonçaient un
+  // minimum de 5 à 70 unités tout en se laissant ajouter à 1. Un devis partait
+  // alors sous le minimum de série, à reprendre au téléphone.
+  const minimum = Math.max(
+    product.moqUnits > 0 ? product.moqUnits : 1,
+    colorMinimum,
+    1,
+  )
 
   // Assises (chaises ET fauteuils) : la commande démarre au minimum de série
   // du produit, puis progresse par packs de 10 — la même logique s'applique
-  // à toutes les cartes (règle métier, demande client 07/2026).
+  // à toutes les cartes (règle métier, demande client 07/2026). Le pas de 10
+  // reste PROPRE aux assises : ailleurs on complète à l'unité.
   if (product.category === 'chair' || product.category === 'armchair') {
-    const minimum = Math.max(product.moqUnits, colorMinimum)
     return {
       minimum,
       step: 10,
@@ -40,17 +50,19 @@ export function getQuantityRule(
     }
   }
 
-  // Un coloris à minimum imposé (ex. plateau d'une teinte spéciale) démarre
-  // à ce minimum puis s'ajoute à l'unité.
-  if (colorMinimum > 0) {
-    return {
-      minimum: colorMinimum,
-      step: 1,
-      label: `Min. ${colorMinimum} pour ce coloris, puis à l'unité`,
-    }
-  }
+  if (minimum <= 1) return DEFAULT_QUANTITY_RULE
 
-  return DEFAULT_QUANTITY_RULE
+  // Un coloris à minimum imposé (ex. plateau d'une teinte spéciale) prime sur
+  // le minimum de série quand il est plus haut : on nomme alors la vraie
+  // contrainte, sinon l'acheteur ne comprend pas d'où sort le chiffre.
+  return {
+    minimum,
+    step: 1,
+    label:
+      colorMinimum > product.moqUnits
+        ? `Min. ${minimum} pour ce coloris, puis à l'unité`
+        : `Min. ${minimum} puis à l'unité`,
+  }
 }
 
 export function sanitizeOrderQuantity(

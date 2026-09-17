@@ -31,15 +31,19 @@ describe('cart store', () => {
     // A product created by the admin / seeded from a collection has an id
     // outside the mock p1…p6. Before the registry fix, setQty silently no-oped.
     const table = PRODUCTS.find((p) => p.category === 'table')!
-    const dbProduct: Product = { ...table, id: 'bistro-bis-001', sku: 'BIS-001' }
+    const dbProduct: Product = {
+      ...table,
+      id: 'bistro-bis-001',
+      sku: 'BIS-001',
+    }
     // Not registered yet → cannot resolve → no-op (proves the mechanism).
-    useCartStore.getState().setQty('bistro-bis-001', 12)
+    useCartStore.getState().setQty('bistro-bis-001', table.moqUnits)
     expect(totalFor('bistro-bis-001')).toBe(0)
 
     // Registered (as the catalog store does on load) → now addable.
     registerCatalogueProducts([dbProduct])
-    useCartStore.getState().setQty('bistro-bis-001', 12)
-    expect(totalFor('bistro-bis-001')).toBe(12)
+    useCartStore.getState().setQty('bistro-bis-001', table.moqUnits)
+    expect(totalFor('bistro-bis-001')).toBe(table.moqUnits)
   })
 
   it('starts from an EMPTY cart — no demo pre-fill inflating the hero gauge', () => {
@@ -85,10 +89,17 @@ describe('cart store', () => {
     expect(totalFor('p1')).toBe(60)
   })
 
-  it('keeps table quantities editable by unit', () => {
+  // Le minimum de série vaut pour TOUTES les catégories : une table dont la
+  // fiche annonce « MOQ 20 » ne peut plus entrer au panier à 11 unités, sans
+  // quoi le devis part sous le minimum. Au-dessus, on complète à l'unité —
+  // le pas de 10 reste propre aux assises.
+  it('remonte une table au MOQ affiché, puis la complète à l’unité', () => {
+    const table = PRODUCTS.find((p) => p.id === 'p3')!
     useCartStore.getState().setQty('p3', 11)
+    expect(totalFor('p3')).toBe(table.moqUnits)
 
-    expect(totalFor('p3')).toBe(11)
+    useCartStore.getState().setQty('p3', table.moqUnits + 1)
+    expect(totalFor('p3')).toBe(table.moqUnits + 1)
   })
 
   it('keeps one cart line PER design of the same product (bug usine 08/2026)', () => {

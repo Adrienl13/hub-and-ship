@@ -81,11 +81,45 @@ describe('quantity rules', () => {
     expect(sanitizeOrderQuantity(31, rule)).toBe(40)
   })
 
-  it('keeps non-seat products editable by unit', () => {
+  // Le MOQ est affiché sur la carte, la fiche et le devis : il vaut pour
+  // TOUTES les catégories, pas seulement les assises. Avant ce changement,
+  // 42 fiches actives (lounge, piètements, bancs, plateaux) annonçaient un
+  // minimum de 5 à 70 unités et se laissaient pourtant ajouter à 1 — un devis
+  // partait sous le minimum de série.
+  it('tient le MOQ des produits hors assise, puis complète à l’unité', () => {
     const rule = getQuantityRule(table)
 
+    expect(rule.minimum).toBe(table.moqUnits)
+    expect(rule.step).toBe(1)
+    expect(rule.label).toBe(`Min. ${table.moqUnits} puis à l'unité`)
+    expect(sanitizeOrderQuantity(1, rule)).toBe(table.moqUnits)
+    expect(getNextOrderQuantity(table.moqUnits, rule)).toBe(table.moqUnits + 1)
+    expect(getPreviousOrderQuantity(table.moqUnits, rule)).toBe(0)
+  })
+
+  it('reste à l’unité quand le produit n’impose aucun minimum', () => {
+    const rule = getQuantityRule({ ...table, moqUnits: 1 })
+
+    expect(rule.minimum).toBe(1)
+    expect(rule.step).toBe(1)
     expect(sanitizeOrderQuantity(1, rule)).toBe(1)
     expect(getNextOrderQuantity(1, rule)).toBe(2)
     expect(getPreviousOrderQuantity(2, rule)).toBe(1)
+  })
+
+  it('nomme la vraie contrainte quand le coloris dépasse le MOQ produit', () => {
+    const colour = getQuantityRule(table, {
+      ...table.variants[0]!,
+      minOrderUnits: table.moqUnits + 20,
+    })
+    expect(colour.minimum).toBe(table.moqUnits + 20)
+    expect(colour.label).toContain('pour ce coloris')
+
+    const series = getQuantityRule(table, {
+      ...table.variants[0]!,
+      minOrderUnits: 2,
+    })
+    expect(series.minimum).toBe(table.moqUnits)
+    expect(series.label).toBe(`Min. ${table.moqUnits} puis à l'unité`)
   })
 })

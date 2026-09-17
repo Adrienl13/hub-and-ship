@@ -55,7 +55,7 @@ function ProductPicker({
               className={`w-[104px] shrink-0 rounded-sm border bg-card p-1.5 text-left transition-all ${
                 selected
                   ? 'border-foreground ring-1 ring-foreground'
-                  : 'border-[color:var(--sand-deep)] hover:border-foreground/40'
+                  : 'hover:border-foreground/40 border-[color:var(--sand-deep)]'
               }`}
             >
               <span className="flex h-16 w-full items-center justify-center overflow-hidden rounded-[3px] bg-white">
@@ -101,8 +101,7 @@ export function TerraceConfigurator({
     chairs.find((p) => p.id === chairId) ?? pickDefaultChair(products)
   const table =
     tables.find((p) => p.id === tableId) ?? pickDefaultTable(products)
-  const mix =
-    chair && table ? buildTerraceMix({ covers, chair, table }) : null
+  const mix = chair && table ? buildTerraceMix({ covers, chair, table }) : null
 
   // Sans chaise ET table au catalogue (état de chargement), pas de module.
   if (!chair || !table || !mix) return null
@@ -181,7 +180,7 @@ export function TerraceConfigurator({
                     className={`h-9 rounded-full border px-4 text-sm font-medium tabular-nums transition-colors ${
                       covers === preset
                         ? 'border-foreground bg-[color:var(--foreground)] text-[color:var(--background)]'
-                        : 'border-[color:var(--sand-deep)] bg-card hover:border-foreground/40'
+                        : 'hover:border-foreground/40 border-[color:var(--sand-deep)] bg-card'
                     }`}
                   >
                     {preset}
@@ -194,7 +193,7 @@ export function TerraceConfigurator({
                   type="button"
                   onClick={() => adjustCovers(-step)}
                   aria-label="Moins de couverts"
-                  className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
+                  className="hover:border-foreground/40 flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
@@ -212,7 +211,7 @@ export function TerraceConfigurator({
                   type="button"
                   onClick={() => adjustCovers(step)}
                   aria-label="Plus de couverts"
-                  className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors hover:border-foreground/40"
+                  className="hover:border-foreground/40 flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] bg-card transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -248,7 +247,9 @@ export function TerraceConfigurator({
                   {
                     product: table,
                     units: mix.tableUnits,
-                    note: `${mix.coversPerTable} couverts par table`,
+                    note: mix.tableAdjusted
+                      ? `${mix.coversPerTable} couverts par table — porté à ${mix.tableUnits} (minimum de série)`
+                      : `${mix.coversPerTable} couverts par table`,
                   },
                 ].map(({ product, units, note }) => (
                   <div key={product.id} className="flex items-center gap-3">
