@@ -209,6 +209,15 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 
 ### Reste
 
+- **[A] Fixer la grille de remise volume par famille.** Le mécanisme est livré
+  et appliqué en production, mais la grille n'est **pas saisie** : le site
+  fonctionne donc exactement comme avant (toutes les pièces comptées ensemble,
+  −6 % dès 100, −10 % dès 150). Elle se saisit dans l'admin, onglet Catalogue,
+  bloc « Remises volume par famille ». Le constat qui motive le changement :
+  une commande minimale de salon (MOQ 10 sur 12 fiches sur 15) pèse **10 040 à
+  22 440 €** et ne déclenche aucune remise, alors que 100 chaises — 7 900 € —
+  en déclenchent une. Dès que la grille est fixée, la page `/prix` doit suivre
+  (elle annonce « la remise se déclenche dès 100 pièces »).
 - **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit :
   ROP-031 et ROP-016 (salons de jardin vendus sous un nom de chaise), BIS-028,
   BIS-029, BIS-030, BIS-059 (chaises 126 cm vendues sous le nom « banc »). Le
