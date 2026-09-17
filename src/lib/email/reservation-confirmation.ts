@@ -13,6 +13,7 @@ import { getRequest } from '@tanstack/react-start/server'
 import { z } from 'zod'
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { isQuoteMode } from '@/lib/reservations/mode'
 import {
   getAdminNotificationEmail,
   isEmailConfigured,
@@ -23,6 +24,15 @@ import {
   buildReservationCreatedEmailToUser,
   type ReservationEmailInput,
 } from './templates'
+
+// Libellés lisibles pour l'e-mail : « door_delivery » ne dit rien au
+// téléphone, « Livraison jusqu'à la terrasse » oui.
+const DELIVERY_MODE_LABEL: Record<string, string | undefined> = {
+  door_delivery: "Livraison jusqu'à la terrasse",
+  pickup_at_port: 'Enlèvement en zone de stockage',
+  self_arranged: 'Transporteur du client',
+  partner_carrier_needed: 'Transporteur à trouver',
+}
 
 const inputSchema = z.object({
   reservationId: z.string().uuid(),
@@ -70,7 +80,7 @@ export const sendReservationConfirmation = createServerFn({ method: 'POST' })
     const { data: reservation, error } = await supabase
       .from('reservations')
       .select(
-        'id, reference, container_reference, siret, contact_snapshot, subtotal_ht, volume_discount, total_ht, total_ttc, pay_now',
+        'id, reference, container_reference, siret, contact_snapshot, subtotal_ht, volume_discount, total_ht, total_ttc, pay_now, delivery_mode, delivery_note, total_cbm, referral_code',
       )
       .eq('id', data.reservationId)
       .maybeSingle()
@@ -128,6 +138,17 @@ export const sendReservationConfirmation = createServerFn({ method: 'POST' })
         subtotalHt: Number(item.subtotal_ht),
       })),
       accountUrl: `${origin}/account/reservations/${reservation.id}`,
+      // Mode devis : le ton des deux e-mails change, et Terrassea a besoin
+      // du contexte livraison pour rappeler utilement (voir mode.ts).
+      quoteMode: isQuoteMode(),
+      deliveryLabel:
+        DELIVERY_MODE_LABEL[String(reservation.delivery_mode ?? '')],
+      deliveryNote: reservation.delivery_note ?? undefined,
+      totalCbm:
+        reservation.total_cbm === null || reservation.total_cbm === undefined
+          ? undefined
+          : Number(reservation.total_cbm),
+      referralCode: reservation.referral_code ?? undefined,
     }
 
     const userEmail = buildReservationCreatedEmailToUser(payload)

@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CreditCard,
+  FileText,
   Handshake,
   Lock,
   Mail,
@@ -22,6 +23,7 @@ import { Link } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { sendReservationConfirmation } from '@/lib/email/reservation-confirmation'
 import { createCheckoutSession } from '@/lib/stripe/checkout'
+import { isQuoteMode } from '@/lib/reservations/mode'
 import { AnalyticsEvent, track, trackEcommerce } from '@/lib/analytics'
 import {
   Dialog,
@@ -132,7 +134,6 @@ const DELIVERY_OPTIONS: ReadonlyArray<{
   },
 ] as const
 
-
 export function ReservationDialog({
   open,
   onOpenChange,
@@ -230,6 +231,9 @@ export function ReservationDialog({
     [form.referralCode, totals.reservationFee],
   )
   const checkoutPayNow = referralApplication.payNow
+  // Tunnel « devis » : on va jusqu'au bout du panier et des coordonnées, mais
+  // rien n'est encaissé ici — voir src/lib/reservations/mode.ts.
+  const quoteMode = isQuoteMode()
   const contactValid =
     form.name.trim().length > 1 &&
     form.company.trim().length > 1 &&
@@ -444,7 +448,9 @@ export function ReservationDialog({
 
     // Persisted reservations can be paid via Stripe. Local-only ones
     // (Supabase missing) fall through to the existing confirmation step.
-    if (creation.persisted) {
+    // En mode devis, on ne passe jamais par Stripe : le tunnel s'arrête ici,
+    // le relais est l'appel de Terrassea.
+    if (creation.persisted && !quoteMode) {
       try {
         const checkout = await startCheckout({
           data: { reservationId: creation.reservation.id },
@@ -480,13 +486,17 @@ export function ReservationDialog({
       payNow: draftResult.draft.payment.payNow,
     })
     setStep(5)
-    if (creation.persisted) {
-      toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} — récapitulatif en route vers votre email. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
+    if (!creation.persisted) {
+      toast.success(quoteMode ? 'Devis établi' : 'Réservation enregistrée', {
+        description: `${creation.reservation.reference} gardée sur cet appareil. Reconnectez-vous pour la synchroniser.`,
+      })
+    } else if (quoteMode) {
+      toast.success('Devis envoyé', {
+        description: `${creation.reservation.reference} — vous le recevez par email, nous aussi. Nous vous rappelons sous 24 h ouvrées.`,
       })
     } else {
       toast.success('Réservation enregistrée', {
-        description: `${creation.reservation.reference} gardée sur cet appareil. Reconnectez-vous pour la synchroniser.`,
+        description: `${creation.reservation.reference} — récapitulatif en route vers votre email. Paiement à finaliser pour ${formatEUR(draftResult.draft.payment.payNow)}.`,
       })
     }
     return false
@@ -568,25 +578,31 @@ export function ReservationDialog({
                 ? 'Commande à composer'
                 : blockedForMinimum
                   ? 'Commande à compléter'
-                  : `Étape ${step} / 4 - Réservation`}
+                  : `Étape ${step} / 4 - ${quoteMode ? 'Devis' : 'Réservation'}`}
           </div>
           <DialogTitle className="font-display text-2xl tracking-tight">
-            {showConfirmation && 'Réservation préparée'}
+            {showConfirmation &&
+              (quoteMode ? 'Devis envoyé' : 'Réservation préparée')}
             {!showConfirmation &&
               !hasReservableItems &&
-              'Composez votre commande avant de réserver'}
+              (quoteMode
+                ? 'Composez votre commande avant de demander un devis'
+                : 'Composez votre commande avant de réserver')}
             {!showConfirmation &&
               blockedForMinimum &&
               'Volume minimum distributeur'}
             {showSteps && step === 1 && 'Identification professionnelle'}
             {showSteps && step === 2 && 'Coordonnées de contact'}
             {showSteps && step === 3 && 'Mode de livraison'}
-            {showSteps && step === 4 && 'Récapitulatif et paiement'}
+            {showSteps &&
+              step === 4 &&
+              (quoteMode
+                ? 'Récapitulatif et envoi'
+                : 'Récapitulatif et paiement')}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Formulaire de réservation en plusieurs étapes pour vérifier la
-            société, renseigner le contact, choisir la livraison et confirmer le
-            paiement.
+            Formulaire en plusieurs étapes pour vérifier la société, renseigner
+            le contact, choisir la livraison et recevoir le devis.
           </DialogDescription>
         </DialogHeader>
 
@@ -781,27 +797,53 @@ export function ReservationDialog({
               onChange={(value) => setForm({ ...form, referralCode: value })}
             />
 
-            <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                <span className="text-sm font-medium">
-                  Paiement carte sécurisé
-                </span>
+            {quoteMode ? (
+              <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Votre devis, puis un appel
+                  </span>
+                </div>
+                <p className="text-foreground/80 text-xs leading-5">
+                  Aucun paiement n&apos;est demandé ici. Vous recevez votre
+                  devis par email, nous le recevons en même temps, et nous vous
+                  rappelons sous 24 h ouvrées pour valider les matières, les
+                  quantités et le délai — puis vous transmettre nos coordonnées
+                  bancaires pour engager la commande.
+                </p>
+                <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
+                  Montant du devis :{' '}
+                  <strong className="font-semibold">
+                    {formatEUR(totals.totalHt)} HT
+                  </strong>{' '}
+                  — prix fermes, rien n&apos;est prélevé tant que vous
+                  n&apos;avez pas validé avec nous.
+                </div>
               </div>
-              <p className="text-foreground/80 text-xs leading-5">
-                Vous serez redirigé vers la page de paiement sécurisée pour
-                régler les frais de réservation. Aucun numéro de carte n'est
-                saisi sur Terrassea.
-              </p>
-              <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
-                Montant à régler aujourd'hui :{' '}
-                <strong className="font-semibold">
-                  {formatEUR(checkoutPayNow)}
-                </strong>{' '}
-                (frais de réservation non-remboursables sauf annulation
-                Terrassea).
+            ) : (
+              <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Paiement carte sécurisé
+                  </span>
+                </div>
+                <p className="text-foreground/80 text-xs leading-5">
+                  Vous serez redirigé vers la page de paiement sécurisée pour
+                  régler les frais de réservation. Aucun numéro de carte n'est
+                  saisi sur Terrassea.
+                </p>
+                <div className="text-foreground/75 mt-3 rounded-sm bg-[color:var(--sand)] px-3 py-2 text-[11px]">
+                  Montant à régler aujourd'hui :{' '}
+                  <strong className="font-semibold">
+                    {formatEUR(checkoutPayNow)}
+                  </strong>{' '}
+                  (frais de réservation non-remboursables sauf annulation
+                  Terrassea).
+                </div>
               </div>
-            </div>
+            )}
 
             <Label className="flex items-start gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3 text-xs leading-5">
               <Checkbox
@@ -810,26 +852,46 @@ export function ReservationDialog({
                 className="mt-0.5"
               />
               <span>
-                J'accepte les CGV B2B, dont la clause SIRET obligatoire et les
-                conditions de frais de réservation.
+                {quoteMode
+                  ? "J'accepte les CGV B2B, dont la clause SIRET obligatoire. Ce devis n'engage aucun paiement."
+                  : "J'accepte les CGV B2B, dont la clause SIRET obligatoire et les conditions de frais de réservation."}
               </span>
             </Label>
 
-            <PaymentTrustBadges />
+            {!quoteMode && <PaymentTrustBadges />}
 
             <div className="space-y-1.5 text-[11px] text-muted-foreground">
-              <Reassure
-                Icon={Lock}
-                t="Paiement sécurisé par Stripe - 3D Secure obligatoire"
-              />
-              <Reassure
-                Icon={Mail}
-                t="Magic link envoyé après paiement réussi"
-              />
-              <Reassure
-                Icon={RefreshCcw}
-                t="Frais remboursés à 100% si Terrassea annule le container"
-              />
+              {quoteMode ? (
+                <>
+                  <Reassure
+                    Icon={FileText}
+                    t="Devis gratuit et sans engagement - prix fermes"
+                  />
+                  <Reassure
+                    Icon={Mail}
+                    t="Vous le recevez par email, nous le recevons en même temps"
+                  />
+                  <Reassure
+                    Icon={Lock}
+                    t="Aucun paiement en ligne - rien n'est prélevé"
+                  />
+                </>
+              ) : (
+                <>
+                  <Reassure
+                    Icon={Lock}
+                    t="Paiement sécurisé par Stripe - 3D Secure obligatoire"
+                  />
+                  <Reassure
+                    Icon={Mail}
+                    t="Magic link envoyé après paiement réussi"
+                  />
+                  <Reassure
+                    Icon={RefreshCcw}
+                    t="Frais remboursés à 100% si Terrassea annule le container"
+                  />
+                </>
+              )}
               <Reassure
                 Icon={ShieldCheck}
                 t="Importation officielle - garantie 1 an"
@@ -857,8 +919,12 @@ export function ReservationDialog({
                 disabled={submitting || !cgvAccepted}
               >
                 {submitting
-                  ? 'Traitement...'
-                  : `Confirmer et payer ${formatEUR(checkoutPayNow)}`}
+                  ? quoteMode
+                    ? 'Envoi du devis...'
+                    : 'Traitement...'
+                  : quoteMode
+                    ? 'Recevoir mon devis'
+                    : `Confirmer et payer ${formatEUR(checkoutPayNow)}`}
               </Button>
             </div>
           </div>
@@ -868,29 +934,39 @@ export function ReservationDialog({
           <div className="space-y-4">
             <div className="border-[color:var(--forest)]/25 bg-[color:var(--forest)]/10 rounded-md border p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--forest)]">
-                <ShieldCheck className="h-4 w-4" />
-                Référence créée
+                {quoteMode ? (
+                  <FileText className="h-4 w-4" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4" />
+                )}
+                {quoteMode ? 'Devis établi' : 'Référence créée'}
               </div>
               <div className="mt-3 font-display text-2xl font-semibold tracking-tight">
                 {createdReservation.reference}
               </div>
               <p className="text-foreground/75 mt-2 text-xs leading-5">
-                {createdReservation.persisted
-                  ? 'Réservation enregistrée. Le récapitulatif arrive par email d’ici quelques minutes — vérifiez votre boîte (et le dossier spam au cas où).'
-                  : 'La réservation est conservée dans votre aperçu local et apparaîtra dans Mon compte dès que les services seront activés.'}
+                {!createdReservation.persisted
+                  ? 'Le devis est conservé dans votre aperçu local et apparaîtra dans Mon compte dès que les services seront activés.'
+                  : quoteMode
+                    ? 'Votre devis arrive par email d’ici quelques minutes — vérifiez votre boîte (et le dossier spam au cas où). Nous l’avons reçu de notre côté en même temps.'
+                    : 'Réservation enregistrée. Le récapitulatif arrive par email d’ici quelques minutes — vérifiez votre boîte (et le dossier spam au cas où).'}
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
                 <div className="label-eyebrow text-muted-foreground">
-                  Montant à régler
+                  {quoteMode ? 'Montant du devis' : 'Montant à régler'}
                 </div>
                 <div className="mt-2 font-display text-2xl font-semibold tabular-nums">
-                  {formatEUR(createdReservation.payNow)}
+                  {quoteMode
+                    ? `${formatEUR(totals.totalHt)} HT`
+                    : formatEUR(createdReservation.payNow)}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  Frais de réservation calculés et verrouillés.
+                  {quoteMode
+                    ? 'Prix fermes. Rien n’est prélevé.'
+                    : 'Frais de réservation calculés et verrouillés.'}
                 </div>
               </div>
               <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
@@ -898,11 +974,14 @@ export function ReservationDialog({
                   Prochaine étape
                 </div>
                 <div className="mt-2 text-sm font-medium">
-                  Suivi dans l’espace compte
+                  {quoteMode
+                    ? 'Notre appel sous 24 h ouvrées'
+                    : 'Suivi dans l’espace compte'}
                 </div>
                 <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Statut, lignes réservées, paiements et documents seront
-                  rattachés à cette référence.
+                  {quoteMode
+                    ? 'Nous validons ensemble matières, quantités et délai, puis nous vous transmettons nos coordonnées bancaires pour engager la commande. Besoin d’aller plus vite ? Appelez-nous avec votre référence.'
+                    : 'Statut, lignes réservées, paiements et documents seront rattachés à cette référence.'}
                 </div>
               </div>
             </div>
@@ -912,7 +991,9 @@ export function ReservationDialog({
                 asChild
                 className="h-11 flex-1 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
               >
-                <Link to="/account/reservations">Voir mes réservations</Link>
+                <Link to="/account/reservations">
+                  {quoteMode ? 'Voir mon devis' : 'Voir mes réservations'}
+                </Link>
               </Button>
               <Button
                 type="button"
@@ -1086,8 +1167,8 @@ function PartnerCodePanel({
         </Button>
       </div>
       <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-        Un partenaire Terrassea vous a recommandé ? Indiquez son code : il
-        sera crédité de sa commission. Aucun impact sur votre prix.
+        Un partenaire Terrassea vous a recommandé ? Indiquez son code : il sera
+        crédité de sa commission. Aucun impact sur votre prix.
       </p>
     </div>
   )

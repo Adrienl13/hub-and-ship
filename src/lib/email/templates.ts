@@ -34,6 +34,21 @@ export interface ReservationEmailInput {
     readonly subtotalHt: number
   }>
   readonly accountUrl: string
+  /**
+   * Tunnel « devis » (src/lib/reservations/mode.ts) : rien n'est encaissé sur
+   * le site. Le client reçoit son devis, Terrassea le reçoit en même temps et
+   * rappelle avec ses coordonnées bancaires. Change le ton des deux e-mails :
+   * annoncer « à régler maintenant » serait faux.
+   */
+  readonly quoteMode?: boolean
+  /** Mode de livraison choisi, déjà libellé en clair. */
+  readonly deliveryLabel?: string
+  /** Note libre du client : ville, accès, contraintes de déchargement. */
+  readonly deliveryNote?: string
+  /** Volume total, pour juger du remplissage container d'un coup d'œil. */
+  readonly totalCbm?: number
+  /** Code apporteur saisi au checkout, s'il y en a un. */
+  readonly referralCode?: string
 }
 
 function escape(value: string): string {
@@ -111,45 +126,67 @@ ${rows}
 export function buildReservationCreatedEmailToUser(
   input: ReservationEmailInput,
 ): { subject: string; html: string; text: string } {
-  const subject = `Réservation enregistrée — ${input.reference}`
-  const preheader = `Votre place sur le container ${input.containerReference} est sécurisée. Détails et prochaines étapes ci-dessous.`
+  const quote = input.quoteMode === true
+  const subject = quote
+    ? `Votre devis Terrassea — ${input.reference}`
+    : `Réservation enregistrée — ${input.reference}`
+  const preheader = quote
+    ? `Votre devis pour le container ${input.containerReference}. Prix fermes, aucun paiement demandé — nous vous rappelons sous 24 h ouvrées.`
+    : `Votre place sur le container ${input.containerReference} est sécurisée. Détails et prochaines étapes ci-dessous.`
+  const intro = quote
+    ? `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Voici votre devis <strong>${escape(input.reference)}</strong> pour le container <strong>${escape(input.containerReference)}</strong>. Les prix sont fermes.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Aucun paiement n'est demandé à ce stade et rien n'a été prélevé. Nous vous rappelons sous 24 h ouvrées pour valider ensemble matières, quantités et délai, puis nous vous transmettons nos coordonnées bancaires pour engager la commande. Gardez ce devis sous les yeux, nous partirons de là.</p>`
+    : `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation <strong>${escape(input.reference)}</strong> pour le container <strong>${escape(input.containerReference)}</strong> est bien enregistrée.</p>
+<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}). À réception, votre place est verrouillée.</p>`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.contactName)},</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Votre réservation <strong>${escape(input.reference)}</strong> pour le container <strong>${escape(input.containerReference)}</strong> est bien enregistrée.</p>
-<p style="font-size:14px;line-height:1.6;margin:0 0 16px;color:#666;">Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}). À réception, votre place est verrouillée.</p>
+${intro}
 ${renderLines(input.lines)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;border-top:2px solid #1a1a1a;padding-top:8px;">
-${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
-<tr><td style="font-size:13px;color:#2d6a4f;">Remise volume</td><td style="font-size:13px;text-align:right;color:#2d6a4f;">−${formatEur(input.volumeDiscount)}</td></tr>` : ''}
+${
+  input.volumeDiscount > 0
+    ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
+<tr><td style="font-size:13px;color:#2d6a4f;">Remise volume</td><td style="font-size:13px;text-align:right;color:#2d6a4f;">−${formatEur(input.volumeDiscount)}</td></tr>`
+    : ''
+}
 <tr><td style="font-size:13px;">Total commande HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.totalHt)}</td></tr>
 <tr><td style="font-size:13px;">Total TTC</td><td style="font-size:13px;text-align:right;">${formatEur(input.totalTtc)}</td></tr>
-<tr><td style="font-size:13px;font-weight:600;">À régler maintenant</td><td style="font-size:13px;text-align:right;font-weight:600;color:#c25e2a;">${formatEur(input.payNow)}</td></tr>
+${quote ? '' : `<tr><td style="font-size:13px;font-weight:600;">À régler maintenant</td><td style="font-size:13px;text-align:right;font-weight:600;color:#c25e2a;">${formatEur(input.payNow)}</td></tr>`}
 </table>
 <p style="margin:24px 0 0;text-align:center;">
-<a href="${escape(input.accountUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Voir ma réservation</a>
+<a href="${escape(input.accountUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:12px 24px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">${quote ? 'Voir mon devis' : 'Voir ma réservation'}</a>
 </p>
 <p style="font-size:12px;line-height:1.6;color:#666;margin:24px 0 0;">Questions ? Répondez simplement à cet email, on est dans la boucle.</p>`
 
   const text = `Bonjour ${input.contactName},
 
-Votre réservation ${input.reference} pour le container ${input.containerReference} est bien enregistrée.
+${
+  quote
+    ? `Voici votre devis ${input.reference} pour le container ${input.containerReference}. Les prix sont fermes.
 
-Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}).
+Aucun paiement n'est demandé à ce stade et rien n'a été prélevé. Nous vous rappelons sous 24 h ouvrées pour valider matières, quantités et délai, puis vous transmettre nos coordonnées bancaires.`
+    : `Votre réservation ${input.reference} pour le container ${input.containerReference} est bien enregistrée.
+
+Un membre Terrassea vous recontacte sous 24 h pour finaliser les frais de réservation (${formatEur(input.payNow)}).`
+}
 
 Récapitulatif :
 ${input.lines.map((l) => `- ${l.productName} (${l.variantName}) · ${l.quantity} unités · ${formatEur(l.subtotalHt)}`).join('\n')}
 
 ${input.volumeDiscount > 0 ? `Sous-total HT : ${formatEur(input.subtotalHt)}\nRemise volume : −${formatEur(input.volumeDiscount)}\n` : ''}Total HT : ${formatEur(input.totalHt)}
 Total TTC : ${formatEur(input.totalTtc)}
-À régler : ${formatEur(input.payNow)}
-
-Voir votre réservation : ${input.accountUrl}
+${quote ? '' : `À régler : ${formatEur(input.payNow)}\n`}
+${quote ? 'Voir votre devis' : 'Voir votre réservation'} : ${input.accountUrl}
 
 ${TEXT_SIGNATURE}
 60 Rue François Ier, 75008 Paris`
 
   return {
     subject,
-    html: shell({ title: 'Réservation enregistrée', preheader, body }),
+    html: shell({
+      title: quote ? 'Votre devis Terrassea' : 'Réservation enregistrée',
+      preheader,
+      body,
+    }),
     text,
   }
 }
@@ -157,9 +194,14 @@ ${TEXT_SIGNATURE}
 export function buildReservationCreatedEmailToAdmin(
   input: ReservationEmailInput,
 ): { subject: string; html: string; text: string } {
-  const subject = `[Terrassea] Nouvelle résa ${input.reference} — ${input.contactCompany}`
-  const preheader = `${input.contactCompany} (${input.siret}) a réservé pour ${formatEur(input.totalHt)} HT sur ${input.containerReference}.`
-  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle réservation à traiter sous 24h.</p>
+  const quote = input.quoteMode === true
+  const subject = quote
+    ? `[Terrassea] Devis ${input.reference} — ${input.contactCompany} — ${formatEur(input.totalHt)} HT`
+    : `[Terrassea] Nouvelle résa ${input.reference} — ${input.contactCompany}`
+  const preheader = quote
+    ? `${input.contactCompany} (${input.siret}) demande un devis de ${formatEur(input.totalHt)} HT sur ${input.containerReference}. À rappeler.`
+    : `${input.contactCompany} (${input.siret}) a réservé pour ${formatEur(input.totalHt)} HT sur ${input.containerReference}.`
+  const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">${quote ? 'Devis envoyé au client. À rappeler sous 24 h ouvrées, avec les coordonnées bancaires.' : 'Nouvelle réservation à traiter sous 24h.'}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">Référence</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.reference)}</td></tr>
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">Container</td><td style="font-size:13px;text-align:right;">${escape(input.containerReference)}</td></tr>
@@ -167,34 +209,51 @@ export function buildReservationCreatedEmailToAdmin(
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">SIRET</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.siret)}</td></tr>
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">Contact</td><td style="font-size:13px;text-align:right;">${escape(input.contactName)}</td></tr>
 <tr><td style="font-size:12px;color:#666;padding:4px 0;">Email</td><td style="font-size:13px;text-align:right;"><a href="mailto:${escape(input.contactEmail)}" style="color:#1a1a1a;">${escape(input.contactEmail)}</a></td></tr>
-<tr><td style="font-size:12px;color:#666;padding:4px 0;">Téléphone</td><td style="font-size:13px;text-align:right;">${escape(input.contactPhone)}</td></tr>
+<tr><td style="font-size:12px;color:#666;padding:4px 0;">Téléphone</td><td style="font-size:13px;text-align:right;"><a href="tel:${escape(input.contactPhone.replace(/\s/g, ''))}" style="color:#1a1a1a;">${escape(input.contactPhone)}</a></td></tr>
+${input.deliveryLabel ? `<tr><td style="font-size:12px;color:#666;padding:4px 0;">Livraison</td><td style="font-size:13px;text-align:right;">${escape(input.deliveryLabel)}</td></tr>` : ''}
+${input.deliveryNote ? `<tr><td style="font-size:12px;color:#666;padding:4px 0;">Note client</td><td style="font-size:13px;text-align:right;">${escape(input.deliveryNote)}</td></tr>` : ''}
+${typeof input.totalCbm === 'number' && input.totalCbm > 0 ? `<tr><td style="font-size:12px;color:#666;padding:4px 0;">Volume</td><td style="font-size:13px;text-align:right;">${input.totalCbm.toFixed(2)} m³</td></tr>` : ''}
+${input.referralCode ? `<tr><td style="font-size:12px;color:#666;padding:4px 0;">Code apporteur</td><td style="font-size:13px;text-align:right;font-family:monospace;">${escape(input.referralCode)}</td></tr>` : ''}
 </table>
 ${renderLines(input.lines)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;border-top:2px solid #1a1a1a;padding-top:8px;">
-${input.volumeDiscount > 0 ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
-<tr><td style="font-size:13px;">Remise volume</td><td style="font-size:13px;text-align:right;">−${formatEur(input.volumeDiscount)}</td></tr>` : ''}
+${
+  input.volumeDiscount > 0
+    ? `<tr><td style="font-size:13px;">Sous-total HT</td><td style="font-size:13px;text-align:right;">${formatEur(input.subtotalHt)}</td></tr>
+<tr><td style="font-size:13px;">Remise volume</td><td style="font-size:13px;text-align:right;">−${formatEur(input.volumeDiscount)}</td></tr>`
+    : ''
+}
 <tr><td style="font-size:13px;">Total HT</td><td style="font-size:13px;text-align:right;font-weight:600;">${formatEur(input.totalHt)}</td></tr>
 <tr><td style="font-size:13px;">Total TTC</td><td style="font-size:13px;text-align:right;">${formatEur(input.totalTtc)}</td></tr>
-<tr><td style="font-size:13px;">Frais à appeler</td><td style="font-size:13px;text-align:right;">${formatEur(input.payNow)}</td></tr>
-</table>`
-  const text = `Nouvelle réservation à traiter sous 24h.
+<tr><td style="font-size:13px;">${quote ? 'Acompte à appeler (3 %)' : 'Frais à appeler'}</td><td style="font-size:13px;text-align:right;">${formatEur(input.payNow)}</td></tr>
+</table>
+<p style="margin:20px 0 0;text-align:center;">
+<a href="${escape(input.accountUrl)}" style="display:inline-block;background:#1a1a1a;color:#f4eee3;padding:10px 20px;text-decoration:none;border-radius:4px;font-size:13px;font-weight:500;">Ouvrir dans l'admin</a>
+</p>`
+  const text = `${quote ? 'Devis envoyé au client. À rappeler sous 24 h ouvrées, avec les coordonnées bancaires.' : 'Nouvelle réservation à traiter sous 24h.'}
 
 Référence : ${input.reference}
 Container : ${input.containerReference}
 Société : ${input.contactCompany}
 SIRET : ${input.siret}
 Contact : ${input.contactName} <${input.contactEmail}> · ${input.contactPhone}
-
+${input.deliveryLabel ? `Livraison : ${input.deliveryLabel}\n` : ''}${input.deliveryNote ? `Note client : ${input.deliveryNote}\n` : ''}${typeof input.totalCbm === 'number' && input.totalCbm > 0 ? `Volume : ${input.totalCbm.toFixed(2)} m³\n` : ''}${input.referralCode ? `Code apporteur : ${input.referralCode}\n` : ''}
 Lignes :
 ${input.lines.map((l) => `- ${l.productName} (${l.variantName}) · ${l.quantity} unités · ${formatEur(l.subtotalHt)}`).join('\n')}
 
 ${input.volumeDiscount > 0 ? `Sous-total HT : ${formatEur(input.subtotalHt)}\nRemise volume : −${formatEur(input.volumeDiscount)}\n` : ''}Total HT : ${formatEur(input.totalHt)}
 Total TTC : ${formatEur(input.totalTtc)}
-Frais à appeler : ${formatEur(input.payNow)}`
+${quote ? 'Acompte à appeler (3 %)' : 'Frais à appeler'} : ${formatEur(input.payNow)}
+
+Ouvrir : ${input.accountUrl}`
 
   return {
     subject,
-    html: shell({ title: 'Nouvelle réservation', preheader, body }),
+    html: shell({
+      title: quote ? 'Nouveau devis' : 'Nouvelle réservation',
+      preheader,
+      body,
+    }),
     text,
   }
 }
@@ -335,12 +394,16 @@ export interface PartnerRequestEmailInput {
   readonly adminUrl: string
 }
 
-export function buildPartnerRequestAdminEmail(input: PartnerRequestEmailInput): {
+export function buildPartnerRequestAdminEmail(
+  input: PartnerRequestEmailInput,
+): {
   subject: string
   html: string
   text: string
 } {
-  const kind = input.isDeal ? 'Opportunité partenaire' : 'Candidature partenaire'
+  const kind = input.isDeal
+    ? 'Opportunité partenaire'
+    : 'Candidature partenaire'
   const subject = `${kind} — ${input.companyName}`
   const preheader = `${input.companyName} · ${input.contactEmail}`
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nouvelle ${escape(kind.toLowerCase())} reçue.</p>
@@ -617,9 +680,11 @@ export interface PaymentReminderEmailInput {
   readonly payUrl: string
 }
 
-export function buildPaymentReminderEmail(
-  input: PaymentReminderEmailInput,
-): { subject: string; html: string; text: string } {
+export function buildPaymentReminderEmail(input: PaymentReminderEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
   const isLast = input.stage === 2
   const subject = isLast
     ? `Dernier rappel — votre place ${input.reference} expire bientôt`

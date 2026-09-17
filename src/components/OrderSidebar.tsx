@@ -49,6 +49,7 @@ const CONTAINER_TYPE_LABEL: Record<ContainerType, string> = {
   '40_hc': "40' High Cube",
 }
 import { type CartItem, type OrderTotals, formatEUR } from '@/lib/order'
+import { isQuoteMode } from '@/lib/reservations/mode'
 import { AnimatedNumber } from '@/components/motion-helpers'
 
 const LazyContainerScene = lazy(() =>
@@ -145,6 +146,9 @@ export function OrderSidebar({
   const [exploded, setExploded] = useState(false)
   const [interactiveSceneEnabled, setInteractiveSceneEnabled] = useState(false)
   const hasItems = items.length > 0
+  // Tunnel « devis » : rien n'est encaissé sur le site — parler de paiement
+  // sécurisé ici serait mentir. Voir src/lib/reservations/mode.ts.
+  const quoteMode = isQuoteMode()
   const { channel } = useChannel()
   // Volume discounts (and loss leaders) are direct-channel only; resellers get
   // their coefficient price + RFA instead (decision #5 by extension).
@@ -443,7 +447,7 @@ export function OrderSidebar({
                               getPreviousOrderQuantity(item.quantity, rule),
                             )
                           }
-                          className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                          className="hover:border-foreground/40 flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors"
                         >
                           <Minus className="h-3 w-3" />
                         </button>
@@ -460,7 +464,7 @@ export function OrderSidebar({
                               getNextOrderQuantity(item.quantity, rule),
                             )
                           }
-                          className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                          className="hover:border-foreground/40 flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
@@ -471,7 +475,7 @@ export function OrderSidebar({
                         onClick={() =>
                           setLineQty(item.product.id, item.variant.id, 0)
                         }
-                        className="flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] text-muted-foreground transition-colors hover:border-[color:var(--destructive)]/50 hover:text-[color:var(--destructive)]"
+                        className="hover:border-[color:var(--destructive)]/50 flex h-6 w-6 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] text-muted-foreground transition-colors hover:text-[color:var(--destructive)]"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -513,7 +517,15 @@ export function OrderSidebar({
               hint="min 150€ / max 500€"
             />
             <div className="my-2 h-px bg-[color:var(--sand-deep)]" />
-            <AnimRow label="À payer aujourd'hui" value={totals.payNow} bold />
+            <AnimRow
+              label={
+                quoteMode
+                  ? 'À la commande (par virement)'
+                  : "À payer aujourd'hui"
+              }
+              value={totals.payNow}
+              bold
+            />
             <AnimRow
               label="Acompte à 80%"
               value={totals.payAt80Percent}
@@ -568,7 +580,7 @@ export function OrderSidebar({
           onClick={onReserve}
           disabled={!hasItems || distributorMinimum.blocked}
         >
-          Confirmer ma réservation
+          {quoteMode ? 'Recevoir mon devis' : 'Confirmer ma réservation'}
           <ArrowRight className="h-4 w-4" />
         </Button>
         <Button
@@ -590,7 +602,12 @@ export function OrderSidebar({
             Icon: RefreshCcw,
             t: 'Remboursement 100% si Terrassea annule',
           },
-          { Icon: Lock, t: 'Paiement Stripe sécurisé · 3D Secure' },
+          {
+            Icon: Lock,
+            t: quoteMode
+              ? 'Devis gratuit · aucun paiement en ligne'
+              : 'Paiement Stripe sécurisé · 3D Secure',
+          },
           {
             Icon: ShieldCheck,
             t: 'Contrôle qualité SGS indépendant avant départ',

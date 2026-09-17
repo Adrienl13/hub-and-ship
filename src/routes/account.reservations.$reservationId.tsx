@@ -55,6 +55,7 @@ import {
   type InvoicesClient,
 } from '@/lib/account/invoices'
 import { formatEUR } from '@/lib/order'
+import { isQuoteMode } from '@/lib/reservations/mode'
 import {
   applyPaymentStatusToLocalHistory,
   readLocalReservationHistory,
@@ -109,6 +110,7 @@ function AccountReservationDetailPage() {
       state.matches[state.matches.length - 1]?.routeId === Route.id,
   })
   const auth = useAuth()
+  const quoteMode = isQuoteMode()
   const [localRecords, setLocalRecords] = useState<
     ReadonlyArray<LocalReservationRecord>
   >([])
@@ -315,8 +317,15 @@ function AccountReservationDetailPage() {
   const showPaymentConfirmed =
     paymentConfirmedByStatus && (Boolean(sessionId) || paymentJustSettled)
   const showPaymentSyncing = paymentSyncing && !paymentConfirmedByStatus
+  // En mode devis, aucun paiement n'est encaissé sur le site : proposer
+  // « Retenter le paiement » enverrait le client sur un tunnel Stripe qui
+  // n'est pas ouvert. On explique la suite réelle — notre appel.
   const canRetryPayment =
-    reservation.status === 'pending_reservation_fee' && !paymentSyncing
+    !quoteMode &&
+    reservation.status === 'pending_reservation_fee' &&
+    !paymentSyncing
+  const showQuotePending =
+    quoteMode && reservation.status === 'pending_reservation_fee'
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -375,6 +384,26 @@ function AccountReservationDetailPage() {
       {/* Tant que les frais restent dus, la page DOIT offrir le paiement —
           pas seulement au retour d'un checkout annulé (?canceled=true) :
           c'est aussi la cible des emails de relance. */}
+      {showQuotePending && !showPaymentSyncing ? (
+        <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand)]">
+          <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">
+            <FileText className="mt-0.5 h-4 w-4 text-[color:var(--ember)]" />
+            <div className="flex-1">
+              <div className="font-medium">
+                Devis envoyé — à valider ensemble
+              </div>
+              <div className="mt-0.5 text-xs leading-5">
+                Rien n’est prélevé. Nous vous rappelons sous 24 h ouvrées pour
+                valider matières, quantités et délai, puis nous vous
+                transmettons nos coordonnées bancaires pour engager la commande.
+                Besoin d’aller plus vite ? Appelez-nous avec cette référence, ou
+                écrivez à contact@prosimport.com.
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {canRetryPayment && !showPaymentSyncing ? (
         <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 border-b">
           <div className="text-foreground/85 mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm">

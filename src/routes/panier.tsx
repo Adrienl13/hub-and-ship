@@ -28,11 +28,7 @@ import { useChannel } from '@/hooks/useChannel'
 import { AnalyticsEvent, track } from '@/lib/analytics'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { getContainerUsableCbm } from '@/lib/container/pricing'
-import {
-  calculateContainerFill,
-  calculateOrder,
-  formatEUR,
-} from '@/lib/order'
+import { calculateContainerFill, calculateOrder, formatEUR } from '@/lib/order'
 import { channelAllowsVolumeDiscounts } from '@/lib/pricing/channel'
 import { openQuotePDF } from '@/lib/quote'
 import {
@@ -41,6 +37,7 @@ import {
   getQuantityRule,
 } from '@/lib/quantity'
 import { buildSeoHead } from '@/lib/seo'
+import { isQuoteMode } from '@/lib/reservations/mode'
 import { useCartStore } from '@/stores/cart.store'
 
 // Page panier dédiée (demande Adrien 08/2026) : le panneau latéral du
@@ -80,6 +77,9 @@ function PanierPage() {
   const [reserveOpen, setReserveOpen] = useState(false)
 
   const totals = useMemo(() => calculateOrder(items), [items])
+  // Tunnel « devis » : le panier va jusqu'au bout mais rien n'est encaissé
+  // sur le site — voir src/lib/reservations/mode.ts.
+  const quoteMode = isQuoteMode()
   // Le format retenu par l'acheteur prime sur le container actif : sans cela
   // la jauge et le devis annonceraient la capacité d'un 20' pour un 40' HC.
   // Même règle que la barre de commande du catalogue (`useCart()`).
@@ -145,8 +145,8 @@ function PanierPage() {
               Votre panier
               {hasItems && (
                 <span className="ml-3 align-middle text-base font-normal text-muted-foreground">
-                  {totalUnits} pièce{totalUnits > 1 ? 's' : ''} ·{' '}
-                  {items.length} ligne{items.length > 1 ? 's' : ''}
+                  {totalUnits} pièce{totalUnits > 1 ? 's' : ''} · {items.length}{' '}
+                  ligne{items.length > 1 ? 's' : ''}
                 </span>
               )}
             </h1>
@@ -162,14 +162,14 @@ function PanierPage() {
 
         {!hasItems ? (
           <div className="mt-8 flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-6 py-20 text-center">
-            <ShoppingBasket className="h-10 w-10 text-muted-foreground/50" />
+            <ShoppingBasket className="text-muted-foreground/50 h-10 w-10" />
             <div>
               <p className="font-display text-lg font-semibold">
                 Votre panier est vide.
               </p>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Parcourez le catalogue, choisissez vos designs et vos
-                quantités — le prix container s&apos;affiche ici.
+                Parcourez le catalogue, choisissez vos designs et vos quantités
+                — le prix container s&apos;affiche ici.
               </p>
             </div>
             <Button asChild className="h-11 rounded-sm px-6">
@@ -183,7 +183,7 @@ function PanierPage() {
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px] lg:items-start">
             {/* Lignes */}
             <div className="space-y-4">
-              <ul className="divide-y divide-[color:var(--sand-deep)]/70 overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
+              <ul className="divide-[color:var(--sand-deep)]/70 divide-y overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
                 {items.map((item) => {
                   const rule = getQuantityRule(item.product, item.variant)
                   return (
@@ -211,8 +211,8 @@ function PanierPage() {
                               Design : {item.variant.name}
                             </div>
                             <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                              {formatEUR(item.product.basePriceHt)} HT /
-                              unité · {rule.label}
+                              {formatEUR(item.product.basePriceHt)} HT / unité ·{' '}
+                              {rule.label}
                             </div>
                           </div>
                           <span className="shrink-0 font-display text-base font-bold tabular-nums sm:text-lg">
@@ -230,13 +230,10 @@ function PanierPage() {
                                 setLineQty(
                                   item.product.id,
                                   item.variant.id,
-                                  getPreviousOrderQuantity(
-                                    item.quantity,
-                                    rule,
-                                  ),
+                                  getPreviousOrderQuantity(item.quantity, rule),
                                 )
                               }
-                              className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                              className="hover:border-foreground/40 flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors"
                             >
                               <Minus className="h-4 w-4" />
                             </button>
@@ -253,7 +250,7 @@ function PanierPage() {
                                   getNextOrderQuantity(item.quantity, rule),
                                 )
                               }
-                              className="flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:border-foreground/40"
+                              className="hover:border-foreground/40 flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -264,7 +261,7 @@ function PanierPage() {
                             onClick={() =>
                               setLineQty(item.product.id, item.variant.id, 0)
                             }
-                            className="inline-flex h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--destructive)]/50 hover:text-[color:var(--destructive)]"
+                            className="hover:border-[color:var(--destructive)]/50 inline-flex h-9 items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-[color:var(--destructive)]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Retirer
@@ -366,7 +363,7 @@ function PanierPage() {
                 className="h-12 w-full rounded-sm bg-[color:var(--foreground)] text-base text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
                 onClick={() => setReserveOpen(true)}
               >
-                Confirmer ma réservation
+                {quoteMode ? 'Recevoir mon devis' : 'Confirmer ma réservation'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <div className="grid grid-cols-2 gap-2">
@@ -394,7 +391,12 @@ function PanierPage() {
                     Icon: RefreshCcw,
                     t: 'Remboursement 100 % si Terrassea annule',
                   },
-                  { Icon: Lock, t: 'Paiement Stripe sécurisé · 3D Secure' },
+                  {
+                    Icon: Lock,
+                    t: quoteMode
+                      ? 'Devis gratuit · aucun paiement en ligne'
+                      : 'Paiement Stripe sécurisé · 3D Secure',
+                  },
                   {
                     Icon: ShieldCheck,
                     t: 'Contrôle qualité SGS indépendant avant départ',
