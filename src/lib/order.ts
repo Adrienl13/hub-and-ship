@@ -81,12 +81,12 @@ export interface LineVatBreakdown {
  * TVA d'une ligne, pour que l'acheteur voie ce que coûte CHAQUE produit TTC
  * et pas seulement un total en bas de page (demande Adrien 18/09/2026).
  *
- * Ces montants sont calculés sur le prix de la ligne AVANT remise volume :
- * la remise porte sur la commande entière, pas sur un article. Le récapitulatif
- * enchaîne donc sous-total HT → remise → total HT → TVA → total TTC, et c'est
- * ce total-là qui fait foi. Sommer les TTC de lignes donnerait un écart de
- * quelques centimes dès qu'une remise s'applique — mesuré : 0,01 à 0,02 € sur
- * des paniers de 12 à 20 lignes.
+ * Ces colonnes affichent le prix CATALOGUE : c'est celui que l'acheteur
+ * compare. La remise volume, elle, porte sur la commande entière et apparaît
+ * en pied de devis — usage normal d'une remise globale. Le total TVA du pied
+ * n'est donc pas la somme de CES lignes-ci, mais la somme des mêmes lignes
+ * remisées (cf. calculateOrder) : dans les deux cas un total n'est JAMAIS un
+ * pourcentage appliqué à un autre total, toujours une somme de lignes.
  */
 export function calculateLineVat(item: CartItem): LineVatBreakdown {
   const unitHt = item.product.basePriceHt
@@ -102,10 +102,12 @@ export function calculateLineVat(item: CartItem): LineVatBreakdown {
 }
 
 export function calculateOrder(items: CartItem[]): OrderTotals {
-  const subtotalHt = items.reduce(
-    (sum, item) => sum + item.product.basePriceHt * item.quantity,
-    0,
+  // Chaque ligne est arrondie au centime AVANT d'être sommée — exactement
+  // comme le RPC de réservation (`round(prix × qté, 2)` puis accumulation).
+  const grossLines = items.map((item) =>
+    round2(item.product.basePriceHt * item.quantity),
   )
+  const subtotalHt = grossLines.reduce((sum, line) => sum + line, 0)
   const ecoContributionTotal = items.reduce(
     (sum, item) => sum + item.product.ecoContribution * item.quantity,
     0,
@@ -121,10 +123,21 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     getActiveSalesChannel() === 'direct'
       ? getCustomerDiscountStatus(totalUnits).discountPercent
       : 0
-  const volumeDiscountAmount = round2(
-    (subtotalHt * volumeDiscountPercent) / 100,
+  // SOMME STRICTE DES LIGNES (demande Adrien 18/09/2026). Le total HT et la
+  // TVA ne sont PAS un pourcentage appliqué au sous-total : ce sont les lignes,
+  // remisées puis arrondies une par une, additionnées. Sans ça, la TVA affichée
+  // ligne à ligne et la TVA du pied divergeaient de 1 à 2 centimes dès qu'une
+  // remise s'appliquait — et sur un gros panier l'écart pouvait dépasser la
+  // tolérance de 0,05 € du RPC et faire REFUSER une réservation légitime.
+  // La migration 48 applique le même calcul, ligne par ligne, côté serveur.
+  const netLines = grossLines.map((line) =>
+    round2(line * (1 - volumeDiscountPercent / 100)),
   )
-  const netHt = round2(subtotalHt - volumeDiscountAmount)
+  const netHt = round2(netLines.reduce((sum, line) => sum + line, 0))
+  const volumeDiscountAmount = round2(subtotalHt - netHt)
+  const vat = round2(
+    netLines.reduce((sum, line) => sum + round2(line * VAT_RATE), 0),
+  )
 
   const reservationFee = calculateReservationFee(netHt)
   const deposit30 = netHt * 0.3
@@ -172,8 +185,8 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
     payAt80Percent,
     payBeforeShipping,
     totalHt: netHt,
-    vat: round2(netHt * VAT_RATE),
-    totalTtc: round2(netHt * (1 + VAT_RATE)),
+    vat,
+    totalTtc: round2(netHt + vat),
     retailReference,
     savings,
     savingsPercent: retailReference > 0 ? (savings / retailReference) * 100 : 0,
