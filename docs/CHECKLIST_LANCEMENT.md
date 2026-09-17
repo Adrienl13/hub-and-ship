@@ -28,6 +28,12 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
   contrôle de publication dans l'admin (§ 1).
 - Économie négative fermée sur les deux dernières surfaces — récap de
   réservation et devis PDF (§ 3).
+- Pages co-brandées `/p/<slug>` fermées aux marques qui n'ont jamais candidaté,
+  et une sélection publiée ne peut plus être ré-affichée sous un autre nom
+  (§ 5).
+- TVA affichée produit par produit sur le panier et le devis, et tous les
+  totaux calculés comme somme stricte des lignes — côté client comme côté
+  serveur (§ 7).
 
 ---
 
@@ -141,13 +147,17 @@ message clair. Marche à suivre et recette : `docs/RUNBOOK_MAGIC_LINK.md`.
 
 ---
 
-## 5. Bloquant — pages co-brandées ouvertes
+## 5. Pages co-brandées — fermé
 
-**[C]** `/p/<n'importe quoi>` affiche « <Marque> vous ouvre son accès
-Terrassea », sans aucun contrôle, et mémorise le contexte 120 jours. Pire :
-`/p/<slug arbitraire>?selection=<uuid>` affiche la sélection publiée d'un vrai
-partenaire sous un nom arbitraire. Aucune donnée partenaire n'est exposée, le
-risque est réputationnel. À garder par une RPC de vérification du slug.
+`/p/<n'importe quoi>` affichait « <Marque> vous ouvre son accès Terrassea »
+sans aucun contrôle, et mémorisait le contexte 120 jours ; pire,
+`/p/<slug arbitraire>?selection=<uuid>` ré-affichait la sélection publiée d'un
+vrai partenaire sous un nom arbitraire.
+
+Deux fonctions de vérification (migration `20260918090000`, appliquée) ferment
+les deux portes. Elles ne renvoient qu'un booléen — aucune donnée partenaire ne
+sort, donc aucune énumération possible. Une base injoignable ne ferme **pas**
+les pages déjà partagées : seul un « non » ferme de la base répond 404.
 
 ---
 
@@ -180,28 +190,40 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 
 ---
 
-## 7. À faire avant d'ouvrir, effort faible
+## 7. À faire avant d'ouvrir
 
-- **[C]** Panier : la clé héritée `__default__` double les quantités sur
-  `/panier`, au catalogue et au devis, et « Retirer » sur une des deux lignes
-  supprime les deux. Faire dériver `useCartLines()` de `createCartSnapshot()`.
-- **[C]** Admin : remplacer ou retirer une image supprime le fichier du bucket
-  **avant** l'enregistrement de la fiche. Un admin qui ferme sans enregistrer a
-  déjà perdu l'ancienne. Différer la suppression après succès.
-- **[A/C]** 32 fiches ont une catégorie qui ne correspond pas à leur nom. Effet
-  concret : BIS-028, BIS-029, BIS-030 et BIS-059 sont des chaises classées
-  « banc », donc réservables **à 1 unité, sous leur MOQ affiché** (25, 25, 25,
-  10). Et la puce de filtre « Table 0 » s'affiche alors que 7 tables existent.
+### Fermé depuis (code livré, tests verts)
+
+- Panier : la clé héritée `__default__` ne double plus les quantités, et
+  « Retirer » ne supprime plus les deux lignes. `useCartLines()` dérive de
+  `createCartSnapshot()` — une seule résolution pour le panier et le devis.
+- Admin : remplacer ou retirer une image ne supprime plus le fichier du bucket
+  avant l'enregistrement. La purge est différée après succès ; annuler rend
+  l'ancienne image.
+- MOQ : la quantité minimale est désormais imposée sur **toutes** les
+  catégories, pas seulement les chaises. BIS-028 / 029 / 030 / 059 ne sont plus
+  réservables à 1 unité sous leur MOQ affiché. 42 fiches concernées.
+- TVA : le taux ne vient plus du payload client (migration 47), et le total HT
+  comme la TVA sont la **somme stricte des lignes**, des deux côtés
+  (migration 48). Client et serveur tombent au centime près.
+
+### Reste
+
+- **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit :
+  ROP-031 et ROP-016 (salons de jardin vendus sous un nom de chaise), BIS-028,
+  BIS-029, BIS-030, BIS-059 (chaises 126 cm vendues sous le nom « banc »). Le
+  prix, lui, est juste — cf. § 3. La puce de filtre « Table 0 » s'affiche
+  encore alors que 7 tables existent : c'est le même désaccord nom/catégorie.
 - **[A]** Compléter les 6 fiches squelettes SKU-321 / 324 / 336 / 368 / 369 /
   521 (dimensions, poids, volume, caractéristiques ; photo pour SKU-321). Elles
   portent 6 des 7 lignes de stock 24 h : **ne pas les désactiver**, cela viderait
   la page stock.
-- **[C]** Appliquer la migration `20260917080000` (surcharges grand compte
+- **[A]** Saisir les poids réels des assises (votre relevé), et les dimensions /
+  poids / volume de ROP-031 et ROP-016.
+- **[A]** Appliquer la migration `20260917080000` (surcharges grand compte
   au-dessus de la remise promise : TES-012, TES-004, BIS-032, ROP-040). Écrite
-  et testée, **pas encore appliquée**. Aucun client impacté aujourd'hui.
-- **[C]** Le taux de TVA du RPC de réservation vient du payload client. Aucun
-  code ne l'envoie, mais la fonction est ouverte à `anon`. Lire le taux côté
-  serveur.
+  et testée, **pas encore appliquée**. Aucun client impacté aujourd'hui : la
+  table `companies` est vide.
 - **[A]** Les quatre transporteurs (Geodis, Heppner, Mauffrey, Dachser) portent
   le badge « Partenaire direct ». Confirmer les accords, sinon libeller
   « Transporteur recommandé ».
