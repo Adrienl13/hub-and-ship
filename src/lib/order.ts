@@ -93,15 +93,33 @@ export function calculateOrder(items: CartItem[]): OrderTotals {
   // frais plancher (150€) dépassent l'acompte de 30% sur une petite commande,
   // le total encaissé (frais + 0 + 70%) dépasserait 100% du total. En
   // dérivant le solde, frais + acompte + solde == total HT net, toujours.
-  const payBeforeShipping = Math.max(
-    0,
-    netHt - reservationFee - payAt80Percent,
+  const payBeforeShipping = Math.max(0, netHt - reservationFee - payAt80Percent)
+  // « Équivalent retail FR » et « Économie » ne se calculent QUE sur les
+  // lignes où le prix de référence veut dire quelque chose, c'est-à-dire
+  // au-dessus de notre propre prix. Une ligne dont la référence vaut 0 ou
+  // passe sous le prix Terrassea n'est pas comparable : la compter tirait
+  // l'économie vers le négatif et affichait « Économie --4 365 € (-111 %) »
+  // au moment de confirmer — vu en production sur ROP-001, BIS-030 et
+  // SKU-336. On compare donc le retail des lignes éligibles au prix net de
+  // CES MÊMES lignes, remise volume répartie au prorata.
+  const comparable = items.filter(
+    (item) =>
+      item.product.retailPriceRef > item.product.basePriceHt &&
+      item.product.basePriceHt > 0,
   )
-  const retailReference = items.reduce(
+  const retailReference = comparable.reduce(
     (sum, item) => sum + item.product.retailPriceRef * item.quantity,
     0,
   )
-  const savings = retailReference - netHt
+  const comparableGrossHt = comparable.reduce(
+    (sum, item) => sum + item.product.basePriceHt * item.quantity,
+    0,
+  )
+  const comparableNetHt =
+    subtotalHt > 0
+      ? round2(comparableGrossHt * (netHt / subtotalHt))
+      : comparableGrossHt
+  const savings = Math.max(0, round2(retailReference - comparableNetHt))
 
   return {
     subtotalHt,

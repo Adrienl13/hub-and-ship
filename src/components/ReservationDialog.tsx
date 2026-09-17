@@ -1079,12 +1079,17 @@ function SummaryCard({
             </div>
           )}
         </div>
-        <div>
-          <div className="label-eyebrow text-muted-foreground">Économie</div>
-          <div className="mt-0.5 font-display text-lg font-semibold tabular-nums text-[color:var(--ember)]">
-            -{formatEUR(totals.savings)}
+        {/* Même garde que /panier et la sidebar : pas d'économie à annoncer,
+            pas de bloc. Sans elle, un panier dont le prix de référence est
+            absent ou sous le prix Terrassea affichait « --4 365 € ». */}
+        {totals.savings > 0 && (
+          <div>
+            <div className="label-eyebrow text-muted-foreground">Économie</div>
+            <div className="mt-0.5 font-display text-lg font-semibold tabular-nums text-[color:var(--ember)]">
+              −{formatEUR(totals.savings)}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div className="mt-3 border-t border-[color:var(--sand-deep)] pt-3">
         <div className="mb-2 space-y-1 text-[11px] text-muted-foreground">
