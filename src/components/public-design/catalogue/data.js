@@ -58,6 +58,10 @@ export function adaptCatalogue(data) {
         // Cartes : nom court (avant le premier « - ») ; la fiche garde name.
         shortName: productShortName(p.name),
         cat: categories[p.category],
+        // Catégorie BRUTE : c'est elle qui donne la famille de remise
+        // (assises / tables / salons). `cat` est un libellé d'affichage, il
+        // regroupe plateaux et piètements sous « Table ».
+        category: p.category,
         kind: kinds[p.category],
         material: family || 'Famille à préciser',
         usage: features.find((f) => /^usage\b/i.test(f)) || 'À préciser',

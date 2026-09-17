@@ -3,6 +3,7 @@ import { PARTNER_ACTIVITY_PROFILE_LABEL } from '@/lib/partner-applications'
 import { Page } from './accueil-v3/app.js'
 import { Catalogue } from './catalogue/app.js'
 import { adaptCatalogue, sanitizeCart } from './catalogue/data.js'
+import { setPublicPricingRules } from '@/lib/pricing/public-rules'
 import { PricePage } from './prix/app.js'
 import { PartnersPage } from './partenaires/app.js'
 import { RegistryPage } from './livres/app.js'
@@ -52,6 +53,7 @@ export function startPage(kind, root, onSelection, onPartner) {
       })
       .then((data) => {
         if (page.disposed) return
+        setPublicPricingRules(data.pricingRules)
         const products = adaptCatalogue(data)
         if (!products.length) return
         page.liveProducts = products
@@ -70,6 +72,9 @@ export function startPage(kind, root, onSelection, onPartner) {
       })
       .then((data) => {
         if (page.disposed) return
+        // Paliers volume vivants : sans cette hydratation, le tiroir du
+        // catalogue appliquerait la grille par défaut, pas celle en base.
+        setPublicPricingRules(data.pricingRules)
         if (kind === 'prix') page.loadCatalogue(data)
         else if (kind === 'livres') page.load(data)
         else {

@@ -39,11 +39,15 @@ export async function readCatalogue() {
     }
     throw new Error('Public catalogue pagination limit')
   }
-  const [products, variants, stock, prices] = await Promise.all([
+  // Les règles de prix publiques viennent avec le catalogue : sans elles, le
+  // tiroir du catalogue calculerait la remise volume avec la grille par défaut
+  // — l'ANCIENNE — et annoncerait un total que /panier ne confirmerait pas.
+  const [products, variants, stock, prices, pricingRules] = await Promise.all([
     pageAll(tables.products),
     pageAll(tables.variants),
     pageAll(tables.stock).catch(() => null),
     read('rpc/get_catalogue_prices').catch(() => null),
+    read('rpc/get_public_pricing_rules').catch(() => null),
   ])
-  return { products, variants, stock, prices }
+  return { products, variants, stock, prices, pricingRules }
 }

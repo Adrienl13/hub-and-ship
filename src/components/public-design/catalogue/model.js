@@ -4,6 +4,11 @@ import {
   PUBLIC_DISCOUNT_FAMILIES,
   describeFamilyTiersWithLabel,
 } from '../../../lib/pricing/discount-families'
+import { nextVolumeStep } from '../../../lib/pricing/volume-progress'
+import {
+  calculateOrderLines,
+  describeVolumeDiscounts,
+} from '../../../lib/order'
 
 export class CatalogueModel {
   state = {
@@ -155,10 +160,26 @@ export class CatalogueModel {
         return p ? { ...c, p } : null
       })
       .filter(Boolean)
-    const subtotal = cartRows.reduce((n, r) => n + r.qty * r.p.price, 0),
-      pieces = cartRows.reduce((n, r) => n + r.qty, 0)
-    const rate = pieces >= 150 ? 0.1 : pieces >= 100 ? 0.06 : 0,
-      discount = subtotal * rate
+    const pieces = cartRows.reduce((n, r) => n + r.qty, 0)
+    // MÊME moteur que /panier et que le devis : paliers par famille, remise
+    // ligne par ligne, somme stricte. Recopier la règle ici donnait un total
+    // différent de celui que l'acheteur voyait à l'étape suivante.
+    const totals = calculateOrderLines(
+      cartRows.map((r) => ({
+        basePriceHt: Number.isFinite(r.p.price) ? r.p.price : 0,
+        ecoContribution: 0,
+        retailPriceRef: 0,
+        category: r.p.category,
+        quantity: r.qty,
+      })),
+      { channel: 'direct' },
+    )
+    const subtotal = totals.subtotalHt
+    const discount = totals.volumeDiscountAmount
+    const nextStep = nextVolumeStep(
+      cartRows.map((r) => ({ category: r.p.category, quantity: r.qty })),
+    )
+    const discountRows = describeVolumeDiscounts(totals)
     const sheetP = s.sheet ? this.products.find((p) => p.ref === s.sheet) : null
     const famOf = (m) =>
       (this.families.find((f) => f.key === m) || {}).name || m
@@ -199,7 +220,7 @@ export class CatalogueModel {
           kicker: 'Sur votre projet',
           big: this.tierBig,
           title: 'Remise automatique',
-          sub: describeFamilyTiersWithLabel('salons'),
+          sub: 'Paliers propres à chaque famille : assises, tables, salons',
           bg: 'var(--color-accent-700)',
           fg: 'var(--color-bg)',
           iconFilter: 'brightness(0) invert(1)',
@@ -418,23 +439,31 @@ export class CatalogueModel {
         remove: () => this.saveCart(s.cart.filter((c) => c.key !== r.key)),
       })),
       cartPieces: pieces,
-      tierPct: Math.min(100, (pieces / 150) * 100) + '%',
-      tierRate: rate ? '−' + Math.round(rate * 100) + ' %' : '',
-      hasDiscount: rate > 0,
+      // La jauge suit la famille la plus proche de son palier suivant : c'est
+      // le seul conseil actionnable. Plus de palier à viser = jauge pleine.
+      tierPct: (nextStep ? nextStep.progressPercent : discount > 0 ? 100 : 0) + '%',
+      tierRate:
+        discountRows.length === 1
+          ? discountRows[0].label.replace('Remise volume ', '')
+          : discount > 0
+            ? '−' + this.eur(discount)
+            : '',
+      hasDiscount: discount > 0,
       tierLabel:
-        rate === 0.1
-          ? 'Remise maximale −10 % appliquée'
-          : rate === 0.06
-            ? 'Remise −6 % appliquée'
-            : 'Tarif dès 50 pièces',
-      tierHint:
-        rate === 0.1
-          ? 'Vous bénéficiez du meilleur tarif volume.'
-          : rate === 0.06
-            ? 'Encore ' + (150 - pieces) + ' pièces pour passer à −10 %.'
-            : pieces >= 50
-              ? 'Encore ' + (100 - pieces) + ' pièces pour débloquer −6 %.'
-              : 'Les projets démarrent à 50 pièces au total.',
+        discountRows.length === 0
+          ? 'Tarif dès 50 pièces'
+          : discountRows.length === 1
+            ? discountRows[0].label + ' appliquée'
+            : 'Remises volume appliquées',
+      tierHint: nextStep
+        ? nextStep.label
+        : discount > 0
+          ? 'Vous bénéficiez du meilleur tarif volume sur ce panier.'
+          : 'Les paliers dépendent de la famille : ' +
+            PUBLIC_DISCOUNT_FAMILIES.map(describeFamilyTiersWithLabel).join(
+              ' ; ',
+            ) +
+            '.',
       deliveries: [
         {
           k: 'terrasse',
@@ -464,7 +493,7 @@ export class CatalogueModel {
           : 'Livraison finale chiffrée après rappel.',
       cartSubtotal: this.totalLabel(cartRows, subtotal),
       cartDiscount: this.totalLabel(cartRows, discount),
-      cartTotal: this.totalLabel(cartRows, subtotal - discount),
+      cartTotal: this.totalLabel(cartRows, totals.totalHt),
     }
   }
 }
