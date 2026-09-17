@@ -54,8 +54,13 @@ accordés, et la question du témoignage nominatif de CC-2025-004. Tout est
 détaillé champ par champ dans `docs/REGISTRE_LIVRES_A_COMPLETER.md`. En
 attendant, trois fiches sur quatre s'affichent sans galerie.
 
-Le plus urgent des quatre : **CC-2025-014 est servi sous l'URL
-`/livres/cc-2025-002`**, qui annonce une autre référence.
+Le slug qui contredisait sa référence est corrigé : CC-2025-014 répond
+désormais sur `/livres/cc-2025-014`. Un garde-fou en base refuse tout slug qui
+ne correspond pas à sa référence (migration 51).
+
+Restent deux incohérences de compteurs, à trancher par vous : CC-2025-014
+annonce 270 articles au total mais 287 à l'affichage, et CC-2026-001 affiche
+0 article.
 
 ---
 
@@ -207,24 +212,34 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 - TVA : le taux ne vient plus du payload client (migration 47), et le total HT
   comme la TVA sont la **somme stricte des lignes**, des deux côtés
   (migration 48). Client et serveur tombent au centime près.
+- Surcharges grand compte : les quatre qui restaient au-dessus de la remise
+  promise (TES-012, TES-004, BIS-032, ROP-040) sont alignées à −10 %.
+  Migration 42, **appliquée**. Les surcharges plus généreuses que −10 % ont
+  été laissées telles quelles : ce sont des décisions commerciales.
+- Slug du registre : CC-2025-014 n'est plus servi sous `/livres/cc-2025-002`.
+  Un garde-fou en base refuse désormais tout slug qui ne correspond pas à sa
+  référence (migration 51, appliquée).
+- Bucket `reservation-quotes` : décrit par une migration (52). Une base
+  reconstruite depuis le dépôt l'aura, au lieu d'échouer sur « Bucket not
+  found » à l'upload d'un devis signé.
+- Navigation mobile : sous 760 px les liens s'enroulent au lieu de défiler
+  horizontalement. « Conteneurs livrés » et « Contact » étaient hors écran,
+  derrière un balayage que rien n'annonçait.
+- Puce de filtre « Table 0 » : les catégories vides ne s'affichent plus au
+  catalogue.
 
 ### Reste
 
 - **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit :
   ROP-031 et ROP-016 (salons de jardin vendus sous un nom de chaise), BIS-028,
   BIS-029, BIS-030, BIS-059 (chaises 126 cm vendues sous le nom « banc »). Le
-  prix, lui, est juste — cf. § 3. La puce de filtre « Table 0 » s'affiche
-  encore alors que 7 tables existent : c'est le même désaccord nom/catégorie.
+  prix, lui, est juste — cf. § 3.
 - **[A]** Compléter les 6 fiches squelettes SKU-321 / 324 / 336 / 368 / 369 /
   521 (dimensions, poids, volume, caractéristiques ; photo pour SKU-321). Elles
   portent 6 des 7 lignes de stock 24 h : **ne pas les désactiver**, cela viderait
   la page stock.
 - **[A]** Saisir les poids réels des assises (votre relevé), et les dimensions /
   poids / volume de ROP-031 et ROP-016.
-- **[A]** Appliquer la migration `20260917080000` (surcharges grand compte
-  au-dessus de la remise promise : TES-012, TES-004, BIS-032, ROP-040). Écrite
-  et testée, **pas encore appliquée**. Aucun client impacté aujourd'hui : la
-  table `companies` est vide.
 - **[A]** Les quatre transporteurs (Geodis, Heppner, Mauffrey, Dachser) portent
   le badge « Partenaire direct ». Confirmer les accords, sinon libeller
   « Transporteur recommandé ».
@@ -241,9 +256,14 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
    transactions** (aucune société, aucune réservation, aucun partenaire). Tout
    ce qui touche aux canaux de prix, aux commissions, à Stripe et aux e-mails
    n'a jamais tourné de bout en bout. Ce n'est pas une formalité.
-5. Brancher `tests/e2e/site-audit.spec.ts` en CI — la spec existe mais n'est
-   exécutée par aucun workflow, et elle échoue aujourd'hui sur le slug du
-   registre.
+5. **[A]** Brancher `tests/e2e/site-audit.spec.ts` en CI. La spec est à jour
+   (le slug du registre est corrigé, et les pages co-brandées y sont
+   vérifiées dans leur nouveau comportement), mais elle a besoin d'un serveur
+   qui lise la base : il faut déclarer `VITE_SUPABASE_URL` et
+   `VITE_SUPABASE_ANON_KEY` en secrets GitHub Actions, puis ajouter un job
+   `playwright` après `check` dans `.github/workflows/ci.yml`. Publier des
+   identifiants dans un dépôt est votre décision, pas la mienne — même s'il
+   s'agit de la clé anonyme.
 
 ---
 
@@ -254,10 +274,6 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
   `companies` est vide ; bloquant le jour où le programme revendeur ouvre.
 - Aucune notification à l'approbation d'un partenaire (envoi manuel suffisant
   pour les premiers).
-- Le bucket `reservation-quotes` n'existe que dans la base de production, créé à
-  la main : migration de rattrapage à écrire.
-- Navigation mobile tronquée sous 760 px (atteignable par balayage, mais sans
-  repère visuel).
 - Déplacer `public/catalogue/bistro-seating/` hors de `public/` une fois la
   relecture photo terminée (156 fichiers, 13 Mo, servis sans être utilisés).
 

@@ -1,6 +1,13 @@
 import { Check } from 'lucide-react'
 
-import { getPublicPricingRules } from '@/lib/pricing/public-rules'
+import {
+  DISCOUNT_FAMILY_LABEL,
+  PUBLIC_DISCOUNT_FAMILIES,
+} from '@/lib/pricing/discount-families'
+import {
+  getPublicPricingRules,
+  getVolumeFamilyTiers,
+} from '@/lib/pricing/public-rules'
 
 // Bande de réassurance du catalogue : ce que chaque prix affiché contient
 // déjà, et la remise volume automatique — pour que l'acheteur comprenne
@@ -8,11 +15,21 @@ import { getPublicPricingRules } from '@/lib/pricing/public-rules'
 // actives (les mêmes que le panier), jamais codés en dur.
 export function IncludedInPriceStrip() {
   const rules = getPublicPricingRules()
+  const families = getVolumeFamilyTiers()
+  // Avec des paliers par famille, un seuil unique serait faux pour deux
+  // familles sur trois. On annonce donc le PREMIER seuil de chacune — la
+  // bande est étroite, le détail vit sur /prix et sur la fiche produit.
+  const discountLabel = families
+    ? `Remise auto par famille : ${PUBLIC_DISCOUNT_FAMILIES.map(
+        (family) =>
+          `${DISCOUNT_FAMILY_LABEL[family].toLowerCase()} ≥${families[family][0]!.minUnits}`,
+      ).join(' · ')}`
+    : `Remise auto : −${Math.round(rules.tier2Discount * 100)} % ≥${rules.tier2Qty} pcs · −${Math.round(rules.tier3Discount * 100)} % ≥${rules.tier3Qty} pcs`
   const items = [
     'Fret maritime & dédouanement',
     'Contrôle SGS avant départ',
     'Garantie 1 an + SAV France',
-    `Remise auto : −${Math.round(rules.tier2Discount * 100)} % ≥${rules.tier2Qty} pcs · −${Math.round(rules.tier3Discount * 100)} % ≥${rules.tier3Qty} pcs`,
+    discountLabel,
   ]
 
   return (

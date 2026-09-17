@@ -1,10 +1,17 @@
 import { useMemo, useState } from 'react'
 
-import { getPublicPricingRules } from '@/lib/pricing/public-rules'
+import {
+  PUBLIC_DISCOUNT_FAMILIES,
+  describeFamilyTiersWithLabel,
+} from '@/lib/pricing/discount-families'
+import { getFamilyDiscountTiers } from '@/lib/pricing/public-rules'
 
-// Simulateur de remise volume (handoff Prix prouvé). Les PALIERS viennent
-// des règles publiques actives (mêmes valeurs que le panier/checkout) — seul
-// le prix de la chaise exemple (78 € HT) est illustratif, libellé comme tel.
+// Simulateur de remise volume (handoff Prix prouvé). L'exemple porte sur une
+// CHAISE : les paliers affichés sont donc ceux des assises, pris dans les
+// règles publiques actives (mêmes valeurs que le panier/checkout). Les tables
+// et les salons ont leurs propres seuils, rappelés sous le simulateur — sans
+// quoi la page laisserait croire à une règle unique. Seul le prix de la chaise
+// exemple (78 € HT) est illustratif, libellé comme tel.
 
 const EXAMPLE_UNIT_PRICE_HT = 78
 
@@ -15,14 +22,16 @@ function formatAmount(value: number): string {
 }
 
 export function VolumeSimulator() {
-  const rules = getPublicPricingRules()
+  const assises = getFamilyDiscountTiers('assises')
   const options = useMemo(
     () => [
       { n: 50, discount: 0 },
-      { n: rules.tier2Qty, discount: rules.tier2Discount },
-      { n: rules.tier3Qty, discount: rules.tier3Discount },
+      ...assises.map((tier) => ({
+        n: tier.minUnits,
+        discount: tier.discountPercent / 100,
+      })),
     ],
-    [rules],
+    [assises],
   )
   const [selected, setSelected] = useState(0)
   const option = options[selected] ?? options[0]!
@@ -101,6 +110,12 @@ export function VolumeSimulator() {
           </div>
         </div>
       </div>
+      <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--color-text-secondary)]">
+        Chaque famille a ses propres paliers, parce qu&apos;un salon de jardin
+        et une chaise ne se commandent pas aux mêmes quantités —{' '}
+        {PUBLIC_DISCOUNT_FAMILIES.map(describeFamilyTiersWithLabel).join(' ; ')}
+        .
+      </p>
     </div>
   )
 }
