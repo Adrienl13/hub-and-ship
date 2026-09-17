@@ -5,6 +5,7 @@ import {
   Handshake,
   History,
   ImageOff,
+  Images,
   PackagePlus,
   Pencil,
   Plus,
@@ -42,14 +43,17 @@ import {
   getActivePricingParameters,
   hardDeleteProduct,
   listAdminContainers,
+  listMediaReviews,
   listPricingParameterVersions,
   listProducts,
   previewPriceAdjustment,
   previewReprice,
   reactivateProduct,
+  saveMediaReview,
   savePricingParametersVersion,
   softDeleteProduct,
   updatePricingParameters,
+  updateProduct,
   type CatalogueAdminClient,
   type PriceAdjustmentRow,
   type PriceAdjustmentScope,
@@ -60,6 +64,8 @@ import type {
   AdminContainerOption,
   AdminPricingParameters,
   AdminProduct,
+  MediaReview,
+  MediaReviewStatus,
 } from '@/lib/catalogue-admin/types'
 import { useAuth } from '@/hooks/useAuth'
 import { computeProductProfit } from '@/lib/pricing/product-profit'
@@ -82,6 +88,8 @@ type AdminCollectionFilter =
   | 'table-base'
   | 'other'
 type AdminStatusFilter = 'all' | 'active' | 'inactive'
+/** Relecture des photos : voir `product_media_reviews` (migration 44). */
+type AdminMediaFilter = 'all' | MediaReviewStatus
 
 const CATEGORY_FILTERS: ReadonlyArray<{
   readonly id: AdminCategoryFilter
@@ -114,6 +122,34 @@ const STATUS_FILTERS: ReadonlyArray<{
   { id: 'active', label: 'Actifs' },
   { id: 'inactive', label: 'Désactivés' },
 ]
+
+const MEDIA_FILTERS: ReadonlyArray<{
+  readonly id: AdminMediaFilter
+  readonly label: string
+}> = [
+  { id: 'all', label: 'Toutes photos' },
+  { id: 'fix', label: 'À corriger' },
+  { id: 'pending', label: 'À relire' },
+  { id: 'ok', label: 'Validées' },
+]
+
+const MEDIA_BADGE: Record<
+  MediaReviewStatus,
+  { readonly label: string; readonly className: string }
+> = {
+  fix: {
+    label: 'Photos à corriger',
+    className: 'bg-red-100 text-red-800',
+  },
+  pending: {
+    label: 'Photos à relire',
+    className: 'bg-amber-100 text-amber-900',
+  },
+  ok: {
+    label: 'Photos validées',
+    className: 'bg-[color:var(--forest)]/15 text-[color:var(--forest)]',
+  },
+}
 
 function getProductCollection(product: Pick<AdminProduct, 'sku' | 'id'>) {
   const key = `${product.sku} ${product.id}`.toLowerCase()
@@ -1083,7 +1119,21 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   const [collectionFilter, setCollectionFilter] =
     useState<AdminCollectionFilter>('all')
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all')
+  const [mediaFilter, setMediaFilter] = useState<AdminMediaFilter>('all')
   const [search, setSearch] = useState('')
+  const [mediaReviews, setMediaReviews] = useState<
+    ReadonlyMap<string, MediaReview>
+  >(new Map())
+  const [mediaForProduct, setMediaForProduct] = useState<AdminProduct | null>(
+    null,
+  )
+  // L'erreur d'une action de ligne s'affiche AUSSI sous la ligne : le bandeau
+  // du haut est hors écran dès qu'on agit sur un produit en bas de liste,
+  // ce qui donnait l'impression que le bouton ne faisait rien.
+  const [rowError, setRowError] = useState<{
+    readonly id: string
+    readonly message: string
+  } | null>(null)
 
   const auth = useAuth()
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -1117,6 +1167,19 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     return counts
   }, [rows])
 
+  // Une fiche absente de la table n'a pas de visuel issu d'un lot
+  // fournisseur : elle n'entre pas dans la file de relecture et ne porte
+  // aucun badge — la marquer « validée » serait mentir sur un tri jamais fait.
+  const mediaCounts = useMemo(() => {
+    const counts = countByFilter(
+      rows,
+      MEDIA_FILTERS,
+      (row): AdminMediaFilter => mediaReviews.get(row.id)?.status ?? 'all',
+    )
+    counts.all = rows.length
+    return counts
+  }, [mediaReviews, rows])
+
   const filteredRows = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('fr-FR')
     return rows.filter((row) => {
@@ -1128,15 +1191,32 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       const statusMatch =
         statusFilter === 'all' ||
         (statusFilter === 'active' ? row.isActive : !row.isActive)
+      const mediaMatch =
+        mediaFilter === 'all' ||
+        mediaReviews.get(row.id)?.status === mediaFilter
       const searchMatch =
         query.length === 0 ||
         [row.name, row.sku, row.description, CATEGORY_LABEL[row.category]]
           .join(' ')
           .toLocaleLowerCase('fr-FR')
           .includes(query)
-      return categoryMatch && collectionMatch && statusMatch && searchMatch
+      return (
+        categoryMatch &&
+        collectionMatch &&
+        statusMatch &&
+        mediaMatch &&
+        searchMatch
+      )
     })
-  }, [categoryFilter, collectionFilter, rows, search, statusFilter])
+  }, [
+    categoryFilter,
+    collectionFilter,
+    mediaFilter,
+    mediaReviews,
+    rows,
+    search,
+    statusFilter,
+  ])
 
   const refresh = useMemo(() => {
     return async () => {
@@ -1157,12 +1237,16 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
         ])
         // P0 pilotage : historique + témoin. Tolérants tant que la migration
         // 20260709090000 n'est pas appliquée (RPC absente ≠ panne du tab).
-        const [versions, control] = await Promise.all([
+        const [versions, control, reviews] = await Promise.all([
           listPricingParameterVersions(client).catch(
             () => [] as ReadonlyArray<AdminPricingParameters>,
           ),
           checkPricingControl(client).catch(() => null),
+          listMediaReviews(client).catch(
+            () => new Map() as ReadonlyMap<string, MediaReview>,
+          ),
         ])
+        setMediaReviews(reviews)
         setRows(products)
         setContainers(containerRows)
         setPricingParameters(activePricingParameters)
@@ -1183,9 +1267,46 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     void refresh()
   }, [refresh])
 
+  function failRow(row: AdminProduct, err: unknown): void {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue'
+    setError(message)
+    setRowError({ id: row.id, message })
+  }
+
+  /**
+   * Relecture des photos : le propriétaire passe les fiches en revue une à
+   * une pour y traquer un élément de marque fournisseur. Rien n'est supprimé
+   * ici — on ne note que l'état du tri.
+   */
+  async function saveReview(
+    row: AdminProduct,
+    status: MediaReviewStatus,
+    note?: string | null,
+  ): Promise<void> {
+    if (!isConfigured) return
+    setBusyId(row.id)
+    setRowError(null)
+    const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
+    try {
+      await saveMediaReview(client, row.id, { status, note }, auth.user?.id ?? null)
+      const next = new Map(mediaReviews)
+      next.set(row.id, {
+        status,
+        note: note === undefined ? (next.get(row.id)?.note ?? null) : note,
+        reviewedAt: status === 'pending' ? null : new Date().toISOString(),
+      })
+      setMediaReviews(next)
+      setError(null)
+    } catch (err) {
+      failRow(row, err)
+    }
+    setBusyId(null)
+  }
+
   async function toggleActive(row: AdminProduct): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
+    setRowError(null)
     const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
     try {
       if (row.isActive) await softDeleteProduct(client, row.id)
@@ -1197,7 +1318,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       })
       await refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      failRow(row, err)
     }
     setBusyId(null)
   }
@@ -1215,6 +1336,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     )
     if (!confirmed) return
     setBusyId(row.id)
+    setRowError(null)
     const client = createSupabaseBrowserClient(config) as CatalogueAdminClient
     try {
       await hardDeleteProduct(client, row.id)
@@ -1225,7 +1347,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       })
       await refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      failRow(row, err)
     }
     setBusyId(null)
   }
@@ -1539,7 +1661,31 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
             </FilterButton>
           ))}
         </FilterGroup>
+
+        <FilterGroup label="Photos">
+          {MEDIA_FILTERS.map((filter) => (
+            <FilterButton
+              key={filter.id}
+              active={mediaFilter === filter.id}
+              onClick={() => setMediaFilter(filter.id)}
+            >
+              {filter.label} ({mediaCounts[filter.id] ?? 0})
+            </FilterButton>
+          ))}
+        </FilterGroup>
       </div>
+
+      {(mediaCounts.fix ?? 0) + (mediaCounts.pending ?? 0) > 0 && (
+        <div className="rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-3 text-xs text-foreground">
+          <strong className="font-medium">Relecture des photos.</strong>{' '}
+          {mediaCounts.fix ?? 0} fiche(s) à corriger et{' '}
+          {mediaCounts.pending ?? 0} à relire : ce sont celles dont au moins une
+          vue vient d&apos;un lot fournisseur. Ouvrez « Photos » sur une ligne
+          pour voir chaque visuel, retirer ceux qui portent une marque, puis
+          marquer la fiche comme validée. Aucun fichier n&apos;est supprimé du
+          dépôt : seule l&apos;URL quitte la fiche.
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
         <div className="hidden border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[74px_minmax(180px,1.4fr)_100px_70px_90px_100px_110px_90px_70px_220px] md:gap-3">
@@ -1570,6 +1716,8 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           ) : (
             filteredRows.map((row) => {
               const busy = busyId === row.id
+              const review = mediaReviews.get(row.id) ?? null
+              const badge = review ? MEDIA_BADGE[review.status] : null
               return (
                 <article
                   key={row.id}
@@ -1607,6 +1755,14 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                         ? 'Pricing prêt'
                         : 'Coûts à compléter'}
                     </div>
+                    {badge && (
+                      <div
+                        className={`mt-1 inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}
+                        title={review?.note ?? undefined}
+                      >
+                        {badge.label}
+                      </div>
+                    )}
                   </div>
                   <span className="rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] px-2 py-0.5 text-[11px]">
                     {CATEGORY_LABEL[row.category]}
@@ -1662,6 +1818,21 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                     </Button>
                     <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
+                      className={`h-8 gap-1.5 rounded-sm ${
+                        review && review.status !== 'ok'
+                          ? 'border-amber-300 text-amber-900 hover:bg-amber-50'
+                          : ''
+                      }`}
+                      onClick={() => setMediaForProduct(row)}
+                      title="Relire les photos de cette fiche (marque fournisseur)"
+                    >
+                      <Images className="h-3.5 w-3.5" />
+                      Photos ({1 + row.galleryUrls.length})
+                    </Button>
+                    <Button
+                      type="button"
                       size="sm"
                       variant="outline"
                       className="h-8 gap-1.5 rounded-sm"
@@ -1693,6 +1864,11 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                         <Trash2 className="h-3.5 w-3.5" />
                         Supprimer
                       </Button>
+                    )}
+                    {rowError?.id === row.id && (
+                      <p className="w-full rounded-sm border border-red-300 bg-red-50 px-2 py-1 text-[11px] text-red-900">
+                        {rowError.message}
+                      </p>
                     )}
                   </div>
                 </article>
@@ -1774,6 +1950,264 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={mediaForProduct !== null}
+        onOpenChange={(open) => {
+          if (!open) setMediaForProduct(null)
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Relecture des photos — {mediaForProduct?.sku ?? ''}
+            </DialogTitle>
+          </DialogHeader>
+          {mediaForProduct && (
+            <MediaReviewEditor
+              product={mediaForProduct}
+              review={mediaReviews.get(mediaForProduct.id) ?? null}
+              onSaveReview={(status, note) =>
+                saveReview(mediaForProduct, status, note)
+              }
+              onSavePhotos={async (mainImageUrl, galleryUrls) => {
+                const client = createSupabaseBrowserClient(
+                  config,
+                ) as CatalogueAdminClient
+                await updateProduct(client, mediaForProduct.id, {
+                  main_image_url: mainImageUrl,
+                  gallery_urls: [...galleryUrls],
+                })
+                await logAdminAction(client, auth.user?.id ?? null, {
+                  action: 'product.media_cleanup',
+                  target: mediaForProduct.id,
+                  extra: {
+                    sku: mediaForProduct.sku,
+                    kept: 1 + galleryUrls.length,
+                    removed:
+                      1 +
+                      mediaForProduct.galleryUrls.length -
+                      (1 + galleryUrls.length),
+                  },
+                })
+                await refresh()
+                setMediaForProduct(null)
+              }}
+              onClose={() => setMediaForProduct(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+/**
+ * Relecture des visuels d'une fiche : chaque vue est affichée en grand avec
+ * son nom de fichier, pour repérer un chevalet d'usine, une étiquette ou une
+ * fiche technique en chinois. Retirer une vue ne supprime QUE son URL de la
+ * fiche — le fichier reste dans le dépôt.
+ */
+function MediaReviewEditor({
+  product,
+  review,
+  onSaveReview,
+  onSavePhotos,
+  onClose,
+}: {
+  readonly product: AdminProduct
+  readonly review: MediaReview | null
+  readonly onSaveReview: (
+    status: MediaReviewStatus,
+    note?: string | null,
+  ) => Promise<void>
+  readonly onSavePhotos: (
+    mainImageUrl: string,
+    galleryUrls: ReadonlyArray<string>,
+  ) => Promise<void>
+  readonly onClose: () => void
+}) {
+  const initial = useMemo(
+    () => [product.mainImageUrl, ...product.galleryUrls].filter(Boolean),
+    [product],
+  )
+  const [kept, setKept] = useState<ReadonlyArray<string>>(initial)
+  const [note, setNote] = useState(review?.note ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const removed = initial.filter((url) => !kept.includes(url))
+  const dirty = removed.length > 0 || kept[0] !== initial[0]
+
+  async function run(action: () => Promise<void>): Promise<void> {
+    setSaving(true)
+    setError(null)
+    try {
+      await action()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        {product.name}
+        {review?.note ? ` — ${review.note}` : ''}
+      </p>
+
+      {error && (
+        <p className="rounded-sm border border-red-300 bg-red-50 p-2 text-xs text-red-900">
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {initial.map((url, index) => {
+          const isKept = kept.includes(url)
+          const isMain = kept[0] === url
+          return (
+            <figure
+              key={`${url}-${index}`}
+              className={`overflow-hidden rounded-sm border ${
+                isKept
+                  ? 'border-[color:var(--sand-deep)]'
+                  : 'border-red-300 opacity-45'
+              }`}
+            >
+              <img
+                src={url}
+                alt={`${product.sku} vue ${index + 1}`}
+                loading="lazy"
+                className="aspect-square w-full bg-[color:var(--sand-soft)] object-cover"
+              />
+              <figcaption className="space-y-1 p-2">
+                <span className="block break-all text-[10px] text-muted-foreground">
+                  {url.split('/').pop()}
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 rounded-sm text-[11px]"
+                    onClick={() =>
+                      setKept(
+                        isKept
+                          ? kept.filter((item) => item !== url)
+                          : [...kept, url],
+                      )
+                    }
+                  >
+                    {isKept ? 'Retirer' : 'Rétablir'}
+                  </Button>
+                  {isKept && !isMain && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 rounded-sm text-[11px]"
+                      onClick={() =>
+                        setKept([url, ...kept.filter((item) => item !== url)])
+                      }
+                    >
+                      Mettre en 1re
+                    </Button>
+                  )}
+                  {isMain && (
+                    <span className="inline-flex items-center rounded-sm bg-[color:var(--forest)]/15 px-1.5 text-[10px] text-[color:var(--forest)]">
+                      Photo principale
+                    </span>
+                  )}
+                </div>
+              </figcaption>
+            </figure>
+          )
+        })}
+      </div>
+
+      <label className="block space-y-1">
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          Note de relecture
+        </span>
+        <textarea
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          rows={2}
+          className="w-full rounded-sm border border-[color:var(--sand-deep)] bg-card p-2 text-xs"
+          placeholder="Ce qui reste à faire sur cette fiche."
+        />
+      </label>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 rounded-sm"
+          disabled={saving || kept.length === 0 || !dirty}
+          onClick={() =>
+            void run(async () => {
+              const [main, ...rest] = kept
+              if (!main) throw new Error('Gardez au moins une photo.')
+              await onSavePhotos(main, rest)
+            })
+          }
+          title={
+            kept.length === 0
+              ? 'Gardez au moins une photo'
+              : 'Enregistrer la galerie'
+          }
+        >
+          Enregistrer la galerie ({kept.length})
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-sm border-[color:var(--forest)]/40 text-[color:var(--forest)]"
+          disabled={saving}
+          onClick={() =>
+            void run(async () => {
+              await onSaveReview('ok', note.trim() || null)
+              onClose()
+            })
+          }
+        >
+          Photos validées
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-sm border-red-300 text-red-700"
+          disabled={saving}
+          onClick={() =>
+            void run(async () => {
+              await onSaveReview('fix', note.trim() || null)
+              onClose()
+            })
+          }
+        >
+          À corriger
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 rounded-sm"
+          disabled={saving}
+          onClick={onClose}
+        >
+          Fermer
+        </Button>
+        {removed.length > 0 && (
+          <span className="text-[11px] text-muted-foreground">
+            {removed.length} vue(s) retirée(s) de la fiche — le fichier reste
+            dans le dépôt.
+          </span>
+        )}
+      </div>
     </div>
   )
 }

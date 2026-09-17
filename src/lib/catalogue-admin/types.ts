@@ -1,5 +1,10 @@
 import type { ProductCategory } from '@/lib/products'
-import type { Database, FireRatingDb, TableShapeDb } from '@/lib/supabase/types'
+import type {
+  Database,
+  FireRatingDb,
+  MediaReviewStatus,
+  TableShapeDb,
+} from '@/lib/supabase/types'
 import type { InternalProductCostColumn } from '@/lib/catalogue/product-columns'
 
 export type ProductRow = Database['public']['Tables']['products']['Row']
@@ -27,6 +32,27 @@ export type PricingParameterUpdate =
 
 export type SeedCommitmentRow =
   Database['public']['Tables']['container_seed_commitments']['Row']
+
+export type ProductMediaReviewRow =
+  Database['public']['Tables']['product_media_reviews']['Row']
+
+/**
+ * État de relecture des photos d'une fiche (migration 44) :
+ * `pending` jamais relue, `fix` une vue au moins à corriger, `ok` validée.
+ */
+export type { MediaReviewStatus }
+
+export interface MediaReview {
+  readonly status: MediaReviewStatus
+  readonly note: string | null
+  readonly reviewedAt: string | null
+}
+
+export const MEDIA_REVIEW_PENDING: MediaReview = {
+  status: 'pending',
+  note: null,
+  reviewedAt: null,
+}
 
 export interface AdminProduct {
   readonly id: string

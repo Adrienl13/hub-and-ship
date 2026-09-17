@@ -1102,6 +1102,29 @@ type ProductPartnerPriceInsert = {
 
 type ProductPartnerPriceUpdate = Partial<ProductPartnerPriceInsert>
 
+/** Relecture des photos produit (migration 44) — interne, jamais publique. */
+export type MediaReviewStatus = 'pending' | 'fix' | 'ok'
+
+type ProductMediaReviewRow = {
+  product_id: string
+  status: MediaReviewStatus
+  note: string | null
+  reviewed_at: string | null
+  reviewed_by: string | null
+  updated_at: string
+}
+
+type ProductMediaReviewInsert = {
+  product_id: string
+  status?: MediaReviewStatus
+  note?: string | null
+  reviewed_at?: string | null
+  reviewed_by?: string | null
+  updated_at?: string
+}
+
+type ProductMediaReviewUpdate = Partial<ProductMediaReviewInsert>
+
 type PricingParameterRow = {
   id: string
   version: number
@@ -1300,6 +1323,11 @@ export interface Database {
         Row: ProductPricingInputRow
         Insert: ProductPricingInputInsert
         Update: ProductPricingInputUpdate
+      }
+      product_media_reviews: {
+        Row: ProductMediaReviewRow
+        Insert: ProductMediaReviewInsert
+        Update: ProductMediaReviewUpdate
       }
       pricing_parameters: {
         Row: PricingParameterRow

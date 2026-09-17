@@ -16,8 +16,11 @@ import type {
   AdminProductRow,
   AdminProductVariant,
   AdminSeedCommitment,
+  MediaReview,
+  MediaReviewStatus,
   PricingParameterRow,
   PricingParameterUpdate,
+  ProductMediaReviewRow,
   ProductPartnerPriceRow,
   ProductPricingInputRow,
   ProductUpdate,
@@ -493,6 +496,14 @@ async function getPartnerPriceIfAvailable(
   throw new Error(error.message)
 }
 
+/** Table optionnelle : migration pas encore appliquée sur cet environnement. */
+function isMissingOptionalTable(errorMessage: string, table: string): boolean {
+  return (
+    errorMessage.includes(`Could not find the table 'public.${table}'`) ||
+    (errorMessage.includes(table) && errorMessage.includes('schema cache'))
+  )
+}
+
 function isMissingOptionalPricingInputsTable(errorMessage: string): boolean {
   return (
     errorMessage.includes(
@@ -651,6 +662,58 @@ export async function hardDeleteProduct(
   const { error } = (await client.rpc('admin_delete_product', {
     p_product_id: id,
   } as never)) as RpcResult<unknown>
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Relecture des photos produit (migration 44). Table interne, admin only :
+ * elle ne sert qu'à savoir quelles fiches restent à passer en revue pour y
+ * traquer un élément de marque fournisseur. Tolère l'absence de la table
+ * tant que la migration n'est pas appliquée : l'onglet reste utilisable.
+ */
+export async function listMediaReviews(
+  client: CatalogueAdminClient,
+): Promise<ReadonlyMap<string, MediaReview>> {
+  const { data, error } = await client
+    .from('product_media_reviews')
+    .select('product_id, status, note, reviewed_at')
+
+  if (error) {
+    if (isMissingOptionalTable(error.message, 'product_media_reviews'))
+      return new Map()
+    throw new Error(error.message)
+  }
+
+  const rows = (data ?? []) as ReadonlyArray<ProductMediaReviewRow>
+  return new Map(
+    rows.map((row) => [
+      row.product_id,
+      {
+        status: row.status,
+        note: row.note,
+        reviewedAt: row.reviewed_at,
+      } satisfies MediaReview,
+    ]),
+  )
+}
+
+export async function saveMediaReview(
+  client: CatalogueAdminClient,
+  productId: string,
+  payload: { status: MediaReviewStatus; note?: string | null },
+  reviewerId: string | null,
+): Promise<void> {
+  const { error } = await client.from('product_media_reviews').upsert(
+    {
+      product_id: productId,
+      status: payload.status,
+      ...(payload.note === undefined ? {} : { note: payload.note }),
+      reviewed_at: payload.status === 'pending' ? null : new Date().toISOString(),
+      reviewed_by: reviewerId,
+      updated_at: new Date().toISOString(),
+    } as never,
+    { onConflict: 'product_id' },
+  )
   if (error) throw new Error(error.message)
 }
 
