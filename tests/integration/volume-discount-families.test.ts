@@ -472,3 +472,91 @@ it('n’est pas appelable directement par anon', async () => {
   `)
   expect(result.rows[0]).toEqual({ anon: false, auth: false })
 })
+
+// La grille RÉELLEMENT en production (migration 50, validée le 18/09/2026).
+// Ces chiffres sont commerciaux : si quelqu'un les change ici, ce test doit
+// tomber, et la migration doit changer avec.
+const GRILLE_PRODUCTION = {
+  assises: [
+    { min_units: 100, discount: 0.06 },
+    { min_units: 150, discount: 0.1 },
+  ],
+  tables: [
+    { min_units: 80, discount: 0.05 },
+    { min_units: 160, discount: 0.08 },
+  ],
+  salons: [
+    { min_units: 10, discount: 0.06 },
+    { min_units: 20, discount: 0.1 },
+  ],
+  autres: [
+    { min_units: 100, discount: 0.06 },
+    { min_units: 150, discount: 0.1 },
+  ],
+}
+
+describe('grille de production', () => {
+  it('récompense enfin la commande minimale d’un salon', async () => {
+    await useGrid(GRILLE_PRODUCTION)
+    // 12 fiches salons sur 15 ont un MOQ de 10 : la plus petite commande
+    // possible sur une seule référence pesait 10 000 à 22 000 € et ne
+    // touchait rien. Elle déclenche maintenant −6 %.
+    const totals = await expectAgreement([line('SALON', 10)])
+    expect(totals.volumeDiscountPercent).toBe(6)
+    expect(totals.volumeDiscountLines[0]).toMatchObject({
+      family: 'salons',
+      units: 10,
+      discountPercent: 6,
+    })
+
+    // Deux références au MOQ : le meilleur palier.
+    const double = await expectAgreement([line('SALON', 20)])
+    expect(double.volumeDiscountPercent).toBe(10)
+  })
+
+  it('demande le double d’une table complète au MOQ', async () => {
+    await useGrid(GRILLE_PRODUCTION)
+    // 20 plateaux + 20 piètements = 40 pièces au MOQ : pas encore de remise.
+    const auMoq = await expectAgreement([
+      line('PLATEAU', 20),
+      line('PIETEMENT', 20),
+    ])
+    expect(auMoq.volumeDiscountAmount).toBe(0)
+
+    // Le double : −5 %.
+    const double = await expectAgreement([
+      line('PLATEAU', 40),
+      line('PIETEMENT', 40),
+    ])
+    expect(double.volumeDiscountPercent).toBe(5)
+  })
+
+  it('laisse les assises sur leur grille historique', async () => {
+    await useGrid(GRILLE_PRODUCTION)
+    // MOQ médian 50 : deux références pour −6 %, trois pour −10 %.
+    expect((await expectAgreement([line('CHAISE', 50)])).volumeDiscountAmount).toBe(0)
+    expect(
+      (await expectAgreement([line('CHAISE', 50), line('FAUTEUIL', 50)]))
+        .volumeDiscountPercent,
+    ).toBe(6)
+    expect((await expectAgreement([line('CHAISE', 150)])).volumeDiscountPercent).toBe(10)
+  })
+
+  it('traite chaque famille séparément dans un panier de terrasse complet', async () => {
+    await useGrid(GRILLE_PRODUCTION)
+    // Commande réaliste : 120 assises, 100 pièces de table, 10 salons.
+    const totals = await expectAgreement([
+      line('CHAISE', 80),
+      line('FAUTEUIL', 40),
+      line('PLATEAU', 50),
+      line('PIETEMENT', 50),
+      line('SALON', 10),
+    ])
+    const byFamily = new Map(
+      totals.volumeDiscountLines.map((entry) => [entry.family, entry]),
+    )
+    expect(byFamily.get('assises')).toMatchObject({ units: 120, discountPercent: 6 })
+    expect(byFamily.get('tables')).toMatchObject({ units: 100, discountPercent: 5 })
+    expect(byFamily.get('salons')).toMatchObject({ units: 10, discountPercent: 6 })
+  })
+})

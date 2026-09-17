@@ -34,6 +34,7 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
 - TVA affichée produit par produit sur le panier et le devis, et tous les
   totaux calculés comme somme stricte des lignes — côté client comme côté
   serveur (§ 7).
+- Remises volume par famille de produits, appliquées en production (§ 10).
 
 ---
 
@@ -209,15 +210,6 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 
 ### Reste
 
-- **[A] Fixer la grille de remise volume par famille.** Le mécanisme est livré
-  et appliqué en production, mais la grille n'est **pas saisie** : le site
-  fonctionne donc exactement comme avant (toutes les pièces comptées ensemble,
-  −6 % dès 100, −10 % dès 150). Elle se saisit dans l'admin, onglet Catalogue,
-  bloc « Remises volume par famille ». Le constat qui motive le changement :
-  une commande minimale de salon (MOQ 10 sur 12 fiches sur 15) pèse **10 040 à
-  22 440 €** et ne déclenche aucune remise, alors que 100 chaises — 7 900 € —
-  en déclenchent une. Dès que la grille est fixée, la page `/prix` doit suivre
-  (elle annonce « la remise se déclenche dès 100 pièces »).
 - **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit :
   ROP-031 et ROP-016 (salons de jardin vendus sous un nom de chaise), BIS-028,
   BIS-029, BIS-030, BIS-059 (chaises 126 cm vendues sous le nom « banc »). Le
@@ -268,3 +260,41 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
   repère visuel).
 - Déplacer `public/catalogue/bistro-seating/` hors de `public/` une fois la
   relecture photo terminée (156 fichiers, 13 Mo, servis sans être utilisés).
+
+---
+
+## 10. Remises volume par famille — en production
+
+Grille active depuis le 18 septembre 2026 (paramètres pricing **v4**) :
+
+| Famille | Palier 1 | Palier 2 |
+|---|---|---|
+| Assises — chaises, fauteuils, bancs | 100 pièces → −6 % | 150 → −10 % |
+| Tables — tables, plateaux, piètements | 80 pièces → −5 % | 160 → −8 % |
+| Salons de jardin | 10 pièces → −6 % | 20 → −10 % |
+| Autres pièces (filet de sécurité) | 100 pièces → −6 % | 150 → −10 % |
+
+Chaque famille compte **ses** pièces : 120 assises et 6 salons dans le même
+panier donnent −6 % sur les assises et rien sur les salons. Les tables se
+comptent en pièces — un plateau vaut 1, un piètement vaut 1, donc une table
+complète en vaut 2.
+
+**Ce que ça corrige.** 12 des 15 fiches salons ont un MOQ de 10 : la plus
+petite commande possible sur une seule référence pesait **10 040 à 22 440 €**
+et ne déclenchait aucune remise, quand 100 chaises — 7 900 € — en
+déclenchaient une. Le volume était récompensé au nombre de cartons, pas à
+l'engagement qu'il représente.
+
+**Ce que ça coûte.** Avec la règle prix = coût rendu × 1,90, un point de remise
+coûte 1 % du prix de vente, soit environ 2 % de la marge : 47,4 % à plein
+tarif, 43,0 % à −6 %, 41,5 % à −10 %.
+
+**Où la modifier.** Admin → onglet Catalogue → bloc « Remises volume par
+famille ». Chaque enregistrement crée une nouvelle version de paramètres et
+l'ancienne reste restaurable. Plafond technique : 25 % — au-delà, un client
+direct passerait sous le prix revendeur, et la base refuse la saisie.
+
+**Si vous changez ces chiffres**, deux endroits suivent à la main : la FAQ de
+`/prix` (`src/components/public-design/prix/model.js`, tableau `familles`) et
+le test `tests/integration/volume-discount-families.test.ts`, qui verrouille
+la grille de production.
