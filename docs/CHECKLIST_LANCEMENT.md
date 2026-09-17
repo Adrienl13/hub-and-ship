@@ -20,6 +20,8 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
 - Suppression d'un produit dans l'admin : réparée (la RPC citait une table
   absente en production, elle échouait sur toutes les fiches).
 - Marqueur de relecture photo dans l'admin, avec filtre et galerie par fiche.
+- Lien magique : sorties de secours sur tous les échecs, et écran de connexion
+  sur un lien de réservation ouvert sans session (§ 4).
 
 ---
 
@@ -96,19 +98,20 @@ référence que sur les lignes où elle dépasse le prix HT, et plancher l'écon
 
 ---
 
-## 4. Bloquant — parcours de connexion
+## 4. Parcours de connexion — code fait, une manip reste
 
-**[C] Le lien magique est le seul mode de connexion du site**, et il n'a aucune
-issue quand il échoue : lien expiré, déjà cliqué, ou demandé sur l'ordinateur
-et ouvert sur le téléphone (le cas normal en CHR). La page reste indéfiniment
-sur « Validation du lien magique », sans message ni bouton. Les paramètres
-d'erreur renvoyés par Supabase ne sont jamais lus.
+Le code est livré : la page de retour lit les erreurs renvoyées par Supabase
+(en query **et** en fragment), pose un délai de garde de 10 s pour le cas
+« ouvert sur un autre appareil » — qui ne renvoie aucune erreur, il reste
+simplement en suspens — et propose « Recevoir un nouveau lien » en conservant
+la destination. Un lien d'e-mail vers une réservation ouvert sans session
+affiche maintenant un écran de connexion au lieu d'une page vide.
 
-À faire : afficher un état d'erreur avec « Recevoir un nouveau lien », et
-basculer le template Supabase sur `token_hash` pour le cas multi-appareil.
-
-**[C]** Un lien e-mail vers une réservation, ouvert sans session, rend une page
-vide — c'est la cible de l'e-mail de confirmation et des relances Stripe.
+**[A] Il reste une modification dans le tableau de bord Supabase**, qui ne peut
+pas être versionnée : passer le modèle d'e-mail « Magic Link » sur
+`{{ .TokenHash }}`, sans quoi un lien demandé sur l'ordinateur et ouvert sur le
+téléphone ne peut toujours pas ouvrir la session — il affichera seulement un
+message clair. Marche à suivre et recette : `docs/RUNBOOK_MAGIC_LINK.md`.
 
 ---
 

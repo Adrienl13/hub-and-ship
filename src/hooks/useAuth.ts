@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { User } from '@supabase/supabase-js'
+import type { EmailOtpType, User } from '@supabase/supabase-js'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export type AuthStatus =
-  | 'loading'
-  | 'anonymous'
-  | 'authenticated'
-  | 'unconfigured'
+  'loading' | 'anonymous' | 'authenticated' | 'unconfigured'
 
 export interface MagicLinkResult {
   readonly ok: boolean
@@ -94,9 +91,13 @@ export function useAuth() {
           ? window.location.origin
           : config.appUrl
       const base = `${origin.replace(/\/$/, '')}/auth/callback`
-      const redirectTo = options.returnTo
-        ? `${base}?returnTo=${encodeURIComponent(options.returnTo)}`
-        : base
+      // `returnTo` est TOUJOURS présent, même à sa valeur par défaut : le
+      // modèle d'e-mail « Magic Link » concatène `{{ .RedirectTo }}` avec
+      // `&token_hash=…` (voir docs/RUNBOOK_MAGIC_LINK.md), ce qui exige une
+      // chaîne de requête déjà ouverte.
+      const redirectTo = `${base}?returnTo=${encodeURIComponent(
+        options.returnTo ?? '/account/reservations',
+      )}`
       const { error } = await client.auth.signInWithOtp({
         email,
         options: {
@@ -116,6 +117,27 @@ export function useAuth() {
     [client, config.appUrl],
   )
 
+  /**
+   * Vérifie un lien `{{ .TokenHash }}`. Contrairement à l'échange PKCE, cette
+   * vérification ne dépend pas du navigateur qui a demandé le lien : c'est ce
+   * qui rend la connexion possible quand on demande le lien sur l'ordinateur
+   * et qu'on l'ouvre sur le téléphone.
+   */
+  const verifyMagicLinkToken = useCallback(
+    async (tokenHash: string, type: EmailOtpType): Promise<MagicLinkResult> => {
+      if (!client) {
+        return { ok: false, message: "Supabase Auth n'est pas configuré." }
+      }
+      const { error } = await client.auth.verifyOtp({
+        token_hash: tokenHash,
+        type,
+      })
+      if (error) return { ok: false, message: error.message }
+      return { ok: true, message: 'Session ouverte.' }
+    },
+    [client],
+  )
+
   const signOut = useCallback(async (): Promise<void> => {
     if (!client) return
     await client.auth.signOut()
@@ -127,6 +149,7 @@ export function useAuth() {
     isConfigured: config.isConfigured,
     missingConfig: config.missing,
     signInWithMagicLink,
+    verifyMagicLinkToken,
     signOut,
   }
 }

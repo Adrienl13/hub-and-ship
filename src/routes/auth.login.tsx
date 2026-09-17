@@ -65,6 +65,10 @@ function LoginPage() {
   const returnTo = sanitizeReturnTo(rawReturnTo)
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  // Le toast de confirmation disparaît au bout de quelques secondes : sur
+  // mobile, l'utilisateur bascule sur sa boîte mail et revient sans savoir si
+  // le lien est parti. L'état d'envoi reste donc affiché sur la page.
+  const [sentTo, setSentTo] = useState<string | null>(null)
   const parsedEmail = businessEmailSchema.safeParse(email)
   const emailError =
     email && !parsedEmail.success ? 'Email invalide' : undefined
@@ -116,10 +120,12 @@ function LoginPage() {
           remaining: rateLimit.remaining,
         },
       })
+      setSentTo(parsedEmail.data)
       toast.success('Lien de connexion envoyé', {
         description: 'Vérifiez votre boîte email (et vos spams).',
       })
     } else {
+      setSentTo(null)
       toast.error('Connexion indisponible', { description: result.message })
     }
   }
@@ -144,8 +150,8 @@ function LoginPage() {
               Connexion sécurisée.
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Entrez votre email : nous vous envoyons un lien de connexion. Aucun
-              mot de passe à créer ni à retenir.
+              Entrez votre email : nous vous envoyons un lien de connexion.
+              Aucun mot de passe à créer ni à retenir.
             </p>
           </div>
 
@@ -157,6 +163,16 @@ function LoginPage() {
                 contact@prosimport.com
               </a>
               .
+            </div>
+          )}
+
+          {sentTo && (
+            <div className="border-[color:var(--forest)]/30 bg-[color:var(--forest)]/10 mb-5 rounded-md border p-3 text-xs leading-5 text-foreground">
+              <strong className="font-medium">Lien envoyé à {sentTo}.</strong>{' '}
+              Il arrive dans la minute, reste valable une heure et ne sert
+              qu’une fois. Ouvrez-le <strong>sur cet appareil</strong> : par
+              sécurité, un lien ouvert ailleurs que là où il a été demandé ne
+              peut pas ouvrir la session. Pensez à regarder vos spams.
             </div>
           )}
 
@@ -185,7 +201,9 @@ function LoginPage() {
                 ? 'Connexion momentanément indisponible'
                 : submitting
                   ? 'Envoi…'
-                  : 'Recevoir mon lien de connexion'}
+                  : sentTo
+                    ? 'Renvoyer un lien'
+                    : 'Recevoir mon lien de connexion'}
             </Button>
           </form>
 

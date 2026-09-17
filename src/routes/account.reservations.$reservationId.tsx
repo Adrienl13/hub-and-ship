@@ -256,6 +256,15 @@ function AccountReservationDetailPage() {
   }
 
   const fullyResolved = localLoaded && remoteLoaded
+  // Cette page est la cible de l'e-mail de confirmation, du webhook Stripe et
+  // des relances de paiement. Ouverte sans session et sans trace locale
+  // (boîte mail du téléphone, nouvel appareil), il n'y a rien à afficher —
+  // mais une 404 muette juste après un paiement est le pire écran possible.
+  // On propose la connexion en conservant la destination ; la 404 reste
+  // réservée au cas authentifié, où elle veut dire quelque chose.
+  if (fullyResolved && !reservation && auth.status !== 'authenticated') {
+    return <ReservationSignInGate reservationId={reservationId} />
+  }
   if (fullyResolved && !reservation) {
     throw notFound()
   }
@@ -550,7 +559,7 @@ function ReservationTimeline({
         Suivi de la réservation
       </div>
       {cancelled ? (
-        <div className="text-destructive flex items-center gap-2 px-4 py-6 text-sm">
+        <div className="flex items-center gap-2 px-4 py-6 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" />
           Cette réservation a été annulée.
         </div>
@@ -874,7 +883,7 @@ function ClaimsSection({
       ) : (
         <>
           {formOpen && (
-            <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/30 px-4 py-4">
+            <div className="bg-[color:var(--sand-soft)]/30 border-b border-[color:var(--sand-deep)] px-4 py-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">
@@ -962,8 +971,10 @@ function ClaimsSection({
                     {claim.message}
                   </p>
                   {claim.adminResponse && (
-                    <p className="mt-2 rounded-sm bg-[color:var(--sand-soft)]/60 px-2 py-1.5 text-xs leading-5">
-                      <span className="font-medium">Réponse Pros Import : </span>
+                    <p className="bg-[color:var(--sand-soft)]/60 mt-2 rounded-sm px-2 py-1.5 text-xs leading-5">
+                      <span className="font-medium">
+                        Réponse Pros Import :{' '}
+                      </span>
                       {claim.adminResponse}
                     </p>
                   )}
@@ -997,5 +1008,52 @@ function AmountRow({
         {formatEUR(value)}
       </span>
     </div>
+  )
+}
+
+/**
+ * Écran de reprise quand le lien d'un e-mail est ouvert sans session. Il dit
+ * ce qui se passe, conserve la destination et ne prétend pas que la
+ * réservation n'existe pas — elle est simplement illisible sans être connecté.
+ */
+function ReservationSignInGate({
+  reservationId,
+}: {
+  readonly reservationId: string
+}) {
+  const returnTo = `/account/reservations/${encodeURIComponent(reservationId)}`
+  return (
+    <main className="min-h-screen bg-[color:var(--sand-soft)] text-foreground">
+      <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-12">
+        <section className="rounded-md border border-[color:var(--sand-deep)] bg-card p-6 text-center">
+          <div className="label-eyebrow text-[color:var(--ember)]">
+            Votre réservation
+          </div>
+          <h1 className="mt-2 font-display text-3xl tracking-tight">
+            Connectez-vous pour l’ouvrir.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Votre réservation est bien enregistrée. Elle ne s’affiche que dans
+            votre espace : entrez l’adresse e-mail utilisée à la commande, nous
+            vous envoyons un lien de connexion et vous revenez directement ici.
+          </p>
+          <Button
+            asChild
+            className="mt-6 h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+          >
+            <a href={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>
+              Recevoir mon lien de connexion
+            </a>
+          </Button>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            Un doute sur l’adresse utilisée ? Écrivez-nous à{' '}
+            <a className="underline" href="mailto:contact@prosimport.com">
+              contact@prosimport.com
+            </a>{' '}
+            en citant la référence reçue par e-mail.
+          </p>
+        </section>
+      </div>
+    </main>
   )
 }
