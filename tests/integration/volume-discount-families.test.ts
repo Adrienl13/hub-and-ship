@@ -28,6 +28,9 @@ import type { SalesChannel } from '@/lib/supabase/types'
 let db: PGlite
 
 const SCHEMA = `
+create role anon;
+create role authenticated;
+
 create type public.sales_channel as enum
   ('direct','revendeur','distributeur','grand_compte');
 
@@ -457,4 +460,15 @@ describe('la grille survit à un enregistrement des paramètres', () => {
     await db.query('delete from public.pricing_parameters where not is_active')
     await useGrid(null)
   })
+})
+
+it('n’est pas appelable directement par anon', async () => {
+  const result = await db.query<{ anon: boolean; auth: boolean }>(`
+    select
+      has_function_privilege('anon',
+        'public.volume_discount_rate(text,int,int,public.sales_channel)','EXECUTE') as anon,
+      has_function_privilege('authenticated',
+        'public.volume_discount_rate(text,int,int,public.sales_channel)','EXECUTE') as auth
+  `)
+  expect(result.rows[0]).toEqual({ anon: false, auth: false })
 })

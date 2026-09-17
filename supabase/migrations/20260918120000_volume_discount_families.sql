@@ -191,9 +191,14 @@ begin
 end;
 $$;
 
+-- Supabase accorde par défaut EXECUTE à anon/authenticated sur toute fonction
+-- créée dans `public` : révoquer à PUBLIC ne suffit donc pas, il faut nommer
+-- les deux rôles. La fonction n'expose que des faits déjà publics, mais elle
+-- n'a aucune raison d'être appelable directement — seul le RPC de réservation
+-- s'en sert, et il tourne en SECURITY DEFINER sous son propriétaire.
 revoke all on function public.volume_discount_rate(
   text, int, int, public.sales_channel
-) from public;
+) from public, anon, authenticated;
 
 -- --------------------------------------------------------------------------
 -- 4. La grille devient publique — comme les paliers qu'elle remplace, elle
