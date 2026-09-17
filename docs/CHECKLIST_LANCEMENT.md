@@ -1,6 +1,6 @@
 # Checklist de lancement — Terrassea / prosimport.com
 
-État au 17 septembre 2026. Établie à partir de l'audit pré-lancement
+État au 18 septembre 2026. Établie à partir de l'audit pré-lancement
 (143 constats, 46 vérifiés en contradictoire) et d'une relecture des données
 de production le jour même.
 
@@ -22,6 +22,8 @@ Convention : **[A]** = décision ou saisie du propriétaire, **[C]** = code.
 - Marqueur de relecture photo dans l'admin, avec filtre et galerie par fiche.
 - Lien magique : sorties de secours sur tous les échecs, et écran de connexion
   sur un lien de réservation ouvert sans session (§ 4).
+- Tunnel de commande en mode devis, e-mails refaits, et pont du catalogue
+  public vers le panier (§ 2).
 
 ---
 
@@ -62,20 +64,37 @@ sur quatre sont des données de démonstration présentées comme réelles.**
 
 ---
 
-## 2. Bloquant — une décision produit
+## 2. Parcours d'achat — tranché, et livré
 
-**[A] Un seul parcours d'achat pour l'ouverture.** Aujourd'hui `/catalogue`
-(demande de rappel) et `/panier` (réservation Stripe) coexistent sans pont :
-l'icône panier du Header est visible sur toutes les pages publiques et mène à
-un panier **toujours vide** pour qui a composé son projet sur `/catalogue`.
+**Décision du 18 septembre : le tunnel s'arrête au devis.** Le client va
+jusqu'au bout — panier, coordonnées, livraison — et reçoit son devis. Rien
+n'est encaissé sur le site. Terrassea reçoit le même devis, rappelle sous
+24 h ouvrées et transmet ses coordonnées bancaires pour engager la commande.
 
-- Si le parcours de lancement est la **demande de rappel** : masquer l'icône
-  panier et « Réserver » du Header sur les pages publiques. Effort moyen.
-- Si c'est la **réservation Stripe** : faire pointer le CTA du tiroir vers
-  `/catalogue?panier=…` et la fiche produit vers l'ancre du catalogue public.
-  Effort lourd.
+Livré : bouton « Recevoir mon devis », étape 4 qui annonce l'appel au lieu
+d'une redirection carte, écran de confirmation refait, badges de réassurance
+qui ne promettent plus un paiement sécurisé là où il n'y en a pas, et dans
+l'espace compte un rappel de la suite à la place de « Retenter le paiement »
+— ce bouton menait à un tunnel fermé.
 
-Tout le reste de la liste est indépendant de ce choix.
+Côté e-mails : le client reçoit « Votre devis Terrassea » ; Terrassea reçoit
+le même devis avec de quoi rappeler utilement — société, SIRET, contact
+cliquable, mode de livraison en clair, note du client, volume et code
+apporteur. Le mode de livraison et la note n'étaient pas transmis jusqu'ici.
+
+Et le catalogue public mène enfin quelque part : son tiroir porte « Obtenir
+mon devis → », qui encode la sélection et atterrit directement sur `/panier`.
+« Préférez-vous être rappelé ? » reste en second.
+
+**[A] Pour ouvrir le paiement plus tard** : une constante à basculer
+(`RESERVATION_MODE`), et une recette à passer d'abord — Stripe n'a jamais
+tourné de bout en bout en production. Tout est dans
+`docs/RUNBOOK_PAIEMENT.md`.
+
+Reste un point mineur : sur les pages React, l'icône panier du Header est
+visible même pour qui vient du catalogue public sans avoir encore cliqué
+« Obtenir mon devis » — son panier y paraît vide. Le pont existe désormais,
+l'incohérence est réduite à ce cas.
 
 ---
 
