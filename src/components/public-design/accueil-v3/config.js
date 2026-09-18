@@ -27,11 +27,11 @@ export const config = {
       href: '/catalogue',
     },
     {
-      // Photo Terrassea. L'intitulé dit « en showroom » sans nommer de
+      // Photo Terrassea, showroom éphémère. L'intitulé ne nomme pas de
       // revendeur : ce serait affirmer une chose que la photo ne prouve pas.
       // L'écriteau du local a été retiré au recadrage.
       url: '/home/parcours/collection-showroom.webp',
-      name: 'La collection de chaises bistrot alignée en showroom',
+      name: 'La collection en showroom éphémère',
       href: '#contact',
     },
   ],
