@@ -118,9 +118,9 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
-      <div className="flex h-[76px] items-center justify-between gap-4 px-[clamp(20px,5vw,72px)]">
+      <div className="flex h-[76px] items-center gap-[clamp(14px,2vw,30px)] px-[clamp(20px,5vw,72px)]">
         {/* Logo — plaque laiton officielle (public/brand/terrassea-logo.svg) */}
-        <a href="/#top" className="flex shrink-0 items-center">
+        <a href="/#top" className="mr-auto flex shrink-0 items-center">
           <img
             src="/brand/terrassea-logo.svg"
             alt="Terrassea"
@@ -129,7 +129,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
         </a>
 
         {/* Nav desktop */}
-        <nav className="hidden min-w-0 items-center gap-4 min-[1150px]:flex 2xl:gap-5">
+        <nav className="hidden min-w-0 items-center gap-[clamp(14px,1.6vw,26px)] min-[1150px]:flex">
           {PRIMARY_LINKS.map(([label, href]) => (
             <a
               key={href}
@@ -182,7 +182,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             asChild
             variant="ghost"
             size="sm"
-            className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap hover:bg-[color:var(--sand-soft)] sm:inline-flex"
+            className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap font-semibold hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
             <Link to="/account" aria-label="Mon compte">
               <User className="h-3.5 w-3.5" />
