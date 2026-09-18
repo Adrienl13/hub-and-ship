@@ -4,7 +4,10 @@ import {
   PUBLIC_DISCOUNT_FAMILIES,
   describeFamilyTiersWithLabel,
 } from '../../../lib/pricing/discount-families'
-import { nextVolumeStep } from '../../../lib/pricing/volume-progress'
+import {
+  buildVolumeScale,
+  nextVolumeStep,
+} from '../../../lib/pricing/volume-progress'
 import {
   calculateOrderLines,
   describeVolumeDiscounts,
@@ -176,9 +179,14 @@ export class CatalogueModel {
     )
     const subtotal = totals.subtotalHt
     const discount = totals.volumeDiscountAmount
-    const nextStep = nextVolumeStep(
-      cartRows.map((r) => ({ category: r.p.category, quantity: r.qty })),
-    )
+    const familleLignes = cartRows.map((r) => ({
+      category: r.p.category,
+      quantity: r.qty,
+    }))
+    const nextStep = nextVolumeStep(familleLignes)
+    // Échelle de la jauge : une seule règle de lecture, de zéro au dernier
+    // palier de la famille montrée. Voir buildVolumeScale().
+    const scale = buildVolumeScale(familleLignes)
     const discountRows = describeVolumeDiscounts(totals)
     const sheetP = s.sheet ? this.products.find((p) => p.ref === s.sheet) : null
     const famOf = (m) =>
@@ -440,8 +448,9 @@ export class CatalogueModel {
       })),
       cartPieces: pieces,
       // La jauge suit la famille la plus proche de son palier suivant : c'est
-      // le seul conseil actionnable. Plus de palier à viser = jauge pleine.
-      tierPct: (nextStep ? nextStep.progressPercent : discount > 0 ? 100 : 0) + '%',
+      // le seul conseil actionnable.
+      tierScale: scale,
+      hasTierScale: !!scale,
       tierRate:
         discountRows.length === 1
           ? discountRows[0].label.replace('Remise volume ', '')
@@ -449,9 +458,13 @@ export class CatalogueModel {
             ? '−' + this.eur(discount)
             : '',
       hasDiscount: discount > 0,
+      // Plus de « Tarif dès 50 pièces » : 50 était le MOQ des assises, pas un
+      // palier, et il ne voulait rien dire pour les tables ni les salons.
       tierLabel:
         discountRows.length === 0
-          ? 'Tarif dès 50 pièces'
+          ? scale
+            ? scale.familyLabel + ' · tarif de base'
+            : 'Tarif de base'
           : discountRows.length === 1
             ? discountRows[0].label + ' appliquée'
             : 'Remises volume appliquées',

@@ -69,3 +69,91 @@ export function nextVolumeStep(
 
   return best
 }
+
+/** Un palier placé sur l'échelle de la jauge. */
+export interface VolumeScaleMark {
+  /** Position sur la piste, en pourcentage — « 66.7% ». */
+  readonly left: string
+  /** Décalage du libellé pour qu'il ne déborde pas de la piste. */
+  readonly shift: string
+  /** « 100 · −6 % ». */
+  readonly label: string
+  readonly reached: boolean
+  /** Couleur du libellé : un palier acquis se lit autrement qu'un palier visé. */
+  readonly tone: string
+}
+
+export interface VolumeScale {
+  readonly family: DiscountFamily
+  readonly familyLabel: string
+  /** Pièces de cette famille au panier. */
+  readonly units: number
+  /** « 50 assises », déjà accordé. */
+  readonly unitsLabel: string
+  /** Remplissage de la piste, en pourcentage — « 33.3% ». */
+  readonly fill: string
+  readonly marks: ReadonlyArray<VolumeScaleMark>
+}
+
+/**
+ * L'échelle de la jauge de remise.
+ *
+ * Elle existe parce que l'ancienne superposait TROIS repères différents sur
+ * une même piste de 6 px : un remplissage mesuré par rapport au palier
+ * suivant, des libellés « 50 / 100 · −6 % / 150 · −10 % » répartis à
+ * intervalles réguliers quelles que soient les vraies valeurs, et un trait
+ * figé à 66,6 %. À 50 assises, le remplissage atteignait 50 % de la piste,
+ * c'est-à-dire pile sous le libellé « −6 % » — l'acheteur croyait avoir la
+ * remise alors qu'il lui manquait la moitié du chemin.
+ *
+ * Ici, UNE seule échelle : de zéro au dernier palier de la famille. Le
+ * remplissage et les paliers s'y lisent avec la même règle, donc la barre
+ * n'atteint un palier que lorsqu'il est réellement atteint.
+ */
+export function buildVolumeScale(
+  lines: ReadonlyArray<{ readonly category: string; readonly quantity: number }>,
+): VolumeScale | null {
+  const units = countUnitsByFamily(lines)
+  const present = DISCOUNT_FAMILIES.filter((family) => units[family] > 0)
+  if (present.length === 0) return null
+
+  // La famille montrée est celle sur laquelle l'acheteur a le plus de prise :
+  // la plus proche de son palier suivant. Quand tout est déjà acquis, celle
+  // qui pèse le plus de pièces.
+  const step = nextVolumeStep(lines)
+  const family =
+    step?.family ??
+    present.reduce((best, f) => (units[f] > units[best] ? f : best), present[0]!)
+
+  const tiers = getFamilyDiscountTiers(family)
+  const last = tiers[tiers.length - 1]
+  if (!last || last.minUnits <= 0) return null
+
+  const count = units[family]
+  const unitWord = DISCOUNT_FAMILY_UNIT[family]
+  const pct = (value: number) =>
+    `${Math.round(Math.min(100, Math.max(0, (value / last.minUnits) * 100)) * 10) / 10}%`
+
+  return {
+    family,
+    familyLabel: DISCOUNT_FAMILY_LABEL[family],
+    units: count,
+    unitsLabel: `${count} ${unitWord}${count > 1 ? 's' : ''}`,
+    fill: pct(count),
+    marks: tiers.map((tier, index) => ({
+      left: pct(tier.minUnits),
+      // Le dernier palier est au bout de la piste : son libellé se cale sur
+      // la droite, sinon il déborde du cadre.
+      shift:
+        index === tiers.length - 1
+          ? 'translateX(-100%)'
+          : 'translateX(-50%)',
+      label: `${tier.minUnits} · −${tier.discountPercent} %`,
+      reached: count >= tier.minUnits,
+      tone:
+        count >= tier.minUnits
+          ? 'var(--color-accent-700)'
+          : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+    })),
+  }
+}

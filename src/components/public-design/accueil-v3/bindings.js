@@ -22,12 +22,19 @@ export function bind(root) {
       return
     }
     if (node.nodeType !== 1) return
+    // `data-bound-text` prend la main sur le CONTENU du nœud, pas sur ses
+    // attributs : il ne doit plus interrompre la visite avant la boucle qui
+    // substitue `style`, `class` ou `title`. Auparavant il rendait, sur un
+    // même nœud, le texte correctement et laissait le style tel quel — les
+    // libellés de la jauge de remise portaient un `left:{{ m.left }}` littéral
+    // et se superposaient tous au même endroit, sans le moindre avertissement.
+    let bindsOwnText = false
     if (node.hasAttribute('data-bound-text')) {
       const template = node.getAttribute('data-bound-text')
       updates.push((scope) => {
         node.textContent = fill(template, scope)
       })
-      return
+      bindsOwnText = true
     }
     if (node.tagName === 'TEMPLATE') {
       const rows = []
@@ -55,6 +62,10 @@ export function bind(root) {
       return
     }
     for (const attr of [...node.attributes]) {
+      // Surtout pas : le substituer écraserait le gabarit par sa première
+      // valeur rendue, et les mises à jour suivantes n'auraient plus de
+      // modèle à remplir.
+      if (attr.name === 'data-bound-text') continue
       if (attr.name === 'data-bound-src' || attr.name === 'data-bound-href') {
         const name = attr.name.slice(11)
         updates.push((scope) => {
@@ -92,7 +103,7 @@ export function bind(root) {
       node.addEventListener('error', () => {
         node.dataset.unavailable = ''
       })
-    ;[...node.childNodes].forEach(visit)
+    if (!bindsOwnText) [...node.childNodes].forEach(visit)
   }
   ;[...root.childNodes].forEach(visit)
   return (scope) => updates.forEach((update) => update(scope))
