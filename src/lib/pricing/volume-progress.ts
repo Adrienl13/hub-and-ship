@@ -96,6 +96,8 @@ export interface VolumeScale {
   /** « encore 50 assises pour −6 % », « −6 % acquis · encore 50 pour −10 % ». */
   readonly state: string
   readonly hasDiscount: boolean
+  /** Remise DÉJÀ acquise sur cette famille, en % (0 si aucun palier atteint). */
+  readonly discountPercent: number
 }
 
 /**
@@ -153,6 +155,7 @@ export function buildVolumeScales(
           fill: pct(count),
           state,
           hasDiscount: acquis > 0,
+          discountPercent: acquis,
           marks: tiers.map((tier, index) => ({
             left: pct(tier.minUnits),
             // Le dernier palier est au bout de la piste : son libellé se cale

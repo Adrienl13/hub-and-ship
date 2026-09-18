@@ -2,102 +2,39 @@ import { TrendingDown } from 'lucide-react'
 
 import type { CartItem } from '@/lib/order'
 import {
-  getCustomerDiscountStatus,
-  type CustomerDiscountTier,
-} from '@/lib/pricing/customer-discounts'
-import {
-  DISCOUNT_FAMILIES,
-  DISCOUNT_FAMILY_LABEL,
-  DISCOUNT_FAMILY_UNIT,
-  countUnitsByFamily,
-  type DiscountFamily,
-} from '@/lib/pricing/discount-families'
-import {
-  getActiveCustomerDiscountTiers,
-  getFamilyDiscountTiers,
-  getVolumeFamilyTiers,
-} from '@/lib/pricing/public-rules'
+  buildVolumeScales,
+  type VolumeScale,
+} from '@/lib/pricing/volume-progress'
 
 /**
- * « Remise quantité » — ce qui pousse l'acheteur au palier suivant.
+ * « Remise quantité » — ce qui pousse l'acheteur au palier suivant, sur
+ * `/panier` et dans la colonne de commande.
  *
- * Deux affichages, selon le régime actif (cf. calculateOrder) :
- *  — grille unique : un seul bloc sur le total des pièces, comme avant ;
- *  — grille par famille : un bloc PAR FAMILLE présente dans le panier, avec
- *    ses propres pièces et ses propres paliers. Sans ça, un panier de salons
- *    verrait « encore 94 unités pour −6 % » alors que sa remise se déclenche
- *    à 5 salons — le message le plus décourageant possible.
+ * Les paliers diffèrent d'une famille à l'autre : une ligne par famille
+ * présente au panier, chacune à sa propre échelle. Un acheteur de salons qui
+ * lirait « encore 94 unités » alors que sa remise se déclenche à 10 pièces
+ * ne comprendrait pas qu'il en est à deux salons du but.
+ *
+ * Le calcul vient de `buildVolumeScales()`, LE MÊME que celui du tiroir du
+ * catalogue. C'est délibéré : ces deux surfaces décrivaient la même chose
+ * avec deux implémentations, et deux implémentations finissent toujours par
+ * diverger — un libellé ici, un arrondi là, et le panier ne dit plus ce que
+ * disait le catalogue.
  */
 export function TieredPricingViz({ items }: { items: CartItem[] }) {
-  const families = getVolumeFamilyTiers()
-
-  if (!families) {
-    const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
-    return (
-      <Card
-        intro="Remise additionnelle selon le nombre total d'unités réservées."
-        blocks={[
-          {
-            key: 'global',
-            title: 'Quantité panier',
-            units: totalUnits,
-            unitLabel: 'unité',
-            tiers: getActiveCustomerDiscountTiers(),
-          },
-        ]}
-      />
-    )
-  }
-
-  const unitsByFamily = countUnitsByFamily(
+  const scales = buildVolumeScales(
     items.map((item) => ({
       category: item.product.category,
       quantity: item.quantity,
     })),
   )
-  const present = DISCOUNT_FAMILIES.filter(
-    (family) => unitsByFamily[family] > 0,
-  )
 
-  return (
-    <Card
-      intro="Chaque famille a ses propres paliers : les assises, les tables et les salons ne se commandent pas aux mêmes quantités."
-      blocks={(present.length > 0 ? present : (['assises'] as DiscountFamily[])).map(
-        (family) => ({
-          key: family,
-          title: DISCOUNT_FAMILY_LABEL[family],
-          units: unitsByFamily[family],
-          unitLabel: DISCOUNT_FAMILY_UNIT[family],
-          tiers: getFamilyDiscountTiers(family),
-        }),
-      )}
-    />
-  )
-}
+  if (scales.length === 0) return null
 
-interface Block {
-  readonly key: string
-  readonly title: string
-  readonly units: number
-  readonly unitLabel: string
-  readonly tiers: ReadonlyArray<CustomerDiscountTier>
-}
-
-function Card({
-  intro,
-  blocks,
-}: {
-  readonly intro: string
-  readonly blocks: ReadonlyArray<Block>
-}) {
-  // Le badge d'en-tête annonce la meilleure remise déjà acquise : c'est la
-  // bonne nouvelle, elle doit se lire sans dérouler le détail.
-  const best = blocks.reduce(
-    (max, block) =>
-      Math.max(
-        max,
-        getCustomerDiscountStatus(block.units, block.tiers).discountPercent,
-      ),
+  // La meilleure remise déjà acquise : c'est la bonne nouvelle, elle doit se
+  // lire sans dérouler le détail.
+  const best = scales.reduce(
+    (max, scale) => Math.max(max, scale.discountPercent),
     0,
   )
 
@@ -108,7 +45,10 @@ function Card({
           <div className="label-eyebrow text-muted-foreground">
             Remise quantité
           </div>
-          <div className="mt-1 text-muted-foreground">{intro}</div>
+          <div className="mt-1 text-muted-foreground">
+            Chaque famille a ses propres paliers : les assises, les tables et
+            les salons ne se commandent pas aux mêmes quantités.
+          </div>
         </div>
         <span className="bg-[color:var(--ember)]/10 inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[10px] font-medium text-[color:var(--ember)]">
           <TrendingDown className="h-3 w-3" />
@@ -117,80 +57,58 @@ function Card({
       </div>
 
       <div className="space-y-3">
-        {blocks.map((block) => (
-          <FamilyBlock key={block.key} block={block} />
+        {scales.map((scale) => (
+          <FamilyBlock key={scale.family} scale={scale} />
         ))}
       </div>
     </div>
   )
 }
 
-function FamilyBlock({ block }: { readonly block: Block }) {
-  const status = getCustomerDiscountStatus(block.units, block.tiers)
-  const plural = block.units > 1 ? 's' : ''
-
+function FamilyBlock({ scale }: { readonly scale: VolumeScale }) {
   return (
     <div>
-      <div className="mb-1.5 grid grid-cols-2 gap-2">
-        <div className="rounded-sm bg-[color:var(--sand-soft)] px-2.5 py-2">
-          <div className="label-eyebrow text-muted-foreground">
-            {block.title}
-          </div>
-          <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-            {block.units} {block.unitLabel}
-            {plural}
-          </div>
-        </div>
-        <div className="rounded-sm bg-[color:var(--sand-soft)] px-2.5 py-2">
-          <div className="label-eyebrow text-muted-foreground">
-            Remise active
-          </div>
-          <div className="mt-0.5 font-display text-base font-semibold tabular-nums">
-            {status.discountPercent}%
-          </div>
-        </div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <span className="font-medium text-foreground">{scale.familyLabel}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {scale.unitsLabel}
+        </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5">
-        {block.tiers.map((tier) => {
-          const active = tier === status.activeTier
-          const reached = block.units >= tier.minUnits
-          return (
-            <div
-              key={`${tier.minUnits}-${tier.discountPercent}`}
-              className={`rounded-sm border px-1.5 py-2 text-center transition-colors ${
-                active
-                  ? 'border-foreground bg-[color:var(--sand)] text-foreground'
-                  : reached
-                    ? 'border-[color:var(--forest)]/35 bg-[color:var(--forest)]/8 text-foreground/80'
-                    : 'border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] text-muted-foreground'
-              }`}
-            >
-              <div className="font-display text-sm font-semibold tabular-nums">
-                {tier.discountPercent}%
-              </div>
-              <div className="mt-0.5 text-[9px] leading-tight">
-                dès {tier.minUnits} {block.unitLabel}
-                {tier.minUnits > 1 ? 's' : ''}
-              </div>
-            </div>
-          )
-        })}
+      {/* Une seule échelle : de zéro au dernier palier de la famille. La piste
+          n'atteint un repère que lorsque le palier l'est vraiment. */}
+      <div className="relative h-1.5 bg-[color:var(--sand-deep)]">
+        <div
+          className="absolute inset-y-0 left-0 bg-[color:var(--ember)] transition-[width] duration-500"
+          style={{ width: scale.fill }}
+        />
+        {scale.marks.map((mark) => (
+          <span
+            key={mark.label}
+            className="absolute -top-[3px] h-3 w-px"
+            style={{ left: mark.left, background: mark.tone }}
+          />
+        ))}
       </div>
 
-      <div className="mt-1.5 rounded-sm bg-[color:var(--sand-soft)] px-2.5 py-2 text-[11px] text-muted-foreground">
-        {status.nextTier ? (
-          <>
-            Encore{' '}
-            <span className="font-medium text-foreground">
-              {status.nextGapUnits} {block.unitLabel}
-              {status.nextGapUnits > 1 ? 's' : ''}
-            </span>{' '}
-            pour atteindre {status.nextTier.discountPercent}% de remise.
-          </>
-        ) : (
-          'Dernier palier atteint : remise quantité maximale appliquée.'
-        )}
+      <div className="relative mt-1 h-4">
+        {scale.marks.map((mark) => (
+          <span
+            key={mark.label}
+            className="mono absolute whitespace-nowrap text-[9.5px] tracking-[0.06em]"
+            style={{
+              left: mark.left,
+              transform: mark.shift,
+              color: mark.tone,
+            }}
+          >
+            {mark.label}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-0.5 text-[11px] text-muted-foreground">
+        {scale.state}
       </div>
     </div>
   )
