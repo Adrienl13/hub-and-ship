@@ -118,9 +118,9 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-6">
+      <div className="flex h-[76px] items-center justify-between gap-4 px-[clamp(20px,5vw,72px)]">
         {/* Logo — plaque laiton officielle (public/brand/terrassea-logo.svg) */}
-        <a href="/#top" className="flex items-center">
+        <a href="/#top" className="flex shrink-0 items-center">
           <img
             src="/brand/terrassea-logo.svg"
             alt="Terrassea"
@@ -129,12 +129,12 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
         </a>
 
         {/* Nav desktop */}
-        <nav className="hidden items-center gap-5 lg:flex">
+        <nav className="hidden min-w-0 items-center gap-4 min-[1150px]:flex 2xl:gap-5">
           {PRIMARY_LINKS.map(([label, href]) => (
             <a
               key={href}
               href={href}
-              className="text-foreground/75 text-sm transition-colors hover:text-foreground"
+              className="text-foreground/75 whitespace-nowrap text-sm transition-colors hover:text-foreground"
             >
               {label}
             </a>
@@ -142,10 +142,10 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
           <ResourcesDropdown />
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {channel !== 'direct' && (
             <span
-              className="mono hidden items-center gap-1 rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[color:var(--ember)] sm:inline-flex"
+              className="mono hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[color:var(--ember)] 2xl:inline-flex"
               title="Vos prix reflètent votre canal partenaire."
             >
               <Tag className="h-3 w-3" />
@@ -157,11 +157,11 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
               asChild
               variant="ghost"
               size="sm"
-              className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] lg:inline-flex"
+              className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap hover:bg-[color:var(--sand-soft)] min-[1150px]:inline-flex"
             >
-              <Link to="/admin">
+              <Link to="/admin" aria-label="Espace admin">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Admin
+                <span className="hidden 2xl:inline">Admin</span>
               </Link>
             </Button>
           )}
@@ -170,11 +170,11 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
               asChild
               variant="ghost"
               size="sm"
-              className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] lg:inline-flex"
+              className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap hover:bg-[color:var(--sand-soft)] min-[1150px]:inline-flex"
             >
-              <Link to="/partner">
+              <Link to="/partner" aria-label="Espace partenaire">
                 <Handshake className="h-3.5 w-3.5" />
-                Espace partenaire
+                <span className="hidden 2xl:inline">Espace partenaire</span>
               </Link>
             </Button>
           )}
@@ -182,11 +182,11 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             asChild
             variant="ghost"
             size="sm"
-            className="text-foreground/75 hidden h-9 gap-1.5 hover:bg-[color:var(--sand-soft)] sm:inline-flex"
+            className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <Link to="/account">
+            <Link to="/account" aria-label="Mon compte">
               <User className="h-3.5 w-3.5" />
-              Mon compte
+              <span className="hidden xl:inline">Mon compte</span>
             </Link>
           </Button>
           {/* Panier global : la commande est consultable et modifiable
@@ -196,7 +196,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             <Button
               size="sm"
               onClick={onReserve}
-              className="h-9 rounded-sm px-4"
+              className="h-9 shrink-0 whitespace-nowrap rounded-sm px-4"
             >
               Réserver
               <ArrowRight className="h-3.5 w-3.5" />
@@ -205,7 +205,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             <Button
               asChild
               size="sm"
-              className="h-9 rounded-sm px-4"
+              className="h-9 shrink-0 whitespace-nowrap rounded-sm px-4"
             >
               <Link to="/catalogue">
                 Réserver
@@ -219,7 +219,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             onClick={() => setMobileOpen((value) => !value)}
-            className="text-foreground/80 inline-flex h-9 w-9 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:bg-[color:var(--sand-soft)] lg:hidden"
+            className="text-foreground/80 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-[color:var(--sand-deep)] transition-colors hover:bg-[color:var(--sand-soft)] min-[1150px]:hidden"
           >
             {mobileOpen ? (
               <X className="h-4.5 w-4.5" />
@@ -232,7 +232,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
 
       {/* Panneau mobile */}
       {mobileOpen && (
-        <nav className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand)] px-6 py-4 lg:hidden">
+        <nav className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand)] px-[clamp(20px,5vw,72px)] py-4 min-[1150px]:hidden">
           <div className="grid gap-0.5">
             {PRIMARY_LINKS.map(([label, href]) => (
               <a
