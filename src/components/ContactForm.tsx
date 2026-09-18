@@ -203,7 +203,7 @@ export function ContactForm({
           type="button"
           onClick={() => void submit()}
           disabled={submitting}
-          className="h-11 w-full gap-2 rounded-sm bg-foreground text-background sm:w-auto sm:px-6"
+          className="h-11 w-full gap-2 rounded-sm sm:w-auto sm:px-6"
         >
           <Send className="h-4 w-4" />
           {submitting ? 'Envoi…' : 'Envoyer le message'}

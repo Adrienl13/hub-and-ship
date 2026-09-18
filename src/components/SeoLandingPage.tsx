@@ -69,7 +69,7 @@ export function SeoLandingPage({
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button
                   asChild
-                  className="h-11 rounded-sm bg-foreground text-background hover:bg-[color:var(--ink-soft)]"
+                  className="h-11 rounded-sm"
                 >
                   <Link to={primaryHref}>
                     {primaryLabel}

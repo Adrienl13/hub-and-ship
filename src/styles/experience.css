@@ -1,25 +1,29 @@
 /* Pros Import — physical samples, clear decisions. Scoped to the new experience. */
 .pi-page {
-  --pi-ink: #20282d;
-  --pi-blue: #2549d5;
-  --pi-paper: #f5f5f1;
-  --pi-muted: #596369;
-  --pi-line: #d9dcd9;
+  /* Même palette que l'accueil et que le reste du site (18/09/2026). Ces
+     pages portaient un bleu #2549D5 et un fond #F5F5F1 qui n'existaient
+     nulle part ailleurs : /lieux et /studio ne ressemblaient ni à l'accueil
+     ni à /contact. Seules les valeurs changent, pas les noms. */
+  --pi-ink: #201e1d;
+  --pi-blue: #006d8f;
+  --pi-paper: #f3f2f2;
+  --pi-muted: #55514e;
+  --pi-line: #d2d1d0;
   --pi-signal: #e1ec82;
-  --sand: #f5f5f1;
-  --sand-soft: #f5f5f1;
-  --sand-deep: #d9dcd9;
+  --sand: #f3f2f2;
+  --sand-soft: #fafafa;
+  --sand-deep: #d2d1d0;
   --paper: #fff;
-  --ink: #20282d;
-  --ink-soft: #596369;
-  --ember: #2549d5;
-  --ember-soft: #e8ecfa;
-  --foreground: #20282d;
-  --background: #f5f5f1;
-  --border: #d9dcd9;
-  --muted-foreground: #596369;
-  --color-border-base: #d9dcd9;
-  --ring: #2549d5;
+  --ink: #201e1d;
+  --ink-soft: #55514e;
+  --ember: #006d8f;
+  --ember-soft: #e4f2f7;
+  --foreground: #201e1d;
+  --background: #f3f2f2;
+  --border: #d2d1d0;
+  --muted-foreground: #55514e;
+  --color-border-base: #d2d1d0;
+  --ring: #006d8f;
   color: var(--pi-ink);
   background: var(--pi-paper);
   min-height: 100vh;
@@ -118,7 +122,11 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  height: 88px;
+  /* Barre alignée sur celle de l'accueil (public-design) : 76 px de haut,
+     logo 40 px, liens 14 px. Trois barres différentes cohabitaient — l'une
+     ici, une sur les pages React, une sur les pages public-design — et le
+     site changeait de taille de titre et de logo d'une page à l'autre. */
+  height: 76px;
   padding: 0 clamp(22px, 4.5vw, 76px);
   background: var(--pi-paper);
   border-bottom: 1px solid var(--pi-line);
@@ -166,7 +174,7 @@
   display: flex;
   align-items: center;
   gap: 28px;
-  font-size: 11px;
+  font-size: 14px;
 }
 .pi-desktop-nav a {
   padding: 16px 0;
@@ -177,7 +185,7 @@
 .pi-header-cta {
   min-height: 42px;
   padding: 10px 16px;
-  font-size: 11px;
+  font-size: 14px;
 }
 .pi-menu-toggle {
   display: none;
@@ -189,7 +197,7 @@
   width: 100%;
   padding: 12px 24px 24px;
   background: var(--pi-paper);
-  box-shadow: 0 18px 24px #20282d15;
+  box-shadow: 0 18px 24px #201e1d15;
 }
 .pi-mobile-menu a {
   display: flex;
@@ -285,7 +293,7 @@
   bottom: 16px;
   left: 18px;
   font-size: 9px;
-  color: #596369;
+  color: #55514e;
 }
 .pi-hero-sample {
   position: absolute;
@@ -387,7 +395,7 @@
   object-fit: cover;
   transform: rotate(-7deg);
   border: 10px solid white;
-  box-shadow: 16px 22px 0 #20282d0e;
+  box-shadow: 16px 22px 0 #201e1d0e;
   position: relative;
 }
 .pi-material-word {
@@ -1418,12 +1426,15 @@
 
 /* Catalogue vivant : photographies originales, mouvement interruptible. */
 .pi-original-logo {
-  width: 168px;
-  height: 79px;
+  /* Dimensions naturelles du SVG (132 × 40) : la plaque n'est plus servie
+     dans une boîte 168 × 79 qui la rendait deux fois plus grande que sur
+     l'accueil. */
+  width: 132px;
+  height: 40px;
   object-fit: contain;
 }
 .pi-header {
-  min-height: 96px;
+  min-height: 76px;
 }
 .pi-wordmark {
   padding: 0;
@@ -1546,7 +1557,7 @@
   object-fit: contain;
   transform: none;
   border: 8px solid white;
-  box-shadow: 0 12px 30px #20282d18;
+  box-shadow: 0 12px 30px #201e1d18;
 }
 .pi-focus-image {
   min-height: 270px;
@@ -1579,11 +1590,11 @@
 }
 @media (max-width: 760px) {
   .pi-header {
-    min-height: 78px;
+    min-height: 72px;
   }
   .pi-original-logo {
-    width: 140px;
-    height: 66px;
+    width: 116px;
+    height: 35px;
   }
   .pi-home-hero {
     display: flex;
@@ -1720,7 +1731,7 @@
   display: block;
   font: 9px/1.5 monospace;
   letter-spacing: 0.06em;
-  color: #596369;
+  color: #55514e;
   margin-bottom: 8px;
 }
 .pi-atmosphere-foot {
@@ -1734,7 +1745,7 @@
   font-size: 11px;
   line-height: 1.6;
   max-width: 410px;
-  color: #596369;
+  color: #55514e;
 }
 .pi-project-invitation .pi-invitation-grid {
   display: block;
@@ -1760,7 +1771,7 @@
   left: 12px;
   z-index: 1;
   background: #fff;
-  color: #20282d;
+  color: #201e1d;
   padding: 4px 8px;
   font-size: 11px;
 }
@@ -1786,12 +1797,12 @@
   width: 27%;
   max-width: 90px;
   height: auto;
-  box-shadow: 0 6px 12px #20282d20;
+  box-shadow: 0 6px 12px #201e1d20;
   border: 5px solid white;
 }
 .pi-project-paper {
-  background: #f5f5f1;
-  color: #20282d;
+  background: #f3f2f2;
+  color: #201e1d;
   padding: 44px 26px 18px;
   display: flex;
   flex-direction: column;
@@ -1810,7 +1821,7 @@
 }
 .pi-project-paper b {
   font-size: 12px;
-  color: #2549d5;
+  color: #006d8f;
   margin-top: auto;
 }
 .pi-container-story {
@@ -1826,7 +1837,7 @@
 .pi-container-heading > p:last-child {
   max-width: 550px;
   line-height: 1.7;
-  color: #596369;
+  color: #55514e;
   font-size: 15px;
 }
 .pi-container-layout {
@@ -1893,7 +1904,7 @@
 .pi-container-answer p {
   font-size: 14px;
   line-height: 1.75;
-  color: #596369;
+  color: #55514e;
 }
 .pi-trust-links {
   display: grid;
@@ -1913,7 +1924,7 @@
 .pi-trust-links span {
   grid-column: 1/-1;
   font: 9px/1.5 monospace;
-  color: #596369;
+  color: #55514e;
 }
 .pi-trust-links svg {
   width: 20px;
@@ -2066,9 +2077,9 @@
   background: #ffffffb5;
 }
 .pi-showcase-families button[aria-pressed='true'] {
-  background: #20282d;
+  background: #201e1d;
   color: white;
-  border-color: #20282d;
+  border-color: #201e1d;
 }
 .pi-showcase-depth .pi-chair-orbit {
   min-height: 415px;
@@ -2300,11 +2311,11 @@
 .pi-home-unified .pi-showcase-families button {
   background: transparent;
   border: 0;
-  color: #596369;
+  color: #55514e;
   padding: 8px 18px;
 }
 .pi-home-unified .pi-showcase-families button[aria-pressed='true'] {
-  background: #20282d;
+  background: #201e1d;
   color: #fff;
 }
 .pi-home-unified .pi-chair-orbit {
@@ -2320,7 +2331,7 @@
   border-radius: 26px;
   overflow: hidden;
   border: 0;
-  box-shadow: 0 14px 28px #20282d12;
+  box-shadow: 0 14px 28px #201e1d12;
   padding: 10px;
 }
 .pi-home-unified .pi-chair-card img {
@@ -2378,11 +2389,11 @@
   background: transparent;
   border: 0;
   border-radius: 999px;
-  color: #20282d;
+  color: #201e1d;
   font-size: 12px;
 }
 .pi-home-unified .pi-showcase-controls button[data-motion-toggle] {
-  background: #20282d;
+  background: #201e1d;
   color: white;
 }
 .pi-home-unified .pi-showcase-controls button:hover {
@@ -2506,6 +2517,6 @@
   min-height: 44px;
   flex-shrink: 0;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }

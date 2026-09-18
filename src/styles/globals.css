@@ -4,65 +4,71 @@
 
 @layer base {
   :root {
-    /* Design v2 (handoff accueil 07/2026) : crème #F4EFE7, noir chaud
-       #1A1815, orange #D97A34 (#E8963F sur fond sombre), typo Archivo,
-       rayons élargis. Les alias historiques (--sand, --ember…) pointent
-       vers la nouvelle palette pour que tout le site suive. */
+    /* Palette du site, alignée le 18/09/2026 sur celle de l'accueil
+       (« public-design ») : fond gris clair #F3F2F2, encre #201E1D, accent
+       bleu-canard #006D8F. Les pages React — contact, mentions légales,
+       panier, compte — vivaient encore sur la palette crème + orange
+       #D97A34 : passer de l'accueil à /contact changeait de site.
+
+       Les NOMS historiques sont conservés (--sand, --ember…) pour que rien
+       ne casse : seules leurs valeurs bougent. Les couleurs SÉMANTIQUES
+       (succès, danger, avertissement) ne sont pas des couleurs de marque et
+       ne changent pas. */
     --radius: 0.6875rem;
 
-    --background: #f4efe7;
-    --foreground: #1a1815;
+    --background: #f3f2f2;
+    --foreground: #201e1d;
     --card: #ffffff;
-    --card-foreground: #1a1815;
+    --card-foreground: #201e1d;
     --popover: #ffffff;
-    --popover-foreground: #1a1815;
-    --primary: #1a1815;
-    --primary-foreground: #f4efe7;
-    --secondary: #e4dccd;
-    --secondary-foreground: #1a1815;
-    --muted: #e4dccd;
-    --muted-foreground: #6b6357;
-    --accent: #e4dccd;
-    --accent-foreground: #1a1815;
+    --popover-foreground: #201e1d;
+    --primary: #006d8f;
+    --primary-foreground: #ffffff;
+    --secondary: #e6e5e4;
+    --secondary-foreground: #201e1d;
+    --muted: #e6e5e4;
+    --muted-foreground: #55514e;
+    --accent: #e6e5e4;
+    --accent-foreground: #201e1d;
     --destructive: #8a3a2a;
-    --destructive-foreground: #f4efe7;
-    --border: #e4dccd;
-    --input: #d8cfbf;
-    --ring: #1a1815;
+    --destructive-foreground: #ffffff;
+    --border: #d2d1d0;
+    --input: #d2d1d0;
+    --ring: #006d8f;
 
-    --sand: #f4efe7;
-    --sand-soft: #faf7f1;
-    --sand-deep: #e4dccd;
-    --ink: #1a1815;
-    --ink-soft: #5f584d;
-    --ember: #d97a34;
-    --ember-hover: #b9601f;
-    /* Tinte claire (fonds de pastilles) / orange vif lisible sur fond noir. */
-    --ember-soft: #f0e6d6;
-    --ember-bright: #e8963f;
+    --sand: #f3f2f2;
+    --sand-soft: #fafafa;
+    --sand-deep: #d2d1d0;
+    --ink: #201e1d;
+    --ink-soft: #55514e;
+    --ember: #006d8f;
+    --ember-hover: #005c78;
+    /* Teinte claire (fonds de pastilles) / accent vif lisible sur fond sombre. */
+    --ember-soft: #e4f2f7;
+    --ember-bright: #0088b0;
     --forest: #3f8f2a;
     --forest-bg: #e9f0e2;
     --ochre: #9a7b2a;
-    --muted: #8a8073;
-    --border-strong: #d8cfbf;
+    --muted: #6b6866;
+    --border-strong: #c4c3c2;
     --paper: #ffffff;
     --stamp: #8a3a2a;
     --stamp-bg: #f0d8cc;
     --info: #3a4f6a;
 
-    --color-bg-base: #f4efe7;
-    --color-bg-alt: #faf7f1;
+    --color-bg-base: #f3f2f2;
+    --color-bg-alt: #fafafa;
     --color-bg-elevated: #ffffff;
-    --color-bg-dark: #1a1815;
-    --color-text-primary: #1a1815;
-    --color-text-secondary: #5f584d;
-    --color-text-muted: #8a8073;
-    --color-text-on-dark: #f4efe7;
-    --color-accent-primary: #d97a34;
-    --color-accent-hover: #b9601f;
-    --color-accent-light: #f0e6d6;
-    --color-border-base: #e4dccd;
-    --color-border-strong: #d8cfbf;
+    --color-bg-dark: #201e1d;
+    --color-text-primary: #201e1d;
+    --color-text-secondary: #55514e;
+    --color-text-muted: #6b6866;
+    --color-text-on-dark: #fafafa;
+    --color-accent-primary: #006d8f;
+    --color-accent-hover: #005c78;
+    --color-accent-light: #e4f2f7;
+    --color-border-base: #d2d1d0;
+    --color-border-strong: #c4c3c2;
     --color-success: #3f8f2a;
     --color-success-bg: #e9f0e2;
     --color-warning: #9a7b2a;
@@ -71,9 +77,9 @@
     --color-danger-bg: #f0d8cc;
     --color-info: #3a4f6a;
     --color-info-bg: #d8e0e8;
-    --color-cta-primary: #1a1815;
-    --color-cta-primary-hover: #2e2a24;
-    --color-cta-text: #f4efe7;
+    --color-cta-primary: #006d8f;
+    --color-cta-primary-hover: #005c78;
+    --color-cta-text: #ffffff;
   }
 
   * {

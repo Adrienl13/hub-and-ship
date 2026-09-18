@@ -24,24 +24,31 @@ import { isStudioEnabled } from '@/lib/studio/flags'
 // un nouveau visiteur en une seconde).
 // « Studio » n'apparaît que sous le flag public de build VITE_STUDIO_ENABLED :
 // une session preview accède au Studio par son URL, jamais par ce lien.
+// MÊME liste, MÊMES libellés et MÊME ordre que la barre de l'accueil
+// (public-design) et que celle des pages expérience : le site appelait la
+// même page « Catalogue » ici et « Le mobilier » ailleurs, et rangeait
+// « Conteneurs livrés » avant ou après « Près de chez vous » selon la page.
 const PRIMARY_LINKS: ReadonlyArray<readonly [string, string]> = [
-  ['Catalogue', '/catalogue'],
-  ...(isStudioEnabled() ? ([['Studio', '/studio']] as const) : []),
-  ['Stock', '/stock-24h'],
+  ['Le mobilier', '/catalogue'],
+  ...(isStudioEnabled() ? ([['Le Studio', '/studio']] as const) : []),
   ['Partenaires', '/partenaires'],
   ['Le prix prouvé', '/prix'],
+  ['Près de chez vous', '/lieux'],
+  ['Conteneurs livrés', '/livres'],
+  ['Contact', '/contact'],
 ]
 
 const RESOURCE_LINKS: ReadonlyArray<readonly [string, string]> = [
   // L'accueil ne porte plus de section « Comment ça marche » : le déroulé
   // complet (étapes, contrôles, paiement) vit désormais sur /prix.
   ['Comment ça marche', '/prix#trajet'],
-  ['Containers livrés', '/livres'],
+  // « Stock » quitte la barre principale pour que les sept entrées soient
+  // identiques partout ; la page reste à un clic.
+  ['Stock sous 24 h', '/stock-24h'],
   ['Avis clients', '/avis'],
   ['Qualité & Tests', '/qualite'],
   ['Guides d’achat', '/guides'],
   ['FAQ', '/faq'],
-  ['Contact', '/contact'],
 ]
 
 function ResourcesDropdown() {
@@ -111,13 +118,13 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
 
   return (
     <header className="bg-[color:var(--sand)]/85 sticky top-0 z-40 border-b border-[color:var(--sand-deep)] backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-6">
         {/* Logo — plaque laiton officielle (public/brand/terrassea-logo.svg) */}
         <a href="/#top" className="flex items-center">
           <img
             src="/brand/terrassea-logo.svg"
             alt="Terrassea"
-            className="h-11 w-auto"
+            className="h-10 w-auto"
           />
         </a>
 
@@ -189,7 +196,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             <Button
               size="sm"
               onClick={onReserve}
-              className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+              className="h-9 rounded-sm px-4"
             >
               Réserver
               <ArrowRight className="h-3.5 w-3.5" />
@@ -198,7 +205,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             <Button
               asChild
               size="sm"
-              className="h-9 rounded-sm bg-[color:var(--foreground)] px-4 text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
+              className="h-9 rounded-sm px-4"
             >
               <Link to="/catalogue">
                 Réserver
