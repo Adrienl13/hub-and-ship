@@ -19,8 +19,11 @@ export const config = {
   ],
   parcours: [
     {
-      url: null,
-      name: 'Terrasse de restaurant équipée, service en cours',
+      // Photo Terrassea, prise à la réception d'un container. L'intitulé
+      // décrit ce que la photo montre VRAIMENT — un dépôt, pas la terrasse
+      // d'un client : même règle de preuve que le registre /livres.
+      url: '/home/parcours/assises-depot-container.webp',
+      name: 'Assises du catalogue déballées devant les palettes filmées, à la réception d’un container',
       href: '/catalogue',
     },
     { url: null, name: 'Showroom d’un revendeur', href: '#contact' },
