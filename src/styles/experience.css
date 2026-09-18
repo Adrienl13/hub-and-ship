@@ -27,7 +27,7 @@
   color: var(--pi-ink);
   background: var(--pi-paper);
   min-height: 100vh;
-  font-family: Archivo, Arial, sans-serif;
+  font-family: 'Source Serif 4', Georgia, serif;
 }
 .pi-page :where(button, a, input, select, summary):focus-visible {
   outline: 2px solid var(--pi-blue);
@@ -39,7 +39,9 @@
 .pi-page h1,
 .pi-page h2 {
   font-weight: 600;
-  letter-spacing: -0.055em;
+  /* -0.055em était réglé pour Archivo ; sur un serif les empattements se
+     chevauchent. Même chasse que l'accueil. */
+  letter-spacing: -0.015em;
 }
 .pi-wrap {
   width: min(1400px, 100%);

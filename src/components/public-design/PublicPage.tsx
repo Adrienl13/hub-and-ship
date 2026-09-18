@@ -70,10 +70,6 @@ export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
     : undefined
   return (
     <>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap"
-      />
       <style>{homeStyles + '\n' + styles[kind]}</style>
       <div
         className="public-design"

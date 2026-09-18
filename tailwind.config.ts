@@ -95,23 +95,26 @@ const config: Config = {
         ochre: 'var(--ochre)',
       },
       fontFamily: {
-        display: ['Archivo', 'system-ui', 'sans-serif'],
-        sans: ['Archivo', 'system-ui', 'sans-serif'],
+        // Serif partout, comme l'accueil. `archivo` reste disponible pour un
+        // besoin ponctuel de grotesque (plaques, compteurs).
+        display: ['Source Serif 4', 'Georgia', 'serif'],
+        sans: ['Source Serif 4', 'Georgia', 'serif'],
+        archivo: ['Archivo', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       fontSize: {
         // Typo responsive avec clamp() — section 15.2
         display: [
           'clamp(2rem, 5vw, 3.5rem)',
-          { letterSpacing: '-0.04em', lineHeight: '1.05' },
+          { letterSpacing: '-0.02em', lineHeight: '1.05' },
         ],
         h1: [
           'clamp(1.75rem, 4vw, 2.5rem)',
-          { letterSpacing: '-0.03em', lineHeight: '1.15' },
+          { letterSpacing: '-0.018em', lineHeight: '1.15' },
         ],
         h2: [
           'clamp(1.5rem, 3vw, 2rem)',
-          { letterSpacing: '-0.02em', lineHeight: '1.2' },
+          { letterSpacing: '-0.015em', lineHeight: '1.2' },
         ],
         h3: ['1.25rem', { letterSpacing: '-0.01em', lineHeight: '1.35' }],
         body: ['1rem', { lineHeight: '1.6' }],
