@@ -589,8 +589,15 @@
   animation-play-state: paused !important;
 }
 
-.public-design p > a,
-.public-design figcaption > a {
+/* Cible tactile de 44 px pour un lien AUTONOME (seul dans son paragraphe,
+   typiquement un « Voir tout le mobilier → »). Appliquée à tous les liens,
+   elle gonflait la boîte de ligne des liens placés au fil d'une phrase : sur
+   l'accueil, la carte « 03 / Le projet à vérifier » faisait 64 px de haut
+   contre 40 px pour ses deux voisines, pour un interlignage identique.
+   WCAG 2.5.8 exempte justement les cibles « dans une phrase », dont la
+   taille est contrainte par l'interlignage du texte qui les entoure. */
+.public-design p > a:only-child,
+.public-design figcaption > a:only-child {
   display: inline-flex;
   align-items: center;
   min-height: 44px;

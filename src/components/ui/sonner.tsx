@@ -13,8 +13,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       mobileOffset={{ bottom: 96 }}
       toastOptions={{
         classNames: {
+          // `font-sans` = la police du site (serif) depuis tailwind.config.
+          // Sans elle, sonner impose sa propre pile système et les messages
+          // d'erreur s'affichaient en grotesque au milieu d'une page serif.
           toast:
-            'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
+            'group toast font-sans group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
           description: 'group-[.toast]:text-muted-foreground',
           actionButton:
             'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',

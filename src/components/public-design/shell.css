@@ -5,7 +5,12 @@
   min-height: 50vh;
 }
 .public-design .public-form-slot {
-  font-family: Arial, sans-serif;
+  /* Les formulaires React encastrés (contact, candidature partenaire,
+     relance container) portaient Arial en dur : depuis que tout le site est
+     en serif, ils étaient les seuls blocs de grotesque de la page — et le
+     MÊME bloc de relance apparaissait deux fois, en Arial dans le corps et
+     en serif dans le pied de page, à quelques centaines de pixels d'écart.
+     Ils héritent maintenant de `.public-design`. */
   min-width: 0;
 }
 .public-design .public-form-slot input,
@@ -54,9 +59,8 @@
 .public-design :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-body);
 }
-.public-design .public-form-slot :is(h1, h2, h3, h4) {
-  font-family: Arial, sans-serif;
-}
+/* Les titres à l'intérieur d'un formulaire encastré suivent la même règle
+   que les autres titres de la page — plus d'exception Arial. */
 
 @media (min-width: 761px) {
   .public-design .public-contact-layout {
@@ -102,7 +106,9 @@
   min-height: 44px;
   flex-shrink: 0;
   white-space: nowrap;
-  font:
-    600 13px Arial,
-    sans-serif;
+  /* Pas de sténographie `font:` ici : elle imposait Arial au milieu d'une
+     barre en serif, et 13 px là où les deux autres barres du site sont à
+     14 px. La famille s'hérite. */
+  font-weight: 600;
+  font-size: 14px;
 }
