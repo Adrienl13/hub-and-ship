@@ -58,9 +58,10 @@ Le slug qui contredisait sa référence est corrigé : CC-2025-014 répond
 désormais sur `/livres/cc-2025-014`. Un garde-fou en base refuse tout slug qui
 ne correspond pas à sa référence (migration 51).
 
-Restent deux incohérences de compteurs, à trancher par vous : CC-2025-014
-annonce 270 articles au total mais 287 à l'affichage, et CC-2026-001 affiche
-0 article.
+Restent **trois fiches dont les compteurs se contredisent** (total ≠ affiché),
+à trancher par vous : CC-2025-014 annonce 270 articles au total mais 287 à
+l'affichage, CC-2026-001 en affiche 0, et CC-2025-003 annonce 790 pour 198
+affichés.
 
 ---
 
@@ -170,7 +171,8 @@ les pages déjà partagées : seul un « non » ferme de la base répond 404.
 ## 6. Photos — la relecture vous revient
 
 L'admin (onglet Catalogue) porte maintenant un filtre **Photos** et un badge par
-fiche. **205 fiches sont en file, dont 134 actives.**
+fiche. **Point au 18/09 : 109 fiches restent à relire et 2 à corriger** — vous
+êtes passé de 198 et 7. Le détail ci-dessous décrit l'état initial.
 
 - **À corriger (7)** : TES-015 (fiche technique en chinois affichée sur une
   fiche active), BIS-044 (quatre vues pointent vers des fichiers retirés) et
@@ -230,16 +232,25 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 
 ### Reste
 
-- **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit :
-  ROP-031 et ROP-016 (salons de jardin vendus sous un nom de chaise), BIS-028,
-  BIS-029, BIS-030, BIS-059 (chaises 126 cm vendues sous le nom « banc »). Le
+- **[A]** Renommer les 6 fiches dont le nom ne décrit plus le produit. Le
   prix, lui, est juste — cf. § 3.
+  - **ROP-031** « Chaise de terrasse ATHENES » et **ROP-016** « Table de
+    terrasse SIENA » sont des salons de jardin : catégorie `lounge`, MOQ 10,
+    prix de salon. Mais leur nom, leur poids (5,2 kg et 18 kg) et leurs
+    dimensions (52×60×82 et 160×90×74) sont restés ceux d'une chaise et d'une
+    table. Au MOQ, le devis annonce 12 250 € pour « 10 chaises de 5 kg », et
+    le volume conteneur est faux d'un facteur ~45.
+  - **BIS-028, BIS-029, BIS-030, BIS-059** font 126 cm de large : ce sont des
+    **bancs**, et la catégorie `bench` est donc la bonne. C'est le NOM qui est
+    faux — « Chaise de bistrot ». *(Correction : j'avais écrit l'inverse dans
+    une version précédente de cette checklist.)*
 - **[A]** Compléter les 6 fiches squelettes SKU-321 / 324 / 336 / 368 / 369 /
   521 (dimensions, poids, volume, caractéristiques ; photo pour SKU-321). Elles
   portent 6 des 7 lignes de stock 24 h : **ne pas les désactiver**, cela viderait
   la page stock.
-- **[A]** Saisir les poids réels des assises (votre relevé), et les dimensions /
-  poids / volume de ROP-031 et ROP-016.
+- **[A]** Saisir les données manquantes, relevées en base le 18/09 :
+  **17 fiches actives sans poids**, **10 sans dimensions** (dont les six
+  squelettes ci-dessus, à 0×0×0). Le volume, lui, est renseigné partout.
 - **[A]** Les quatre transporteurs (Geodis, Heppner, Mauffrey, Dachser) portent
   le badge « Partenaire direct ». Confirmer les accords, sinon libeller
   « Transporteur recommandé ».

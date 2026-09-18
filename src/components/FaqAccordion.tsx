@@ -59,15 +59,11 @@ export function FaqAccordion() {
       className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]"
     >
       <div className="mx-auto max-w-3xl px-6 py-20">
-        <div className="mb-10">
-          <div className="label-eyebrow text-[color:var(--ember)]">
-            Questions fréquentes
-          </div>
-          <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
-            Tout ce que vous devez savoir avant de réserver.
-          </h2>
-        </div>
-
+        {/* Pas de titre ici : ce bloc n'est utilisé que par /faq, qui porte
+            déjà « Tout ce qu'il faut savoir avant de réserver. » en h1. Le
+            visiteur lisait donc deux fois la même phrase, dans deux
+            formulations différentes, à deux cents pixels d'écart — et la page
+            présentait deux titres concurrents au même sujet. */}
         <RevealStagger className="space-y-3">
           {FAQ.map((item, i) => {
             const isOpen = open === i
