@@ -5,7 +5,7 @@ import {
   setPublicPricingRules,
 } from '@/lib/pricing/public-rules'
 import {
-  buildVolumeScale,
+  buildVolumeScales,
   nextVolumeStep,
 } from '@/lib/pricing/volume-progress'
 
@@ -80,7 +80,7 @@ describe('échelle de la jauge', () => {
     setPublicPricingRules({ volume_discount_families: GRID })
     // Le défaut signalé : à 50 assises sur un palier à 100, l'ancienne jauge
     // remplissait 50 % de la piste — soit pile sous le libellé « −6 % ».
-    const scale = buildVolumeScale([{ category: 'chair', quantity: 50 }])!
+    const scale = buildVolumeScales([{ category: 'chair', quantity: 50 }])[0]!
     expect(scale.family).toBe('assises')
     expect(scale.unitsLabel).toBe('50 assises')
     // Échelle 0 → 150 (dernier palier) : 50 pièces = un tiers de la piste.
@@ -105,7 +105,7 @@ describe('échelle de la jauge', () => {
 
   it('le remplissage atteint le repère exactement quand le palier tombe', () => {
     setPublicPricingRules({ volume_discount_families: GRID })
-    const scale = buildVolumeScale([{ category: 'chair', quantity: 100 }])!
+    const scale = buildVolumeScales([{ category: 'chair', quantity: 100 }])[0]!
     expect(scale.fill).toBe('66.7%')
     expect(scale.marks[0]).toMatchObject({ left: '66.7%', reached: true })
     expect(scale.marks[1]!.reached).toBe(false)
@@ -113,7 +113,7 @@ describe('échelle de la jauge', () => {
 
   it('sature au dernier palier', () => {
     setPublicPricingRules({ volume_discount_families: GRID })
-    const scale = buildVolumeScale([{ category: 'chair', quantity: 400 }])!
+    const scale = buildVolumeScales([{ category: 'chair', quantity: 400 }])[0]!
     expect(scale.fill).toBe('100%')
     expect(scale.marks.every((m) => m.reached)).toBe(true)
   })
@@ -122,7 +122,7 @@ describe('échelle de la jauge', () => {
     setPublicPricingRules({ volume_discount_families: GRID })
     // Salons : paliers 10 et 20. Dix salons, c'est la moitié du chemin — pas
     // « encore 140 pièces » comme le disait une échelle 50/100/150.
-    const scale = buildVolumeScale([{ category: 'lounge', quantity: 10 }])!
+    const scale = buildVolumeScales([{ category: 'lounge', quantity: 10 }])[0]!
     expect(scale.family).toBe('salons')
     expect(scale.unitsLabel).toBe('10 salons')
     expect(scale.fill).toBe('50%')
@@ -132,9 +132,53 @@ describe('échelle de la jauge', () => {
 
   it('accorde le singulier et rend null sur un panier vide', () => {
     setPublicPricingRules({ volume_discount_families: GRID })
-    expect(buildVolumeScale([{ category: 'lounge', quantity: 1 }])!.unitsLabel).toBe(
+    expect(buildVolumeScales([{ category: 'lounge', quantity: 1 }])[0]!.unitsLabel).toBe(
       '1 salon',
     )
-    expect(buildVolumeScale([])).toBeNull()
+    expect(buildVolumeScales([])).toEqual([])
+  })
+})
+
+describe('panier à plusieurs familles', () => {
+  it('donne une ligne à CHAQUE famille, dans l’ordre du catalogue', () => {
+    setPublicPricingRules({ volume_discount_families: GRID })
+    // Le cas qui piégeait la barre unique : la remise est sur les assises,
+    // mais ce sont les salons qui sont le plus près de leur palier. Une seule
+    // barre aurait montré une piste de salons à zéro sous un bandeau
+    // annonçant une remise acquise.
+    const scales = buildVolumeScales([
+      { category: 'lounge', quantity: 6 },
+      { category: 'chair', quantity: 120 },
+    ])
+    expect(scales.map((s) => s.family)).toEqual(['assises', 'salons'])
+
+    const assises = scales[0]!
+    expect(assises.hasDiscount).toBe(true)
+    expect(assises.unitsLabel).toBe('120 assises')
+    expect(assises.state).toBe('−6 % acquis · encore 30 assises pour −10 %')
+    expect(assises.fill).toBe('80%')
+
+    const salons = scales[1]!
+    expect(salons.hasDiscount).toBe(false)
+    expect(salons.state).toBe('encore 4 salons pour −6 %')
+    expect(salons.fill).toBe('30%')
+  })
+
+  it('n’affiche que les familles réellement au panier', () => {
+    setPublicPricingRules({ volume_discount_families: GRID })
+    const scales = buildVolumeScales([{ category: 'table_top', quantity: 40 }])
+    expect(scales).toHaveLength(1)
+    expect(scales[0]).toMatchObject({
+      family: 'tables',
+      unitsLabel: '40 pièces',
+      state: 'encore 40 pièces pour −5 %',
+    })
+  })
+
+  it('annonce le meilleur tarif quand il n’y a plus de palier à viser', () => {
+    setPublicPricingRules({ volume_discount_families: GRID })
+    const scales = buildVolumeScales([{ category: 'lounge', quantity: 25 }])
+    expect(scales[0]!.state).toBe('meilleur tarif volume : −10 %')
+    expect(scales[0]!.fill).toBe('100%')
   })
 })

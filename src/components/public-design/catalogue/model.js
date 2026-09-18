@@ -5,7 +5,7 @@ import {
   describeFamilyTiersWithLabel,
 } from '../../../lib/pricing/discount-families'
 import {
-  buildVolumeScale,
+  buildVolumeScales,
   nextVolumeStep,
 } from '../../../lib/pricing/volume-progress'
 import {
@@ -184,9 +184,9 @@ export class CatalogueModel {
       quantity: r.qty,
     }))
     const nextStep = nextVolumeStep(familleLignes)
-    // Échelle de la jauge : une seule règle de lecture, de zéro au dernier
-    // palier de la famille montrée. Voir buildVolumeScale().
-    const scale = buildVolumeScale(familleLignes)
+    // Une jauge PAR FAMILLE : les paliers diffèrent d'une famille à l'autre,
+    // une barre unique ne peut pas les décrire toutes. Voir buildVolumeScales().
+    const scales = buildVolumeScales(familleLignes)
     const discountRows = describeVolumeDiscounts(totals)
     const sheetP = s.sheet ? this.products.find((p) => p.ref === s.sheet) : null
     const famOf = (m) =>
@@ -449,8 +449,7 @@ export class CatalogueModel {
       cartPieces: pieces,
       // La jauge suit la famille la plus proche de son palier suivant : c'est
       // le seul conseil actionnable.
-      tierScale: scale,
-      hasTierScale: !!scale,
+      tierScales: scales,
       tierRate:
         discountRows.length === 1
           ? discountRows[0].label.replace('Remise volume ', '')
@@ -462,9 +461,7 @@ export class CatalogueModel {
       // palier, et il ne voulait rien dire pour les tables ni les salons.
       tierLabel:
         discountRows.length === 0
-          ? scale
-            ? scale.familyLabel + ' · tarif de base'
-            : 'Tarif de base'
+          ? 'Tarif de base'
           : discountRows.length === 1
             ? discountRows[0].label + ' appliquée'
             : 'Remises volume appliquées',

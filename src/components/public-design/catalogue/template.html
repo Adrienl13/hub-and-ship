@@ -1495,45 +1495,77 @@
               style="
                 color: color-mix(in srgb, var(--color-text) 60%, transparent);
               "
-              ><span data-bound-text="{{ tierScale.unitsLabel }}"></span
+              ><span data-bound-text="{{ cartPieces }} pièces"></span
             ></span>
           </div>
-          <template data-if="hasTierScale">
-            <div
-              style="
-                position: relative;
-                height: 6px;
-                background: var(--color-neutral-200);
-                margin-top: 8px;
-              "
-            >
+          <template data-list="tierScales" data-as="s">
+            <div style="margin-top: 12px">
               <div
-                style="position:absolute;left:0;top:0;bottom:0;width:{{ tierScale.fill }};background:var(--color-accent-700);transition:width .6s cubic-bezier(.2,.7,.2,1)"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: baseline;
+                  gap: 10px;
+                  font-size: 12px;
+                  line-height: 17px;
+                "
+              >
+                <span
+                  style="font-weight: 600"
+                  data-bound-text="{{ s.familyLabel }}"
+                ></span
+                ><span
+                  style="
+                    color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                  "
+                  data-bound-text="{{ s.unitsLabel }}"
+                ></span>
+              </div>
+              <div
+                style="
+                  position: relative;
+                  height: 6px;
+                  background: var(--color-neutral-200);
+                  margin-top: 6px;
+                "
+              >
+                <div
+                  style="position:absolute;left:0;top:0;bottom:0;width:{{ s.fill }};background:var(--color-accent-700);transition:width .6s cubic-bezier(.2,.7,.2,1)"
+                ></div>
+                <template data-list="s.marks" data-as="m">
+                  <span
+                    style="position:absolute;left:{{ m.left }};top:-3px;width:1px;height:12px;background:{{ m.tone }}"
+                  ></span>
+                </template>
+              </div>
+              <div
+                style="
+                  position: relative;
+                  height: 15px;
+                  margin-top: 5px;
+                  font:
+                    10px ui-monospace,
+                    Menlo,
+                    monospace;
+                  letter-spacing: 0.06em;
+                "
+              >
+                <template data-list="s.marks" data-as="m">
+                  <span
+                    style="position:absolute;left:{{ m.left }};transform:{{ m.shift }};white-space:nowrap;color:{{ m.tone }}"
+                    data-bound-text="{{ m.label }}"
+                  ></span>
+                </template>
+              </div>
+              <div
+                style="
+                  margin-top: 3px;
+                  font-size: 11.5px;
+                  line-height: 16px;
+                  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+                "
+                data-bound-text="{{ s.state }}"
               ></div>
-              <template data-list="tierScale.marks" data-as="m">
-                <span
-                  style="position:absolute;left:{{ m.left }};top:-3px;width:1px;height:12px;background:{{ m.tone }}"
-                ></span>
-              </template>
-            </div>
-            <div
-              style="
-                position: relative;
-                height: 16px;
-                margin-top: 6px;
-                font:
-                  10px ui-monospace,
-                  Menlo,
-                  monospace;
-                letter-spacing: 0.06em;
-              "
-            >
-              <template data-list="tierScale.marks" data-as="m">
-                <span
-                  style="position:absolute;left:{{ m.left }};transform:{{ m.shift }};white-space:nowrap;color:{{ m.tone }}"
-                  data-bound-text="{{ m.label }}"
-                ></span>
-              </template>
             </div>
           </template>
           <p

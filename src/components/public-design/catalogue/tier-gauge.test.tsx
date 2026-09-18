@@ -15,7 +15,7 @@ import {
   resetPublicPricingRules,
   setPublicPricingRules,
 } from '@/lib/pricing/public-rules'
-import { buildVolumeScale } from '@/lib/pricing/volume-progress'
+import { buildVolumeScales } from '@/lib/pricing/volume-progress'
 
 const TEMPLATE = readFileSync(
   'src/components/public-design/catalogue/template.html',
@@ -44,7 +44,7 @@ const GRID = {
 /** Le bloc de la jauge, découpé du gabarit de production. Les `<template>`
  *  sont imbriqués : on compte les ouvertures et les fermetures. */
 function gaugeMarkup(): string {
-  const start = TEMPLATE.indexOf('<template data-if="hasTierScale">')
+  const start = TEMPLATE.indexOf('<template data-list="tierScales" data-as="s">')
   expect(start, 'bloc de jauge introuvable dans le gabarit').toBeGreaterThan(0)
   let depth = 0
   const re = /<\/?template\b/g
@@ -60,8 +60,7 @@ function render(lines: ReadonlyArray<{ category: string; quantity: number }>) {
   const host = document.createElement('div')
   host.innerHTML = gaugeMarkup()
   const update = bind(host)
-  const scale = buildVolumeScale(lines)
-  update({ hasTierScale: !!scale, tierScale: scale })
+  update({ tierScales: buildVolumeScales(lines) })
   const fill = [...host.querySelectorAll('div[style*="width:"]')].find(
     (b) => !(b.getAttribute('style') || '').includes('{{'),
   )
@@ -115,8 +114,51 @@ describe('jauge de remise du tiroir catalogue', () => {
   it('ne rend rien sur un panier vide', () => {
     const host = document.createElement('div')
     host.innerHTML = gaugeMarkup()
-    const update = bind(host)
-    update({ hasTierScale: false, tierScale: null })
-    expect(host.querySelectorAll('span[style*="transform"]')).toHaveLength(0)
+    bind(host)({ tierScales: [] })
+    expect(
+      [...host.querySelectorAll('span[style*="transform"]')].filter(
+        (l) => !(l.getAttribute('style') || '').includes('{{'),
+      ),
+    ).toHaveLength(0)
+  })
+})
+
+describe('panier à plusieurs familles', () => {
+  it('rend une piste par famille, chacune à sa propre échelle', () => {
+    setPublicPricingRules({ volume_discount_families: GRID })
+    const host = document.createElement('div')
+    host.innerHTML = gaugeMarkup()
+    bind(host)({
+      tierScales: buildVolumeScales([
+        { category: 'chair', quantity: 120 },
+        { category: 'lounge', quantity: 6 },
+      ]),
+    })
+    const rendu = (sel: string) =>
+      [...host.querySelectorAll(sel)].filter(
+        (n) => !(n.getAttribute('style') || '').includes('{{'),
+      )
+
+    // Deux pistes, deux remplissages distincts : 120/150 et 6/20.
+    const remplissages = rendu('div[style*="width:"]').map(
+      (d) => (d.getAttribute('style') || '').match(/width:([^;]+)/)?.[1],
+    )
+    expect(remplissages).toEqual(['80%', '30%'])
+
+    // Les paliers des assises et ceux des salons cohabitent sans se mélanger.
+    expect(rendu('span[style*="transform"]').map((n) => n.textContent)).toEqual([
+      '100 · −6 %',
+      '150 · −10 %',
+      '10 · −6 %',
+      '20 · −10 %',
+    ])
+
+    const texte = host.textContent!.replace(/\s+/g, ' ')
+    // Les deux libellés sont deux éléments voisins d'un flex : pas d'espace
+    // entre eux dans le texte brut, ils sont écartés par la mise en page.
+    expect(texte).toContain('Assises120 assises')
+    expect(texte).toContain('−6 % acquis · encore 30 assises pour −10 %')
+    expect(texte).toContain('Salons de jardin6 salons')
+    expect(texte).toContain('encore 4 salons pour −6 %')
   })
 })

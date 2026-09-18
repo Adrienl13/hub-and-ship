@@ -93,67 +93,83 @@ export interface VolumeScale {
   /** Remplissage de la piste, en pourcentage — « 33.3% ». */
   readonly fill: string
   readonly marks: ReadonlyArray<VolumeScaleMark>
+  /** « encore 50 assises pour −6 % », « −6 % acquis · encore 50 pour −10 % ». */
+  readonly state: string
+  readonly hasDiscount: boolean
 }
 
 /**
- * L'échelle de la jauge de remise.
+ * Les échelles de la jauge de remise — UNE PAR FAMILLE présente au panier.
  *
- * Elle existe parce que l'ancienne superposait TROIS repères différents sur
- * une même piste de 6 px : un remplissage mesuré par rapport au palier
- * suivant, des libellés « 50 / 100 · −6 % / 150 · −10 % » répartis à
+ * Une seule barre ne peut pas décrire trois familles aux paliers différents.
+ * Un panier de 120 assises et 6 salons a sa remise sur les assises, mais ce
+ * sont les salons qui sont le plus près de leur palier : afficher la seule
+ * famille « la plus proche » montrerait une piste de salons à zéro sous un
+ * bandeau annonçant une remise acquise. Chaque famille a donc sa ligne, avec
+ * ses pièces, ses paliers et son état.
+ *
+ * Sur chaque ligne, UNE seule échelle : de zéro au dernier palier de la
+ * famille. L'ancienne superposait trois repères sur une piste de 6 px — un
+ * remplissage mesuré par rapport au palier suivant, des libellés répartis à
  * intervalles réguliers quelles que soient les vraies valeurs, et un trait
- * figé à 66,6 %. À 50 assises, le remplissage atteignait 50 % de la piste,
- * c'est-à-dire pile sous le libellé « −6 % » — l'acheteur croyait avoir la
- * remise alors qu'il lui manquait la moitié du chemin.
+ * figé à 66,6 %. À 50 assises, la piste atteignait le libellé « −6 % » :
+ * l'acheteur croyait avoir la remise alors qu'il lui manquait la moitié du
+ * chemin.
  *
- * Ici, UNE seule échelle : de zéro au dernier palier de la famille. Le
- * remplissage et les paliers s'y lisent avec la même règle, donc la barre
- * n'atteint un palier que lorsqu'il est réellement atteint.
+ * L'ordre est celui du catalogue, pas celui de la proximité : une liste qui
+ * se réordonne à chaque ajout au panier se lit mal.
  */
-export function buildVolumeScale(
+export function buildVolumeScales(
   lines: ReadonlyArray<{ readonly category: string; readonly quantity: number }>,
-): VolumeScale | null {
+): VolumeScale[] {
   const units = countUnitsByFamily(lines)
-  const present = DISCOUNT_FAMILIES.filter((family) => units[family] > 0)
-  if (present.length === 0) return null
 
-  // La famille montrée est celle sur laquelle l'acheteur a le plus de prise :
-  // la plus proche de son palier suivant. Quand tout est déjà acquis, celle
-  // qui pèse le plus de pièces.
-  const step = nextVolumeStep(lines)
-  const family =
-    step?.family ??
-    present.reduce((best, f) => (units[f] > units[best] ? f : best), present[0]!)
+  return DISCOUNT_FAMILIES.filter((family) => units[family] > 0).flatMap(
+    (family) => {
+      const tiers = getFamilyDiscountTiers(family)
+      const last = tiers[tiers.length - 1]
+      if (!last || last.minUnits <= 0) return []
 
-  const tiers = getFamilyDiscountTiers(family)
-  const last = tiers[tiers.length - 1]
-  if (!last || last.minUnits <= 0) return null
+      const count = units[family]
+      const word = DISCOUNT_FAMILY_UNIT[family]
+      const plural = (n: number) => `${n} ${word}${n > 1 ? 's' : ''}`
+      const pct = (value: number) =>
+        `${Math.round(Math.min(100, Math.max(0, (value / last.minUnits) * 100)) * 10) / 10}%`
 
-  const count = units[family]
-  const unitWord = DISCOUNT_FAMILY_UNIT[family]
-  const pct = (value: number) =>
-    `${Math.round(Math.min(100, Math.max(0, (value / last.minUnits) * 100)) * 10) / 10}%`
+      const status = getCustomerDiscountStatus(count, tiers)
+      const acquis = status.discountPercent
+      const state = status.nextTier
+        ? acquis > 0
+          ? `−${acquis} % acquis · encore ${plural(status.nextGapUnits)} pour −${status.nextTier.discountPercent} %`
+          : `encore ${plural(status.nextGapUnits)} pour −${status.nextTier.discountPercent} %`
+        : `meilleur tarif volume : −${acquis} %`
 
-  return {
-    family,
-    familyLabel: DISCOUNT_FAMILY_LABEL[family],
-    units: count,
-    unitsLabel: `${count} ${unitWord}${count > 1 ? 's' : ''}`,
-    fill: pct(count),
-    marks: tiers.map((tier, index) => ({
-      left: pct(tier.minUnits),
-      // Le dernier palier est au bout de la piste : son libellé se cale sur
-      // la droite, sinon il déborde du cadre.
-      shift:
-        index === tiers.length - 1
-          ? 'translateX(-100%)'
-          : 'translateX(-50%)',
-      label: `${tier.minUnits} · −${tier.discountPercent} %`,
-      reached: count >= tier.minUnits,
-      tone:
-        count >= tier.minUnits
-          ? 'var(--color-accent-700)'
-          : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
-    })),
-  }
+      return [
+        {
+          family,
+          familyLabel: DISCOUNT_FAMILY_LABEL[family],
+          units: count,
+          unitsLabel: plural(count),
+          fill: pct(count),
+          state,
+          hasDiscount: acquis > 0,
+          marks: tiers.map((tier, index) => ({
+            left: pct(tier.minUnits),
+            // Le dernier palier est au bout de la piste : son libellé se cale
+            // sur la droite, sinon il déborde du cadre.
+            shift:
+              index === tiers.length - 1
+                ? 'translateX(-100%)'
+                : 'translateX(-50%)',
+            label: `${tier.minUnits} · −${tier.discountPercent} %`,
+            reached: count >= tier.minUnits,
+            tone:
+              count >= tier.minUnits
+                ? 'var(--color-accent-700)'
+                : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+          })),
+        },
+      ]
+    },
+  )
 }
