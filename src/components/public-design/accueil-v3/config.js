@@ -26,7 +26,14 @@ export const config = {
       name: 'Assises du catalogue déballées devant les palettes filmées, à la réception d’un container',
       href: '/catalogue',
     },
-    { url: null, name: 'Showroom d’un revendeur', href: '#contact' },
+    {
+      // Photo Terrassea. L'intitulé dit « en showroom » sans nommer de
+      // revendeur : ce serait affirmer une chose que la photo ne prouve pas.
+      // L'écriteau du local a été retiré au recadrage.
+      url: '/home/parcours/collection-showroom.webp',
+      name: 'La collection de chaises bistrot alignée en showroom',
+      href: '#contact',
+    },
   ],
   // Références du catalogue : photo, nom et lien de la fiche sont résolus au
   // chargement (liveBandCards). ROP-001 (salon cordage CANNES) remplace
