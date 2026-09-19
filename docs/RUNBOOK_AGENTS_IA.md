@@ -95,3 +95,42 @@ Côté Adrien (les VRAIS leviers, dans l'ordre) :
 5. **Patience mesurée** — le Mode IA recompose ses sources sur plusieurs
    semaines ; suivre dans Plausible les referrers google.com/search (AI) et
    re-tester les requêtes de référence chaque semaine.
+
+## IndexNow — signaler les changements à Bing (posé le 19/09/2026)
+
+Bing réindexe en heures au lieu de semaines quand on lui signale l'URL.
+Google n'utilise pas IndexNow, mais Bing alimente Copilot et une partie des
+IA qui citent des sources : c'est un gain net de ce côté-là.
+
+- **Clé** : `public/dad4d7620f7ce9f465ba22a0f9a13421.txt`, servie à la racine.
+  Elle n'est **pas** un secret — le protocole EXIGE qu'elle soit publique
+  pour prouver qu'on contrôle le domaine. Ne pas la supprimer : sans elle,
+  Bing rejette toutes les soumissions. Un test vérifie que le fichier existe
+  et contient exactement la clé.
+- **Endpoint** : `POST /api/cron/indexnow`, protégé par `CRON_SECRET`
+  (en-tête `x-cron-secret`), comme `/api/cron/payment-reminders`. C'est ce
+  garde qui compte : sans lui, n'importe qui ferait soumettre 10 000 URLs en
+  boucle et nous ferait limiter par Bing.
+
+Deux usages :
+
+```bash
+# Passage complet : pages clés + toutes les fiches publiques.
+curl -X POST https://prosimport.com/api/cron/indexnow \
+  -H "x-cron-secret: $CRON_SECRET"
+
+# Après avoir corrigé UNE fiche — réindexée dans l'heure.
+curl -X POST https://prosimport.com/api/cron/indexnow \
+  -H "x-cron-secret: $CRON_SECRET" -H "content-type: application/json" \
+  -d '{"urls":["/catalogue/p/chaise-de-bistrot-vavin-sku-414"]}'
+```
+
+À brancher sur le même scheduler que les relances (`RUNBOOK_RELANCES.md`),
+une fois par jour suffit pour le passage complet.
+
+Réponses : `{ok:true, submitted:N, status:200|202}` — 202 signifie « clé en
+cours de validation », c'est un succès. `503` = catalogue indisponible, on
+ne soumet rien plutôt que de laisser croire que le passage a eu lieu.
+
+**Non fait** : la vérification Bing Webmaster Tools (balise `msvalidate.01`).
+Créer la propriété sur bing.com/webmasters, puis me donner le code.
