@@ -71,7 +71,7 @@ export const config = {
     {
       name: 'Madeleine',
       before: '/home/comparisons/madeleine-noir-blanc.webp',
-      after: '/home/comparisons/madeleine-bordeaux.webp',
+      after: '/home/comparisons/madeleine-vert.webp',
       href: '/catalogue/#produit-BIS-012',
     },
   ],

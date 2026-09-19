@@ -437,7 +437,7 @@ export class Accueil {
       before: null,
       after: null,
       beforeLabel: 'Noir / blanc',
-      afterLabel: 'Bordeaux / crème',
+      afterLabel: 'Vert / blanc / noir',
     },
   ]
   initTiles() {
