@@ -1,5 +1,45 @@
 // This adapter never borrows another product's photo or a price from the mockup.
-import { productShortName } from '@/lib/products'
+import {
+  formatProductDimensions,
+  parseComposition,
+  productShortName,
+} from '@/lib/products'
+
+/**
+ * Cotes et poids du tiroir catalogue.
+ *
+ * `formatProductDimensions` est LA même fonction que la fiche produit, le
+ * panier et les devis : elle rend « Ensemble 4 pièces » sur un salon, « Ø 80
+ * × H 75 cm » sur un plateau rond, et '' tant que rien n'est saisi. Deux
+ * implémentations finiraient par diverger, et le tiroir annoncerait des
+ * cotes que la fiche dément.
+ *
+ * '' devient « À préciser » plutôt que de disparaître : une ligne vide se
+ * lirait comme un oubli d'affichage, alors que c'est une fiche à compléter.
+ */
+const À_PRÉCISER = 'À préciser'
+
+function dimensionsLabel(p) {
+  return (
+    formatProductDimensions({
+      dimensions: {
+        l: Number(p.dim_length_cm) || 0,
+        w: Number(p.dim_width_cm) || 0,
+        h: Number(p.dim_height_cm) || 0,
+      },
+      tableShape: p.table_shape ?? null,
+      composition: parseComposition(p.composition),
+    }) || À_PRÉCISER
+  )
+}
+
+function weightLabel(p) {
+  const kg = Number(p.weight_kg)
+  // 0 kg n'est pas un poids : c'est une fiche que personne n'a encore pesée.
+  return Number.isFinite(kg) && kg > 0
+    ? `${kg.toFixed(kg % 1 === 0 ? 0 : 1)} kg`
+    : À_PRÉCISER
+}
 
 const categories = {
   chair: 'Chaise',
@@ -64,11 +104,16 @@ export function adaptCatalogue(data) {
         category: p.category,
         kind: kinds[p.category],
         material: family || 'Famille à préciser',
-        usage: features.find((f) => /^usage\b/i.test(f)) || 'À préciser',
+        // « Usage » et « Empilable » ont été retirés du tiroir : ils
+        // répétaient « À préciser » sur presque tout le catalogue, faute
+        // d'une caractéristique nommée ainsi. Les cotes et le poids, eux,
+        // sont ce que l'acheteur vérifie avant de commander cinquante
+        // pièces — passe-t-elle entre deux tables, que pèse la palette.
+        dimensions: dimensionsLabel(p),
+        weight: weightLabel(p),
         frame:
           features.find((f) => /^structure\b/i.test(f)) ||
           'Structure à préciser',
-        stack: features.find((f) => /empilable/i.test(f)) || 'À préciser',
         price: prices.get(p.id) ?? money(p.base_price_ht),
         moq:
           Number.isInteger(p.moq_units) && p.moq_units > 0 ? p.moq_units : null,

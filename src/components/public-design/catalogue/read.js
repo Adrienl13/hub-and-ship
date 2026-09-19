@@ -3,7 +3,7 @@ import { getSupabasePublicConfig } from '@/lib/supabase/env'
 // Fixed, anonymous, read-only queries. No service role or user session is used.
 const tables = {
   products:
-    'products_public?select=id,sku,name,category,base_price_ht,moq_units,main_image_url,gallery_urls,features,visibility,sort_order&is_active=eq.true&order=sort_order.asc,id.asc',
+    'products_public?select=id,sku,name,category,base_price_ht,moq_units,main_image_url,gallery_urls,features,visibility,sort_order,dim_length_cm,dim_width_cm,dim_height_cm,weight_kg,table_shape,composition&is_active=eq.true&order=sort_order.asc,id.asc',
   variants:
     'product_variants?select=id,product_id,name,image_url,gallery_urls,min_order_units,sort_order&order=sort_order.asc,id.asc',
   stock:
