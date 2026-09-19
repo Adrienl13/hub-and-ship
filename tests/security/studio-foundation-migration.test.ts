@@ -75,7 +75,11 @@ function viewBody(view: string): string {
  */
 function latestStudioProductsDefinition(): string {
   const dir = join(process.cwd(), 'supabase', 'migrations')
-  const pattern = /create\s+or\s+replace\s+view\s+public\.studio_products\b/i
+  // `create view` autant que `create or replace view` : ce dernier ne sait
+  // qu'ajouter des colonnes à la toute FIN d'une vue, donc toute migration
+  // qui insère une colonne produit avant les colonnes de profil doit passer
+  // par un drop + create (migration 53).
+  const pattern = /create\s+(?:or\s+replace\s+)?view\s+public\.studio_products\b/i
   let latest: string | null = null
   for (const file of readdirSync(dir).sort()) {
     if (!file.endsWith('.sql')) continue

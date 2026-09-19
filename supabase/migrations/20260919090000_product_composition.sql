@@ -114,11 +114,22 @@ from public.products;
 grant select on public.products_public to anon, authenticated;
 
 -- `studio_products` relaie les colonnes publiques de products au Studio. Elle
--- lit la VUE des profils, jamais la table interne (lot 1). La composition est
--- ajoutée EN FIN de liste : `create or replace view` refuse de déplacer une
--- colonne existante, l'insérer entre `table_shape` et `compatible_top_shapes`
--- obligerait à dropper la vue et tout ce qui en dépend.
-create or replace view public.studio_products
+-- lit la VUE des profils, jamais la table interne (lot 1).
+--
+-- DROP puis CREATE, et non `create or replace` : celui-ci ne sait qu'AJOUTER
+-- des colonnes à la toute fin de la vue. Or `composition` doit rester parmi
+-- les colonnes produit, avant les six colonnes de profil (studio_role,
+-- seat_kind…) — sans quoi l'ordre ne correspond plus à
+-- PUBLIC_PRODUCT_COLUMNS ++ STUDIO_PROFILE_COLUMNS, la parité que vérifient
+-- tests/security/studio-foundation-migration et `bun run security:studio`.
+-- Postgres refuse d'ailleurs le remplacement, en le lisant comme un
+-- renommage de `studio_role` en `composition`.
+--
+-- Sans danger : aucune vue, aucune fonction ne dépend de studio_products
+-- (vérifié sur pg_depend et pg_proc avant application). Les grants sont
+-- reposés juste après, dans la même transaction.
+drop view if exists public.studio_products;
+create view public.studio_products
 with (security_invoker = true) as
 select
   p.id, p.sku, p.category, p.name, p.description,
