@@ -12,8 +12,10 @@ type Fiche = Parameters<typeof productGaps>[0]
 const COMPLETE: Fiche = {
   category: 'chair',
   composition: null,
+  description: 'Chaise de bistrot TERNES pour restaurant, café et terrasse CHR.',
   dimensions: { l: 47, w: 59, h: 85 },
   mainImageUrl: '/catalogue/bistro/BIS-067-01.webp',
+  name: 'Chaise de bistrot TERNES - tressage vert sauge / olive',
   tableShape: null,
   weightKg: 5.4,
 }
@@ -91,12 +93,14 @@ describe('manques d’une fiche produit', () => {
       productGaps({
         category: 'lounge',
         composition: null,
+        description: '',
         dimensions: { l: 0, w: 0, h: 0 },
         mainImageUrl: '',
+        name: 'A faire',
         tableShape: null,
         weightKg: 0,
       }),
-    ).toEqual(['photo', 'dimensions', 'weight', 'composition'])
+    ).toEqual(['name', 'photo', 'dimensions', 'weight', 'composition'])
   })
 })
 
@@ -161,5 +165,31 @@ describe('compteurs des puces « À compléter »', () => {
     // Une fiche complète ne doit apparaître sous aucune puce de manque.
     expect(matchesGapFilter([], 'any')).toBe(false)
     expect(matchesGapFilter([], 'all')).toBe(true)
+  })
+})
+
+describe('fiche restée au nom provisoire', () => {
+  const base = { ...COMPLETE }
+
+  it('relève « A faire », avec ou sans accent', () => {
+    // Trois lots de fiches sont nées ainsi. Au 19/09, QUATRE d'entre elles
+    // étaient actives et publiques sous ce nom, description vide.
+    expect(productGaps({ ...base, name: 'A faire' })).toContain('name')
+    expect(productGaps({ ...base, name: 'À faire' })).toContain('name')
+    expect(productGaps({ ...base, name: '  a faire  ' })).toContain('name')
+  })
+
+  it('relève une description vide, même sous un vrai nom', () => {
+    expect(productGaps({ ...base, description: '   ' })).toEqual(['name'])
+  })
+
+  it('ne confond pas un vrai nom contenant le mot', () => {
+    // « Chaise SAVOIR-FAIRE » n'est pas un nom provisoire : la comparaison
+    // porte sur le nom ENTIER, pas sur une sous-chaîne.
+    expect(productGaps({ ...base, name: 'Chaise de bistrot SAVOIR-FAIRE' })).toEqual([])
+  })
+
+  it('relève un nom vide', () => {
+    expect(productGaps({ ...base, name: '' })).toContain('name')
   })
 })

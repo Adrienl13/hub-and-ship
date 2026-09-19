@@ -19,9 +19,15 @@
 
 import type { AdminProduct } from './types'
 
-export type ProductGap = 'photo' | 'dimensions' | 'weight' | 'composition'
+export type ProductGap =
+  | 'name'
+  | 'photo'
+  | 'dimensions'
+  | 'weight'
+  | 'composition'
 
 export const PRODUCT_GAP_LABEL: Record<ProductGap, string> = {
+  name: 'Fiche à rédiger',
   photo: 'Photo',
   dimensions: 'Dimensions',
   weight: 'Poids',
@@ -30,15 +36,44 @@ export const PRODUCT_GAP_LABEL: Record<ProductGap, string> = {
 
 /** Ce que l'admin lit sur la ligne : « Manque : poids, dimensions ». */
 export const PRODUCT_GAP_SHORT: Record<ProductGap, string> = {
+  name: 'nom et description',
   photo: 'photo',
   dimensions: 'dimensions',
   weight: 'poids',
   composition: 'composition',
 }
 
+/**
+ * Noms provisoires posés à la création d'une fiche, en attendant sa rédaction.
+ *
+ * Trois lots de fiches sont nées ainsi (migrations 33 et 41, puis celles
+ * relevées le 19/09) et le nom provisoire est resté en ligne : quatre fiches
+ * ACTIVES et publiques s'appelaient « A faire », description vide, visibles
+ * au catalogue. Rien ne le signalait — il fallait tomber dessus.
+ */
+/** Comparés sans accents : « À faire » et « A faire » sont le même nom. */
+const PLACEHOLDER_NAMES = ['a faire', 'todo', 'tbd', 'sans nom', 'nouveau produit']
+
+function isPlaceholderName(name: string): boolean {
+  const clean = name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .toLowerCase()
+  if (!clean) return true
+  return PLACEHOLDER_NAMES.includes(clean)
+}
+
 type Completable = Pick<
   AdminProduct,
-  'category' | 'composition' | 'dimensions' | 'mainImageUrl' | 'tableShape' | 'weightKg'
+  | 'category'
+  | 'composition'
+  | 'description'
+  | 'dimensions'
+  | 'mainImageUrl'
+  | 'name'
+  | 'tableShape'
+  | 'weightKg'
 >
 
 /**
@@ -49,6 +84,13 @@ type Completable = Pick<
  */
 export function productGaps(product: Completable): ReadonlyArray<ProductGap> {
   const gaps: ProductGap[] = []
+
+  // Une fiche encore au nom provisoire, ou sans description, n'est pas
+  // « incomplète » au sens d'une cote manquante : elle n'est pas rédigée.
+  // C'est le premier manque affiché parce que c'est celui que le client voit.
+  if (isPlaceholderName(product.name) || !product.description.trim()) {
+    gaps.push('name')
+  }
 
   if (!product.mainImageUrl.trim()) gaps.push('photo')
 
@@ -77,8 +119,9 @@ export function isProductComplete(product: Completable): boolean {
   return productGaps(product).length === 0
 }
 
-/** Les quatre manques, dans l'ordre d'affichage des puces de filtre. */
+/** Les cinq manques, dans l'ordre d'affichage des puces de filtre. */
 export const PRODUCT_GAPS: ReadonlyArray<ProductGap> = [
+  'name',
   'photo',
   'dimensions',
   'weight',
@@ -107,6 +150,7 @@ export function tallyGaps(
 ): GapTally {
   const byProduct = new Map<string, ReadonlyArray<ProductGap>>()
   const counts: Record<GapFilter, number> = {
+    name: 0,
     all: rows.length,
     any: 0,
     photo: 0,
