@@ -1,5 +1,9 @@
 import { isStudioEnabled } from '@/lib/studio/flags'
 import { studioEntryMarkup } from './studio-entry'
+import {
+  withCatalogueIndex,
+  type CatalogueIndexItem,
+} from './catalogue-index'
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Footer } from '@/components/Footer'
@@ -28,7 +32,15 @@ const styles = {
   livres: livresStyles,
 }
 export type PublicPageKind = keyof typeof pages
-export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
+export function PublicPage({
+  kind,
+  catalogueIndex,
+}: {
+  readonly kind: PublicPageKind
+  /** Liste rendue dans le HTML initial pour les robots (voir
+   *  catalogue-index.ts). Absente = comportement d'avant, inchangé. */
+  readonly catalogueIndex?: ReadonlyArray<CatalogueIndexItem>
+}) {
   const root = useRef<HTMLDivElement>(null)
   const [slots, setSlots] = useState<HTMLElement[]>([])
   const [partnerPrefill, setPartnerPrefill] = useState<PartnerPrefill>({
@@ -38,8 +50,13 @@ export function PublicPage({ kind }: { readonly kind: PublicPageKind }) {
   })
   const [selection, setSelection] = useState<ProjectSelection>()
   const markup = useMemo(
-    () => ({ __html: studioEntryMarkup(pages[kind], isStudioEnabled()) }),
-    [kind],
+    () => ({
+      __html: withCatalogueIndex(
+        studioEntryMarkup(pages[kind], isStudioEnabled()),
+        catalogueIndex ?? [],
+      ),
+    }),
+    [catalogueIndex, kind],
   )
   useEffect(() => {
     let cancelled = false

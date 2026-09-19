@@ -9,6 +9,12 @@ import { PartnersPage } from './partenaires/app.js'
 import { RegistryPage } from './livres/app.js'
 
 export function startPage(kind, root, onSelection, onPartner) {
+  // L'index rendu côté serveur a fait son office : les robots et les
+  // visiteurs sans JavaScript l'ont lu. La vraie grille prend le relais, et
+  // le binder INSÈRE ses cartes sans effacer ce qui précède — laisser
+  // l'index donnerait deux listes l'une sous l'autre.
+  root.querySelector('#catalogue-ssr-index')?.remove()
+
   const page =
     kind === 'home'
       ? new Page(root)

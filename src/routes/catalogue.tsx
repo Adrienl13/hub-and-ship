@@ -41,8 +41,10 @@ import { openQuotePDF } from '@/lib/quote'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { useSharedCartSelection } from '@/hooks/useSharedCartSelection'
 import { AnalyticsEvent, track } from '@/lib/analytics'
-import type { Product } from '@/lib/products'
+import { isPubliclyListed, type Product } from '@/lib/products'
+import { productPath } from '@/lib/catalogue/product-slug'
 import { loadLiveCatalogProducts } from '@/lib/catalogue/server-catalog'
+import type { CatalogueIndexItem } from '@/components/public-design/catalogue-index'
 import {
   COLLECTIONS,
   countByCollection,
@@ -83,10 +85,25 @@ export const Route = createFileRoute('/catalogue')({
   // requête à chaque navigation.
   loader: async () => {
     if (typeof window !== 'undefined') {
-      return { products: [] as ReadonlyArray<Product> }
+      return {
+        products: [] as ReadonlyArray<Product>,
+        index: [] as ReadonlyArray<CatalogueIndexItem>,
+      }
     }
     const products = await loadLiveCatalogProducts()
-    return { products: (products ?? []).slice(0, 24) }
+    const listed = (products ?? []).filter(isPubliclyListed)
+    return {
+      // 24 pour le JSON-LD ItemList, comme avant.
+      products: (products ?? []).slice(0, 24),
+      // TOUTES les fiches pour l'index lisible par les robots : c'est le
+      // seul maillage interne vers elles, le sitemap mis à part.
+      index: listed.map((product) => ({
+        name: product.name,
+        path: productPath(product),
+        price:
+          product.basePriceHt > 0 ? `${formatEUR(product.basePriceHt)} HT` : '',
+      })),
+    }
   },
   head: ({ loaderData }) => {
     const products = loaderData?.products ?? []
@@ -147,7 +164,12 @@ const GRID_PAGE_SIZE = 36
 
 function CataloguePage() {
   const { panier } = Route.useSearch()
-  return panier ? <LegacyCataloguePage /> : <PublicPage kind="catalogue" />
+  const { index } = Route.useLoaderData()
+  return panier ? (
+    <LegacyCataloguePage />
+  ) : (
+    <PublicPage kind="catalogue" catalogueIndex={index} />
+  )
 }
 
 function LegacyCataloguePage() {

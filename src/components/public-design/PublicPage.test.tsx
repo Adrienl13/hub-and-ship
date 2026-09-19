@@ -48,3 +48,56 @@ describe('Public pages integration', () => {
     expect(await screen.findByText('Candidature réelle')).toBeInTheDocument()
   })
 })
+
+describe('index catalogue rendu côté serveur', () => {
+  const ITEMS = [
+    {
+      name: 'Chaise de bistrot RIVOLI - chevron blanc / gris',
+      path: '/catalogue/p/chaise-de-bistrot-rivoli-bis-001',
+      price: '80,00 € HT',
+    },
+    {
+      name: 'Tabouret de bistrot PIGALLE - tressage rose / crème',
+      path: '/catalogue/p/tabouret-de-bistrot-pigalle-sku-896',
+      price: '82,27 € HT',
+    },
+  ]
+
+  it('place un lien par fiche dans le balisage de la page', () => {
+    // Sans lui, un robot qui n'exécute pas JavaScript ne lit que
+    // « Chargement du catalogue… » : aucun produit, aucun lien interne.
+    const { container } = render(
+      <PublicPage kind="catalogue" catalogueIndex={ITEMS} />,
+    )
+    const index = container.querySelector('#catalogue-ssr-index')
+    expect(index).not.toBeNull()
+    const links = index!.querySelectorAll('a')
+    expect(links).toHaveLength(2)
+    expect(links[0]).toHaveAttribute(
+      'href',
+      '/catalogue/p/chaise-de-bistrot-rivoli-bis-001',
+    )
+    expect(index!.textContent).toContain('Chaise de bistrot RIVOLI')
+    expect(index!.textContent).toContain('82,27 € HT')
+  })
+
+  it('ne change rien quand la liste est absente ou vide', () => {
+    // Base injoignable : mieux vaut pas d'index qu'un « Tous nos modèles »
+    // sans modèle, que les robots liraient comme un catalogue vide.
+    for (const props of [{}, { catalogueIndex: [] }]) {
+      const { container, unmount } = render(
+        <PublicPage kind="catalogue" {...props} />,
+      )
+      expect(container.querySelector('#catalogue-ssr-index')).toBeNull()
+      expect(container.innerHTML).not.toContain('catalogue-ssr-index')
+      unmount()
+    }
+  })
+
+  it('n’ajoute rien aux autres pages', () => {
+    const { container } = render(
+      <PublicPage kind="home" catalogueIndex={ITEMS} />,
+    )
+    expect(container.querySelector('#catalogue-ssr-index')).toBeNull()
+  })
+})

@@ -334,6 +334,10 @@
   <p id="catalogue-status" class="wrap" role="status">
     Chargement du catalogue…
   </p>
+  <!-- Index rendu côté serveur pour les robots et les visiteurs sans
+       JavaScript ; retiré par startPage() dès que la grille prend la main.
+       Voir src/components/public-design/catalogue-index.ts. -->
+  <!--catalogue-ssr-index-->
   <section
     data-screen-label="Catalogue"
     class="wrap"
