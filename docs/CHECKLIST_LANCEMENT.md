@@ -251,6 +251,37 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 - **[A]** Saisir les données manquantes, relevées en base le 18/09 :
   **17 fiches actives sans poids**, **10 sans dimensions** (dont les six
   squelettes ci-dessus, à 0×0×0). Le volume, lui, est renseigné partout.
+  Références exactes (relevé du 19/09) :
+
+  | Réf. | Catégorie | Manque |
+  |---|---|---|
+  | BIS-061 Fauteuil MONTMARTRE | armchair | poids + dimensions |
+  | BIS-062 Fauteuil PATMOS | armchair | poids |
+  | BIS-064 Banquette MONTORGUEIL | bench | poids |
+  | BIS-067 Chaise TERNES | chair | poids |
+  | BIS-068 Fauteuil TROCADERO | armchair | poids |
+  | ROP-049 COLLIOURE | armchair | poids + dimensions |
+  | ROP-050 Chaise BONIFACIO | chair | poids + dimensions |
+  | ROP-051 Fauteuil PORQUEROLLES | armchair | poids + dimensions |
+  | SKU-321 Chaise Chevron | chair | poids + dimensions *(squelette)* |
+  | SKU-324 Chaise ELOP | chair | poids + dimensions *(squelette)* |
+  | SKU-336 Chaise DAMIER | armchair | poids + dimensions *(squelette)* |
+  | SKU-368 Chaise MER | chair | poids + dimensions *(squelette)* |
+  | SKU-369 Chaise LOG | chair | poids + dimensions *(squelette)* |
+  | SKU-521 Chaise Basse | chair | poids + dimensions *(squelette)* |
+  | TBA-008 Piètement VENTOUX | table_base | poids |
+  | TBA-009 Piètement GARRIGUE | table_base | poids |
+  | TBA-011 Piètement VERCORS | table_base | poids |
+
+  Les 10 sans dimensions = les 6 squelettes + BIS-061, ROP-049, ROP-050 et
+  ROP-051, qui sont eux des fiches nommées et photographiées.
+- **[A]** Saisir la **composition** des 13 salons (champ « Composition de
+  l'ensemble », sous les cotes, dans la fiche admin). Les 15 fiches `lounge`
+  portent toutes 180 × 78 × 78 — les cotes du CANAPÉ seul, jamais celles de
+  l'ensemble photographié. Une fois la composition saisie, la fiche annonce
+  « Ensemble N pièces » et détaille chaque meuble. Concernées : ROP-001, 011,
+  012, 014, 015, 017, 018, 019, SKU-501, 505, 508, 511, 529. *(ROP-031 et
+  ROP-016 ne sont pas des salons : voir le point de renommage ci-dessus.)*
 - **[A]** Les quatre transporteurs (Geodis, Heppner, Mauffrey, Dachser) portent
   le badge « Partenaire direct ». Confirmer les accords, sinon libeller
   « Transporteur recommandé ».
