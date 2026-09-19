@@ -70,6 +70,14 @@ import {
   scoreProductMatch,
   sortByRelevance,
 } from '@/lib/catalogue-admin/search'
+import {
+  PRODUCT_GAP_LABEL,
+  PRODUCT_GAP_SHORT,
+  PRODUCT_GAPS,
+  matchesGapFilter,
+  tallyGaps,
+  type GapFilter,
+} from '@/lib/catalogue-admin/completeness'
 import type {
   AdminContainerOption,
   AdminPricingParameters,
@@ -101,6 +109,8 @@ type AdminCollectionFilter =
 type AdminStatusFilter = 'all' | 'active' | 'inactive'
 /** Relecture des photos : voir `product_media_reviews` (migration 44). */
 type AdminMediaFilter = 'all' | MediaReviewStatus
+/** Complétude : 'any' = au moins un manque ; sinon un manque précis. */
+type AdminGapFilter = GapFilter
 
 const CATEGORY_FILTERS: ReadonlyArray<{
   readonly id: AdminCategoryFilter
@@ -142,6 +152,15 @@ const MEDIA_FILTERS: ReadonlyArray<{
   { id: 'fix', label: 'À corriger' },
   { id: 'pending', label: 'À relire' },
   { id: 'ok', label: 'Validées' },
+]
+
+const GAP_FILTERS: ReadonlyArray<{
+  readonly id: AdminGapFilter
+  readonly label: string
+}> = [
+  { id: 'all', label: 'Toutes fiches' },
+  { id: 'any', label: 'Incomplètes' },
+  ...PRODUCT_GAPS.map((id) => ({ id, label: PRODUCT_GAP_LABEL[id] })),
 ]
 
 const MEDIA_BADGE: Record<
@@ -1155,6 +1174,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     useState<AdminCollectionFilter>('all')
   const [statusFilter, setStatusFilter] = useState<AdminStatusFilter>('all')
   const [mediaFilter, setMediaFilter] = useState<AdminMediaFilter>('all')
+  const [gapFilter, setGapFilter] = useState<AdminGapFilter>('all')
   const [search, setSearch] = useState('')
   const [mediaReviews, setMediaReviews] = useState<
     ReadonlyMap<string, MediaReview>
@@ -1215,6 +1235,13 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
     return counts
   }, [mediaReviews, rows])
 
+  // Un seul parcours du catalogue pour les quatre compteurs et pour
+  // l'étiquette de chaque ligne.
+  const { byProduct: gapsByProduct, counts: gapCounts } = useMemo(
+    () => tallyGaps(rows),
+    [rows],
+  )
+
   const filteredRows = useMemo(() => {
     const query = search.trim()
     const scores = new Map<string, number>()
@@ -1230,7 +1257,17 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       const mediaMatch =
         mediaFilter === 'all' ||
         mediaReviews.get(row.id)?.status === mediaFilter
-      if (!categoryMatch || !collectionMatch || !statusMatch || !mediaMatch) {
+      const gapMatch = matchesGapFilter(
+        gapsByProduct.get(row.id) ?? [],
+        gapFilter,
+      )
+      if (
+        !categoryMatch ||
+        !collectionMatch ||
+        !statusMatch ||
+        !mediaMatch ||
+        !gapMatch
+      ) {
         return false
       }
       if (query.length === 0) return true
@@ -1246,6 +1283,8 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   }, [
     categoryFilter,
     collectionFilter,
+    gapFilter,
+    gapsByProduct,
     mediaFilter,
     mediaReviews,
     rows,
@@ -1712,6 +1751,23 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
             </FilterButton>
           ))}
         </FilterGroup>
+
+        {/* « Fiches à compléter » : le relevé du 18/09 comptait 17 fiches sans
+            poids et 10 sans dimensions, sans dire lesquelles — il fallait
+            requêter la base pour le savoir, et toute liste écrite à la main
+            est périmée à la première saisie. Ces compteurs sont la base
+            elle-même. */}
+        <FilterGroup label="À compléter">
+          {GAP_FILTERS.map((filter) => (
+            <FilterButton
+              key={filter.id}
+              active={gapFilter === filter.id}
+              onClick={() => setGapFilter(filter.id)}
+            >
+              {filter.label} ({gapCounts[filter.id] ?? 0})
+            </FilterButton>
+          ))}
+        </FilterGroup>
       </div>
 
       {(mediaCounts.fix ?? 0) + (mediaCounts.pending ?? 0) > 0 && (
@@ -1757,6 +1813,7 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
               const busy = busyId === row.id
               const review = mediaReviews.get(row.id) ?? null
               const badge = review ? MEDIA_BADGE[review.status] : null
+              const gaps = gapsByProduct.get(row.id) ?? []
               return (
                 <article
                   key={row.id}
@@ -1800,6 +1857,14 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
                         title={review?.note ?? undefined}
                       >
                         {badge.label}
+                      </div>
+                    )}
+                    {/* Ce qui manque, nommé sur la ligne : savoir QUE la
+                        fiche est incomplète sans savoir QUOI saisir oblige à
+                        l'ouvrir pour le découvrir. */}
+                    {gaps.length > 0 && (
+                      <div className="mt-1 inline-flex rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">
+                        Manque : {gaps.map((g) => PRODUCT_GAP_SHORT[g]).join(', ')}
                       </div>
                     )}
                   </div>

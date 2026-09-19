@@ -247,34 +247,26 @@ sans OCR. Une marque plus petite qu'environ 15 px sur la vignette a pu passer.
 - **[A]** Compléter les 6 fiches squelettes SKU-321 / 324 / 336 / 368 / 369 /
   521 (dimensions, poids, volume, caractéristiques ; photo pour SKU-321). Elles
   portent 6 des 7 lignes de stock 24 h : **ne pas les désactiver**, cela viderait
-  la page stock.
-- **[A]** Saisir les données manquantes, relevées en base le 18/09 :
-  **17 fiches actives sans poids**, **10 sans dimensions** (dont les six
-  squelettes ci-dessus, à 0×0×0). Le volume, lui, est renseigné partout.
-  Références exactes (relevé du 19/09) :
+  la page stock. Raccourci admin : filtre « À compléter → Incomplètes ».
+- **[A]** Saisir les données manquantes. **Ne plus tenir de liste ici** : elle
+  est périmée à la première saisie — celle du matin du 19/09 l'était le
+  midi même. Le catalogue admin porte désormais un groupe de filtres
+  **« À compléter »** (Incomplètes / Photo / Dimensions / Poids /
+  Composition) avec ses compteurs, et chaque ligne affiche « Manque : … ».
+  C'est la base elle-même, toujours à jour.
 
-  | Réf. | Catégorie | Manque |
-  |---|---|---|
-  | BIS-061 Fauteuil MONTMARTRE | armchair | poids + dimensions |
-  | BIS-062 Fauteuil PATMOS | armchair | poids |
-  | BIS-064 Banquette MONTORGUEIL | bench | poids |
-  | BIS-067 Chaise TERNES | chair | poids |
-  | BIS-068 Fauteuil TROCADERO | armchair | poids |
-  | ROP-049 COLLIOURE | armchair | poids + dimensions |
-  | ROP-050 Chaise BONIFACIO | chair | poids + dimensions |
-  | ROP-051 Fauteuil PORQUEROLLES | armchair | poids + dimensions |
-  | SKU-321 Chaise Chevron | chair | poids + dimensions *(squelette)* |
-  | SKU-324 Chaise ELOP | chair | poids + dimensions *(squelette)* |
-  | SKU-336 Chaise DAMIER | armchair | poids + dimensions *(squelette)* |
-  | SKU-368 Chaise MER | chair | poids + dimensions *(squelette)* |
-  | SKU-369 Chaise LOG | chair | poids + dimensions *(squelette)* |
-  | SKU-521 Chaise Basse | chair | poids + dimensions *(squelette)* |
-  | TBA-008 Piètement VENTOUX | table_base | poids |
-  | TBA-009 Piètement GARRIGUE | table_base | poids |
-  | TBA-011 Piètement VERCORS | table_base | poids |
+  État au 19/09 à 10 h 15, sur **143 fiches actives** : **22 incomplètes**.
+  Le 18/09 au soir il y en avait 32 — dix ont été renseignées dans la
+  matinée (BIS-062, BIS-064, BIS-067, BIS-068, ROP-049, ROP-050, ROP-051,
+  TBA-008, TBA-009, TBA-011).
 
-  Les 10 sans dimensions = les 6 squelettes + BIS-061, ROP-049, ROP-050 et
-  ROP-051, qui sont eux des fiches nommées et photographiées.
+  | Manque | Fiches actives |
+  |---|---|
+  | Poids **et** dimensions | **7** — les 6 squelettes + BIS-061 MONTMARTRE |
+  | Photo principale | **1** — SKU-321 Chaise Chevron |
+  | Composition | **15** — toutes les fiches `lounge` |
+
+  Le volume conteneur, lui, est renseigné partout.
 - **[A]** Saisir la **composition** des 13 salons (champ « Composition de
   l'ensemble », sous les cotes, dans la fiche admin). Les 15 fiches `lounge`
   portent toutes 180 × 78 × 78 — les cotes du CANAPÉ seul, jamais celles de
