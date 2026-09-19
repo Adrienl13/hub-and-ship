@@ -6,7 +6,7 @@
 // created_by, updated_by, confirmed_by), aucun UUID auth.users, aucune
 // colonne de coût ; data_quality projetée ; aucune option semée confirmée.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -67,9 +67,33 @@ function viewBody(view: string): string {
   return rest.slice(0, rest.indexOf(';'))
 }
 
+/**
+ * Dernière définition de `studio_products` du dépôt, toutes migrations
+ * confondues. La vue relaie les colonnes publiques de `products` : chaque
+ * colonne ajoutée depuis la fondation la redéfinit dans sa propre migration,
+ * c'est donc la plus récente qui décrit l'état courant.
+ */
+function latestStudioProductsDefinition(): string {
+  const dir = join(process.cwd(), 'supabase', 'migrations')
+  const pattern = /create\s+or\s+replace\s+view\s+public\.studio_products\b/i
+  let latest: string | null = null
+  for (const file of readdirSync(dir).sort()) {
+    if (!file.endsWith('.sql')) continue
+    const text = readFileSync(join(dir, file), 'utf8').replace(/--[^\n]*/g, '')
+    const start = text.search(pattern)
+    if (start < 0) continue
+    latest = text.slice(start).split(';')[0] ?? null
+  }
+  expect(latest, 'aucune migration ne définit studio_products').not.toBeNull()
+  return latest ?? ''
+}
+
 /** Colonnes projetées d'une vue (alias inclus), sans les clauses from/where. */
 function viewColumns(view: string): string[] {
-  const body = viewBody(view)
+  return columnsOf(viewBody(view))
+}
+
+function columnsOf(body: string): string[] {
   const select = body.slice(body.search(/\bselect\b/i) + 6, body.search(/\bfrom\b/i))
   return select
     .split(/,(?![^(]*\))/)
@@ -209,8 +233,22 @@ describe('migration studio_foundation : surfaces publiques explicites', () => {
     expect(body).toMatch(/from public\.products_public p/)
     expect(body).toMatch(/left join public\.studio_product_profiles_public sp/)
     expect(body).not.toMatch(/join public\.studio_product_profiles\s/)
-    const columns = viewColumns('studio_products')
-    expect(columns).toEqual([...PUBLIC_PRODUCT_COLUMNS, ...STUDIO_PROFILE_COLUMNS])
+    // La liste de colonnes se lit sur la DERNIÈRE définition de la vue, pas
+    // sur celle de la fondation : une colonne publique ajoutée à `products`
+    // est relayée par la migration qui la crée (RUNBOOK_SECURITY_GRANTS § 2),
+    // et la fondation, déjà appliquée en production, ne sera jamais rejouée.
+    // La structure (security_invoker, vue publique des profils, jamais la
+    // table) reste vérifiée ci-dessus sur la fondation ET ci-dessous sur la
+    // définition courante.
+    const current = latestStudioProductsDefinition()
+    expect(current).toMatch(/with \(security_invoker = true\)/)
+    expect(current).toMatch(/from public\.products_public p/)
+    expect(current).toMatch(/left join public\.studio_product_profiles_public sp/)
+    expect(current).not.toMatch(/join public\.studio_product_profiles\s/)
+    expect(columnsOf(current)).toEqual([
+      ...PUBLIC_PRODUCT_COLUMNS,
+      ...STUDIO_PROFILE_COLUMNS,
+    ])
   })
 
   it('studio_product_profiles_public : colonnes explicites, data_quality projetée, produits actifs, security_barrier', () => {

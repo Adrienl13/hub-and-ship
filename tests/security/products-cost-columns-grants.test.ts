@@ -54,14 +54,55 @@ function grantedColumns(sql: string, role: string): ReadonlyArray<string> {
     .filter(Boolean)
 }
 
+/**
+ * Colonnes réellement accordées à `role` une fois TOUTES les migrations
+ * rejouées : celles des migrations 37/38, plus celles qu'accorde chaque
+ * migration postérieure.
+ *
+ * Le runbook demande qu'une colonne publique ajoutée à `products` porte son
+ * `grant select (<col>) … to anon, authenticated` dans LA MIGRATION QUI LA
+ * CRÉE (§ 2.3) — sans quoi `products_public`, security_invoker, tombe en
+ * 42501 pour tout le monde : c'est l'incident du 07/09. Ce test comparait
+ * pourtant la seule migration 37/38 à `PUBLIC_PRODUCT_COLUMNS`, ce qui
+ * n'aurait laissé qu'une issue : réécrire une migration déjà appliquée en
+ * production — où elle ne serait jamais rejouée. On somme donc les grants,
+ * et la garde qui compte reste entière : une colonne de coût accordée par
+ * n'importe quelle migration échoue encore.
+ */
+function effectiveGrantedColumns(role: string): ReadonlyArray<string> {
+  const base = role === 'anon' ? ANON_GRANT_MIGRATION : AUTHENTICATED_GRANT_MIGRATION
+  const later = readdirSync(MIGRATIONS_DIR)
+    .filter((file) => file.endsWith('.sql') && file > base)
+    .sort()
+  const columns = new Set(grantedColumns(readMigration(base), role))
+  for (const file of later) {
+    // `to anon, authenticated` autant que `to anon` : on interroge le rôle
+    // dans une liste éventuelle.
+    const sql = stripSqlComments(readMigration(file))
+    const pattern = new RegExp(
+      `grant\\s+select\\s*\\(([^)]*)\\)\\s*on\\s+(?:table\\s+)?public\\.products\\s+to\\s+([\\w\\s,]*?)\\s*;`,
+      'gi',
+    )
+    for (const match of sql.matchAll(pattern)) {
+      const roles = (match[2] ?? '').split(',').map((r) => r.trim())
+      if (!roles.includes(role)) continue
+      for (const column of (match[1] ?? '').split(',')) {
+        const name = column.trim()
+        if (name) columns.add(name)
+      }
+    }
+  }
+  return [...columns]
+}
+
 describe('products : grants colonne par colonne (anon et authenticated)', () => {
   const expected = [...PUBLIC_PRODUCT_COLUMNS].sort()
 
   it.each([
     ['anon', ANON_GRANT_MIGRATION],
     ['authenticated', AUTHENTICATED_GRANT_MIGRATION],
-  ])('%s : la migration accorde exactement PUBLIC_PRODUCT_COLUMNS', (role, file) => {
-    const granted = [...grantedColumns(readMigration(file), role)].sort()
+  ])('%s : les migrations accordent exactement PUBLIC_PRODUCT_COLUMNS', (role) => {
+    const granted = [...effectiveGrantedColumns(role)].sort()
     expect(granted).toEqual(expected)
     for (const hidden of INTERNAL_PRODUCT_COST_COLUMNS) {
       expect(granted).not.toContain(hidden)

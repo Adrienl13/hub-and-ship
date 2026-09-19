@@ -28,6 +28,7 @@ import {
 import {
   CATEGORY_LABEL,
   formatProductDimensions,
+  productCompositionLines,
   type Product,
 } from '@/lib/products'
 import {
@@ -130,6 +131,7 @@ function ProductPage() {
   const { product } = Route.useLoaderData()
   const savings = savingsPercent(product)
   const showRetail = hasMeaningfulRetail(product)
+  const compositionLines = productCompositionLines(product)
   // Les paliers dépendent de la famille : annoncer « dès 100 pièces » sur un
   // salon de jardin serait faux de dix fois.
   const family = resolveDiscountFamily(product.category)
@@ -270,6 +272,31 @@ function ProductPage() {
             value="Contrôle SGS avant départ · Garantie 1 an · SAV France"
           />
         </section>
+
+        {/* L'ensemble, meuble par meuble. La vignette « Dimensions » ci-dessus
+            annonce « Ensemble 4 pièces » : c'est ici qu'on lit lesquelles. Un
+            salon n'a pas de L × l × H, et afficher celles d'un seul de ses
+            meubles trompait l'acheteur qui en voit quatre sur la photo. */}
+        {compositionLines.length > 0 && (
+          <section className="mt-8">
+            <h2 className="font-display text-xl tracking-tight">
+              Composition de l’ensemble
+            </h2>
+            <ul className="mt-3 divide-y divide-[color:var(--sand-deep)] overflow-hidden rounded-sm border border-[color:var(--sand-deep)] bg-card text-sm">
+              {compositionLines.map((line) => (
+                <li
+                  key={line.label}
+                  className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-3 py-2.5"
+                >
+                  <span>{line.label}</span>
+                  <span className="mono text-xs tracking-[0.04em] text-muted-foreground">
+                    {line.dimensions}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {product.features.length > 0 && (
           <section className="mt-8">

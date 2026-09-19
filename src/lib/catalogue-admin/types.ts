@@ -1,4 +1,8 @@
-import type { ProductCategory } from '@/lib/products'
+import {
+  parseComposition,
+  type CompositionPiece,
+  type ProductCategory,
+} from '@/lib/products'
 import type {
   Database,
   FireRatingDb,
@@ -67,6 +71,8 @@ export interface AdminProduct {
   readonly dimensions: { l: number; w: number; h: number }
   /** Forme du plateau (tables) : 'round' ⇒ l = w = diamètre. null = rectangulaire. */
   readonly tableShape: TableShapeDb | null
+  /** Pièces d'un ensemble (salon, lot). null = produit d'une seule pièce. */
+  readonly composition: ReadonlyArray<CompositionPiece> | null
   /** Piètements : formes de plateau compatibles (vide = tous). */
   readonly compatibleTopShapes: ReadonlyArray<TableShapeDb>
   /** on_request = produit de projet (sur mesure), réservable par lien direct. */
@@ -168,6 +174,7 @@ export function fromProductRow(
       h: row.dim_height_cm,
     },
     tableShape: row.table_shape ?? null,
+    composition: parseComposition(row.composition),
     compatibleTopShapes: (row.compatible_top_shapes ?? []).filter(
       (value): value is TableShapeDb =>
         value === 'rectangular' || value === 'round',

@@ -41,6 +41,11 @@ export const PUBLIC_PRODUCT_COLUMNS = [
   'table_shape',
   'compatible_top_shapes',
   'visibility',
+  // En fin de liste, et pas à côté des dim_* : l'ordre de cette constante est
+  // celui des vues products_public et studio_products, et `create or replace
+  // view` refuse d'insérer une colonne AILLEURS qu'à la fin. Ranger
+  // `composition` près des dimensions imposerait de dropper les deux vues.
+  'composition',
 ] as const
 
 export const INTERNAL_PRODUCT_COST_COLUMNS = [

@@ -26,7 +26,7 @@ const PRODUCT_COLUMNS = [
   'id', 'sku', 'category', 'name', 'description', 'dim_length_cm', 'dim_width_cm', 'dim_height_cm',
   'cbm_per_unit', 'weight_kg', 'moq_units', 'base_price_ht', 'retail_price_ref', 'eco_contribution',
   'main_image_url', 'gallery_urls', 'features', 'fire_rating', 'is_active', 'sort_order', 'created_at',
-  'updated_at', 'table_shape', 'compatible_top_shapes', 'visibility',
+  'updated_at', 'table_shape', 'compatible_top_shapes', 'visibility', 'composition',
 ]
 const PROFILE_COLUMNS = ['studio_role', 'seat_kind', 'material', 'model_family_id', 'visual_traits', 'data_quality']
 const PUBLIC_SURFACES = [

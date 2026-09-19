@@ -25,6 +25,21 @@ export const PRODUCT_CATEGORIES: ReadonlyArray<ProductCategory> = [
 ]
 
 export type TableTopShape = 'rectangular' | 'round'
+
+/**
+ * Une pièce d'un ensemble. Un salon de jardin n'a pas de dimensions : il a un
+ * canapé, deux fauteuils et une table basse, chacun avec les siennes. Un
+ * unique « L × l × H » ne pouvait décrire qu'un meuble sur quatre, et
+ * l'acheteur lisait les cotes d'une chaise sous la photo d'un salon.
+ */
+export interface CompositionPiece {
+  readonly label: string
+  readonly qty: number
+  /** cm */
+  readonly l: number
+  readonly w: number
+  readonly h: number
+}
 export type ProductVisibility = 'public' | 'on_request'
 
 /** Listé au catalogue, dans les pages SEO, le feed et les sélections du
@@ -60,6 +75,9 @@ export interface Product {
   /** Forme du plateau (tables uniquement). 'round' ⇒ l = w = diamètre.
    *  Absent/null = rectangulaire ou non applicable. */
   tableShape?: TableTopShape | null
+  /** Pièces d'un ENSEMBLE (salon, lot), chacune avec ses propres cotes.
+   *  Absent = produit d'une seule pièce, `dimensions` fait foi. */
+  composition?: ReadonlyArray<CompositionPiece> | null
   /** Piètements : formes de plateau compatibles. Vide/absent = tous. */
   compatibleTopShapes?: ReadonlyArray<TableTopShape>
   /** 'on_request' = produit de projet (plateau découpé sur mesure, prix
@@ -130,14 +148,73 @@ export function emptyCategoryCounts(): Record<ProductCategory, number> {
  * fiche en cours de complétion vaut mieux muette que créditée d'un « 0 × 0 × 0
  * cm ». Les appelants testent le résultat avant d'afficher leur libellé.
  */
+/**
+ * La ligne « Dimensions » d'un produit — le point d'entrée de toutes les
+ * surfaces qui l'affichent (carte, fiche, devis, panier, Studio).
+ *
+ * Un ensemble ne rend PAS un « L × l × H » : ce serait celui d'une seule de
+ * ses pièces. Il annonce son nombre de pièces, et le détail se lit dans le
+ * bloc composition (`productCompositionLines`).
+ */
 export function formatProductDimensions(
-  product: Pick<Product, 'dimensions' | 'tableShape'>,
+  product: Pick<Product, 'dimensions' | 'tableShape' | 'composition'>,
 ): string {
+  const pieces = productCompositionPieces(product)
+  if (pieces.length > 0) {
+    const total = pieces.reduce((sum, piece) => sum + piece.qty, 0)
+    return `Ensemble ${total} pièce${total > 1 ? 's' : ''}`
+  }
   const { l, w, h } = product.dimensions
   if (product.tableShape === 'round') {
     return l > 0 && h > 0 ? `Ø ${l} × H ${h} cm` : ''
   }
   return l > 0 && w > 0 && h > 0 ? `${l} × ${w} × ${h} cm` : ''
+}
+
+/**
+ * Lit une composition venue de la base. Tout ou rien : une pièce incomplète
+ * invalide l'ensemble, parce qu'une composition à moitié affichée décrirait
+ * le produit plus mal qu'une absence de composition. Miroir de la contrainte
+ * SQL `product_composition_is_valid`.
+ */
+export function parseComposition(
+  raw: unknown,
+): ReadonlyArray<CompositionPiece> | null {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 20) return null
+  const pieces: CompositionPiece[] = []
+  for (const entry of raw) {
+    if (typeof entry !== 'object' || entry === null) return null
+    const row = entry as Record<string, unknown>
+    const label = typeof row.label === 'string' ? row.label.trim() : ''
+    const qty = Number(row.qty)
+    const l = Number(row.l)
+    const w = Number(row.w)
+    const h = Number(row.h)
+    if (!label || label.length > 80) return null
+    if (!Number.isInteger(qty) || qty < 1 || qty > 50) return null
+    for (const dim of [l, w, h]) {
+      if (!Number.isFinite(dim) || dim <= 0 || dim > 1000) return null
+    }
+    pieces.push({ label, qty, l, w, h })
+  }
+  return pieces
+}
+
+/** Les pièces de l'ensemble, ou une liste vide pour un produit simple. */
+export function productCompositionPieces(
+  product: Pick<Product, 'composition'>,
+): ReadonlyArray<CompositionPiece> {
+  return product.composition ?? []
+}
+
+/** « 2 × Fauteuil — 70 × 70 × 70 cm », une ligne par pièce. */
+export function productCompositionLines(
+  product: Pick<Product, 'composition'>,
+): ReadonlyArray<{ readonly label: string; readonly dimensions: string }> {
+  return productCompositionPieces(product).map((piece) => ({
+    label: piece.qty > 1 ? `${piece.qty} × ${piece.label}` : piece.label,
+    dimensions: `${piece.l} × ${piece.w} × ${piece.h} cm`,
+  }))
 }
 
 /**

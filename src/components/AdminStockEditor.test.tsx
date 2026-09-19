@@ -68,6 +68,7 @@ function makeProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
     description: '',
     dimensions: { l: 50, w: 50, h: 90 },
     tableShape: null,
+    composition: null,
     compatibleTopShapes: [],
     visibility: 'public',
     cbmPerUnit: 0.2,

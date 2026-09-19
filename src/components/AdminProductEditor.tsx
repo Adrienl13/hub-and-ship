@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import {
+  AdminCompositionEditor,
+  buildCompositionPayload,
+  compositionToDraft,
+  type CompositionDraftRow,
+} from '@/components/AdminCompositionEditor'
 import { Button } from '@/components/ui/button'
 import { ImageGalleryUploader, ImageUploader } from '@/components/ImageUploader'
 import { Input } from '@/components/ui/input'
@@ -70,6 +76,8 @@ interface EditableProduct {
   dim_length_cm: string
   dim_width_cm: string
   dim_height_cm: string
+  /** Ensembles (salon, lot) : une ligne par meuble. Vide = pièce unique. */
+  composition: CompositionDraftRow[]
   /** Tables et plateaux : '' = rectangulaire, 'round' = plateau rond (Ø). */
   table_shape: '' | TableShapeDb
   /** Piètements : formes de plateau acceptées (vide = tous). */
@@ -107,6 +115,7 @@ function toEditable(detail: AdminProductDetail): EditableProduct {
     dim_length_cm: String(detail.dimensions.l),
     dim_width_cm: String(detail.dimensions.w),
     dim_height_cm: String(detail.dimensions.h),
+    composition: compositionToDraft(detail.composition),
     table_shape: detail.tableShape ?? '',
     compatible_top_shapes: [...detail.compatibleTopShapes],
     visibility: detail.visibility,
@@ -139,6 +148,7 @@ function emptyEditable(): EditableProduct {
     dim_length_cm: '0',
     dim_width_cm: '0',
     dim_height_cm: '0',
+    composition: [],
     table_shape: '',
     compatible_top_shapes: [],
     visibility: 'public',
@@ -312,8 +322,12 @@ function hasTopShape(category: ProductCategory): boolean {
   return category === 'table' || category === 'table_top'
 }
 
-function toUpdatePayload(state: EditableProduct): ProductEditorPayload {
+function toUpdatePayload(
+  state: EditableProduct,
+  composition: ProductEditorPayload['composition'],
+): ProductEditorPayload {
   return {
+    composition,
     sku: state.sku.trim(),
     name: state.name.trim(),
     description: state.description.trim(),
@@ -661,7 +675,21 @@ export function AdminProductEditor({
       }
     }
 
-    const productPayload = toUpdatePayload(state)
+    // La composition est validée AVANT l'appel : les mêmes règles qu'en base,
+    // mais le message arrive ici, à côté du champ fautif, plutôt qu'en échec
+    // de contrainte SQL au milieu d'un enregistrement transactionnel.
+    const composition = buildCompositionPayload(state.composition)
+    if ('error' in composition) {
+      setError(composition.error)
+      toast.error(composition.error)
+      setSaving(false)
+      return
+    }
+
+    const productPayload = toUpdatePayload(
+      state,
+      composition.payload as unknown as ProductEditorPayload['composition'],
+    )
     const variantsPayload = variants
       .filter((v) => v.name.trim())
       .map((v) => ({
@@ -1185,6 +1213,10 @@ export function AdminProductEditor({
             />
           </Field>
         </div>
+        <AdminCompositionEditor
+          rows={state.composition}
+          onChange={(rows) => setField('composition', rows)}
+        />
       </Fieldset>
 
       <Fieldset title="Images & contenu">

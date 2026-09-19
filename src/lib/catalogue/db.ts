@@ -6,6 +6,7 @@
 import { setPublicPricingRules } from '@/lib/pricing/public-rules'
 import type { InternalProductCostColumn } from '@/lib/catalogue/product-columns'
 import type { Database } from '@/lib/supabase/types'
+import { parseComposition } from '@/lib/products'
 import type {
   DesignVariant,
   Product,
@@ -160,6 +161,7 @@ export function productFromRow(
       h: row.dim_height_cm,
     },
     tableShape: row.table_shape ?? null,
+    composition: parseComposition(row.composition),
     compatibleTopShapes: toTopShapes(row.compatible_top_shapes),
     visibility: row.visibility === 'on_request' ? 'on_request' : 'public',
     cbmPerUnit: Number(row.cbm_per_unit),

@@ -65,8 +65,12 @@ export function buildDiscoveryPool(
 
 /** UNE spécification pertinente, issue de la base ; null si rien de fiable. */
 export function seatSpecLine(product: StudioProduct): string | null {
-  const { l, w, h } = product.dimensions
-  if (l > 0 && w > 0 && h > 0) return formatProductDimensions(product)
+  // `formatProductDimensions` rend '' sur une fiche incomplète (0 × 0 × 0) —
+  // c'est ce vide qui fait basculer sur le poids. Il rend aussi « Ensemble
+  // 4 pièces » quand le produit est un salon : un ensemble n'a pas de cotes
+  // propres, mais son nombre de meubles est bien la spec qui le décrit.
+  const dimensions = formatProductDimensions(product)
+  if (dimensions) return dimensions
   if (product.weightKg > 0) return `${product.weightKg} kg`
   return null
 }

@@ -926,6 +926,8 @@ type ProductRow = {
   features: string[]
   fire_rating: FireRatingDb | null
   table_shape: TableShapeDb | null
+  /** Pièces d'un ensemble (salon, lot). NULL = produit d'une seule pièce. */
+  composition: ProductCompositionJson | null
   compatible_top_shapes: string[]
   visibility: 'public' | 'on_request'
   is_active: boolean
@@ -958,6 +960,7 @@ type ProductInsert = {
   features?: string[]
   fire_rating?: FireRatingDb | null
   table_shape?: TableShapeDb | null
+  composition?: ProductCompositionJson | null
   compatible_top_shapes?: string[]
   visibility?: 'public' | 'on_request'
   is_active?: boolean
@@ -1170,6 +1173,15 @@ type PricingParameterRow = {
 }
 
 /** Forme stockée : { famille: [{ min_units, discount }, ...] }. */
+/** Forme stockée d'une composition : [{ label, qty, l, w, h }, …]. */
+export type ProductCompositionJson = ReadonlyArray<{
+  readonly label: string
+  readonly qty: number
+  readonly l: number
+  readonly w: number
+  readonly h: number
+}>
+
 export type VolumeDiscountFamiliesJson = Record<
   string,
   ReadonlyArray<{ readonly min_units: number; readonly discount: number }>

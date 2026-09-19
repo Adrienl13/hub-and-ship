@@ -20,6 +20,7 @@ import {
 import {
   CATEGORY_LABEL,
   formatProductDimensions,
+  productCompositionLines,
   type Product,
 } from '@/lib/products'
 import { productSlug } from '@/lib/catalogue/product-slug'
@@ -76,6 +77,7 @@ export function ProductDetailDialog({
   const savingsEur = hasRetailRef
     ? product.retailPriceRef - product.basePriceHt
     : null
+  const compositionLines = productCompositionLines(product)
   const moqStatus = getMoqStatus(variant.unitsCommitted + qty, product.moqUnits)
   const totalLine = product.basePriceHt * qty
   const lineCbm = product.cbmPerUnit * qty
@@ -158,6 +160,29 @@ export function ProductDetailDialog({
               ))}
             </div>
 
+            {/* Le détail de l'ensemble, juste sous la galerie : la vignette
+                « Dimensions » annonce « Ensemble 4 pièces », l'acheteur a la
+                photo sous les yeux et veut savoir ce qu'il y voit. */}
+            {compositionLines.length > 0 && (
+              <div className="rounded-sm border border-[color:var(--sand-deep)] bg-card">
+                <div className="label-eyebrow border-b border-[color:var(--sand-deep)] px-2.5 py-1.5 text-muted-foreground">
+                  Composition
+                </div>
+                <ul className="divide-y divide-[color:var(--sand-deep)] text-xs">
+                  {compositionLines.map((line) => (
+                    <li
+                      key={line.label}
+                      className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-2.5 py-1.5"
+                    >
+                      <span className="font-medium">{line.label}</span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {line.dimensions}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Right column */}
