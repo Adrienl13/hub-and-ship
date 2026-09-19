@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Calculator,
@@ -11,6 +11,7 @@ import {
   Plus,
   Power,
   PowerOff,
+  Search,
   ShieldCheck,
   Trash2,
   TriangleAlert,
@@ -65,6 +66,10 @@ import {
   type PricingControlStatus,
   type RepriceRow,
 } from '@/lib/catalogue-admin/repository'
+import {
+  scoreProductMatch,
+  sortByRelevance,
+} from '@/lib/catalogue-admin/search'
 import type {
   AdminContainerOption,
   AdminPricingParameters,
@@ -1211,8 +1216,9 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
   }, [mediaReviews, rows])
 
   const filteredRows = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase('fr-FR')
-    return rows.filter((row) => {
+    const query = search.trim()
+    const scores = new Map<string, number>()
+    const matching = rows.filter((row) => {
       const categoryMatch =
         categoryFilter === 'all' || row.category === categoryFilter
       const collectionMatch =
@@ -1224,20 +1230,19 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       const mediaMatch =
         mediaFilter === 'all' ||
         mediaReviews.get(row.id)?.status === mediaFilter
-      const searchMatch =
-        query.length === 0 ||
-        [row.name, row.sku, row.description, CATEGORY_LABEL[row.category]]
-          .join(' ')
-          .toLocaleLowerCase('fr-FR')
-          .includes(query)
-      return (
-        categoryMatch &&
-        collectionMatch &&
-        statusMatch &&
-        mediaMatch &&
-        searchMatch
-      )
+      if (!categoryMatch || !collectionMatch || !statusMatch || !mediaMatch) {
+        return false
+      }
+      if (query.length === 0) return true
+      const score = scoreProductMatch(row, query, CATEGORY_LABEL[row.category])
+      if (score === null) return false
+      scores.set(row.id, score)
+      return true
     })
+    // Sans requête, on ne touche pas à l'ordre du catalogue : c'est celui que
+    // l'admin connaît. Avec une requête, la fiche cherchée passe en tête.
+    if (query.length === 0) return matching
+    return sortByRelevance(matching, (row) => scores.get(row.id) ?? 0)
   }, [
     categoryFilter,
     collectionFilter,
@@ -1587,6 +1592,22 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
         </Button>
       </div>
 
+      {/* La recherche vit EN HAUT, avant les panneaux de tarification.
+          Elle existait déjà, mais sept panneaux plus bas — simulateur de
+          marge, reprice, ajustement, historique des versions — c'est-à-dire
+          hors de l'écran d'ouverture. Chercher une fiche parmi deux cents
+          commençait donc par un long défilement à la recherche du champ de
+          recherche. Elle est collante : les filtres et la liste défilent
+          sous elle. */}
+      <div className="sticky top-0 z-20 -mx-1 bg-background px-1 py-2">
+        <ProductSearchField
+          value={search}
+          onChange={setSearch}
+          shown={filteredRows.length}
+          total={rows.length}
+        />
+      </div>
+
       <AdminPartnerPriceGrid
         open={partnerGridOpen}
         products={rows}
@@ -1644,22 +1665,6 @@ export function AdminCatalogueTab({ authStatus }: AdminCatalogueTabProps) {
       />
 
       <div className="space-y-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-3">
-        <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-center">
-          <label className="block">
-            <span className="sr-only">Rechercher un produit</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher par nom, SKU, description…"
-              className="h-9 w-full rounded-sm border border-[color:var(--sand-deep)] bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-            />
-          </label>
-          <div className="text-xs text-muted-foreground">
-            {filteredRows.length} / {rows.length} produits affichés
-          </div>
-        </div>
-
         <FilterGroup label="Type">
           {CATEGORY_FILTERS.map((filter) => (
             <FilterButton
@@ -2242,6 +2247,108 @@ function MediaReviewEditor({
           </span>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Le champ de recherche du catalogue admin.
+ *
+ * Raccourci « / » : les deux cents fiches se parcourent au clavier, et
+ * reposer la main sur la souris pour atteindre le champ à chaque fiche
+ * cherchée est précisément ce qu'on veut éviter. Échap vide la recherche
+ * sans quitter le champ.
+ */
+function ProductSearchField({
+  value,
+  onChange,
+  shown,
+  total,
+}: {
+  readonly value: string
+  readonly onChange: (value: string) => void
+  readonly shown: number
+  readonly total: number
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) {
+        return
+      }
+      // Ne pas voler la touche à quelqu'un en train d'écrire ailleurs : « / »
+      // est un caractère ordinaire dans un nom ou une description.
+      const active = document.activeElement
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active instanceof HTMLSelectElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return
+      }
+      event.preventDefault()
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const filtering = value.trim().length > 0
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border border-[color:var(--sand-deep)] bg-card p-2">
+      <label className="relative min-w-[220px] flex-1">
+        <span className="sr-only">Rechercher un produit</span>
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <input
+          ref={inputRef}
+          type="search"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && value) {
+              event.preventDefault()
+              onChange('')
+            }
+          }}
+          placeholder="Rechercher : nom, SKU, description… (touche /)"
+          className="h-9 w-full rounded-sm border border-[color:var(--sand-deep)] bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+        />
+      </label>
+
+      <div className="tabular-nums text-xs text-muted-foreground">
+        {filtering ? (
+          shown === 0 ? (
+            <span className="text-[color:var(--destructive)]">
+              Aucune fiche pour « {value.trim()} »
+            </span>
+          ) : (
+            <>
+              <span className="font-medium text-foreground">{shown}</span> sur{' '}
+              {total} — la plus proche en tête
+            </>
+          )
+        ) : (
+          <>
+            {shown} / {total} produits affichés
+          </>
+        )}
+      </div>
+
+      {filtering && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-sm"
+          onClick={() => onChange('')}
+        >
+          Effacer
+        </Button>
+      )}
     </div>
   )
 }
