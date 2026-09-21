@@ -135,12 +135,12 @@ function AProposPage() {
             Pros Import EURL · RCS Paris 988 269 981 · SIRET 98826998100011 · TVA
             FR08988269981. Site partenaire :{' '}
             <a
-              href="https://prosimport.com"
+              href="https://terrassea.com"
               target="_blank"
               rel="noreferrer"
               className="text-foreground underline"
             >
-              prosimport.com
+              terrassea.com
             </a>
             .
           </p>

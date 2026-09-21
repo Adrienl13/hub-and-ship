@@ -8,7 +8,7 @@ import {
 // site reste servi sur prosimport.com jusqu'à la bascule finale. LE JOUR J :
 // exécuter scripts/flip-domaine-terrassea.sh (change ce host + toutes les
 // URLs) — tous les hôtes connus non canoniques passent alors en 301.
-const CANONICAL_HOST: string = 'prosimport.com'
+const CANONICAL_HOST: string = 'terrassea.com'
 const KNOWN_HOSTS = [
   'prosimport.com',
   'www.prosimport.com',

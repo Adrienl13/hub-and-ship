@@ -4,9 +4,9 @@ import { buildPartnerLink, buildQrSvg } from './qr'
 
 describe('buildPartnerLink', () => {
   it('builds a LOT 2 tagged link for the partner code', () => {
-    const link = buildPartnerLink('DBP-13', 'https://prosimport.com')
+    const link = buildPartnerLink('DBP-13', 'https://terrassea.com')
     expect(link).toBe(
-      'https://prosimport.com/?ref=DBP-13&utm_source=partner&utm_medium=qr&utm_campaign=corner_depot',
+      'https://terrassea.com/?ref=DBP-13&utm_source=partner&utm_medium=qr&utm_campaign=corner_depot',
     )
   })
 
@@ -17,7 +17,7 @@ describe('buildPartnerLink', () => {
 
 describe('buildQrSvg', () => {
   it('produces a self-contained SVG encoding the text', () => {
-    const svg = buildQrSvg(buildPartnerLink('DBP-13', 'https://prosimport.com'))
+    const svg = buildQrSvg(buildPartnerLink('DBP-13', 'https://terrassea.com'))
     expect(svg.startsWith('<svg')).toBe(true)
     expect(svg).toContain('</svg>')
     // no external references — fully inline

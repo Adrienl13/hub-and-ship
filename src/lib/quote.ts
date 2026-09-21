@@ -293,7 +293,7 @@ export function buildQuoteHTML(q: QuoteData): string {
     </div>
 
     <footer>
-      <div>Terrassea — édité par Pros Import EURL · contact@prosimport.com</div>
+      <div>Terrassea — édité par Pros Import EURL · contact@terrassea.com</div>
       <div>RCS Paris 988 269 981</div>
     </footer>
   </div>

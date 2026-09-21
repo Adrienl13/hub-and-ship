@@ -30,7 +30,7 @@ export class CatalogueModel {
     cartOpen: false,
     delivery: 'terrasse',
   }
-  P = 'https://prosimport.com/catalogue/'
+  P = 'https://terrassea.com/catalogue/'
   S =
     'https://mkfztwibolswqcggukeq.supabase.co/storage/v1/object/public/catalogue-images/products/'
   I = 'https://cdn.jsdelivr.net/npm/@phosphor-icons/core@2/assets/duotone/'

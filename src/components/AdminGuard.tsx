@@ -109,10 +109,10 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
             Votre compte n'a pas les droits d'administration. Si vous pensez que
             c'est une erreur, contactez{' '}
             <a
-              href="mailto:contact@prosimport.com"
+              href="mailto:contact@terrassea.com"
               className="text-foreground underline"
             >
-              contact@prosimport.com
+              contact@terrassea.com
             </a>
             .
           </p>

@@ -21,7 +21,7 @@ import {
 import { timingSafeEqualStr } from '@/lib/security/timing-safe-equal'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
-const SITE_URL = 'https://prosimport.com'
+const SITE_URL = 'https://terrassea.com'
 const BATCH_LIMIT = 50
 
 function jsonResponse(body: unknown, init: ResponseInit): Response {

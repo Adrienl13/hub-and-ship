@@ -6,6 +6,13 @@
 
 const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email'
 const FALLBACK_SENDER_NAME = 'Terrassea'
+// Volontairement laissé sur prosimport.com après la bascule du 21/09/2026.
+// C'est le DOMAINE D'ENVOI, pas une URL : il doit être vérifié en DKIM chez
+// Brevo, et terrassea.com ne l'est pas encore. Un envoi depuis un domaine non
+// vérifié part en spam ou se fait refuser — et ce repli n'est pas théorique,
+// `BREVO_FROM` n'est pas contrôlé par le garde-fou de déploiement.
+// À basculer sur contact@terrassea.com UNE FOIS le domaine vérifié chez
+// Brevo (RUNBOOK_REBRANDING_TERRASSEA.md, étape 2).
 const FALLBACK_SENDER_EMAIL = 'contact@prosimport.com'
 
 export function isEmailConfigured(): boolean {

@@ -8,7 +8,7 @@ import {
 
 // Domaine ACTUEL de service. La marque est déjà Terrassea ; l'URL bascule sur
 // terrassea.com au dernier moment via scripts/flip-domaine-terrassea.sh.
-export const SITE_URL = 'https://prosimport.com'
+export const SITE_URL = 'https://terrassea.com'
 // Une seule marque visible : Terrassea (marque de Pros Import EURL).
 // L'ancien nom « Container Club » ne survit que dans le JSON-LD
 // (alternateName/sameAs) pour la continuité d'entité Google.

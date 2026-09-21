@@ -10,7 +10,7 @@ import {
   submitToIndexNow,
 } from './indexnow'
 
-const SITE = 'https://prosimport.com'
+const SITE = 'https://terrassea.com'
 
 describe('clé IndexNow', () => {
   it('est publiée à la racine, et le fichier contient exactement la clé', () => {
@@ -28,8 +28,8 @@ describe('clé IndexNow', () => {
 describe('construction du lot', () => {
   it('résout les chemins relatifs sur le site', () => {
     expect(buildUrlList(SITE, ['/catalogue', '/prix'])).toEqual([
-      'https://prosimport.com/catalogue',
-      'https://prosimport.com/prix',
+      'https://terrassea.com/catalogue',
+      'https://terrassea.com/prix',
     ])
   })
 
@@ -40,25 +40,25 @@ describe('construction du lot', () => {
       buildUrlList(SITE, [
         '/catalogue',
         'https://exemple.test/piege',
-        'http://prosimport.com/en-clair',
+        'http://terrassea.com/en-clair',
       ]),
-    ).toEqual(['https://prosimport.com/catalogue'])
+    ).toEqual(['https://terrassea.com/catalogue'])
   })
 
   it('déduplique en conservant l’ordre d’entrée', () => {
     // Deux exécutions identiques doivent envoyer exactement la même chose.
     expect(
-      buildUrlList(SITE, ['/b', '/a', '/b', 'https://prosimport.com/a']),
-    ).toEqual(['https://prosimport.com/b', 'https://prosimport.com/a'])
+      buildUrlList(SITE, ['/b', '/a', '/b', 'https://terrassea.com/a']),
+    ).toEqual(['https://terrassea.com/b', 'https://terrassea.com/a'])
   })
 
   it('ignore une entrée qui n’est pas une adresse, sans perdre le reste', () => {
     // `new URL('n importe quoi', site)` ne lève pas : il fabriquerait
-    // https://prosimport.com/n%20importe%20quoi, soumis à Bing puis crawlé
+    // https://terrassea.com/n%20importe%20quoi, soumis à Bing puis crawlé
     // en 404. Seuls un chemin absolu ou une URL http(s) sont acceptés.
     expect(
       buildUrlList(SITE, ['::pas une url', 'catalogue', '', '  ', '/prix']),
-    ).toEqual(['https://prosimport.com/prix'])
+    ).toEqual(['https://terrassea.com/prix'])
   })
 
   it('plafonne à la limite du protocole', () => {
@@ -69,10 +69,10 @@ describe('construction du lot', () => {
   it('déclare l’hôte et l’emplacement de la clé', () => {
     const payload = buildPayload(SITE, ['/catalogue'])
     expect(payload).toEqual({
-      host: 'prosimport.com',
+      host: 'terrassea.com',
       key: INDEXNOW_KEY,
-      keyLocation: `https://prosimport.com/${INDEXNOW_KEY}.txt`,
-      urlList: ['https://prosimport.com/catalogue'],
+      keyLocation: `https://terrassea.com/${INDEXNOW_KEY}.txt`,
+      urlList: ['https://terrassea.com/catalogue'],
     })
   })
 

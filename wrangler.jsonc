@@ -4,7 +4,13 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // terrassea.com est le domaine canonique depuis le 21/09/2026.
+  // prosimport.com reste routé, et doit le rester : c'est lui qui porte les
+  // 308 vers terrassea.com (src/start.ts, CANONICAL_HOST). Le retirer ferait
+  // tomber les anciens liens et l'index Google au lieu de les transférer.
   "routes": [
+    { "pattern": "terrassea.com", "custom_domain": true },
+    { "pattern": "www.terrassea.com", "custom_domain": true },
     { "pattern": "prosimport.com", "custom_domain": true },
     { "pattern": "www.prosimport.com", "custom_domain": true },
   ],

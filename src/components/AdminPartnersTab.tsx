@@ -875,7 +875,7 @@ function absoluteShareUrl(path: string): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return `${window.location.origin}${path}`
   }
-  return `https://prosimport.com${path}`
+  return `https://terrassea.com${path}`
 }
 
 function PartnerShareLinkEditor({

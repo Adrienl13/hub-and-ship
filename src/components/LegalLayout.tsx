@@ -126,10 +126,10 @@ export function LegalLayout({
               <span>
                 Pour toute question juridique :{' '}
                 <a
-                  href="mailto:contact@prosimport.com"
+                  href="mailto:contact@terrassea.com"
                   className="font-medium text-foreground underline-offset-2 hover:underline"
                 >
-                  contact@prosimport.com
+                  contact@terrassea.com
                 </a>
               </span>
               <span>·</span>

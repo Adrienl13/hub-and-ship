@@ -25,7 +25,7 @@ describe('photos du registre', () => {
     for (const url of [
       'https://mkfztwibolswqcggukeq.supabase.co/storage/v1/object/public/catalogue-images/containers/1786308760742-arsfdb.jpg',
       '/catalogue/rope-series/ROP-001-01.webp',
-      'https://prosimport.com/images/home/hero.webp',
+      'https://terrassea.com/images/home/hero.webp',
       '',
       null,
     ]) {
@@ -89,9 +89,9 @@ describe('sitemap du registre', () => {
       { slug: 'cc-2026-001', deliveredAt: '2026-03-09' },
       { slug: 'cc-2025-014', deliveredAt: null },
     ])
-    expect(xml).toContain('https://prosimport.com/livres/cc-2026-001')
+    expect(xml).toContain('https://terrassea.com/livres/cc-2026-001')
     expect(xml).toContain('<lastmod>2026-03-09</lastmod>')
-    expect(xml).toContain('https://prosimport.com/livres/cc-2025-014')
+    expect(xml).toContain('https://terrassea.com/livres/cc-2025-014')
     expect(xml.match(/<url>/g)).toHaveLength(2)
   })
 

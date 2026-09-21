@@ -104,13 +104,13 @@ export function ContactForm({
         toast.error('Message non envoyé', {
           description:
             payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à contact@prosimport.com.',
+            'Réessayez dans un instant, ou écrivez-nous à contact@terrassea.com.',
         })
       }
     } catch {
       toast.error('Message non envoyé', {
         description:
-          'Connexion impossible. Écrivez-nous à contact@prosimport.com.',
+          'Connexion impossible. Écrivez-nous à contact@terrassea.com.',
       })
     }
     setSubmitting(false)

@@ -27,7 +27,7 @@ import {
   type StockRequestEmailInput,
 } from '@/lib/email/templates'
 
-const SITE_URL = 'https://prosimport.com'
+const SITE_URL = 'https://terrassea.com'
 
 /** Trace un échec d'email admin pour un lead déjà persisté en base (le lead
  *  n'est pas perdu, mais l'admin doit le voir dans les logs Cloudflare). */

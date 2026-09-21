@@ -397,7 +397,7 @@ function AccountReservationDetailPage() {
                 valider matières, quantités et délai, puis nous vous
                 transmettons nos coordonnées bancaires pour engager la commande.
                 Besoin d’aller plus vite ? Appelez-nous avec cette référence, ou
-                écrivez à contact@prosimport.com.
+                écrivez à contact@terrassea.com.
               </div>
             </div>
           </div>
@@ -790,7 +790,7 @@ function DocumentsCard({
         )}
       </ul>
       <a
-        href="mailto:contact@prosimport.com"
+        href="mailto:contact@terrassea.com"
         className="mt-3 inline-block text-xs text-foreground underline"
       >
         Demander un document
@@ -1076,8 +1076,8 @@ function ReservationSignInGate({
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Un doute sur l’adresse utilisée ? Écrivez-nous à{' '}
-            <a className="underline" href="mailto:contact@prosimport.com">
-              contact@prosimport.com
+            <a className="underline" href="mailto:contact@terrassea.com">
+              contact@terrassea.com
             </a>{' '}
             en citant la référence reçue par e-mail.
           </p>

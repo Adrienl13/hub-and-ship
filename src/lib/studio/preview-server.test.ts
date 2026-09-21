@@ -17,7 +17,7 @@ const NOW = 1_800_000_000
 const allow = () => ({ allowed: true })
 
 function request(query: string, init?: RequestInit): Request {
-  return new Request(`https://prosimport.com/studio/preview${query}`, init)
+  return new Request(`https://terrassea.com/studio/preview${query}`, init)
 }
 
 describe('secret de preview', () => {
@@ -80,7 +80,7 @@ describe('GET /studio/preview', () => {
 
     const token = cookie.split(';')[0]?.split('=')[1] ?? ''
     expect(token).toContain(`${NOW + 7 * 24 * 3600}.`)
-    const follow = new Request('https://prosimport.com/studio', {
+    const follow = new Request('https://terrassea.com/studio', {
       headers: { cookie: `${STUDIO_PREVIEW_COOKIE}=${token}` },
     })
     expect(await requestHasValidStudioPreview(follow, SECRET, NOW + 100)).toBe(true)
@@ -124,7 +124,7 @@ describe('GET /studio/preview', () => {
 
   it("un cookie forgé sans le secret n'ouvre rien", async () => {
     const forged = await signStudioPreviewToken('secret-devine-par-un-attaquant', NOW + 60)
-    const follow = new Request('https://prosimport.com/studio', {
+    const follow = new Request('https://terrassea.com/studio', {
       headers: { cookie: `${STUDIO_PREVIEW_COOKIE}=${forged}` },
     })
     expect(await requestHasValidStudioPreview(follow, SECRET, NOW)).toBe(false)

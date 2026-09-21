@@ -159,8 +159,8 @@ function LoginPage() {
             <div className="border-[color:var(--ochre)]/30 bg-[color:var(--ochre)]/10 text-foreground/80 mb-5 rounded-md border p-3 text-xs leading-5">
               La connexion est momentanément indisponible. Merci de réessayer
               dans quelques minutes, ou écrivez-nous à{' '}
-              <a className="underline" href="mailto:contact@prosimport.com">
-                contact@prosimport.com
+              <a className="underline" href="mailto:contact@terrassea.com">
+                contact@terrassea.com
               </a>
               .
             </div>

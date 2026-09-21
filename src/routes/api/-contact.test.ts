@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { handleContactMessage } from './contact'
 
 function createRequest(body: unknown, origin?: string): Request {
-  return new Request('https://prosimport.com/api/contact', {
+  return new Request('https://terrassea.com/api/contact', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

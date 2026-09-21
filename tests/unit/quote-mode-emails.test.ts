@@ -28,7 +28,7 @@ const BASE: ReservationEmailInput = {
       subtotalHt: 7200,
     },
   ],
-  accountUrl: 'https://prosimport.com/account/reservations/abc',
+  accountUrl: 'https://terrassea.com/account/reservations/abc',
 }
 
 const QUOTE: ReservationEmailInput = {

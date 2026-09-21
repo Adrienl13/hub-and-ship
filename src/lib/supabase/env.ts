@@ -40,7 +40,7 @@ export function getSupabasePublicConfig(
   // envoyait les liens magiques vers http://localhost:5173. En production le
   // repli est le domaine de service (le flip de domaine le réécrit).
   const appUrlFallback = import.meta.env.PROD
-    ? 'https://prosimport.com'
+    ? 'https://terrassea.com'
     : 'http://localhost:5173'
 
   return {

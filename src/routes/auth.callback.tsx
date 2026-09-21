@@ -216,8 +216,8 @@ function MagicLinkFailurePanel({
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Toujours bloqué ? Écrivez-nous à{' '}
-            <a className="underline" href="mailto:contact@prosimport.com">
-              contact@prosimport.com
+            <a className="underline" href="mailto:contact@terrassea.com">
+              contact@terrassea.com
             </a>{' '}
             ou appelez-nous, on ouvre votre accès à la main.
           </p>

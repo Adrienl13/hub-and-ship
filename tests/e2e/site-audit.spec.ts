@@ -163,7 +163,7 @@ test.describe('site audit parcours publics', () => {
         .first()
         .getAttribute('href')
 
-      expect(canonical, path).toBe(`https://prosimport.com${path}`)
+      expect(canonical, path).toBe(`https://terrassea.com${path}`)
     }
   })
 
@@ -509,7 +509,7 @@ test.describe('site audit stock et admin', () => {
       '/auth/login?returnTo=%2Fadmin%3Ftab%3Dreservations',
     )
 
-    await page.getByLabel('Email professionnel').fill('admin@prosimport.com')
+    await page.getByLabel('Email professionnel').fill('admin@terrassea.com')
 
     await expect(page.getByText('Supabase Auth est indisponible')).toBeVisible()
     await expect(

@@ -39,7 +39,7 @@ import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 // Repli humain quand la demande ne peut pas être enregistrée (mailto du
 // panneau + consigne du toast d'échec).
-const STOCK_CONTACT_EMAIL = 'contact@prosimport.com'
+const STOCK_CONTACT_EMAIL = 'contact@terrassea.com'
 
 export const Route = createFileRoute('/stock-24h')({
   // Head STATIQUE : plus d'ItemList ni d'og:image dérivés de la fixture — les

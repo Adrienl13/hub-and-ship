@@ -81,7 +81,7 @@ export function ReportAccessRequestDialog({
         toast.error('Demande non envoyée', {
           description:
             payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à contact@prosimport.com.',
+            'Réessayez dans un instant, ou écrivez-nous à contact@terrassea.com.',
         })
         return
       }
@@ -102,7 +102,7 @@ export function ReportAccessRequestDialog({
     } catch {
       toast.error('Demande non envoyée', {
         description:
-          'Connexion impossible. Écrivez-nous à contact@prosimport.com.',
+          'Connexion impossible. Écrivez-nous à contact@terrassea.com.',
       })
     } finally {
       setSubmitting(false)

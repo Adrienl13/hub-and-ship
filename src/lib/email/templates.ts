@@ -5,9 +5,9 @@
 // Branded contact surface (the sending domain is authenticated in Brevo and
 // receives via Cloudflare Email Routing). Single source of truth for footers
 // and text signatures so we never leak a personal address.
-const CONTACT_EMAIL = 'contact@prosimport.com'
-const SITE_URL = 'https://prosimport.com'
-const SITE_LABEL = 'prosimport.com'
+const CONTACT_EMAIL = 'contact@terrassea.com'
+const SITE_URL = 'https://terrassea.com'
+const SITE_LABEL = 'terrassea.com'
 const TEXT_SIGNATURE = `Terrassea — Pros Import EURL
 ${SITE_LABEL} · ${CONTACT_EMAIL}`
 
@@ -289,7 +289,7 @@ ${amountLine}
 </p>${
     input.accountLinkIsMagic
       ? `
-<p style="font-size:12px;line-height:1.6;margin:12px 0 0;text-align:center;color:#999;">Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.</p>`
+<p style="font-size:12px;line-height:1.6;margin:12px 0 0;text-align:center;color:#999;">Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur terrassea.com.</p>`
       : ''
   }`
   const text = `Bonjour,
@@ -297,7 +297,7 @@ ${amountLine}
 Nous confirmons la réception de votre paiement pour la réservation ${input.reference} (container ${input.containerReference}). Votre place est verrouillée.
 ${input.amountPaid ? `Montant réglé : ${formatEur(input.amountPaid)}\n` : ''}
 Voir votre réservation (connexion automatique) : ${input.accountUrl}
-${input.accountLinkIsMagic ? 'Lien à usage unique — ensuite, connectez-vous avec votre email sur prosimport.com.\n' : ''}
+${input.accountLinkIsMagic ? 'Lien à usage unique — ensuite, connectez-vous avec votre email sur terrassea.com.\n' : ''}
 ${TEXT_SIGNATURE}`
   return {
     subject,
@@ -566,7 +566,7 @@ L'équipe Terrassea
 
 Terrassea — Pros Import EURL
 60 Rue François Ier, 75008 Paris
-contact@prosimport.com`
+contact@terrassea.com`
 
   return {
     subject,
@@ -650,7 +650,7 @@ export function buildContactConfirmationEmail(input: ContactEmailInput): {
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Bonjour ${escape(input.name)},</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px;">Nous avons bien reçu votre message (<strong>${escape(input.topicLabel)}</strong>). Notre équipe vous répond sous <strong>24 h ouvrées</strong>, directement à cette adresse.</p>
 <p style="font-size:13px;line-height:1.7;margin:0 0 16px;padding:12px;background:#f6f2ea;border-radius:4px;white-space:pre-wrap;color:#666;">${escape(input.message)}</p>
-<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">En attendant : le catalogue et les prix directs sont sur <a href="https://prosimport.com/catalogue" style="color:#1a1a1a;">prosimport.com/catalogue</a>, et la méthode de prix sur <a href="https://prosimport.com/prix" style="color:#1a1a1a;">prosimport.com/prix</a>.</p>`
+<p style="font-size:13px;line-height:1.6;margin:0;color:#666;">En attendant : le catalogue et les prix directs sont sur <a href="https://terrassea.com/catalogue" style="color:#1a1a1a;">terrassea.com/catalogue</a>, et la méthode de prix sur <a href="https://terrassea.com/prix" style="color:#1a1a1a;">terrassea.com/prix</a>.</p>`
   const text = `Bonjour ${input.name},
 
 Nous avons bien reçu votre message (${input.topicLabel}). Notre équipe vous répond sous 24 h ouvrées, directement à cette adresse.

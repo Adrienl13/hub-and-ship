@@ -38,7 +38,7 @@ function createRequest(
   body: unknown,
   init: { origin?: string; method?: string; ip?: string } = {},
 ): Request {
-  return new Request('https://prosimport.com/api/studio/events', {
+  return new Request('https://terrassea.com/api/studio/events', {
     method: init.method ?? 'POST',
     headers: {
       'content-type': 'application/json',
