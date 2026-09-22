@@ -9,7 +9,10 @@
 // Le développement local (bun run dev) n'est pas concerné : le fallback
 // mock reste utile sans Supabase.
 
-export const REQUIRED_PUBLIC_ENV = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']
+export const REQUIRED_PUBLIC_ENV = [
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_ANON_KEY',
+]
 
 /** Ordre de priorité croissante de Vite pour `vite build` (mode production). */
 export function viteEnvFilesForMode(mode = 'production') {
@@ -23,7 +26,9 @@ export function parseDotenv(text) {
   for (const rawLine of String(text ?? '').split(/\r?\n/)) {
     const line = rawLine.trim()
     if (!line || line.startsWith('#')) continue
-    const match = line.match(/^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/)
+    const match = line.match(
+      /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/,
+    )
     if (!match) continue
     let value = match[2].trim()
     if (
@@ -45,7 +50,11 @@ export function parseDotenv(text) {
  * croissant de priorité, puis process.env qui gagne toujours.
  * `readFile(name)` renvoie le contenu ou null si absent.
  */
-export function resolveViteEnv({ processEnv = {}, readFile, mode = 'production' }) {
+export function resolveViteEnv({
+  processEnv = {},
+  readFile,
+  mode = 'production',
+}) {
   const merged = {}
   for (const file of viteEnvFilesForMode(mode)) {
     const content = readFile(file)
@@ -60,7 +69,9 @@ export function resolveViteEnv({ processEnv = {}, readFile, mode = 'production' 
 }
 
 export function findMissingPublicEnv(env, required = REQUIRED_PUBLIC_ENV) {
-  return required.filter((key) => !(typeof env[key] === 'string' && env[key].trim().length > 0))
+  return required.filter(
+    (key) => !(typeof env[key] === 'string' && env[key].trim().length > 0),
+  )
 }
 
 /** Message d'erreur sans aucune valeur, uniquement les noms manquants. */
@@ -71,5 +82,32 @@ export function formatMissingEnvMessage(missing) {
     'Sans elles, le site en ligne retombe sur le catalogue mock (6 produits).',
     'Renseigne-les dans .env.production (non commité) ou dans l’environnement du shell,',
     'puis relance `bun run deploy`. Détails : docs/RUNBOOK_FUSION_DEPLOY.md.',
+  ].join('\n')
+}
+
+// Régression du 22/09/2026 : un build déployé depuis un poste dont le
+// .env.local ne portait pas VITE_STUDIO_ENABLED=true a refermé le Studio
+// (ouvert le 15/09) sans que rien ne le signale — « Le Studio » et
+// « Commencer un projet » retombaient sur leurs ancres de repli. Le flag
+// est une variable de BUILD : les variables Cloudflare n'y changent rien.
+export const STUDIO_FLAG = 'VITE_STUDIO_ENABLED'
+/** Fermeture volontaire, déclarée dans le shell : `STUDIO_CLOSED=1 bun run deploy`. */
+export const STUDIO_CLOSED_OVERRIDE = 'STUDIO_CLOSED'
+const STUDIO_TRUE = new Set(['true', '1', 'on', 'yes'])
+
+/** Rend null si le build ouvre le Studio (ou le ferme sciemment), sinon le message de refus. */
+export function findStudioFlagProblem(env) {
+  const flag = String(env[STUDIO_FLAG] ?? '')
+    .trim()
+    .toLowerCase()
+  if (STUDIO_TRUE.has(flag)) return null
+  if (String(env[STUDIO_CLOSED_OVERRIDE] ?? '').trim() === '1') return null
+  return [
+    `Déploiement refusé : ${STUDIO_FLAG} n'est pas à true dans ce build${flag ? ` (valeur « ${flag} »)` : ' (absent)'}.`,
+    'Le Studio est ouvert au public depuis le 15/09/2026 : sans ce flag, « Le Studio » et',
+    '« Commencer un projet » retombent sur les ancres de la page d’accueil, et /studio répond 404.',
+    `Ajoute ${STUDIO_FLAG}=true à .env.local (ou .env.production) de CE dossier, puis relance.`,
+    `Pour refermer le Studio volontairement : ${STUDIO_CLOSED_OVERRIDE}=1 bun run deploy.`,
+    'Détails : docs/STUDIO_PUBLIC_PREPARATION.md.',
   ].join('\n')
 }

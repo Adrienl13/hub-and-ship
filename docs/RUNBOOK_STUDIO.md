@@ -6,7 +6,7 @@
 
 - `main` inclut le hotfix preview `4017238` : cookie `Path=/`, déployé et validé en production.
 - Preview privée production et navigation `/studio` → `/studio/assises` : **fonctionnelles**.
-- `VITE_STUDIO_ENABLED` reste **OFF en production** : le Studio reste accessible uniquement par la preview privée.
+- `VITE_STUDIO_ENABLED` est **ON en production depuis l’ouverture du 15/09/2026**. Depuis le 22/09, `bun run deploy` refuse un build sans ce flag (`scripts/check-deploy-env.mjs`) : un poste dont le `.env.local` ne le porte pas avait redéployé le Studio fermé sans le savoir. Fermeture volontaire : `STUDIO_CLOSED=1 bun run deploy`.
 - Contrôles de sécurité production : **`security:studio` OK · `security:grants` OK**.
 - Version Cloudflare validée : `9418ec86-8ba1-4102-8f82-109541dcafe5`.
 
