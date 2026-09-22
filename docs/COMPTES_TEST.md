@@ -149,3 +149,26 @@ delete from public.companies
 ## Contrôle des grants (lot 0.5 Studio)
 
 Le script `bun run security:grants` et le test `tests/integration/products-access.integration.test.ts` utilisent le compte **Client direct** (`direct.test@prosimport.com`, non admin) et, facultativement, le compte **Admin** de test pour vérifier que les coûts fournisseur restent invisibles et que le catalogue reste lisible. Renseigne `TEST_BUYER_EMAIL` / `TEST_BUYER_PASSWORD` (et `TEST_ADMIN_*`) dans `.env.local` ou dans les secrets CI — jamais dans le repo, jamais avec un vrai compte client.
+
+## Contrôle des portails (après mise en ligne)
+
+`bun run security:portals` vérifie, contre le site réel, que l'admin n'est
+atteignable que par un admin : `is_admin()` vaut `false` pour anon, les tables
+privées (profils, réservations, factures, commissions…) ne renvoient rien à
+anon, les RPC `admin_*` refusent, les compartiments de stockage privés
+restent illisibles, le site sert ses en-têtes de sécurité et
+`prosimport.com` redirige vers `terrassea.com`.
+
+```bash
+SUPABASE_URL=… SUPABASE_ANON_KEY=… \
+TEST_BUYER_EMAIL=direct.test@prosimport.com TEST_BUYER_PASSWORD=… \
+bun run security:portals
+```
+
+Avec `TEST_BUYER_*`, deux **sondes d'escalade** tentent de passer ce compte
+admin (`PATCH users_profile.role`, `PATCH professionals.is_admin`). Elles
+doivent être refusées ; si l'une passait, le script remet la valeur en place
+et sort en échec. D'où la règle : un compte de **test** uniquement, jamais un
+vrai client. Sans `TEST_BUYER_*`, le script est en lecture seule (à une
+insertion près, conçue pour être refusée par la RLS et impossible à
+persister).
