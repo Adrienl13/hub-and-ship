@@ -35,22 +35,12 @@
   border-radius: 12px;
 }
 @media (max-width: 760px) {
-  .public-design .nav-links {
-    display: flex !important;
-    order: 3;
-    width: 100%;
-    /* Les liens s'enroulent au lieu de défiler horizontalement. Sous 760 px
-       la barre n'est PAS collante (position: relative, plus bas) : elle
-       défile avec la page, deux ou trois lignes ne coûtent donc rien passé
-       le premier scroll. Le défilement horizontal, lui, cachait « Conteneurs
-       livrés » et « Contact » derrière un balayage que rien n'annonçait —
-       sur un téléphone, ces entrées n'existaient tout simplement pas. */
-    flex-wrap: wrap;
-    white-space: normal;
-    row-gap: 10px;
-    column-gap: 16px;
-    padding: 10px 0 4px;
-  }
+  /* Les sept liens s'affichaient ici, enroulés sur deux ou trois lignes sous
+     le logo. C'était déjà un progrès sur le défilement horizontal d'avant,
+     qui cachait « Conteneurs livrés » et « Contact » derrière un balayage
+     que rien n'annonçait — mais la barre mangeait encore un tiers du premier
+     écran. Ils sont passés derrière un bouton « Menu » : voir le bloc
+     « Menu déroulant mobile » en fin de fichier. */
   .public-design .nav {
     padding-top: 12px;
     padding-bottom: 8px;
@@ -111,4 +101,130 @@
      14 px. La famille s'hérite. */
   font-weight: 600;
   font-size: 14px;
+}
+
+/* ---------------------------------------------------------------------------
+   Menu déroulant mobile.
+
+   Sous 760 px, les sept entrées s'enroulaient sur deux ou trois lignes sous
+   le logo : la barre mangeait un tiers du premier écran, et la page
+   commençait sous une liste de liens au lieu de commencer par son sujet.
+   Elles passent derrière un bouton « Menu ».
+
+   Les liens restent DANS LE HTML, simplement masqués par CSS : un robot les
+   lit, le maillage interne est intact. C'est aussi pourquoi le repli se joue
+   en CSS et non en JavaScript — pas de disparition après coup.
+
+   Au-dessus de 760 px, rien ne change : le bouton n'existe pas, les liens
+   sont en ligne comme avant.
+--------------------------------------------------------------------------- */
+
+.public-design .nav-toggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .public-design .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    /* 44 px : la cible tactile minimale recommandée. Plus petit, on vise à
+       côté une fois sur trois. */
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--color-neutral-300, rgba(32, 30, 29, 0.18));
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .public-design .nav-toggle-bars,
+  .public-design .nav-toggle-bars::before,
+  .public-design .nav-toggle-bars::after {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  .public-design .nav-toggle-bars {
+    position: relative;
+  }
+  .public-design .nav-toggle-bars::before,
+  .public-design .nav-toggle-bars::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+  .public-design .nav-toggle-bars::before {
+    top: -5px;
+  }
+  .public-design .nav-toggle-bars::after {
+    top: 5px;
+  }
+
+  /* Ouvert : les trois barres deviennent une croix. */
+  .public-design .nav-toggle[aria-expanded='true'] .nav-toggle-bars {
+    background: transparent;
+  }
+  .public-design .nav-toggle[aria-expanded='true'] .nav-toggle-bars::before {
+    transform: translateY(5px) rotate(45deg);
+  }
+  .public-design .nav-toggle[aria-expanded='true'] .nav-toggle-bars::after {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  /* Fermé : les liens sortent du flux sans quitter le document. */
+  .public-design .nav:has(.nav-toggle[aria-expanded='false']) .nav-links {
+    display: none !important;
+  }
+
+  /* Ouvert : une colonne pleine largeur, une entrée par ligne. */
+  .public-design .nav:has(.nav-toggle[aria-expanded='true']) .nav-links {
+    display: flex !important;
+    order: 3;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    row-gap: 0;
+    column-gap: 0;
+    padding: 6px 0 10px;
+    border-top: 1px solid var(--color-neutral-300, rgba(32, 30, 29, 0.14));
+    margin-top: 10px;
+  }
+  .public-design .nav:has(.nav-toggle[aria-expanded='true']) .nav-links > a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .public-design
+    .nav:has(.nav-toggle[aria-expanded='true'])
+    .nav-links
+    > a
+    + a {
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-text) 10%, transparent);
+  }
+}
+
+@media (max-width: 760px) {
+  /* Le libellé « Mon compte » coûte une centaine de pixels dans une barre
+     qui n'en a plus. L'icône et l'aria-label du lien suffisent — le lien
+     lui-même reste bien présent et atteignable. */
+  .public-design .public-account-link > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .public-design .public-account-link {
+    padding-inline: 10px;
+  }
 }

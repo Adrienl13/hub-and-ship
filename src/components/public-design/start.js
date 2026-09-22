@@ -7,6 +7,7 @@ import { setPublicPricingRules } from '@/lib/pricing/public-rules'
 import { PricePage } from './prix/app.js'
 import { PartnersPage } from './partenaires/app.js'
 import { RegistryPage } from './livres/app.js'
+import { startNavMenu } from './nav-menu.js'
 
 export function startPage(kind, root, onSelection, onPartner) {
   // L'index rendu côté serveur a fait son office : les robots et les
@@ -136,7 +137,12 @@ export function startPage(kind, root, onSelection, onPartner) {
         }
       })
   }
+  // Le menu mobile est commun aux cinq pages : une seule mise en route ici
+  // plutôt qu'une par gabarit, qui finirait par diverger.
+  const stopNavMenu = startNavMenu(root)
+
   return () => {
+    stopNavMenu()
     page.destroy()
     document.body.style.overflow = ''
     document.documentElement.classList.remove('motion-paused')

@@ -17,7 +17,16 @@
         alt="Terrassea"
         style="height: 40px; display: block"
     /></a>
-    <div class="nav-links">
+    <button
+      type="button"
+      class="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-links"
+    >
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+      <span>Menu</span>
+    </button>
+    <div class="nav-links" id="nav-links">
       <a href="/catalogue/">Le mobilier</a>
       <a href="/#studio" data-studio-entry="">Le Studio</a>
       <a href="/partenaires/" aria-current="page">Partenaires</a>
