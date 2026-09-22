@@ -51,7 +51,10 @@ import {
   V1_POLICY,
 } from '@/lib/studio/engine/v1'
 import { resolveStudioEngine } from '@/lib/studio/engine/runtime'
-import { evaluateConvergence } from '@/lib/studio/engine/convergence'
+import {
+  evaluateConvergence,
+  evaluateConvergenceV0,
+} from '@/lib/studio/engine/convergence'
 import { EMPTY_VISUAL_DATA } from '@/lib/studio/visual'
 import { isStudioEnabled } from '@/lib/studio/flags'
 import type { StudioProduct, StudioProjectItem } from '@/lib/studio/types'
@@ -196,14 +199,18 @@ function StudioSeatsPage() {
     [pool, v1Operational, visual.neighbors, algorithmVersion],
   )
   const card = useMemo(() => next(engineState), [next, engineState])
+  // Public (V0) : la découverte a aussi une fin, par compteurs — sans elle,
+  // rien n'invitait à conclure avant d'avoir vu tout le catalogue.
   const convergence = useMemo(
     () =>
-      v1Operational && pool
-        ? evaluateConvergence(
-            engineState,
-            pool.engineCatalogue,
-            visual.neighbors,
-          )
+      pool
+        ? v1Operational
+          ? evaluateConvergence(
+              engineState,
+              pool.engineCatalogue,
+              visual.neighbors,
+            )
+          : evaluateConvergenceV0(engineState, pool.engineCatalogue)
         : null,
     [v1Operational, pool, engineState, visual.neighbors],
   )

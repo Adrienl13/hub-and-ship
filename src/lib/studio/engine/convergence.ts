@@ -1,5 +1,7 @@
 import type { VisualNeighbor } from '../visual'
+import { MAX_FINALISTS } from './scoring'
 import type { EngineCatalogue, EngineState } from './types'
+import { initialOrder, remainingCandidates } from './v0'
 import { rankVisualSeats, V1_POLICY } from './v1'
 
 export interface ConvergenceResult {
@@ -124,6 +126,84 @@ export function evaluateConvergence(
       (history.length >= V1_POLICY.stalledAmbiguousFloor &&
         (coherence < V1_POLICY.minimumCoherence ||
           separation < V1_POLICY.minimumSeparation)))
+  return {
+    state: stalled ? 'stalled' : 'insufficient_signal',
+    reasons,
+    metrics,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Fin de découverte du moteur V0 (public).
+//
+// Le V1 ne tourne qu'en preview, avec les données visuelles : en public le
+// Studio faisait défiler les 88 assises sans jamais proposer de conclure —
+// neuf « j'aime » et aucune invitation. Le V0 n'a pas de similarité visuelle
+// pour juger d'une convergence ; il a des compteurs, et c'est suffisant pour
+// dire « on a de quoi comparer ». Même résultat, même invitation à l'écran,
+// mêmes événements que le V1.
+// ---------------------------------------------------------------------------
+
+export const V0_CONVERGENCE_POLICY = Object.freeze({
+  /** Assez de favoris pour remplir les finalistes… */
+  readyLikes: MAX_FINALISTS,
+  /** …et assez de décisions pour qu'ils aient été choisis parmi d'autres. */
+  readyInformative: 6,
+  /** Au-delà, on propose quoi qu'il arrive : la sélection est déjà large. */
+  manyLikes: 5,
+  /** Cartes vues sans qu'une piste se dessine : on cesse d'insister… */
+  stalledObservations: 14,
+  /** …et au-delà, on conclut même avec des favoris : la découverte a une fin. */
+  maximumObservations: 24,
+})
+
+/** Recalcul intégral depuis l'historique : Undo exact, comme le V1. */
+export function evaluateConvergenceV0(
+  state: EngineState,
+  catalogue: EngineCatalogue,
+): ConvergenceResult {
+  const ids = new Set(catalogue.seats.map((s) => s.id))
+  const history = state.history.filter((h) => ids.has(h.productId))
+  const latest = [...new Map(history.map((h) => [h.productId, h])).values()]
+  const informative = latest.filter((h) => h.action !== 'pass').length
+  const likes = latest.filter((h) => h.action === 'like').length
+  const remaining = remainingCandidates(
+    state,
+    initialOrder(state.sessionId, catalogue.seats),
+  ).length
+  const metrics = {
+    informative,
+    likes,
+    stability: 0,
+    separation: 0,
+    coherence: 0,
+    remainingNovelty: remaining / Math.max(1, catalogue.seats.length),
+    clusters: 0,
+  }
+  const policy = V0_CONVERGENCE_POLICY
+  const exhausted = remaining === 0
+  const ready =
+    likes >= policy.manyLikes ||
+    (likes >= policy.readyLikes && informative >= policy.readyInformative)
+  if (ready) {
+    return {
+      state: 'ready',
+      reasons: exhausted
+        ? ['enough_favorites', 'catalogue_exhausted']
+        : ['enough_favorites'],
+      metrics,
+    }
+  }
+  const reasons: string[] = ['insufficient_favorites']
+  if (exhausted) reasons.push('catalogue_exhausted')
+  if (history.length >= policy.maximumObservations)
+    reasons.push('discovery_too_long')
+  else if (
+    history.length >= policy.stalledObservations &&
+    likes < policy.readyLikes
+  )
+    reasons.push('sparse_signal')
+  const stalled = reasons.length > 1
   return {
     state: stalled ? 'stalled' : 'insufficient_signal',
     reasons,
