@@ -6,6 +6,7 @@ import { STUDIO_BRIEF_SERVER_LIMIT } from './studio/studio-brief-limit'
 import { z } from 'zod'
 
 export const CONTACT_TOPICS = [
+  'devis',
   'produit',
   'container',
   'reservation',
@@ -15,6 +16,9 @@ export const CONTACT_TOPICS = [
 export type ContactTopic = (typeof CONTACT_TOPICS)[number]
 
 export const CONTACT_TOPIC_LABEL: Record<ContactTopic, string> = {
+  // Demande de devis pour un modèle (tiroir catalogue, fiche produit) :
+  // le sujet fait la différence dans la boîte de réception.
+  devis: 'Demande de devis',
   produit: 'Produit / catalogue',
   container: 'Container en cours',
   reservation: 'Ma réservation',

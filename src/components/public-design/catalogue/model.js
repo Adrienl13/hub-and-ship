@@ -12,6 +12,16 @@ import {
   calculateOrderLines,
   describeVolumeDiscounts,
 } from '../../../lib/order'
+import {
+  QUOTE_REQUEST_TOPIC,
+  buildQuoteRequestMessage,
+  validateQuoteRequest,
+} from '../../../lib/quote-request'
+
+// Demande de devis pour le modèle ouvert dans le tiroir : formulaire replié
+// par défaut, identité conservée d'une fiche à l'autre (on ne ressaisit pas
+// son email pour un second modèle), état d'envoi remis à zéro à chaque fiche.
+const QUOTE_IDLE = { quoteOpen: false, quoteStatus: 'idle', quoteError: '' }
 
 export class CatalogueModel {
   state = {
@@ -29,6 +39,12 @@ export class CatalogueModel {
     cart: [],
     cartOpen: false,
     delivery: 'terrasse',
+    ...QUOTE_IDLE,
+    quoteName: '',
+    quoteCompany: '',
+    quoteEmail: '',
+    quotePhone: '',
+    quoteNote: '',
   }
   P = 'https://terrassea.com/catalogue/'
   S =
@@ -135,6 +151,90 @@ export class CatalogueModel {
     return encoded ? '/panier?panier=' + encoded : '/panier'
   }
 
+  /**
+   * Transport de la demande de devis. Le modèle ne connaît ni fetch ni
+   * l'URL : l'application (app.js) le remplace par l'appel à /api/contact,
+   * les tests par une promesse. Ici, refus explicite plutôt que silence.
+   */
+  deliverQuote() {
+    return Promise.reject(new Error('Envoi indisponible'))
+  }
+  submitQuote(event, p, vi) {
+    event?.preventDefault?.()
+    const s = this.state
+    const checked = validateQuoteRequest({
+      name: s.quoteName,
+      email: s.quoteEmail,
+    })
+    if (!checked.ok) {
+      this.setState({ quoteStatus: 'failed', quoteError: checked.error })
+      return Promise.resolve()
+    }
+    const payload = {
+      name: s.quoteName.trim(),
+      email: s.quoteEmail.trim(),
+      company: s.quoteCompany.trim(),
+      phone: s.quotePhone.trim(),
+      topic: QUOTE_REQUEST_TOPIC,
+      message: buildQuoteRequestMessage({
+        name: p.name,
+        ref: p.ref,
+        design: p.variants[vi][0],
+        qty: this.sheetQuantity(p, vi, s.qty),
+        priceLabel: this.eur(p.price),
+        moq: this.minimum(p, vi),
+        note: s.quoteNote,
+      }),
+    }
+    this.setState({ quoteStatus: 'sending', quoteError: '' })
+    return this.deliverQuote(payload).then(
+      () => this.setState({ quoteStatus: 'sent' }),
+      (error) =>
+        this.setState({
+          quoteStatus: 'failed',
+          quoteError:
+            (error && error.message) || 'Envoi impossible pour le moment.',
+        }),
+    )
+  }
+  quoteVals(p, vi) {
+    const s = this.state
+    const field = (key) => (e) => this.setState({ [key]: e.target.value })
+    return {
+      open: !!p && s.quoteOpen && s.quoteStatus !== 'sent',
+      sent: !!p && s.quoteStatus === 'sent',
+      sending: s.quoteStatus === 'sending',
+      failed: s.quoteStatus === 'failed',
+      error: s.quoteError,
+      submitLabel:
+        s.quoteStatus === 'sending' ? 'Envoi en cours…' : 'Envoyer ma demande',
+      summary: p
+        ? p.name +
+          ' · ' +
+          p.variants[vi][0] +
+          ' · ' +
+          this.sheetQuantity(p, vi, s.qty) +
+          ' pièces'
+        : '',
+      name: s.quoteName,
+      company: s.quoteCompany,
+      email: s.quoteEmail,
+      phone: s.quotePhone,
+      setName: field('quoteName'),
+      setCompany: field('quoteCompany'),
+      setEmail: field('quoteEmail'),
+      setPhone: field('quotePhone'),
+      setNote: field('quoteNote'),
+      toggle: () =>
+        this.setState((st) => ({
+          quoteOpen: !st.quoteOpen,
+          quoteStatus: 'idle',
+          quoteError: '',
+        })),
+      cancel: () => this.setState({ ...QUOTE_IDLE }),
+      submit: (e) => this.submitQuote(e, p, vi),
+    }
+  }
   renderVals() {
     const s = this.state,
       C = this.C
@@ -189,6 +289,9 @@ export class CatalogueModel {
     const scales = buildVolumeScales(familleLignes)
     const discountRows = describeVolumeDiscounts(totals)
     const sheetP = s.sheet ? this.products.find((p) => p.ref === s.sheet) : null
+    const sheetVi = sheetP
+      ? Math.min(s.sheetVar, sheetP.variants.length - 1)
+      : 0
     const famOf = (m) =>
       (this.families.find((f) => f.key === m) || {}).name || m
     return {
@@ -307,6 +410,7 @@ export class CatalogueModel {
               sheetVar: di,
               sheetImg: 0,
               qty: this.minimum(p, di),
+              ...QUOTE_IDLE,
             }),
           add: () => this.addToCart(p, di, this.minimum(p, di)),
           notInCart: !n,
@@ -330,7 +434,7 @@ export class CatalogueModel {
       }),
       empty: list.length === 0,
       sheetOpen: !!sheetP,
-      closeSheet: () => this.setState({ sheet: null }),
+      closeSheet: () => this.setState({ sheet: null, ...QUOTE_IDLE }),
       stop: (e) => e.stopPropagation(),
       sheet: sheetP
         ? (() => {
@@ -385,7 +489,7 @@ export class CatalogueModel {
                   vi,
                   this.sheetQuantity(sheetP, vi, s.qty),
                 )
-                this.setState({ sheet: null, cartOpen: true })
+                this.setState({ sheet: null, cartOpen: true, ...QUOTE_IDLE })
               },
               addLabel:
                 'Ajouter ' +
@@ -396,6 +500,7 @@ export class CatalogueModel {
         : { gallery: [], variants: [] },
       sheetQty: s.qty,
       setQty: (e) => this.setState({ qty: +e.target.value }),
+      quote: this.quoteVals(sheetP, sheetVi),
       handoff: () => this.prepareHandoff(),
       // Passage de relais vers le tunnel React : la sélection part encodée
       // dans l'URL, /panier la rejoue et affiche le devis. Sans ce lien, un

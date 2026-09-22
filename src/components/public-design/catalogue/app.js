@@ -1,7 +1,8 @@
-/* global document, window, localStorage, IntersectionObserver, setInterval, clearInterval, queueMicrotask */
+/* global document, window, localStorage, fetch, IntersectionObserver, setInterval, clearInterval, queueMicrotask */
 import { CatalogueModel } from './model.js'
 import { bind } from '../accueil-v3/bindings.js'
 import { sanitizeCart, minimum } from './data.js'
+import { getAttributionFields } from '@/lib/analytics/attribution'
 export class Catalogue extends CatalogueModel {
   constructor(root, products) {
     super()
@@ -171,6 +172,30 @@ export class Catalogue extends CatalogueModel {
     if (row) row.qty = Math.min(100000, row.qty + qty)
     else cart.push({ key, ref: p.ref, varIdx, qty: Math.max(min, qty) })
     this.saveCart(cart)
+  }
+  /**
+   * Demande de devis pour un modèle → /api/contact, même canal que le
+   * formulaire de contact (même-origine, limite par IP, validation zod).
+   * L'attribution first-touch part avec, comme depuis /contact.
+   */
+  async deliverQuote(payload) {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...payload,
+        attribution: getAttributionFields(Date.now()),
+      }),
+    })
+    if (response.ok) return
+    let message = 'Envoi impossible pour le moment. Réessayez dans un instant.'
+    try {
+      const body = await response.json()
+      if (body && typeof body.error === 'string') message = body.error
+    } catch {
+      /* corps non JSON : message générique */
+    }
+    throw new Error(message)
   }
   prepareHandoff() {
     this.saveCart(this.state.cart)

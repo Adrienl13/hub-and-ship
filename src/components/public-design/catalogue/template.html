@@ -1272,16 +1272,119 @@
                   ></span>
                 </button>
               </div>
-              <a
-                href="/#contact"
+              <button
+                type="button"
                 class="btn btn-secondary"
-                style="
-                  justify-content: center;
-                  min-height: 48px;
-                  text-decoration: none;
-                "
-                >Demander un devis pour ce modèle →</a
+                style="justify-content: center; min-height: 48px"
+                data-onclick="quote.toggle"
+                aria-expanded="{{ quote.open }}"
+                aria-controls="quick-quote"
               >
+                Demander un devis pour ce modèle
+              </button>
+              <template data-if="quote.open">
+                <form
+                  id="quick-quote"
+                  class="quick-quote"
+                  novalidate=""
+                  data-onsubmit="quote.submit"
+                >
+                  <p class="quick-quote-lead">
+                    Devis pour
+                    <strong data-bound-text="{{ quote.summary }}"></strong>.
+                    Réponse sous 24 h ouvrées, sans engagement.
+                  </p>
+                  <div class="quick-quote-grid">
+                    <label
+                      >Nom
+                      <input
+                        type="text"
+                        name="name"
+                        autocomplete="name"
+                        required=""
+                        value="{{ quote.name }}"
+                        data-oninput="quote.setName"
+                    /></label>
+                    <label
+                      >Société
+                      <input
+                        type="text"
+                        name="company"
+                        autocomplete="organization"
+                        value="{{ quote.company }}"
+                        data-oninput="quote.setCompany"
+                    /></label>
+                    <label
+                      >Email professionnel
+                      <input
+                        type="email"
+                        name="email"
+                        autocomplete="email"
+                        required=""
+                        value="{{ quote.email }}"
+                        data-oninput="quote.setEmail"
+                    /></label>
+                    <label
+                      >Téléphone
+                      <input
+                        type="tel"
+                        name="phone"
+                        autocomplete="tel"
+                        value="{{ quote.phone }}"
+                        data-oninput="quote.setPhone"
+                    /></label>
+                  </div>
+                  <label
+                    >Précisions (délai, livraison, autres modèles)
+                    <textarea
+                      name="note"
+                      rows="3"
+                      data-oninput="quote.setNote"
+                    ></textarea>
+                  </label>
+                  <template data-if="quote.failed">
+                    <p
+                      class="quick-quote-error"
+                      role="alert"
+                      data-bound-text="{{ quote.error }}"
+                    ></p>
+                  </template>
+                  <div class="quick-quote-actions">
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      data-disabled="{{ quote.sending }}"
+                    >
+                      <span data-bound-text="{{ quote.submitLabel }}"></span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-onclick="quote.cancel"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                  <p class="quick-quote-alt">
+                    Plusieurs modèles ?
+                    <button
+                      type="button"
+                      class="quick-quote-link"
+                      data-onclick="sheet.add"
+                    >
+                      Ajoutez celui-ci à votre projet</button
+                    >, composez votre sélection et recevez un devis complet.
+                  </p>
+                </form>
+              </template>
+              <template data-if="quote.sent">
+                <div class="quick-quote-done" role="status">
+                  <strong>Demande envoyée.</strong> Vous recevez un accusé de
+                  réception par email ; nous revenons vers vous sous 24 h
+                  ouvrées avec un devis pour
+                  <span data-bound-text="{{ quote.summary }}"></span>.
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -1529,7 +1632,11 @@
                 ></span
                 ><span
                   style="
-                    color: color-mix(in srgb, var(--color-text) 60%, transparent);
+                    color: color-mix(
+                      in srgb,
+                      var(--color-text) 60%,
+                      transparent
+                    );
                   "
                   data-bound-text="{{ s.unitsLabel }}"
                 ></span>

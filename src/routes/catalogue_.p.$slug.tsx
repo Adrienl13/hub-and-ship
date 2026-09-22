@@ -13,13 +13,14 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { QualityBadgeDetail } from '@/components/QualityBadge'
 import { SafeImage } from '@/components/SafeImage'
-import {
-  findProductBySlug,
-  productPath,
-} from '@/lib/catalogue/product-slug'
+import { findProductBySlug, productPath } from '@/lib/catalogue/product-slug'
 import { encodeCartSelection } from '@/lib/catalogue/share-cart'
 import { loadCatalogProducts } from '@/lib/catalogue/server-catalog'
 import { formatEUR } from '@/lib/order'
+import {
+  QUOTE_REQUEST_TOPIC,
+  buildQuoteRequestMessage,
+} from '@/lib/quote-request'
 import {
   DISCOUNT_FAMILY_LABEL,
   describeFamilyTiers,
@@ -115,16 +116,12 @@ function Spec({
 // (fiche en cours de complétion) ne doit pas s'afficher barré — le client
 // lirait un prix pro PLUS CHER que le prix public.
 function hasMeaningfulRetail(product: Product): boolean {
-  return (
-    product.basePriceHt > 0 && product.retailPriceRef > product.basePriceHt
-  )
+  return product.basePriceHt > 0 && product.retailPriceRef > product.basePriceHt
 }
 
 function savingsPercent(product: Product): number {
   if (!hasMeaningfulRetail(product)) return 0
-  return Math.round(
-    (1 - product.basePriceHt / product.retailPriceRef) * 100,
-  )
+  return Math.round((1 - product.basePriceHt / product.retailPriceRef) * 100)
 }
 
 function ProductPage() {
@@ -214,7 +211,7 @@ function ProductPage() {
                 </div>
               )}
               {savings > 0 && (
-                <div className="mt-2 inline-flex rounded-sm bg-[color:var(--ember)]/10 px-2 py-1 text-xs font-semibold text-[color:var(--ember)]">
+                <div className="bg-[color:var(--ember)]/10 mt-2 inline-flex rounded-sm px-2 py-1 text-xs font-semibold text-[color:var(--ember)]">
                   −{savings} % vs circuit classique
                 </div>
               )}
@@ -240,9 +237,19 @@ function ProductPage() {
               </Link>
               <Link
                 to="/contact"
+                search={{
+                  topic: QUOTE_REQUEST_TOPIC,
+                  message: buildQuoteRequestMessage({
+                    name: product.name,
+                    ref: product.sku,
+                    qty: product.moqUnits,
+                    priceLabel: formatEUR(product.basePriceHt),
+                    moq: product.moqUnits,
+                  }),
+                }}
                 className="inline-flex h-11 items-center rounded-sm border border-[color:var(--sand-deep)] px-5 text-sm font-medium"
               >
-                Poser une question
+                Demander un devis pour ce modèle
               </Link>
             </div>
 
