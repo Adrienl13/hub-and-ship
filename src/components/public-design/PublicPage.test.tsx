@@ -2,7 +2,20 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { PublicPage } from './PublicPage'
 const destroy = vi.fn()
-vi.mock('./start', () => ({ startPage: () => destroy }))
+const startPage = vi.fn(() => destroy)
+vi.mock('./start', () => ({ startPage }))
+
+// PublicPage charge `./start` par un import différé dans un effet. Un test
+// qui rend la page sans attendre cet import laisse la promesse en suspens :
+// sur une machine lente (CI), elle se résout APRÈS la fermeture de jsdom, le
+// module simulé n'est plus enregistré, et Vitest charge le vrai start.js —
+// « Cannot load zod after the environment was torn down ». Chaque rendu
+// attend donc que la mise en route ait eu lieu.
+async function renderStarted(ui: React.ReactElement) {
+  const result = render(ui)
+  await waitFor(() => expect(startPage).toHaveBeenCalled())
+  return result
+}
 vi.mock('@/components/ContactForm', () => ({
   ContactForm: () => <div>Contact réel</div>,
 }))
@@ -12,7 +25,10 @@ vi.mock('@/components/partenaires/PartnerForm', () => ({
 vi.mock('@/components/ContainerNotifyForm', () => ({
   ContainerNotifyForm: () => <div>Alerte réelle</div>,
 }))
-beforeEach(() => destroy.mockClear())
+beforeEach(() => {
+  destroy.mockClear()
+  startPage.mockClear()
+})
 describe('Public pages integration', () => {
   it.each(['home', 'catalogue', 'prix', 'partenaires', 'livres'] as const)(
     'preserves the complete application footer on %s',
@@ -63,10 +79,10 @@ describe('index catalogue rendu côté serveur', () => {
     },
   ]
 
-  it('place un lien par fiche dans le balisage de la page', () => {
+  it('place un lien par fiche dans le balisage de la page', async () => {
     // Sans lui, un robot qui n'exécute pas JavaScript ne lit que
     // « Chargement du catalogue… » : aucun produit, aucun lien interne.
-    const { container } = render(
+    const { container } = await renderStarted(
       <PublicPage kind="catalogue" catalogueIndex={ITEMS} />,
     )
     const index = container.querySelector('#catalogue-ssr-index')
@@ -81,11 +97,12 @@ describe('index catalogue rendu côté serveur', () => {
     expect(index!.textContent).toContain('82,27 € HT')
   })
 
-  it('ne change rien quand la liste est absente ou vide', () => {
+  it('ne change rien quand la liste est absente ou vide', async () => {
     // Base injoignable : mieux vaut pas d'index qu'un « Tous nos modèles »
     // sans modèle, que les robots liraient comme un catalogue vide.
     for (const props of [{}, { catalogueIndex: [] }]) {
-      const { container, unmount } = render(
+      startPage.mockClear()
+      const { container, unmount } = await renderStarted(
         <PublicPage kind="catalogue" {...props} />,
       )
       expect(container.querySelector('#catalogue-ssr-index')).toBeNull()
@@ -94,8 +111,8 @@ describe('index catalogue rendu côté serveur', () => {
     }
   })
 
-  it('n’ajoute rien aux autres pages', () => {
-    const { container } = render(
+  it('n’ajoute rien aux autres pages', async () => {
+    const { container } = await renderStarted(
       <PublicPage kind="home" catalogueIndex={ITEMS} />,
     )
     expect(container.querySelector('#catalogue-ssr-index')).toBeNull()

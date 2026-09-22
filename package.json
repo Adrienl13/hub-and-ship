@@ -28,6 +28,7 @@
     "security:grants": "node scripts/security/check-cost-exposure.mjs",
     "security:studio": "node scripts/security/check-studio-access.mjs",
     "security:portals": "node scripts/security/check-portal-access.mjs",
+    "email:previews": "bun scripts/email/render-previews.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",

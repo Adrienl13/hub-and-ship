@@ -89,3 +89,4 @@ supplier-mapping-*.json
 # Caches Python du pipeline (générés par les tests)
 __pycache__/
 *.pyc
+.email-previews/
