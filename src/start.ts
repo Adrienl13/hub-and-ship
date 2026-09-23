@@ -54,6 +54,33 @@ export function getCanonicalRedirectLocation(
   return url.toString()
 }
 
+// Adresses de l'ancien site (TerrasseaHUB, Vercel, jusqu'au 21/09/2026),
+// encore dans l'index Google et dans ses rapports : `/produits/<id>`,
+// `/produits?categorie=…`, `/projects/new`, `/index.html`. Sur le nouveau
+// site elles tombaient dans le vide ; une redirection permanente vers la
+// page équivalente récupère les liens entrants et assainit les rapports.
+// Les identifiants produits de l'ancien site n'ont aucune correspondance :
+// ils vont au catalogue.
+const LEGACY_COLLECTIONS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/cordage/i, 'cordage'],
+  [/textil/i, 'textilene'],
+  [/bistrot|tress|cannage/i, 'bistrot'],
+]
+
+export function getLegacyPathRedirect(requestUrl: string): string | null {
+  const url = new URL(requestUrl)
+  const path = url.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/index.html') return '/'
+  if (path === '/produits') {
+    const categorie = url.searchParams.get('categorie') ?? ''
+    const collection = LEGACY_COLLECTIONS.find(([re]) => re.test(categorie))
+    return collection ? `/catalogue?collection=${collection[1]}` : '/catalogue'
+  }
+  if (path.startsWith('/produits/')) return '/catalogue'
+  if (path === '/projects' || path.startsWith('/projects/')) return '/studio'
+  return null
+}
+
 function applySecurityHeaders(headers: Headers): void {
   headers.set(
     'Strict-Transport-Security',
@@ -71,13 +98,25 @@ function applySecurityHeaders(headers: Headers): void {
 
 const canonicalHostMiddleware = createMiddleware().server(async (ctx) => {
   const location = getCanonicalRedirectLocation(ctx.request.url)
-  if (!location) {
-    return ctx.next()
+  if (location) {
+    const response = createRedirectResponse(location)
+    applySecurityHeaders(response.headers)
+    return response
   }
 
-  const response = createRedirectResponse(location)
-  applySecurityHeaders(response.headers)
-  return response
+  // 301 et non 308 : l'ancien site n'avait que des GET, et un 301 est ce
+  // que les moteurs prennent le plus sûrement pour un déménagement.
+  const legacy = getLegacyPathRedirect(ctx.request.url)
+  if (legacy) {
+    const response = new Response(null, {
+      status: 301,
+      headers: { Location: new URL(legacy, ctx.request.url).toString() },
+    })
+    applySecurityHeaders(response.headers)
+    return response
+  }
+
+  return ctx.next()
 })
 
 const securityHeadersMiddleware = createMiddleware().server(
@@ -88,10 +127,7 @@ const securityHeadersMiddleware = createMiddleware().server(
     // immediately (hashed JS/CSS keep their own long-lived cache).
     const contentType = result.response.headers.get('content-type') ?? ''
     if (contentType.includes('text/html')) {
-      result.response.headers.set(
-        'Cache-Control',
-        'no-cache, must-revalidate',
-      )
+      result.response.headers.set('Cache-Control', 'no-cache, must-revalidate')
     }
     return result
   },
