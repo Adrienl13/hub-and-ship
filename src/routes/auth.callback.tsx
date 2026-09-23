@@ -6,11 +6,19 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import {
+  companyNameFromUser,
+  isProfileComplete,
+  resolvePostLoginDestination,
+} from '@/lib/account/onboarding'
+import { loadMyProfile, type ProfileClient } from '@/lib/account/profile'
+import {
   describeStalledCallback,
   parseMagicLinkCallback,
   type MagicLinkFailure,
 } from '@/lib/auth/magic-link-callback'
 import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 /**
  * Délai de garde. Au-delà, l'échange ne se fera plus : dans le flux PKCE,
@@ -19,6 +27,9 @@ import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
  * lien sur un autre appareil reste bloqué sur un spinner.
  */
 const CALLBACK_TIMEOUT_MS = 10_000
+
+/** Lecture du profil après connexion : au-delà, direction la création de l'espace. */
+const PROFILE_READ_TIMEOUT_MS = 4_000
 
 const callbackSearchSchema = z.object({
   returnTo: z.string().optional(),
@@ -41,6 +52,10 @@ function AuthCallbackPage() {
   const authenticated = status === 'authenticated'
   const target = sanitizeReturnTo(returnTo, DEFAULT_RETURN_TO)
   const [failure, setFailure] = useState<MagicLinkFailure | null>(null)
+  // Destination réelle : la création de l'espace si la fiche est incomplète
+  // (première visite), sinon `target`. Connue une fois le profil lu.
+  const [destination, setDestination] = useState<string | null>(null)
+  const [delayElapsed, setDelayElapsed] = useState(false)
 
   // Lien `{{ .TokenHash }}` : on vérifie nous-mêmes, ce qui marche depuis
   // n'importe quel appareil. Sinon le client Supabase échange le `?code=`
@@ -93,15 +108,67 @@ function AuthCallbackPage() {
     if (authenticated) setFailure(null)
   }, [authenticated])
 
+  // Première visite ou fiche jamais complétée → création de l'espace. Une
+  // lecture en échec compte comme incomplète : la page de création se
+  // redirige elle-même si la fiche s'avère complète.
+  // Dépendances scalaires : l'objet `user` change d'identité à chaque
+  // rafraîchissement de jeton, ce qui relancerait la lecture pour rien.
+  const userId = user?.id
+  const companyName = companyNameFromUser(user)
   useEffect(() => {
-    if (!authenticated) return
-    // Brief delay so the user sees "Session activée" before being whisked
-    // back to where they were trying to go.
-    const id = window.setTimeout(() => {
-      window.location.assign(target)
-    }, 800)
+    if (!authenticated || !userId) return undefined
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) {
+      setDestination(target)
+      return undefined
+    }
+
+    let cancelled = false
+
+    void (async () => {
+      let complete = false
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as unknown as ProfileClient
+        // Une requête qui ne répond pas ne doit pas retenir le client ici :
+        // au-delà du délai, on le traite comme une première visite.
+        const profile = await Promise.race([
+          loadMyProfile(client, userId),
+          new Promise<never>((_, reject) =>
+            window.setTimeout(
+              () => reject(new Error('profile_timeout')),
+              PROFILE_READ_TIMEOUT_MS,
+            ),
+          ),
+        ])
+        complete = isProfileComplete({ ...profile, companyName })
+      } catch {
+        complete = false
+      }
+      if (cancelled) return
+      setDestination(
+        resolvePostLoginDestination({ complete, returnTo: target }),
+      )
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [authenticated, userId, companyName, target])
+
+  // Brève pause pour que « Votre espace s'ouvre. » soit lu avant la
+  // redirection ; elle court en parallèle de la lecture du profil.
+  useEffect(() => {
+    if (!authenticated) return undefined
+    const id = window.setTimeout(() => setDelayElapsed(true), 800)
     return () => window.clearTimeout(id)
-  }, [authenticated, target])
+  }, [authenticated])
+
+  useEffect(() => {
+    if (!authenticated || !delayElapsed || !destination) return
+    window.location.assign(destination)
+  }, [authenticated, delayElapsed, destination])
 
   if (failure && !authenticated) {
     return (
@@ -127,20 +194,22 @@ function AuthCallbackPage() {
             Connexion
           </div>
           <h1 className="mt-2 font-display text-3xl tracking-tight">
-            {authenticated ? 'Session activée.' : 'Validation du lien magique.'}
+            {authenticated
+              ? 'Votre espace s’ouvre.'
+              : 'Validation du lien de connexion.'}
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {authenticated
               ? `Connecté avec ${user?.email ?? 'votre email professionnel'}. Redirection en cours…`
               : isConfigured
-                ? 'Supabase Auth finalise votre session.'
+                ? 'Nous vérifions votre lien et ouvrons votre session.'
                 : 'Supabase Auth sera actif dès que les variables locales seront configurées.'}
           </p>
           <Button
             asChild
             className="mt-6 h-11 rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
           >
-            <a href={authenticated ? target : '/catalogue'}>
+            <a href={authenticated ? (destination ?? target) : '/catalogue'}>
               {authenticated ? 'Continuer' : 'Retour au catalogue'}
             </a>
           </Button>

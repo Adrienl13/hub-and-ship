@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ChevronDown,
   Handshake,
+  LogIn,
   Menu,
   ShieldCheck,
   Tag,
@@ -13,9 +14,11 @@ import {
 
 import { CartSheet } from '@/components/CartSheet'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 import { useChannel } from '@/hooks/useChannel'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useIsPartner } from '@/hooks/useIsPartner'
+import { DEFAULT_RETURN_TO } from '@/lib/auth/return-to'
 import { SALES_CHANNEL_LABEL } from '@/lib/pricing/channel'
 import { isStudioEnabled } from '@/lib/studio/flags'
 
@@ -111,7 +114,20 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
   const { isAdmin } = useIsAdmin()
   const { isPartner } = useIsPartner()
   const { channel } = useChannel()
+  const { status: authStatus } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Un visiteur sans session voit « Connexion », pas « Mon compte » : le
+  // bouton dit ce qu'il fait. Pendant la vérification de session (et sans
+  // Supabase), on garde « Mon compte » pour ne rien faire sauter.
+  const anonymous = authStatus === 'anonymous'
+  // Revenir sur la page courante après connexion. Lu dans un effet : au
+  // rendu serveur il n'y a pas de `window`, le tableau de bord fait défaut.
+  const [returnTo, setReturnTo] = useState(DEFAULT_RETURN_TO)
+  useEffect(() => {
+    const { pathname, search } = window.location
+    if (pathname && pathname !== '/') setReturnTo(`${pathname}${search}`)
+  }, [])
 
   // Le panneau mobile ne doit jamais rester ouvert après une navigation.
   const closeMobile = () => setMobileOpen(false)
@@ -145,7 +161,7 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
         <div className="flex shrink-0 items-center gap-2">
           {channel !== 'direct' && (
             <span
-              className="mono hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[color:var(--ember)] 2xl:inline-flex"
+              className="mono border-[color:var(--ember)]/40 bg-[color:var(--ember)]/10 hidden shrink-0 items-center gap-1 whitespace-nowrap rounded-sm border px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[color:var(--ember)] 2xl:inline-flex"
               title="Vos prix reflètent votre canal partenaire."
             >
               <Tag className="h-3 w-3" />
@@ -184,10 +200,21 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
             size="sm"
             className="text-foreground/75 hidden h-9 gap-1.5 whitespace-nowrap font-semibold hover:bg-[color:var(--sand-soft)] sm:inline-flex"
           >
-            <Link to="/account" aria-label="Mon compte">
-              <User className="h-3.5 w-3.5" />
-              <span className="hidden xl:inline">Mon compte</span>
-            </Link>
+            {anonymous ? (
+              <Link
+                to="/auth/login"
+                search={{ returnTo }}
+                aria-label="Connexion"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">Connexion</span>
+              </Link>
+            ) : (
+              <Link to="/account" aria-label="Mon compte">
+                <User className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">Mon compte</span>
+              </Link>
+            )}
           </Button>
           {/* Panier global : la commande est consultable et modifiable
               depuis toutes les pages, pas seulement le catalogue. */}
@@ -281,14 +308,26 @@ export function Header({ onReserve }: { onReserve?: () => void }) {
                 Espace partenaire
               </Link>
             )}
-            <Link
-              to="/account"
-              onClick={closeMobile}
-              className="text-foreground/80 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm"
-            >
-              <User className="h-3.5 w-3.5" />
-              Mon compte
-            </Link>
+            {anonymous ? (
+              <Link
+                to="/auth/login"
+                search={{ returnTo }}
+                onClick={closeMobile}
+                className="text-foreground/80 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Connexion
+              </Link>
+            ) : (
+              <Link
+                to="/account"
+                onClick={closeMobile}
+                className="text-foreground/80 inline-flex items-center gap-1.5 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm"
+              >
+                <User className="h-3.5 w-3.5" />
+                Mon compte
+              </Link>
+            )}
           </div>
         </nav>
       )}

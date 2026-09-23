@@ -60,6 +60,7 @@ import { Route as AccountReservationsRouteImport } from './routes/account.reserv
 import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
 import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
+import { Route as AccountBienvenueRouteImport } from './routes/account.bienvenue'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
 import { Route as PPartnerSlugDevisRouteImport } from './routes/p.$partnerSlug.devis'
 import { Route as CataloguePSlugRouteImport } from './routes/catalogue_.p.$slug'
@@ -67,6 +68,7 @@ import { Route as ApiStudioEventsRouteImport } from './routes/api/studio/events'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiCronPaymentRemindersRouteImport } from './routes/api/cron/payment-reminders'
 import { Route as ApiCronIndexnowRouteImport } from './routes/api/cron/indexnow'
+import { Route as ApiAuthSendEmailRouteImport } from './routes/api/auth/send-email'
 import { Route as AccountReservationsReservationIdRouteImport } from './routes/account.reservations.$reservationId'
 import { Route as AccountReservationsReservationIdDocumentRouteImport } from './routes/account.reservations.$reservationId.document'
 import { Route as AccountReservationsReservationIdFactureInvoiceIdRouteImport } from './routes/account.reservations.$reservationId.facture.$invoiceId'
@@ -330,6 +332,11 @@ const AccountFavorisRoute = AccountFavorisRouteImport.update({
   path: '/account/favoris',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountBienvenueRoute = AccountBienvenueRouteImport.update({
+  id: '/account/bienvenue',
+  path: '/account/bienvenue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountAvisRoute = AccountAvisRouteImport.update({
   id: '/account/avis',
   path: '/account/avis',
@@ -363,6 +370,11 @@ const ApiCronPaymentRemindersRoute = ApiCronPaymentRemindersRouteImport.update({
 const ApiCronIndexnowRoute = ApiCronIndexnowRouteImport.update({
   id: '/api/cron/indexnow',
   path: '/api/cron/indexnow',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSendEmailRoute = ApiAuthSendEmailRouteImport.update({
+  id: '/api/auth/send-email',
+  path: '/api/auth/send-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountReservationsReservationIdRoute =
@@ -408,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/studio': typeof StudioRouteWithChildren
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
@@ -438,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/livres/': typeof LivresIndexRoute
   '/studio/': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/cron/indexnow': typeof ApiCronIndexnowRoute
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -470,6 +484,7 @@ export interface FileRoutesByTo {
   '/stock-mobilier-terrasse-24h': typeof StockMobilierTerrasse24hRoute
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
@@ -500,6 +515,7 @@ export interface FileRoutesByTo {
   '/livres': typeof LivresIndexRoute
   '/studio': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/cron/indexnow': typeof ApiCronIndexnowRoute
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -534,6 +550,7 @@ export interface FileRoutesById {
   '/studio': typeof StudioRouteWithChildren
   '/transport-partenaires': typeof TransportPartenairesRoute
   '/account/avis': typeof AccountAvisRoute
+  '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
@@ -564,6 +581,7 @@ export interface FileRoutesById {
   '/livres/': typeof LivresIndexRoute
   '/studio/': typeof StudioIndexRoute
   '/account/reservations/$reservationId': typeof AccountReservationsReservationIdRouteWithChildren
+  '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/cron/indexnow': typeof ApiCronIndexnowRoute
   '/api/cron/payment-reminders': typeof ApiCronPaymentRemindersRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
@@ -599,6 +617,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/bienvenue'
     | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
@@ -629,6 +648,7 @@ export interface FileRouteTypes {
     | '/livres/'
     | '/studio/'
     | '/account/reservations/$reservationId'
+    | '/api/auth/send-email'
     | '/api/cron/indexnow'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -661,6 +681,7 @@ export interface FileRouteTypes {
     | '/stock-mobilier-terrasse-24h'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/bienvenue'
     | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
@@ -691,6 +712,7 @@ export interface FileRouteTypes {
     | '/livres'
     | '/studio'
     | '/account/reservations/$reservationId'
+    | '/api/auth/send-email'
     | '/api/cron/indexnow'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -724,6 +746,7 @@ export interface FileRouteTypes {
     | '/studio'
     | '/transport-partenaires'
     | '/account/avis'
+    | '/account/bienvenue'
     | '/account/favoris'
     | '/account/parametres'
     | '/account/parrainage'
@@ -754,6 +777,7 @@ export interface FileRouteTypes {
     | '/livres/'
     | '/studio/'
     | '/account/reservations/$reservationId'
+    | '/api/auth/send-email'
     | '/api/cron/indexnow'
     | '/api/cron/payment-reminders'
     | '/api/stripe/webhook'
@@ -788,6 +812,7 @@ export interface RootRouteChildren {
   StudioRoute: typeof StudioRouteWithChildren
   TransportPartenairesRoute: typeof TransportPartenairesRoute
   AccountAvisRoute: typeof AccountAvisRoute
+  AccountBienvenueRoute: typeof AccountBienvenueRoute
   AccountFavorisRoute: typeof AccountFavorisRoute
   AccountParametresRoute: typeof AccountParametresRoute
   AccountParrainageRoute: typeof AccountParrainageRoute
@@ -812,6 +837,7 @@ export interface RootRouteChildren {
   GuidesIndexRoute: typeof GuidesIndexRoute
   LegalIndexRoute: typeof LegalIndexRoute
   LivresIndexRoute: typeof LivresIndexRoute
+  ApiAuthSendEmailRoute: typeof ApiAuthSendEmailRoute
   ApiCronIndexnowRoute: typeof ApiCronIndexnowRoute
   ApiCronPaymentRemindersRoute: typeof ApiCronPaymentRemindersRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -1178,6 +1204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountFavorisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/bienvenue': {
+      id: '/account/bienvenue'
+      path: '/account/bienvenue'
+      fullPath: '/account/bienvenue'
+      preLoaderRoute: typeof AccountBienvenueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/avis': {
       id: '/account/avis'
       path: '/account/avis'
@@ -1225,6 +1258,13 @@ declare module '@tanstack/react-router' {
       path: '/api/cron/indexnow'
       fullPath: '/api/cron/indexnow'
       preLoaderRoute: typeof ApiCronIndexnowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/send-email': {
+      id: '/api/auth/send-email'
+      path: '/api/auth/send-email'
+      fullPath: '/api/auth/send-email'
+      preLoaderRoute: typeof ApiAuthSendEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account/reservations/$reservationId': {
@@ -1345,6 +1385,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudioRoute: StudioRouteWithChildren,
   TransportPartenairesRoute: TransportPartenairesRoute,
   AccountAvisRoute: AccountAvisRoute,
+  AccountBienvenueRoute: AccountBienvenueRoute,
   AccountFavorisRoute: AccountFavorisRoute,
   AccountParametresRoute: AccountParametresRoute,
   AccountParrainageRoute: AccountParrainageRoute,
@@ -1370,6 +1411,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesIndexRoute: GuidesIndexRoute,
   LegalIndexRoute: LegalIndexRoute,
   LivresIndexRoute: LivresIndexRoute,
+  ApiAuthSendEmailRoute: ApiAuthSendEmailRoute,
   ApiCronIndexnowRoute: ApiCronIndexnowRoute,
   ApiCronPaymentRemindersRoute: ApiCronPaymentRemindersRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
@@ -1379,7 +1421,6 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {

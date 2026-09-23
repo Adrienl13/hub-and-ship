@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EmailOtpType, User } from '@supabase/supabase-js'
 
+import { DEFAULT_RETURN_TO } from '@/lib/auth/return-to'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export type AuthStatus =
   'loading' | 'anonymous' | 'authenticated' | 'unconfigured'
 
-export interface MagicLinkResult {
+export interface AuthActionResult {
   readonly ok: boolean
   readonly message: string
 }
+
+export type MagicLinkResult = AuthActionResult
 
 export function useAuth() {
   const config = useMemo(() => getSupabasePublicConfig(), [])
@@ -94,9 +97,10 @@ export function useAuth() {
       // `returnTo` est TOUJOURS présent, même à sa valeur par défaut : le
       // modèle d'e-mail « Magic Link » concatène `{{ .RedirectTo }}` avec
       // `&token_hash=…` (voir docs/RUNBOOK_MAGIC_LINK.md), ce qui exige une
-      // chaîne de requête déjà ouverte.
+      // chaîne de requête déjà ouverte. Le hook « Send Email » lit ce même
+      // paramètre pour construire le lien de l'email de marque.
       const redirectTo = `${base}?returnTo=${encodeURIComponent(
-        options.returnTo ?? '/account/reservations',
+        options.returnTo ?? DEFAULT_RETURN_TO,
       )}`
       const { error } = await client.auth.signInWithOtp({
         email,
@@ -138,6 +142,24 @@ export function useAuth() {
     [client],
   )
 
+  /**
+   * Complète les métadonnées utilisateur (`user.user_metadata`) : c'est là
+   * que vit le nom de l'établissement, que la fiche `users_profile` ne peut
+   * pas porter pour un acheteur. Supabase fusionne les clés fournies avec les
+   * métadonnées existantes et réémet la session : `user` se met à jour seul.
+   */
+  const updateUserMetadata = useCallback(
+    async (data: Record<string, string>): Promise<AuthActionResult> => {
+      if (!client) {
+        return { ok: false, message: "Supabase Auth n'est pas configuré." }
+      }
+      const { error } = await client.auth.updateUser({ data })
+      if (error) return { ok: false, message: error.message }
+      return { ok: true, message: 'Informations enregistrées.' }
+    },
+    [client],
+  )
+
   const signOut = useCallback(async (): Promise<void> => {
     if (!client) return
     await client.auth.signOut()
@@ -150,6 +172,7 @@ export function useAuth() {
     missingConfig: config.missing,
     signInWithMagicLink,
     verifyMagicLinkToken,
+    updateUserMetadata,
     signOut,
   }
 }

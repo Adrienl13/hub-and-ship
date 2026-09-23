@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
+  buildAuthEmail,
   buildContactAdminEmail,
   buildContactConfirmationEmail,
   buildInvoiceEmailToUser,
@@ -213,6 +214,26 @@ const previews: Record<
     firstName: 'Sophie',
     email: 'sophie.lambert@groupe-horizon.fr',
     qualityUrl: `${SITE}/qualite`,
+  }),
+  // Connexion (hook Supabase « Send Email ») : jeton fictif, lien inerte.
+  '19-auth-bienvenue': buildAuthEmail({
+    kind: 'welcome',
+    firstName: 'Camille',
+    link: `${SITE}/auth/callback?returnTo=%2Faccount&token_hash=apercu_jeton_fictif&type=signup`,
+  }),
+  '20-auth-connexion': buildAuthEmail({
+    kind: 'login',
+    link: `${SITE}/auth/callback?returnTo=%2Faccount%2Ffavoris&token_hash=apercu_jeton_fictif&type=magiclink`,
+  }),
+  '21-auth-code': buildAuthEmail({
+    kind: 'reauthentication',
+    firstName: 'Camille',
+    code: '482913',
+  }),
+  '22-auth-notice': buildAuthEmail({
+    kind: 'notice',
+    firstName: 'Camille',
+    noticeLabel: 'Votre mot de passe a été modifié',
   }),
 }
 

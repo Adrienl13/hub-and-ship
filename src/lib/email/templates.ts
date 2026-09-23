@@ -1403,3 +1403,271 @@ ${TEXT_SIGNATURE}`
     text,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Connexion (hook Supabase « Send Email » → /api/auth/send-email)
+// ---------------------------------------------------------------------------
+//
+// Le lien magique est le seul mode de connexion du site : ces emails sont
+// souvent le PREMIER contact écrit avec un client. Ils portent la marque,
+// disent en une phrase ce que le clic va faire, et rassurent : valable une
+// heure, un seul usage, ouvrable sur n'importe quel appareil.
+
+export type AuthEmailKind =
+  /** Première visite (signup, invite) : le clic crée l'espace. */
+  | 'welcome'
+  /** Adresse connue (magiclink, email) : le clic ouvre l'espace. */
+  | 'login'
+  /** Récupération d'accès : sans mot de passe, le lien ouvre la session. */
+  | 'recovery'
+  /** Changement d'adresse, message envoyé à l'adresse ACTUELLE. */
+  | 'email_change_current'
+  /** Changement d'adresse, message envoyé à la NOUVELLE adresse. */
+  | 'email_change_new'
+  /** Code à 6 chiffres, sans lien. */
+  | 'reauthentication'
+  /** Information sans lien (mot de passe modifié, adresse modifiée…). */
+  | 'notice'
+
+export interface AuthEmailInput {
+  readonly kind: AuthEmailKind
+  /** Lien vers /auth/callback, obligatoire sauf reauthentication et notice. */
+  readonly link?: string
+  /** Code à 6 chiffres (reauthentication). */
+  readonly code?: string
+  readonly firstName?: string
+  /** Titre de l'information (notice) : « Votre mot de passe a été modifié ». */
+  readonly noticeLabel?: string
+}
+
+const AUTH_LINK_VALIDITY =
+  'Ce lien est valable une heure et ne sert qu’une fois. Vous pouvez l’ouvrir sur l’ordinateur ou le téléphone de votre choix.'
+const AUTH_NOTHING_ASKED =
+  'Vous n’avez rien demandé ? Ignorez simplement cet email : sans clic, rien ne se passe.'
+const AUTH_NOTICE_FALLBACK_LABEL = 'Information sur votre compte'
+
+/** Le lien en clair, sous le bouton, pour les clients mail qui bloquent les boutons. */
+function plainLink(link: string): string {
+  return p(
+    `Si le bouton ne répond pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;"><a href="${escape(link)}" style="color:${C.blue};text-decoration:none;">${escape(link)}</a></span>`,
+    { muted: true, small: true },
+  )
+}
+
+function authTextGreeting(firstName: string | undefined): string {
+  const who = firstName?.trim()
+  return who ? `Bonjour ${who},` : 'Bonjour,'
+}
+
+function authLinkText(
+  firstName: string | undefined,
+  intro: string,
+  action: string,
+  link: string,
+): string {
+  return `${authTextGreeting(firstName)}
+
+${intro}
+
+${action} : ${link}
+
+${AUTH_LINK_VALIDITY}
+${AUTH_NOTHING_ASKED}
+
+${TEXT_SIGNATURE}`
+}
+
+interface AuthLinkEmailSpec {
+  readonly subject: string
+  readonly eyebrow: string
+  readonly title: string
+  readonly preheader: string
+  /** Phrase d'explication, déjà en HTML sûr (aucune donnée externe). */
+  readonly introHtml: string
+  /** La même phrase, en texte brut. */
+  readonly introText: string
+  readonly buttonLabel: string
+  /** Prochaines étapes, pour la première visite uniquement. */
+  readonly stepsHtml?: string
+}
+
+function authLinkEmail(
+  input: AuthEmailInput,
+  link: string,
+  spec: AuthLinkEmailSpec,
+): { subject: string; html: string; text: string } {
+  const body = `${greeting(input.firstName)}
+${p(spec.introHtml)}
+${button(spec.buttonLabel, link)}
+${spec.stepsHtml ?? ''}
+${callout('info', AUTH_LINK_VALIDITY, { title: 'Bon à savoir' })}
+${plainLink(link)}
+${p(AUTH_NOTHING_ASKED, { muted: true, small: true })}
+${signature()}`
+  return {
+    subject: spec.subject,
+    html: shell({
+      eyebrow: spec.eyebrow,
+      title: spec.title,
+      preheader: spec.preheader,
+      body,
+    }),
+    text: authLinkText(input.firstName, spec.introText, spec.buttonLabel, link),
+  }
+}
+
+export function buildAuthEmail(input: AuthEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const link = input.link?.trim() ?? ''
+
+  switch (input.kind) {
+    case 'welcome': {
+      const intro =
+        'Vous avez demandé à ouvrir votre espace professionnel sur terrassea.com. Un clic sur le bouton et il est prêt : vous complétez votre fiche en trente secondes (nom, établissement), puis vous retrouvez vos devis, réservations et factures au même endroit.'
+      return authLinkEmail(input, link, {
+        subject: 'Bienvenue chez Terrassea — créez votre espace',
+        eyebrow: 'Votre espace pro',
+        title: 'Bienvenue chez Terrassea',
+        preheader:
+          'Un clic pour ouvrir votre espace : devis, réservations et factures au même endroit.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Créer mon espace',
+        stepsHtml: steps([
+          { title: 'Cliquez sur le bouton' },
+          {
+            title: 'Complétez votre fiche',
+            detail:
+              'Prénom, nom, établissement : trente secondes, une seule fois.',
+          },
+          {
+            title: 'Retrouvez tout votre suivi',
+            detail:
+              'Devis, réservations, factures et favoris, sur tous vos appareils.',
+          },
+        ]),
+      })
+    }
+
+    case 'login': {
+      const intro =
+        'Cliquez sur le bouton pour ouvrir votre espace. Aucun mot de passe : ce lien suffit.'
+      return authLinkEmail(input, link, {
+        subject: 'Votre lien de connexion Terrassea',
+        eyebrow: 'Connexion',
+        title: 'Votre lien de connexion',
+        preheader: 'Votre lien de connexion Terrassea, valable une heure.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Me connecter',
+      })
+    }
+
+    case 'recovery': {
+      const intro =
+        'Vous avez demandé à retrouver l’accès à votre espace. Le site n’utilise pas de mot de passe : ce lien ouvre directement votre session, et vous retrouvez tout votre suivi.'
+      return authLinkEmail(input, link, {
+        subject: 'Réinitialiser votre accès Terrassea',
+        eyebrow: 'Connexion',
+        title: 'Réinitialiser votre accès',
+        preheader: 'Un clic ouvre votre espace : aucun mot de passe à retenir.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Me connecter',
+      })
+    }
+
+    case 'email_change_current': {
+      const intro =
+        'Un changement d’adresse email a été demandé sur votre espace Terrassea. Pour le confirmer depuis votre adresse actuelle, cliquez sur le bouton. Votre nouvelle adresse reçoit un email du même type : les deux confirmations sont nécessaires.'
+      return authLinkEmail(input, link, {
+        subject: 'Confirmez votre adresse email — Terrassea',
+        eyebrow: 'Votre espace',
+        title: 'Confirmez le changement d’adresse',
+        preheader:
+          'Un changement d’adresse a été demandé sur votre espace : confirmez-le en un clic.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Confirmer',
+      })
+    }
+
+    case 'email_change_new': {
+      const intro =
+        'Cette adresse a été indiquée comme nouvelle adresse de votre espace Terrassea. Cliquez sur le bouton pour la confirmer : vos devis, réservations et factures vous suivent.'
+      return authLinkEmail(input, link, {
+        subject: 'Confirmez votre adresse email — Terrassea',
+        eyebrow: 'Votre espace',
+        title: 'Confirmez votre nouvelle adresse',
+        preheader: 'Confirmez votre nouvelle adresse email en un clic.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Confirmer',
+      })
+    }
+
+    case 'reauthentication': {
+      const code = input.code?.trim() ?? ''
+      const body = `${greeting(input.firstName)}
+${p('Voici le code demandé pour confirmer une opération sensible sur votre espace. Saisissez-le dans la page qui l’attend.')}
+${hero([{ label: 'Code', value: code, tone: 'blue' }])}
+${callout('info', 'Il expire dans quelques minutes et ne sert qu’une fois. Ne le communiquez à personne : Terrassea ne vous le demandera jamais.', { title: 'Bon à savoir' })}
+${p(AUTH_NOTHING_ASKED, { muted: true, small: true })}
+${signature()}`
+      const text = `${authTextGreeting(input.firstName)}
+
+Voici le code demandé pour confirmer une opération sensible sur votre espace :
+
+Code : ${code}
+
+Il expire dans quelques minutes et ne sert qu'une fois. Ne le communiquez à personne.
+${AUTH_NOTHING_ASKED}
+
+${TEXT_SIGNATURE}`
+      return {
+        subject: 'Votre code de vérification Terrassea',
+        html: shell({
+          eyebrow: 'Vérification',
+          title: 'Votre code de vérification',
+          preheader:
+            'Votre code de vérification Terrassea, valable quelques minutes.',
+          body,
+        }),
+        text,
+      }
+    }
+
+    case 'notice': {
+      const label = input.noticeLabel?.trim() || AUTH_NOTICE_FALLBACK_LABEL
+      const warning =
+        'Ce n’est pas vous ? Écrivez-nous immédiatement à contact@terrassea.com.'
+      const body = `${greeting(input.firstName)}
+${p(
+  `Un changement vient d’être effectué sur votre espace terrassea.com. <strong style="color:${C.ink};">${escape(label)}.</strong> Si c’est bien vous, vous n’avez rien à faire.`,
+)}
+${callout('warning', escape(warning), { title: 'Sécurité' })}
+${signature()}`
+      const text = `${authTextGreeting(input.firstName)}
+
+Un changement vient d'être effectué sur votre espace terrassea.com.
+${label}. Si c'est bien vous, vous n'avez rien à faire.
+
+${warning}
+
+${TEXT_SIGNATURE}`
+      return {
+        subject: `${label} — Terrassea`,
+        html: shell({
+          eyebrow: 'Votre espace',
+          title: label,
+          preheader: `${label}. Ce n’est pas vous ? Écrivez-nous.`,
+          body,
+        }),
+        text,
+      }
+    }
+  }
+}

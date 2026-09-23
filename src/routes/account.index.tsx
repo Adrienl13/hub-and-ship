@@ -9,28 +9,42 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Loader2,
+  LogOut,
   Settings,
   Ship,
   Star,
   Truck,
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { useAccountReservations } from '@/hooks/useAccountReservations'
+import { useAuth } from '@/hooks/useAuth'
 import {
   isPaymentDue,
   primaryActionReservation,
   reservationsAwaitingPayment,
 } from '@/lib/account/dashboard'
 import {
+  companyNameFromUser,
+  dashboardGreeting,
+  firstNameFromUser,
+  isProfileComplete,
+  onboardingHref,
+} from '@/lib/account/onboarding'
+import { loadMyProfile, type ProfileClient } from '@/lib/account/profile'
+import {
   ACCOUNT_RESERVATION_STATUS_LABEL,
   calculateAccountReservationKpis,
   type AccountReservation,
 } from '@/lib/account/reservations'
+import { DEFAULT_RETURN_TO } from '@/lib/auth/return-to'
 import { formatEUR } from '@/lib/order'
 import { buildSeoHead } from '@/lib/seo'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export const Route = createFileRoute('/account/')({
   component: AccountDashboard,
@@ -43,34 +57,120 @@ export const Route = createFileRoute('/account/')({
     }),
 })
 
+interface DashboardIdentity {
+  readonly firstName: string
+  readonly lastName: string
+  readonly companyName: string
+  /** Fiche lue avec succès : on peut juger de sa complétude. */
+  readonly known: boolean
+}
+
 function AccountDashboard() {
   const { reservations, loading, error, authStatus } = useAccountReservations()
+  const { user, signOut } = useAuth()
   const kpis = calculateAccountReservationKpis(reservations)
   const primary = primaryActionReservation(reservations)
   const awaitingPayment = reservationsAwaitingPayment(reservations)
   const recent = reservations.slice(0, 4)
+  const [identity, setIdentity] = useState<DashboardIdentity | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
+  // La déconnexion passe par l'état « anonyme » avant de quitter la page : ce
+  // drapeau évite d'envoyer le client sur la page de connexion à ce moment-là.
+  const signingOutRef = useRef(false)
+
+  // Pas de tableau de bord vide pour un anonyme : on l'envoie se connecter,
+  // l'encart ci-dessous ne sert que le temps de la redirection.
+  useEffect(() => {
+    if (authStatus !== 'anonymous' || signingOutRef.current) return
+    window.location.replace(
+      `/auth/login?returnTo=${encodeURIComponent(DEFAULT_RETURN_TO)}`,
+    )
+  }, [authStatus])
+
+  // Salutation et complétude de la fiche. Les métadonnées donnent une
+  // première réponse immédiate, la fiche fait foi pour prénom et nom.
+  const userId = user?.id
+  const metaFirstName = firstNameFromUser(user)
+  const companyName = companyNameFromUser(user)
+  useEffect(() => {
+    if (authStatus !== 'authenticated' || !userId) {
+      setIdentity(null)
+      return undefined
+    }
+    const config = getSupabasePublicConfig()
+    if (!config.isConfigured) return undefined
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as unknown as ProfileClient
+        const profile = await loadMyProfile(client, userId)
+        if (cancelled) return
+        setIdentity({
+          firstName: profile.firstName || metaFirstName,
+          lastName: profile.lastName,
+          companyName,
+          known: true,
+        })
+      } catch {
+        if (cancelled) return
+        // Fiche illisible : on salue avec ce qu'on a, sans réclamer quoi
+        // que ce soit (on ne sait pas ce qui manque).
+        setIdentity({
+          firstName: metaFirstName,
+          lastName: '',
+          companyName,
+          known: false,
+        })
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [authStatus, userId, metaFirstName, companyName])
+
+  const authenticated = authStatus === 'authenticated'
+  const greeting = dashboardGreeting({
+    firstName: identity?.firstName ?? metaFirstName,
+    companyName: identity?.companyName ?? companyName,
+  })
+  const needsOnboarding =
+    authenticated && identity?.known === true && !isProfileComplete(identity)
+
+  const handleSignOut = async () => {
+    signingOutRef.current = true
+    setSigningOut(true)
+    try {
+      await signOut()
+    } finally {
+      window.location.assign('/')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <section className="shadow-paper relative overflow-hidden rounded-xl border border-[color:var(--ember)]/30">
+        <section className="shadow-paper border-[color:var(--ember)]/30 relative overflow-hidden rounded-xl border">
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-br from-[color:var(--ember)]/35 via-[color:var(--sand-soft)] to-[color:var(--ochre)]/30"
+            className="from-[color:var(--ember)]/35 to-[color:var(--ochre)]/30 absolute inset-0 bg-gradient-to-br via-[color:var(--sand-soft)]"
           />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 overflow-hidden"
           >
             <motion.div
-              className="absolute -left-12 -top-20 h-52 w-52 rounded-full bg-[color:var(--ember)]/30 blur-3xl"
+              className="bg-[color:var(--ember)]/30 absolute -left-12 -top-20 h-52 w-52 rounded-full blur-3xl"
               animate={{ x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.18, 1] }}
               transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute right-[-5%] top-1/4 h-60 w-60 rounded-full bg-[color:var(--ochre)]/25 blur-3xl"
+              className="bg-[color:var(--ochre)]/25 absolute right-[-5%] top-1/4 h-60 w-60 rounded-full blur-3xl"
               animate={{ x: [0, -40, 0], y: [0, -15, 0], scale: [1, 1.2, 1] }}
               transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
             />
@@ -81,56 +181,88 @@ function AccountDashboard() {
             transition={{ duration: 0.55, ease: 'easeOut' }}
             className="relative p-6 sm:p-8"
           >
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ember)]">
+            <span className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ember)]">
               <LayoutDashboard className="h-3.5 w-3.5" />
               Mon espace
             </span>
             <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Tableau de bord
+              {authenticated ? greeting : 'Tableau de bord'}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Vos réservations container, paiements à venir et documents, au même
-              endroit.
+              Vos réservations container, paiements à venir et documents, au
+              même endroit.
             </p>
 
-            {authStatus === 'authenticated' && (
+            {authenticated && (
               <div className="mt-4 flex flex-wrap items-center gap-4">
-            <Link
-              to="/account/parametres"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="h-3.5 w-3.5" />
-              Paramètres du compte
-            </Link>
-            <Link
-              to="/account/avis"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <Star className="h-3.5 w-3.5" />
-              Donner mon avis
-            </Link>
-            <Link
-              to="/account/parrainage"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <Gift className="h-3.5 w-3.5" />
-              Programme apporteur
-            </Link>
-            <Link
-              to="/account/favoris"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <Heart className="h-3.5 w-3.5" />
-              Mes favoris
-            </Link>
+                <Link
+                  to="/account/parametres"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Paramètres du compte
+                </Link>
+                <Link
+                  to="/account/avis"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Star className="h-3.5 w-3.5" />
+                  Donner mon avis
+                </Link>
+                <Link
+                  to="/account/parrainage"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Gift className="h-3.5 w-3.5" />
+                  Programme apporteur
+                </Link>
+                <Link
+                  to="/account/favoris"
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Heart className="h-3.5 w-3.5" />
+                  Mes favoris
+                </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto h-9 gap-1.5 rounded-sm"
+                  disabled={signingOut}
+                  onClick={() => void handleSignOut()}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+                </Button>
               </div>
             )}
           </motion.div>
         </section>
 
+        {needsOnboarding && (
+          <div className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.06] mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 text-sm">
+            <div>
+              <div className="font-medium">Finalisez votre espace (30 s)</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Prénom, nom et établissement : de quoi préparer vos devis au bon
+                nom.
+              </p>
+            </div>
+            <Button
+              asChild
+              size="sm"
+              className="h-9 rounded-sm bg-foreground px-3 text-xs text-background"
+            >
+              <a href={onboardingHref(DEFAULT_RETURN_TO)}>
+                Créer mon espace
+                <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </Button>
+          </div>
+        )}
 
         {authStatus !== 'authenticated' && (
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 p-4 text-sm">
+          <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 text-sm">
             <span>
               Connectez-vous avec votre email professionnel pour retrouver
               toutes vos réservations.
@@ -165,10 +297,7 @@ function AccountDashboard() {
             <NextActionCard reservation={primary} />
 
             <div className="grid gap-2 sm:grid-cols-4">
-              <Kpi
-                label="Réservations actives"
-                value={`${kpis.activeCount}`}
-              />
+              <Kpi label="Réservations actives" value={`${kpis.activeCount}`} />
               <Kpi label="Engagé HT" value={formatEUR(kpis.totalCommittedHt)} />
               <Kpi label="Déjà réglé" value={formatEUR(kpis.totalPaid)} />
               <Kpi
@@ -200,7 +329,7 @@ function NextActionCard({
 }) {
   if (!reservation) {
     return (
-      <section className="rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] p-5">
+      <section className="border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] rounded-md border p-5">
         <h2 className="font-display text-lg font-semibold">
           Tout est à jour 👌
         </h2>
@@ -214,7 +343,7 @@ function NextActionCard({
 
   const dueNow = isPaymentDue(reservation)
   return (
-    <section className="rounded-md border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.06] p-5">
+    <section className="border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.06] rounded-md border p-5">
       <div className="flex items-center gap-2">
         <CreditCard className="h-4 w-4 text-[color:var(--ember)]" />
         <h2 className="font-display text-lg font-semibold">
@@ -292,9 +421,7 @@ function RecentReservationsCard({
   return (
     <section className="overflow-hidden rounded-md border border-[color:var(--sand-deep)] bg-card">
       <div className="flex items-center justify-between gap-2 border-b border-[color:var(--sand-deep)] px-5 py-3">
-        <h2 className="font-display text-lg font-semibold">
-          Mes réservations
-        </h2>
+        <h2 className="font-display text-lg font-semibold">Mes réservations</h2>
         <Link
           to="/account/reservations"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
@@ -309,7 +436,7 @@ function RecentReservationsCard({
             <Link
               to="/account/reservations/$reservationId"
               params={{ reservationId: r.draft.id }}
-              className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm hover:bg-[color:var(--sand-soft)]/40"
+              className="hover:bg-[color:var(--sand-soft)]/40 flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm"
             >
               <div className="min-w-0">
                 <div className="font-medium">{r.draft.reference}</div>
@@ -349,7 +476,7 @@ function ResourcesCard() {
           <a
             key={href}
             href={href}
-            className="flex items-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2.5 text-sm hover:bg-[color:var(--sand-soft)]/40"
+            className="hover:bg-[color:var(--sand-soft)]/40 flex items-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2.5 text-sm"
           >
             <Icon className="h-4 w-4 text-[color:var(--ember)]" />
             {label}
@@ -392,11 +519,17 @@ function EmptyState({ authenticated }: { readonly authenticated: boolean }) {
   )
 }
 
-function Kpi({ label, value }: { readonly label: string; readonly value: string }) {
+function Kpi({
+  label,
+  value,
+}: {
+  readonly label: string
+  readonly value: string
+}) {
   return (
     <Link
       to="/account/reservations"
-      className="group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[color:var(--ember)]/40 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.25)]"
+      className="hover:border-[color:var(--ember)]/40 group rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.25)]"
     >
       <div className="label-eyebrow text-muted-foreground">{label}</div>
       <div className="mt-2 font-display text-2xl font-semibold tabular-nums">

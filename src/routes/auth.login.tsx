@@ -120,11 +120,12 @@ function LoginPage() {
               Votre espace pro
             </div>
             <h1 className="mt-2 font-display text-3xl tracking-tight">
-              Connexion sécurisée.
+              Accédez à votre espace pro.
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Entrez votre email : nous vous envoyons un lien de connexion.
-              Aucun mot de passe à créer ni à retenir.
+              Entrez votre email professionnel : nous vous envoyons un lien de
+              connexion. Première visite ? Le même lien crée votre espace. Aucun
+              mot de passe.
             </p>
           </div>
 
@@ -143,9 +144,8 @@ function LoginPage() {
             <div className="border-[color:var(--forest)]/30 bg-[color:var(--forest)]/10 mb-5 rounded-md border p-3 text-xs leading-5 text-foreground">
               <strong className="font-medium">Lien envoyé à {sentTo}.</strong>{' '}
               Il arrive dans la minute, reste valable une heure et ne sert
-              qu’une fois. Ouvrez-le <strong>sur cet appareil</strong> : par
-              sécurité, un lien ouvert ailleurs que là où il a été demandé ne
-              peut pas ouvrir la session. Pensez à regarder vos spams.
+              qu’une fois. Vous pouvez l’ouvrir sur l’appareil de votre choix.
+              Pensez à regarder vos spams.
             </div>
           )}
 
@@ -176,7 +176,7 @@ function LoginPage() {
                   ? 'Envoi…'
                   : sentTo
                     ? 'Renvoyer un lien'
-                    : 'Recevoir mon lien de connexion'}
+                    : 'Recevoir mon lien'}
             </Button>
           </form>
 
@@ -187,11 +187,11 @@ function LoginPage() {
             </li>
             <li className="flex items-start gap-2">
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--forest)]" />
-              Le lien arrive par email (pensez à vérifier vos spams).
+              Expéditeur : Terrassea. Vérifiez vos spams la première fois.
             </li>
             <li className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--forest)]" />
-              Vos réservations, paiements et factures réunis au même endroit.
+              Devis, réservations, factures et favoris réunis au même endroit.
             </li>
           </ul>
         </section>

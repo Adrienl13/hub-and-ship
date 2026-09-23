@@ -123,6 +123,12 @@ function saneRules(): Rule[] {
           ? json(405, { ok: false })
           : json(403, { ok: false, error: 'Forbidden origin' })
         : undefined,
+    ({ url, method }) =>
+      url === `${DEFAULT_SITE_URL}/api/auth/send-email`
+        ? method === 'GET'
+          ? json(405, { error: { http_code: 405 } })
+          : json(401, { error: { http_code: 401 } })
+        : undefined,
     ({ url }) =>
       url === `${DEFAULT_SITE_URL}/${INDEXNOW_KEY}.txt`
         ? text(200, `${INDEXNOW_KEY}\n`)
@@ -175,6 +181,7 @@ describe('security:portals — site sain', () => {
       `PATCH ${SUPABASE}/rest/v1/users_profile?id=eq.${SUB}`,
       `PATCH ${SUPABASE}/rest/v1/professionals?id=eq.${SUB}`,
       `POST ${DEFAULT_SITE_URL}/api/contact`,
+      `POST ${DEFAULT_SITE_URL}/api/auth/send-email`,
     ])
   })
 
@@ -338,6 +345,49 @@ describe('security:portals — failles à détecter', () => {
     expect(failures).toEqual([
       '[site] /api/contact refuse une origine étrangère (403)',
     ])
+  })
+
+  it('/api/auth/send-email qui accepte un appel non signé (200) : échec', async () => {
+    const { fetchImpl } = fakeFetch([
+      ({ url, method }) =>
+        url === `${DEFAULT_SITE_URL}/api/auth/send-email` && method === 'POST'
+          ? json(200, {})
+          : undefined,
+    ])
+    const { failures } = await runPortalChecks({ fetchImpl, env: ENV })
+    expect(failures).toEqual([
+      '[site] /api/auth/send-email refuse un appel non signé (401 ; 503 tant que le secret n’est pas posé)',
+    ])
+  })
+
+  it('/api/auth/send-email sans secret côté Worker (503) : passe, avec la mention', async () => {
+    const { fetchImpl } = fakeFetch([
+      ({ url, method }) =>
+        url === `${DEFAULT_SITE_URL}/api/auth/send-email` && method === 'POST'
+          ? json(503, { error: { http_code: 503 } })
+          : undefined,
+    ])
+    const { lines, failures } = await runPortalChecks({ fetchImpl, env: ENV })
+    expect(failures).toEqual([])
+    const line = lines.find((l: string) =>
+      l.includes('/api/auth/send-email refuse un appel non signé'),
+    )
+    expect(line).toBeDefined()
+    expect(line!.startsWith('OK  ')).toBe(true)
+    expect(line).toContain(
+      'secret SUPABASE_SEND_EMAIL_HOOK_SECRET absent côté Worker',
+    )
+  })
+
+  it('/api/auth/send-email qui répond à GET autrement que 405 : échec', async () => {
+    const { fetchImpl } = fakeFetch([
+      ({ url, method }) =>
+        url === `${DEFAULT_SITE_URL}/api/auth/send-email` && method === 'GET'
+          ? json(200, {})
+          : undefined,
+    ])
+    const { failures } = await runPortalChecks({ fetchImpl, env: ENV })
+    expect(failures).toEqual(['[site] /api/auth/send-email refuse GET (405)'])
   })
 })
 

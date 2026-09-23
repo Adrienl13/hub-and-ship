@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { buildSeoHead } from '@/lib/seo'
+import { companyNameFromUser } from '@/lib/account/onboarding'
 import {
   loadMyProfile,
   toAccountProfilePatch,
@@ -39,7 +40,7 @@ export const Route = createFileRoute('/account/parametres')({
 })
 
 function AccountSettings() {
-  const { status, user, signOut } = useAuth()
+  const { status, user, signOut, updateUserMetadata } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState<AccountProfile>({
     firstName: '',
@@ -47,6 +48,9 @@ function AccountSettings() {
     phone: '',
     marketingConsent: false,
   })
+  // L'établissement n'a pas de colonne accessible à l'acheteur : il vit dans
+  // les métadonnées utilisateur (voir lib/account/onboarding.ts).
+  const [companyName, setCompanyName] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -61,6 +65,7 @@ function AccountSettings() {
 
     let cancelled = false
     setLoading(true)
+    setCompanyName(companyNameFromUser(user))
     void (async () => {
       try {
         const client = createSupabaseBrowserClient(
@@ -103,6 +108,15 @@ function AccountSettings() {
         user.id,
         toAccountProfilePatch(form, new Date().toISOString()),
       )
+      // Dupliqué dans les métadonnées pour l'admin et les emails ; le
+      // téléphone vidé y est bien effacé (chaîne vide), pas conservé.
+      const metadata = await updateUserMetadata({
+        company_name: companyName.trim(),
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        phone: form.phone.trim(),
+      })
+      if (!metadata.ok) throw new Error(metadata.message)
       toast.success('Profil mis à jour.')
     } catch (err) {
       toast.error(
@@ -178,7 +192,9 @@ function AccountSettings() {
       <Header onReserve={() => window.location.assign('/catalogue')} />
 
       <main className="mx-auto max-w-2xl px-6 py-10">
-        <div className="label-eyebrow text-[color:var(--ember)]">Mon espace</div>
+        <div className="label-eyebrow text-[color:var(--ember)]">
+          Mon espace
+        </div>
         <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
           Paramètres du compte
         </h1>
@@ -197,14 +213,17 @@ function AccountSettings() {
             Authentification non configurée sur cet environnement.
           </p>
         ) : status !== 'authenticated' ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 p-4 text-sm">
+          <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border p-4 text-sm">
             <span>Connectez-vous pour gérer votre profil.</span>
             <Button
               asChild
               size="sm"
               className="h-9 rounded-sm bg-foreground px-3 text-xs text-background"
             >
-              <Link to="/auth/login" search={{ returnTo: '/account/parametres' }}>
+              <Link
+                to="/auth/login"
+                search={{ returnTo: '/account/parametres' }}
+              >
                 Se connecter
               </Link>
             </Button>
@@ -217,89 +236,102 @@ function AccountSettings() {
         ) : (
           <div className="mt-6 space-y-6">
             <form onSubmit={(e) => void handleSave(e)} className="space-y-6">
-            <section className="space-y-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
-                  Email (identifiant de connexion)
-                </Label>
-                <Input value={user?.email ?? ''} disabled readOnly />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <section className="space-y-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Prénom</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Email (identifiant de connexion)
+                  </Label>
+                  <Input value={user?.email ?? ''} disabled readOnly />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">
+                      Prénom
+                    </Label>
+                    <Input
+                      value={form.firstName}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, firstName: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Nom</Label>
+                    <Input
+                      value={form.lastName}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, lastName: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    Établissement
+                  </Label>
                   <Input
-                    value={form.firstName}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, firstName: e.target.value }))
-                    }
+                    value={companyName}
+                    autoComplete="organization"
+                    placeholder="Restaurant, hôtel, bar, collectivité…"
+                    onChange={(e) => setCompanyName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Nom</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Téléphone
+                  </Label>
                   <Input
-                    value={form.lastName}
+                    type="tel"
+                    value={form.phone}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, lastName: e.target.value }))
+                      setForm((f) => ({ ...f, phone: e.target.value }))
                     }
                   />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
-                  Téléphone
-                </Label>
-                <Input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: e.target.value }))
-                  }
-                />
-              </div>
-              <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={form.marketingConsent}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      marketingConsent: e.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-muted-foreground">
-                  J'accepte de recevoir les ouvertures de container et offres par
-                  email.
-                </span>
-              </label>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={saving}>
-                  {saving ? 'Enregistrement…' : 'Enregistrer'}
-                </Button>
-              </div>
-            </section>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={form.marketingConsent}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        marketingConsent: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-muted-foreground">
+                    J'accepte de recevoir les ouvertures de container et offres
+                    par email.
+                  </span>
+                </label>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Enregistrement…' : 'Enregistrer'}
+                  </Button>
+                </div>
+              </section>
 
-            <section className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5">
-              <div>
-                <div className="font-display text-sm font-semibold">
-                  Déconnexion
+              <section className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)] p-5">
+                <div>
+                  <div className="font-display text-sm font-semibold">
+                    Déconnexion
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Termine votre session sur cet appareil.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Termine votre session sur cet appareil.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-1.5"
-                disabled={signingOut}
-                onClick={() => void handleSignOut()}
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
-              </Button>
-            </section>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-1.5"
+                  disabled={signingOut}
+                  onClick={() => void handleSignOut()}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+                </Button>
+              </section>
             </form>
 
             <MfaEnrollment />

@@ -404,6 +404,33 @@ export async function runPortalChecks({
     `HTTP ${contactForeign.status}`,
   )
 
+  // /api/auth/send-email : hook Supabase « Send Email ». La signature Standard
+  // Webhooks est la seule porte : un appel non signé doit être refusé (401).
+  // Tant que le secret n'est pas posé côté Worker, l'endpoint répond 503 —
+  // sûr (rien ne part), mais l'email de connexion ne part pas non plus : la
+  // ligne passe, avec la mention. Un 200 serait grave : n'importe qui pourrait
+  // faire envoyer des emails de connexion au nom de Terrassea.
+  const hookGet = await call(`${siteUrl}/api/auth/send-email`)
+  record(
+    'site',
+    '/api/auth/send-email refuse GET (405)',
+    hookGet.status === 405,
+    `HTTP ${hookGet.status}`,
+  )
+  const hookUnsigned = await call(`${siteUrl}/api/auth/send-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  })
+  record(
+    'site',
+    '/api/auth/send-email refuse un appel non signé (401 ; 503 tant que le secret n’est pas posé)',
+    hookUnsigned.status === 401 || hookUnsigned.status === 503,
+    hookUnsigned.status === 503
+      ? 'HTTP 503, secret SUPABASE_SEND_EMAIL_HOOK_SECRET absent côté Worker'
+      : `HTTP ${hookUnsigned.status}`,
+  )
+
   const key = await call(`${siteUrl}/${INDEXNOW_KEY}.txt`)
   record(
     'site',
