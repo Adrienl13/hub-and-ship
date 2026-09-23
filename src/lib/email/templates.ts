@@ -702,7 +702,7 @@ ${button('Voir ma réservation', input.accountUrl)}
 ${
   input.accountLinkIsMagic
     ? p(
-        'Ce bouton vous connecte automatiquement, sans mot de passe. Lien à usage unique — ensuite, connectez-vous avec votre email sur terrassea.com.',
+        'Ce bouton ouvre directement votre espace (lien à usage unique). Ensuite, connectez-vous avec votre email et votre mot de passe sur terrassea.com.',
         { muted: true, small: true },
       )
     : ''
@@ -1371,7 +1371,7 @@ ${steps(
     {
       title: 'Connectez-vous avec cette même adresse email',
       detail:
-        'Ou créez votre compte si ce n’est pas encore fait — un lien de connexion vous est envoyé, sans mot de passe.',
+        'Ou créez votre espace sur terrassea.com/auth/inscription si ce n’est pas encore fait.',
     },
     {
       title: 'Ouvrez la page Qualité & Tests',
@@ -1408,17 +1408,20 @@ ${TEXT_SIGNATURE}`
 // Connexion (hook Supabase « Send Email » → /api/auth/send-email)
 // ---------------------------------------------------------------------------
 //
-// Le lien magique est le seul mode de connexion du site : ces emails sont
-// souvent le PREMIER contact écrit avec un client. Ils portent la marque,
+// La connexion se fait par email et mot de passe ; le lien reste le secours
+// (activation de l'espace, mot de passe oublié, lien de connexion). Ces emails
+// sont souvent le PREMIER contact écrit avec un client. Ils portent la marque,
 // disent en une phrase ce que le clic va faire, et rassurent : valable une
 // heure, un seul usage, ouvrable sur n'importe quel appareil.
 
 export type AuthEmailKind =
-  /** Première visite (signup, invite) : le clic crée l'espace. */
+  /** Inscription avec mot de passe : le clic ACTIVE l'espace déjà créé. */
   | 'welcome'
+  /** Première visite par lien (adresse inconnue, invitation) : le clic crée l'espace, la fiche suit. */
+  | 'welcome_link'
   /** Adresse connue (magiclink, email) : le clic ouvre l'espace. */
   | 'login'
-  /** Récupération d'accès : sans mot de passe, le lien ouvre la session. */
+  /** Mot de passe oublié : le lien ouvre la session sur la page « nouveau mot de passe ». */
   | 'recovery'
   /** Changement d'adresse, message envoyé à l'adresse ACTUELLE. */
   | 'email_change_current'
@@ -1526,6 +1529,36 @@ export function buildAuthEmail(input: AuthEmailInput): {
   switch (input.kind) {
     case 'welcome': {
       const intro =
+        'Votre espace professionnel est créé. Un clic pour l’activer, et vous retrouvez vos devis, réservations et factures au même endroit.'
+      return authLinkEmail(input, link, {
+        subject: 'Bienvenue chez Terrassea — activez votre espace',
+        eyebrow: 'Votre espace pro',
+        title: 'Bienvenue chez Terrassea',
+        preheader:
+          'Un clic pour activer votre espace : devis, réservations et factures au même endroit.',
+        introHtml: intro,
+        introText: intro,
+        buttonLabel: 'Activer mon espace',
+        stepsHtml: steps([
+          {
+            title: 'Activez votre espace',
+            detail: 'Un clic sur le bouton ci-dessus, une seule fois.',
+          },
+          {
+            title: 'Connectez-vous avec votre email et votre mot de passe',
+            detail: 'Ou recevez un lien de connexion à tout moment.',
+          },
+          {
+            title: 'Retrouvez tout votre suivi',
+            detail:
+              'Devis, réservations, factures et favoris, sur tous vos appareils.',
+          },
+        ]),
+      })
+    }
+
+    case 'welcome_link': {
+      const intro =
         'Vous avez demandé à ouvrir votre espace professionnel sur terrassea.com. Un clic sur le bouton et il est prêt : vous complétez votre fiche en trente secondes (nom, établissement), puis vous retrouvez vos devis, réservations et factures au même endroit.'
       return authLinkEmail(input, link, {
         subject: 'Bienvenue chez Terrassea — créez votre espace',
@@ -1544,9 +1577,9 @@ export function buildAuthEmail(input: AuthEmailInput): {
               'Prénom, nom, établissement : trente secondes, une seule fois.',
           },
           {
-            title: 'Retrouvez tout votre suivi',
+            title: 'Choisissez un mot de passe quand vous voulez',
             detail:
-              'Devis, réservations, factures et favoris, sur tous vos appareils.',
+              'Dans Paramètres du compte. En attendant, un lien par email vous connecte à tout moment.',
           },
         ]),
       })
@@ -1554,7 +1587,7 @@ export function buildAuthEmail(input: AuthEmailInput): {
 
     case 'login': {
       const intro =
-        'Cliquez sur le bouton pour ouvrir votre espace. Aucun mot de passe : ce lien suffit.'
+        'Cliquez sur le bouton pour ouvrir votre espace, sans saisir votre mot de passe.'
       return authLinkEmail(input, link, {
         subject: 'Votre lien de connexion Terrassea',
         eyebrow: 'Connexion',
@@ -1568,15 +1601,16 @@ export function buildAuthEmail(input: AuthEmailInput): {
 
     case 'recovery': {
       const intro =
-        'Vous avez demandé à retrouver l’accès à votre espace. Le site n’utilise pas de mot de passe : ce lien ouvre directement votre session, et vous retrouvez tout votre suivi.'
+        'Vous avez demandé un nouveau mot de passe. Cliquez sur le bouton : vous le choisissez en quelques secondes, puis vous êtes connecté.'
       return authLinkEmail(input, link, {
-        subject: 'Réinitialiser votre accès Terrassea',
+        subject: 'Votre nouveau mot de passe Terrassea',
         eyebrow: 'Connexion',
-        title: 'Réinitialiser votre accès',
-        preheader: 'Un clic ouvre votre espace : aucun mot de passe à retenir.',
+        title: 'Choisir un nouveau mot de passe',
+        preheader:
+          'Un clic, un nouveau mot de passe, et vous êtes connecté à votre espace.',
         introHtml: intro,
         introText: intro,
-        buttonLabel: 'Me connecter',
+        buttonLabel: 'Choisir mon mot de passe',
       })
     }
 

@@ -12,6 +12,13 @@
 // restent portés par la fiche utilisateur et sont dupliqués dans les
 // métadonnées pour la même raison.
 
+import {
+  loadMyProfile,
+  toAccountProfilePatch,
+  updateMyProfile,
+  type AccountProfile,
+  type ProfileClient,
+} from '@/lib/account/profile'
 import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
 import { phoneSchema } from '@/lib/validation/schemas'
 
@@ -159,4 +166,63 @@ export function dashboardGreeting({
   const company = companyName.trim()
   const head = name ? `Bonjour ${name}` : 'Bonjour'
   return company ? `${head} · ${company}` : head
+}
+
+// ---------------------------------------------------------------------------
+// Inscription avec mot de passe : complément de la fiche à l'activation
+// ---------------------------------------------------------------------------
+
+export interface SignupMetadata {
+  readonly phone: string
+  readonly marketingConsent: boolean
+}
+
+/** Téléphone et consentement tels que l'inscription les a mis en métadonnées. */
+export function signupMetadataFromUser(
+  user: UserLike | null | undefined,
+): SignupMetadata {
+  const phone = user?.user_metadata?.phone
+  return {
+    phone: typeof phone === 'string' ? phone.trim() : '',
+    marketingConsent: user?.user_metadata?.email_marketing_consent === true,
+  }
+}
+
+/**
+ * Le déclencheur côté base crée la fiche avec le prénom et le nom lus dans
+ * les métadonnées, mais ni le téléphone ni le consentement. On ne les
+ * recopie qu'UNE fois, à l'activation de l'espace : plus tard, la fiche fait
+ * foi (un consentement retiré dans les paramètres doit le rester).
+ */
+export function signupProfileComplement(
+  profile: AccountProfile,
+  metadata: SignupMetadata,
+): AccountProfile | null {
+  const phone = profile.phone.trim() || metadata.phone
+  const marketingConsent = profile.marketingConsent || metadata.marketingConsent
+  if (
+    phone === profile.phone.trim() &&
+    marketingConsent === profile.marketingConsent
+  ) {
+    return null
+  }
+  return { ...profile, phone, marketingConsent }
+}
+
+/** Lecture puis mise à jour de la fiche, au mieux : l'appelant borne et ignore l'échec. */
+export async function completeProfileFromSignup(
+  client: ProfileClient,
+  userId: string,
+  metadata: SignupMetadata,
+  nowIso: string,
+): Promise<boolean> {
+  const profile = await loadMyProfile(client, userId)
+  const complement = signupProfileComplement(profile, metadata)
+  if (!complement) return false
+  await updateMyProfile(
+    client,
+    userId,
+    toAccountProfilePatch(complement, nowIso),
+  )
+  return true
 }

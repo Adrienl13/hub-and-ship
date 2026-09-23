@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import {
   companyNameFromUser,
+  completeProfileFromSignup,
   isProfileComplete,
   resolvePostLoginDestination,
+  signupMetadataFromUser,
 } from '@/lib/account/onboarding'
 import { loadMyProfile, type ProfileClient } from '@/lib/account/profile'
 import {
@@ -16,6 +18,7 @@ import {
   parseMagicLinkCallback,
   type MagicLinkFailure,
 } from '@/lib/auth/magic-link-callback'
+import { PASSWORD_PATH } from '@/lib/auth/password'
 import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
@@ -30,6 +33,18 @@ const CALLBACK_TIMEOUT_MS = 10_000
 
 /** Lecture du profil après connexion : au-delà, direction la création de l'espace. */
 const PROFILE_READ_TIMEOUT_MS = 4_000
+
+/** Complément de la fiche à l'activation : au-delà, on redirige sans attendre. */
+const PROFILE_PATCH_TIMEOUT_MS = 2_000
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      window.setTimeout(() => reject(new Error('timeout')), ms),
+    ),
+  ])
+}
 
 const callbackSearchSchema = z.object({
   returnTo: z.string().optional(),
@@ -50,7 +65,16 @@ function AuthCallbackPage() {
   const { status, user, isConfigured, verifyMagicLinkToken } = useAuth()
   const { returnTo } = Route.useSearch()
   const authenticated = status === 'authenticated'
-  const target = sanitizeReturnTo(returnTo, DEFAULT_RETURN_TO)
+  // Lien « mot de passe oublié » : la destination est le choix du mot de
+  // passe, quoi que dise `returnTo` (la liste blanche du fournisseur peut
+  // l'avoir remplacé).
+  const [recovery, setRecovery] = useState(false)
+  // Lien d'activation (inscription avec mot de passe) : c'est le seul moment
+  // où l'on recopie téléphone et consentement des métadonnées vers la fiche.
+  const [activation, setActivation] = useState(false)
+  const target = recovery
+    ? PASSWORD_PATH
+    : sanitizeReturnTo(returnTo, DEFAULT_RETURN_TO)
   const [failure, setFailure] = useState<MagicLinkFailure | null>(null)
   // Destination réelle : la création de l'espace si la fiche est incomplète
   // (première visite), sinon `target`. Connue une fois le profil lu.
@@ -73,6 +97,9 @@ function AuthCallbackPage() {
     }
 
     let cancelled = false
+
+    if (callback.otpType === 'recovery') setRecovery(true)
+    if (callback.otpType === 'signup') setActivation(true)
 
     if (callback.tokenHash) {
       void verifyMagicLinkToken(
@@ -115,6 +142,8 @@ function AuthCallbackPage() {
   // rafraîchissement de jeton, ce qui relancerait la lecture pour rien.
   const userId = user?.id
   const companyName = companyNameFromUser(user)
+  const { phone: metaPhone, marketingConsent: metaConsent } =
+    signupMetadataFromUser(user)
   useEffect(() => {
     if (!authenticated || !userId) return undefined
     const config = getSupabasePublicConfig()
@@ -133,16 +162,25 @@ function AuthCallbackPage() {
         ) as unknown as ProfileClient
         // Une requête qui ne répond pas ne doit pas retenir le client ici :
         // au-delà du délai, on le traite comme une première visite.
-        const profile = await Promise.race([
+        const profile = await withTimeout(
           loadMyProfile(client, userId),
-          new Promise<never>((_, reject) =>
-            window.setTimeout(
-              () => reject(new Error('profile_timeout')),
-              PROFILE_READ_TIMEOUT_MS,
-            ),
-          ),
-        ])
+          PROFILE_READ_TIMEOUT_MS,
+        )
         complete = isProfileComplete({ ...profile, companyName })
+
+        // À l'activation seulement, au mieux : un échec ici ne retient pas
+        // le client, la fiche reste modifiable dans les paramètres du compte.
+        if (activation) {
+          await withTimeout(
+            completeProfileFromSignup(
+              client,
+              userId,
+              { phone: metaPhone, marketingConsent: metaConsent },
+              new Date().toISOString(),
+            ),
+            PROFILE_PATCH_TIMEOUT_MS,
+          ).catch(() => undefined)
+        }
       } catch {
         complete = false
       }
@@ -155,7 +193,15 @@ function AuthCallbackPage() {
     return () => {
       cancelled = true
     }
-  }, [authenticated, userId, companyName, target])
+  }, [
+    authenticated,
+    activation,
+    userId,
+    companyName,
+    metaPhone,
+    metaConsent,
+    target,
+  ])
 
   // Brève pause pour que « Votre espace s'ouvre. » soit lu avant la
   // redirection ; elle court en parallèle de la lecture du profil.
@@ -174,7 +220,14 @@ function AuthCallbackPage() {
     return (
       <MagicLinkFailurePanel
         failure={failure}
-        retryHref={`/auth/login?returnTo=${encodeURIComponent(target)}`}
+        retryHref={
+          recovery
+            ? '/auth/mot-de-passe-oublie'
+            : `/auth/login?returnTo=${encodeURIComponent(target)}`
+        }
+        retryLabel={
+          recovery ? 'Demander un nouveau lien' : 'Recevoir un nouveau lien'
+        }
       />
     )
   }
@@ -203,7 +256,7 @@ function AuthCallbackPage() {
               ? `Connecté avec ${user?.email ?? 'votre email professionnel'}. Redirection en cours…`
               : isConfigured
                 ? 'Nous vérifions votre lien et ouvrons votre session.'
-                : 'Supabase Auth sera actif dès que les variables locales seront configurées.'}
+                : 'La connexion est momentanément indisponible. Merci de réessayer dans quelques minutes.'}
           </p>
           <Button
             asChild
@@ -227,9 +280,11 @@ function AuthCallbackPage() {
 function MagicLinkFailurePanel({
   failure,
   retryHref,
+  retryLabel,
 }: {
   readonly failure: MagicLinkFailure
   readonly retryHref: string
+  readonly retryLabel: string
 }) {
   return (
     <main className="min-h-screen bg-[color:var(--sand-soft)] text-foreground">
@@ -251,7 +306,7 @@ function MagicLinkFailurePanel({
             asChild
             className="mt-6 h-11 w-full rounded-sm bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]"
           >
-            <a href={retryHref}>Recevoir un nouveau lien</a>
+            <a href={retryHref}>{retryLabel}</a>
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Toujours bloqué ? Écrivez-nous à{' '}

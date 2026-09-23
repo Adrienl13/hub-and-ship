@@ -7,6 +7,7 @@ import {
   parseHookSecret,
   parseSendEmailPayload,
   planAuthEmails,
+  RECOVERY_RETURN_TO,
   signStandardWebhook,
   verifyStandardWebhook,
   type SendEmailHookPayload,
@@ -301,6 +302,29 @@ describe('buildAuthCallbackLink', () => {
       }),
     ).toContain('returnTo=%2Faccount&')
   })
+
+  it('returnToOverride remplace la destination de redirect_to, après contrôle', () => {
+    expect(
+      buildAuthCallbackLink({
+        tokenHash: 'h',
+        actionType: 'recovery',
+        redirectTo:
+          'https://terrassea.com/auth/callback?returnTo=%2Faccount%2Ffavoris',
+        returnToOverride: '/account/mot-de-passe',
+      }),
+    ).toBe(
+      `${AUTH_LINK_ORIGIN}/auth/callback?returnTo=%2Faccount%2Fmot-de-passe&token_hash=h&type=recovery`,
+    )
+    // Une destination forcée hostile retombe sur le tableau de bord.
+    expect(
+      buildAuthCallbackLink({
+        tokenHash: 'h',
+        actionType: 'recovery',
+        redirectTo: null,
+        returnToOverride: 'https://evil.example',
+      }),
+    ).toContain('returnTo=%2Faccount&')
+  })
 })
 
 describe('planAuthEmails', () => {
@@ -309,11 +333,26 @@ describe('planAuthEmails', () => {
       payload({ user: { user_metadata: { first_name: ' Camille ' } } }),
     )
     expect(plan).toHaveLength(1)
+    // Première visite par lien (aucune fiche en métadonnées) : le clic crée l'espace.
     expect(plan[0]).toMatchObject({
       to: 'adrien.laniez@icloud.com',
-      kind: 'welcome',
+      kind: 'welcome_link',
       firstName: 'Camille',
     })
+    // Inscription avec mot de passe (fiche déjà posée) : le clic ACTIVE l'espace.
+    expect(
+      planAuthEmails(
+        payload({
+          user: {
+            user_metadata: {
+              first_name: 'Camille',
+              company_name: 'Hôtel des Pins',
+              onboarding_completed_at: '2026-09-23T13:00:00.000Z',
+            },
+          },
+        }),
+      )[0],
+    ).toMatchObject({ kind: 'welcome' })
     expect(plan[0]!.link).toBe(
       `${AUTH_LINK_ORIGIN}/auth/callback?returnTo=%2Faccount&token_hash=pkce_hash_abc&type=signup`,
     )
@@ -321,7 +360,7 @@ describe('planAuthEmails', () => {
       planAuthEmails(
         payload({ email_data: { email_action_type: 'invite' } }),
       )[0],
-    ).toMatchObject({ kind: 'welcome', firstName: undefined })
+    ).toMatchObject({ kind: 'welcome_link', firstName: undefined })
   })
 
   it('magiclink et email → connexion ; recovery → récupération', () => {
@@ -352,6 +391,38 @@ describe('planAuthEmails', () => {
         payload({ email_data: { email_action_type: 'recovery' } }),
       )[0]!.link,
     ).toContain('&type=recovery')
+  })
+
+  it('recovery → le lien mène TOUJOURS au choix du mot de passe, quel que soit redirect_to', () => {
+    expect(RECOVERY_RETURN_TO).toBe('/account/mot-de-passe')
+    const expected = `${AUTH_LINK_ORIGIN}/auth/callback?returnTo=%2Faccount%2Fmot-de-passe&token_hash=pkce_hash_abc&type=recovery`
+    const redirects = [
+      'https://terrassea.com/auth/callback?returnTo=%2Faccount%2Fmot-de-passe',
+      // returnTo conservé mais différent : le navigateur visait une autre page.
+      'https://terrassea.com/auth/callback?returnTo=%2Faccount%2Ffavoris',
+      // Liste blanche : Supabase a remplacé la redirection par la Site URL.
+      'https://prosimport.com',
+      '',
+    ]
+    for (const redirect_to of redirects) {
+      const plan = planAuthEmails(
+        payload({ email_data: { email_action_type: 'recovery', redirect_to } }),
+      )
+      expect(plan, redirect_to).toHaveLength(1)
+      expect(plan[0]!.link, redirect_to).toBe(expected)
+    }
+    // Les autres types gardent la destination demandée.
+    expect(
+      planAuthEmails(
+        payload({
+          email_data: {
+            email_action_type: 'magiclink',
+            redirect_to:
+              'https://terrassea.com/auth/callback?returnTo=%2Faccount%2Ffavoris',
+          },
+        }),
+      )[0]!.link,
+    ).toContain('returnTo=%2Faccount%2Ffavoris&')
   })
 
   it('email_change sécurisé → deux emails, mapping croisé des token_hash', () => {

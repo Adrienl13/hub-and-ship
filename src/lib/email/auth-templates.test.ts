@@ -7,25 +7,49 @@ const LINK =
 const LINK_HTML = LINK.replace(/&/g, '&amp;')
 
 describe('emails de connexion (hook Send Email)', () => {
-  it('welcome : sujet, bouton « Créer mon espace », étapes et lien en clair', () => {
+  it('welcome : email d’activation — sujet, bouton « Activer mon espace », étapes et lien en clair', () => {
     const email = buildAuthEmail({
       kind: 'welcome',
       link: LINK,
       firstName: 'Camille',
     })
-    expect(email.subject).toBe('Bienvenue chez Terrassea — créez votre espace')
+    expect(email.subject).toBe(
+      'Bienvenue chez Terrassea — activez votre espace',
+    )
     expect(email.html).toContain('Bienvenue chez Terrassea')
     expect(email.html).toContain('Bonjour Camille,')
-    expect(email.html).toContain('Créer mon espace')
+    expect(email.html).toContain('Votre espace professionnel est créé.')
+    expect(email.html).toContain('Activer mon espace')
     expect(email.html).toContain(`href="${LINK_HTML}"`)
-    expect(email.html).toContain('Complétez votre fiche')
+    expect(email.html).toContain('Et maintenant ?')
+    expect(email.html).toContain('Activez votre espace')
+    expect(email.html).toContain(
+      'Connectez-vous avec votre email et votre mot de passe',
+    )
+    expect(email.html).toContain(
+      'Ou recevez un lien de connexion à tout moment.',
+    )
+    expect(email.html).toContain('Retrouvez tout votre suivi')
+    expect(email.html).not.toContain('Complétez votre fiche')
+    expect(email.html).not.toContain('Créer mon espace')
     expect(email.html).toContain('Bon à savoir')
     expect(email.html).toContain('word-break:break-all')
     expect(email.html).toContain('Vous n’avez rien demandé ?')
     expect(email.text).toContain(LINK)
     expect(email.text).toContain('Bonjour Camille,')
-    expect(email.text).toContain('Créer mon espace : ')
+    expect(email.text).toContain('Votre espace professionnel est créé.')
+    expect(email.text).toContain('Activer mon espace : ')
     expect(email.text).toContain('terrassea.com · contact@terrassea.com')
+  })
+
+  it('welcome_link : première visite par lien — « Créer mon espace » et la fiche à compléter', () => {
+    const email = buildAuthEmail({ kind: 'welcome_link', link: LINK })
+    expect(email.subject).toBe('Bienvenue chez Terrassea — créez votre espace')
+    expect(email.html).toContain('Créer mon espace')
+    expect(email.html).toContain('Complétez votre fiche')
+    expect(email.html).toContain('Choisissez un mot de passe quand vous voulez')
+    expect(email.html).not.toContain('Activer mon espace')
+    expect(email.text).toContain('Créer mon espace : ')
   })
 
   it('login : sujet, « Me connecter », sans prénom ni étapes', () => {
@@ -34,19 +58,34 @@ describe('emails de connexion (hook Send Email)', () => {
     expect(email.html).toContain('Votre lien de connexion')
     expect(email.html).toContain('Bonjour,')
     expect(email.html).toContain('Me connecter')
-    expect(email.html).toContain('Aucun mot de passe')
+    expect(email.html).toContain('sans saisir votre mot de passe')
     expect(email.html).not.toContain('Et maintenant ?')
     expect(email.html).toContain(`href="${LINK_HTML}"`)
     expect(email.text).toContain(LINK)
   })
 
-  it('recovery et changement d’adresse : sujets et boutons attendus', () => {
-    const recovery = buildAuthEmail({ kind: 'recovery', link: LINK })
-    expect(recovery.subject).toBe('Réinitialiser votre accès Terrassea')
-    expect(recovery.html).toContain('Réinitialiser votre accès')
-    expect(recovery.html).toContain('Me connecter')
+  it('recovery : « Choisir un nouveau mot de passe », bouton et sujet dédiés', () => {
+    const recovery = buildAuthEmail({
+      kind: 'recovery',
+      link: LINK,
+      firstName: 'Camille',
+    })
+    expect(recovery.subject).toBe('Votre nouveau mot de passe Terrassea')
+    expect(recovery.html).toContain('Choisir un nouveau mot de passe')
+    expect(recovery.html).toContain(
+      'Vous avez demandé un nouveau mot de passe.',
+    )
+    expect(recovery.html).toContain('Choisir mon mot de passe')
+    expect(recovery.html).toContain(`href="${LINK_HTML}"`)
+    expect(recovery.html).not.toContain('Me connecter')
+    expect(recovery.html).not.toContain('n’utilise pas de mot de passe')
+    expect(recovery.html).not.toContain('Et maintenant ?')
+    expect(recovery.text).toContain('Bonjour Camille,')
+    expect(recovery.text).toContain('Choisir mon mot de passe : ')
     expect(recovery.text).toContain(LINK)
+  })
 
+  it('changement d’adresse : sujets et boutons attendus', () => {
     const current = buildAuthEmail({ kind: 'email_change_current', link: LINK })
     expect(current.subject).toBe('Confirmez votre adresse email — Terrassea')
     expect(current.html).toContain('Confirmez le changement d’adresse')
@@ -91,6 +130,7 @@ describe('emails de connexion (hook Send Email)', () => {
     const hostile = '<img src=x onerror=alert(1)>'
     const kinds: AuthEmailKind[] = [
       'welcome',
+      'welcome_link',
       'login',
       'recovery',
       'email_change_current',

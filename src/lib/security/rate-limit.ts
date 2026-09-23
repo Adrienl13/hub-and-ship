@@ -68,6 +68,32 @@ export function consumeRateLimit({
   }
 }
 
+/**
+ * État de la limite SANS consommer d'essai : pour ne compter que les échecs
+ * (une connexion réussie ne doit pas rapprocher du blocage).
+ */
+export function peekRateLimit({
+  key,
+  limit,
+  windowMs,
+  now = Date.now(),
+  store = defaultStore,
+}: RateLimitInput): RateLimitStatus {
+  const normalizedKey = normalizeRateLimitKey(key)
+  const activeHits = getActiveHits(store, normalizedKey, now, windowMs)
+  const oldestHit = activeHits[0] ?? now
+  const resetAt = oldestHit + windowMs
+  const blocked = activeHits.length >= limit
+  return {
+    allowed: !blocked,
+    key: normalizedKey,
+    limit,
+    remaining: Math.max(0, limit - activeHits.length),
+    resetAt,
+    retryAfterMs: blocked ? Math.max(0, resetAt - now) : 0,
+  }
+}
+
 export function formatRetryAfter(ms: number): string {
   const minutes = Math.max(1, Math.ceil(ms / 60_000))
 

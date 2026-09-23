@@ -21,7 +21,12 @@ import { z } from 'zod'
 import type { AuthEmailKind } from '@/lib/email/templates'
 import { timingSafeEqualStr } from '@/lib/security/timing-safe-equal'
 
-import { returnToFromRedirectUrl } from './return-to'
+import { PASSWORD_PATH } from './password'
+import {
+  DEFAULT_RETURN_TO,
+  returnToFromRedirectUrl,
+  sanitizeReturnTo,
+} from './return-to'
 
 /**
  * Origine FIXE du lien. `email_data.site_url` n'est pas utilisée : c'est la
@@ -309,20 +314,36 @@ export function parseSendEmailPayload(
 // ---------------------------------------------------------------------------
 
 /**
+ * Destination forcée du lien « mot de passe oublié » : la page où l'on
+ * choisit son nouveau mot de passe, quoi qu'ait demandé le navigateur.
+ */
+export const RECOVERY_RETURN_TO = PASSWORD_PATH
+
+/**
  * `https://terrassea.com/auth/callback?returnTo=…&token_hash=…&type=…`.
  * `type` est l'email_action_type tel quel : parseMagicLinkCallback les
  * accepte tous, et verifyOtp attend exactement ces valeurs.
+ *
+ * `returnToOverride` remplace la destination lue dans `redirect_to` : pour
+ * un lien de récupération, la liste blanche du dashboard peut avoir effacé
+ * `redirect_to`, et l'on ne veut PAS retomber sur le tableau de bord sans
+ * mot de passe. La valeur passe quand même par sanitizeReturnTo (chemin
+ * interne uniquement).
  */
 export function buildAuthCallbackLink({
   tokenHash,
   actionType,
   redirectTo,
+  returnToOverride,
 }: {
   readonly tokenHash: string
   readonly actionType: LinkActionType
   readonly redirectTo: string | null | undefined
+  readonly returnToOverride?: string
 }): string {
-  const returnTo = returnToFromRedirectUrl(redirectTo)
+  const returnTo = returnToOverride
+    ? sanitizeReturnTo(returnToOverride, DEFAULT_RETURN_TO)
+    : returnToFromRedirectUrl(redirectTo)
   return `${AUTH_LINK_ORIGIN}/auth/callback?returnTo=${encodeURIComponent(returnTo)}&token_hash=${encodeURIComponent(tokenHash)}&type=${actionType}`
 }
 
@@ -357,6 +378,16 @@ function firstNameOf(payload: SendEmailHookPayload): string | undefined {
   return trimmed
 }
 
+/** Fiche posée à l'inscription avec mot de passe (buildOnboardingMetadata). */
+function hasSignupProfile(payload: SendEmailHookPayload): boolean {
+  const meta = payload.user.user_metadata
+  return (
+    typeof meta?.onboarding_completed_at === 'string' &&
+    typeof meta.company_name === 'string' &&
+    meta.company_name.trim().length > 0
+  )
+}
+
 /** Décide quoi envoyer à qui. Pur : aucun envoi ici. */
 export function planAuthEmails(
   payload: SendEmailHookPayload,
@@ -364,12 +395,13 @@ export function planAuthEmails(
   const { user, email_data: data } = payload
   const type = data.email_action_type
   const firstName = firstNameOf(payload)
-  const link = (tokenHash: string) =>
+  const link = (tokenHash: string, returnToOverride?: string) =>
     buildAuthCallbackLink({
       tokenHash,
       // Garanti par parseSendEmailPayload : seuls les types « lien » arrivent ici.
       actionType: type as LinkActionType,
       redirectTo: data.redirect_to,
+      returnToOverride,
     })
 
   if (type === 'reauthentication') {
@@ -398,10 +430,16 @@ export function planAuthEmails(
   switch (type) {
     case 'signup':
     case 'invite':
+      // Inscription avec mot de passe (fiche déjà en métadonnées) : l'espace
+      // existe, le clic l'ACTIVE. Première visite par lien ou invitation : le
+      // clic crée l'espace, la fiche se remplit ensuite.
       return [
         {
           to: user.email,
-          kind: 'welcome',
+          kind:
+            type === 'signup' && hasSignupProfile(payload)
+              ? 'welcome'
+              : 'welcome_link',
           link: link(data.token_hash),
           firstName,
         },
@@ -419,11 +457,13 @@ export function planAuthEmails(
       ]
 
     case 'recovery':
+      // Mot de passe oublié : le clic doit mener au choix du nouveau mot de
+      // passe, même si Supabase a remplacé redirect_to par la Site URL.
       return [
         {
           to: user.email,
           kind: 'recovery',
-          link: link(data.token_hash),
+          link: link(data.token_hash, RECOVERY_RETURN_TO),
           firstName,
         },
       ]

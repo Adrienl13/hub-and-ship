@@ -235,6 +235,15 @@ const previews: Record<
     firstName: 'Camille',
     noticeLabel: 'Votre mot de passe a été modifié',
   }),
+  '24-auth-premiere-visite': buildAuthEmail({
+    kind: 'welcome_link',
+    link: `${SITE}/auth/callback?returnTo=%2Faccount&token_hash=apercu_jeton_fictif&type=signup`,
+  }),
+  '23-auth-mot-de-passe': buildAuthEmail({
+    kind: 'recovery',
+    firstName: 'Camille',
+    link: `${SITE}/auth/callback?returnTo=%2Faccount%2Fmot-de-passe&token_hash=apercu_jeton_fictif&type=recovery`,
+  }),
 }
 
 const outDir = process.argv[2] ?? '.email-previews'

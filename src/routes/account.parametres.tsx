@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Download, Loader2, LogOut, Trash2 } from 'lucide-react'
+import { Download, KeyRound, Loader2, LogOut, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Footer } from '@/components/Footer'
@@ -95,7 +95,7 @@ function AccountSettings() {
     if (!user) return
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
-      toast.error('Supabase non configuré.')
+      toast.error('Connexion momentanément indisponible.')
       return
     }
     setSaving(true)
@@ -333,6 +333,29 @@ function AccountSettings() {
                 </Button>
               </section>
             </form>
+
+            <section className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
+              <div className="max-w-md">
+                <h2 className="font-display text-sm font-semibold">
+                  Mot de passe
+                </h2>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Vous vous connectez par email et mot de passe. Vous pouvez
+                  aussi recevoir un lien de connexion à tout moment.
+                </p>
+              </div>
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="gap-1.5"
+              >
+                <Link to="/account/mot-de-passe" search={{ change: '1' }}>
+                  <KeyRound className="h-3.5 w-3.5" />
+                  Changer mon mot de passe
+                </Link>
+              </Button>
+            </section>
 
             <MfaEnrollment />
 

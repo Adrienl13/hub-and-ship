@@ -6,14 +6,14 @@
 
 ## Les portails et qui y accède
 
-| Portail | URL | Condition d'accès |
-|---|---|---|
-| Client direct | `/catalogue`, `/account` | N'importe quel compte connecté (canal `direct`) |
-| Revendeur | `/catalogue` (prix nets revendeur) | `companies.channel = 'revendeur'` + profil rattaché |
-| Distributeur | `/catalogue` (prix nets distributeur) | `companies.channel = 'distributeur'` |
-| Grand compte | `/catalogue` (−10 % d'office) | `companies.channel = 'grand_compte'` |
-| Espace partenaire | `/partner` | Lié dans `partner_users` (via une candidature approuvée) |
-| Admin | `/admin` | `users_profile.role = 'admin'` (ou `super_admin`) |
+| Portail           | URL                                   | Condition d'accès                                        |
+| ----------------- | ------------------------------------- | -------------------------------------------------------- |
+| Client direct     | `/catalogue`, `/account`              | N'importe quel compte connecté (canal `direct`)          |
+| Revendeur         | `/catalogue` (prix nets revendeur)    | `companies.channel = 'revendeur'` + profil rattaché      |
+| Distributeur      | `/catalogue` (prix nets distributeur) | `companies.channel = 'distributeur'`                     |
+| Grand compte      | `/catalogue` (−10 % d'office)         | `companies.channel = 'grand_compte'`                     |
+| Espace partenaire | `/partner`                            | Lié dans `partner_users` (via une candidature approuvée) |
+| Admin             | `/admin`                              | `users_profile.role = 'admin'` (ou `super_admin`)        |
 
 Le **canal de vente** (revendeur/distributeur/grand compte) est une décision
 admin : il n'est jamais auto-attribué. Les prix nets d'un canal ne sortent
@@ -26,16 +26,19 @@ Le mot de passe ne peut pas être posé en SQL (hachage géré par le service
 Auth). Dans **Supabase → Authentication → Users → Add user**, coche
 **« Auto Confirm User »** et crée ces 5 comptes :
 
-| Persona | Email | Mot de passe suggéré |
-|---|---|---|
-| Admin | `admin.test@prosimport.com` | `Test-Admin-2026!` |
-| Client direct | `direct.test@prosimport.com` | `Test-Direct-2026!` |
-| Revendeur | `revendeur.test@prosimport.com` | `Test-Revendeur-2026!` |
-| Distributeur | `distributeur.test@prosimport.com` | `Test-Distributeur-2026!` |
-| Partenaire apporteur | `partenaire.test@prosimport.com` | `Test-Partenaire-2026!` |
+| Persona              | Email                              | Mot de passe suggéré      |
+| -------------------- | ---------------------------------- | ------------------------- |
+| Admin                | `admin.test@prosimport.com`        | `Test-Admin-2026!`        |
+| Client direct        | `direct.test@prosimport.com`       | `Test-Direct-2026!`       |
+| Revendeur            | `revendeur.test@prosimport.com`    | `Test-Revendeur-2026!`    |
+| Distributeur         | `distributeur.test@prosimport.com` | `Test-Distributeur-2026!` |
+| Partenaire apporteur | `partenaire.test@prosimport.com`   | `Test-Partenaire-2026!`   |
 
 > Ce sont des comptes de DÉMO : utilise un mot de passe fort et supprime-les
 > (ou change les mots de passe) avant la mise en production réelle.
+
+Les comptes de test se connectent par email et mot de passe sur `/auth/login`
+(le lien magique reste disponible en secours sur la même page).
 
 ## Étape 2 — Câbler rôles, canaux et partenaire (SQL Editor)
 

@@ -1,8 +1,9 @@
 # Runbook — connexion par lien magique
 
-Le lien magique est le **seul** mode de connexion du site : aucun mot de passe
-n'existe. Tout ce qui le casse coupe l'accès à l'espace client, aux
-réservations, aux factures et à l'espace partenaire.
+Le lien magique a été le **seul** mode de connexion du site jusqu'au
+23 septembre 2026 ; il reste le **secours** de la connexion par email et mot
+de passe (section 2). Tout ce qui le casse coupe l'activation des nouveaux
+espaces, le « mot de passe oublié » et le lien de connexion de dépannage.
 
 Depuis le 23 septembre 2026, l'email de connexion n'est plus rédigé ni envoyé
 par Supabase : Supabase appelle notre Worker (hook « Send Email »), qui
@@ -28,6 +29,23 @@ Lu dans les logs de production Supabase, 09:58 UTC :
 Trois causes indépendantes, une seule sortie : reprendre la main sur l'email.
 
 ## 2. Comment ça marche maintenant
+
+**Depuis le 23/09 : connexion principale par email + mot de passe ; le lien
+magique reste le secours (mot de passe oublié, lien de connexion).** Le
+visiteur crée son espace sur `/auth/inscription` (fiche + email + mot de
+passe, `signUp`) ; Supabase envoie par le hook l'email « Bienvenue chez
+Terrassea — activez votre espace » (type `signup`, gabarit `welcome`) ; le
+clic active l'espace et ouvre la session. Ensuite, `/auth/login` demande
+email + mot de passe (`signInWithPassword`) et mène directement à `/account`.
+Le lien ne sert plus qu'à trois moments : l'activation, « Mot de passe
+oublié » (`resetPasswordForEmail`, type `recovery`, gabarit `recovery`, dont
+le lien mène **toujours** à `/account/mot-de-passe` — le hook force ce
+`returnTo` quel que soit `redirect_to`) et « Recevoir un lien de connexion »
+(`signInWithOtp`, type `magiclink`, gabarit `login`, inchangé). Les comptes
+créés avant cette date n'ont pas de mot de passe : ils en choisissent un via
+« Mot de passe oublié » ou dans Paramètres → « Changer mon mot de passe ».
+
+Le schéma ci-dessous décrit le trajet d'un lien, quel que soit son type :
 
 ```
 navigateur ── signInWithOtp({ email, emailRedirectTo: …/auth/callback?returnTo=… })
@@ -171,6 +189,30 @@ Dashboard → **Authentication → Emails** → modèles (Confirm signup, Magic 
 Change Email Address…) : ils ne sont **plus utilisés** une fois le hook actif.
 Les laisser tels quels : ils redeviennent le repli si le hook est désactivé.
 
+### (h) Mot de passe : confirmation, longueur, mots de passe compromis
+
+Dashboard → **Authentication → Providers → Email** :
+
+- **Confirm email** : **ON** (souhaité). L'inscription envoie alors l'email
+  d'activation par le hook (`signup` → gabarit `welcome`) ; sans clic, la
+  connexion par mot de passe répond « Activez d'abord votre espace ». Avec
+  OFF, l'inscription ouvrirait la session immédiatement (le code le gère,
+  mais l'adresse ne serait jamais vérifiée).
+- **Minimum password length** : **8**, comme `PASSWORD_MIN_LENGTH` dans
+  `src/lib/auth/password.ts`. Une valeur plus haute côté dashboard ferait
+  refuser par Supabase des mots de passe que le formulaire accepte (le message
+  français « au moins 8 caractères » deviendrait faux).
+- **Password requirements** : laisser « No required characters » — la
+  solidité est un indicateur à l'écran, pas une contrainte.
+- **Secure password change** : **OFF**. Activé, « Changer mon mot de passe »
+  depuis les paramètres échouerait pour une session ouverte depuis plus de
+  24 h (le site afficherait « reconnectez-vous puis choisissez votre mot de
+  passe »).
+
+Dashboard → **Authentication → Attack protection** : activer **Leaked
+password protection** (refus des mots de passe présents dans les fuites
+connues, vérifié par empreinte, sans envoyer le mot de passe).
+
 ## 4. Mise en service et retour arrière
 
 L'ordre sûr est celui de la section 3 : **déployer → générer le secret →
@@ -226,11 +268,39 @@ test se fait **avant** d'activer le hook, ou sur un déploiement de preview.
 
 À faire en production, sur le domaine réel.
 
-- [ ] **Première visite** avec une adresse inconnue → email « Bienvenue chez
-      Terrassea — créez votre espace », expéditeur Terrassea (pas
-      `noreply@mail.app.supabase.io`) → clic **sur un autre appareil** que
-      celui qui a demandé → `/account/bienvenue` → fiche (prénom, nom,
-      établissement, téléphone) → `/account`.
+Connexion par mot de passe (parcours principal) :
+
+- [ ] **Inscription** sur `/auth/inscription` (prénom, nom, établissement,
+      email, mot de passe ≥ 8) → écran « Vérifiez votre boîte mail » → email
+      « Bienvenue chez Terrassea — activez votre espace », expéditeur
+      Terrassea, bouton « Activer mon espace » → clic → `/account` (fiche
+      déjà complète : pas de passage par `/account/bienvenue` ; le téléphone
+      saisi apparaît dans Paramètres).
+- [ ] **Connexion par mot de passe** sur `/auth/login` → `/account`
+      directement, sans email. Mauvais mot de passe → « Email ou mot de passe
+      incorrect. » ; 6 essais d'affilée → « Trop de tentatives ».
+- [ ] **Mot de passe oublié** sur `/auth/mot-de-passe-oublie` → écran « Email
+      envoyé » (identique pour une adresse inconnue) → email « Votre nouveau
+      mot de passe Terrassea », bouton « Choisir mon mot de passe » → clic →
+      `/account/mot-de-passe` → nouveau mot de passe + confirmation → toast
+      « Mot de passe enregistré. » → `/account`.
+- [ ] **Compte ancien sans mot de passe** (créé par lien magique) → « Mot de
+      passe oublié » avec son adresse → email → `/account/mot-de-passe` →
+      choix → connexion par mot de passe OK ensuite.
+- [ ] **Inscription avec une adresse déjà connue** → écran neutre « Si cette
+      adresse a déjà un espace, connectez-vous ou demandez un nouveau mot de
+      passe », aucun email reçu. (Si « Confirm email » est OFF, la page
+      affiche à la place, sous le champ email : « Cette adresse a déjà un
+      espace : connectez-vous. »)
+
+Lien magique (secours) :
+
+- [ ] **Première visite** par « Recevoir un lien de connexion » avec une
+      adresse inconnue → email « Bienvenue chez Terrassea — activez votre
+      espace », expéditeur Terrassea (pas `noreply@mail.app.supabase.io`) →
+      clic **sur un autre appareil** que celui qui a demandé →
+      `/account/bienvenue` → fiche (prénom, nom, établissement, téléphone) →
+      `/account`.
 - [ ] **Adresse connue** → email « Votre lien de connexion Terrassea » → clic
       → `/account` (ou la page `returnTo` demandée).
 - [ ] Même lien cliqué **deux fois** → « Ce lien a expiré. », bouton
@@ -277,4 +347,6 @@ et testée) et `src/routes/auth.callback.tsx` (affichage et délai de garde) ;
 le hook dans `src/lib/auth/send-email-hook.ts` (signature, lecture du corps,
 plan d'envoi) et `src/routes/api/auth/send-email.ts` (route) ; les gabarits
 dans `src/lib/email/templates.ts` (`buildAuthEmail`), avec leurs aperçus via
-`bun run email:previews` (fichiers `19-auth-*` à `22-auth-*`).
+`bun run email:previews` (fichiers `19-auth-*` à `23-auth-*`). Les règles du
+mot de passe (longueur, solidité, validation de l'inscription, traduction des
+erreurs du service) sont dans `src/lib/auth/password.ts`.

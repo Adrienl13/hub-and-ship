@@ -12,6 +12,8 @@ import {
   resolvePostLoginDestination,
   validateOnboardingForm,
   type OnboardingForm,
+  signupMetadataFromUser,
+  signupProfileComplement,
 } from './onboarding'
 
 const VALID_FORM: OnboardingForm = {
@@ -302,5 +304,52 @@ describe('dashboardGreeting', () => {
     expect(dashboardGreeting({ firstName: '  ', companyName: '' })).toBe(
       'Bonjour',
     )
+  })
+})
+
+describe('complément de fiche à l’activation', () => {
+  const profile = {
+    firstName: 'Camille',
+    lastName: 'Martin',
+    phone: '',
+    marketingConsent: false,
+  }
+
+  it('lit téléphone et consentement dans les métadonnées, sinon vide', () => {
+    expect(
+      signupMetadataFromUser({
+        user_metadata: {
+          phone: ' 06 12 34 56 78 ',
+          email_marketing_consent: true,
+        },
+      }),
+    ).toEqual({ phone: '06 12 34 56 78', marketingConsent: true })
+    expect(signupMetadataFromUser(null)).toEqual({
+      phone: '',
+      marketingConsent: false,
+    })
+    expect(
+      signupMetadataFromUser({
+        user_metadata: { email_marketing_consent: 'oui' },
+      }).marketingConsent,
+    ).toBe(false)
+  })
+
+  it('complète ce qui manque et ne touche pas à ce que la fiche a déjà', () => {
+    expect(
+      signupProfileComplement(profile, {
+        phone: '06 12 34 56 78',
+        marketingConsent: true,
+      }),
+    ).toEqual({ ...profile, phone: '06 12 34 56 78', marketingConsent: true })
+    expect(
+      signupProfileComplement(
+        { ...profile, phone: '01 00 00 00 00' },
+        { phone: '06 12 34 56 78', marketingConsent: false },
+      ),
+    ).toBeNull()
+    expect(
+      signupProfileComplement(profile, { phone: '', marketingConsent: false }),
+    ).toBeNull()
   })
 })

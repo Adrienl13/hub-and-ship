@@ -48,7 +48,9 @@ import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as CatalogueTablesRestaurantRouteImport } from './routes/catalogue_.tables-restaurant'
 import { Route as CatalogueChaisesRestaurantRouteImport } from './routes/catalogue_.chaises-restaurant'
 import { Route as CatalogueChaisesBistrotParisiennesRouteImport } from './routes/catalogue_.chaises-bistrot-parisiennes'
+import { Route as AuthMotDePasseOublieRouteImport } from './routes/auth.mot-de-passe-oublie'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthInscriptionRouteImport } from './routes/auth.inscription'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ApiStockRequestsRouteImport } from './routes/api/stock-requests'
 import { Route as ApiReportAccessRouteImport } from './routes/api/report-access'
@@ -59,6 +61,7 @@ import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as AccountReservationsRouteImport } from './routes/account.reservations'
 import { Route as AccountParrainageRouteImport } from './routes/account.parrainage'
 import { Route as AccountParametresRouteImport } from './routes/account.parametres'
+import { Route as AccountMotDePasseRouteImport } from './routes/account.mot-de-passe'
 import { Route as AccountFavorisRouteImport } from './routes/account.favoris'
 import { Route as AccountBienvenueRouteImport } from './routes/account.bienvenue'
 import { Route as AccountAvisRouteImport } from './routes/account.avis'
@@ -272,9 +275,19 @@ const CatalogueChaisesBistrotParisiennesRoute =
     path: '/catalogue/chaises-bistrot-parisiennes',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthMotDePasseOublieRoute = AuthMotDePasseOublieRouteImport.update({
+  id: '/auth/mot-de-passe-oublie',
+  path: '/auth/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthInscriptionRoute = AuthInscriptionRouteImport.update({
+  id: '/auth/inscription',
+  path: '/auth/inscription',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -325,6 +338,11 @@ const AccountParrainageRoute = AccountParrainageRouteImport.update({
 const AccountParametresRoute = AccountParametresRouteImport.update({
   id: '/account/parametres',
   path: '/account/parametres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountMotDePasseRoute = AccountMotDePasseRouteImport.update({
+  id: '/account/mot-de-passe',
+  path: '/account/mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountFavorisRoute = AccountFavorisRouteImport.update({
@@ -422,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/account/avis': typeof AccountAvisRoute
   '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
+  '/account/mot-de-passe': typeof AccountMotDePasseRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -432,7 +451,9 @@ export interface FileRoutesByFullPath {
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/inscription': typeof AuthInscriptionRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/mot-de-passe-oublie': typeof AuthMotDePasseOublieRoute
   '/catalogue/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
@@ -486,6 +507,7 @@ export interface FileRoutesByTo {
   '/account/avis': typeof AccountAvisRoute
   '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
+  '/account/mot-de-passe': typeof AccountMotDePasseRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -496,7 +518,9 @@ export interface FileRoutesByTo {
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/inscription': typeof AuthInscriptionRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/mot-de-passe-oublie': typeof AuthMotDePasseOublieRoute
   '/catalogue/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue/tables-restaurant': typeof CatalogueTablesRestaurantRoute
@@ -552,6 +576,7 @@ export interface FileRoutesById {
   '/account/avis': typeof AccountAvisRoute
   '/account/bienvenue': typeof AccountBienvenueRoute
   '/account/favoris': typeof AccountFavorisRoute
+  '/account/mot-de-passe': typeof AccountMotDePasseRoute
   '/account/parametres': typeof AccountParametresRoute
   '/account/parrainage': typeof AccountParrainageRoute
   '/account/reservations': typeof AccountReservationsRouteWithChildren
@@ -562,7 +587,9 @@ export interface FileRoutesById {
   '/api/report-access': typeof ApiReportAccessRoute
   '/api/stock-requests': typeof ApiStockRequestsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/inscription': typeof AuthInscriptionRoute
   '/auth/login': typeof AuthLoginRoute
+  '/auth/mot-de-passe-oublie': typeof AuthMotDePasseOublieRoute
   '/catalogue_/chaises-bistrot-parisiennes': typeof CatalogueChaisesBistrotParisiennesRoute
   '/catalogue_/chaises-restaurant': typeof CatalogueChaisesRestaurantRoute
   '/catalogue_/tables-restaurant': typeof CatalogueTablesRestaurantRoute
@@ -619,6 +646,7 @@ export interface FileRouteTypes {
     | '/account/avis'
     | '/account/bienvenue'
     | '/account/favoris'
+    | '/account/mot-de-passe'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -629,7 +657,9 @@ export interface FileRouteTypes {
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
+    | '/auth/inscription'
     | '/auth/login'
+    | '/auth/mot-de-passe-oublie'
     | '/catalogue/chaises-bistrot-parisiennes'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
@@ -683,6 +713,7 @@ export interface FileRouteTypes {
     | '/account/avis'
     | '/account/bienvenue'
     | '/account/favoris'
+    | '/account/mot-de-passe'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -693,7 +724,9 @@ export interface FileRouteTypes {
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
+    | '/auth/inscription'
     | '/auth/login'
+    | '/auth/mot-de-passe-oublie'
     | '/catalogue/chaises-bistrot-parisiennes'
     | '/catalogue/chaises-restaurant'
     | '/catalogue/tables-restaurant'
@@ -748,6 +781,7 @@ export interface FileRouteTypes {
     | '/account/avis'
     | '/account/bienvenue'
     | '/account/favoris'
+    | '/account/mot-de-passe'
     | '/account/parametres'
     | '/account/parrainage'
     | '/account/reservations'
@@ -758,7 +792,9 @@ export interface FileRouteTypes {
     | '/api/report-access'
     | '/api/stock-requests'
     | '/auth/callback'
+    | '/auth/inscription'
     | '/auth/login'
+    | '/auth/mot-de-passe-oublie'
     | '/catalogue_/chaises-bistrot-parisiennes'
     | '/catalogue_/chaises-restaurant'
     | '/catalogue_/tables-restaurant'
@@ -814,6 +850,7 @@ export interface RootRouteChildren {
   AccountAvisRoute: typeof AccountAvisRoute
   AccountBienvenueRoute: typeof AccountBienvenueRoute
   AccountFavorisRoute: typeof AccountFavorisRoute
+  AccountMotDePasseRoute: typeof AccountMotDePasseRoute
   AccountParametresRoute: typeof AccountParametresRoute
   AccountParrainageRoute: typeof AccountParrainageRoute
   AccountReservationsRoute: typeof AccountReservationsRouteWithChildren
@@ -824,7 +861,9 @@ export interface RootRouteChildren {
   ApiReportAccessRoute: typeof ApiReportAccessRoute
   ApiStockRequestsRoute: typeof ApiStockRequestsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthInscriptionRoute: typeof AuthInscriptionRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthMotDePasseOublieRoute: typeof AuthMotDePasseOublieRoute
   CatalogueChaisesBistrotParisiennesRoute: typeof CatalogueChaisesBistrotParisiennesRoute
   CatalogueChaisesRestaurantRoute: typeof CatalogueChaisesRestaurantRoute
   CatalogueTablesRestaurantRoute: typeof CatalogueTablesRestaurantRoute
@@ -1120,11 +1159,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogueChaisesBistrotParisiennesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/mot-de-passe-oublie': {
+      id: '/auth/mot-de-passe-oublie'
+      path: '/auth/mot-de-passe-oublie'
+      fullPath: '/auth/mot-de-passe-oublie'
+      preLoaderRoute: typeof AuthMotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/login': {
       id: '/auth/login'
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/inscription': {
+      id: '/auth/inscription'
+      path: '/auth/inscription'
+      fullPath: '/auth/inscription'
+      preLoaderRoute: typeof AuthInscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -1195,6 +1248,13 @@ declare module '@tanstack/react-router' {
       path: '/account/parametres'
       fullPath: '/account/parametres'
       preLoaderRoute: typeof AccountParametresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/mot-de-passe': {
+      id: '/account/mot-de-passe'
+      path: '/account/mot-de-passe'
+      fullPath: '/account/mot-de-passe'
+      preLoaderRoute: typeof AccountMotDePasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account/favoris': {
@@ -1387,6 +1447,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountAvisRoute: AccountAvisRoute,
   AccountBienvenueRoute: AccountBienvenueRoute,
   AccountFavorisRoute: AccountFavorisRoute,
+  AccountMotDePasseRoute: AccountMotDePasseRoute,
   AccountParametresRoute: AccountParametresRoute,
   AccountParrainageRoute: AccountParrainageRoute,
   AccountReservationsRoute: AccountReservationsRouteWithChildren,
@@ -1397,7 +1458,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReportAccessRoute: ApiReportAccessRoute,
   ApiStockRequestsRoute: ApiStockRequestsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthInscriptionRoute: AuthInscriptionRoute,
   AuthLoginRoute: AuthLoginRoute,
+  AuthMotDePasseOublieRoute: AuthMotDePasseOublieRoute,
   CatalogueChaisesBistrotParisiennesRoute:
     CatalogueChaisesBistrotParisiennesRoute,
   CatalogueChaisesRestaurantRoute: CatalogueChaisesRestaurantRoute,

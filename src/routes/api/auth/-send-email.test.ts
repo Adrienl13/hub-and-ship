@@ -219,6 +219,7 @@ describe('hook /api/auth/send-email', () => {
     const [email] = sentTo(d.send)
     expect(email).toBeDefined()
     expect(email!.to).toBe('adrien.laniez@icloud.com')
+    // Première visite par lien : la fiche n'est pas encore en métadonnées.
     expect(email!.subject).toBe('Bienvenue chez Terrassea — créez votre espace')
     const link = `https://terrassea.com/auth/callback?returnTo=%2Faccount&token_hash=${TOKEN_HASH}&type=signup`
     // Dans le HTML, le kit échappe le « & » du href en « &amp; ».
