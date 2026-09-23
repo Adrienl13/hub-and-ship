@@ -22,8 +22,8 @@ function AppErrorComponent({ reset }: { reset?: () => void }) {
         </h1>
         <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
           Nos équipes sont prévenues. Rechargez la page — si le problème
-          persiste, écrivez-nous à contact@terrassea.com et nous vous
-          répondrons rapidement.
+          persiste, écrivez-nous depuis la page contact et nous vous répondrons
+          rapidement.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button

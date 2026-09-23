@@ -91,7 +91,7 @@ function LegalHub() {
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[color:var(--ink-soft)]">
             Tous les documents légaux régissant l'utilisation du site Terrassea
-             et les relations commerciales avec Pros Import EURL. Adaptés au
+            et les relations commerciales avec Pros Import EURL. Adaptés au
             modèle B2B de pré-commande groupée, conformes au droit français.
           </p>
         </header>
@@ -129,12 +129,12 @@ function LegalHub() {
           </div>
           <p className="text-foreground/85 mt-2 leading-relaxed">
             Pour toute question relative à ces documents, exercer vos droits
-            RGPD, ou signaler un problème de conformité, écrivez à{' '}
+            RGPD, ou signaler un problème de conformité, écrivez-nous via{' '}
             <a
-              href="mailto:legal@terrassea.fr"
+              href="/contact?topic=autre"
               className="font-medium text-foreground underline-offset-2 hover:underline"
             >
-              legal@terrassea.fr
+              le formulaire de contact
             </a>{' '}
             — réponse sous 5 jours ouvrés.
           </p>

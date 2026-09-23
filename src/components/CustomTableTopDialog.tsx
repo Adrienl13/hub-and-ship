@@ -168,15 +168,12 @@ export function CustomTableTopDialog({
       sent = response.ok && payload?.ok === true
       if (!sent) {
         toast.error('Demande non envoyée', {
-          description:
-            payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à contact@terrassea.com.',
+          description: payload?.error ?? 'Réessayez dans un instant.',
         })
       }
     } catch {
       toast.error('Demande non envoyée', {
-        description:
-          'Connexion impossible. Écrivez-nous à contact@terrassea.com.',
+        description: 'Connexion impossible. Réessayez dans un instant.',
       })
     }
     setSubmitting(false)

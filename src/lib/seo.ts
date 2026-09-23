@@ -54,9 +54,7 @@ export function buildSeoHead({
     meta: [
       { title: fullTitle },
       { name: 'description', content: description },
-      ...(noindex
-        ? [{ name: 'robots', content: 'noindex, nofollow' }]
-        : []),
+      ...(noindex ? [{ name: 'robots', content: 'noindex, nofollow' }] : []),
       { property: 'og:title', content: fullTitle },
       { property: 'og:description', content: description },
       { property: 'og:type', content: 'website' },
@@ -143,7 +141,6 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: `${SITE_URL}/brand/terrassea-logo.svg`,
     image: `${SITE_URL}/brand/terrassea-logo.svg`,
-    email: 'contact@prosimport.com',
     description:
       "Terrassea, marque de Pros Import EURL : club d'achat groupé de mobilier outdoor professionnel par container. Importation officielle France, prix usine, contrôle qualité SGS.",
     founder: {
@@ -217,7 +214,10 @@ export function linkListJsonLd({
 }: {
   readonly name: string
   readonly path: string
-  readonly items: ReadonlyArray<{ readonly name: string; readonly path: string }>
+  readonly items: ReadonlyArray<{
+    readonly name: string
+    readonly path: string
+  }>
 }) {
   return {
     '@context': 'https://schema.org',

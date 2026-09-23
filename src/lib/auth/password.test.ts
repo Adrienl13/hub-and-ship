@@ -221,7 +221,7 @@ describe('validateSignupForm', () => {
 
 describe('classifyAuthError / describeAuthError', () => {
   const GENERIC =
-    'Connexion impossible pour le moment. Réessayez, ou écrivez-nous à contact@terrassea.com.'
+    'Connexion impossible pour le moment. Réessayez, ou écrivez-nous depuis la page contact.'
 
   it('null, undefined ou erreur vide → message générique', () => {
     expect(describeAuthError(null)).toBe(GENERIC)

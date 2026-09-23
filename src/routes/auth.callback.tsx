@@ -309,11 +309,11 @@ function MagicLinkFailurePanel({
             <a href={retryHref}>{retryLabel}</a>
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            Toujours bloqué ? Écrivez-nous à{' '}
-            <a className="underline" href="mailto:contact@terrassea.com">
-              contact@terrassea.com
-            </a>{' '}
-            ou appelez-nous, on ouvre votre accès à la main.
+            Toujours bloqué ? Écrivez-nous via{' '}
+            <a className="underline" href="/contact">
+              le formulaire de contact
+            </a>
+            , on ouvre votre accès à la main.
           </p>
         </section>
       </div>

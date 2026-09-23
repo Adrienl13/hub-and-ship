@@ -72,12 +72,10 @@ function ContactPage() {
         <section className="mt-4 rounded-md border border-[color:var(--sand-deep)] bg-card p-5">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-[color:var(--ember)]" />
-            <a
-              href="mailto:contact@terrassea.com"
-              className="text-sm font-medium underline"
-            >
-              contact@terrassea.com
-            </a>
+            <span className="text-sm font-medium">
+              Le formulaire ci-dessus est le moyen le plus rapide de nous
+              joindre.
+            </span>
           </div>
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
@@ -130,7 +128,7 @@ function ContactPage() {
             <a
               key={href}
               href={href}
-              className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors hover:border-[color:var(--ember)]/40"
+              className="hover:border-[color:var(--ember)]/40 rounded-md border border-[color:var(--sand-deep)] bg-card p-4 transition-colors"
             >
               <Icon className="h-5 w-5 text-[color:var(--ember)]" />
               <h2 className="mt-3 font-display text-base font-semibold">

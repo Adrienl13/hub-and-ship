@@ -102,10 +102,10 @@ function HeroSection({ carrierCount }: { readonly carrierCount: number }) {
           <strong>
             Terrassea organise la livraison jusqu'à votre terrasse
           </strong>{' '}
-          (tarif confirmé sous 24 h, à choisir lors de la réservation). Si
-          vous préférez gérer le transport vous-même depuis notre zone de
-          stockage de Fos-sur-Mer, voici les transporteurs avec lesquels nos
-          clients travaillent.{' '}
+          (tarif confirmé sous 24 h, à choisir lors de la réservation). Si vous
+          préférez gérer le transport vous-même depuis notre zone de stockage de
+          Fos-sur-Mer, voici les transporteurs avec lesquels nos clients
+          travaillent.{' '}
           <strong>Aucune commission de notre part — contact direct.</strong>
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs">
@@ -323,7 +323,7 @@ function ContactCta() {
             asChild
             className="hover:bg-foreground/90 h-11 rounded-sm bg-foreground px-5 text-background"
           >
-            <a href="mailto:contact@terrassea.com?subject=Demande%20de%20mise%20en%20relation%20transporteur">
+            <a href="/contact?topic=autre&message=Demande%20de%20mise%20en%20relation%20transporteur">
               Demander une mise en relation
               <ArrowRight className="h-4 w-4" />
             </a>

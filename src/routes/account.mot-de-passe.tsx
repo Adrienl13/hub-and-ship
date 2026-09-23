@@ -261,9 +261,9 @@ function Unconfigured() {
         Connexion momentanément indisponible.
       </h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        Merci de réessayer dans quelques minutes, ou écrivez-nous à{' '}
-        <a className="underline" href="mailto:contact@terrassea.com">
-          contact@terrassea.com
+        Merci de réessayer dans quelques minutes, ou écrivez-nous via{' '}
+        <a className="underline" href="/contact">
+          le formulaire de contact
         </a>
         .
       </p>

@@ -90,9 +90,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             L'ensemble des éléments du Site (textes, photographies,
             illustrations, logos, graphismes, mise en page, code source,
-            structure de base de données, marque « Terrassea » et «
-            Terrassea ») est protégé par le Code de la propriété intellectuelle
-            et appartient à Pros Import EURL ou à ses partenaires concédants.
+            structure de base de données, marque « Terrassea » et « Terrassea »)
+            est protégé par le Code de la propriété intellectuelle et appartient
+            à Pros Import EURL ou à ses partenaires concédants.
           </P>
           <P>
             Toute reproduction, représentation, modification, publication,
@@ -148,8 +148,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           <P>
             Les présentes Conditions Générales de Vente (« CGV ») régissent les
             ventes conclues entre Pros Import EURL, exploitant la marque{' '}
-            <Strong>Terrassea</Strong>, et tout professionnel (personne
-            morale ou personne physique agissant dans le cadre de son activité
+            <Strong>Terrassea</Strong>, et tout professionnel (personne morale
+            ou personne physique agissant dans le cadre de son activité
             commerciale) souhaitant participer à une opération d'achat groupé
             via le Site (l'« Acheteur »).
           </P>
@@ -165,11 +165,10 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="objet" title="2. Objet">
           <P>
-            Terrassea organise des campagnes de pré-commande groupée de
-            mobilier outdoor professionnel. Chaque container réunit plusieurs
-            Acheteurs autour d'un objectif de remplissage de 80 % minimum
-            permettant de déclencher la production usine et l'expédition vers la
-            France.
+            Terrassea organise des campagnes de pré-commande groupée de mobilier
+            outdoor professionnel. Chaque container réunit plusieurs Acheteurs
+            autour d'un objectif de remplissage de 80 % minimum permettant de
+            déclencher la production usine et l'expédition vers la France.
           </P>
         </LegalSection>
 
@@ -392,8 +391,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         <LegalSection id="objet" title="1. Objet">
           <P>
             Les présentes Conditions Générales d'Utilisation (« CGU ») régissent
-            l'accès et l'usage du site Terrassea, édité par Pros Import
-            SAS. Elles complètent les{' '}
+            l'accès et l'usage du site Terrassea, édité par Pros Import SAS.
+            Elles complètent les{' '}
             <a href="/legal/cgv" className="underline">
               Conditions Générales de Vente
             </a>{' '}
@@ -406,9 +405,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             Le Site est accessible gratuitement à toute personne disposant d'un
             accès à Internet. Tous les frais nécessaires à l'accès aux services
             (matériel informatique, connexion Internet, etc.) sont à la charge
-            de l'utilisateur. Terrassea met en œuvre les moyens
-            raisonnables pour assurer une disponibilité du Site satisfaisante,
-            sans garantie d'absence d'interruption.
+            de l'utilisateur. Terrassea met en œuvre les moyens raisonnables
+            pour assurer une disponibilité du Site satisfaisante, sans garantie
+            d'absence d'interruption.
           </P>
         </LegalSection>
 
@@ -419,8 +418,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             responsable de la confidentialité de ses identifiants et de
             l'ensemble des opérations effectuées depuis son compte. Toute
             utilisation frauduleuse ou suspecte doit être signalée sans délai à{' '}
-            <a href="mailto:contact@terrassea.com" className="underline">
-              contact@terrassea.com
+            <a href="/contact" className="underline">
+              le formulaire de contact
             </a>
             .
           </P>
@@ -465,8 +464,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="responsabilite" title="6. Responsabilité">
           <P>
-            Terrassea ne saurait être tenu responsable des dommages
-            résultant d'une mauvaise utilisation du Site, d'une indisponibilité
+            Terrassea ne saurait être tenu responsable des dommages résultant
+            d'une mauvaise utilisation du Site, d'une indisponibilité
             temporaire, ou de la présence de virus en dépit des précautions
             prises. L'utilisateur reconnaît disposer de la compétence et des
             moyens nécessaires pour accéder au Site dans des conditions
@@ -476,10 +475,10 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
 
         <LegalSection id="modification" title="7. Modification des CGU">
           <P>
-            Terrassea peut modifier les présentes CGU à tout moment. La
-            version applicable est celle en vigueur lors de l'utilisation du
-            Site. Les modifications substantielles sont notifiées par email aux
-            titulaires de comptes actifs.
+            Terrassea peut modifier les présentes CGU à tout moment. La version
+            applicable est celle en vigueur lors de l'utilisation du Site. Les
+            modifications substantielles sont notifiées par email aux titulaires
+            de comptes actifs.
           </P>
         </LegalSection>
 
@@ -512,8 +511,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <P>
             Pour toute question relative à la protection de vos données :{' '}
-            <a href="mailto:contact@terrassea.com" className="underline">
-              contact@terrassea.com
+            <a href="/contact" className="underline">
+              le formulaire de contact
             </a>
             .
           </P>
@@ -540,8 +539,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               <Strong>Données de paiement :</Strong> traitées exclusivement par
-              Stripe (cf. sous-traitants). Terrassea ne stocke jamais le
-              numéro de carte bancaire (PAN).
+              Stripe (cf. sous-traitants). Terrassea ne stocke jamais le numéro
+              de carte bancaire (PAN).
             </LI>
             <LI>
               <Strong>Données techniques :</Strong> adresse IP, journaux
@@ -631,8 +630,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
             <LI>
               Données de paiement : <Strong>13 mois maximum</Strong> côté
-              Terrassea ; durée conforme aux règles propres de Stripe pour
-              les tokens.
+              Terrassea ; durée conforme aux règles propres de Stripe pour les
+              tokens.
             </LI>
             <LI>
               Journaux de connexion : <Strong>1 an</Strong> conformément à la
@@ -666,9 +665,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </LI>
           </UL>
           <P>
-            Pour exercer ces droits, écrivez à{' '}
-            <a href="mailto:contact@terrassea.com" className="underline">
-              contact@terrassea.com
+            Pour exercer ces droits, écrivez-nous via{' '}
+            <a href="/contact" className="underline">
+              le formulaire de contact
             </a>{' '}
             en joignant une copie d'une pièce d'identité. Nous répondons sous 30
             jours.
@@ -756,11 +755,11 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               consentement.
             </LI>
             <LI>
-              <Strong>Cookies de mesure d'audience</Strong> — Google
-              Analytics 4 (chargé via Google Tag Manager) pour mesurer la
-              fréquentation et le parcours d'achat. Refusés par défaut, déposés
-              uniquement après votre consentement ; Plausible, sans cookie,
-              peut compléter cette mesure de façon anonyme.
+              <Strong>Cookies de mesure d'audience</Strong> — Google Analytics 4
+              (chargé via Google Tag Manager) pour mesurer la fréquentation et
+              le parcours d'achat. Refusés par défaut, déposés uniquement après
+              votre consentement ; Plausible, sans cookie, peut compléter cette
+              mesure de façon anonyme.
             </LI>
             <LI>
               <Strong>Cookies tiers (paiement)</Strong> — Stripe utilise ses
@@ -770,8 +769,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </UL>
           <UL>
             <LI>
-              <Strong>Cookies publicitaires et de mesure de campagnes</Strong>{' '}
-              — Google Ads (conversions) et pixel Meta (Facebook / Instagram),
+              <Strong>Cookies publicitaires et de mesure de campagnes</Strong> —
+              Google Ads (conversions) et pixel Meta (Facebook / Instagram),
               chargés via Google Tag Manager. Refusés par défaut, déposés
               uniquement après votre consentement ; ils servent à mesurer nos
               campagnes, jamais à vendre vos données.
@@ -792,8 +791,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
               anti-bots, strictement nécessaire.
             </LI>
             <LI>
-              <Strong>cc_consent</Strong> (Terrassea, 6 mois) — mémorise
-              vos choix de consentement cookies.
+              <Strong>cc_consent</Strong> (Terrassea, 6 mois) — mémorise vos
+              choix de consentement cookies.
             </LI>
             <LI>
               <Strong>_ga, _ga_*</Strong> (Google Analytics, 13 mois) — mesure
@@ -846,9 +845,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       <>
         <LegalSection id="principe" title="1. Principe général">
           <P>
-            Terrassea applique une politique de remboursement transparente
-            et alignée sur ses CGV. Les remboursements sont effectués sur le
-            moyen de paiement original utilisé pour la réservation initiale.
+            Terrassea applique une politique de remboursement transparente et
+            alignée sur ses CGV. Les remboursements sont effectués sur le moyen
+            de paiement original utilisé pour la réservation initiale.
           </P>
         </LegalSection>
 
@@ -858,8 +857,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         >
           <UL>
             <LI>
-              <Strong>Annulation du container par Terrassea</Strong> (seuil
-              80 % non atteint, force majeure, défaillance partenaire usine) —
+              <Strong>Annulation du container par Terrassea</Strong> (seuil 80 %
+              non atteint, force majeure, défaillance partenaire usine) —
               remboursement de l'intégralité des sommes versées, y compris les
               frais de réservation.
             </LI>
@@ -890,8 +889,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
           </P>
           <UL>
             <LI>
-              <Strong>Remboursés intégralement</Strong> si Terrassea annule
-              le container ou ne tient pas ses engagements contractuels.
+              <Strong>Remboursés intégralement</Strong> si Terrassea annule le
+              container ou ne tient pas ses engagements contractuels.
             </LI>
             <LI>
               <Strong>Non remboursés</Strong> en cas de désistement volontaire
@@ -928,9 +927,9 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         >
           <P>
             L'Acheteur dispose de 7 jours après livraison pour signaler tout
-            défaut visible (photos par email à{' '}
-            <a href="mailto:contact@terrassea.com" className="underline">
-              contact@terrassea.com
+            défaut visible (photos via{' '}
+            <a href="/contact" className="underline">
+              le formulaire de contact
             </a>
             ). En cas de défaut confirmé : remplacement à l'identique sur le
             container suivant, à défaut avoir commercial à valoir sous 12 mois,
@@ -945,16 +944,16 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
             </Strong>{' '}
             de 14 jours prévu par les articles L221-18 et suivants du Code de la
             consommation — celui-ci est réservé aux consommateurs particuliers.
-            Terrassea étant strictement réservé aux professionnels (cf.
-            CGV), ce droit ne s'applique pas.
+            Terrassea étant strictement réservé aux professionnels (cf. CGV), ce
+            droit ne s'applique pas.
           </P>
         </LegalSection>
 
         <LegalSection id="reclamation" title="8. Réclamations">
           <P>
-            Toute demande de remboursement doit être adressée par écrit à{' '}
-            <a href="mailto:contact@terrassea.com" className="underline">
-              contact@terrassea.com
+            Toute demande de remboursement doit être adressée par écrit via{' '}
+            <a href="/contact" className="underline">
+              le formulaire de contact
             </a>{' '}
             en précisant la référence du container, le numéro de commande et le
             motif. Une réponse argumentée est apportée sous 5 jours ouvrés.

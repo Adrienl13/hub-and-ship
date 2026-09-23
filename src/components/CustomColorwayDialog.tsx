@@ -61,7 +61,7 @@ function ChoiceChips({
               className={`h-8 rounded-full border px-3 text-xs font-medium transition-colors ${
                 selected
                   ? 'border-foreground bg-foreground text-background'
-                  : 'border-[color:var(--sand-deep)] bg-card hover:border-foreground/40'
+                  : 'hover:border-foreground/40 border-[color:var(--sand-deep)] bg-card'
               }`}
             >
               {choice}
@@ -151,15 +151,12 @@ export function CustomColorwayDialog({
       sent = response.ok && payload?.ok === true
       if (!sent) {
         toast.error('Demande non envoyée', {
-          description:
-            payload?.error ??
-            'Réessayez dans un instant, ou écrivez-nous à contact@terrassea.com.',
+          description: payload?.error ?? 'Réessayez dans un instant.',
         })
       }
     } catch {
       toast.error('Demande non envoyée', {
-        description:
-          'Connexion impossible. Écrivez-nous à contact@terrassea.com.',
+        description: 'Connexion impossible. Réessayez dans un instant.',
       })
     }
     setSubmitting(false)

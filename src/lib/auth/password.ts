@@ -196,7 +196,7 @@ export const AUTH_ERROR_MESSAGES: Readonly<Record<AuthErrorKind, string>> = {
   email_rate_limited:
     'Patientez quelques secondes avant de redemander un email.',
   unknown:
-    'Connexion impossible pour le moment. Réessayez, ou écrivez-nous à contact@terrassea.com.',
+    'Connexion impossible pour le moment. Réessayez, ou écrivez-nous depuis la page contact.',
 }
 
 /** Codes renvoyés par le service (champ `code`), quand il en renvoie un. */

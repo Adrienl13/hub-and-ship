@@ -486,7 +486,7 @@ function ResourcesCard() {
       <p className="mt-3 text-xs text-muted-foreground">
         Une question sur une réservation, un document ou une facture ?{' '}
         <a
-          href="mailto:contact@terrassea.com"
+          href="/contact?topic=reservation"
           className="text-foreground underline"
         >
           Contacter notre équipe

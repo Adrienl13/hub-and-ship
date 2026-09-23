@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="border-t border-[color:var(--sand-deep)] bg-[color:var(--foreground)] text-[color:var(--sand)]">
       <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="mb-10 flex flex-col gap-4 border-b border-[color:var(--sand)]/15 pb-10 md:flex-row md:items-center md:justify-between">
+        <div className="border-[color:var(--sand)]/15 mb-10 flex flex-col gap-4 border-b pb-10 md:flex-row md:items-center md:justify-between">
           <div className="max-w-md">
             <div className="font-display text-lg font-semibold tracking-tight">
               Ne ratez pas le prochain départ.
@@ -37,8 +37,8 @@ export function Footer() {
             <p className="text-[color:var(--sand)]/65 mt-3 max-w-xs text-xs leading-relaxed">
               Le club d'achat groupé des pros de la terrasse. Mobilier outdoor
               direct usine, importation officielle France. Vos commandes et
-              factures sont contractées avec Pros Import EURL, société
-              française basée à Paris.
+              factures sont contractées avec Pros Import EURL, société française
+              basée à Paris.
             </p>
             {/* Le compte est VIVANT (coulisses usine, containers, arrivages) :
                 on vend le contenu, pas juste une icône. */}
@@ -46,7 +46,7 @@ export function Footer() {
               href="https://www.instagram.com/terrassea_france/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[color:var(--sand)]/80 mt-4 inline-flex items-center gap-2 rounded-sm border border-[color:var(--sand)]/25 px-3 py-2 text-xs font-medium transition-colors hover:border-[color:var(--sand)]/60 hover:text-[color:var(--sand)]"
+              className="text-[color:var(--sand)]/80 border-[color:var(--sand)]/25 hover:border-[color:var(--sand)]/60 mt-4 inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-medium transition-colors hover:text-[color:var(--sand)]"
             >
               <Instagram className="h-4 w-4 text-[color:var(--ember-bright)]" />
               @terrassea_france — les coulisses de l'import
@@ -206,14 +206,6 @@ export function Footer() {
                   className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
                 >
                   Contact
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:contact@terrassea.com"
-                  className="text-[color:var(--sand)]/80 hover:text-[color:var(--sand)]"
-                >
-                  contact@terrassea.com
                 </a>
               </li>
               <li className="text-[color:var(--sand)]/65">

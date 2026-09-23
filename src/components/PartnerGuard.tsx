@@ -7,7 +7,10 @@ import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useChannel } from '@/hooks/useChannel'
-import { claimPartnerAccess, type PartnerPortalClient } from '@/lib/partners/portal'
+import {
+  claimPartnerAccess,
+  type PartnerPortalClient,
+} from '@/lib/partners/portal'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
@@ -131,7 +134,7 @@ export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           {state === 'error'
-            ? "Impossible de vérifier votre accès partenaire pour le moment. Réessayez dans un instant."
+            ? 'Impossible de vérifier votre accès partenaire pour le moment. Réessayez dans un instant.'
             : "Aucune candidature partenaire approuvée n'est associée à cet email. Déposez une demande, ou contactez-nous si votre dossier est en cours."}
         </p>
         <Button
@@ -141,7 +144,7 @@ export function PartnerGuard({ children, onReserve }: PartnerGuardProps) {
           <Link to="/partenaires">Déposer une demande partenaire</Link>
         </Button>
         <a
-          href="mailto:contact@terrassea.com"
+          href="/contact?topic=partenariat"
           className="mt-4 inline-block text-xs text-muted-foreground hover:text-foreground"
         >
           Mon dossier est en cours — nous contacter

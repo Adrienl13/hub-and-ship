@@ -79,7 +79,7 @@ function describeFailure(
       code,
       title: 'Connexion refusée.',
       detail:
-        'Cette adresse n’est pas autorisée à se connecter. Écrivez-nous à contact@terrassea.com et nous réglons ça.',
+        'Cette adresse n’est pas autorisée à se connecter. Écrivez-nous depuis la page contact et nous réglons ça.',
     }
   }
 

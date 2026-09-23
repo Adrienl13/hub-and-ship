@@ -1,5 +1,11 @@
 import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 
@@ -146,7 +152,7 @@ function PartnerDashboard() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-24 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+                className="bg-[color:var(--sand-soft)]/50 h-24 animate-pulse rounded-md border border-[color:var(--sand-deep)]"
               />
             ))}
           </div>
@@ -162,9 +168,7 @@ function PartnerDashboard() {
               partnerName={partnerName}
             />
             <DealsCard deals={workspace.deals} onCreateDeal={createDeal} />
-            <AttributedReservationsCard
-              reservations={workspace.reservations}
-            />
+            <AttributedReservationsCard reservations={workspace.reservations} />
             <ChannelSpaceSections />
           </div>
         ) : null}
@@ -205,7 +209,7 @@ function ChannelSpaceSections() {
     return (
       <div
         aria-hidden
-        className="h-24 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+        className="bg-[color:var(--sand-soft)]/50 h-24 animate-pulse rounded-md border border-[color:var(--sand-deep)]"
       />
     )
   }
@@ -251,7 +255,7 @@ function ReferentRecap({ channel }: { readonly channel: SalesChannel }) {
           suivis avec votre référent Terrassea.
         </p>
         <Button asChild className="mt-4 gap-1.5">
-          <a href="mailto:contact@terrassea.com?subject=Espace%20partenaire">
+          <a href="/contact?topic=partenariat">
             <Mail className="h-4 w-4" />
             Contactez votre référent
           </a>
@@ -269,11 +273,11 @@ function PartnerHero({
   readonly report: ReturnType<typeof computePartnerReport> | null
 }) {
   return (
-    <section className="relative overflow-hidden rounded-xl border border-[color:var(--forest)]/30 shadow-paper">
+    <section className="border-[color:var(--forest)]/30 shadow-paper relative overflow-hidden rounded-xl border">
       {/* Base gradient — assumed (franc) */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-br from-[color:var(--forest)]/40 via-[color:var(--sand-soft)] to-[color:var(--ember)]/35"
+        className="from-[color:var(--forest)]/40 to-[color:var(--ember)]/35 absolute inset-0 bg-gradient-to-br via-[color:var(--sand-soft)]"
       />
       {/* Aura animée */}
       <div
@@ -281,17 +285,17 @@ function PartnerHero({
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <motion.div
-          className="absolute -left-16 -top-24 h-60 w-60 rounded-full bg-[color:var(--forest)]/35 blur-3xl"
+          className="bg-[color:var(--forest)]/35 absolute -left-16 -top-24 h-60 w-60 rounded-full blur-3xl"
           animate={{ x: [0, 45, 0], y: [0, 22, 0], scale: [1, 1.18, 1] }}
           transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute right-[-6%] top-1/3 h-72 w-72 rounded-full bg-[color:var(--ember)]/25 blur-3xl"
+          className="bg-[color:var(--ember)]/25 absolute right-[-6%] top-1/3 h-72 w-72 rounded-full blur-3xl"
           animate={{ x: [0, -45, 0], y: [0, -18, 0], scale: [1, 1.22, 1] }}
           transition={{ duration: 21, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute bottom-[-20%] left-1/3 h-52 w-52 rounded-full bg-[color:var(--ochre)]/25 blur-3xl"
+          className="bg-[color:var(--ochre)]/25 absolute bottom-[-20%] left-1/3 h-52 w-52 rounded-full blur-3xl"
           animate={{ x: [0, -25, 0], y: [0, -30, 0], scale: [1, 1.12, 1] }}
           transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -305,7 +309,7 @@ function PartnerHero({
           className="flex flex-wrap items-start justify-between gap-4"
         >
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--forest)] shadow-sm backdrop-blur">
+            <span className="border-[color:var(--forest)]/40 bg-[color:var(--forest)]/15 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--forest)] shadow-sm backdrop-blur">
               <Handshake className="h-3.5 w-3.5" />
               Espace partenaire
             </span>
@@ -398,7 +402,7 @@ function PartnerStat({
     <button
       type="button"
       onClick={goToTarget}
-      className={`group h-full w-full rounded-md border bg-card/80 p-3 text-left backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.3)] ${
+      className={`bg-card/80 group h-full w-full rounded-md border p-3 text-left backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-14px_rgba(0,0,0,0.3)] ${
         highlight
           ? 'border-[color:var(--ember)]/50'
           : 'border-[color:var(--sand-deep)]'
@@ -465,7 +469,7 @@ function ShareLinkCard({
             jamais exposer vos prix nets.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <code className="truncate rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50 px-2 py-1.5 text-xs">
+            <code className="bg-[color:var(--sand-soft)]/50 truncate rounded-sm border border-[color:var(--sand-deep)] px-2 py-1.5 text-xs">
               {shareUrl}
             </code>
             <Button
@@ -640,7 +644,7 @@ function DealForm({
   }
 
   return (
-    <div className="border-b border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/30 px-5 py-4">
+    <div className="bg-[color:var(--sand-soft)]/30 border-b border-[color:var(--sand-deep)] px-5 py-4">
       <p className="mb-3 text-xs text-muted-foreground">
         Déclarez un projet client pour le rattacher à votre canal. La protection
         (durée, statut) est validée ensuite par notre équipe.

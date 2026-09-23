@@ -39,7 +39,6 @@ import { breadcrumbJsonLd, buildSeoHead, jsonLdScript } from '@/lib/seo'
 
 // Repli humain quand la demande ne peut pas être enregistrée (mailto du
 // panneau + consigne du toast d'échec).
-const STOCK_CONTACT_EMAIL = 'contact@terrassea.com'
 
 export const Route = createFileRoute('/stock-24h')({
   // Head STATIQUE : plus d'ItemList ni d'og:image dérivés de la fixture — les
@@ -219,7 +218,7 @@ function Stock24hPage() {
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-64 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+                    className="bg-[color:var(--sand-soft)]/50 h-64 animate-pulse rounded-md border border-[color:var(--sand-deep)]"
                   />
                 ))}
               </div>
@@ -255,7 +254,10 @@ function Stock24hPage() {
           </div>
 
           <aside className="min-w-0 lg:col-span-4">
-            <div id="stock-request-panel" className="sticky top-24 scroll-mt-20">
+            <div
+              id="stock-request-panel"
+              className="sticky top-24 scroll-mt-20"
+            >
               <StockRequestPanel line={selectedLine} />
             </div>
           </aside>
@@ -294,7 +296,7 @@ function StockCard({
     <article
       className={`shadow-paper group flex flex-col overflow-hidden rounded-md border bg-card transition-shadow ${
         selected
-          ? 'border-[color:var(--ember)] ring-2 ring-[color:var(--ember)]/40'
+          ? 'ring-[color:var(--ember)]/40 border-[color:var(--ember)] ring-2'
           : 'border-[color:var(--sand-deep)]'
       }`}
     >
@@ -347,7 +349,9 @@ function StockCard({
             <div className="font-display text-base font-semibold tabular-nums">
               {formatEUR(line.stockPriceHt)}
             </div>
-            <div className="text-[10px] text-muted-foreground">{line.readyLabel}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {line.readyLabel}
+            </div>
           </div>
           <Button
             type="button"
@@ -355,7 +359,7 @@ function StockCard({
             onClick={onSelect}
             className={`h-8 shrink-0 rounded-sm px-2.5 text-xs ${
               selected
-                ? 'bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember)]/90'
+                ? 'hover:bg-[color:var(--ember)]/90 bg-[color:var(--ember)] text-white'
                 : 'bg-[color:var(--foreground)] text-[color:var(--background)] hover:bg-[color:var(--ink-soft)]'
             }`}
           >
@@ -413,9 +417,11 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
 
     if (!creation.ok) {
       // Site configuré mais rien d'enregistré (API + insert navigateur KO) :
-      // pas de faux succès, on oriente vers l'email et on garde le formulaire.
+      // pas de faux succès, on oriente vers le formulaire de contact et on
+      // garde le formulaire.
       toast.error('Demande non enregistrée', {
-        description: `Votre demande n'a pas pu être transmise. Écrivez-nous à ${STOCK_CONTACT_EMAIL} (bouton « Envoyer un email » ci-dessous) pour être rappelé.`,
+        description:
+          'Votre demande n’a pas pu être transmise. Écrivez-nous via le bouton « Nous écrire » ci-dessous pour être rappelé.',
       })
       return
     }
@@ -538,13 +544,13 @@ function StockRequestPanel({ line }: { readonly line: StockLine | null }) {
         {submitting ? 'Enregistrement...' : 'Être rappelé'}
       </Button>
       <a
-        href={`mailto:${STOCK_CONTACT_EMAIL}?subject=Stock 24h - ${encodeURIComponent(
-          line.product.name,
+        href={`/contact?topic=produit&message=${encodeURIComponent(
+          `Stock 24h - ${line.product.name}`,
         )}`}
         className="hover:border-foreground/40 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-sm transition-colors"
       >
         <Mail className="h-4 w-4" />
-        Envoyer un email
+        Nous écrire
       </a>
     </div>
   )

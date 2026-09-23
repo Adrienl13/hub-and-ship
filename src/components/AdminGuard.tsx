@@ -107,12 +107,9 @@ export function AdminGuard({ children, onReserve }: AdminGuardProps) {
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
             Votre compte n'a pas les droits d'administration. Si vous pensez que
-            c'est une erreur, contactez{' '}
-            <a
-              href="mailto:contact@terrassea.com"
-              className="text-foreground underline"
-            >
-              contact@terrassea.com
+            c'est une erreur, écrivez-nous via{' '}
+            <a href="/contact" className="text-foreground underline">
+              le formulaire de contact
             </a>
             .
           </p>
