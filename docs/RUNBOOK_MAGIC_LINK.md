@@ -296,8 +296,9 @@ Connexion par mot de passe (parcours principal) :
 Lien magique (secours) :
 
 - [ ] **Première visite** par « Recevoir un lien de connexion » avec une
-      adresse inconnue → email « Bienvenue chez Terrassea — activez votre
-      espace », expéditeur Terrassea (pas `noreply@mail.app.supabase.io`) →
+      adresse inconnue → email « Bienvenue chez Terrassea — créez votre
+      espace » (bouton « Créer mon espace »), expéditeur Terrassea (pas
+      `noreply@mail.app.supabase.io`) →
       clic **sur un autre appareil** que celui qui a demandé →
       `/account/bienvenue` → fiche (prénom, nom, établissement, téléphone) →
       `/account`.
