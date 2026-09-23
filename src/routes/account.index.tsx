@@ -484,12 +484,13 @@ function ResourcesCard() {
         ))}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        Une question sur une réservation, un document ou une facture ?{' '}
+        Une question sur une réservation, un document ou une facture ?
+        Écrivez-nous directement à{' '}
         <a
-          href="/contact?topic=reservation"
+          href="mailto:contact@terrassea.com"
           className="text-foreground underline"
         >
-          Contacter notre équipe
+          contact@terrassea.com
         </a>
         .
       </p>

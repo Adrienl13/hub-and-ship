@@ -397,7 +397,7 @@ function AccountReservationDetailPage() {
                 valider matières, quantités et délai, puis nous vous
                 transmettons nos coordonnées bancaires pour engager la commande.
                 Besoin d’aller plus vite ? Appelez-nous avec cette référence, ou
-                écrivez-nous depuis la page contact.
+                écrivez à contact@terrassea.com.
               </div>
             </div>
           </div>
@@ -790,10 +790,10 @@ function DocumentsCard({
         )}
       </ul>
       <a
-        href="/contact?topic=reservation"
+        href="mailto:contact@terrassea.com"
         className="mt-3 inline-block text-xs text-foreground underline"
       >
-        Demander un document
+        Demander un document (contact@terrassea.com)
       </a>
     </div>
   )
@@ -1075,9 +1075,9 @@ function ReservationSignInGate({
             </a>
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            Un doute sur l’adresse utilisée ? Écrivez-nous via{' '}
-            <a className="underline" href="/contact?topic=reservation">
-              le formulaire de contact
+            Un doute sur l’adresse utilisée ? Écrivez-nous à{' '}
+            <a className="underline" href="mailto:contact@terrassea.com">
+              contact@terrassea.com
             </a>{' '}
             en citant la référence reçue par e-mail.
           </p>

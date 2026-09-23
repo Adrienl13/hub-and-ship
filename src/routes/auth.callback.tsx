@@ -146,6 +146,12 @@ function AuthCallbackPage() {
     signupMetadataFromUser(user)
   useEffect(() => {
     if (!authenticated || !userId) return undefined
+    // Mot de passe oublié : le client a demandé un mot de passe, pas une
+    // fiche. Il y va directement ; le tableau de bord rappellera la fiche.
+    if (recovery) {
+      setDestination(target)
+      return undefined
+    }
     const config = getSupabasePublicConfig()
     if (!config.isConfigured) {
       setDestination(target)
@@ -196,6 +202,7 @@ function AuthCallbackPage() {
   }, [
     authenticated,
     activation,
+    recovery,
     userId,
     companyName,
     metaPhone,
