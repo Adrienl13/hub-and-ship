@@ -13,35 +13,8 @@ import {
   formatRetryAfter,
   MAGIC_LINK_RATE_LIMIT,
 } from '@/lib/security/rate-limit'
+import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
 import { businessEmailSchema } from '@/lib/validation/schemas'
-
-// Espaces et caractères de contrôle : les navigateurs les retirent en
-// résolvant l'URL, ils masqueraient donc un préfixe hostile.
-function hasUnsafeChar(value: string): boolean {
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index)
-    if (code <= 0x20 || code === 0x7f) return true
-  }
-  return false
-}
-
-// Seules les destinations internes sont acceptées : un `returnTo` absolu
-// ferait sortir le visiteur du site depuis un lien /auth/login?returnTo=…
-// Les navigateurs assimilent l'antislash à un slash, donc « /\evil.example »
-// vaut « //evil.example » — d'où la normalisation AVANT les contrôles.
-function sanitizeReturnTo(value: string | undefined): string | undefined {
-  if (!value) return undefined
-  if (hasUnsafeChar(value)) return undefined
-  const normalized = value.replace(/\\/g, '/')
-  if (!normalized.startsWith('/')) return undefined
-  if (normalized.startsWith('//')) return undefined
-  try {
-    const url = new URL(normalized, 'https://terrassea.invalid')
-    return `${url.pathname}${url.search}${url.hash}`
-  } catch {
-    return undefined
-  }
-}
 
 const loginSearchSchema = z.object({
   returnTo: z.string().optional(),
@@ -62,7 +35,7 @@ function LoginPage() {
   const auth = useAuth()
   const securityEvents = useSecurityEvents()
   const { returnTo: rawReturnTo } = Route.useSearch()
-  const returnTo = sanitizeReturnTo(rawReturnTo)
+  const returnTo = sanitizeReturnTo(rawReturnTo, undefined)
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   // Le toast de confirmation disparaît au bout de quelques secondes : sur
@@ -77,7 +50,7 @@ function LoginPage() {
   // another magic link.
   useEffect(() => {
     if (auth.status !== 'authenticated') return
-    window.location.assign(returnTo ?? '/account/reservations')
+    window.location.assign(returnTo ?? DEFAULT_RETURN_TO)
   }, [auth.status, returnTo])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

@@ -10,8 +10,7 @@ import {
   parseMagicLinkCallback,
   type MagicLinkFailure,
 } from '@/lib/auth/magic-link-callback'
-
-const DEFAULT_RETURN_TO = '/account/reservations'
+import { DEFAULT_RETURN_TO, sanitizeReturnTo } from '@/lib/auth/return-to'
 
 /**
  * Délai de garde. Au-delà, l'échange ne se fera plus : dans le flux PKCE,
@@ -20,35 +19,6 @@ const DEFAULT_RETURN_TO = '/account/reservations'
  * lien sur un autre appareil reste bloqué sur un spinner.
  */
 const CALLBACK_TIMEOUT_MS = 10_000
-
-// Espaces et caractères de contrôle : les navigateurs les retirent en
-// résolvant l'URL, ils masqueraient donc un préfixe hostile.
-function hasUnsafeChar(value: string): boolean {
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index)
-    if (code <= 0x20 || code === 0x7f) return true
-  }
-  return false
-}
-
-// Seules les destinations internes sont acceptées : un `returnTo` absolu
-// ferait sortir le visiteur du site quand le lien magique est partagé ou
-// intercepté. Les navigateurs assimilent l'antislash à un slash, donc
-// « /\evil.example » vaut « //evil.example » — d'où la normalisation AVANT
-// les contrôles.
-function sanitizeReturnTo(value: string | undefined): string {
-  if (!value) return DEFAULT_RETURN_TO
-  if (hasUnsafeChar(value)) return DEFAULT_RETURN_TO
-  const normalized = value.replace(/\\/g, '/')
-  if (!normalized.startsWith('/')) return DEFAULT_RETURN_TO
-  if (normalized.startsWith('//')) return DEFAULT_RETURN_TO
-  try {
-    const url = new URL(normalized, 'https://terrassea.invalid')
-    return `${url.pathname}${url.search}${url.hash}`
-  } catch {
-    return DEFAULT_RETURN_TO
-  }
-}
 
 const callbackSearchSchema = z.object({
   returnTo: z.string().optional(),
@@ -69,7 +39,7 @@ function AuthCallbackPage() {
   const { status, user, isConfigured, verifyMagicLinkToken } = useAuth()
   const { returnTo } = Route.useSearch()
   const authenticated = status === 'authenticated'
-  const target = sanitizeReturnTo(returnTo)
+  const target = sanitizeReturnTo(returnTo, DEFAULT_RETURN_TO)
   const [failure, setFailure] = useState<MagicLinkFailure | null>(null)
 
   // Lien `{{ .TokenHash }}` : on vérifie nous-mêmes, ce qui marche depuis
