@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  ChevronDown,
+  ChevronUp,
   Download,
   Handshake,
   RefreshCw,
@@ -8,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { CustomerFile } from '@/components/admin/CustomerFile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth, type AuthStatus } from '@/hooks/useAuth'
@@ -201,6 +204,8 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
   const [linkableApps, setLinkableApps] = useState<
     ReadonlyArray<LinkableApplication>
   >([])
+  // Une seule fiche client dépliée à la fois : elle lit cinq tables.
+  const [openFileId, setOpenFileId] = useState<string | null>(null)
 
   const auth = useAuth()
   const currentUserId = auth.user?.id ?? null
@@ -515,6 +520,7 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
               const busy = busyId === row.id
               const isSelf = currentUserId === row.id
               const link = partnerLinks.get(row.id)
+              const fileOpen = openFileId === row.id
               return (
                 <article
                   key={row.id}
@@ -686,7 +692,33 @@ export function AdminUsersTab({ authStatus }: AdminUsersTabProps) {
                         Rétrograder
                       </Button>
                     )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={fileOpen ? 'secondary' : 'ghost'}
+                      className="h-8 gap-1.5 rounded-sm"
+                      aria-expanded={fileOpen}
+                      onClick={() => setOpenFileId(fileOpen ? null : row.id)}
+                    >
+                      {fileOpen ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
+                      Fiche client
+                    </Button>
                   </div>
+
+                  {/* Fiche 360 : pleine largeur sous la ligne, dans la grille. */}
+                  {fileOpen && (
+                    <div className="-mx-4 -mb-3 lg:col-span-6">
+                      <CustomerFile
+                        userId={row.id}
+                        email={row.email}
+                        profile={row}
+                      />
+                    </div>
+                  )}
                 </article>
               )
             })

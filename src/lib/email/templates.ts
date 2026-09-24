@@ -1301,6 +1301,76 @@ ${TEXT_SIGNATURE}`
 }
 
 // ---------------------------------------------------------------------------
+// Relance rédigée depuis l'admin (onglets Demandes / Réservations)
+// ---------------------------------------------------------------------------
+//
+// Le corps est du texte libre saisi par l'admin : il est échappé, ses sauts
+// de ligne deviennent des <br>. Le sujet est celui choisi dans le dialogue ;
+// il sert aussi de titre. Registre client : logo, salutation, signature.
+
+export interface AdminFollowUpEmailInput {
+  readonly subject: string
+  /** Absent quand la cible n'a pas de nom : « Bonjour, » tout court. */
+  readonly recipientName?: string | null
+  readonly body: string
+  /** Référence rappelée en surtitre (devis, réservation…). */
+  readonly reference?: string | null
+  readonly ctaLabel?: string | null
+  /** Lien interne déjà absolu, validé par l'appelant. */
+  readonly ctaUrl?: string | null
+}
+
+/** Texte libre → paragraphes HTML : échappé, une ligne vide sépare deux <p>. */
+function freeText(text: string): string {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .trim()
+    .split(/\n{2,}/)
+    .map((paragraph) => p(escape(paragraph).replace(/\n/g, '<br>')))
+    .join('\n')
+}
+
+export function buildAdminFollowUpEmail(input: AdminFollowUpEmailInput): {
+  subject: string
+  html: string
+  text: string
+} {
+  const reference = input.reference?.trim() ?? ''
+  const ctaUrl = input.ctaUrl?.trim() ?? ''
+  const ctaLabel = input.ctaLabel?.trim() || 'Voir mon espace'
+  const body = input.body.replace(/\r\n?/g, '\n').trim()
+  const firstLine = body.split('\n').find((line) => line.trim() !== '') ?? ''
+  const preheader =
+    firstLine.length > 140 ? `${firstLine.slice(0, 137)}…` : firstLine
+
+  const html = `${greeting(input.recipientName)}
+${freeText(body)}
+${ctaUrl ? button(ctaLabel, ctaUrl) : ''}
+${replyNote()}
+${signature()}`
+
+  const who = input.recipientName?.trim()
+  const text = `Bonjour${who ? ` ${who}` : ''},
+
+${body}
+${ctaUrl ? `\n${ctaLabel} : ${ctaUrl}\n` : ''}
+Une question ? Répondez simplement à cet email.
+
+${TEXT_SIGNATURE}`
+
+  return {
+    subject: input.subject,
+    html: shell({
+      eyebrow: reference ? `Référence ${reference}` : 'Votre suivi Terrassea',
+      title: input.subject,
+      preheader,
+      body: html,
+    }),
+    text,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Rapports de tests (accès sur autorisation admin)
 // ---------------------------------------------------------------------------
 

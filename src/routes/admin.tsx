@@ -18,6 +18,11 @@ import type { ReactNode } from 'react'
 
 import { AdminGuard } from '@/components/AdminGuard'
 import { AdminOverviewKpis } from '@/components/AdminOverviewKpis'
+import {
+  FollowUpDialog,
+  type FollowUpSent,
+  type FollowUpTarget,
+} from '@/components/admin/FollowUpDialog'
 import { Kpi } from '@/components/admin/Kpi'
 import { AdminReservationQuoteUpload } from '@/components/AdminReservationQuoteUpload'
 import { Button } from '@/components/ui/button'
@@ -42,6 +47,15 @@ import { toast } from 'sonner'
 
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { downloadCsv, toCsv } from '@/lib/admin/csv'
+import {
+  describeFollowUps,
+  reservationFollowUpTemplate,
+} from '@/lib/admin/follow-ups'
+import {
+  listFollowUpsForTargets,
+  type FollowUpRow,
+  type FollowUpsClient,
+} from '@/lib/admin/follow-ups.repository'
 import { formatAdminDate, telHref } from '@/lib/admin/format'
 import { stockRequestSourceLabel } from '@/lib/admin/origin'
 import { issueInvoice, type InvoicesClient } from '@/lib/account/invoices'
@@ -1058,6 +1072,14 @@ function ReservationsAdminPanel({
   // Période chargée côté base (500 lignes max) ; « tout » reste possible.
   const [periodDays, setPeriodDays] = useState<ReservationPeriodDays>(90)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  // Relances par réservation, chargées après la liste ; une lecture qui
+  // échoue ne bloque pas le panneau, le badge reste simplement absent.
+  const [followUps, setFollowUps] = useState<Map<string, FollowUpRow[]>>(
+    () => new Map(),
+  )
+  const [followUpTarget, setFollowUpTarget] = useState<FollowUpTarget | null>(
+    null,
+  )
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
@@ -1081,6 +1103,17 @@ function ReservationsAdminPanel({
         const list = await listAllReservations(client, { periodDays })
         setRows(sortReservationsForAdmin(list))
         setError(null)
+        try {
+          setFollowUps(
+            await listFollowUpsForTargets(
+              client as unknown as FollowUpsClient,
+              'reservation',
+              list.map((row) => row.id),
+            ),
+          )
+        } catch (followUpError) {
+          console.warn('reservations: follow-ups unavailable', followUpError)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
       }
@@ -1091,6 +1124,54 @@ function ReservationsAdminPanel({
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  // Relance d'une réservation : modèle « paiement » quand un règlement est
+  // attendu, « informations » sinon ; montant attendu selon le statut.
+  function openFollowUp(row: AdminReservationRow): void {
+    if (!row.contactEmail) return
+    const template = reservationFollowUpTemplate(row.status)
+    const priceLabel =
+      row.status === 'pending_reservation_fee'
+        ? formatEUR(row.reservationFee)
+        : row.status === 'deposit_called'
+          ? formatEUR(row.depositAmount)
+          : `${formatEUR(row.totalHt)} HT`
+    setFollowUpTarget({
+      kind: 'reservation',
+      id: row.id,
+      recipientName: row.contactName ?? '',
+      recipientEmail: row.contactEmail,
+      context: {
+        name: row.contactName ?? '',
+        company: row.companyLegalName,
+        reference: row.reference,
+        priceLabel,
+      },
+      defaultTemplate: template,
+      ctaUrl: `/account/reservations/${row.id}`,
+      ctaLabel: 'Voir ma réservation',
+    })
+  }
+
+  async function handleFollowUpSent(
+    target: FollowUpTarget,
+    sent: FollowUpSent,
+  ): Promise<void> {
+    if (!isConfigured) return
+    const client = createSupabaseBrowserClient(
+      config,
+    ) as AdminReservationsClient
+    await logAdminAction(client, auth.user?.id ?? null, {
+      action: 'reservation.follow_up',
+      target: target.id,
+      extra: {
+        reference: target.context.reference ?? null,
+        template: sent.template,
+        traced: sent.traced,
+      },
+    })
+    await refresh()
+  }
 
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase()
@@ -1619,6 +1700,11 @@ function ReservationsAdminPanel({
                           : ''}
                       </div>
                     )}
+                    {followUps.has(row.id) && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {describeFollowUps(followUps.get(row.id) ?? [])}
+                      </div>
+                    )}
                   </div>
                   <StatusPill label={RESERVATION_STATUS_LABEL[row.status]} />
                   <div className="flex flex-wrap gap-1.5">
@@ -1659,6 +1745,24 @@ function ReservationsAdminPanel({
                         </Button>
                       )}
                     <AdminReservationQuoteUpload reservationId={row.id} />
+                    {row.status !== 'cancelled' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy || !row.contactEmail}
+                        title={
+                          row.contactEmail
+                            ? undefined
+                            : 'Aucun email de contact sur cette réservation'
+                        }
+                        onClick={() => openFollowUp(row)}
+                        className="h-7 rounded-sm px-2 text-[11px]"
+                        aria-label={`Relancer ${row.reference}`}
+                      >
+                        Relancer
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="outline"
@@ -1754,6 +1858,12 @@ function ReservationsAdminPanel({
           </div>
         )}
       </div>
+
+      <FollowUpDialog
+        target={followUpTarget}
+        onClose={() => setFollowUpTarget(null)}
+        onSent={(target, sent) => void handleFollowUpSent(target, sent)}
+      />
     </div>
   )
 }

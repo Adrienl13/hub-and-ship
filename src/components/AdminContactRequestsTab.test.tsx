@@ -11,6 +11,17 @@ const adminListContactRequests = vi.fn()
 const adminUpdateContactRequestStatus = vi.fn()
 const adminUpdateContactRequestNote = vi.fn()
 const logAdminAction = vi.fn()
+const listFollowUpsForTargets = vi.fn()
+const sendAdminFollowUp = vi.fn()
+
+vi.mock('@/lib/admin/follow-ups.repository', () => ({
+  listFollowUpsForTargets: (...args: unknown[]) =>
+    listFollowUpsForTargets(...args),
+}))
+
+vi.mock('@/lib/admin/follow-ups.send', () => ({
+  sendAdminFollowUp: (...args: unknown[]) => sendAdminFollowUp(...args),
+}))
 
 vi.mock('@/lib/contact-requests/admin-repository', async () => {
   const actual = await vi.importActual<
@@ -49,7 +60,7 @@ vi.mock('@/lib/admin/audit-log', () => ({
 }))
 
 vi.mock('sonner', () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+  toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }))
 
 import { toast } from 'sonner'
@@ -117,6 +128,23 @@ beforeEach(() => {
   adminUpdateContactRequestStatus.mockResolvedValue(undefined)
   adminUpdateContactRequestNote.mockResolvedValue(undefined)
   logAdminAction.mockResolvedValue(undefined)
+  listFollowUpsForTargets.mockResolvedValue(
+    new Map([
+      [
+        'cr-2',
+        [
+          { id: 'fu-1', targetId: 'cr-2', sentAt: '2026-09-20T08:00:00.000Z' },
+          { id: 'fu-2', targetId: 'cr-2', sentAt: '2026-09-22T08:00:00.000Z' },
+        ],
+      ],
+    ]),
+  )
+  sendAdminFollowUp.mockResolvedValue({
+    ok: true,
+    traced: true,
+    followUpId: 'fu-3',
+    deliveryId: 'brevo-3',
+  })
 })
 
 describe('AdminContactRequestsTab', () => {
@@ -222,6 +250,127 @@ describe('AdminContactRequestsTab', () => {
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith('Demande rouverte'),
     )
+  })
+
+  it('shows the follow-up badge and loads follow-ups for the listed requests', async () => {
+    render(<AdminContactRequestsTab authStatus="authenticated" />)
+    await screen.findByText('Contact Un')
+
+    await waitFor(() =>
+      expect(listFollowUpsForTargets).toHaveBeenCalledWith(
+        expect.objectContaining({ marker: 'browser-client' }),
+        'contact_request',
+        ['cr-1', 'cr-2'],
+      ),
+    )
+    expect(
+      await screen.findByText('Relancé le 22/09/2026 (2)'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Relancé le 20\/09/)).not.toBeInTheDocument()
+  })
+
+  it('still lists requests when follow-ups cannot be read', async () => {
+    listFollowUpsForTargets.mockRejectedValue(new Error('RLS denied'))
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    render(<AdminContactRequestsTab authStatus="authenticated" />)
+
+    await screen.findByText('Contact Un')
+    expect(screen.queryByText('RLS denied')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Relancé le/)).not.toBeInTheDocument()
+  })
+
+  it('sends a follow-up from the dialog, moves the new request to contacted and audits it', async () => {
+    render(<AdminContactRequestsTab authStatus="authenticated" />)
+    await screen.findByText('Contact Un')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Relancer Contact Un' }))
+
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('Contact Un <un@exemple.test>')
+    // Sujet « devis » → modèle devis présélectionné, prérempli avec le produit.
+    expect(screen.getByRole('button', { name: 'Devis' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(
+      (screen.getByLabelText('Message') as HTMLTextAreaElement).value,
+    ).toContain('Chaise CANNES (40 unités) pour Brasserie Test')
+
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer la relance/ }))
+
+    await waitFor(() =>
+      expect(sendAdminFollowUp).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          targetKind: 'contact_request',
+          targetId: 'cr-1',
+          recipientEmail: 'un@exemple.test',
+          recipientName: 'Contact Un',
+          template: 'devis',
+          subject: 'Votre devis Terrassea',
+        }),
+      }),
+    )
+    await waitFor(() =>
+      expect(adminUpdateContactRequestStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ marker: 'browser-client' }),
+        'cr-1',
+        'contacted',
+      ),
+    )
+    await waitFor(() =>
+      expect(logAdminAction).toHaveBeenCalledWith(
+        expect.objectContaining({ marker: 'browser-client' }),
+        'admin-1',
+        expect.objectContaining({
+          action: 'contact_request.follow_up',
+          target: 'cr-1',
+          previousValue: 'new',
+          nextValue: 'contacted',
+          extra: { template: 'devis', traced: true },
+        }),
+      ),
+    )
+    // Liste et relances relues après l'envoi ; le dialogue est fermé.
+    await waitFor(() =>
+      expect(adminListContactRequests).toHaveBeenCalledTimes(2),
+    )
+    expect(listFollowUpsForTargets).toHaveBeenCalledTimes(2)
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
+    expect(toast.success).toHaveBeenCalledWith(
+      'Relance envoyée',
+      expect.anything(),
+    )
+  })
+
+  it('does not change the status of an already-followed request', async () => {
+    render(<AdminContactRequestsTab authStatus="authenticated" />)
+    await screen.findByText('Contact Deux')
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Relancer Contact Deux' }),
+    )
+    await screen.findByRole('dialog')
+    // Sujet « produit » → modèle informations.
+    expect(
+      screen.getByRole('button', { name: 'Informations' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer la relance/ }))
+
+    await waitFor(() =>
+      expect(logAdminAction).toHaveBeenCalledWith(
+        expect.anything(),
+        'admin-1',
+        expect.objectContaining({
+          action: 'contact_request.follow_up',
+          target: 'cr-2',
+        }),
+      ),
+    )
+    expect(adminUpdateContactRequestStatus).not.toHaveBeenCalled()
+    const metadata = logAdminAction.mock.calls[0]![2] as Record<string, unknown>
+    expect(metadata.previousValue).toBeUndefined()
   })
 
   it('shows the database error instead of an empty list', async () => {

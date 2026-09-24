@@ -9,7 +9,12 @@ import { getRequest } from '@tanstack/react-start/server'
 import { parseCookieHeader } from '@/lib/auth/cookies'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-export async function callerIsAdmin(): Promise<boolean> {
+/**
+ * Identifiant de l'admin qui appelle, ou `null` si l'appelant n'est pas
+ * connecté, n'est pas admin, ou si la vérification échoue. Sert aux écritures
+ * qui doivent porter l'auteur (sent_by, journal d'audit).
+ */
+export async function callerAdminId(): Promise<string | null> {
   try {
     const request = getRequest()
     const cookieEntries = parseCookieHeader(request.headers.get('cookie'))
@@ -17,11 +22,15 @@ export async function callerIsAdmin(): Promise<boolean> {
       cookies: { getAll: () => cookieEntries },
     })
     const { data: userData } = await sessionClient.auth.getUser()
-    if (!userData.user) return false
+    if (!userData.user) return null
     const { data: isAdmin, error } = await sessionClient.rpc('is_admin')
-    return !error && isAdmin === true
+    return !error && isAdmin === true ? userData.user.id : null
   } catch (error) {
-    console.warn('callerIsAdmin: auth check failed', error)
-    return false
+    console.warn('callerAdminId: auth check failed', error)
+    return null
   }
+}
+
+export async function callerIsAdmin(): Promise<boolean> {
+  return (await callerAdminId()) !== null
 }

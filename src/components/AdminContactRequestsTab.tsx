@@ -1,12 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Mail, Phone, RefreshCw } from 'lucide-react'
+import { Download, Mail, Phone, RefreshCw, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
+import {
+  FollowUpDialog,
+  type FollowUpSent,
+  type FollowUpTarget,
+} from '@/components/admin/FollowUpDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth, type AuthStatus } from '@/hooks/useAuth'
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { downloadCsv, toCsv } from '@/lib/admin/csv'
+import { describeFollowUps } from '@/lib/admin/follow-ups'
+import {
+  listFollowUpsForTargets,
+  type FollowUpRow,
+  type FollowUpsClient,
+} from '@/lib/admin/follow-ups.repository'
 import {
   formatAdminDate,
   formatAdminDateTime,
@@ -89,6 +100,14 @@ export function AdminContactRequestsTab({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Relances par demande, chargées après la liste ; une lecture qui échoue
+  // (RLS, réseau) ne bloque pas l'onglet : le badge reste simplement absent.
+  const [followUps, setFollowUps] = useState<Map<string, FollowUpRow[]>>(
+    () => new Map(),
+  )
+  const [followUpTarget, setFollowUpTarget] = useState<FollowUpTarget | null>(
+    null,
+  )
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<
     ContactRequestStatus | 'all'
@@ -109,11 +128,25 @@ export function AdminContactRequestsTab({
       }
       setLoading(true)
       try {
-        const client = createContactAdminClient(
-          createSupabaseBrowserClient(config),
-        )
-        setRows(await adminListContactRequests(client))
+        const browser = createSupabaseBrowserClient(config)
+        const client = createContactAdminClient(browser)
+        const list = await adminListContactRequests(client)
+        setRows(list)
         setError(null)
+        try {
+          setFollowUps(
+            await listFollowUpsForTargets(
+              browser as unknown as FollowUpsClient,
+              'contact_request',
+              list.map((row) => row.id),
+            ),
+          )
+        } catch (followUpError) {
+          console.warn(
+            'contact requests: follow-ups unavailable',
+            followUpError,
+          )
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
       }
@@ -124,6 +157,56 @@ export function AdminContactRequestsTab({
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  function openFollowUp(row: AdminContactRequestRow): void {
+    setFollowUpTarget({
+      kind: 'contact_request',
+      id: row.id,
+      recipientName: row.name,
+      recipientEmail: row.email,
+      context: {
+        name: row.name,
+        company: row.company,
+        productName: row.productName,
+        quantity: row.quantity,
+        priceLabel: row.priceLabel,
+      },
+      defaultTemplate: row.topic === 'devis' ? 'devis' : 'informations',
+    })
+  }
+
+  // Après une relance partie : la demande neuve passe « contactée » (elle
+  // l'est, de fait), l'action est auditée, la liste et les badges rechargés.
+  async function handleFollowUpSent(
+    target: FollowUpTarget,
+    sent: FollowUpSent,
+  ): Promise<void> {
+    if (!isConfigured) return
+    const row = rows.find((candidate) => candidate.id === target.id)
+    const browser = createSupabaseBrowserClient(config)
+    try {
+      if (row?.status === 'new') {
+        await adminUpdateContactRequestStatus(
+          createContactAdminClient(browser),
+          target.id,
+          'contacted',
+        )
+      }
+      await logAdminAction(browser, auth.user?.id ?? null, {
+        action: 'contact_request.follow_up',
+        target: target.id,
+        ...(row?.status === 'new'
+          ? { previousValue: 'new', nextValue: 'contacted' }
+          : {}),
+        extra: { template: sent.template, traced: sent.traced },
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue'
+      setError(message)
+      toast.error('Statut non modifié', { description: message })
+    }
+    await refresh()
+  }
 
   async function changeStatus(
     row: AdminContactRequestRow,
@@ -411,13 +494,21 @@ export function AdminContactRequestsTab({
                 key={row.id}
                 row={row}
                 busy={busyId === row.id}
+                followUpLabel={describeFollowUps(followUps.get(row.id) ?? [])}
                 onChangeStatus={(target) => void changeStatus(row, target)}
                 onSaveNote={(note) => void saveNote(row, note)}
+                onFollowUp={() => openFollowUp(row)}
               />
             ))}
           </div>
         )}
       </div>
+
+      <FollowUpDialog
+        target={followUpTarget}
+        onClose={() => setFollowUpTarget(null)}
+        onSent={(target, sent) => void handleFollowUpSent(target, sent)}
+      />
     </div>
   )
 }
@@ -425,13 +516,17 @@ export function AdminContactRequestsTab({
 function ContactRequestCard({
   row,
   busy,
+  followUpLabel,
   onChangeStatus,
   onSaveNote,
+  onFollowUp,
 }: {
   readonly row: AdminContactRequestRow
   readonly busy: boolean
+  readonly followUpLabel: string | null
   readonly onChangeStatus: (target: ContactRequestStatus) => void
   readonly onSaveNote: (note: string | null) => void
+  readonly onFollowUp: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const transitions = nextContactRequestStatuses(row.status)
@@ -544,7 +639,24 @@ function ContactRequestCard({
               {transition.label}
             </Button>
           ))}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            className="h-7 gap-1 rounded-sm px-2 text-[11px]"
+            onClick={onFollowUp}
+            aria-label={`Relancer ${row.name}`}
+          >
+            <Send className="h-3 w-3" />
+            Relancer
+          </Button>
         </div>
+        {followUpLabel && (
+          <div className="text-[11px] text-muted-foreground">
+            {followUpLabel}
+          </div>
+        )}
         {!expanded && (
           <button
             type="button"
