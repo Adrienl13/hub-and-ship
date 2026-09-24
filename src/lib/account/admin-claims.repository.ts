@@ -1,6 +1,7 @@
-// Admin SAV repository — lists all reservation claims (latest 100) with their
-// reservation context and updates status/response. RLS policy
-// "Admins full access claims" restricts these calls to admin / super_admin.
+// Dépôt admin SAV : liste toutes les réclamations (100 dernières) avec le
+// contexte de la réservation (référence, SIRET, contact) et met à jour statut /
+// réponse. La politique RLS « Admins full access claims » réserve ces appels
+// aux profils admin / super_admin.
 
 import type { SupabaseBrowserClient } from '@/lib/supabase/client'
 import type {
@@ -15,6 +16,11 @@ export interface AdminClaimRow {
   readonly reservationId: string
   readonly reservationReference: string | null
   readonly reservationSiret: string | null
+  /** Contact figé dans la réservation (contact_snapshot). */
+  readonly companyName: string | null
+  readonly contactName: string | null
+  readonly contactEmail: string | null
+  readonly contactPhone: string | null
   readonly category: ReservationClaimCategory
   readonly status: ReservationClaimStatus
   readonly quantity: number | null
@@ -22,6 +28,12 @@ export interface AdminClaimRow {
   readonly adminResponse: string | null
   readonly createdAt: string
   readonly updatedAt: string
+}
+
+interface RawClaimReservation {
+  readonly reference?: string | null
+  readonly siret?: string | null
+  readonly contact_snapshot?: unknown
 }
 
 interface RawClaimRow {
@@ -34,28 +46,33 @@ interface RawClaimRow {
   readonly admin_response: string | null
   readonly created_at: string
   readonly updated_at: string
-  readonly reservations?:
-    | { readonly reference?: string; readonly siret?: string }
-    | Array<{ readonly reference?: string; readonly siret?: string }>
-    | null
+  readonly reservations?: RawClaimReservation | RawClaimReservation[] | null
 }
 
-function reservationField(
-  row: RawClaimRow,
-  key: 'reference' | 'siret',
-): string | null {
+function reservationOf(row: RawClaimRow): RawClaimReservation | null {
   const rel = row.reservations
   if (!rel) return null
-  const obj = Array.isArray(rel) ? rel[0] : rel
-  return obj?.[key] ?? null
+  return (Array.isArray(rel) ? rel[0] : rel) ?? null
 }
 
-function toAdminClaimRow(row: RawClaimRow): AdminClaimRow {
+function snapshotField(snapshot: unknown, key: string): string | null {
+  if (!snapshot || typeof snapshot !== 'object') return null
+  const value = (snapshot as Record<string, unknown>)[key]
+  return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
+export function toAdminClaimRow(row: RawClaimRow): AdminClaimRow {
+  const reservation = reservationOf(row)
+  const snapshot = reservation?.contact_snapshot
   return {
     id: row.id,
     reservationId: row.reservation_id,
-    reservationReference: reservationField(row, 'reference'),
-    reservationSiret: reservationField(row, 'siret'),
+    reservationReference: reservation?.reference ?? null,
+    reservationSiret: reservation?.siret ?? null,
+    companyName: snapshotField(snapshot, 'company'),
+    contactName: snapshotField(snapshot, 'name'),
+    contactEmail: snapshotField(snapshot, 'email'),
+    contactPhone: snapshotField(snapshot, 'phone'),
     category: row.category,
     status: row.status,
     quantity: row.quantity,
@@ -66,12 +83,15 @@ function toAdminClaimRow(row: RawClaimRow): AdminClaimRow {
   }
 }
 
+export const ADMIN_CLAIMS_SELECT =
+  '*, reservations(reference, siret, contact_snapshot)'
+
 export async function listAllClaims(
   client: AdminClaimsClient,
 ): Promise<ReadonlyArray<AdminClaimRow>> {
   const { data, error } = await client
     .from('reservation_claims')
-    .select('*, reservations(reference, siret)')
+    .select(ADMIN_CLAIMS_SELECT)
     .order('created_at', { ascending: false })
     .limit(100)
 

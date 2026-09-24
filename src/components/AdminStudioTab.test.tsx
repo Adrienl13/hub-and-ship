@@ -3,6 +3,9 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { AdminStudioTab } from './AdminStudioTab'
 const mock = vi.hoisted(() => ({
   writes: [] as { table: string; values: Record<string, unknown> }[],
+  /** Simule les migrations du module visuel non appliquées en production. */
+  visualMissing: false,
+  events: [] as Record<string, unknown>[],
   media: [
     {
       id: 'image',
@@ -26,17 +29,45 @@ vi.mock('@/lib/supabase/client', () => ({
   createSupabaseBrowserClient: () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'admin-test' } } }) },
     from: (table: string) => ({
-      select: () => ({
-        range: async () => ({
-          data:
-            table === 'studio_product_media'
-              ? mock.media
-              : table === 'products'
-                ? [{ id: 'a', name: 'Assise A' }]
-                : [],
-          error: null,
-        }),
-      }),
+      select: () => {
+        // La lecture d'usage enchaîne .order().order().range() ; le reste de
+        // l'onglet appelle .range() directement.
+        const query = {
+          order: () => query,
+          range: async () => {
+            if (
+              mock.visualMissing &&
+              table.startsWith('studio_product_media')
+            ) {
+              return {
+                data: null,
+                error: {
+                  message: `Could not find the table 'public.${table}' in the schema cache`,
+                },
+              }
+            }
+            return {
+              data:
+                table === 'studio_product_media'
+                  ? mock.media
+                  : table === 'products'
+                    ? [{ id: 'a', name: 'Assise A' }]
+                    : table === 'studio_sessions'
+                      ? [
+                          {
+                            id: 'session-1',
+                            created_at: '2026-09-22T09:00:00Z',
+                          },
+                        ]
+                      : table === 'studio_events'
+                        ? mock.events
+                        : [],
+              error: null,
+            }
+          },
+        }
+        return query
+      },
       update: (values: Record<string, unknown>) => {
         const q = {
           eq: () => q,
@@ -56,6 +87,43 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 beforeEach(() => {
   mock.writes = []
+  mock.visualMissing = false
+  mock.events = []
+})
+it('sans les tables du module visuel, l’onglet reste utilisable et l’annonce', async () => {
+  mock.visualMissing = true
+  render(<AdminStudioTab />)
+  expect(
+    await screen.findByText('Module visuel non activé (migration à appliquer)'),
+  ).toBeInTheDocument()
+  // Les autres sections continuent de vivre : usage et compatibilité.
+  expect(
+    await screen.findByRole('region', { name: 'Usage du Studio' }),
+  ).toBeInTheDocument()
+  expect(screen.queryByRole('alert')).toBeNull()
+  expect(screen.queryByAltText('Source')).toBeNull()
+})
+it('affiche l’usage du Studio : sessions, décisions, produits aimés et refusés', async () => {
+  mock.events = [
+    { session_id: 'session-1', event_type: 'card_liked', product_id: 'a' },
+    { session_id: 'session-1', event_type: 'card_liked', product_id: 'a' },
+    { session_id: 'session-1', event_type: 'card_disliked', product_id: 'a' },
+    { session_id: 'session-1', event_type: 'card_passed', product_id: null },
+    {
+      session_id: 'session-1',
+      event_type: 'finalists_viewed',
+      product_id: null,
+    },
+  ]
+  render(<AdminStudioTab />)
+  const usage = await screen.findByRole('region', { name: 'Usage du Studio' })
+  await waitFor(() => expect(usage).toHaveTextContent('2 / 1 / 1'))
+  expect(usage).toHaveTextContent('Décisions (j’aime / pas pour moi / passer)')
+  expect(usage).toHaveTextContent('1 · 100 %')
+  // Les semaines sont datées au format admin jj/mm/aaaa.
+  expect(usage).toHaveTextContent(/Semaine du \d{2}\/\d{2}\/\d{4}/)
+  expect(usage).toHaveTextContent('Top 10 produits aimés')
+  expect(usage).toHaveTextContent('Assise A')
 })
 it('affiche source et normalisée sans publier automatiquement ; validation explicite admin', async () => {
   render(<AdminStudioTab />)

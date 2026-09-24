@@ -11,6 +11,7 @@ import {
   buildContactMessageDraft,
   CONTACT_TOPIC_LABEL,
   CONTACT_TOPICS,
+  type ContactSource,
 } from '@/lib/contact'
 
 interface FormState {
@@ -38,6 +39,7 @@ export function ContactForm({
   initialTopic,
   initialMessage,
   studioBrief,
+  source,
   embedded = false,
 }: {
   /** Sujet pré-sélectionné (déjà validé contre CONTACT_TOPICS par la route). */
@@ -45,6 +47,11 @@ export function ContactForm({
   /** Message pré-rempli (ex. demande de coloris depuis une fiche produit). */
   readonly initialMessage?: string
   readonly studioBrief?: string
+  /**
+   * Point de capture enregistré avec la demande (contact_requests.source).
+   * Par défaut : la page contact, ou le brief Studio quand il y en a un.
+   */
+  readonly source?: ContactSource
   readonly embedded?: boolean
 } = {}) {
   const [form, setForm] = useState<FormState>({
@@ -57,6 +64,9 @@ export function ContactForm({
   const update = (key: keyof FormState) => (value: string) =>
     setForm((previous) => ({ ...previous, [key]: value }))
 
+  const resolvedSource: ContactSource =
+    source ?? (studioBrief === undefined ? 'contact_page' : 'studio_brief')
+
   const submit = async () => {
     const draftResult = buildContactMessageDraft({
       name: form.name,
@@ -64,6 +74,7 @@ export function ContactForm({
       company: form.company,
       phone: form.phone,
       topic: form.topic || undefined,
+      source: resolvedSource,
       message: form.message,
       studioBrief:
         studioBrief === undefined ? undefined : boundStudioBrief(studioBrief),
@@ -85,6 +96,7 @@ export function ContactForm({
           company: form.company,
           phone: form.phone,
           topic: form.topic || undefined,
+          source: resolvedSource,
           message: form.message,
           studioBrief:
             studioBrief === undefined

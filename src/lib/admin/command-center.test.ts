@@ -45,6 +45,7 @@ describe('command center counts', () => {
   it('aggregates the day urgencies from each table', async () => {
     const { client, log } = createClient({
       stock_requests: 3,
+      contact_requests: 5,
       partner_applications: 2,
       partner_deals: 1,
       reservations: 4,
@@ -55,17 +56,31 @@ describe('command center counts', () => {
 
     expect(counts).toEqual({
       newStockRequests: 3,
+      newContactRequests: 5,
       partnerApplicationsToReview: 2,
       partnerDealsToQualify: 1,
       reservationsPendingPayment: 4,
       openClaims: 2,
     })
-    expect(totalUrgencies(counts)).toBe(12)
+    expect(totalUrgencies(counts)).toBe(17)
 
     // Applications are filtered with an IN over new/reviewing.
     const appQuery = log.find((q) => q.table === 'partner_applications')
     expect(appQuery).toMatchObject({ op: 'in', column: 'status' })
     expect(appQuery?.value).toEqual(['new', 'reviewing'])
+  })
+
+  it('counts only the contact requests still at status new', async () => {
+    const { client, log } = createClient({ contact_requests: 2 })
+    const counts = await loadCommandCenterCounts(client)
+    expect(counts.newContactRequests).toBe(2)
+    const contactQuery = log.find((q) => q.table === 'contact_requests')
+    expect(contactQuery).toEqual({
+      table: 'contact_requests',
+      op: 'eq',
+      column: 'status',
+      value: 'new',
+    })
   })
 
   it('treats a null count as zero', async () => {

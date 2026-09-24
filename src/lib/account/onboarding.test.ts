@@ -10,7 +10,9 @@ import {
   onboardingExitTarget,
   onboardingHref,
   resolvePostLoginDestination,
+  setMyCompany,
   validateOnboardingForm,
+  type CompanyClient,
   type OnboardingForm,
   signupMetadataFromUser,
   signupProfileComplement,
@@ -351,5 +353,50 @@ describe('complément de fiche à l’activation', () => {
     expect(
       signupProfileComplement(profile, { phone: '', marketingConsent: false }),
     ).toBeNull()
+  })
+})
+
+describe('setMyCompany', () => {
+  function createClient(result: {
+    data: unknown
+    error: { message: string } | null
+  }): { client: CompanyClient; calls: unknown[][] } {
+    const calls: unknown[][] = []
+    return {
+      calls,
+      client: {
+        rpc: (fn, args) => {
+          calls.push([fn, args])
+          return Promise.resolve(result)
+        },
+      },
+    }
+  }
+
+  it('appelle set_my_company avec le nom nettoyé et renvoie l’identifiant', async () => {
+    const { client, calls } = createClient({ data: 'company-1', error: null })
+    await expect(setMyCompany(client, '  Hôtel des Pins ')).resolves.toBe(
+      'company-1',
+    )
+    expect(calls).toEqual([
+      ['set_my_company', { p_legal_name: 'Hôtel des Pins' }],
+    ])
+  })
+
+  it('n’appelle pas la base pour un nom vide ou trop court', async () => {
+    const { client, calls } = createClient({ data: 'company-1', error: null })
+    await expect(setMyCompany(client, '   ')).resolves.toBeNull()
+    await expect(setMyCompany(client, 'A')).resolves.toBeNull()
+    expect(calls).toEqual([])
+  })
+
+  it('remonte l’erreur de la fonction SQL', async () => {
+    const { client } = createClient({
+      data: null,
+      error: { message: 'not_authenticated' },
+    })
+    await expect(setMyCompany(client, 'Hôtel des Pins')).rejects.toThrow(
+      'not_authenticated',
+    )
   })
 })

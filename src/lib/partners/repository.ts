@@ -6,8 +6,15 @@ import type {
   PartnerDealRow,
   PartnerDealStatus,
 } from '@/lib/partners/types'
+import { describeOrigin, partnerSourceLabel } from '@/lib/admin/origin'
 import type { PartnerSubmissionDraft } from '@/lib/partners/submission'
 import { normalizePartnerSlug } from '@/lib/partners/link'
+import {
+  PARTNER_ACTIVITY_PROFILE_LABEL,
+  PARTNER_TARGET_STATUS_LABEL,
+  type PartnerActivityProfile,
+} from '@/lib/partner-applications'
+import type { PartnerTargetStatus } from '@/lib/supabase/types'
 
 interface RepositoryResult<T> {
   readonly data: T | null
@@ -91,6 +98,21 @@ export interface PartnerApplicationAdminRow {
   readonly message: string | null
   readonly internalNote: string | null
   readonly partnerReferralSlug: string | null
+  readonly website: string | null
+  /** Profil d'activité déclaré (brasseur, pisciniste…), texte libre côté base. */
+  readonly activityProfile: string | null
+  /** Libellé lisible du profil quand il fait partie du sélecteur /partenaires. */
+  readonly activityProfileLabel: string | null
+  /** Statut visé (apporteur, revendeur, grand compte, distributeur, nsp). */
+  readonly targetStatus: PartnerTargetStatus | null
+  readonly targetStatusLabel: string | null
+  readonly siretVerified: boolean
+  /** Point de capture (partners_page, partners_deal_form…). */
+  readonly source: string
+  readonly utmSource: string | null
+  readonly utmMedium: string | null
+  readonly utmCampaign: string | null
+  readonly partnerRef: string | null
   readonly createdAt: string
   readonly updatedAt: string
 }
@@ -114,13 +136,66 @@ export interface PartnerDealAdminRow {
   readonly message: string | null
   readonly internalNote: string | null
   readonly partnerReferralSlug: string | null
+  /** Point de capture (partners_deal_form, partner_space…). */
+  readonly source: string
   readonly createdAt: string
   readonly updatedAt: string
 }
 
-function toApplicationAdminRow(
+function toNullableString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
+function isKnownActivityProfile(
+  value: string,
+): value is PartnerActivityProfile {
+  return Object.prototype.hasOwnProperty.call(
+    PARTNER_ACTIVITY_PROFILE_LABEL,
+    value,
+  )
+}
+
+export function partnerTargetStatusLabel(
+  status: PartnerTargetStatus | null,
+): string | null {
+  if (!status) return null
+  return PARTNER_TARGET_STATUS_LABEL[status] ?? status
+}
+
+export function partnerActivityProfileLabel(
+  profile: string | null,
+): string | null {
+  if (!profile) return null
+  return isKnownActivityProfile(profile)
+    ? PARTNER_ACTIVITY_PROFILE_LABEL[profile]
+    : profile
+}
+
+/**
+ * Origine lisible d'une candidature : partenaire (?ref=), puis UTM, sinon le
+ * libellé de la source de capture (« Page partenaires »), sinon « Direct ».
+ * Helper commun dans lib/admin/origin.ts ; sert au détail admin et au CSV.
+ */
+export function describePartnerApplicationOrigin(
+  row: Pick<
+    PartnerApplicationAdminRow,
+    'source' | 'utmSource' | 'utmMedium' | 'utmCampaign' | 'partnerRef'
+  >,
+): string {
+  return describeOrigin({
+    partnerRef: row.partnerRef,
+    utmSource: row.utmSource,
+    utmMedium: row.utmMedium,
+    utmCampaign: row.utmCampaign,
+    sourceLabel: partnerSourceLabel(row.source),
+  })
+}
+
+export function toApplicationAdminRow(
   row: PartnerApplicationRow,
 ): PartnerApplicationAdminRow {
+  const activityProfile = toNullableString(row.activity_profile)
+  const targetStatus = row.target_status ?? null
   return {
     id: row.id,
     status: row.status,
@@ -136,12 +211,23 @@ function toApplicationAdminRow(
     message: row.message,
     internalNote: row.internal_note,
     partnerReferralSlug: row.partner_referral_slug,
+    website: toNullableString(row.website),
+    activityProfile,
+    activityProfileLabel: partnerActivityProfileLabel(activityProfile),
+    targetStatus,
+    targetStatusLabel: partnerTargetStatusLabel(targetStatus),
+    siretVerified: row.siret_verified === true,
+    source: typeof row.source === 'string' ? row.source : '',
+    utmSource: toNullableString(row.utm_source),
+    utmMedium: toNullableString(row.utm_medium),
+    utmCampaign: toNullableString(row.utm_campaign),
+    partnerRef: toNullableString(row.partner_ref),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
 }
 
-function toDealAdminRow(row: PartnerDealRow): PartnerDealAdminRow {
+export function toDealAdminRow(row: PartnerDealRow): PartnerDealAdminRow {
   return {
     id: row.id,
     applicationId: row.application_id,
@@ -162,6 +248,7 @@ function toDealAdminRow(row: PartnerDealRow): PartnerDealAdminRow {
     message: row.message,
     internalNote: row.internal_note,
     partnerReferralSlug: row.partner_referral_slug,
+    source: typeof row.source === 'string' ? row.source : '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }

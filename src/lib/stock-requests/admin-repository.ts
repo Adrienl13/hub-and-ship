@@ -3,6 +3,7 @@
 // RLS policy `Admins full access stock requests` restricts these calls
 // to admin/super_admin profiles.
 
+import { describeOrigin, stockRequestSourceLabel } from '@/lib/admin/origin'
 import type { SupabaseBrowserClient } from '@/lib/supabase/client'
 import type { Database, StockRequestStatus } from '@/lib/supabase/types'
 
@@ -28,11 +29,43 @@ export interface StockRequestAdminRow {
   readonly location: string
   readonly customerNote: string | null
   readonly internalNote: string | null
+  /** Point de capture (stock_24h_page, catalogue…). */
+  readonly source: string
+  readonly utmSource: string | null
+  readonly utmMedium: string | null
+  readonly utmCampaign: string | null
+  readonly partnerRef: string | null
   readonly createdAt: string
   readonly updatedAt: string
 }
 
-function toAdminRow(row: StockRequestRow): StockRequestAdminRow {
+function toNullableString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
+/**
+ * Origine lisible d'une demande : partenaire (?ref=), puis UTM, sinon le
+ * libellé de la source de capture (« Page stock 24h »), sinon « Direct ».
+ * Helper commun dans lib/admin/origin.ts ; sert à la ligne admin et au CSV.
+ */
+export function describeStockRequestOrigin(
+  row: Pick<
+    StockRequestAdminRow,
+    'source' | 'utmSource' | 'utmMedium' | 'utmCampaign' | 'partnerRef'
+  >,
+): string {
+  return describeOrigin({
+    partnerRef: row.partnerRef,
+    utmSource: row.utmSource,
+    utmMedium: row.utmMedium,
+    utmCampaign: row.utmCampaign,
+    sourceLabel: stockRequestSourceLabel(row.source),
+  })
+}
+
+export function toStockRequestAdminRow(
+  row: StockRequestRow,
+): StockRequestAdminRow {
   return {
     id: row.id,
     status: row.status,
@@ -49,6 +82,11 @@ function toAdminRow(row: StockRequestRow): StockRequestAdminRow {
     location: row.location,
     customerNote: row.customer_note,
     internalNote: row.internal_note,
+    source: typeof row.source === 'string' ? row.source : '',
+    utmSource: toNullableString(row.utm_source),
+    utmMedium: toNullableString(row.utm_medium),
+    utmCampaign: toNullableString(row.utm_campaign),
+    partnerRef: toNullableString(row.partner_ref),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -63,7 +101,9 @@ export async function listAllStockRequests(
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
-  return ((data ?? []) as ReadonlyArray<StockRequestRow>).map(toAdminRow)
+  return ((data ?? []) as ReadonlyArray<StockRequestRow>).map(
+    toStockRequestAdminRow,
+  )
 }
 
 export async function updateStockRequestStatus(

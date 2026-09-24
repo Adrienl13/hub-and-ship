@@ -375,6 +375,7 @@ function ShowroomPage() {
             <h2>Découvrir le mobilier à {visit.city}</h2>
             <ContactForm
               key={visit.id}
+              source="lieux"
               initialTopic="produit"
               initialMessage={`Bonjour, je souhaite organiser une visite du lieu équipé à ${visit.city} (référence ${visit.id}). Merci de me préciser les possibilités.`}
             />

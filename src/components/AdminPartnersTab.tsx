@@ -3,8 +3,11 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/hooks/useAuth'
+import { logAdminAction } from '@/lib/admin/audit-log'
 import {
   createPartnerCodeForApplication,
+  describePartnerApplicationOrigin,
   listPartnerApplications,
   listPartnerDeals,
   updatePartnerApplicationNote,
@@ -23,8 +26,12 @@ import {
   type AdminReservationRow,
 } from '@/lib/account/admin-reservations.repository'
 import { ACCOUNT_RESERVATION_STATUS_LABEL } from '@/lib/account/reservations'
-import { buildPartnerSharePath, normalizePartnerSlug } from '@/lib/partners/link'
+import {
+  buildPartnerSharePath,
+  normalizePartnerSlug,
+} from '@/lib/partners/link'
 import { downloadCsv, toCsv } from '@/lib/admin/csv'
+import { partnerSourceLabel } from '@/lib/admin/origin'
 import {
   PARTNER_APPLICATION_STATUS_LABEL,
   PARTNER_DEAL_STATUS_LABEL,
@@ -59,12 +66,30 @@ const DEAL_STATUSES = [
   'rejected',
 ] as const satisfies ReadonlyArray<PartnerDealStatus>
 
+// Le client complet sert au journal d'audit ; les dépôts partenaires ne voient
+// que l'interface étroite.
+function createPartnerAdminClients(config: SupabasePublicConfig): {
+  readonly repo: PartnerAdminRepositoryClient
+  readonly audit: ReturnType<typeof createSupabaseBrowserClient>
+} {
+  const audit = createSupabaseBrowserClient(config)
+  return { repo: audit as unknown as PartnerAdminRepositoryClient, audit }
+}
+
 function createPartnerAdminClient(
   config: SupabasePublicConfig,
 ): PartnerAdminRepositoryClient {
-  return createSupabaseBrowserClient(
-    config,
-  ) as unknown as PartnerAdminRepositoryClient
+  return createPartnerAdminClients(config).repo
+}
+
+function formatPartnerDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso.slice(0, 10)
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
 export function AdminPartnersTab({
@@ -72,6 +97,7 @@ export function AdminPartnersTab({
 }: {
   readonly authStatus: string
 }) {
+  const auth = useAuth()
   const [applications, setApplications] = useState<
     ReadonlyArray<PartnerApplicationAdminRow>
   >([])
@@ -80,6 +106,12 @@ export function AdminPartnersTab({
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState<
+    PartnerApplicationStatus | 'all'
+  >('all')
+  const [dealStatusFilter, setDealStatusFilter] = useState<
+    PartnerDealStatus | 'all'
+  >('all')
   const [reservations, setReservations] = useState<
     ReadonlyArray<AdminReservationRow>
   >([])
@@ -123,26 +155,40 @@ export function AdminPartnersTab({
 
   const filteredApplications = useMemo(() => {
     const needle = search.trim().toLowerCase()
-    if (!needle) return applications
-    return applications.filter((row) =>
-      [
+    return applications.filter((row) => {
+      if (
+        applicationStatusFilter !== 'all' &&
+        row.status !== applicationStatusFilter
+      ) {
+        return false
+      }
+      if (!needle) return true
+      return [
         row.companyName,
         row.contactName,
         row.contactEmail,
         row.siret ?? '',
         row.territory ?? '',
+        row.website ?? '',
+        row.activityProfileLabel ?? '',
+        row.targetStatusLabel ?? '',
+        row.partnerRef ?? '',
+        row.utmSource ?? '',
       ]
         .join(' ')
         .toLowerCase()
-        .includes(needle),
-    )
-  }, [applications, search])
+        .includes(needle)
+    })
+  }, [applications, applicationStatusFilter, search])
 
   const filteredDeals = useMemo(() => {
     const needle = search.trim().toLowerCase()
-    if (!needle) return deals
-    return deals.filter((row) =>
-      [
+    return deals.filter((row) => {
+      if (dealStatusFilter !== 'all' && row.status !== dealStatusFilter) {
+        return false
+      }
+      if (!needle) return true
+      return [
         row.partnerCompanyName,
         row.partnerContactEmail,
         row.clientCompanyName,
@@ -153,9 +199,9 @@ export function AdminPartnersTab({
       ]
         .join(' ')
         .toLowerCase()
-        .includes(needle),
-    )
-  }, [deals, search])
+        .includes(needle)
+    })
+  }, [deals, dealStatusFilter, search])
 
   async function changeApplicationStatus(
     row: PartnerApplicationAdminRow,
@@ -163,9 +209,16 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      await updatePartnerApplicationStatus(client, row.id, status)
+      await updatePartnerApplicationStatus(repo, row.id, status)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_application.status_change',
+        target: row.id,
+        previousValue: row.status,
+        nextValue: status,
+        extra: { company: row.companyName },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -180,9 +233,17 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      const result = await createPartnerCodeForApplication(client, row.id)
+      const result = await createPartnerCodeForApplication(repo, row.id)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: result.created
+          ? 'partner_application.code_create'
+          : 'partner_application.code_reuse',
+        target: row.id,
+        nextValue: result.code,
+        extra: { company: row.companyName, linkedUser: result.linkedUser },
+      })
       const link = buildPartnerLink(result.code)
       try {
         await navigator.clipboard.writeText(link)
@@ -213,9 +274,19 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      await updatePartnerDealStatus(client, row.id, status)
+      await updatePartnerDealStatus(repo, row.id, status)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_deal.status_change',
+        target: row.id,
+        previousValue: row.status,
+        nextValue: status,
+        extra: {
+          partner: row.partnerCompanyName,
+          client: row.clientCompanyName,
+        },
+      })
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
@@ -229,9 +300,16 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      const slug = await updatePartnerApplicationSlug(client, row.id, rawSlug)
+      const slug = await updatePartnerApplicationSlug(repo, row.id, rawSlug)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_application.slug_change',
+        target: row.id,
+        previousValue: row.partnerReferralSlug,
+        nextValue: slug,
+        extra: { company: row.companyName },
+      })
       toast.success(slug ? `Lien partenaire enregistré` : 'Slug effacé', {
         description: slug ? buildPartnerSharePath({ slug }) : undefined,
       })
@@ -250,9 +328,16 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      const slug = await updatePartnerDealSlug(client, row.id, rawSlug)
+      const slug = await updatePartnerDealSlug(repo, row.id, rawSlug)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_deal.slug_change',
+        target: row.id,
+        previousValue: row.partnerReferralSlug,
+        nextValue: slug,
+        extra: { partner: row.partnerCompanyName },
+      })
       toast.success(slug ? `Lien deal enregistré` : 'Slug effacé', {
         description: slug ? buildPartnerSharePath({ slug }) : undefined,
       })
@@ -271,9 +356,14 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      await updatePartnerApplicationNote(client, row.id, note)
+      await updatePartnerApplicationNote(repo, row.id, note)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_application.note_change',
+        target: row.id,
+        extra: { company: row.companyName },
+      })
       toast.success('Note interne enregistrée')
       await refresh()
     } catch (err) {
@@ -290,9 +380,14 @@ export function AdminPartnersTab({
   ): Promise<void> {
     if (!isConfigured) return
     setBusyId(row.id)
-    const client = createPartnerAdminClient(config)
+    const { repo, audit } = createPartnerAdminClients(config)
     try {
-      await updatePartnerDealNote(client, row.id, note)
+      await updatePartnerDealNote(repo, row.id, note)
+      await logAdminAction(audit, auth.user?.id ?? null, {
+        action: 'partner_deal.note_change',
+        target: row.id,
+        extra: { partner: row.partnerCompanyName },
+      })
       toast.success('Note interne enregistrée')
       await refresh()
     } catch (err) {
@@ -303,11 +398,12 @@ export function AdminPartnersTab({
     setBusyId(null)
   }
 
-  // Attributed reservations are only needed when an admin opens a partner
-  // detail panel, so they load lazily (latest 100 reservations) on first open.
+  // Les réservations attribuées ne servent qu'au dépliage d'une candidature :
+  // chargement paresseux (500 dernières réservations) à la première ouverture.
   async function ensureReservationsLoaded(): Promise<void> {
     if (!isConfigured) return
-    if (reservationsState === 'loading' || reservationsState === 'loaded') return
+    if (reservationsState === 'loading' || reservationsState === 'loaded')
+      return
     setReservationsState('loading')
     try {
       const client = createSupabaseBrowserClient(config)
@@ -348,10 +444,42 @@ export function AdminPartnersTab({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          placeholder="Rechercher partenaire / client / SIRET / ville"
+          placeholder="Rechercher partenaire / client / SIRET / ville / profil"
           onChange={(event) => setSearch(event.target.value)}
           className="h-9 max-w-sm text-xs"
         />
+        <select
+          value={applicationStatusFilter}
+          onChange={(event) =>
+            setApplicationStatusFilter(
+              event.target.value as PartnerApplicationStatus | 'all',
+            )
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer les candidatures par statut"
+        >
+          <option value="all">Candidatures : tous statuts</option>
+          {APPLICATION_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {PARTNER_APPLICATION_STATUS_LABEL[status]}
+            </option>
+          ))}
+        </select>
+        <select
+          value={dealStatusFilter}
+          onChange={(event) =>
+            setDealStatusFilter(event.target.value as PartnerDealStatus | 'all')
+          }
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer les opportunités par statut"
+        >
+          <option value="all">Opportunités : tous statuts</option>
+          {DEAL_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {PARTNER_DEAL_STATUS_LABEL[status]}
+            </option>
+          ))}
+        </select>
         <Button
           type="button"
           size="sm"
@@ -367,17 +495,44 @@ export function AdminPartnersTab({
                   header: 'Type',
                   value: (r) => PARTNER_KIND_LABEL[r.partnerKind],
                 },
+                {
+                  header: 'Profil',
+                  value: (r) => r.activityProfileLabel ?? '',
+                },
+                {
+                  header: 'Statut visé',
+                  value: (r) => r.targetStatusLabel ?? '',
+                },
                 { header: 'Contact', value: (r) => r.contactName },
                 { header: 'Email', value: (r) => r.contactEmail },
                 { header: 'Téléphone', value: (r) => r.contactPhone },
                 { header: 'SIRET', value: (r) => r.siret ?? '' },
+                {
+                  header: 'SIRET vérifié',
+                  value: (r) => (r.siretVerified ? 'oui' : 'non'),
+                },
+                { header: 'Site web', value: (r) => r.website ?? '' },
                 { header: 'Territoire', value: (r) => r.territory ?? '' },
-                { header: 'Volume', value: (r) => r.expectedMonthlyVolume ?? '' },
+                {
+                  header: 'Volume',
+                  value: (r) => r.expectedMonthlyVolume ?? '',
+                },
                 {
                   header: 'Statut',
                   value: (r) => PARTNER_APPLICATION_STATUS_LABEL[r.status],
                 },
                 { header: 'Slug', value: (r) => r.partnerReferralSlug ?? '' },
+                {
+                  header: 'Source',
+                  value: (r) => partnerSourceLabel(r.source),
+                },
+                { header: 'UTM source', value: (r) => r.utmSource ?? '' },
+                { header: 'UTM medium', value: (r) => r.utmMedium ?? '' },
+                { header: 'UTM campagne', value: (r) => r.utmCampaign ?? '' },
+                {
+                  header: 'Partenaire (ref)',
+                  value: (r) => r.partnerRef ?? '',
+                },
                 { header: 'Note interne', value: (r) => r.internalNote ?? '' },
               ]),
             )
@@ -397,7 +552,10 @@ export function AdminPartnersTab({
               toCsv(filteredDeals, [
                 { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
                 { header: 'Partenaire', value: (r) => r.partnerCompanyName },
-                { header: 'Email partenaire', value: (r) => r.partnerContactEmail },
+                {
+                  header: 'Email partenaire',
+                  value: (r) => r.partnerContactEmail,
+                },
                 { header: 'Client', value: (r) => r.clientCompanyName },
                 { header: 'SIRET client', value: (r) => r.clientSiret ?? '' },
                 { header: 'Email client', value: (r) => r.clientEmail ?? '' },
@@ -411,7 +569,16 @@ export function AdminPartnersTab({
                   header: 'Statut',
                   value: (r) => PARTNER_DEAL_STATUS_LABEL[r.status],
                 },
-                { header: 'Protégé jusqu’au', value: (r) => r.protectedUntil ?? '' },
+                {
+                  header: 'Protégé jusqu’au',
+                  value: (r) => r.protectedUntil ?? '',
+                },
+                { header: 'Slug', value: (r) => r.partnerReferralSlug ?? '' },
+                {
+                  header: 'Source',
+                  value: (r) => partnerSourceLabel(r.source),
+                },
+                { header: 'Note interne', value: (r) => r.internalNote ?? '' },
               ]),
             )
           }
@@ -554,20 +721,30 @@ function ApplicationCard({
         <div>
           <div className="font-medium">{row.companyName}</div>
           <div className="mt-1 text-xs text-muted-foreground">
+            {formatPartnerDate(row.createdAt)} ·{' '}
             {PARTNER_KIND_LABEL[row.partnerKind]} · {row.contactName}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {row.contactEmail} · {row.contactPhone}
           </div>
+          {(row.activityProfileLabel || row.targetStatusLabel) && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {[row.activityProfileLabel, row.targetStatusLabel]
+                .filter(Boolean)
+                .join(' · ')}
+            </div>
+          )}
           {row.internalNote && (
-            <p className="mt-2 rounded-sm bg-[color:var(--ochre)]/10 px-2 py-1 text-[11px] leading-4 text-foreground">
+            <p className="bg-[color:var(--ochre)]/10 mt-2 rounded-sm px-2 py-1 text-[11px] leading-4 text-foreground">
               📝 {row.internalNote}
             </p>
           )}
         </div>
         <div>
           <div className="text-xs text-muted-foreground">
-            SIRET {row.siret ?? 'à compléter'} ·{' '}
+            SIRET {row.siret ?? 'à compléter'}
+            {row.siret && (row.siretVerified ? ' (vérifié)' : ' (à vérifier)')}
+            {' · '}
             {row.territory ?? 'zone à cadrer'}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
@@ -622,14 +799,16 @@ function ApplicationCard({
             onClick={toggleExpanded}
             className="h-8 w-full px-2 text-xs"
           >
-            {expanded ? 'Masquer le détail' : 'Détail'} ·{' '}
-            {linkedDeals.length} deal{linkedDeals.length > 1 ? 's' : ''}
+            {expanded ? 'Masquer le détail' : 'Détail'} · {linkedDeals.length}{' '}
+            deal{linkedDeals.length > 1 ? 's' : ''}
           </Button>
         </div>
       </article>
 
       {expanded && (
-        <div className="border-t border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/30 px-4 py-4">
+        <div className="bg-[color:var(--sand-soft)]/30 border-t border-[color:var(--sand-deep)] px-4 py-4">
+          <ApplicationDetailFacts row={row} />
+
           <NoteEditor
             label="Note interne (candidature)"
             currentNote={row.internalNote}
@@ -646,6 +825,63 @@ function ApplicationCard({
         </div>
       )}
     </div>
+  )
+}
+
+// Fiche candidature : ce que le formulaire /partenaires collecte mais que la
+// ligne compacte ne montre pas (profil, statut visé, site, origine marketing).
+function ApplicationDetailFacts({
+  row,
+}: {
+  readonly row: PartnerApplicationAdminRow
+}) {
+  const facts: ReadonlyArray<{
+    readonly label: string
+    readonly value: ReactNode
+  }> = [
+    { label: 'Reçue le', value: formatPartnerDate(row.createdAt) },
+    { label: 'Profil', value: row.activityProfileLabel ?? 'non renseigné' },
+    { label: 'Statut visé', value: row.targetStatusLabel ?? 'non renseigné' },
+    {
+      label: 'Site web',
+      value: row.website ? (
+        <a
+          href={
+            /^https?:\/\//i.test(row.website)
+              ? row.website
+              : `https://${row.website}`
+          }
+          target="_blank"
+          rel="noreferrer"
+          className="text-[color:var(--ember)] hover:underline"
+        >
+          {row.website}
+        </a>
+      ) : (
+        'non renseigné'
+      ),
+    },
+    {
+      label: 'SIRET',
+      value: row.siret
+        ? `${row.siret} · ${row.siretVerified ? 'vérifié' : 'à vérifier'}`
+        : 'à compléter',
+    },
+    { label: 'Origine', value: describePartnerApplicationOrigin(row) },
+    { label: 'Source', value: partnerSourceLabel(row.source) || '—' },
+  ]
+
+  return (
+    <dl className="mb-4 grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-2 lg:grid-cols-3">
+      {facts.map((fact) => (
+        <div key={fact.label} className="min-w-0">
+          <dt className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+            {fact.label}
+          </dt>
+          <dd className="truncate">{fact.value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -751,7 +987,7 @@ function PartnerDetailReservations({
         </p>
       ) : reservations.length === 0 ? (
         <p className="mt-1 text-xs text-muted-foreground">
-          Aucune réservation attribuée (sur les 100 dernières).
+          Aucune réservation attribuée (sur les 500 dernières).
         </p>
       ) : (
         <ul className="mt-1.5 space-y-1.5">
@@ -804,7 +1040,9 @@ function DealCard({
           {row.clientEmail ?? 'email à compléter'}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {row.projectType} · {row.projectCity ?? 'ville à cadrer'}
+          {formatPartnerDate(row.createdAt)} · {row.projectType} ·{' '}
+          {row.projectCity ?? 'ville à cadrer'}
+          {row.source ? ` · ${partnerSourceLabel(row.source)}` : ''}
         </div>
         <NoteEditor
           label="Note interne (deal)"
@@ -864,9 +1102,7 @@ function DealCard({
   )
 }
 
-function reservationStatusLabel(
-  status: AdminReservationRow['status'],
-): string {
+function reservationStatusLabel(status: AdminReservationRow['status']): string {
   const labels = ACCOUNT_RESERVATION_STATUS_LABEL as Record<string, string>
   return labels[status] ?? status
 }
@@ -904,7 +1140,9 @@ function PartnerShareLinkEditor({
   const normalized = normalizePartnerSlug(value)
   const trimmedEmpty = value.trim() === ''
   const isInvalid = !trimmedEmpty && !normalized
-  const sharePath = normalized ? buildPartnerSharePath({ slug: normalized }) : null
+  const sharePath = normalized
+    ? buildPartnerSharePath({ slug: normalized })
+    : null
   const dirty = (currentSlug ?? '') !== (normalized ?? '')
 
   async function copyLink(): Promise<void> {
@@ -919,7 +1157,7 @@ function PartnerShareLinkEditor({
   }
 
   return (
-    <div className="mt-3 rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/40 p-2.5">
+    <div className="bg-[color:var(--sand-soft)]/40 mt-3 rounded-sm border border-[color:var(--sand-deep)] p-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
           Lien partageable

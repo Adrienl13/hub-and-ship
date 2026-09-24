@@ -25,7 +25,21 @@ const CLAIM_STATUSES: ReadonlyArray<ReservationClaimStatus> = [
   'rejected',
 ]
 
-export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) {
+function formatClaimDate(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso.slice(0, 10)
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+export function AdminClaimsTab({
+  authStatus,
+}: {
+  readonly authStatus: string
+}) {
   const [claims, setClaims] = useState<ReadonlyArray<AdminClaimRow>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +85,9 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
       return [
         c.reservationReference ?? '',
         c.reservationSiret ?? '',
+        c.companyName ?? '',
+        c.contactName ?? '',
+        c.contactEmail ?? '',
         c.message,
         CLAIM_CATEGORY_LABEL[c.category],
       ]
@@ -87,11 +104,16 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
       { header: 'Date', value: (c) => c.createdAt.slice(0, 10) },
       { header: 'Réservation', value: (c) => c.reservationReference ?? '' },
       { header: 'SIRET', value: (c) => c.reservationSiret ?? '' },
+      { header: 'Société', value: (c) => c.companyName ?? '' },
+      { header: 'Contact', value: (c) => c.contactName ?? '' },
+      { header: 'Email', value: (c) => c.contactEmail ?? '' },
+      { header: 'Téléphone', value: (c) => c.contactPhone ?? '' },
       { header: 'Catégorie', value: (c) => CLAIM_CATEGORY_LABEL[c.category] },
       { header: 'Statut', value: (c) => CLAIM_STATUS_LABEL[c.status] },
       { header: 'Quantité', value: (c) => c.quantity ?? '' },
       { header: 'Message', value: (c) => c.message },
       { header: 'Réponse', value: (c) => c.adminResponse ?? '' },
+      { header: 'Mise à jour', value: (c) => c.updatedAt.slice(0, 10) },
     ])
     downloadCsv(`sav-${new Date().toISOString().slice(0, 10)}.csv`, csv)
   }
@@ -155,9 +177,10 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          placeholder="Rechercher référence / SIRET / motif"
+          placeholder="Rechercher référence / SIRET / société / contact / motif"
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 max-w-sm text-xs"
+          aria-label="Rechercher une réclamation"
         />
         <select
           value={statusFilter}
@@ -165,6 +188,7 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
             setStatusFilter(e.target.value as ReservationClaimStatus | 'all')
           }
           className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Filtrer par statut"
         >
           <option value="all">Tous statuts</option>
           {CLAIM_STATUSES.map((s) => (
@@ -205,7 +229,9 @@ export function AdminClaimsTab({ authStatus }: { readonly authStatus: string }) 
                 claim={claim}
                 busy={busyId === claim.id}
                 onChangeStatus={(status) => void changeStatus(claim, status)}
-                onSaveResponse={(response) => void saveResponse(claim, response)}
+                onSaveResponse={(response) =>
+                  void saveResponse(claim, response)
+                }
               />
             ))}
           </div>
@@ -239,25 +265,53 @@ function ClaimCard({
           {claim.reservationReference ?? 'Réservation'}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
-          SIRET {claim.reservationSiret ?? '—'}
+          {formatClaimDate(claim.createdAt)} · SIRET{' '}
+          {claim.reservationSiret ?? '—'}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
           {CLAIM_CATEGORY_LABEL[claim.category]}
           {claim.quantity ? ` · ${claim.quantity} unité(s)` : ''}
+        </div>
+        <div className="mt-2 space-y-0.5 text-xs">
+          <div className="font-medium">{claim.companyName ?? '—'}</div>
+          {claim.contactName && (
+            <div className="text-muted-foreground">{claim.contactName}</div>
+          )}
+          <div className="flex flex-wrap gap-x-2">
+            {claim.contactEmail && (
+              <a
+                href={`mailto:${claim.contactEmail}`}
+                className="text-[color:var(--ember)] hover:underline"
+              >
+                {claim.contactEmail}
+              </a>
+            )}
+            {claim.contactPhone && (
+              <a
+                href={`tel:${claim.contactPhone.replace(/\s+/g, '')}`}
+                className="text-[color:var(--ember)] hover:underline"
+              >
+                {claim.contactPhone}
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
       <div>
         <p className="text-foreground/85 text-xs leading-5">{claim.message}</p>
         <div className="mt-2">
-          <textarea
-            value={response}
-            disabled={busy}
-            rows={2}
-            placeholder="Réponse au client…"
-            onChange={(e) => setResponse(e.target.value)}
-            className="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-xs"
-          />
+          <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+            Réponse au client
+            <textarea
+              value={response}
+              disabled={busy}
+              rows={2}
+              placeholder="Réponse au client…"
+              onChange={(e) => setResponse(e.target.value)}
+              className="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-xs font-normal normal-case tracking-normal text-foreground"
+            />
+          </label>
           <Button
             type="button"
             size="sm"
@@ -282,6 +336,7 @@ function ClaimCard({
             onChangeStatus(e.target.value as ReservationClaimStatus)
           }
           className="h-8 w-full rounded-sm border border-input bg-transparent px-2 text-xs"
+          aria-label="Changer le statut"
         >
           {CLAIM_STATUSES.map((s) => (
             <option key={s} value={s}>

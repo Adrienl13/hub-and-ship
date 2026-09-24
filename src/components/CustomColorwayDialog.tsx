@@ -117,13 +117,23 @@ export function CustomColorwayDialog({
       .filter(Boolean)
       .join('\n')
 
-    const draftResult = buildContactMessageDraft({
+    // Le même contexte part structuré pour la table contact_requests :
+    // source « coloris sur mesure », produit et design regardé en colonnes.
+    const body = {
       name,
       email,
       phone,
       topic: 'produit',
+      source: 'custom_colorway',
+      product: {
+        sku: product.sku,
+        name: product.name,
+        design: variant?.name ?? null,
+      },
       message,
-    })
+    }
+
+    const draftResult = buildContactMessageDraft(body)
     if (!draftResult.ok) {
       toast.error('Demande à compléter', { description: draftResult.error })
       return
@@ -136,11 +146,7 @@ export function CustomColorwayDialog({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
-          phone,
-          topic: 'produit',
-          message,
+          ...body,
           attribution: getAttributionFields(Date.now()),
         }),
       })

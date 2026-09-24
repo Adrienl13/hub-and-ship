@@ -4,48 +4,57 @@ import {
   AlertTriangle,
   ArrowRight,
   Boxes,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   LayoutDashboard,
   PackageCheck,
   Handshake,
   Ship,
   ShoppingCart,
-  type LucideIcon,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { AdminGuard } from '@/components/AdminGuard'
+import { AdminOverviewKpis } from '@/components/AdminOverviewKpis'
+import { Kpi } from '@/components/admin/Kpi'
 import { AdminReservationQuoteUpload } from '@/components/AdminReservationQuoteUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/useAuth'
 import {
+  RESERVATION_PERIOD_OPTIONS,
+  deliveryModeLabel,
+  describeReservationOrigin,
   listAllReservations,
+  listReservationItems,
   updateReservationAdminNote,
   updateReservationStatus,
+  type AdminReservationItemRow,
   type AdminReservationRow,
   type AdminReservationsClient,
+  type ReservationPeriodDays,
 } from '@/lib/account/admin-reservations.repository'
 import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 
 import { logAdminAction } from '@/lib/admin/audit-log'
 import { downloadCsv, toCsv } from '@/lib/admin/csv'
-import {
-  issueInvoice,
-  type InvoicesClient,
-} from '@/lib/account/invoices'
+import { formatAdminDate, telHref } from '@/lib/admin/format'
+import { stockRequestSourceLabel } from '@/lib/admin/origin'
+import { issueInvoice, type InvoicesClient } from '@/lib/account/invoices'
 import { sendInvoiceEmail } from '@/lib/email/invoice-email'
 import { sendReservationCancelled } from '@/lib/email/reservation-cancelled'
 import {
   loadAdminOverview,
   type AdminOverviewClient,
-  type AdminOverviewKpis,
+  type AdminOverviewKpis as AdminOverviewKpisData,
 } from '@/lib/admin/overview'
 import { formatEUR } from '@/lib/order'
 import {
+  describeStockRequestOrigin,
   listAllStockRequests,
   updateStockRequestInternalNote,
   updateStockRequestStatus,
@@ -54,7 +63,10 @@ import {
 } from '@/lib/stock-requests/admin-repository'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { AdminCommandCenter } from '@/components/AdminCommandCenter'
-import { getSupabasePublicConfig } from '@/lib/supabase/env'
+import {
+  getSupabasePublicConfig,
+  type SupabasePublicConfig,
+} from '@/lib/supabase/env'
 import type {
   ReservationStatus,
   StockRequestStatus,
@@ -64,6 +76,7 @@ const ADMIN_TABS = [
   'studio',
   'overview',
   'stock-requests',
+  'demandes',
   'reservations',
   'companies',
   'commissions',
@@ -114,7 +127,11 @@ const LazyAdminContainersTab = lazy(() =>
   })),
 )
 
-const LazyAdminStudioTab = lazy(() => import('@/components/AdminStudioTab').then((module) => ({ default: module.AdminStudioTab })))
+const LazyAdminStudioTab = lazy(() =>
+  import('@/components/AdminStudioTab').then((module) => ({
+    default: module.AdminStudioTab,
+  })),
+)
 
 const LazyAdminSiteMediaTab = lazy(() =>
   import('@/components/AdminSiteMediaTab').then((module) => ({
@@ -123,7 +140,9 @@ const LazyAdminSiteMediaTab = lazy(() =>
 )
 
 const LazyAdminShowroomTab = lazy(() =>
-  import('@/components/AdminShowroomTab').then(module => ({ default: module.AdminShowroomTab })),
+  import('@/components/AdminShowroomTab').then((module) => ({
+    default: module.AdminShowroomTab,
+  })),
 )
 
 const LazyAdminQualityReportsTab = lazy(() =>
@@ -171,6 +190,12 @@ const LazyAdminReferralsTab = lazy(() =>
 const LazyAdminLeadsTab = lazy(() =>
   import('@/components/AdminLeadsTab').then((module) => ({
     default: module.AdminLeadsTab,
+  })),
+)
+
+const LazyAdminContactRequestsTab = lazy(() =>
+  import('@/components/AdminContactRequestsTab').then((module) => ({
+    default: module.AdminContactRequestsTab,
   })),
 )
 
@@ -266,8 +291,8 @@ function AdminPage() {
               Pilotage opérationnel
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Vue compacte pour suivre les réservations, les demandes stock 24h,
-              le catalogue et le remplissage du container.
+              Vue compacte pour suivre les réservations, les demandes stock 24h
+              et de contact, le catalogue et le remplissage du container.
             </p>
           </div>
           <AdminAccessBox
@@ -283,6 +308,7 @@ function AdminPage() {
             [
               ['overview', 'Vue générale'],
               ['stock-requests', 'Demandes stock'],
+              ['demandes', 'Demandes'],
               ['reservations', 'Réservations'],
               ['companies', 'Comptes'],
               ['commissions', 'Commissions'],
@@ -321,9 +347,43 @@ function AdminPage() {
         </div>
 
         {activeTab === 'overview' && (
-          <div className="space-y-6">
-            <AdminCommandCenter onNavigate={setActiveTab} />
-            <Overview onNavigate={setActiveTab} />
+          <div className="space-y-8">
+            <section
+              aria-labelledby="admin-overview-todo"
+              className="space-y-3"
+            >
+              <h2
+                id="admin-overview-todo"
+                className="label-eyebrow text-muted-foreground"
+              >
+                À traiter
+              </h2>
+              <AdminCommandCenter onNavigate={setActiveTab} />
+            </section>
+            <section
+              aria-labelledby="admin-overview-activity"
+              className="space-y-3"
+            >
+              <h2
+                id="admin-overview-activity"
+                className="label-eyebrow text-muted-foreground"
+              >
+                Activité 12 mois
+              </h2>
+              <AdminOverviewKpis />
+            </section>
+            <section
+              aria-labelledby="admin-overview-operations"
+              className="space-y-3"
+            >
+              <h2
+                id="admin-overview-operations"
+                className="label-eyebrow text-muted-foreground"
+              >
+                Opérationnel
+              </h2>
+              <Overview onNavigate={setActiveTab} />
+            </section>
           </div>
         )}
         {activeTab === 'stock-requests' && (
@@ -333,6 +393,9 @@ function AdminPage() {
           <ReservationsAdminPanel authStatus={auth.status} />
         )}
         <Suspense fallback={<AdminTabLoading />}>
+          {activeTab === 'demandes' && (
+            <LazyAdminContactRequestsTab authStatus={auth.status} />
+          )}
           {activeTab === 'products' && (
             <LazyAdminCatalogueTab authStatus={auth.status} />
           )}
@@ -454,10 +517,8 @@ function Overview({
   readonly onNavigate: (tab: AdminTab) => void
 }) {
   const config = useMemo(() => getSupabasePublicConfig(), [])
-  const [kpis, setKpis] = useState<AdminOverviewKpis | null>(null)
-  const [state, setState] = useState<'loading' | 'loaded' | 'error'>(
-    'loading',
-  )
+  const [kpis, setKpis] = useState<AdminOverviewKpisData | null>(null)
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
 
   useEffect(() => {
     let cancelled = false
@@ -487,8 +548,8 @@ function Overview({
   if (state === 'error') {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-4 text-sm">
-        Indicateurs indisponibles : connectez-vous avec un compte
-        administrateur pour lire les réservations, le stock et les containers.
+        Indicateurs indisponibles : connectez-vous avec un compte administrateur
+        pour lire les réservations, le stock et les containers.
       </div>
     )
   }
@@ -499,7 +560,7 @@ function Overview({
         {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-28 animate-pulse rounded-md border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+            className="bg-[color:var(--sand-soft)]/50 h-28 animate-pulse rounded-md border border-[color:var(--sand-deep)]"
           />
         ))}
       </div>
@@ -719,8 +780,8 @@ function StockRequestsAdminPanel({
   if (!isConfigured) {
     return (
       <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 rounded-md border p-6 text-sm">
-        Supabase non configuré : les demandes stock ne sont pas disponibles
-        dans cet environnement.
+        Supabase non configuré : les demandes stock ne sont pas disponibles dans
+        cet environnement.
       </div>
     )
   }
@@ -772,15 +833,33 @@ function StockRequestsAdminPanel({
             downloadCsv(
               `stock-leads-${new Date().toISOString().slice(0, 10)}.csv`,
               toCsv(filteredRows, [
-                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Date', value: (r) => formatAdminDate(r.createdAt) },
                 { header: 'Produit', value: (r) => r.productName },
+                { header: 'SKU', value: (r) => r.sku },
+                { header: 'Variante', value: (r) => r.variantName },
                 { header: 'Quantité', value: (r) => r.requestedQuantity },
                 { header: 'Estimation HT', value: (r) => r.estimatedTotalHt },
+                { header: 'Lieu', value: (r) => r.location },
                 { header: 'Société', value: (r) => r.companyName },
                 { header: 'Email', value: (r) => r.contactEmail },
                 { header: 'Téléphone', value: (r) => r.contactPhone },
-                { header: 'Statut', value: (r) => r.status },
-                { header: 'Note', value: (r) => r.customerNote ?? '' },
+                {
+                  header: 'Statut',
+                  value: (r) => STOCK_REQUEST_STATUS_LABEL_LOCAL[r.status],
+                },
+                {
+                  header: 'Source',
+                  value: (r) => stockRequestSourceLabel(r.source),
+                },
+                { header: 'UTM source', value: (r) => r.utmSource ?? '' },
+                { header: 'UTM medium', value: (r) => r.utmMedium ?? '' },
+                { header: 'UTM campagne', value: (r) => r.utmCampaign ?? '' },
+                {
+                  header: 'Partenaire (ref)',
+                  value: (r) => r.partnerRef ?? '',
+                },
+                { header: 'Note client', value: (r) => r.customerNote ?? '' },
+                { header: 'Note interne', value: (r) => r.internalNote ?? '' },
               ]),
             )
           }
@@ -814,8 +893,24 @@ function StockRequestsAdminPanel({
                 >
                   <div className="min-w-0">
                     <div className="font-medium">{row.companyName}</div>
-                    <div className="mt-1 truncate text-xs text-muted-foreground">
-                      {row.contactEmail} · {row.contactPhone}
+                    <div className="mt-1 flex flex-wrap gap-x-1.5 text-xs text-muted-foreground">
+                      <a
+                        href={`mailto:${row.contactEmail}`}
+                        className="truncate hover:underline"
+                      >
+                        {row.contactEmail}
+                      </a>
+                      <span>·</span>
+                      <a
+                        href={telHref(row.contactPhone)}
+                        className="hover:underline"
+                      >
+                        {row.contactPhone}
+                      </a>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {formatAdminDate(row.createdAt)} · Origine :{' '}
+                      {describeStockRequestOrigin(row)}
                     </div>
                   </div>
                   <div className="min-w-0">
@@ -828,6 +923,9 @@ function StockRequestsAdminPanel({
                     <div className="mt-1 text-xs text-muted-foreground">
                       {row.requestedQuantity} u / {row.availableUnitsSnapshot} ·{' '}
                       {formatEUR(row.estimatedTotalHt)}
+                    </div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      Lieu : {row.location || '—'}
                     </div>
                   </div>
                   <StatusPill
@@ -957,9 +1055,15 @@ function ReservationsAdminPanel({
     'all',
   )
   const [search, setSearch] = useState('')
+  // Période chargée côté base (500 lignes max) ; « tout » reste possible.
+  const [periodDays, setPeriodDays] = useState<ReservationPeriodDays>(90)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const config = useMemo(() => getSupabasePublicConfig(), [])
   const isConfigured = config.isConfigured
+  const periodLabel =
+    RESERVATION_PERIOD_OPTIONS.find((option) => option.value === periodDays)
+      ?.label ?? 'Tout'
 
   const refresh = useMemo(() => {
     return async () => {
@@ -974,7 +1078,7 @@ function ReservationsAdminPanel({
         config,
       ) as AdminReservationsClient
       try {
-        const list = await listAllReservations(client)
+        const list = await listAllReservations(client, { periodDays })
         setRows(sortReservationsForAdmin(list))
         setError(null)
       } catch (err) {
@@ -982,7 +1086,7 @@ function ReservationsAdminPanel({
       }
       setLoading(false)
     }
-  }, [config, isConfigured])
+  }, [config, isConfigured, periodDays])
 
   useEffect(() => {
     void refresh()
@@ -1017,9 +1121,12 @@ function ReservationsAdminPanel({
         (row.companyLegalName?.toLowerCase().includes(needle) ?? false) ||
         (row.contactEmail?.toLowerCase().includes(needle) ?? false) ||
         (row.contactName?.toLowerCase().includes(needle) ?? false) ||
-        (row.partnerAttributionPartnerCompany
-          ?.toLowerCase()
-          .includes(needle) ??
+        (row.contactPhone?.replace(/\s+/g, '').includes(needle) ?? false) ||
+        (row.referralCode?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerRef?.toLowerCase().includes(needle) ?? false) ||
+        (row.utmSource?.toLowerCase().includes(needle) ?? false) ||
+        (row.utmCampaign?.toLowerCase().includes(needle) ?? false) ||
+        (row.partnerAttributionPartnerCompany?.toLowerCase().includes(needle) ??
           false) ||
         (row.partnerAttributionPartnerEmail?.toLowerCase().includes(needle) ??
           false) ||
@@ -1180,10 +1287,30 @@ function ReservationsAdminPanel({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          placeholder="Rechercher référence / SIRET / société / email / partenaire"
+          placeholder="Rechercher référence / SIRET / société / email / téléphone / code / partenaire"
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 max-w-sm text-xs"
         />
+        <select
+          value={periodDays === null ? 'all' : String(periodDays)}
+          onChange={(e) => {
+            const value = e.target.value
+            setPeriodDays(
+              value === 'all' ? null : (Number(value) as ReservationPeriodDays),
+            )
+          }}
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-xs"
+          aria-label="Période des réservations chargées"
+        >
+          {RESERVATION_PERIOD_OPTIONS.map((option) => (
+            <option
+              key={option.value === null ? 'all' : option.value}
+              value={option.value === null ? 'all' : String(option.value)}
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
         <select
           value={statusFilter}
           onChange={(e) =>
@@ -1266,27 +1393,68 @@ function ReservationsAdminPanel({
             downloadCsv(
               `reservations-${new Date().toISOString().slice(0, 10)}.csv`,
               toCsv(filteredRows, [
-                { header: 'Date', value: (r) => r.createdAt.slice(0, 10) },
+                { header: 'Date', value: (r) => formatAdminDate(r.createdAt) },
                 { header: 'Référence', value: (r) => r.reference },
                 { header: 'Container', value: (r) => r.containerReference },
                 { header: 'Société', value: (r) => r.companyLegalName ?? '' },
                 { header: 'SIRET', value: (r) => r.siret },
+                { header: 'Contact', value: (r) => r.contactName ?? '' },
                 { header: 'Email', value: (r) => r.contactEmail ?? '' },
-                { header: 'Statut', value: (r) => RESERVATION_STATUS_LABEL[r.status] },
+                { header: 'Téléphone', value: (r) => r.contactPhone ?? '' },
+                {
+                  header: 'Statut',
+                  value: (r) => RESERVATION_STATUS_LABEL[r.status],
+                },
                 { header: 'Total HT', value: (r) => r.totalHt },
+                { header: 'TTC', value: (r) => r.totalTtc },
+                { header: 'Volume m3', value: (r) => r.totalCbm },
                 { header: 'Frais réservation', value: (r) => r.reservationFee },
                 {
                   header: 'Frais payés',
                   value: (r) => (r.paidReservationFeeAt ? 'oui' : 'non'),
                 },
                 {
+                  header: 'Relances paiement',
+                  value: (r) => r.paymentReminderCount,
+                },
+                {
+                  header: 'Livraison',
+                  value: (r) => deliveryModeLabel(r.deliveryMode),
+                },
+                {
+                  header: 'Note livraison',
+                  value: (r) => r.deliveryNote ?? '',
+                },
+                { header: 'Code parrain', value: (r) => r.referralCode ?? '' },
+                { header: 'UTM source', value: (r) => r.utmSource ?? '' },
+                { header: 'UTM medium', value: (r) => r.utmMedium ?? '' },
+                { header: 'UTM campagne', value: (r) => r.utmCampaign ?? '' },
+                {
+                  header: 'Partenaire (ref)',
+                  value: (r) => r.partnerRef ?? '',
+                },
+                {
                   header: 'Partenaire',
-                  value: (r) => r.partnerAttributionPartnerCompany ?? '',
+                  value: (r) =>
+                    r.partnerAttributionPartnerCompany ??
+                    r.partnerLinkDisplayName ??
+                    r.partnerLinkSlug ??
+                    '',
                 },
                 {
                   header: 'Attribution',
-                  value: (r) => r.partnerAttributionReason ?? '',
+                  value: (r) =>
+                    r.partnerAttributionReason
+                      ? (PARTNER_ATTRIBUTION_REASON_LABEL[
+                          r.partnerAttributionReason
+                        ] ?? r.partnerAttributionReason)
+                      : '',
                 },
+                {
+                  header: 'Container demandé',
+                  value: (r) => r.requestedContainerType ?? '',
+                },
+                { header: 'Note admin', value: (r) => r.adminNotes ?? '' },
               ]),
             )
           }
@@ -1295,7 +1463,7 @@ function ReservationsAdminPanel({
           Exporter CSV
         </Button>
         <span className="text-xs text-muted-foreground">
-          {filteredRows.length} / {rows.length}
+          {filteredRows.length} / {rows.length} · {periodLabel.toLowerCase()}
         </span>
       </div>
 
@@ -1306,7 +1474,11 @@ function ReservationsAdminPanel({
           </div>
         ) : filteredRows.length === 0 ? (
           <div className="px-4 py-8 text-sm text-muted-foreground">
-            Aucune réservation.
+            {rows.length === 0 && periodDays !== null
+              ? `Aucune réservation sur la période (${periodLabel.toLowerCase()}). Élargissez la période.`
+              : rows.length === 0
+                ? 'Aucune réservation.'
+                : 'Aucune réservation ne correspond aux filtres.'}
           </div>
         ) : (
           <div className="divide-[color:var(--sand-deep)]/70 divide-y">
@@ -1314,6 +1486,7 @@ function ReservationsAdminPanel({
               const busy = busyId === row.id
               const actions = RESERVATION_ACTIONS[row.status]
               const isCancelling = cancellingId === row.id
+              const isExpanded = expandedId === row.id
               const readOnly =
                 row.status === 'delivered' || row.status === 'cancelled'
               const hasPartnerSignal =
@@ -1349,7 +1522,17 @@ function ReservationsAdminPanel({
                         )}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground">
+                      {formatAdminDate(row.createdAt)} ·{' '}
                       {row.containerReference} · SIRET {row.siret}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Origine : {describeReservationOrigin(row)}
+                      {row.referralCode && (
+                        <>
+                          {' · '}Code parrain{' '}
+                          <span className="font-mono">{row.referralCode}</span>
+                        </>
+                      )}
                     </div>
                     {hasPartnerSignal && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[color:var(--forest)]">
@@ -1357,19 +1540,22 @@ function ReservationsAdminPanel({
                         <span className="font-medium">
                           {partnerSignalLabel}
                         </span>
-                        {partnerSignalName && <span>· {partnerSignalName}</span>}
+                        {partnerSignalName && (
+                          <span>· {partnerSignalName}</span>
+                        )}
                         {row.partnerAttributionReason && (
-                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
+                          <span className="border-[color:var(--forest)]/25 rounded-sm border px-1.5 py-0.5">
                             {PARTNER_ATTRIBUTION_REASON_LABEL[
                               row.partnerAttributionReason
                             ] ?? row.partnerAttributionReason}
                           </span>
                         )}
-                        {!row.partnerAttributionReason && row.partnerLinkSlug && (
-                          <span className="rounded-sm border border-[color:var(--forest)]/25 px-1.5 py-0.5">
-                            {row.partnerLinkSlug}
-                          </span>
-                        )}
+                        {!row.partnerAttributionReason &&
+                          row.partnerLinkSlug && (
+                            <span className="border-[color:var(--forest)]/25 rounded-sm border px-1.5 py-0.5">
+                              {row.partnerLinkSlug}
+                            </span>
+                          )}
                       </div>
                     )}
                     {row.stripePaymentIntentId && (
@@ -1390,12 +1576,49 @@ function ReservationsAdminPanel({
                     <div className="truncate text-xs">
                       {row.companyLegalName ?? '—'}
                     </div>
-                    <div className="mt-1 truncate text-xs text-muted-foreground">
-                      {row.contactName ?? ''} · {row.contactEmail ?? ''}
+                    <div className="mt-1 flex flex-wrap gap-x-1.5 text-xs text-muted-foreground">
+                      {row.contactName && <span>{row.contactName}</span>}
+                      {row.contactEmail && (
+                        <a
+                          href={`mailto:${row.contactEmail}`}
+                          className="truncate hover:underline"
+                        >
+                          {row.contactEmail}
+                        </a>
+                      )}
+                      {row.contactPhone && (
+                        <a
+                          href={telHref(row.contactPhone)}
+                          className="hover:underline"
+                        >
+                          {row.contactPhone}
+                        </a>
+                      )}
                     </div>
                     <div className="mt-1 text-xs tabular-nums">
-                      {formatEUR(row.totalHt)} · {row.totalCbm.toFixed(1)} m³
+                      {formatEUR(row.totalHt)} HT · {formatEUR(row.totalTtc)}{' '}
+                      TTC · {row.totalCbm.toFixed(1)} m³
                     </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {deliveryModeLabel(row.deliveryMode)}
+                      {row.deliveryNote && (
+                        <span
+                          title={row.deliveryNote}
+                          className="line-clamp-1 break-words"
+                        >
+                          {row.deliveryNote}
+                        </span>
+                      )}
+                    </div>
+                    {row.paymentReminderCount > 0 && (
+                      <div className="mt-1 text-xs text-[color:var(--ember)]">
+                        {row.paymentReminderCount} relance
+                        {row.paymentReminderCount > 1 ? 's' : ''} paiement
+                        {row.paymentReminderLastAt
+                          ? ` · dernière le ${formatAdminDate(row.paymentReminderLastAt)}`
+                          : ''}
+                      </div>
+                    )}
                   </div>
                   <StatusPill label={RESERVATION_STATUS_LABEL[row.status]} />
                   <div className="flex flex-wrap gap-1.5">
@@ -1437,6 +1660,21 @@ function ReservationsAdminPanel({
                       )}
                     <AdminReservationQuoteUpload reservationId={row.id} />
                     <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-sm px-2 text-[11px]"
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpandedId(isExpanded ? null : row.id)}
+                    >
+                      Produits
+                      {isExpanded ? (
+                        <ChevronUp className="ml-1 h-3 w-3" />
+                      ) : (
+                        <ChevronDown className="ml-1 h-3 w-3" />
+                      )}
+                    </Button>
+                    <Button
                       asChild
                       variant="outline"
                       size="sm"
@@ -1447,6 +1685,15 @@ function ReservationsAdminPanel({
                       </a>
                     </Button>
                   </div>
+
+                  {isExpanded && (
+                    <div className="col-span-full">
+                      <ReservationItemsDetail
+                        reservationId={row.id}
+                        config={config}
+                      />
+                    </div>
+                  )}
 
                   {isCancelling && (
                     <div className="border-[color:var(--ochre)]/40 bg-[color:var(--ochre)]/10 col-span-full rounded-md border p-3 text-xs">
@@ -1511,6 +1758,126 @@ function ReservationsAdminPanel({
   )
 }
 
+// Lignes produits d'une réservation : chargées uniquement au dépliage, pour ne
+// pas alourdir la liste (500 réservations max).
+function ReservationItemsDetail({
+  reservationId,
+  config,
+}: {
+  readonly reservationId: string
+  readonly config: SupabasePublicConfig
+}) {
+  const [items, setItems] = useState<ReadonlyArray<AdminReservationItemRow>>([])
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setState('loading')
+    void (async () => {
+      try {
+        const client = createSupabaseBrowserClient(
+          config,
+        ) as AdminReservationsClient
+        const next = await listReservationItems(client, reservationId)
+        if (!cancelled) {
+          setItems(next)
+          setState('loaded')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setMessage(err instanceof Error ? err.message : 'Erreur inconnue')
+          setState('error')
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [config, reservationId])
+
+  if (state === 'loading') {
+    return (
+      <div className="bg-[color:var(--sand-soft)]/40 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-xs text-muted-foreground">
+        Chargement des lignes produits…
+      </div>
+    )
+  }
+
+  if (state === 'error') {
+    return (
+      <div className="rounded-sm border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-900">
+        Lignes produits indisponibles : {message}
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-[color:var(--sand-soft)]/40 rounded-sm border border-[color:var(--sand-deep)] px-3 py-2 text-xs text-muted-foreground">
+        Aucune ligne produit enregistrée pour cette réservation.
+      </div>
+    )
+  }
+
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0)
+
+  return (
+    <div className="bg-[color:var(--sand-soft)]/40 overflow-x-auto rounded-sm border border-[color:var(--sand-deep)]">
+      <table className="w-full text-xs">
+        <thead className="text-left text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2 font-medium">Produit</th>
+            <th className="px-3 py-2 font-medium">Variante</th>
+            <th className="px-3 py-2 text-right font-medium">Qté</th>
+            <th className="px-3 py-2 text-right font-medium">PU HT</th>
+            <th className="px-3 py-2 text-right font-medium">Sous-total HT</th>
+            <th className="px-3 py-2 text-right font-medium">m³</th>
+          </tr>
+        </thead>
+        <tbody className="divide-[color:var(--sand-deep)]/60 divide-y">
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td className="px-3 py-1.5">
+                <div className="font-medium">{item.productName}</div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  {item.sku}
+                </div>
+              </td>
+              <td className="px-3 py-1.5 text-muted-foreground">
+                {item.variantName}
+              </td>
+              <td className="px-3 py-1.5 text-right tabular-nums">
+                {item.quantity}
+              </td>
+              <td className="px-3 py-1.5 text-right tabular-nums">
+                {formatEUR(item.unitPriceHt)}
+              </td>
+              <td className="px-3 py-1.5 text-right tabular-nums">
+                {formatEUR(item.subtotalHt)}
+              </td>
+              <td className="px-3 py-1.5 text-right tabular-nums">
+                {item.cbmTotal.toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot className="text-[11px] text-muted-foreground">
+          <tr>
+            <td className="px-3 py-1.5" colSpan={2}>
+              {items.length} ligne{items.length > 1 ? 's' : ''}
+            </td>
+            <td className="px-3 py-1.5 text-right tabular-nums">
+              {totalUnits}
+            </td>
+            <td colSpan={3} />
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  )
+}
+
 function NoteField({
   initialValue,
   placeholder,
@@ -1544,31 +1911,6 @@ function NoteField({
       onBlur={() => void onCommit(value)}
       className="text-xs"
     />
-  )
-}
-
-function Kpi({
-  Icon,
-  label,
-  value,
-  detail,
-}: {
-  readonly Icon: LucideIcon
-  readonly label: string
-  readonly value: string
-  readonly detail: string
-}) {
-  return (
-    <div className="rounded-md border border-[color:var(--sand-deep)] bg-card p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="h-4 w-4" />
-        <span className="label-eyebrow">{label}</span>
-      </div>
-      <div className="mt-2 font-display text-3xl font-semibold tabular-nums">
-        {value}
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
-    </div>
   )
 }
 

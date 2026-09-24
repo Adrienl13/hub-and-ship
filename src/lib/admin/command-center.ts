@@ -12,7 +12,10 @@ interface CountResult {
 
 interface CountFilterBuilder {
   eq: (column: string, value: string) => PromiseLike<CountResult>
-  in: (column: string, values: ReadonlyArray<string>) => PromiseLike<CountResult>
+  in: (
+    column: string,
+    values: ReadonlyArray<string>,
+  ) => PromiseLike<CountResult>
 }
 
 export interface CommandCenterClient {
@@ -26,6 +29,8 @@ export interface CommandCenterClient {
 
 export interface CommandCenterCounts {
   readonly newStockRequests: number
+  // Demandes de contact (devis, produit, Studio…) jamais prises en charge.
+  readonly newContactRequests: number
   readonly partnerApplicationsToReview: number
   readonly partnerDealsToQualify: number
   readonly reservationsPendingPayment: number
@@ -50,6 +55,7 @@ export async function loadCommandCenterCounts(
 ): Promise<CommandCenterCounts> {
   const [
     newStockRequests,
+    newContactRequests,
     partnerApplicationsToReview,
     partnerDealsToQualify,
     reservationsPendingPayment,
@@ -58,6 +64,10 @@ export async function loadCommandCenterCounts(
     runCount(
       countHead(client, 'stock_requests').eq('status', 'new'),
       'stock_requests',
+    ),
+    runCount(
+      countHead(client, 'contact_requests').eq('status', 'new'),
+      'contact_requests',
     ),
     runCount(
       countHead(client, 'partner_applications').in('status', [
@@ -82,6 +92,7 @@ export async function loadCommandCenterCounts(
 
   return {
     newStockRequests,
+    newContactRequests,
     partnerApplicationsToReview,
     partnerDealsToQualify,
     reservationsPendingPayment,
@@ -92,6 +103,7 @@ export async function loadCommandCenterCounts(
 export function totalUrgencies(counts: CommandCenterCounts): number {
   return (
     counts.newStockRequests +
+    counts.newContactRequests +
     counts.partnerApplicationsToReview +
     counts.partnerDealsToQualify +
     counts.reservationsPendingPayment +

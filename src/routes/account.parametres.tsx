@@ -13,7 +13,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 import { buildSeoHead } from '@/lib/seo'
-import { companyNameFromUser } from '@/lib/account/onboarding'
+import {
+  companyNameFromUser,
+  setMyCompany,
+  type CompanyClient,
+} from '@/lib/account/onboarding'
 import {
   loadMyProfile,
   toAccountProfilePatch,
@@ -48,8 +52,8 @@ function AccountSettings() {
     phone: '',
     marketingConsent: false,
   })
-  // L'établissement n'a pas de colonne accessible à l'acheteur : il vit dans
-  // les métadonnées utilisateur (voir lib/account/onboarding.ts).
+  // L'établissement vit dans les métadonnées utilisateur (salutation, emails)
+  // et dans `companies` via set_my_company (voir lib/account/onboarding.ts).
   const [companyName, setCompanyName] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -100,9 +104,8 @@ function AccountSettings() {
     }
     setSaving(true)
     try {
-      const client = createSupabaseBrowserClient(
-        config,
-      ) as unknown as ProfileClient
+      const supabase = createSupabaseBrowserClient(config)
+      const client = supabase as unknown as ProfileClient
       await updateMyProfile(
         client,
         user.id,
@@ -117,6 +120,27 @@ function AccountSettings() {
         phone: form.phone.trim(),
       })
       if (!metadata.ok) throw new Error(metadata.message)
+      // L'établissement en base (companies), au mieux : un échec n'annule
+      // pas la fiche ni les métadonnées déjà enregistrées. On n'appelle le
+      // RPC que si le nom est renseigné ET a changé : un champ vidé laisse
+      // l'établissement enregistré intact (voir le hint du champ).
+      const nextCompanyName = companyName.trim()
+      if (
+        nextCompanyName !== '' &&
+        nextCompanyName !== companyNameFromUser(user)
+      ) {
+        try {
+          await setMyCompany(
+            supabase as unknown as CompanyClient,
+            nextCompanyName,
+          )
+        } catch (err) {
+          toast.error(
+            'Établissement non enregistré : ' +
+              (err instanceof Error ? err.message : 'erreur inconnue'),
+          )
+        }
+      }
       toast.success('Profil mis à jour.')
     } catch (err) {
       toast.error(
@@ -275,6 +299,10 @@ function AccountSettings() {
                     placeholder="Restaurant, hôtel, bar, collectivité…"
                     onChange={(e) => setCompanyName(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    L'établissement enregistré reste inchangé si ce champ est
+                    vide.
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">

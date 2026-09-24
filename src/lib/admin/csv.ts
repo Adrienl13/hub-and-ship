@@ -7,8 +7,16 @@ export interface CsvColumn<T> {
   readonly value: (row: T) => string | number | null | undefined
 }
 
+// Une cellule qui commence par = + - @ tabulation ou retour chariot serait
+// interprétée comme une formule par Excel / LibreOffice (injection CSV) : on
+// la préfixe d'une apostrophe et on force le quoting.
+const FORMULA_PREFIX = /^[=+\-@\t\r]/
+
 function escapeCell(raw: string | number | null | undefined): string {
   const value = raw === null || raw === undefined ? '' : String(raw)
+  if (typeof raw !== 'number' && FORMULA_PREFIX.test(value)) {
+    return `"'${value.replace(/"/g, '""')}"`
+  }
   if (/[",\n\r]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`
   }

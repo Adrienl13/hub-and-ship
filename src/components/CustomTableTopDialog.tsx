@@ -134,13 +134,21 @@ export function CustomTableTopDialog({
       .filter(Boolean)
       .join('\n')
 
-    const draftResult = buildContactMessageDraft({
+    // Source « plateau sur mesure » pour la table contact_requests ; le
+    // piètement déjà choisi, s'il y en a un, part comme produit concerné.
+    const body = {
       name,
       email,
       phone,
       topic: 'produit',
+      source: 'custom_tabletop',
+      product: base
+        ? { sku: base.sku, name: base.name, design: baseVariant?.name ?? null }
+        : undefined,
       message,
-    })
+    }
+
+    const draftResult = buildContactMessageDraft(body)
     if (!draftResult.ok) {
       toast.error('Demande à compléter', { description: draftResult.error })
       return
@@ -153,11 +161,7 @@ export function CustomTableTopDialog({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
-          phone,
-          topic: 'produit',
-          message,
+          ...body,
           attribution: getAttributionFields(Date.now()),
         }),
       })

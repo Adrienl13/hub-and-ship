@@ -19,7 +19,9 @@ import {
   isProfileComplete,
   onboardingExitTarget,
   onboardingHref,
+  setMyCompany,
   validateOnboardingForm,
+  type CompanyClient,
   type OnboardingErrors,
   type OnboardingForm,
 } from '@/lib/account/onboarding'
@@ -173,14 +175,27 @@ function OnboardingPage() {
     setSubmitting(true)
     const now = new Date().toISOString()
     try {
-      const client = createSupabaseBrowserClient(
-        config,
-      ) as unknown as ProfileClient
+      const supabase = createSupabaseBrowserClient(config)
+      const client = supabase as unknown as ProfileClient
       await updateMyProfile(client, user.id, toAccountProfilePatch(form, now))
       const metadata = await updateUserMetadata(
         buildOnboardingMetadata(form, now),
       )
       if (!metadata.ok) throw new Error(metadata.message)
+
+      // L'établissement en base (companies), au mieux : la fiche et les
+      // métadonnées sont déjà enregistrées, un échec ici ne bloque pas.
+      try {
+        await setMyCompany(
+          supabase as unknown as CompanyClient,
+          form.companyName,
+        )
+      } catch (err) {
+        toast.error(
+          'Établissement non enregistré : ' +
+            (err instanceof Error ? err.message : 'erreur inconnue'),
+        )
+      }
 
       toast.success('Votre espace est prêt.')
       setFormStatus('redirecting')

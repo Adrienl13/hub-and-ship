@@ -5,9 +5,13 @@
 // change, c'est le sujet — « Demande de devis », pour que la notification
 // interne se distingue d'une simple question — et le corps, composé ici
 // pour que rien d'utile ne manque au rappel : référence, design, quantité,
-// prix affiché.
+// prix affiché. Les mêmes champs partent aussi structurés (product) pour la
+// table contact_requests : compter les devis par modèle sans relire l'email.
+
+import type { ContactProduct, ContactSource } from './contact'
 
 export const QUOTE_REQUEST_TOPIC = 'devis' as const
+export const QUOTE_REQUEST_SOURCE: ContactSource = 'catalogue_quick_quote'
 
 export interface QuoteRequestModel {
   readonly name: string
@@ -36,6 +40,24 @@ export function buildQuoteRequestMessage(model: QuoteRequestModel): string {
   const note = model.note?.trim()
   if (note) lines.push('', note)
   return lines.join('\n')
+}
+
+/**
+ * Le même modèle, en champs structurés pour /api/contact (colonnes
+ * product_* de contact_requests). Une quantité non exploitable part à null
+ * plutôt que de faire refuser la demande côté serveur.
+ */
+export function buildQuoteRequestProduct(
+  model: QuoteRequestModel,
+): ContactProduct {
+  const qty = Math.trunc(model.qty)
+  return {
+    sku: model.ref,
+    name: model.name,
+    design: model.design?.trim() || null,
+    quantity: Number.isFinite(qty) && qty > 0 ? qty : null,
+    priceLabel: model.priceLabel?.trim() || null,
+  }
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

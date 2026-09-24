@@ -94,6 +94,18 @@ describe('demande de devis dans le tiroir', () => {
     expect(vals().quote.summary).toContain('80 pièces')
   })
 
+  it('envoie la quantité saisie dans les champs structurés', async () => {
+    const { vals, deliver } = monter()
+    vals().setQty({ target: { value: '80' } })
+    vals().quote.toggle()
+    vals().quote.setName({ target: { value: 'Camille Roux' } })
+    vals().quote.setEmail({ target: { value: 'camille@hoteldespins.fr' } })
+    await vals().quote.submit({ preventDefault() {} })
+    const payload = deliver.mock.calls[0]![0]
+    expect(payload.product.quantity).toBe(80)
+    expect(payload.message).toContain('Quantité : 80 pièces')
+  })
+
   it('refuse d’envoyer sans email, sans appel réseau', async () => {
     const { vals, deliver } = monter()
     vals().quote.toggle()
@@ -124,6 +136,16 @@ describe('demande de devis dans le tiroir', () => {
       email: 'camille@hoteldespins.fr',
       phone: '06 12 34 56 78',
       topic: 'devis',
+      source: 'catalogue_quick_quote',
+    })
+    // Le produit part aussi structuré : la table contact_requests compte
+    // les devis par modèle sans relire l'email.
+    expect(payload.product).toEqual({
+      sku: 'BIS-061',
+      name: 'Fauteuil de bistrot MONTMARTRE - cannage rouge / crème',
+      design: 'Design catalogue',
+      quantity: 50,
+      priceLabel: '83,26 €',
     })
     expect(payload.message).toContain('cannage rouge / crème (BIS-061)')
     expect(payload.message).toContain('Design : Design catalogue')

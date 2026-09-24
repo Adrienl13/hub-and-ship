@@ -11,10 +11,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getSupabasePublicConfig } from '@/lib/supabase/env'
 
 export type CommandCenterTab =
-  | 'stock-requests'
-  | 'partners'
-  | 'reservations'
-  | 'claims'
+  'stock-requests' | 'demandes' | 'partners' | 'reservations' | 'claims'
 
 interface UrgencyCard {
   readonly key: string
@@ -36,6 +33,14 @@ function buildCards(counts: CommandCenterCounts): ReadonlyArray<UrgencyCard> {
       hint: 'Demandes entrantes non encore prises en charge.',
       cta: 'Ouvrir les demandes stock',
       tab: 'stock-requests',
+    },
+    {
+      key: 'contact',
+      count: counts.newContactRequests,
+      title: 'Demandes de contact à traiter',
+      hint: 'Devis, produits, coloris, briefs Studio : aucune réponse encore.',
+      cta: 'Ouvrir les demandes',
+      tab: 'demandes',
     },
     {
       key: 'partners',
@@ -115,9 +120,7 @@ export function AdminCommandCenter({
         ) : (
           <CheckCircle2 className="h-4 w-4 text-[color:var(--forest)]" />
         )}
-        <h2 className="font-display text-lg font-semibold">
-          Command Center
-        </h2>
+        <h2 className="font-display text-lg font-semibold">Command Center</h2>
         {state === 'loaded' && (
           <span className="text-xs text-muted-foreground">
             {total > 0
@@ -132,14 +135,14 @@ export function AdminCommandCenter({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-20 animate-pulse rounded-sm border border-[color:var(--sand-deep)] bg-[color:var(--sand-soft)]/50"
+              className="bg-[color:var(--sand-soft)]/50 h-20 animate-pulse rounded-sm border border-[color:var(--sand-deep)]"
             />
           ))}
         </div>
       ) : urgentCards.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          Tout est traité : aucun lead stock, partenaire ou paiement en
-          attente. 👌
+          Tout est traité : aucun lead stock, demande de contact, partenaire ou
+          paiement en attente. 👌
         </p>
       ) : (
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -148,7 +151,7 @@ export function AdminCommandCenter({
               key={card.key}
               type="button"
               onClick={() => onNavigate(card.tab)}
-              className="group flex flex-col rounded-sm border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] p-3 text-left transition hover:bg-[color:var(--ember)]/10"
+              className="border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] hover:bg-[color:var(--ember)]/10 group flex flex-col rounded-sm border p-3 text-left transition"
             >
               <span className="font-display text-3xl font-semibold leading-none text-[color:var(--ember)]">
                 {card.count}

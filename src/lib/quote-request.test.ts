@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  QUOTE_REQUEST_SOURCE,
   QUOTE_REQUEST_TOPIC,
   buildQuoteRequestMessage,
+  buildQuoteRequestProduct,
   validateQuoteRequest,
 } from './quote-request'
-import { CONTACT_TOPICS, CONTACT_TOPIC_LABEL } from './contact'
+import {
+  CONTACT_SOURCES,
+  CONTACT_TOPICS,
+  CONTACT_TOPIC_LABEL,
+  buildContactMessageDraft,
+} from './contact'
 
 describe('demande de devis pour un modèle', () => {
   it('compose un message complet depuis le tiroir', () => {
@@ -42,9 +49,63 @@ describe('demande de devis pour un modèle', () => {
     expect(message.length).toBeGreaterThanOrEqual(10) // minimum de /api/contact
   })
 
-  it('a son propre sujet, accepté par le formulaire de contact', () => {
+  it('a son propre sujet et sa propre source, acceptés par le formulaire de contact', () => {
     expect(CONTACT_TOPICS).toContain(QUOTE_REQUEST_TOPIC)
     expect(CONTACT_TOPIC_LABEL[QUOTE_REQUEST_TOPIC]).toBe('Demande de devis')
+    expect(CONTACT_SOURCES).toContain(QUOTE_REQUEST_SOURCE)
+  })
+
+  it('expose les mêmes champs structurés pour la table contact_requests', () => {
+    const model = {
+      name: 'Fauteuil de bistrot MONTMARTRE',
+      ref: 'BIS-061',
+      design: 'cannage rouge / crème',
+      qty: 50,
+      priceLabel: '83,26 €',
+      moq: 50,
+      note: 'Avant le 15 mars.',
+    }
+    const product = buildQuoteRequestProduct(model)
+    expect(product).toEqual({
+      sku: 'BIS-061',
+      name: 'Fauteuil de bistrot MONTMARTRE',
+      design: 'cannage rouge / crème',
+      quantity: 50,
+      priceLabel: '83,26 €',
+    })
+
+    // Le serveur accepte tel quel ce que le tiroir enverra.
+    const draft = buildContactMessageDraft({
+      name: 'Camille Roux',
+      email: 'camille@hoteldespins.fr',
+      topic: QUOTE_REQUEST_TOPIC,
+      source: QUOTE_REQUEST_SOURCE,
+      message: buildQuoteRequestMessage(model),
+      product,
+    })
+    expect(draft.ok).toBe(true)
+    if (draft.ok) expect(draft.draft.product).toEqual(product)
+  })
+
+  it('met à null design, prix et quantité inexploitables plutôt que de faire refuser la demande', () => {
+    expect(
+      buildQuoteRequestProduct({
+        name: 'Chaise Cannes',
+        ref: 'ROP-001',
+        design: '  ',
+        qty: Number.NaN,
+        priceLabel: '',
+      }),
+    ).toEqual({
+      sku: 'ROP-001',
+      name: 'Chaise Cannes',
+      design: null,
+      quantity: null,
+      priceLabel: null,
+    })
+    expect(
+      buildQuoteRequestProduct({ name: 'X', ref: 'R', qty: 0 }).quantity,
+    ).toBeNull()
   })
 
   it('refuse un nom ou un email manquant, en français', () => {

@@ -5,12 +5,16 @@
 // « Créer mon espace » complète la fiche en une fois. Tout ce qui se décide
 // ici est pur et testé ; les pages n'orchestrent que les appels.
 //
-// Le nom de l'établissement n'a pas de colonne accessible à l'acheteur dans
-// `users_profile` (les acheteurs ne créent pas de `companies`) : il vit dans
-// les métadonnées utilisateur Supabase (`user.user_metadata.company_name`),
-// où l'admin et les modèles d'email le retrouvent. Prénom, nom et téléphone
-// restent portés par la fiche utilisateur et sont dupliqués dans les
-// métadonnées pour la même raison.
+// Le nom de l'établissement vit à deux endroits, volontairement :
+// - dans les métadonnées utilisateur Supabase (`user.user_metadata.company_name`),
+//   où la salutation, l'admin et les modèles d'email le retrouvent sans requête ;
+// - dans `companies`, via la fonction `set_my_company` (migration 57) : la
+//   table reste interdite en écriture directe aux acheteurs (canal, SIRET
+//   vérifié et risque sont des décisions admin), la fonction crée ou renomme
+//   SEULEMENT l'établissement du connecté. Cet enregistrement est fait au
+//   mieux : un échec ne bloque jamais la création de l'espace.
+// Prénom, nom et téléphone restent portés par la fiche utilisateur et sont
+// dupliqués dans les métadonnées pour la même raison.
 
 import {
   loadMyProfile,
@@ -166,6 +170,43 @@ export function dashboardGreeting({
   const company = companyName.trim()
   const head = name ? `Bonjour ${name}` : 'Bonjour'
   return company ? `${head} · ${company}` : head
+}
+
+// ---------------------------------------------------------------------------
+// Établissement : création ou renommage par le client (RPC set_my_company)
+// ---------------------------------------------------------------------------
+
+interface RpcResult {
+  readonly data: unknown
+  readonly error: { readonly message: string } | null
+}
+
+export interface CompanyClient {
+  rpc: (
+    fn: 'set_my_company',
+    args: { readonly p_legal_name: string },
+  ) => PromiseLike<RpcResult>
+}
+
+/** Longueur minimale acceptée par la fonction SQL (company_name_required). */
+export const COMPANY_NAME_MIN_LENGTH = 2
+
+/**
+ * Crée ou renomme l'établissement du connecté et renvoie son identifiant.
+ * Un nom vide ou trop court n'appelle pas la base et renvoie null : la
+ * fonction SQL refuserait de toute façon, autant ne pas produire d'erreur.
+ */
+export async function setMyCompany(
+  client: CompanyClient,
+  name: string,
+): Promise<string | null> {
+  const legalName = name.trim()
+  if (legalName.length < COMPANY_NAME_MIN_LENGTH) return null
+  const { data, error } = await client.rpc('set_my_company', {
+    p_legal_name: legalName,
+  })
+  if (error) throw new Error(error.message)
+  return typeof data === 'string' ? data : null
 }
 
 // ---------------------------------------------------------------------------

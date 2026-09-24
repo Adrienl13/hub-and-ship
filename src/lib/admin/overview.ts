@@ -198,3 +198,307 @@ export async function loadAdminOverview(
     activeProductReferences,
   })
 }
+
+// ============================================================================
+// Agrégats business — 12 mois glissants, conversion, demandes de contact
+// ============================================================================
+//
+// Le propriétaire veut lire en un coup d'œil ce que l'activité rapporte et
+// où les demandes se perdent. Tout est calculé à partir de lignes minimales
+// (statut, montant, date) lues sous RLS admin ; les calculs sont purs et
+// testés, la lecture paginée (PostgREST plafonne à 1 000 lignes par page).
+
+/** Réservations dont le client a payé au moins les frais : c'est le CA HT
+ * « encaissé » au sens du tableau de bord (brouillon, frais en attente,
+ * acompte appelé et annulée en sont exclus). */
+export const PAID_RESERVATION_STATUSES: ReadonlyArray<string> = [
+  'reserved',
+  'deposit_paid',
+  'in_production',
+  'in_transit',
+  'delivered',
+]
+
+export const CONTACT_REQUEST_STATUSES = [
+  'new',
+  'contacted',
+  'quoted',
+  'won',
+  'lost',
+] as const
+export type ContactRequestStatusKey = (typeof CONTACT_REQUEST_STATUSES)[number]
+
+export const BUSINESS_MONTHS = 12
+
+export interface PaidReservationRow {
+  readonly total_ht: number | string | null
+  readonly status: string
+  readonly reserved_at: string | null
+  readonly created_at: string
+}
+
+export interface CreatedAtRow {
+  readonly created_at: string
+}
+
+export interface StatusRow {
+  readonly status: string
+}
+
+export interface StatusCreatedRow extends StatusRow, CreatedAtRow {}
+
+export interface MonthlyBusinessRow {
+  /** Clé AAAA-MM (UTC). */
+  readonly month: string
+  /** Libellé court en français, ex. « sept. 2026 ». */
+  readonly label: string
+  readonly revenueHt: number
+  readonly reservations: number
+  readonly accounts: number
+  /** Demandes stock 24h + demandes de contact reçues dans le mois. */
+  readonly requests: number
+}
+
+export interface ConversionKpi {
+  readonly won: number
+  readonly total: number
+  /** Pourcentage 0–100 ; 0 sans dénominateur. */
+  readonly rate: number
+}
+
+export interface AdminBusinessKpis {
+  readonly months: ReadonlyArray<MonthlyBusinessRow>
+  readonly revenueHt: number
+  readonly paidReservations: number
+  readonly averageBasketHt: number
+  readonly accountsCreated: number
+  readonly stockRequestConversion: ConversionKpi
+  readonly partnerDealConversion: ConversionKpi
+  readonly contactRequestsByStatus: Readonly<
+    Record<ContactRequestStatusKey, number>
+  >
+  readonly contactRequestsTotal: number
+}
+
+const FR_MONTH_SHORT = [
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
+] as const
+
+/** Clé AAAA-MM (UTC) d'une date ISO, null si illisible. */
+export function monthKeyOf(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+function monthLabel(key: string): string {
+  const [year, month] = key.split('-')
+  const index = Number(month) - 1
+  return `${FR_MONTH_SHORT[index] ?? month} ${year}`
+}
+
+/** Premier jour (UTC) du mois situé `months - 1` mois avant `now`. */
+export function businessWindowStart(now: Date, months = BUSINESS_MONTHS): Date {
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1),
+  )
+}
+
+/** Clés AAAA-MM des `months` derniers mois, le plus ancien en premier. */
+export function lastMonthKeys(now: Date, months = BUSINESS_MONTHS): string[] {
+  const start = businessWindowStart(now, months)
+  return Array.from({ length: months }, (_, i) => {
+    const date = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1),
+    )
+    return monthKeyOf(date.toISOString()) as string
+  })
+}
+
+function conversion(won: number, total: number): ConversionKpi {
+  return { won, total, rate: total > 0 ? (won / total) * 100 : 0 }
+}
+
+export function summarizeBusiness(
+  input: {
+    readonly reservations: ReadonlyArray<PaidReservationRow>
+    readonly profiles: ReadonlyArray<CreatedAtRow>
+    readonly stockRequests: ReadonlyArray<StatusCreatedRow>
+    readonly partnerDeals: ReadonlyArray<StatusRow>
+    readonly contactRequests: ReadonlyArray<StatusCreatedRow>
+  },
+  options: { readonly now?: Date; readonly months?: number } = {},
+): AdminBusinessKpis {
+  const now = options.now ?? new Date()
+  const months = options.months ?? BUSINESS_MONTHS
+  const keys = lastMonthKeys(now, months)
+  const buckets = new Map(
+    keys.map((key) => [
+      key,
+      { revenueHt: 0, reservations: 0, accounts: 0, requests: 0 },
+    ]),
+  )
+
+  let revenueHt = 0
+  let paidReservations = 0
+  for (const row of input.reservations) {
+    if (!PAID_RESERVATION_STATUSES.includes(row.status)) continue
+    // Le mois est celui de la réservation effective, sinon de la création.
+    const bucket = buckets.get(
+      monthKeyOf(row.reserved_at) ?? monthKeyOf(row.created_at) ?? '',
+    )
+    if (!bucket) continue
+    const amount = toNumber(row.total_ht)
+    bucket.revenueHt += amount
+    bucket.reservations += 1
+    revenueHt += amount
+    paidReservations += 1
+  }
+
+  let accountsCreated = 0
+  for (const row of input.profiles) {
+    const bucket = buckets.get(monthKeyOf(row.created_at) ?? '')
+    if (!bucket) continue
+    bucket.accounts += 1
+    accountsCreated += 1
+  }
+
+  for (const row of [...input.stockRequests, ...input.contactRequests]) {
+    const bucket = buckets.get(monthKeyOf(row.created_at) ?? '')
+    if (bucket) bucket.requests += 1
+  }
+
+  const contactRequestsByStatus: Record<ContactRequestStatusKey, number> = {
+    new: 0,
+    contacted: 0,
+    quoted: 0,
+    won: 0,
+    lost: 0,
+  }
+  for (const row of input.contactRequests) {
+    if (row.status in contactRequestsByStatus) {
+      contactRequestsByStatus[row.status as ContactRequestStatusKey] += 1
+    }
+  }
+
+  return {
+    months: keys.map((key) => {
+      const bucket = buckets.get(key) as NonNullable<
+        ReturnType<typeof buckets.get>
+      >
+      return { month: key, label: monthLabel(key), ...bucket }
+    }),
+    revenueHt,
+    paidReservations,
+    averageBasketHt: paidReservations > 0 ? revenueHt / paidReservations : 0,
+    accountsCreated,
+    stockRequestConversion: conversion(
+      input.stockRequests.filter((r) => r.status === 'converted').length,
+      input.stockRequests.length,
+    ),
+    partnerDealConversion: conversion(
+      input.partnerDeals.filter((r) => r.status === 'won').length,
+      input.partnerDeals.length,
+    ),
+    contactRequestsByStatus,
+    contactRequestsTotal: input.contactRequests.length,
+  }
+}
+
+// --- Lecture paginée -------------------------------------------------------
+
+interface BusinessQuery<Row> extends PromiseLike<RowsResult<Row>> {
+  in: (column: string, values: ReadonlyArray<string>) => BusinessQuery<Row>
+  gte: (column: string, value: string) => BusinessQuery<Row>
+  order: (
+    column: string,
+    options: { readonly ascending: boolean },
+  ) => BusinessQuery<Row>
+  range: (from: number, to: number) => BusinessQuery<Row>
+}
+
+export interface AdminBusinessClient {
+  from: (table: string) => {
+    select: (columns: string) => BusinessQuery<Record<string, unknown>>
+  }
+}
+
+export const BUSINESS_PAGE_SIZE = 1000
+
+async function pages<Row>(
+  build: () => BusinessQuery<Record<string, unknown>>,
+  label: string,
+): Promise<ReadonlyArray<Row>> {
+  const all: Row[] = []
+  for (let offset = 0; ; offset += BUSINESS_PAGE_SIZE) {
+    // Ordre stable (date puis id) : sans lui, PostgREST peut renvoyer une
+    // même ligne sur deux pages et en oublier une autre.
+    const { data, error } = await build()
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .range(offset, offset + BUSINESS_PAGE_SIZE - 1)
+    if (error) throw new Error(`${label}: ${error.message}`)
+    const page = (data ?? []) as unknown as ReadonlyArray<Row>
+    all.push(...page)
+    if (page.length < BUSINESS_PAGE_SIZE) break
+  }
+  return all
+}
+
+export async function loadAdminBusiness(
+  client: AdminBusinessClient,
+  options: { readonly now?: Date } = {},
+): Promise<AdminBusinessKpis> {
+  const now = options.now ?? new Date()
+  const since = businessWindowStart(now).toISOString()
+
+  const [reservations, profiles, stockRequests, partnerDeals, contactRequests] =
+    await Promise.all([
+      pages<PaidReservationRow>(
+        () =>
+          client
+            .from('reservations')
+            .select('total_ht,status,reserved_at,created_at')
+            .in('status', PAID_RESERVATION_STATUSES)
+            .gte('created_at', since),
+        'reservations',
+      ),
+      pages<CreatedAtRow>(
+        () =>
+          client
+            .from('users_profile')
+            .select('created_at')
+            .gte('created_at', since),
+        'users_profile',
+      ),
+      pages<StatusCreatedRow>(
+        () => client.from('stock_requests').select('status,created_at'),
+        'stock_requests',
+      ),
+      pages<StatusRow>(
+        () => client.from('partner_deals').select('status'),
+        'partner_deals',
+      ),
+      pages<StatusCreatedRow>(
+        () => client.from('contact_requests').select('status,created_at'),
+        'contact_requests',
+      ),
+    ])
+
+  return summarizeBusiness(
+    { reservations, profiles, stockRequests, partnerDeals, contactRequests },
+    { now },
+  )
+}

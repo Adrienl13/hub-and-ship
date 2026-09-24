@@ -176,7 +176,10 @@ export class Catalogue extends CatalogueModel {
   /**
    * Demande de devis pour un modèle → /api/contact, même canal que le
    * formulaire de contact (même-origine, limite par IP, validation zod).
-   * L'attribution first-touch part avec, comme depuis /contact.
+   * Le modèle (model.js) fournit source « catalogue_quick_quote » et le
+   * produit structuré ; l'attribution first-touch part avec, comme depuis
+   * /contact. Côté serveur la demande est enregistrée dans contact_requests
+   * avant l'email.
    */
   async deliverQuote(payload) {
     const response = await fetch('/api/contact', {

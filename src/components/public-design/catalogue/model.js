@@ -13,8 +13,10 @@ import {
   describeVolumeDiscounts,
 } from '../../../lib/order'
 import {
+  QUOTE_REQUEST_SOURCE,
   QUOTE_REQUEST_TOPIC,
   buildQuoteRequestMessage,
+  buildQuoteRequestProduct,
   validateQuoteRequest,
 } from '../../../lib/quote-request'
 
@@ -170,21 +172,26 @@ export class CatalogueModel {
       this.setState({ quoteStatus: 'failed', quoteError: checked.error })
       return Promise.resolve()
     }
+    // Le modèle demandé part deux fois : lisible dans le message (email) et
+    // structuré dans product (colonnes de contact_requests).
+    const quoted = {
+      name: p.name,
+      ref: p.ref,
+      design: p.variants[vi][0],
+      qty: this.sheetQuantity(p, vi, s.qty),
+      priceLabel: this.eur(p.price),
+      moq: this.minimum(p, vi),
+      note: s.quoteNote,
+    }
     const payload = {
       name: s.quoteName.trim(),
       email: s.quoteEmail.trim(),
       company: s.quoteCompany.trim(),
       phone: s.quotePhone.trim(),
       topic: QUOTE_REQUEST_TOPIC,
-      message: buildQuoteRequestMessage({
-        name: p.name,
-        ref: p.ref,
-        design: p.variants[vi][0],
-        qty: this.sheetQuantity(p, vi, s.qty),
-        priceLabel: this.eur(p.price),
-        moq: this.minimum(p, vi),
-        note: s.quoteNote,
-      }),
+      source: QUOTE_REQUEST_SOURCE,
+      message: buildQuoteRequestMessage(quoted),
+      product: buildQuoteRequestProduct(quoted),
     }
     this.setState({ quoteStatus: 'sending', quoteError: '' })
     return this.deliverQuote(payload).then(

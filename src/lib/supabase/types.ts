@@ -24,25 +24,13 @@ export type ReservationStatus =
   | 'delivered'
   | 'cancelled'
 export type StockRequestStatus =
-  | 'new'
-  | 'contacted'
-  | 'reserved'
-  | 'converted'
-  | 'closed'
+  'new' | 'contacted' | 'reserved' | 'converted' | 'closed'
+export type ContactRequestStatus =
+  'new' | 'contacted' | 'quoted' | 'won' | 'lost'
 export type PartnerApplicationStatus =
-  | 'new'
-  | 'reviewing'
-  | 'qualified'
-  | 'approved'
-  | 'rejected'
-  | 'archived'
+  'new' | 'reviewing' | 'qualified' | 'approved' | 'rejected' | 'archived'
 export type PartnerKind =
-  | 'introducer'
-  | 'reseller'
-  | 'agency'
-  | 'installer'
-  | 'network'
-  | 'other'
+  'introducer' | 'reseller' | 'agency' | 'installer' | 'network' | 'other'
 export type PartnerDealStatus =
   | 'submitted'
   | 'protected'
@@ -56,34 +44,17 @@ export type PartnerDealStatus =
 // statut visé par une candidature (page /partenaires mockup), et ledger
 // de commissions apporteur (8% CA encaissé / 12 mois).
 export type SalesChannel =
-  | 'direct'
-  | 'revendeur'
-  | 'distributeur'
-  | 'grand_compte'
+  'direct' | 'revendeur' | 'distributeur' | 'grand_compte'
 export type PartnerTargetStatus =
-  | 'apporteur'
-  | 'revendeur'
-  | 'grand_compte'
-  | 'distributeur'
-  | 'nsp'
+  'apporteur' | 'revendeur' | 'grand_compte' | 'distributeur' | 'nsp'
 export type CommissionStatus = 'accrued' | 'payable' | 'paid'
 export type CommissionPhase = 'accrual' | 'reversal'
 export type ContainerStatus =
-  | 'open'
-  | 'locked'
-  | 'shipping'
-  | 'delivered'
-  | 'cancelled'
+  'open' | 'locked' | 'shipping' | 'delivered' | 'cancelled'
 export type ContainerType = '20_dv' | '20_hc' | '40_gp' | '40_hc'
 export type StockCondition = 'new' | 'opened_box' | 'showroom'
 export type QualityReportOrganization =
-  | 'sgs'
-  | 'eurofins'
-  | 'tuv'
-  | 'bureau_veritas'
-  | 'dekra'
-  | 'intertek'
-  | 'other'
+  'sgs' | 'eurofins' | 'tuv' | 'bureau_veritas' | 'dekra' | 'intertek' | 'other'
 export type QualityReportType =
   | 'aql_inspection'
   | 'pre_shipment_inspection'
@@ -627,6 +598,60 @@ type StockRequestInsert = {
 }
 
 type StockRequestUpdate = Partial<StockRequestInsert>
+
+// Demandes passées par /api/contact (migration 56) : formulaire, devis
+// rapide, coloris et plateau sur mesure, brief Studio.
+type ContactRequestRow = {
+  id: string
+  status: ContactRequestStatus
+  topic: string
+  source: string
+  name: string
+  email: string
+  company: string | null
+  phone: string | null
+  message: string
+  product_sku: string | null
+  product_name: string | null
+  product_design: string | null
+  quantity: number | null
+  price_label: string | null
+  studio_brief: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  partner_ref: string | null
+  internal_note: string | null
+  created_at: string
+  updated_at: string
+}
+
+type ContactRequestInsert = {
+  id?: string
+  status?: ContactRequestStatus
+  topic: string
+  source?: string
+  name: string
+  email: string
+  company?: string | null
+  phone?: string | null
+  message: string
+  product_sku?: string | null
+  product_name?: string | null
+  product_design?: string | null
+  quantity?: number | null
+  price_label?: string | null
+  studio_brief?: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  partner_ref?: string | null
+  internal_note?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+type ContactRequestUpdate = Partial<ContactRequestInsert>
 
 type PartnerApplicationRow = {
   id: string
@@ -1280,6 +1305,11 @@ export interface Database {
         Insert: StockRequestInsert
         Update: StockRequestUpdate
       }
+      contact_requests: {
+        Row: ContactRequestRow
+        Insert: ContactRequestInsert
+        Update: ContactRequestUpdate
+      }
       stock_lines: {
         Row: StockLineRow
         Insert: StockLineInsert
@@ -1502,6 +1532,7 @@ export interface Database {
       delivery_mode: DeliveryMode
       reservation_status: ReservationStatus
       stock_request_status: StockRequestStatus
+      contact_request_status: ContactRequestStatus
       partner_application_status: PartnerApplicationStatus
       partner_kind: PartnerKind
       partner_deal_status: PartnerDealStatus

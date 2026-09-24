@@ -21,8 +21,13 @@ const auth: {
 const updateUserMetadata = vi.fn()
 const loadMyProfile = vi.fn()
 const updateMyProfile = vi.fn()
+const rpc = vi.fn()
 const toastSuccess = vi.fn()
 const toastError = vi.fn()
+
+// Le client Supabase simulé : la fiche passe par les fonctions mockées de
+// lib/account/profile, l'établissement par la fonction SQL set_my_company.
+const supabase = { rpc: (...args: unknown[]) => rpc(...args) }
 
 vi.mock('@tanstack/react-router', () => ({
   // Le fichier de route ne fait qu'enregistrer la page : on lui rend un
@@ -66,7 +71,7 @@ vi.mock('@/lib/supabase/env', () => ({
 }))
 
 vi.mock('@/lib/supabase/client', () => ({
-  createSupabaseBrowserClient: () => ({}),
+  createSupabaseBrowserClient: () => supabase,
 }))
 
 vi.mock('sonner', () => ({
@@ -110,6 +115,7 @@ beforeEach(() => {
     marketingConsent: false,
   })
   updateMyProfile.mockReset().mockResolvedValue(undefined)
+  rpc.mockReset().mockResolvedValue({ data: 'company-1', error: null })
   toastSuccess.mockReset()
   toastError.mockReset()
 })
@@ -151,7 +157,7 @@ describe('/account/bienvenue', () => {
     expect(await screen.findByLabelText(/Prénom/)).toHaveValue('Camille')
     expect(screen.getByLabelText(/Établissement/)).toHaveValue('Hôtel des Pins')
     expect(screen.getByText(USER.email)).toBeInTheDocument()
-    expect(loadMyProfile).toHaveBeenCalledWith({}, 'user-1')
+    expect(loadMyProfile).toHaveBeenCalledWith(supabase, 'user-1')
   })
 
   it('passe directement à la destination quand la fiche est déjà complète', async () => {
@@ -269,6 +275,41 @@ describe('/account/bienvenue', () => {
       company_name: 'Hôtel des Pins',
       phone: '06 12 34 56 78',
     })
+    // L'établissement est aussi créé en base, nom nettoyé, après la fiche.
+    expect(rpc).toHaveBeenCalledTimes(1)
+    expect(rpc).toHaveBeenCalledWith('set_my_company', {
+      p_legal_name: 'Hôtel des Pins',
+    })
+    expect(toastError).not.toHaveBeenCalled()
+    expect(toastSuccess).toHaveBeenCalledWith('Votre espace est prêt.')
+  })
+
+  it('un établissement refusé en base ne bloque pas la création de l’espace', async () => {
+    const { assign } = stubLocation()
+    auth.status = 'authenticated'
+    auth.user = USER
+    search.returnTo = '/panier'
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'company_name_required' },
+    })
+    render(<Page />)
+
+    fireEvent.change(await screen.findByLabelText(/Prénom/), {
+      target: { value: 'Camille' },
+    })
+    fireEvent.change(screen.getByLabelText(/Nom/), {
+      target: { value: 'Martin' },
+    })
+    fireEvent.change(screen.getByLabelText(/Établissement/), {
+      target: { value: 'Hôtel des Pins' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Créer mon espace' }))
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/panier'))
+    expect(toastError).toHaveBeenCalledWith(
+      'Établissement non enregistré : company_name_required',
+    )
     expect(toastSuccess).toHaveBeenCalledWith('Votre espace est prêt.')
   })
 
