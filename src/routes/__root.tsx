@@ -134,7 +134,19 @@ export const Route = createRootRoute({
       },
       { property: 'og:type', content: 'website' },
       { property: 'og:locale', content: 'fr_FR' },
+      // Pages sans buildSeoHead : même visuel de partage que le reste du site.
+      {
+        property: 'og:image',
+        content: 'https://terrassea.com/images/social/terrassea-partage.jpg',
+      },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { property: 'og:image:type', content: 'image/jpeg' },
       { name: 'twitter:card', content: 'summary_large_image' },
+      {
+        name: 'twitter:image',
+        content: 'https://terrassea.com/images/social/terrassea-partage.jpg',
+      },
       {
         name: 'twitter:title',
         content: 'Terrassea — Mobilier outdoor pro mutualisé par container',

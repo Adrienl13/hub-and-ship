@@ -114,7 +114,7 @@ export const Route = createFileRoute('/catalogue')({
           'Chaises, fauteuils, tables et bancs de terrasse professionnels au prix container : réservez vos séries en achat groupé, contrôle qualité SGS et garantie 1 an inclus.',
         path: '/catalogue',
         image:
-          products[0]?.mainImageUrl || '/images/home/hero-salon-vue-mer.webp',
+          products[0]?.mainImageUrl || '/images/social/terrassea-partage.jpg',
       }),
       scripts: [
         jsonLdScript(

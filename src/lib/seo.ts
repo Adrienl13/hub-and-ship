@@ -15,11 +15,13 @@ export const SITE_URL = 'https://terrassea.com'
 export const SITE_NAME = 'Terrassea'
 
 // Visuel de partage par défaut : sans og:image, un lien posté en messagerie ou
-// sur un réseau s'affiche sans aperçu. Photo d'ambiance déjà servie par
-// l'accueil ; dimensions relevées sur le fichier, à corriger si on le remplace.
-export const DEFAULT_SHARE_IMAGE = '/images/home/hero-salon-vue-mer.webp'
-const DEFAULT_SHARE_IMAGE_WIDTH = '1920'
-const DEFAULT_SHARE_IMAGE_HEIGHT = '960'
+// sur un réseau s'affiche sans aperçu. JPEG et non WebP : Facebook, WhatsApp
+// et LinkedIn n'affichent pas un WebP de façon fiable, et WhatsApp exige un
+// fichier léger. 1200 × 630, le format que tous les réseaux recadrent le
+// moins. Généré depuis la photo d'ambiance de l'accueil.
+export const DEFAULT_SHARE_IMAGE = '/images/social/terrassea-partage.jpg'
+const DEFAULT_SHARE_IMAGE_WIDTH = '1200'
+const DEFAULT_SHARE_IMAGE_HEIGHT = '630'
 
 export interface SeoInput {
   readonly title: string

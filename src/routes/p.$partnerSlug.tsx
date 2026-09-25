@@ -79,7 +79,7 @@ export const Route = createFileRoute('/p/$partnerSlug')({
         description:
           'Sélection partenaire Terrassea : mobilier CHR en achat groupé, client protégé, prix publics directs et conditions partenaires hors espace public.',
         path: buildPartnerSharePath({ slug }),
-        image: '/images/home/hero-salon-vue-mer.webp',
+        image: '/images/social/terrassea-partage.jpg',
         // Espace d'URL non borné (n'importe quel slug matche) : ces pages
         // co-brandées se partagent par lien direct, elles n'ont pas à être
         // indexées (contenu catalogue dupliqué par partenaire + usurpation).
