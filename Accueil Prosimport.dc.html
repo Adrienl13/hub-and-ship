@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  body { margin:0; background:#F4EFE7; font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; color:#1A1815; }
+  a { color:#D97A34; text-decoration:none; }
+  a:hover { color:#b9601f; }
+  h1,h2,h3{text-wrap:balance}
+  @media (max-width:1024px){
+    h1{font-size:50px !important}
+    h2{font-size:33px !important}
+    .hero-box{height:auto !important}
+    .hero-img{position:relative !important;width:100% !important;height:400px;top:auto !important;right:auto !important;bottom:auto !important}
+    .hero-fade{background:linear-gradient(0deg,rgba(244,239,231,1) 0%,rgba(244,239,231,0) 20%) !important}
+    .hero-text{position:relative !important;left:auto !important;top:auto !important;width:auto !important;padding:30px 30px 0}
+    .hero-card{position:relative !important;right:auto !important;bottom:auto !important;width:auto !important;margin:28px 30px 30px}
+    .col-grid{grid-template-columns:1fr !important}
+    .g5{grid-template-columns:repeat(3,1fr) !important}
+    .g3c{grid-template-columns:repeat(2,1fr) !important}
+    .cat-grid{grid-template-columns:1fr !important}
+    .side-panel{position:static !important}
+    .g4{grid-template-columns:1fr 1fr !important}
+    .sec-head{flex-wrap:wrap}
+    .hero-text h1 br{display:none}
+    h3{font-size:21px !important}
+    [style*="font-size:26px"],[style*="font-size: 26px"]{font-size:23px !important}
+    [style*="font-size:18px"],[style*="font-size: 18px"]{font-size:17px !important}
+  }
+  @media (max-width:640px){
+    h1{font-size:38px !important}
+    h2{font-size:26px !important}
+    .wrap{padding-left:18px !important;padding-right:18px !important}
+    .nav-inner{padding:14px 18px !important}
+    .nav-l{display:none}
+    .hero-img{height:300px}
+    .hero-text{padding:24px 20px 0}
+    .hero-card{margin:24px 20px 20px}
+    .g2,.g3,.g3c,.g5,.g4{grid-template-columns:1fr !important}
+    .band{height:560px !important}
+    .band-inner{padding:0 20px !important}
+    .cta-box{padding:36px 24px !important}
+    .nl-box{padding:28px 20px !important}
+    .nl-form{min-width:100% !important}
+    h3{font-size:19px !important}
+    [style*="font-size:34px"],[style*="font-size: 34px"]{font-size:26px !important}
+    [style*="font-size:26px"],[style*="font-size: 26px"]{font-size:20px !important}
+    [style*="font-size:24px"],[style*="font-size: 24px"]{font-size:20px !important}
+    [style*="font-size:22px"],[style*="font-size: 22px"]{font-size:19px !important}
+    [style*="font-size:20px"],[style*="font-size: 20px"]{font-size:17px !important}
+    [style*="font-size:19px"],[style*="font-size: 19px"]{font-size:17px !important}
+    [style*="font-size:18px"],[style*="font-size: 18px"]{font-size:16px !important}
+    [style*="font-size:17px"],[style*="font-size: 17px"]{font-size:15px !important}
+    [style*="font-size:16.5px"],[style*="font-size: 16.5px"]{font-size:15px !important}
+    [style*="font-size:16px"],[style*="font-size: 16px"]{font-size:15px !important}
+    [style*="font-size:15.5px"],[style*="font-size: 15.5px"]{font-size:14.5px !important}
+  }
+
+</style>
+</helmet>
+
+<div style="width:100%;overflow:hidden;">
+
+  <!-- ============ NAV ============ -->
+  <div style="position:sticky;top:0;z-index:50;background:rgba(244,239,231,.86);backdrop-filter:blur(12px);border-bottom:1px solid #e4dccd;">
+    <div class="nav-inner" style="max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div style="width:34px;height:34px;border-radius:9px;background:#1A1815;display:flex;align-items:center;justify-content:center;color:#F4EFE7;font-weight:800;font-size:19px;">C</div>
+        <span style="color:#1A1815;font-weight:700;font-size:18px;letter-spacing:-.01em;">Container Club</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:26px;">
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Catalogue</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Stock</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Partenaires</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Le prix prouvé</span>
+        <span class="nav-l" style="color:#4a443c;font-size:14.5px;font-weight:500;">Ressources ▾</span>
+        <span style="background:#1A1815;color:#F4EFE7;font-size:14.5px;font-weight:700;padding:9px 18px;border-radius:9px;">Réserver →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HERO (style 1b) ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:28px 40px 0;">
+    <div class="hero-box" style="position:relative;width:100%;height:660px;border-radius:22px;overflow:hidden;background:#F4EFE7;box-shadow:0 30px 80px -34px rgba(26,24,21,.4);">
+      <div class="hero-img" style="position:absolute;top:0;right:0;bottom:0;width:56%;">
+        <div style="position:absolute;inset:0;opacity:{{ op0 }};transition:opacity .55s ease;">
+          <image-slot id="hero-slide-1" shape="rect" fit="cover" src="uploads/ab4dac1297hth9ws.webp" placeholder="Photo — salon outdoor vue mer"></image-slot>
+        </div>
+        <div style="position:absolute;inset:0;opacity:{{ op1 }};transition:opacity .55s ease;">
+          <image-slot id="hero-slide-2" shape="rect" fit="cover" src="uploads/f02879e6f5qdi8lg.webp" placeholder="Photo — assises tressées coloris"></image-slot>
+        </div>
+        <div style="position:absolute;inset:0;opacity:{{ op2 }};transition:opacity .55s ease;">
+          <image-slot id="hero-slide-3" shape="rect" fit="cover" src="uploads/2ef459bf73v2xyly.webp" placeholder="Photo — terrasses de restaurants"></image-slot>
+        </div>
+        <div style="position:absolute;inset:0;opacity:{{ op3 }};transition:opacity .55s ease;">
+          <image-slot id="hero-slide-4" shape="rect" fit="cover" placeholder="Glissez une photo depuis votre site — vue produit ou ambiance"></image-slot>
+        </div>
+
+        <div class="hero-fade" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(244,239,231,1) 0%,rgba(244,239,231,.35) 14%,rgba(244,239,231,0) 36%);"></div>
+
+        <!-- flèches -->
+        <div style="position:absolute;right:22px;top:22px;display:flex;gap:10px;z-index:4;">
+          <button onClick="{{ prev }}" aria-label="Photo précédente" style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(28,25,22,.42);backdrop-filter:blur(8px);color:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="background:rgba(28,25,22,.72)">‹</button>
+          <button onClick="{{ next }}" aria-label="Photo suivante" style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(28,25,22,.42);backdrop-filter:blur(8px);color:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="background:rgba(28,25,22,.72)">›</button>
+        </div>
+
+        <!-- pastilles -->
+        <div style="position:absolute;left:0;right:22px;top:78px;display:flex;justify-content:flex-end;gap:7px;z-index:4;">
+          <span onClick="{{ go0 }}" style="width:{{ dot0 }};height:7px;border-radius:100px;background:{{ dotc0 }};cursor:pointer;transition:all .3s ease;"></span>
+          <span onClick="{{ go1 }}" style="width:{{ dot1 }};height:7px;border-radius:100px;background:{{ dotc1 }};cursor:pointer;transition:all .3s ease;"></span>
+          <span onClick="{{ go2 }}" style="width:{{ dot2 }};height:7px;border-radius:100px;background:{{ dotc2 }};cursor:pointer;transition:all .3s ease;"></span>
+          <span onClick="{{ go3 }}" style="width:{{ dot3 }};height:7px;border-radius:100px;background:{{ dotc3 }};cursor:pointer;transition:all .3s ease;"></span>
+        </div>
+      </div>
+
+      
+
+      <div class="hero-text" style="position:absolute;left:44px;top:66px;width:540px;display:flex;flex-direction:column;gap:24px;z-index:2;">
+        <div style="display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid #d8cfbf;padding:7px 13px;border-radius:100px;width:max-content;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7BB661;box-shadow:0 0 0 3px rgba(123,182,97,.22);"></span>
+          <span style="color:#4a443c;font-size:12.5px;font-weight:600;">Container CC-2026-001 ouvert · Clôture estimée 25 juin 2026</span>
+        </div>
+        <h1 style="margin:0;color:#1A1815;font-size:66px;line-height:.96;font-weight:800;letter-spacing:-.03em;">Mobilier outdoor pro,<br data-om-id="cb30cc15:52"> <span data-om-id="cb30cc15:51" style="color: rgb(217, 122, 52);">direct usine,&nbsp;</span>sans intermédiaire.</h1>
+        <p style="margin: 0; color: #5f584d; font-size: 18px; line-height: 1.5; max-width: 430px; width: 428px; height: 78px">Pré-commande groupée par container 20' entre professionnels. Jusqu'à <strong style="color:#1A1815;">−40%</strong> vs retail français. Import, douane et garantie 2 ans inclus.</p>
+        <div style="display:flex;gap:14px;">
+          <span style="background:#1A1815;color:#F4EFE7;font-size:16px;font-weight:700;padding:15px 26px;border-radius:11px;">Voir le catalogue →</span>
+          <span style="background:#fff;border:1px solid #d8cfbf;color:#1A1815;font-size:16px;font-weight:600;padding:15px 26px;border-radius:11px;">Comment ça marche</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+          <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid #d8cfbf;color:#4a443c;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:8px;">Importateur officiel FR</span>
+          <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid #d8cfbf;color:#4a443c;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:8px;">Contrôle SGS</span>
+          <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid #d8cfbf;color:#4a443c;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:8px;">Garantie 2 ans</span>
+        </div>
+      </div><div class="hero-card" style="position:absolute;right:32px;bottom:32px;width:280px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.6);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 40px -18px rgba(26,24,21,.45);">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8a8073;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Container en cours</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;color:#3f8f2a;font-size:12px;font-weight:700;"><span style="width:6px;height:6px;border-radius:50%;background:#3f8f2a;"></span>Ouvert</span>
+        </div>
+        <div style="color:#1A1815;font-size:22px;font-weight:800;">CC-2026-001</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="color:#6b6357;font-size:12.5px;">Remplissage</span><span style="color:#1A1815;font-size:18px;font-weight:800;">62%</span></div>
+          <div style="position:relative;height:6px;border-radius:100px;background:#e4dccd;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:62%;border-radius:100px;background:#D97A34;"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:22px;padding-top:12px;border-top:1px solid #e4dccd;">
+          <div><div style="color:#8a8073;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Séries</div><div style="color:#1A1815;font-size:17px;font-weight:800;">3/5</div></div>
+          <div><div style="color:#8a8073;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Pros</div><div style="color:#1A1815;font-size:17px;font-weight:800;">12</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COLLECTIONS ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;">
+    <div class="sec-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:40px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Quatre gammes, quatre terrasses</div>
+        <h2 style="margin:0;font-size:44px;line-height:1.04;font-weight:800;letter-spacing:-.025em;max-width:640px;">Le mobilier que vos clients verront, avant tout discours.</h2>
+      </div>
+      <span style="white-space:nowrap;color:#4a443c;font-size:15px;font-weight:600;border-bottom:2px solid #D97A34;padding-bottom:2px;">Ouvrir le catalogue →</span>
+    </div>
+
+    <div class="col-grid" style="display:grid;grid-template-columns:1.35fr 1fr;gap:24px;align-items:stretch;">
+      <div style="position:relative;border-radius:20px;overflow:hidden;min-height:520px;background:#e4dccd;">
+        <image-slot id="collections-chairs" shape="rect" fit="cover" src="uploads/f02879e6f5qdi8lg.webp" placeholder="Photo produit — assises tressées"></image-slot>
+        <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(20,18,15,.62) 0%,rgba(20,18,15,0) 44%);"></div>
+        <div style="position:absolute;left:26px;bottom:24px;right:26px;pointer-events:none;">
+          <div style="color:#F9F6F0;font-size:26px;font-weight:800;letter-spacing:-.01em;">Cordage &amp; tressage main</div>
+          <div style="color:rgba(244,239,231,.82);font-size:15px;margin-top:4px;">Corde tressée, cadre alu — coloris au choix, MOQ 50 par design.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="flex:1;background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:4px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#D97A34;">Bistrot</div>
+          <div style="font-size:20px;font-weight:800;">La terrasse parisienne</div>
+          <div style="color:#6b6357;font-size:14.5px;">Tressage chevrons, cadre alu bambou.</div>
+        </div>
+        <div style="flex:1;background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:4px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#D97A34;">Textilène</div>
+          <div style="font-size:20px;font-weight:800;">La brasserie contemporaine</div>
+          <div style="color:#6b6357;font-size:14.5px;">Toile tendue, lignes nettes.</div>
+        </div>
+        <div style="flex:1;background:#1A1815;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:4px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E8963F;">Piètements</div>
+          <div style="font-size:20px;font-weight:800;color:#F9F6F0;">La base du métier</div>
+          <div style="color:rgba(244,239,231,.72);font-size:14.5px;">Fonte et alu, plateaux au choix.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BANDEAU CLIENTÈLE (collage) ============ -->
+  <section style="margin:104px 0 0;position:relative;">
+    <div class="band" style="position:relative;height:420px;overflow:hidden;">
+      <image-slot id="clientele-band" shape="rect" fit="cover" src="uploads/2ef459bf73v2xyly.webp" placeholder="Bandeau — terrasses de restaurants, bars, hôtels"></image-slot>
+      <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(20,18,15,.88) 0%,rgba(20,18,15,.62) 42%,rgba(20,18,15,.2) 100%);"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;">
+        <div class="band-inner" style="max-width:1240px;margin:0 auto;width:100%;padding:0 40px;">
+          <div style="max-width:560px;">
+            <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E8963F;margin-bottom:14px;">Pensé pour les pros de la terrasse</div>
+            <h2 style="margin:0;color:#F9F6F0;font-size:42px;line-height:1.05;font-weight:800;letter-spacing:-.02em;">Restaurants, hôtels, campings, bars : équipez à prix usine, sans compromis sur la qualité.</h2>
+            <p style="color:rgba(244,239,231,.82);font-size:17px;line-height:1.5;margin:20px 0 0;">Un mobilier robuste, garanti 2 ans et contrôlé SGS avant expédition — pensé pour l'exigence d'un usage professionnel intensif.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 PILIERS ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px;">
+    <div class="g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#f0e6d6;color:#D97A34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">1</div>
+        <h3 style="margin:6px 0 0;font-size:22px;font-weight:800;letter-spacing:-.01em;">Direct usine</h3>
+        <p style="margin:0;color:#6b6357;font-size:15.5px;line-height:1.5;">Prix négociés au niveau container, sans empilement de marges ni stock dormant à financer.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#f0e6d6;color:#D97A34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">2</div>
+        <h3 style="margin:6px 0 0;font-size:22px;font-weight:800;letter-spacing:-.01em;">Groupé entre pros</h3>
+        <p style="margin:0;color:#6b6357;font-size:15.5px;line-height:1.5;">Chaque réservation contribue au remplissage. Le départ se déclenche quand le seuil est atteint.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#f0e6d6;color:#D97A34;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">3</div>
+        <h3 style="margin:6px 0 0;font-size:22px;font-weight:800;letter-spacing:-.01em;">Tout est géré</h3>
+        <p style="margin:0;color:#6b6357;font-size:15.5px;line-height:1.5;">Import, douane, conformité, contrôle SGS, facture française et garantie 2 ans centralisés chez nous.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOUBLE PARCOURS ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 40px 8px;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Deux parcours, une règle</div>
+    <h2 style="margin:0 0 36px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:760px;">Acheter en direct ou revendre : le canal reste clair.</h2>
+    <div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:20px;padding:36px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#D97A34;">J'équipe mon établissement</div>
+        <h3 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;">Prix direct pro</h3>
+        <p style="margin:0;color:#6b6357;font-size:16px;line-height:1.5;">MOQ clair, réservation container et stock 24h pour les besoins urgents.</p>
+        <span style="margin-top:8px;color:#1A1815;font-size:15px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;width:max-content;">Explorer les produits →</span>
+      </div>
+      <div style="background:#1A1815;border-radius:20px;padding:36px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E8963F;">Je revends à mon réseau</div>
+        <h3 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;color:#F9F6F0;">Programme partenaire</h3>
+        <p style="margin:0;color:rgba(244,239,231,.74);font-size:16px;line-height:1.5;">Prix nets réservés, opportunités protégées et sélections co-brandées à construire ensemble.</p>
+        <span style="margin-top:8px;color:#F9F6F0;font-size:15px;font-weight:700;border-bottom:2px solid #E8963F;padding-bottom:2px;width:max-content;">Voir le programme →</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMMENT ÇA MARCHE ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Le processus</div>
+    <h2 style="margin:0 0 40px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:760px;">Comment se déroule une commande container.</h2>
+    <div class="g5" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;letter-spacing:-.02em;">01</div>
+        <div style="font-size:17px;font-weight:800;">Réservation</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">3% de frais (min 150€, max 500€), non-remboursables sauf annulation de notre part.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;letter-spacing:-.02em;">02</div>
+        <div style="font-size:17px;font-weight:800;">Container à 80%</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">Seuil atteint : la production est lancée et l'acompte 27% est appelé.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;letter-spacing:-.02em;">03</div>
+        <div style="font-size:17px;font-weight:800;">Production usine</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">45 jours de production, contrôle qualité SGS indépendant avant chargement.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#e0d3bd;letter-spacing:-.02em;">04</div>
+        <div style="font-size:17px;font-weight:800;">Expédition + douane</div>
+        <p style="margin:0;color:#6b6357;font-size:13.5px;line-height:1.45;">30 jours de transit maritime + dédouanement géré par Pros Import.</p>
+      </div>
+      <div style="background:#1A1815;border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:34px;font-weight:900;color:#E8963F;letter-spacing:-.02em;">05</div>
+        <div style="font-size:17px;font-weight:800;color:#F9F6F0;">Rendu port</div>
+        <p style="margin:0;color:rgba(244,239,231,.72);font-size:13.5px;line-height:1.45;">Enlèvement libre, votre transporteur, ou mise en relation recommandée.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CATALOGUE ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;">
+    <div class="sec-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Catalogue</div>
+        <h2 style="margin:0;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:640px;">Choisissez vos modèles, design par design.</h2>
+      </div>
+      <span style="white-space:nowrap;color:#4a443c;font-size:15px;font-weight:600;border-bottom:2px solid #D97A34;padding-bottom:2px;">Ouvrir le catalogue complet →</span>
+    </div>
+    <p style="margin:0 0 28px;color:#6b6357;font-size:17px;max-width:640px;">Chaque référence affiche son MOQ en temps réel : ajoutez votre quantité pour déclencher la série.</p>
+
+    <div class="cat-grid" style="display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;">
+      <div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:20px;">
+          <span style="background:#1A1815;color:#F4EFE7;font-size:13.5px;font-weight:700;padding:8px 16px;border-radius:100px;">Tous</span>
+          <span style="background:#fff;border:1px solid #d8cfbf;color:#4a443c;font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:100px;">Chaise</span>
+          <span style="background:#fff;border:1px solid #d8cfbf;color:#4a443c;font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:100px;">Fauteuil</span>
+          <span style="background:#fff;border:1px solid #d8cfbf;color:#4a443c;font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:100px;">Table</span>
+          <span style="background:#fff;border:1px solid #d8cfbf;color:#4a443c;font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:100px;">Banc</span>
+        </div>
+        <div class="g3c" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;">
+            <div style="height:180px;background:#e4dccd;position:relative;"><image-slot id="cat-1" shape="rect" fit="cover" placeholder="Fauteuil tressé"></image-slot></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:16px;font-weight:800;">Fauteuil Cordage</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="color:#6b6357;font-size:13px;">dès</span><span style="font-size:18px;font-weight:800;">98 € HT</span></div>
+              <div style="height:5px;border-radius:100px;background:#e4dccd;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:64%;border-radius:100px;background:#D97A34;"></div></div>
+              <div style="color:#8a8073;font-size:12px;">MOQ 50 · 32 réservés</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;">
+            <div style="height:180px;background:#e4dccd;position:relative;"><image-slot id="cat-2" shape="rect" fit="cover" placeholder="Chaise bistrot"></image-slot></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:16px;font-weight:800;">Chaise Bistrot</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="color:#6b6357;font-size:13px;">dès</span><span style="font-size:18px;font-weight:800;">54 € HT</span></div>
+              <div style="height:5px;border-radius:100px;background:#e4dccd;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:82%;border-radius:100px;background:#D97A34;"></div></div>
+              <div style="color:#8a8073;font-size:12px;">MOQ 50 · 41 réservés</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4dccd;border-radius:16px;overflow:hidden;">
+            <div style="height:180px;background:#e4dccd;position:relative;"><image-slot id="cat-3" shape="rect" fit="cover" placeholder="Table alu"></image-slot></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:16px;font-weight:800;">Table Piètement</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="color:#6b6357;font-size:13px;">dès</span><span style="font-size:18px;font-weight:800;">129 € HT</span></div>
+              <div style="height:5px;border-radius:100px;background:#e4dccd;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:45%;border-radius:100px;background:#D97A34;"></div></div>
+              <div style="color:#8a8073;font-size:12px;">MOQ 20 · 9 réservés</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px;position:sticky;top:96px;" class="side-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8a8073;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">CC-2026-001</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;color:#3f8f2a;font-size:12px;font-weight:700;"><span style="width:6px;height:6px;border-radius:50%;background:#3f8f2a;"></span>Ouvert</span>
+        </div>
+        <div style="color:#6b6357;font-size:13px;">Marseille-Fos · 20' High Cube · 28 m³ utiles</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="color:#6b6357;font-size:13px;">Remplissage</span><span style="font-size:20px;font-weight:800;">62%</span></div>
+          <div style="height:6px;border-radius:100px;background:#e4dccd;position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;border-radius:100px;background:#D97A34;"></div><div style="position:absolute;left:80%;top:-3px;bottom:-3px;width:2px;background:#b7ac98;"></div></div>
+          <div style="color:#8a8073;font-size:11.5px;">17.4 / 28 m³ · Départ à 80%</div>
+        </div>
+        <div style="display:flex;gap:22px;padding:14px 0;border-top:1px solid #e4dccd;border-bottom:1px solid #e4dccd;">
+          <div><div style="color:#8a8073;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Séries</div><div style="font-size:18px;font-weight:800;">3/5</div></div>
+          <div><div style="color:#8a8073;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Pros engagés</div><div style="font-size:18px;font-weight:800;">12</div></div>
+        </div>
+        <div style="color:#6b6357;font-size:13px;line-height:1.45;">Sélectionnez des produits dans le catalogue pour démarrer votre commande.</div>
+        <span style="background:#1A1815;color:#F4EFE7;font-size:15px;font-weight:700;padding:13px;border-radius:11px;text-align:center;">Confirmer ma réservation</span>
+        <span style="color:#4a443c;font-size:14px;font-weight:600;text-align:center;">Télécharger le devis PDF</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVRAISON ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto;padding:104px 40px 0;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Comment la livraison fonctionne</div>
+    <h2 style="margin:0 0 12px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;max-width:760px;">Notre prix s'arrête au port d'arrivée.</h2>
+    <p style="margin:0 0 36px;color:#6b6357;font-size:17px;max-width:680px;">Le transport final varie selon votre zone, votre quai et vos habitudes logistiques. Container Club ne prend aucune marge cachée dessus.</p>
+    <div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:32px;display:flex;flex-direction:column;gap:10px;">
+        <h3 style="margin:0;font-size:22px;font-weight:800;">Enlèvement libre au port</h3>
+        <p style="margin:0;color:#6b6357;font-size:15.5px;line-height:1.5;">Vous récupérez la marchandise au Havre ou à Marseille-Fos avec votre organisation habituelle.</p>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:18px;padding:32px;display:flex;flex-direction:column;gap:10px;">
+        <h3 style="margin:0;font-size:22px;font-weight:800;">Transporteur recommandé</h3>
+        <p style="margin:0;color:#6b6357;font-size:15.5px;line-height:1.5;">Nous fournissons une liste de transporteurs présélectionnés à contacter directement.</p>
+        <span style="margin-top:6px;color:#1A1815;font-size:15px;font-weight:700;border-bottom:2px solid #D97A34;padding-bottom:2px;width:max-content;">Voir les transporteurs →</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="wrap" style="max-width:900px;margin:0 auto;padding:104px 40px 0;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#D97A34;margin-bottom:14px;">Questions fréquentes</div>
+    <h2 style="margin:0 0 36px;font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.025em;">Tout ce qu'il faut savoir avant de réserver.</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT0 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Que se passe-t-il si le container n'atteint pas 80% de remplissage ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS0 }}</span>
+        </div>
+        <div style="display:{{ faqD0 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Tant que le seuil n'est pas atteint, rien n'est lancé et vous n'êtes débité que des frais de réservation. La collecte peut être prolongée de 2 semaines ; sinon le container est annulé et l'intégralité des sommes versées vous est remboursée sous 5 jours ouvrés, sans retenue.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT1 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Que se passe-t-il si mon design n'atteint pas le MOQ de 50 ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS1 }}</span>
+        </div>
+        <div style="display:{{ faqD1 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Trois options vous sont proposées : basculer vers un design confirmé au même prix, reporter votre ligne sur le container suivant sans frais, ou être remboursé sur cette ligne uniquement. Vous gardez la main, avec un délai clair pour choisir.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT2 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Quand suis-je débité, et de combien à chaque étape ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS2 }}</span>
+        </div>
+        <div style="display:{{ faqD2 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Paiement en 3 étapes : 3% à la réservation (min 150€, max 500€), 27% au lancement à 80% (prévenu 48h avant), puis le solde de 70% une fois la production terminée et le contrôle SGS validé en usine.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT3 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Qui s'occupe de la douane et de la TVA à l'import ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS3 }}</span>
+        </div>
+        <div style="display:{{ faqD3 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Tout est pris en charge par Pros Import EURL, votre importateur officiel français : déclaration, dédouanement, TVA à l'import autoliquidée et conformité (CE, REACH, classement au feu ERP). Vous recevez une facture française HT + TVA 20%, parfaitement déductible.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT4 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Quelle garantie sur les produits, et le SAV ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS4 }}</span>
+        </div>
+        <div style="display:{{ faqD4 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Garantie commerciale 2 ans sur pièces et structure, assurée en France. SAV par email sous 48h ouvrées, pièces détachées disponibles. L'éco-participation Eco-mobilier est incluse dans le prix.</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e4dccd;border-radius:14px;overflow:hidden;">
+        <div onClick="{{ faqT5 }}" style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 24px;cursor:pointer;">
+          <span style="font-size:16.5px;font-weight:700;color:#1A1815;">Comment vérifiez-vous la qualité avant expédition ?</span>
+          <span style="color:#D97A34;font-size:22px;font-weight:400;line-height:1;">{{ faqS5 }}</span>
+        </div>
+        <div style="display:{{ faqD5 }};padding:0 24px 22px;color:#6b6357;font-size:15px;line-height:1.55;">Avant chaque chargement, SGS — organisme indépendant — réalise un contrôle physique en usine (échantillonnage AQL 2.5 : dimensions, finitions, solidité, conformité). Un rapport photo/vidéo est partagé avec tous les pros engagés. Aucun container ne part sans cette validation.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA FINAL ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto 104px;padding:0 40px;">
+    <div class="cta-box" style="background:#1A1815;border-radius:22px;padding:64px 56px;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;">
+      <div style="max-width:600px;">
+        <h2 style="margin:0;color:#F9F6F0;font-size:38px;line-height:1.06;font-weight:800;letter-spacing:-.02em;">Réservez votre volume sur le prochain container.</h2>
+        <p style="color:rgba(244,239,231,.74);font-size:16.5px;line-height:1.5;margin:16px 0 0;">Les frais de réservation bloquent votre place. Le complément n'est appelé qu'au seuil de remplissage.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <span style="background:#D97A34;color:#fff;font-size:16px;font-weight:700;padding:16px 30px;border-radius:11px;text-align:center;">Confirmer ma réservation →</span>
+        <span style="color:rgba(244,239,231,.6);font-size:13px;text-align:center;">Remboursé si le container ne part pas.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWSLETTER ============ -->
+  <section class="wrap" style="max-width:1240px;margin:0 auto 104px;padding:0 40px;">
+    <div class="nl-box" style="border:1px solid #e4dccd;border-radius:22px;padding:48px 56px;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;">
+      <div style="max-width:560px;">
+        <h3 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;">Ne ratez pas le prochain départ.</h3>
+        <p style="margin:10px 0 0;color:#6b6357;font-size:16px;line-height:1.5;">Les containers partent quand le seuil est atteint. Laissez votre email pour être prévenu en priorité à la prochaine ouverture. Pas de spam.</p>
+      </div>
+      <div class="nl-form" style="display:flex;gap:10px;flex:1;min-width:320px;max-width:460px;">
+        <div style="flex:1;background:#fff;border:1px solid #d8cfbf;border-radius:11px;padding:15px 18px;color:#8a8073;font-size:15px;">vous@etablissement.fr</div>
+        <span style="background:#1A1815;color:#F4EFE7;font-size:15px;font-weight:700;padding:15px 24px;border-radius:11px;white-space:nowrap;">M'avertir</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer style="background:#1A1815;color:#F4EFE7;">
+    <div style="max-width:1240px;margin:0 auto;padding:64px 40px 40px;">
+      <div class="g4" style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;">
+        <div style="max-width:300px;">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:16px;">
+            <div style="width:34px;height:34px;border-radius:9px;background:#D97A34;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:19px;">C</div>
+            <span style="font-weight:700;font-size:18px;">Container Club</span>
+          </div>
+          <p style="margin:0;color:rgba(244,239,231,.6);font-size:14.5px;line-height:1.55;">Le club d'achat groupé des pros de la terrasse. Mobilier outdoor direct usine, importation officielle France.</p>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,239,231,.45);margin-bottom:16px;">Guides pros</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Importer par container</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Le prix prouvé</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Chaises restaurant</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Stock terrasse 24h</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">FAQ achat groupé</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,239,231,.45);margin-bottom:16px;">Logistique</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Devenir partenaire</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Espace partenaire</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Transporteurs partenaires</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Qualité &amp; rapports SGS</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Containers livrés</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,239,231,.45);margin-bottom:16px;">Contact</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">À propos de Pros Import</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">contact@prosimport.com</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">Lun–Ven · 9h–18h</span>
+            <span style="color:rgba(244,239,231,.78);font-size:14.5px;">60 Rue François Ier, 75008 Paris</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:48px;padding-top:24px;border-top:1px solid rgba(244,239,231,.12);">
+        <span style="color:rgba(244,239,231,.5);font-size:13px;">© 2026 Pros Import EURL · RCS Paris 988 269 981 · TVA FR08988269981</span>
+        <div style="display:flex;gap:20px;">
+          <span style="color:rgba(244,239,231,.5);font-size:13px;">Mentions légales</span>
+          <span style="color:rgba(244,239,231,.5);font-size:13px;">CGV</span>
+          <span style="color:rgba(244,239,231,.5);font-size:13px;">Confidentialité</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { i: 0, faq: 0 };
+  n = 4;
+  faqN = 6;
+  toggleFaq = (k) => this.setState(s => ({ faq: s.faq === k ? -1 : k }));
+  componentDidMount() {
+    this.timer = setInterval(() => this.setState(s => ({ i: (s.i + 1) % this.n })), 5500);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  goTo = (k) => { clearInterval(this.timer); this.setState({ i: k }); };
+  renderVals() {
+    const i = this.state.i;
+    const v = {
+      prev: () => this.goTo((i - 1 + this.n) % this.n),
+      next: () => this.goTo((i + 1) % this.n),
+    };
+    for (let k = 0; k < this.n; k++) {
+      v['op' + k] = i === k ? 1 : 0;
+      v['dot' + k] = i === k ? '22px' : '7px';
+      v['dotc' + k] = i === k ? '#D97A34' : 'rgba(255,255,255,.65)';
+      v['go' + k] = () => this.goTo(k);
+    }
+    for (let k = 0; k < this.faqN; k++) {
+      const open = this.state.faq === k;
+      v['faqD' + k] = open ? 'block' : 'none';
+      v['faqS' + k] = open ? '−' : '+';
+      v['faqT' + k] = () => this.toggleFaq(k);
+    }
+    return v;
+  }
+}
+</script>
+</body>
+</html>
