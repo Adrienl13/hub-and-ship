@@ -7,7 +7,10 @@ export const Route = createFileRoute('/livres/')({
       title: 'Containers livrés — Terrassea',
       description:
         'Consultez le registre public des containers livrés ou en transit, les photos et les chiffres documentés.',
-      path: '/livres/',
+      // Sans slash final : c'est l'URL déclarée dans sitemap.xml. Une
+      // canonique différente de l'URL du sitemap fait choisir à Google une
+      // « autre URL canonique » et retarde l'indexation.
+      path: '/livres',
     }),
   component: Page,
 })
